@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Menu, X, ChevronDown } from "lucide-react";
+import crumsLogo from "@/assets/crums-logo.png";
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -20,9 +21,7 @@ export const Navigation = () => {
         <div className="flex items-center justify-between h-20">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-3">
-            <div className="text-3xl font-bold text-primary">
-              CL<span className="text-secondary">.</span>
-            </div>
+            <img src={crumsLogo} alt="Crums Leasing Logo" className="h-12 w-auto" />
             <div className="hidden sm:block">
               <div className="text-xl font-bold text-primary">Crums Leasing</div>
               <div className="text-xs text-muted-foreground">Equipment Solutions</div>

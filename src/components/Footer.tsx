@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { Facebook, Twitter, Linkedin, Instagram } from "lucide-react";
+import crumsLogo from "@/assets/crums-logo.png";
 
 export const Footer = () => {
   return (
@@ -8,9 +9,7 @@ export const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
           {/* Company Info */}
           <div>
-            <div className="text-2xl font-bold mb-4">
-              CL<span className="text-secondary">.</span>
-            </div>
+            <img src={crumsLogo} alt="Crums Leasing Logo" className="h-10 w-auto mb-4 brightness-0 invert" />
             <p className="text-sm text-primary-foreground/80 mb-4">
               Building trust, family, and opportunity in trailer leasing and logistics nationwide.
             </p>
