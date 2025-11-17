@@ -1,0 +1,186 @@
+import { Navigation } from "@/components/Navigation";
+import { Footer } from "@/components/Footer";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Phone, Mail, MapPin, Clock } from "lucide-react";
+
+const Contact = () => {
+  return (
+    <div className="min-h-screen flex flex-col">
+      <Navigation />
+
+      {/* Hero */}
+      <section className="bg-gradient-to-r from-secondary to-brand-orange-light text-secondary-foreground py-20">
+        <div className="container mx-auto px-4 text-center">
+          <h1 className="text-4xl md:text-6xl font-bold mb-6">Contact Us</h1>
+          <p className="text-xl md:text-2xl max-w-4xl mx-auto text-secondary-foreground/90">
+            Ready to get started? Our team is here to help you find the perfect solution.
+          </p>
+        </div>
+      </section>
+
+      {/* Contact Form & Info */}
+      <section className="py-20 bg-background">
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 max-w-6xl mx-auto">
+            {/* Contact Form */}
+            <Card className="border-2">
+              <CardContent className="p-8">
+                <h2 className="text-2xl font-bold mb-6 text-foreground">Get A Quote</h2>
+                <form className="space-y-6">
+                  <div>
+                    <Label htmlFor="name">Full Name *</Label>
+                    <Input id="name" placeholder="John Smith" className="mt-2" />
+                  </div>
+                  <div>
+                    <Label htmlFor="company">Company Name *</Label>
+                    <Input id="company" placeholder="Your Company LLC" className="mt-2" />
+                  </div>
+                  <div>
+                    <Label htmlFor="email">Email Address *</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="john@yourcompany.com"
+                      className="mt-2"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="phone">Phone Number *</Label>
+                    <Input
+                      id="phone"
+                      type="tel"
+                      placeholder="(555) 123-4567"
+                      className="mt-2"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="service">Service Interest</Label>
+                    <select
+                      id="service"
+                      className="mt-2 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    >
+                      <option value="">Select a service...</option>
+                      <option value="leasing">Trailer Leasing</option>
+                      <option value="rentals">Trailer Rentals</option>
+                      <option value="fleet">Fleet Solutions</option>
+                      <option value="other">Other</option>
+                    </select>
+                  </div>
+                  <div>
+                    <Label htmlFor="message">Message</Label>
+                    <Textarea
+                      id="message"
+                      placeholder="Tell us about your needs..."
+                      rows={4}
+                      className="mt-2"
+                    />
+                  </div>
+                  <Button
+                    type="submit"
+                    className="w-full bg-secondary hover:bg-secondary/90"
+                    size="lg"
+                  >
+                    Submit Request
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+
+            {/* Contact Information */}
+            <div className="space-y-8">
+              <div>
+                <h2 className="text-2xl font-bold mb-6 text-foreground">Get In Touch</h2>
+                <p className="text-lg text-muted-foreground mb-8">
+                  Have questions? Our team is ready to help. Reach out via phone, email, or fill out
+                  the form and we'll get back to you within 24 hours.
+                </p>
+              </div>
+
+              <Card className="border-2">
+                <CardContent className="p-6">
+                  <div className="space-y-6">
+                    <div className="flex items-start">
+                      <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mr-4 flex-shrink-0">
+                        <Phone className="h-6 w-6 text-primary" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-foreground mb-1">Phone</h3>
+                        <p className="text-muted-foreground">(800) 555-CRUMS</p>
+                        <p className="text-sm text-muted-foreground">(800) 555-2786</p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-start">
+                      <div className="h-12 w-12 rounded-full bg-secondary/10 flex items-center justify-center mr-4 flex-shrink-0">
+                        <Mail className="h-6 w-6 text-secondary" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-foreground mb-1">Email</h3>
+                        <p className="text-muted-foreground">info@crumsleasing.com</p>
+                        <p className="text-sm text-muted-foreground">We respond within 24 hours</p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-start">
+                      <div className="h-12 w-12 rounded-full bg-accent/10 flex items-center justify-center mr-4 flex-shrink-0">
+                        <MapPin className="h-6 w-6 text-accent" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-foreground mb-1">Headquarters</h3>
+                        <p className="text-muted-foreground">
+                          1234 Corporate Drive
+                          <br />
+                          Atlanta, GA 30301
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-start">
+                      <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mr-4 flex-shrink-0">
+                        <Clock className="h-6 w-6 text-primary" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-foreground mb-1">Business Hours</h3>
+                        <p className="text-muted-foreground">
+                          Monday - Friday: 7:00 AM - 7:00 PM ET
+                          <br />
+                          Saturday: 8:00 AM - 4:00 PM ET
+                          <br />
+                          Sunday: Closed
+                        </p>
+                        <p className="text-sm text-muted-foreground mt-2">
+                          24/7 Emergency Support Available
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="border-2 bg-gradient-to-br from-primary/5 to-secondary/5">
+                <CardContent className="p-6">
+                  <h3 className="font-bold text-foreground mb-2">Existing Customer?</h3>
+                  <p className="text-muted-foreground mb-4">
+                    Log in to your customer portal to manage payments, view tolls, and access
+                    support.
+                  </p>
+                  <Button variant="outline" className="w-full" asChild>
+                    <a href="/login">Access Customer Portal</a>
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <Footer />
+    </div>
+  );
+};
+
+export default Contact;
