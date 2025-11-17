@@ -1,12 +1,364 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { Navigation } from "@/components/Navigation";
+import { Footer } from "@/components/Footer";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Link } from "react-router-dom";
+import {
+  Truck,
+  Users,
+  Shield,
+  TrendingUp,
+  MapPin,
+  CheckCircle,
+  ArrowRight,
+  Heart,
+  Award,
+  Target,
+} from "lucide-react";
+import heroImage from "@/assets/hero-truck.jpg";
+import fleetImage from "@/assets/fleet-overview.jpg";
+import teamImage from "@/assets/team-handshake.jpg";
 
 const Index = () => {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
-      </div>
+    <div className="min-h-screen flex flex-col">
+      <Navigation />
+
+      {/* Hero Section */}
+      <section className="relative h-[600px] lg:h-[700px] flex items-center justify-center overflow-hidden">
+        <div
+          className="absolute inset-0 bg-cover bg-center"
+          style={{ backgroundImage: `url(${heroImage})` }}
+        >
+          <div className="absolute inset-0 bg-gradient-to-r from-primary/95 to-primary/70"></div>
+        </div>
+
+        <div className="relative z-10 container mx-auto px-4 text-center text-primary-foreground">
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
+            Empowering Every Trucker
+            <br />
+            <span className="text-secondary">To Build the Life They're Proud Of</span>
+          </h1>
+          <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto text-primary-foreground/90">
+            Guided by family values, integrity, and commitment to your success — creating lasting
+            partnerships that move people forward and bring them safely home.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link to="/contact">
+              <Button size="lg" className="bg-secondary hover:bg-secondary/90 text-secondary-foreground text-lg px-8 py-6">
+                Get A Quote
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </Button>
+            </Link>
+            <Link to="/mission">
+              <Button
+                size="lg"
+                variant="outline"
+                className="bg-transparent border-2 border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary text-lg px-8 py-6"
+              >
+                Our Mission & Values
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Core Values Section */}
+      <section className="py-20 bg-gradient-to-b from-muted to-background">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
+              Core Values
+            </h2>
+            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+              At Crums Leasing, we see a future where every trucker has the freedom, tools, and
+              support to build a life they're proud of both on and off the road.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {/* Family First */}
+            <Card className="border-2 hover:shadow-lg transition-shadow bg-gradient-to-br from-secondary/10 to-background">
+              <CardContent className="p-8">
+                <div className="h-14 w-14 rounded-full bg-secondary/20 flex items-center justify-center mb-6">
+                  <Heart className="h-7 w-7 text-secondary" />
+                </div>
+                <h3 className="text-2xl font-bold mb-4 text-foreground">Family First</h3>
+                <p className="text-muted-foreground leading-relaxed">
+                  We treat every team member and customer like family — with respect, compassion,
+                  and understanding. We know that when we support each other, everyone makes it home
+                  safe.
+                </p>
+              </CardContent>
+            </Card>
+
+            {/* Hard Work & Dedication */}
+            <Card className="border-2 hover:shadow-lg transition-shadow bg-gradient-to-br from-primary/10 to-background">
+              <CardContent className="p-8">
+                <div className="h-14 w-14 rounded-full bg-primary/20 flex items-center justify-center mb-6">
+                  <Award className="h-7 w-7 text-primary" />
+                </div>
+                <h3 className="text-2xl font-bold mb-4 text-foreground">
+                  Hard Work & Dedication
+                </h3>
+                <p className="text-muted-foreground leading-relaxed">
+                  We honor the spirit of "Crums" by showing up every day with pride, effort, and a
+                  willingness to go the extra mile for our customers and our team.
+                </p>
+              </CardContent>
+            </Card>
+
+            {/* Quality You Can Count On */}
+            <Card className="border-2 hover:shadow-lg transition-shadow bg-gradient-to-br from-accent/10 to-background">
+              <CardContent className="p-8">
+                <div className="h-14 w-14 rounded-full bg-accent/20 flex items-center justify-center mb-6">
+                  <CheckCircle className="h-7 w-7 text-accent" />
+                </div>
+                <h3 className="text-2xl font-bold mb-4 text-foreground">
+                  Quality You Can Count On
+                </h3>
+                <p className="text-muted-foreground leading-relaxed">
+                  We stand behind every trailer, every promise, and every handshake. Dependability
+                  isn't just what we deliver — it's who we are.
+                </p>
+              </CardContent>
+            </Card>
+
+            {/* Integrity in Every Mile */}
+            <Card className="border-2 hover:shadow-lg transition-shadow bg-gradient-to-br from-primary/10 to-background">
+              <CardContent className="p-8">
+                <div className="h-14 w-14 rounded-full bg-primary/20 flex items-center justify-center mb-6">
+                  <Shield className="h-7 w-7 text-primary" />
+                </div>
+                <h3 className="text-2xl font-bold mb-4 text-foreground">
+                  Integrity in Every Mile
+                </h3>
+                <p className="text-muted-foreground leading-relaxed">
+                  We do what's right, even when no one's watching. Honesty and accountability guide
+                  every decision we make.
+                </p>
+              </CardContent>
+            </Card>
+
+            {/* Relationships Fuel Our Success */}
+            <Card className="border-2 hover:shadow-lg transition-shadow bg-gradient-to-br from-secondary/10 to-background">
+              <CardContent className="p-8">
+                <div className="h-14 w-14 rounded-full bg-secondary/20 flex items-center justify-center mb-6">
+                  <Users className="h-7 w-7 text-secondary" />
+                </div>
+                <h3 className="text-2xl font-bold mb-4 text-foreground">
+                  Relationships Fuel Our Success
+                </h3>
+                <p className="text-muted-foreground leading-relaxed">
+                  We work hard, but we never lose sight of what matters most. Every decision is
+                  guided by respect, empathy, and genuine commitment to our customers and team.
+                </p>
+              </CardContent>
+            </Card>
+
+            {/* Keep Moving Forward */}
+            <Card className="border-2 hover:shadow-lg transition-shadow bg-gradient-to-br from-accent/10 to-background">
+              <CardContent className="p-8">
+                <div className="h-14 w-14 rounded-full bg-accent/20 flex items-center justify-center mb-6">
+                  <TrendingUp className="h-7 w-7 text-accent" />
+                </div>
+                <h3 className="text-2xl font-bold mb-4 text-foreground">
+                  Keep Moving Forward
+                </h3>
+                <p className="text-muted-foreground leading-relaxed">
+                  We grow, learn, and adapt together. Every challenge is an opportunity to improve
+                  ourselves and the company we believe in.
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="text-center mt-12">
+            <p className="text-lg text-muted-foreground italic max-w-4xl mx-auto">
+              Follow the <span className="text-secondary font-semibold">Crums</span> home — to a
+              future built on trust, family, and opportunity.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Services Overview */}
+      <section className="py-20 bg-background">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
+              Comprehensive Fleet Solutions
+            </h2>
+            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+              From leasing to rentals, we provide the equipment and support your business needs to
+              thrive nationwide.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <Card className="group hover:shadow-xl transition-all duration-300 border-2">
+              <CardContent className="p-8">
+                <div className="h-16 w-16 rounded-lg bg-primary/10 flex items-center justify-center mb-6 group-hover:bg-primary group-hover:scale-110 transition-all">
+                  <Truck className="h-8 w-8 text-primary group-hover:text-primary-foreground" />
+                </div>
+                <h3 className="text-2xl font-bold mb-4 text-foreground">Trailer Leasing</h3>
+                <p className="text-muted-foreground mb-6 leading-relaxed">
+                  Long-term equipment solutions designed to optimize your fleet composition and
+                  maximize your return on investment.
+                </p>
+                <Link to="/services/trailer-leasing">
+                  <Button variant="link" className="p-0 text-primary group-hover:text-secondary">
+                    Learn More
+                    <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                  </Button>
+                </Link>
+              </CardContent>
+            </Card>
+
+            <Card className="group hover:shadow-xl transition-all duration-300 border-2">
+              <CardContent className="p-8">
+                <div className="h-16 w-16 rounded-lg bg-secondary/10 flex items-center justify-center mb-6 group-hover:bg-secondary group-hover:scale-110 transition-all">
+                  <Target className="h-8 w-8 text-secondary group-hover:text-secondary-foreground" />
+                </div>
+                <h3 className="text-2xl font-bold mb-4 text-foreground">Trailer Rentals</h3>
+                <p className="text-muted-foreground mb-6 leading-relaxed">
+                  Flexible short-term rental options for peak seasons, special projects, or testing
+                  new equipment before you commit.
+                </p>
+                <Link to="/services/trailer-rentals">
+                  <Button variant="link" className="p-0 text-primary group-hover:text-secondary">
+                    Learn More
+                    <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                  </Button>
+                </Link>
+              </CardContent>
+            </Card>
+
+            <Card className="group hover:shadow-xl transition-all duration-300 border-2">
+              <CardContent className="p-8">
+                <div className="h-16 w-16 rounded-lg bg-accent/10 flex items-center justify-center mb-6 group-hover:bg-accent group-hover:scale-110 transition-all">
+                  <MapPin className="h-8 w-8 text-accent group-hover:text-accent-foreground" />
+                </div>
+                <h3 className="text-2xl font-bold mb-4 text-foreground">Fleet Solutions</h3>
+                <p className="text-muted-foreground mb-6 leading-relaxed">
+                  Comprehensive fleet management services with nationwide support and advanced
+                  technology for growing businesses.
+                </p>
+                <Link to="/services/fleet-solutions">
+                  <Button variant="link" className="p-0 text-primary group-hover:text-secondary">
+                    Learn More
+                    <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                  </Button>
+                </Link>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </section>
+
+      {/* Why Choose Us */}
+      <section className="py-20 bg-muted">
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            <div>
+              <img
+                src={fleetImage}
+                alt="Professional fleet management"
+                className="rounded-lg shadow-2xl"
+              />
+            </div>
+            <div>
+              <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
+                Why Choose Crums Leasing?
+              </h2>
+              <p className="text-xl text-muted-foreground mb-8">
+                We're more than an equipment provider — we're your partner in success.
+              </p>
+              <div className="space-y-6">
+                <div className="flex items-start space-x-4">
+                  <div className="h-12 w-12 rounded-full bg-secondary/20 flex items-center justify-center flex-shrink-0">
+                    <CheckCircle className="h-6 w-6 text-secondary" />
+                  </div>
+                  <div>
+                    <h4 className="text-lg font-semibold text-foreground mb-2">
+                      Nationwide Coverage
+                    </h4>
+                    <p className="text-muted-foreground">
+                      Access to equipment across all major markets with convenient locations
+                      coast-to-coast.
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-start space-x-4">
+                  <div className="h-12 w-12 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
+                    <CheckCircle className="h-6 w-6 text-primary" />
+                  </div>
+                  <div>
+                    <h4 className="text-lg font-semibold text-foreground mb-2">
+                      24/7 Customer Support
+                    </h4>
+                    <p className="text-muted-foreground">
+                      Our dedicated team is always here to help, ensuring your operations never stop.
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-start space-x-4">
+                  <div className="h-12 w-12 rounded-full bg-accent/20 flex items-center justify-center flex-shrink-0">
+                    <CheckCircle className="h-6 w-6 text-accent" />
+                  </div>
+                  <div>
+                    <h4 className="text-lg font-semibold text-foreground mb-2">
+                      Modern Technology
+                    </h4>
+                    <p className="text-muted-foreground">
+                      Advanced customer portal for managing payments, tolls, and fleet operations
+                      seamlessly.
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <Link to="/about" className="inline-block mt-8">
+                <Button size="lg" variant="outline">
+                  Learn More About Us
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-20 bg-gradient-to-r from-primary to-brand-teal-dark text-primary-foreground">
+        <div className="container mx-auto px-4 text-center">
+          <h2 className="text-4xl md:text-5xl font-bold mb-6">
+            Ready to Get Started?
+          </h2>
+          <p className="text-xl mb-8 max-w-2xl mx-auto text-primary-foreground/90">
+            Join the Crums family and experience the difference that integrity, dedication, and
+            family values make.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link to="/contact">
+              <Button size="lg" className="bg-secondary hover:bg-secondary/90 text-secondary-foreground text-lg px-8 py-6">
+                Request A Quote
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </Button>
+            </Link>
+            <Link to="/login">
+              <Button
+                size="lg"
+                variant="outline"
+                className="bg-transparent border-2 border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary text-lg px-8 py-6"
+              >
+                Customer Portal Login
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      <Footer />
     </div>
   );
 };

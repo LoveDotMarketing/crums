@@ -1,0 +1,243 @@
+import { Navigation } from "@/components/Navigation";
+import { Footer } from "@/components/Footer";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Link } from "react-router-dom";
+import { Heart, TrendingUp, Users, Award, ArrowRight } from "lucide-react";
+import teamImage from "@/assets/team-handshake.jpg";
+
+const Careers = () => {
+  return (
+    <div className="min-h-screen flex flex-col">
+      <Navigation />
+
+      {/* Hero */}
+      <section className="bg-gradient-to-r from-primary to-brand-teal-dark text-primary-foreground py-20">
+        <div className="container mx-auto px-4 text-center">
+          <h1 className="text-4xl md:text-6xl font-bold mb-6">Join The Crums Family</h1>
+          <p className="text-xl md:text-2xl max-w-4xl mx-auto text-primary-foreground/90 mb-8">
+            Build your career with a company that values integrity, hard work, and putting people
+            first.
+          </p>
+          <Link to="/contact">
+            <Button size="lg" className="bg-secondary hover:bg-secondary/90">
+              View Open Positions
+              <ArrowRight className="ml-2 h-5 w-5" />
+            </Button>
+          </Link>
+        </div>
+      </section>
+
+      {/* Why Work Here */}
+      <section className="py-20 bg-background">
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            <div>
+              <h2 className="text-3xl md:text-4xl font-bold mb-6 text-foreground">
+                Why Work at Crums?
+              </h2>
+              <p className="text-lg text-muted-foreground mb-8 leading-relaxed">
+                At Crums Leasing, we don't just hire employees — we welcome family members. We
+                believe that when you invest in people, they invest back in the mission. That's why
+                we're committed to creating an environment where everyone can thrive.
+              </p>
+              <div className="space-y-6">
+                <div className="flex items-start">
+                  <div className="h-12 w-12 rounded-full bg-secondary/10 flex items-center justify-center mr-4 flex-shrink-0">
+                    <Heart className="h-6 w-6 text-secondary" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-foreground mb-2">Family Culture</h3>
+                    <p className="text-muted-foreground">
+                      Work-life balance, respect, and genuine care for every team member
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-start">
+                  <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mr-4 flex-shrink-0">
+                    <TrendingUp className="h-6 w-6 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-foreground mb-2">
+                      Growth Opportunities
+                    </h3>
+                    <p className="text-muted-foreground">
+                      Clear career paths and development programs to help you advance
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-start">
+                  <div className="h-12 w-12 rounded-full bg-accent/10 flex items-center justify-center mr-4 flex-shrink-0">
+                    <Award className="h-6 w-6 text-accent" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-foreground mb-2">
+                      Competitive Benefits
+                    </h3>
+                    <p className="text-muted-foreground">
+                      Health insurance, 401(k) matching, paid time off, and more
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div>
+              <img
+                src={teamImage}
+                alt="Crums Leasing team"
+                className="rounded-lg shadow-2xl"
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Open Positions */}
+      <section className="py-20 bg-muted">
+        <div className="container mx-auto px-4">
+          <h2 className="text-3xl md:text-4xl font-bold text-center mb-16 text-foreground">
+            Open Positions
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+            <Card className="border-2 hover:shadow-lg transition-shadow">
+              <CardContent className="p-6">
+                <div className="mb-4">
+                  <span className="text-sm font-semibold text-secondary bg-secondary/10 px-3 py-1 rounded-full">
+                    Sales
+                  </span>
+                </div>
+                <h3 className="text-xl font-bold mb-2 text-foreground">
+                  Account Executive
+                </h3>
+                <p className="text-muted-foreground mb-4">Atlanta, GA • Full Time</p>
+                <Link to="/contact">
+                  <Button variant="outline" className="w-full">
+                    Apply Now
+                  </Button>
+                </Link>
+              </CardContent>
+            </Card>
+
+            <Card className="border-2 hover:shadow-lg transition-shadow">
+              <CardContent className="p-6">
+                <div className="mb-4">
+                  <span className="text-sm font-semibold text-primary bg-primary/10 px-3 py-1 rounded-full">
+                    Operations
+                  </span>
+                </div>
+                <h3 className="text-xl font-bold mb-2 text-foreground">
+                  Fleet Manager
+                </h3>
+                <p className="text-muted-foreground mb-4">Dallas, TX • Full Time</p>
+                <Link to="/contact">
+                  <Button variant="outline" className="w-full">
+                    Apply Now
+                  </Button>
+                </Link>
+              </CardContent>
+            </Card>
+
+            <Card className="border-2 hover:shadow-lg transition-shadow">
+              <CardContent className="p-6">
+                <div className="mb-4">
+                  <span className="text-sm font-semibold text-accent bg-accent/10 px-3 py-1 rounded-full">
+                    Customer Service
+                  </span>
+                </div>
+                <h3 className="text-xl font-bold mb-2 text-foreground">
+                  Customer Success Manager
+                </h3>
+                <p className="text-muted-foreground mb-4">Remote • Full Time</p>
+                <Link to="/contact">
+                  <Button variant="outline" className="w-full">
+                    Apply Now
+                  </Button>
+                </Link>
+              </CardContent>
+            </Card>
+
+            <Card className="border-2 hover:shadow-lg transition-shadow">
+              <CardContent className="p-6">
+                <div className="mb-4">
+                  <span className="text-sm font-semibold text-secondary bg-secondary/10 px-3 py-1 rounded-full">
+                    Finance
+                  </span>
+                </div>
+                <h3 className="text-xl font-bold mb-2 text-foreground">
+                  Financial Analyst
+                </h3>
+                <p className="text-muted-foreground mb-4">Chicago, IL • Full Time</p>
+                <Link to="/contact">
+                  <Button variant="outline" className="w-full">
+                    Apply Now
+                  </Button>
+                </Link>
+              </CardContent>
+            </Card>
+
+            <Card className="border-2 hover:shadow-lg transition-shadow">
+              <CardContent className="p-6">
+                <div className="mb-4">
+                  <span className="text-sm font-semibold text-primary bg-primary/10 px-3 py-1 rounded-full">
+                    Technology
+                  </span>
+                </div>
+                <h3 className="text-xl font-bold mb-2 text-foreground">
+                  Software Engineer
+                </h3>
+                <p className="text-muted-foreground mb-4">Remote • Full Time</p>
+                <Link to="/contact">
+                  <Button variant="outline" className="w-full">
+                    Apply Now
+                  </Button>
+                </Link>
+              </CardContent>
+            </Card>
+
+            <Card className="border-2 hover:shadow-lg transition-shadow">
+              <CardContent className="p-6">
+                <div className="mb-4">
+                  <span className="text-sm font-semibold text-accent bg-accent/10 px-3 py-1 rounded-full">
+                    Operations
+                  </span>
+                </div>
+                <h3 className="text-xl font-bold mb-2 text-foreground">
+                  Maintenance Supervisor
+                </h3>
+                <p className="text-muted-foreground mb-4">Los Angeles, CA • Full Time</p>
+                <Link to="/contact">
+                  <Button variant="outline" className="w-full">
+                    Apply Now
+                  </Button>
+                </Link>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section className="py-20 bg-background">
+        <div className="container mx-auto px-4 text-center">
+          <h2 className="text-3xl md:text-4xl font-bold mb-6 text-foreground">
+            Don't See Your Role?
+          </h2>
+          <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
+            We're always looking for talented individuals who share our values. Send us your resume
+            and let's talk about how you can contribute to the Crums family.
+          </p>
+          <Link to="/contact">
+            <Button size="lg" className="bg-secondary hover:bg-secondary/90">
+              Submit Your Resume
+              <ArrowRight className="ml-2 h-5 w-5" />
+            </Button>
+          </Link>
+        </div>
+      </section>
+
+      <Footer />
+    </div>
+  );
+};
+
+export default Careers;
