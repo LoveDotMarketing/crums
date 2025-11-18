@@ -53,6 +53,57 @@ export type Database = {
         }
         Relationships: []
       }
+      maintenance_records: {
+        Row: {
+          completed: boolean | null
+          cost: number
+          created_at: string
+          description: string
+          id: string
+          maintenance_date: string
+          mechanic_id: string | null
+          trailer_id: string
+          updated_at: string
+        }
+        Insert: {
+          completed?: boolean | null
+          cost?: number
+          created_at?: string
+          description: string
+          id?: string
+          maintenance_date: string
+          mechanic_id?: string | null
+          trailer_id: string
+          updated_at?: string
+        }
+        Update: {
+          completed?: boolean | null
+          cost?: number
+          created_at?: string
+          description?: string
+          id?: string
+          maintenance_date?: string
+          mechanic_id?: string | null
+          trailer_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "maintenance_records_mechanic_id_fkey"
+            columns: ["mechanic_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_records_trailer_id_fkey"
+            columns: ["trailer_id"]
+            isOneToOne: false
+            referencedRelation: "trailers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -260,49 +311,73 @@ export type Database = {
           assigned_to: string | null
           company_id: string
           created_at: string
+          gps_latitude: number | null
+          gps_longitude: number | null
           id: string
+          is_rented: boolean | null
+          last_location_update: string | null
           license_plate: string | null
           make: string | null
           model: string | null
           notes: string | null
+          purchase_price: number | null
+          rental_income: number | null
           status: string
+          total_maintenance_cost: number | null
           trailer_number: string
           type: string
           updated_at: string
           vin: string | null
           year: number | null
+          year_purchased: number | null
         }
         Insert: {
           assigned_to?: string | null
           company_id: string
           created_at?: string
+          gps_latitude?: number | null
+          gps_longitude?: number | null
           id?: string
+          is_rented?: boolean | null
+          last_location_update?: string | null
           license_plate?: string | null
           make?: string | null
           model?: string | null
           notes?: string | null
+          purchase_price?: number | null
+          rental_income?: number | null
           status?: string
+          total_maintenance_cost?: number | null
           trailer_number: string
           type: string
           updated_at?: string
           vin?: string | null
           year?: number | null
+          year_purchased?: number | null
         }
         Update: {
           assigned_to?: string | null
           company_id?: string
           created_at?: string
+          gps_latitude?: number | null
+          gps_longitude?: number | null
           id?: string
+          is_rented?: boolean | null
+          last_location_update?: string | null
           license_plate?: string | null
           make?: string | null
           model?: string | null
           notes?: string | null
+          purchase_price?: number | null
+          rental_income?: number | null
           status?: string
+          total_maintenance_cost?: number | null
           trailer_number?: string
           type?: string
           updated_at?: string
           vin?: string | null
           year?: number | null
+          year_purchased?: number | null
         }
         Relationships: [
           {
