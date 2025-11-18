@@ -2,6 +2,7 @@ import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
 import { Card, CardContent } from "@/components/ui/card";
 import { MapPin, Phone, Mail, Navigation as NavigationIcon } from "lucide-react";
+import crumsTruckHighway from "@/assets/crums-truck-highway.png";
 
 const Locations = () => {
   const locations = [
@@ -37,6 +38,15 @@ const Locations = () => {
             Proudly serving from our Texas location
           </p>
         </div>
+      </section>
+
+      {/* Hero Image Section */}
+      <section className="w-full">
+        <img 
+          src={crumsTruckHighway} 
+          alt="Crums Leasing 53-foot dry van trailer on the highway" 
+          className="w-full h-[400px] md:h-[500px] lg:h-[600px] object-cover"
+        />
       </section>
 
       <section className="py-20 bg-background">
