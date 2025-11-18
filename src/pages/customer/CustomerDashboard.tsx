@@ -4,6 +4,7 @@ import { Receipt, Truck, AlertCircle, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
+import { CustomerNav } from "@/components/customer/CustomerNav";
 
 export default function CustomerDashboard() {
   const { user, signOut } = useAuth();
@@ -38,6 +39,7 @@ export default function CustomerDashboard() {
   return (
     <div className="min-h-screen flex flex-col">
       <Navigation />
+      <CustomerNav />
 
       <main className="flex-1 bg-gradient-to-b from-muted to-background py-8">
         <div className="container mx-auto px-4">
