@@ -16,6 +16,15 @@ import { Progress } from "@/components/ui/progress";
 interface ApplicationData {
   id?: string;
   phone_number: string;
+  
+  // Company & Business Details
+  mc_dot_number: string;
+  company_address: string;
+  business_type: string;
+  number_of_trailers: number | string;
+  date_needed: string;
+  message: string;
+  
   secondary_contact_name: string;
   secondary_contact_phone: string;
   secondary_contact_relationship: string;
@@ -31,6 +40,7 @@ interface ApplicationData {
   // Insurance
   insurance_carrier: string;
   insurance_policy: string;
+  insurance_company: string;
   insurance_docs_url: string | null;
   
   // Contract
@@ -53,6 +63,12 @@ export default function Application() {
   const [uploadingDoc, setUploadingDoc] = useState<string | null>(null);
   const [application, setApplication] = useState<ApplicationData>({
     phone_number: "",
+    mc_dot_number: "",
+    company_address: "",
+    business_type: "",
+    number_of_trailers: "",
+    date_needed: "",
+    message: "",
     secondary_contact_name: "",
     secondary_contact_phone: "",
     secondary_contact_relationship: "",
@@ -62,6 +78,7 @@ export default function Application() {
     drivers_license_url: null,
     insurance_carrier: "",
     insurance_policy: "",
+    insurance_company: "",
     insurance_docs_url: null,
     contract_url: null,
     bank_name: "",
@@ -92,6 +109,12 @@ export default function Application() {
         setApplication({
           id: data.id,
           phone_number: data.phone_number || "",
+          mc_dot_number: data.mc_dot_number || "",
+          company_address: data.company_address || "",
+          business_type: data.business_type || "",
+          number_of_trailers: data.number_of_trailers || "",
+          date_needed: data.date_needed || "",
+          message: data.message || "",
           secondary_contact_name: data.secondary_contact_name || "",
           secondary_contact_phone: data.secondary_contact_phone || "",
           secondary_contact_relationship: data.secondary_contact_relationship || "",
@@ -101,6 +124,7 @@ export default function Application() {
           drivers_license_url: data.drivers_license_url,
           insurance_carrier: "",
           insurance_policy: "",
+          insurance_company: data.insurance_company || "",
           insurance_docs_url: data.insurance_docs_url,
           contract_url: data.contract_url,
           bank_name: data.bank_name || "",
@@ -150,14 +174,16 @@ export default function Application() {
   const calculateProgress = () => {
     const requiredFields = [
       application.phone_number,
+      application.mc_dot_number,
+      application.company_address,
+      application.business_type,
+      application.number_of_trailers,
+      application.date_needed,
+      application.insurance_company,
       application.secondary_contact_name,
       application.secondary_contact_phone,
-      application.ssn_number,
       application.ssn_card_url,
-      application.dl_number,
       application.drivers_license_url,
-      application.insurance_carrier,
-      application.insurance_policy,
       application.insurance_docs_url,
       application.contract_url,
       application.bank_name,
@@ -166,7 +192,7 @@ export default function Application() {
       application.routing_number,
     ];
     
-    const completed = requiredFields.filter(field => field && field.length > 0).length;
+    const completed = requiredFields.filter(field => field && field.toString().length > 0).length;
     return Math.round((completed / requiredFields.length) * 100);
   };
 
@@ -178,6 +204,13 @@ export default function Application() {
       const dataToSave = {
         user_id: user?.id,
         phone_number: application.phone_number,
+        mc_dot_number: application.mc_dot_number,
+        company_address: application.company_address,
+        business_type: application.business_type,
+        number_of_trailers: application.number_of_trailers ? parseInt(application.number_of_trailers.toString()) : null,
+        date_needed: application.date_needed || null,
+        insurance_company: application.insurance_company,
+        message: application.message,
         secondary_contact_name: application.secondary_contact_name,
         secondary_contact_phone: application.secondary_contact_phone,
         secondary_contact_relationship: application.secondary_contact_relationship,
@@ -190,7 +223,7 @@ export default function Application() {
         account_number: application.account_number,
         routing_number: application.routing_number,
         payment_method: application.payment_method,
-        status: calculateProgress() === 100 ? "pending" : "new",
+        status: calculateProgress() === 100 ? "pending" : "incomplete",
       };
 
       if (application.id) {
@@ -259,6 +292,91 @@ export default function Application() {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Company & Business Details */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Company & Business Details</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="mc_dot_number">MC/DOT Number *</Label>
+                    <Input
+                      id="mc_dot_number"
+                      required
+                      value={application.mc_dot_number}
+                      onChange={(e) => setApplication({ ...application, mc_dot_number: e.target.value })}
+                      placeholder="MC123456 or DOT123456"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="business_type">Business Type *</Label>
+                    <select
+                      id="business_type"
+                      required
+                      value={application.business_type}
+                      onChange={(e) => setApplication({ ...application, business_type: e.target.value })}
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    >
+                      <option value="">Select business type...</option>
+                      <option value="individual">Individual</option>
+                      <option value="proprietorship">Proprietorship</option>
+                      <option value="partnership">Partnership</option>
+                      <option value="corporation">Corporation</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="company_address">Company Address *</Label>
+                  <Input
+                    id="company_address"
+                    required
+                    value={application.company_address}
+                    onChange={(e) => setApplication({ ...application, company_address: e.target.value })}
+                    placeholder="123 Main St, City, State ZIP"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="number_of_trailers">Number of Trailers Needed *</Label>
+                    <Input
+                      id="number_of_trailers"
+                      type="number"
+                      min="1"
+                      required
+                      value={application.number_of_trailers}
+                      onChange={(e) => setApplication({ ...application, number_of_trailers: e.target.value })}
+                      placeholder="1"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="date_needed">Date Needed *</Label>
+                    <Input
+                      id="date_needed"
+                      type="date"
+                      required
+                      value={application.date_needed}
+                      onChange={(e) => setApplication({ ...application, date_needed: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="message">Additional Message (Optional)</Label>
+                  <textarea
+                    id="message"
+                    value={application.message}
+                    onChange={(e) => setApplication({ ...application, message: e.target.value })}
+                    placeholder="Any additional information or special requests..."
+                    rows={4}
+                    className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
             {/* Contact Information */}
             <Card>
               <CardHeader>
@@ -407,6 +525,16 @@ export default function Application() {
                       placeholder="POL-123456"
                     />
                   </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="insurance_company">Insurance Company Name *</Label>
+                  <Input
+                    id="insurance_company"
+                    required
+                    value={application.insurance_company}
+                    onChange={(e) => setApplication({ ...application, insurance_company: e.target.value })}
+                    placeholder="State Farm Insurance"
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label>Insurance Documents *</Label>
