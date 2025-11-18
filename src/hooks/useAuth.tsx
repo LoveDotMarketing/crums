@@ -7,10 +7,10 @@ import { toast } from "sonner";
 interface AuthContextType {
   user: User | null;
   session: Session | null;
-  userRole: "admin" | "customer" | null;
+  userRole: "admin" | "customer" | "mechanic" | null;
   isLoading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
-  signUp: (email: string, password: string, role: "admin" | "customer") => Promise<{ error: any }>;
+  signUp: (email: string, password: string, role: "admin" | "customer" | "mechanic") => Promise<{ error: any }>;
   signOut: () => Promise<void>;
 }
 
@@ -19,7 +19,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
-  const [userRole, setUserRole] = useState<"admin" | "customer" | null>(null);
+  const [userRole, setUserRole] = useState<"admin" | "customer" | "mechanic" | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
 
@@ -68,7 +68,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         console.error("Error fetching user role:", error);
         setUserRole(null);
       } else {
-        setUserRole(data?.role as "admin" | "customer");
+        setUserRole(data?.role as "admin" | "customer" | "mechanic");
       }
     } catch (err) {
       console.error("Error fetching role:", err);
@@ -91,7 +91,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return { error };
   };
 
-  const signUp = async (email: string, password: string, role: "admin" | "customer") => {
+  const signUp = async (email: string, password: string, role: "admin" | "customer" | "mechanic") => {
     const redirectUrl = `${window.location.origin}/`;
     
     const { data, error } = await supabase.auth.signUp({
