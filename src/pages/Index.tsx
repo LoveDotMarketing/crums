@@ -18,6 +18,7 @@ import {
 import heroImage from "@/assets/hero-truck.jpg";
 import fleetImage from "@/assets/crums-trailer.png";
 import teamImage from "@/assets/team-handshake.jpg";
+import trailerFleetImage from "@/assets/trailer-fleet.png";
 import { ChatBot } from "@/components/ChatBot";
 
 const Index = () => {
@@ -187,6 +188,13 @@ const Index = () => {
       <section className="py-20 bg-background">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
+            <div className="mb-8">
+              <img 
+                src={trailerFleetImage} 
+                alt="CRUM'S Leasing trailer fleet" 
+                className="w-full max-w-5xl mx-auto rounded-lg shadow-lg"
+              />
+            </div>
             <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
               53-Foot Dry Van Trailer Leasing
             </h2>
