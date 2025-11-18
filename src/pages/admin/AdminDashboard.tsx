@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Receipt, Users, Truck, DollarSign, TrendingUp, AlertCircle } from "lucide-react";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
+import { ChatBot } from "@/components/ChatBot";
 
 export default function AdminDashboard() {
   const { user } = useAuth();
@@ -174,6 +175,7 @@ export default function AdminDashboard() {
           </main>
         </div>
       </div>
+      <ChatBot userType="admin" />
     </SidebarProvider>
   );
 }

@@ -10,6 +10,7 @@ import { Footer } from "@/components/Footer";
 import { CustomerNav } from "@/components/customer/CustomerNav";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Progress } from "@/components/ui/progress";
+import { ChatBot } from "@/components/ChatBot";
 
 
 export default function CustomerDashboard() {
@@ -198,6 +199,7 @@ export default function CustomerDashboard() {
       </main>
 
       <Footer />
+      <ChatBot userType="customer" />
     </div>
   );
 }
