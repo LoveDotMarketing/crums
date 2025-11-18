@@ -41,6 +41,8 @@ export default function MechanicDashboard() {
   const [maintenanceDescription, setMaintenanceDescription] = useState("");
   const [maintenanceCost, setMaintenanceCost] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isCheckOutDialogOpen, setIsCheckOutDialogOpen] = useState(false);
+  const [checkOutType, setCheckOutType] = useState<"service" | "use">("service");
 
   useEffect(() => {
     fetchTrailers();
@@ -101,6 +103,34 @@ export default function MechanicDashboard() {
     setIsDialogOpen(true);
   };
 
+  const handleCheckOut = (trailer: Trailer) => {
+    setSelectedTrailer(trailer);
+    setIsCheckOutDialogOpen(true);
+  };
+
+  const handleSubmitCheckOut = async () => {
+    if (!selectedTrailer) return;
+
+    try {
+      const newStatus = checkOutType === "service" ? "maintenance" : "in_use";
+      
+      const { error } = await supabase
+        .from("trailers")
+        .update({ status: newStatus })
+        .eq("id", selectedTrailer.id);
+
+      if (error) throw error;
+
+      toast.success(`Trailer ${selectedTrailer.trailer_number} checked out for ${checkOutType}`);
+      setIsCheckOutDialogOpen(false);
+      setSelectedTrailer(null);
+      fetchTrailers();
+    } catch (error) {
+      console.error("Error checking out trailer:", error);
+      toast.error("Failed to check out trailer");
+    }
+  };
+
   const handleSubmitMaintenance = async () => {
     if (!selectedTrailer || !maintenanceDescription) {
       toast.error("Please provide maintenance description");
@@ -139,7 +169,7 @@ export default function MechanicDashboard() {
     }
   };
 
-  const handleCheckOut = async (trailerId: string, trailerNumber: string) => {
+  const handleCompleteService = async (trailerId: string, trailerNumber: string) => {
     try {
       // Mark all maintenance records for this trailer as completed
       await supabase
@@ -155,10 +185,10 @@ export default function MechanicDashboard() {
         .eq("id", trailerId);
 
       if (error) throw error;
-      toast.success(`${trailerNumber} checked out and marked available`);
+      toast.success(`${trailerNumber} service completed and marked available`);
     } catch (error) {
-      console.error("Error checking out trailer:", error);
-      toast.error("Failed to check out trailer");
+      console.error("Error completing service:", error);
+      toast.error("Failed to complete service");
     }
   };
 
@@ -196,6 +226,74 @@ export default function MechanicDashboard() {
             </div>
           </div>
           <div className="flex items-center gap-4">
+            <Dialog open={isCheckOutDialogOpen} onOpenChange={setIsCheckOutDialogOpen}>
+              <DialogTrigger asChild>
+                <Button size="sm" variant="default">
+                  <Truck className="h-4 w-4 mr-2" />
+                  Check Out Trailer
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Check Out Trailer</DialogTitle>
+                  <DialogDescription>
+                    Select a trailer from the fleet to check out
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="trailer-select">Select Trailer</Label>
+                    <select
+                      id="trailer-select"
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      onChange={(e) => {
+                        const trailer = trailers.find(t => t.id === e.target.value);
+                        setSelectedTrailer(trailer || null);
+                      }}
+                    >
+                      <option value="">Choose a trailer...</option>
+                      {trailers.filter(t => t.status === "available").map((trailer) => (
+                        <option key={trailer.id} value={trailer.id}>
+                          {trailer.trailer_number} - {trailer.type} ({trailer.make} {trailer.model})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Check Out Type</Label>
+                    <div className="flex gap-4">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="checkout-type"
+                          value="service"
+                          checked={checkOutType === "service"}
+                          onChange={(e) => setCheckOutType(e.target.value as "service" | "use")}
+                          className="h-4 w-4"
+                        />
+                        <span className="text-sm">For Service</span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="checkout-type"
+                          value="use"
+                          checked={checkOutType === "use"}
+                          onChange={(e) => setCheckOutType(e.target.value as "service" | "use")}
+                          className="h-4 w-4"
+                        />
+                        <span className="text-sm">For Use</span>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button onClick={handleSubmitCheckOut} disabled={!selectedTrailer}>
+                    Check Out
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
             <span className="text-sm text-muted-foreground">{user?.email}</span>
             <Button onClick={signOut} variant="outline" size="sm">
               <LogOut className="h-4 w-4 mr-2" />
@@ -350,7 +448,7 @@ export default function MechanicDashboard() {
                               <Button 
                                 size="sm" 
                                 variant="secondary"
-                                onClick={() => handleCheckOut(trailer.id, trailer.trailer_number)}
+                                onClick={() => handleCompleteService(trailer.id, trailer.trailer_number)}
                               >
                                 <Wrench className="mr-2 h-4 w-4" />
                                 Complete Service
