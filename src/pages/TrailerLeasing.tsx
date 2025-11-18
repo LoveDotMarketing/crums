@@ -5,10 +5,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Link } from "react-router-dom";
 import { CheckCircle, TrendingUp, Shield, DollarSign, ArrowRight } from "lucide-react";
 import crumsVideo from "@/assets/crums-just-add-water.webm";
-
 const TrailerLeasing = () => {
-  return (
-    <div className="min-h-screen flex flex-col">
+  return <div className="min-h-screen flex flex-col">
       <Navigation />
 
       {/* Hero */}
@@ -33,15 +31,10 @@ const TrailerLeasing = () => {
         <div className="container mx-auto px-4">
           <div className="max-w-2xl mx-auto">
             <h2 className="text-3xl md:text-4xl font-bold text-center mb-8 text-foreground">
-              See Our Trailers in Action
+              Just Add Your Truck         
             </h2>
             <div className="relative w-full max-w-md mx-auto aspect-[9/16] rounded-lg overflow-hidden shadow-2xl">
-              <video 
-                className="w-full h-full object-cover"
-                controls
-                playsInline
-                loop
-              >
+              <video className="w-full h-full object-cover" controls playsInline loop>
                 <source src={crumsVideo} type="video/webm" />
                 Your browser does not support the video tag.
               </video>
@@ -214,8 +207,6 @@ const TrailerLeasing = () => {
       </section>
 
       <Footer />
-    </div>
-  );
+    </div>;
 };
-
 export default TrailerLeasing;
