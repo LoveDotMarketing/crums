@@ -1,13 +1,64 @@
+import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Receipt, Truck, AlertCircle, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
 import { CustomerNav } from "@/components/customer/CustomerNav";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Progress } from "@/components/ui/progress";
+
 
 export default function CustomerDashboard() {
   const { user, signOut } = useAuth();
+  const [applicationProgress, setApplicationProgress] = useState(0);
+  const [applicationStatus, setApplicationStatus] = useState<string | null>(null);
+
+  useEffect(() => {
+    checkApplicationStatus();
+  }, [user]);
+
+  const checkApplicationStatus = async () => {
+    if (!user) return;
+
+    try {
+      const { data, error } = await supabase
+        .from("customer_applications")
+        .select("*")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (error) throw error;
+
+      if (data) {
+        setApplicationStatus(data.status);
+        
+        const requiredFields = [
+          data.phone_number,
+          data.secondary_contact_name,
+          data.secondary_contact_phone,
+          data.ssn_card_url,
+          data.drivers_license_url,
+          data.insurance_docs_url,
+          data.contract_url,
+          data.bank_name,
+          data.account_holder_name,
+          data.account_number,
+          data.routing_number,
+        ];
+        
+        const completed = requiredFields.filter(field => field && field.length > 0).length;
+        setApplicationProgress(Math.round((completed / requiredFields.length) * 100));
+      } else {
+        setApplicationProgress(0);
+      }
+    } catch (error) {
+      console.error("Error checking application:", error);
+    }
+  };
 
   const stats = [
     {
@@ -53,6 +104,35 @@ export default function CustomerDashboard() {
               Sign Out
             </Button>
           </div>
+
+          {/* Application Status Alert */}
+          {applicationProgress < 100 && (
+            <Alert className="mb-8 border-yellow-500/50 bg-yellow-50 dark:bg-yellow-900/20">
+              <AlertCircle className="h-4 w-4 text-yellow-600" />
+              <AlertTitle className="text-yellow-800 dark:text-yellow-200">Application Incomplete</AlertTitle>
+              <AlertDescription className="text-yellow-700 dark:text-yellow-300">
+                <div className="space-y-3">
+                  <p>Complete your rental application to get approved ({applicationProgress}% complete)</p>
+                  <Progress value={applicationProgress} className="h-2" />
+                  <Link to="/dashboard/customer/application">
+                    <Button variant="outline" size="sm" className="mt-2">
+                      Complete Application
+                    </Button>
+                  </Link>
+                </div>
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {applicationProgress === 100 && applicationStatus === "pending" && (
+            <Alert className="mb-8 border-blue-500/50 bg-blue-50 dark:bg-blue-900/20">
+              <CheckCircle className="h-4 w-4 text-blue-600" />
+              <AlertTitle className="text-blue-800 dark:text-blue-200">Application Under Review</AlertTitle>
+              <AlertDescription className="text-blue-700 dark:text-blue-300">
+                Your application is complete and under review. We'll notify you within 24-48 hours.
+              </AlertDescription>
+            </Alert>
+          )}
 
           {/* Stats */}
           <div className="grid gap-6 md:grid-cols-3 mb-8">

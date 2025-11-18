@@ -12,6 +12,11 @@ export function CustomerNav() {
       icon: Home 
     },
     { 
+      title: "Application", 
+      href: "/dashboard/customer/application", 
+      icon: FileText 
+    },
+    { 
       title: "My Profile", 
       href: "/dashboard/customer/profile", 
       icon: User 
@@ -20,11 +25,6 @@ export function CustomerNav() {
       title: "My Rentals", 
       href: "/dashboard/customer/rentals", 
       icon: Truck 
-    },
-    { 
-      title: "Request Rental", 
-      href: "/dashboard/customer/request", 
-      icon: FileText 
     },
   ];
 

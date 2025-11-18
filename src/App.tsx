@@ -27,6 +27,7 @@ import CustomerDashboard from "./pages/customer/CustomerDashboard";
 import Profile from "./pages/customer/Profile";
 import Rentals from "./pages/customer/Rentals";
 import RentalRequest from "./pages/customer/RentalRequest";
+import Application from "./pages/customer/Application";
 import MechanicDashboard from "./pages/mechanic/MechanicDashboard";
 import NotFound from "./pages/NotFound";
 
@@ -111,6 +112,14 @@ const App = () => (
               element={
                 <ProtectedRoute requiredRole="admin">
                   <Reports />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/dashboard/customer/application" 
+              element={
+                <ProtectedRoute requiredRole="customer">
+                  <Application />
                 </ProtectedRoute>
               } 
             />
