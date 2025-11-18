@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Facebook, Twitter, Linkedin, Instagram } from "lucide-react";
+import { Facebook, Linkedin, Instagram } from "lucide-react";
 import crumsLogo from "@/assets/crums-logo.png";
 
 export const Footer = () => {
@@ -14,17 +14,32 @@ export const Footer = () => {
               Building trust, family, and opportunity in trailer leasing and logistics nationwide.
             </p>
             <div className="flex space-x-4">
-              <a href="#" className="hover:text-secondary transition-colors">
+              <a 
+                href="https://www.facebook.com/people/Crums-Leasing/100090574399864/" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="hover:text-secondary transition-colors"
+                aria-label="Visit our Facebook page"
+              >
                 <Facebook className="h-5 w-5" />
               </a>
-              <a href="#" className="hover:text-secondary transition-colors">
-                <Twitter className="h-5 w-5" />
-              </a>
-              <a href="#" className="hover:text-secondary transition-colors">
-                <Linkedin className="h-5 w-5" />
-              </a>
-              <a href="#" className="hover:text-secondary transition-colors">
+              <a 
+                href="https://www.instagram.com/crumsleasingllc/" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="hover:text-secondary transition-colors"
+                aria-label="Visit our Instagram page"
+              >
                 <Instagram className="h-5 w-5" />
+              </a>
+              <a 
+                href="https://www.linkedin.com/company/crums-leasing/" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="hover:text-secondary transition-colors"
+                aria-label="Visit our LinkedIn page"
+              >
+                <Linkedin className="h-5 w-5" />
               </a>
             </div>
           </div>
