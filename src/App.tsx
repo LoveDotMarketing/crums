@@ -21,6 +21,8 @@ import Customers from "./pages/admin/Customers";
 import Mechanics from "./pages/admin/Mechanics";
 import Tolls from "./pages/admin/Tolls";
 import Billing from "./pages/admin/Billing";
+import Support from "./pages/admin/Support";
+import Reports from "./pages/admin/Reports";
 import CustomerDashboard from "./pages/customer/CustomerDashboard";
 import MechanicDashboard from "./pages/mechanic/MechanicDashboard";
 import NotFound from "./pages/NotFound";
@@ -94,6 +96,22 @@ const App = () => (
               } 
             />
             <Route 
+              path="/dashboard/admin/support" 
+              element={
+                <ProtectedRoute requiredRole="admin">
+                  <Support />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/dashboard/admin/reports" 
+              element={
+                <ProtectedRoute requiredRole="admin">
+                  <Reports />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
               path="/dashboard/customer" 
               element={
                 <ProtectedRoute requiredRole="customer">
@@ -102,7 +120,7 @@ const App = () => (
               } 
             />
             <Route 
-              path="/dashboard/mechanic" 
+              path="/dashboard/mechanic"
               element={
                 <ProtectedRoute requiredRole="mechanic">
                   <MechanicDashboard />
