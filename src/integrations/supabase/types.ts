@@ -60,12 +60,19 @@ export type Database = {
           admin_notes: string | null
           backup_trailer_id: string | null
           bank_name: string | null
+          business_type: string | null
+          company_address: string | null
           company_id: string | null
           contract_url: string | null
           created_at: string
+          date_needed: string | null
           drivers_license_url: string | null
           id: string
+          insurance_company: string | null
           insurance_docs_url: string | null
+          mc_dot_number: string | null
+          message: string | null
+          number_of_trailers: number | null
           payment_method: string | null
           phone_number: string
           primary_trailer_id: string | null
@@ -88,12 +95,19 @@ export type Database = {
           admin_notes?: string | null
           backup_trailer_id?: string | null
           bank_name?: string | null
+          business_type?: string | null
+          company_address?: string | null
           company_id?: string | null
           contract_url?: string | null
           created_at?: string
+          date_needed?: string | null
           drivers_license_url?: string | null
           id?: string
+          insurance_company?: string | null
           insurance_docs_url?: string | null
+          mc_dot_number?: string | null
+          message?: string | null
+          number_of_trailers?: number | null
           payment_method?: string | null
           phone_number: string
           primary_trailer_id?: string | null
@@ -116,12 +130,19 @@ export type Database = {
           admin_notes?: string | null
           backup_trailer_id?: string | null
           bank_name?: string | null
+          business_type?: string | null
+          company_address?: string | null
           company_id?: string | null
           contract_url?: string | null
           created_at?: string
+          date_needed?: string | null
           drivers_license_url?: string | null
           id?: string
+          insurance_company?: string | null
           insurance_docs_url?: string | null
+          mc_dot_number?: string | null
+          message?: string | null
+          number_of_trailers?: number | null
           payment_method?: string | null
           phone_number?: string
           primary_trailer_id?: string | null
