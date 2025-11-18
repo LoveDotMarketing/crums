@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { Users, TrendingUp, MapPin, Award, ArrowRight } from "lucide-react";
-import teamImage from "@/assets/team-handshake.jpg";
+import teamImage from "@/assets/team-leaders.png";
 import fleetImage from "@/assets/fleet-overview.jpg";
 import crumsTrailer from "@/assets/crums-trailer.png";
 
