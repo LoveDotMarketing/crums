@@ -32,8 +32,8 @@ const menuItems = [
   { title: "Mechanics", url: "/dashboard/admin/mechanics", icon: Wrench },
   { title: "Tolls", url: "/dashboard/admin/tolls", icon: Receipt },
   { title: "Billing", url: "/dashboard/admin/billing", icon: DollarSign },
-  { title: "Companies", url: "/dashboard/admin/companies", icon: Building2 },
   { title: "Support", url: "/dashboard/admin/support", icon: HelpCircle },
+  { title: "Reports", url: "/dashboard/admin/reports", icon: Receipt },
 ];
 
 export function AdminSidebar() {
