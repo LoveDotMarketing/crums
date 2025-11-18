@@ -6,7 +6,7 @@ import { Link } from "react-router-dom";
 import { Users, TrendingUp, MapPin, Award, ArrowRight } from "lucide-react";
 import teamImage from "@/assets/team-leaders.png";
 import fleetImage from "@/assets/fleet-overview.jpg";
-import crumsTrailer from "@/assets/crums-trailer.png";
+import ourStoryImage from "@/assets/our-story-image.png";
 
 const About = () => {
   return (
@@ -51,8 +51,8 @@ const About = () => {
             </div>
             <div>
               <img
-                src={crumsTrailer}
-                alt="Crums Leasing 53-foot dry van trailer"
+                src={ourStoryImage}
+                alt="Crums Leasing leadership team"
                 className="rounded-lg shadow-2xl"
               />
             </div>
