@@ -18,6 +18,7 @@ import {
 import heroImage from "@/assets/hero-truck.jpg";
 import fleetImage from "@/assets/fleet-overview.jpg";
 import teamImage from "@/assets/team-handshake.jpg";
+import { ChatBot } from "@/components/ChatBot";
 
 const Index = () => {
   return (
@@ -359,6 +360,7 @@ const Index = () => {
       </section>
 
       <Footer />
+      <ChatBot userType="customer" />
     </div>
   );
 };
