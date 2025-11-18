@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -8,27 +8,59 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { useAuth } from "@/hooks/useAuth";
 
 const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
+  const [isSignUp, setIsSignUp] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [selectedRole, setSelectedRole] = useState<"customer" | "admin">("customer");
   const navigate = useNavigate();
+  const { signIn, signUp, user, userRole } = useAuth();
 
-  const handleLogin = (e: React.FormEvent, role: "customer" | "admin") => {
-    e.preventDefault();
-    setIsLoading(true);
-
-    // Mock authentication
-    setTimeout(() => {
-      setIsLoading(false);
-      toast.success(`Welcome! Logging in as ${role}...`);
-      
-      // Navigate to dashboard (to be created in next iteration)
-      if (role === "admin") {
+  useEffect(() => {
+    if (user && userRole) {
+      if (userRole === "admin") {
         navigate("/dashboard/admin");
       } else {
         navigate("/dashboard/customer");
       }
-    }, 1000);
+    }
+  }, [user, userRole, navigate]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    try {
+      if (isSignUp) {
+        const { error } = await signUp(email, password, selectedRole);
+        if (error) {
+          if (error.message.includes("already registered")) {
+            toast.error("This email is already registered. Please sign in instead.");
+          } else {
+            toast.error(error.message || "Failed to create account");
+          }
+        } else {
+          // Navigate based on role
+          if (selectedRole === "admin") {
+            navigate("/dashboard/admin");
+          } else {
+            navigate("/dashboard/customer");
+          }
+        }
+      } else {
+        const { error } = await signIn(email, password);
+        if (error) {
+          toast.error(error.message || "Invalid email or password");
+        }
+      }
+    } catch (err) {
+      toast.error("An unexpected error occurred");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -45,7 +77,11 @@ const Login = () => {
               </p>
             </div>
 
-            <Tabs defaultValue="customer" className="w-full">
+            <Tabs 
+              defaultValue="customer" 
+              className="w-full"
+              onValueChange={(value) => setSelectedRole(value as "customer" | "admin")}
+            >
               <TabsList className="grid w-full grid-cols-2 mb-8">
                 <TabsTrigger value="customer">Customer</TabsTrigger>
                 <TabsTrigger value="admin">Admin</TabsTrigger>
@@ -54,10 +90,10 @@ const Login = () => {
               <TabsContent value="customer">
                 <Card className="border-2">
                   <CardHeader>
-                    <CardTitle>Customer Portal</CardTitle>
+                    <CardTitle>{isSignUp ? "Create Customer Account" : "Customer Portal"}</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <form onSubmit={(e) => handleLogin(e, "customer")} className="space-y-4">
+                    <form onSubmit={handleSubmit} className="space-y-4">
                       <div>
                         <Label htmlFor="customer-email">Email</Label>
                         <Input
@@ -66,6 +102,8 @@ const Login = () => {
                           placeholder="your.email@company.com"
                           required
                           className="mt-2"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
                         />
                       </div>
                       <div>
@@ -75,26 +113,39 @@ const Login = () => {
                           type="password"
                           required
                           className="mt-2"
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
                         />
                       </div>
-                      <div className="flex items-center justify-between text-sm">
-                        <label className="flex items-center">
-                          <input type="checkbox" className="mr-2" />
-                          <span className="text-muted-foreground">Remember me</span>
-                        </label>
-                        <a href="#" className="text-primary hover:underline">
-                          Forgot password?
-                        </a>
-                      </div>
+                      {!isSignUp && (
+                        <div className="flex items-center justify-between text-sm">
+                          <label className="flex items-center">
+                            <input type="checkbox" className="mr-2" />
+                            <span className="text-muted-foreground">Remember me</span>
+                          </label>
+                          <a href="#" className="text-primary hover:underline">
+                            Forgot password?
+                          </a>
+                        </div>
+                      )}
                       <Button
                         type="submit"
                         className="w-full bg-primary hover:bg-primary/90"
                         size="lg"
                         disabled={isLoading}
                       >
-                        {isLoading ? "Logging in..." : "Sign In"}
+                        {isLoading ? "Please wait..." : isSignUp ? "Create Admin Account" : "Sign In"}
                       </Button>
                     </form>
+                    <div className="mt-6 text-center text-sm text-muted-foreground">
+                      {isSignUp ? "Already have an account? " : "Don't have an account? "}
+                      <button 
+                        onClick={() => setIsSignUp(!isSignUp)}
+                        className="text-primary hover:underline"
+                      >
+                        {isSignUp ? "Sign in" : "Create account"}
+                      </button>
+                    </div>
                     <div className="mt-6 text-center text-sm text-muted-foreground">
                       Don't have an account?{" "}
                       <a href="/contact" className="text-primary hover:underline">
@@ -108,10 +159,10 @@ const Login = () => {
               <TabsContent value="admin">
                 <Card className="border-2">
                   <CardHeader>
-                    <CardTitle>Admin Portal</CardTitle>
+                    <CardTitle>{isSignUp ? "Create Admin Account" : "Admin Portal"}</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <form onSubmit={(e) => handleLogin(e, "admin")} className="space-y-4">
+                    <form onSubmit={handleSubmit} className="space-y-4">
                       <div>
                         <Label htmlFor="admin-email">Admin Email</Label>
                         <Input
@@ -120,6 +171,8 @@ const Login = () => {
                           placeholder="admin@crumsleasing.com"
                           required
                           className="mt-2"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
                         />
                       </div>
                       <div>
@@ -129,6 +182,8 @@ const Login = () => {
                           type="password"
                           required
                           className="mt-2"
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
                         />
                       </div>
                       <div className="flex items-center justify-between text-sm">
