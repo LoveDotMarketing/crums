@@ -36,13 +36,12 @@ const Index = () => {
 
         <div className="relative z-10 container mx-auto px-4 text-center text-primary-foreground">
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
-            Empowering Every Trucker
+            53-Foot Dry Van Trailers
             <br />
-            <span className="text-secondary">To Build the Life They're Proud Of</span>
+            <span className="text-secondary">Built for Your Supply Chain Success</span>
           </h1>
           <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto text-primary-foreground/90">
-            Guided by family values, integrity, and commitment to your success — creating lasting
-            partnerships that move people forward and bring them safely home.
+            We lease reliable 53-foot dry van trailers to companies seeking capacity solutions for their supply chain needs — backed by family values, integrity, and commitment to your business growth.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link to="/contact">
@@ -188,11 +187,10 @@ const Index = () => {
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
-              Comprehensive Fleet Solutions
+              53-Foot Dry Van Trailer Leasing
             </h2>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-              From leasing to rentals, we provide the equipment and support your business needs to
-              thrive nationwide.
+              Specialized capacity solutions for companies looking to expand their supply chain capabilities with reliable, well-maintained dry van trailers.
             </p>
           </div>
 
@@ -202,55 +200,34 @@ const Index = () => {
                 <div className="h-16 w-16 rounded-lg bg-primary/10 flex items-center justify-center mb-6 group-hover:bg-primary group-hover:scale-110 transition-all">
                   <Truck className="h-8 w-8 text-primary group-hover:text-primary-foreground" />
                 </div>
-                <h3 className="text-2xl font-bold mb-4 text-foreground">Trailer Leasing</h3>
+                <h3 className="text-2xl font-bold mb-4 text-foreground">Quality Equipment</h3>
                 <p className="text-muted-foreground mb-6 leading-relaxed">
-                  Long-term equipment solutions designed to optimize your fleet composition and
-                  maximize your return on investment.
+                  All 53-foot dry van trailers are thoroughly inspected, well-maintained, and ready to handle your freight capacity needs efficiently.
                 </p>
-                <Link to="/services/trailer-leasing">
-                  <Button variant="link" className="p-0 text-primary group-hover:text-secondary">
-                    Learn More
-                    <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
-                  </Button>
-                </Link>
               </CardContent>
             </Card>
 
             <Card className="group hover:shadow-xl transition-all duration-300 border-2">
               <CardContent className="p-8">
                 <div className="h-16 w-16 rounded-lg bg-secondary/10 flex items-center justify-center mb-6 group-hover:bg-secondary group-hover:scale-110 transition-all">
-                  <Target className="h-8 w-8 text-secondary group-hover:text-secondary-foreground" />
+                  <Shield className="h-8 w-8 text-secondary group-hover:text-secondary-foreground" />
                 </div>
-                <h3 className="text-2xl font-bold mb-4 text-foreground">Trailer Rentals</h3>
+                <h3 className="text-2xl font-bold mb-4 text-foreground">Flexible Leasing Terms</h3>
                 <p className="text-muted-foreground mb-6 leading-relaxed">
-                  Flexible short-term rental options for peak seasons, special projects, or testing
-                  new equipment before you commit.
+                  Long-term leasing solutions designed to scale with your business and optimize your supply chain operations.
                 </p>
-                <Link to="/services/trailer-rentals">
-                  <Button variant="link" className="p-0 text-primary group-hover:text-secondary">
-                    Learn More
-                    <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
-                  </Button>
-                </Link>
               </CardContent>
             </Card>
 
             <Card className="group hover:shadow-xl transition-all duration-300 border-2">
               <CardContent className="p-8">
                 <div className="h-16 w-16 rounded-lg bg-accent/10 flex items-center justify-center mb-6 group-hover:bg-accent group-hover:scale-110 transition-all">
-                  <MapPin className="h-8 w-8 text-accent group-hover:text-accent-foreground" />
+                  <Users className="h-8 w-8 text-accent group-hover:text-accent-foreground" />
                 </div>
-                <h3 className="text-2xl font-bold mb-4 text-foreground">Fleet Solutions</h3>
+                <h3 className="text-2xl font-bold mb-4 text-foreground">Dedicated Support</h3>
                 <p className="text-muted-foreground mb-6 leading-relaxed">
-                  Comprehensive fleet management services with nationwide support and advanced
-                  technology for growing businesses.
+                  Comprehensive support services to keep your leased trailers operational and your supply chain running smoothly.
                 </p>
-                <Link to="/services/fleet-solutions">
-                  <Button variant="link" className="p-0 text-primary group-hover:text-secondary">
-                    Learn More
-                    <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
-                  </Button>
-                </Link>
               </CardContent>
             </Card>
           </div>
