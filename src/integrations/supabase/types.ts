@@ -617,7 +617,147 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      customer_application_safe: {
+        Row: {
+          account_holder_name: string | null
+          account_number_masked: string | null
+          admin_notes: string | null
+          backup_trailer_id: string | null
+          bank_name: string | null
+          business_type: string | null
+          company_address: string | null
+          company_id: string | null
+          created_at: string | null
+          date_needed: string | null
+          has_contract: boolean | null
+          has_drivers_license: boolean | null
+          has_insurance_docs: boolean | null
+          has_ssn_card: boolean | null
+          id: string | null
+          insurance_company: string | null
+          mc_dot_number: string | null
+          message: string | null
+          number_of_trailers: number | null
+          payment_method: string | null
+          phone_number: string | null
+          primary_trailer_id: string | null
+          rental_start_date: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          routing_number_masked: string | null
+          secondary_contact_name: string | null
+          secondary_contact_phone: string | null
+          secondary_contact_relationship: string | null
+          status: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          account_holder_name?: never
+          account_number_masked?: never
+          admin_notes?: string | null
+          backup_trailer_id?: string | null
+          bank_name?: string | null
+          business_type?: string | null
+          company_address?: string | null
+          company_id?: string | null
+          created_at?: string | null
+          date_needed?: string | null
+          has_contract?: never
+          has_drivers_license?: never
+          has_insurance_docs?: never
+          has_ssn_card?: never
+          id?: string | null
+          insurance_company?: string | null
+          mc_dot_number?: string | null
+          message?: string | null
+          number_of_trailers?: number | null
+          payment_method?: string | null
+          phone_number?: string | null
+          primary_trailer_id?: string | null
+          rental_start_date?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          routing_number_masked?: never
+          secondary_contact_name?: string | null
+          secondary_contact_phone?: string | null
+          secondary_contact_relationship?: string | null
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          account_holder_name?: never
+          account_number_masked?: never
+          admin_notes?: string | null
+          backup_trailer_id?: string | null
+          bank_name?: string | null
+          business_type?: string | null
+          company_address?: string | null
+          company_id?: string | null
+          created_at?: string | null
+          date_needed?: string | null
+          has_contract?: never
+          has_drivers_license?: never
+          has_insurance_docs?: never
+          has_ssn_card?: never
+          id?: string | null
+          insurance_company?: string | null
+          mc_dot_number?: string | null
+          message?: string | null
+          number_of_trailers?: number | null
+          payment_method?: string | null
+          phone_number?: string | null
+          primary_trailer_id?: string | null
+          rental_start_date?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          routing_number_masked?: never
+          secondary_contact_name?: string | null
+          secondary_contact_phone?: string | null
+          secondary_contact_relationship?: string | null
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_applications_backup_trailer_id_fkey"
+            columns: ["backup_trailer_id"]
+            isOneToOne: false
+            referencedRelation: "trailers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_applications_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_applications_primary_trailer_id_fkey"
+            columns: ["primary_trailer_id"]
+            isOneToOne: false
+            referencedRelation: "trailers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_applications_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_applications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       has_role: {

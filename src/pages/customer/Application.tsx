@@ -99,7 +99,7 @@ export default function Application() {
 
     try {
       const { data, error } = await supabase
-        .from("customer_applications")
+        .from("customer_application_safe")
         .select("*")
         .eq("user_id", user.id)
         .maybeSingle();
@@ -120,18 +120,18 @@ export default function Application() {
           secondary_contact_phone: data.secondary_contact_phone || "",
           secondary_contact_relationship: data.secondary_contact_relationship || "",
           ssn_number: "",
-          ssn_card_url: data.ssn_card_url,
+          ssn_card_url: data.has_ssn_card ? "uploaded" : undefined,
           dl_number: "",
-          drivers_license_url: data.drivers_license_url,
+          drivers_license_url: data.has_drivers_license ? "uploaded" : undefined,
           insurance_carrier: "",
           insurance_policy: "",
           insurance_company: data.insurance_company || "",
-          insurance_docs_url: data.insurance_docs_url,
-          contract_url: data.contract_url,
+          insurance_docs_url: data.has_insurance_docs ? "uploaded" : undefined,
+          contract_url: data.has_contract ? "uploaded" : undefined,
           bank_name: data.bank_name || "",
           account_holder_name: data.account_holder_name || "",
-          account_number: data.account_number || "",
-          routing_number: data.routing_number || "",
+          account_number: data.account_number_masked || "",
+          routing_number: data.routing_number_masked || "",
           payment_method: data.payment_method || "bank",
           status: data.status,
         });
@@ -165,11 +165,13 @@ export default function Application() {
 
       if (uploadError) throw uploadError;
 
-      const { data: { publicUrl } } = supabase.storage
+      const { data, error: urlError } = await supabase.storage
         .from('customer-documents')
-        .getPublicUrl(fileName);
+        .createSignedUrl(fileName, 31536000); // 1 year expiry
 
-      setApplication({ ...application, [fieldName]: publicUrl });
+      if (urlError) throw urlError;
+
+      setApplication({ ...application, [fieldName]: data.signedUrl });
       toast.success("Document uploaded successfully");
     } catch (error) {
       console.error("Error uploading file:", error);

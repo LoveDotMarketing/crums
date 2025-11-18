@@ -18,8 +18,8 @@ export function ApplicationAlert({ userId }: ApplicationAlertProps) {
   useEffect(() => {
     const fetchApplicationStatus = async () => {
       const { data, error } = await supabase
-        .from('customer_applications')
-        .select('status, bank_name, drivers_license_url, ssn_card_url, insurance_docs_url')
+        .from('customer_application_safe')
+        .select('status, bank_name, has_drivers_license, has_ssn_card, has_insurance_docs')
         .eq('user_id', userId)
         .single();
 
@@ -27,7 +27,7 @@ export function ApplicationAlert({ userId }: ApplicationAlertProps) {
 
       setApplicationStatus(data.status);
       setHasBankingInfo(!!data.bank_name);
-      setHasDocuments(!!(data.drivers_license_url && data.ssn_card_url && data.insurance_docs_url));
+      setHasDocuments(!!(data.has_drivers_license && data.has_ssn_card && data.has_insurance_docs));
     };
 
     fetchApplicationStatus();
