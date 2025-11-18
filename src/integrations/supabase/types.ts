@@ -53,6 +53,129 @@ export type Database = {
         }
         Relationships: []
       }
+      customer_applications: {
+        Row: {
+          account_holder_name: string | null
+          account_number: string | null
+          admin_notes: string | null
+          backup_trailer_id: string | null
+          bank_name: string | null
+          company_id: string | null
+          contract_url: string | null
+          created_at: string
+          drivers_license_url: string | null
+          id: string
+          insurance_docs_url: string | null
+          payment_method: string | null
+          phone_number: string
+          primary_trailer_id: string | null
+          rental_start_date: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          routing_number: string | null
+          secondary_contact_name: string | null
+          secondary_contact_phone: string | null
+          secondary_contact_relationship: string | null
+          ssn_card_url: string | null
+          status: string
+          stripe_customer_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          account_holder_name?: string | null
+          account_number?: string | null
+          admin_notes?: string | null
+          backup_trailer_id?: string | null
+          bank_name?: string | null
+          company_id?: string | null
+          contract_url?: string | null
+          created_at?: string
+          drivers_license_url?: string | null
+          id?: string
+          insurance_docs_url?: string | null
+          payment_method?: string | null
+          phone_number: string
+          primary_trailer_id?: string | null
+          rental_start_date?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          routing_number?: string | null
+          secondary_contact_name?: string | null
+          secondary_contact_phone?: string | null
+          secondary_contact_relationship?: string | null
+          ssn_card_url?: string | null
+          status?: string
+          stripe_customer_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          account_holder_name?: string | null
+          account_number?: string | null
+          admin_notes?: string | null
+          backup_trailer_id?: string | null
+          bank_name?: string | null
+          company_id?: string | null
+          contract_url?: string | null
+          created_at?: string
+          drivers_license_url?: string | null
+          id?: string
+          insurance_docs_url?: string | null
+          payment_method?: string | null
+          phone_number?: string
+          primary_trailer_id?: string | null
+          rental_start_date?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          routing_number?: string | null
+          secondary_contact_name?: string | null
+          secondary_contact_phone?: string | null
+          secondary_contact_relationship?: string | null
+          ssn_card_url?: string | null
+          status?: string
+          stripe_customer_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_applications_backup_trailer_id_fkey"
+            columns: ["backup_trailer_id"]
+            isOneToOne: false
+            referencedRelation: "trailers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_applications_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_applications_primary_trailer_id_fkey"
+            columns: ["primary_trailer_id"]
+            isOneToOne: false
+            referencedRelation: "trailers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_applications_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_applications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       maintenance_records: {
         Row: {
           completed: boolean | null
