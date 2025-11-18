@@ -141,8 +141,8 @@ export const Navigation = () => {
             <Link to="/login">
               <Button variant="ghost">Customer Login</Button>
             </Link>
-            <Link to="/contact">
-              <Button className="bg-secondary hover:bg-secondary/90">Get A Quote</Button>
+            <Link to="/get-started">
+              <Button className="bg-secondary hover:bg-secondary/90">Get Started</Button>
             </Link>
           </div>
 
@@ -212,8 +212,8 @@ export const Navigation = () => {
                 <Link to="/login" onClick={() => setMobileMenuOpen(false)}>
                   <Button variant="outline" className="w-full">Customer Login</Button>
                 </Link>
-                <Link to="/contact" onClick={() => setMobileMenuOpen(false)}>
-                  <Button className="w-full bg-secondary hover:bg-secondary/90">Get A Quote</Button>
+                <Link to="/get-started" onClick={() => setMobileMenuOpen(false)}>
+                  <Button className="w-full bg-secondary hover:bg-secondary/90">Get Started</Button>
                 </Link>
               </div>
             </div>

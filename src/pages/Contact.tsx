@@ -130,11 +130,11 @@ const Contact = () => {
                         <MapPin className="h-6 w-6 text-accent" />
                       </div>
                       <div>
-                        <h3 className="font-semibold text-foreground mb-1">Headquarters</h3>
+                        <h3 className="font-semibold text-foreground mb-1">Location</h3>
                         <p className="text-muted-foreground">
-                          1234 Corporate Drive
+                          4070 FM1863
                           <br />
-                          Atlanta, GA 30301
+                          Bulverde, TX 78163
                         </p>
                       </div>
                     </div>
@@ -173,6 +173,25 @@ const Contact = () => {
                   </Button>
                 </CardContent>
               </Card>
+            </div>
+          </div>
+        </div>
+
+        {/* Google Maps Embed */}
+        <div className="container mx-auto px-4 pb-20">
+          <div className="max-w-6xl mx-auto">
+            <h2 className="text-3xl font-bold text-center mb-8 text-foreground">Find Us</h2>
+            <div className="rounded-lg overflow-hidden shadow-lg border-2 border-border">
+              <iframe 
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3464.0358335621604!2d-98.41197869999999!3d29.7476761!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x865c8755d13488bf%3A0x32f8e2e89d9d005e!2sCRUMS%20Leasing!5e0!3m2!1sen!2sus!4v1763435194517!5m2!1sen!2sus" 
+                width="100%" 
+                height="450" 
+                style={{ border: 0 }} 
+                allowFullScreen 
+                loading="lazy" 
+                referrerPolicy="no-referrer-when-downgrade"
+                title="CRUMS Leasing Location"
+              />
             </div>
           </div>
         </div>

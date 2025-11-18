@@ -6,46 +6,11 @@ import { MapPin, Phone, Mail } from "lucide-react";
 const Locations = () => {
   const locations = [
     {
-      city: "Atlanta",
-      state: "GA",
-      address: "1234 Industrial Pkwy",
-      phone: "(404) 555-0100",
-      email: "atlanta@crumsleasing.com",
-    },
-    {
-      city: "Chicago",
-      state: "IL",
-      address: "5678 Logistics Dr",
-      phone: "(312) 555-0200",
-      email: "chicago@crumsleasing.com",
-    },
-    {
-      city: "Dallas",
+      city: "Bulverde",
       state: "TX",
-      address: "9012 Commerce Blvd",
-      phone: "(214) 555-0300",
-      email: "dallas@crumsleasing.com",
-    },
-    {
-      city: "Los Angeles",
-      state: "CA",
-      address: "3456 Harbor Way",
-      phone: "(213) 555-0400",
-      email: "losangeles@crumsleasing.com",
-    },
-    {
-      city: "Charlotte",
-      state: "NC",
-      address: "7890 Distribution Ln",
-      phone: "(704) 555-0500",
-      email: "charlotte@crumsleasing.com",
-    },
-    {
-      city: "Miami",
-      state: "FL",
-      address: "2345 Port Access Rd",
-      phone: "(305) 555-0600",
-      email: "miami@crumsleasing.com",
+      address: "4070 FM1863, Bulverde, TX 78163",
+      phone: "(800) 555-CRUMS",
+      email: "info@crumsleasing.com",
     },
   ];
 
@@ -58,7 +23,7 @@ const Locations = () => {
         <div className="container mx-auto px-4 text-center">
           <h1 className="text-4xl md:text-6xl font-bold mb-6">Our Locations</h1>
           <p className="text-xl md:text-2xl max-w-4xl mx-auto text-primary-foreground/90">
-            Nationwide coverage with 25+ service centers across major markets
+            Proudly serving from our Texas location
           </p>
         </div>
       </section>
