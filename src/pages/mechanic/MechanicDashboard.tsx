@@ -5,7 +5,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Wrench, LogOut, Truck, Search, MapPin, DollarSign } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Wrench, LogOut, Truck, Search, MapPin, DollarSign, ClipboardList } from "lucide-react";
 import { toast } from "sonner";
 import {
   Table,
@@ -34,6 +37,10 @@ export default function MechanicDashboard() {
   const [trailers, setTrailers] = useState<Trailer[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedTrailer, setSelectedTrailer] = useState<Trailer | null>(null);
+  const [maintenanceDescription, setMaintenanceDescription] = useState("");
+  const [maintenanceCost, setMaintenanceCost] = useState("");
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   useEffect(() => {
     fetchTrailers();
@@ -87,23 +94,61 @@ export default function MechanicDashboard() {
     }
   };
 
-  const handleCheckIn = async (trailerId: string, trailerNumber: string) => {
+  const handleCheckInForService = (trailer: Trailer) => {
+    setSelectedTrailer(trailer);
+    setMaintenanceDescription("");
+    setMaintenanceCost("");
+    setIsDialogOpen(true);
+  };
+
+  const handleSubmitMaintenance = async () => {
+    if (!selectedTrailer || !maintenanceDescription) {
+      toast.error("Please provide maintenance description");
+      return;
+    }
+
     try {
-      const { error } = await supabase
+      // Create maintenance record
+      const { error: maintenanceError } = await supabase
+        .from("maintenance_records")
+        .insert({
+          trailer_id: selectedTrailer.id,
+          mechanic_id: user?.id,
+          description: maintenanceDescription,
+          cost: parseFloat(maintenanceCost) || 0,
+          maintenance_date: new Date().toISOString().split('T')[0],
+          completed: false
+        });
+
+      if (maintenanceError) throw maintenanceError;
+
+      // Update trailer status to maintenance
+      const { error: statusError } = await supabase
         .from("trailers")
         .update({ status: "maintenance" })
-        .eq("id", trailerId);
+        .eq("id", selectedTrailer.id);
 
-      if (error) throw error;
-      toast.success(`${trailerNumber} checked in for maintenance`);
+      if (statusError) throw statusError;
+
+      toast.success(`${selectedTrailer.trailer_number} checked in for maintenance`);
+      setIsDialogOpen(false);
+      setSelectedTrailer(null);
     } catch (error) {
       console.error("Error checking in trailer:", error);
-      toast.error("Failed to check in trailer");
+      toast.error("Failed to check in trailer for service");
     }
   };
 
   const handleCheckOut = async (trailerId: string, trailerNumber: string) => {
     try {
+      // Mark all maintenance records for this trailer as completed
+      await supabase
+        .from("maintenance_records")
+        .update({ completed: true })
+        .eq("trailer_id", trailerId)
+        .eq("completed", false);
+
+      // Update trailer status to available
       const { error } = await supabase
         .from("trailers")
         .update({ status: "available" })
@@ -303,21 +348,22 @@ export default function MechanicDashboard() {
                           <div className="flex gap-2">
                             {trailer.status === "maintenance" ? (
                               <Button 
+                                size="sm" 
+                                variant="secondary"
                                 onClick={() => handleCheckOut(trailer.id, trailer.trailer_number)}
-                                variant="outline"
-                                size="sm"
-                                className="text-green-600 border-green-600 hover:bg-green-50"
                               >
-                                Check Out
+                                <Wrench className="mr-2 h-4 w-4" />
+                                Complete Service
                               </Button>
                             ) : (
                               <Button 
-                                onClick={() => handleCheckIn(trailer.id, trailer.trailer_number)}
-                                variant="outline"
                                 size="sm"
+                                variant="default"
+                                onClick={() => handleCheckInForService(trailer)}
                                 disabled={trailer.is_rented}
                               >
-                                Check In
+                                <ClipboardList className="mr-2 h-4 w-4" />
+                                Check In for Service
                               </Button>
                             )}
                           </div>
@@ -331,6 +377,50 @@ export default function MechanicDashboard() {
           </Card>
         )}
       </main>
+
+      {/* Maintenance Dialog */}
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Check In Trailer for Service</DialogTitle>
+            <DialogDescription>
+              Create a maintenance record for {selectedTrailer?.trailer_number}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="description">Service Description *</Label>
+              <Textarea
+                id="description"
+                placeholder="Describe the maintenance work needed..."
+                value={maintenanceDescription}
+                onChange={(e) => setMaintenanceDescription(e.target.value)}
+                rows={4}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="cost">Estimated Cost ($)</Label>
+              <Input
+                id="cost"
+                type="number"
+                step="0.01"
+                placeholder="0.00"
+                value={maintenanceCost}
+                onChange={(e) => setMaintenanceCost(e.target.value)}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSubmitMaintenance}>
+              <ClipboardList className="mr-2 h-4 w-4" />
+              Check In for Service
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
