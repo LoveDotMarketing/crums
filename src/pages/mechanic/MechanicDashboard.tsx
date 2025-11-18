@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Wrench, LogOut, Truck, Search, MapPin, DollarSign, ClipboardList } from "lucide-react";
 import { toast } from "sonner";
+import { ChatBot } from "@/components/ChatBot";
 import {
   Table,
   TableBody,
@@ -519,6 +520,8 @@ export default function MechanicDashboard() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <ChatBot userType="mechanic" />
     </div>
   );
 }
