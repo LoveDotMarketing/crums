@@ -36,12 +36,13 @@ const Index = () => {
 
         <div className="relative z-10 container mx-auto px-4 text-center text-primary-foreground">
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
-            53-Foot Dry Van Trailers
+            Empowering Every Trucker
             <br />
-            <span className="text-secondary">Built for Your Supply Chain Success</span>
+            <span className="text-secondary">To Build the Life They're Proud Of</span>
           </h1>
           <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto text-primary-foreground/90">
-            We lease reliable 53-foot dry van trailers to companies seeking capacity solutions for their supply chain needs — backed by family values, integrity, and commitment to your business growth.
+            Guided by family values, integrity, and commitment to your success — creating lasting
+            partnerships that move people forward and bring them safely home.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link to="/contact">
