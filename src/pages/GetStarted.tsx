@@ -13,6 +13,8 @@ import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
+import { signupSchema, customerApplicationSchema, validateFile, sanitizeInput } from "@/lib/validations";
+import { z } from "zod";
 
 export default function GetStarted() {
   const [currentStep, setCurrentStep] = useState(1);
@@ -63,15 +65,47 @@ export default function GetStarted() {
       toast({ title: "Error", description: "Passwords don't match", variant: "destructive" });
       return false;
     }
-    if (password.length < 8) {
-      toast({ title: "Error", description: "Password must be at least 8 characters", variant: "destructive" });
+
+    // Validate with zod schema
+    const validationResult = signupSchema.safeParse({
+      email,
+      password,
+      firstName: primaryContactName.split(" ")[0] || "",
+      lastName: primaryContactName.split(" ")[1] || "",
+      phone: phoneNumber
+    });
+
+    if (!validationResult.success) {
+      const firstError = validationResult.error.errors[0];
+      toast({ title: "Validation Error", description: firstError.message, variant: "destructive" });
       return false;
     }
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      toast({ title: "Error", description: "Please enter a valid email address", variant: "destructive" });
+
+    // Validate application data
+    const appValidation = customerApplicationSchema.safeParse({
+      email,
+      phone_number: phoneNumber,
+      company_name: companyName,
+      company_address: companyAddress,
+      mc_dot_number: mcDotNumber,
+      business_type: businessType,
+      account_holder_name: accountHolderName || "N/A",
+      account_number: accountNumber || "0000",
+      routing_number: routingNumber || "000000000",
+      bank_name: bankName || "N/A",
+      insurance_company: insuranceCompany || "N/A",
+      secondary_contact_name: secondaryContactName,
+      secondary_contact_phone: secondaryContactPhone,
+      secondary_contact_relationship: secondaryContactRelationship,
+      message: message
+    });
+
+    if (!appValidation.success) {
+      const firstError = appValidation.error.errors[0];
+      toast({ title: "Validation Error", description: firstError.message, variant: "destructive" });
       return false;
     }
+
     return true;
   };
 
@@ -89,6 +123,12 @@ export default function GetStarted() {
   };
 
   const uploadFile = async (file: File, path: string) => {
+    // Validate file before upload
+    const validation = validateFile(file);
+    if (!validation.valid) {
+      throw new Error(validation.error);
+    }
+
     const { data, error } = await supabase.storage
       .from('customer-documents')
       .upload(path, file);
