@@ -1,10 +1,13 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
   Truck, 
   Plus, 
@@ -15,7 +18,8 @@ import {
   Calendar,
   TrendingUp,
   Edit,
-  Trash2
+  Trash2,
+  Loader2
 } from "lucide-react";
 import {
   Table,
@@ -25,203 +29,181 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { useAuth } from "@/hooks/useAuth";
+
+interface Trailer {
+  id: string;
+  trailer_number: string;
+  type: string;
+  make: string | null;
+  model: string | null;
+  year: number | null;
+  year_purchased: number | null;
+  purchase_price: number | null;
+  total_maintenance_cost: number;
+  is_rented: boolean;
+  rental_income: number | null;
+  status: string;
+  assigned_to: string | null;
+  gps_latitude: number | null;
+  gps_longitude: number | null;
+  vin: string | null;
+  license_plate: string | null;
+  company_id: string;
+}
 
 export default function Fleet() {
+  const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
+  const [trailers, setTrailers] = useState<Trailer[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [companyId, setCompanyId] = useState<string>("");
+  
+  const [newTrailer, setNewTrailer] = useState({
+    trailer_number: "",
+    type: "Dry Van",
+    make: "",
+    model: "",
+    year: new Date().getFullYear(),
+    year_purchased: new Date().getFullYear(),
+    purchase_price: "",
+    vin: "",
+    license_plate: "",
+  });
 
-  // Mock data for 10 trailers of various kinds
-  const trailers = [
-    {
-      id: "1",
-      trailer_number: "TRL-001",
-      type: "Dry Van",
-      make: "Utility",
-      model: "3000R",
-      year: 2020,
-      year_purchased: 2020,
-      purchase_price: 35000,
-      total_maintenance_cost: 4500,
-      is_rented: true,
-      rental_income: 24000,
-      status: "rented",
-      assigned_to: "ABC Transport",
-      gps_latitude: 34.0522,
-      gps_longitude: -118.2437,
-      vin: "1UYVS25387A123456",
-      mileage: 145230
-    },
-    {
-      id: "2",
-      trailer_number: "TRL-002",
-      type: "Refrigerated",
-      make: "Great Dane",
-      model: "Everest",
-      year: 2021,
-      year_purchased: 2021,
-      purchase_price: 58000,
-      total_maintenance_cost: 3200,
-      is_rented: false,
-      rental_income: 18000,
-      status: "available",
-      assigned_to: null,
-      gps_latitude: 34.0522,
-      gps_longitude: -118.2437,
-      vin: "1GRAA06259S123457",
-      mileage: 98450
-    },
-    {
-      id: "3",
-      trailer_number: "TRL-003",
-      type: "Flatbed",
-      make: "Fontaine",
-      model: "Revolution",
-      year: 2019,
-      year_purchased: 2019,
-      purchase_price: 42000,
-      total_maintenance_cost: 6800,
-      is_rented: true,
-      rental_income: 32000,
-      status: "rented",
-      assigned_to: "XYZ Logistics",
-      gps_latitude: 40.7128,
-      gps_longitude: -74.0060,
-      vin: "4FMSK12R1FTA123458",
-      mileage: 187620
-    },
-    {
-      id: "4",
-      trailer_number: "TRL-004",
-      type: "Dry Van",
-      make: "Wabash",
-      model: "National",
-      year: 2022,
-      year_purchased: 2022,
-      purchase_price: 38000,
-      total_maintenance_cost: 1200,
-      is_rented: false,
-      rental_income: 8000,
-      status: "maintenance",
-      assigned_to: null,
-      gps_latitude: 34.0522,
-      gps_longitude: -118.2437,
-      vin: "1JJV532W5JL123459",
-      mileage: 54320
-    },
-    {
-      id: "5",
-      trailer_number: "TRL-005",
-      type: "Lowboy",
-      make: "Talbert",
-      model: "55SA",
-      year: 2018,
-      year_purchased: 2018,
-      purchase_price: 65000,
-      total_maintenance_cost: 9500,
-      is_rented: true,
-      rental_income: 45000,
-      status: "rented",
-      assigned_to: "Heavy Haul Co",
-      gps_latitude: 41.8781,
-      gps_longitude: -87.6298,
-      vin: "5SFTA33348S123460",
-      mileage: 234580
-    },
-    {
-      id: "6",
-      trailer_number: "TRL-006",
-      type: "Dry Van",
-      make: "Utility",
-      model: "4000AE",
-      year: 2021,
-      year_purchased: 2021,
-      purchase_price: 36000,
-      total_maintenance_cost: 2100,
-      is_rented: false,
-      rental_income: 12000,
-      status: "available",
-      assigned_to: null,
-      gps_latitude: 34.0522,
-      gps_longitude: -118.2437,
-      vin: "1UYVS31647A123461",
-      mileage: 67890
-    },
-    {
-      id: "7",
-      trailer_number: "TRL-007",
-      type: "Tanker",
-      make: "Brenner",
-      model: "Tank",
-      year: 2020,
-      year_purchased: 2020,
-      purchase_price: 72000,
-      total_maintenance_cost: 5400,
-      is_rented: true,
-      rental_income: 38000,
-      status: "rented",
-      assigned_to: "Fuel Express",
-      gps_latitude: 29.7604,
-      gps_longitude: -95.3698,
-      vin: "7BRNR45789T123462",
-      mileage: 156780
-    },
-    {
-      id: "8",
-      trailer_number: "TRL-008",
-      type: "Step Deck",
-      make: "Fontaine",
-      model: "Magnitude",
-      year: 2019,
-      year_purchased: 2019,
-      purchase_price: 48000,
-      total_maintenance_cost: 7200,
-      is_rented: false,
-      rental_income: 28000,
-      status: "available",
-      assigned_to: null,
-      gps_latitude: 34.0522,
-      gps_longitude: -118.2437,
-      vin: "4FMSK34R9KTA123463",
-      mileage: 123450
-    },
-    {
-      id: "9",
-      trailer_number: "TRL-009",
-      type: "Refrigerated",
-      make: "Thermo King",
-      model: "SB-230",
-      year: 2023,
-      year_purchased: 2023,
-      purchase_price: 62000,
-      total_maintenance_cost: 500,
-      is_rented: true,
-      rental_income: 15000,
-      status: "rented",
-      assigned_to: "Cold Chain LLC",
-      gps_latitude: 33.4484,
-      gps_longitude: -112.0740,
-      vin: "8THRM23459S123464",
-      mileage: 23450
-    },
-    {
-      id: "10",
-      trailer_number: "TRL-010",
-      type: "Conestoga",
-      make: "Timpte",
-      model: "Super Hopper",
-      year: 2020,
-      year_purchased: 2020,
-      purchase_price: 52000,
-      total_maintenance_cost: 4800,
-      is_rented: false,
-      rental_income: 22000,
-      status: "available",
-      assigned_to: null,
-      gps_latitude: 34.0522,
-      gps_longitude: -118.2437,
-      vin: "9TIMP67890C123465",
-      mileage: 89760
+  useEffect(() => {
+    fetchCompanyAndTrailers();
+
+    // Set up real-time subscription
+    const channel = supabase
+      .channel('fleet-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'trailers'
+        },
+        () => {
+          fetchCompanyAndTrailers();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user]);
+
+  const fetchCompanyAndTrailers = async () => {
+    try {
+      // Get user's company
+      const { data: profileData, error: profileError } = await supabase
+        .from("profiles")
+        .select("company_id")
+        .eq("id", user?.id)
+        .single();
+
+      if (profileError) throw profileError;
+
+      if (!profileData?.company_id) {
+        toast.error("No company associated with your account");
+        setLoading(false);
+        return;
+      }
+
+      setCompanyId(profileData.company_id);
+
+      // Fetch trailers
+      const { data, error } = await supabase
+        .from("trailers")
+        .select("*")
+        .eq("company_id", profileData.company_id)
+        .order("trailer_number");
+
+      if (error) throw error;
+      setTrailers(data || []);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+      toast.error("Failed to load fleet data");
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
+
+  const handleAddTrailer = async () => {
+    if (!newTrailer.trailer_number || !newTrailer.type) {
+      toast.error("Trailer number and type are required");
+      return;
+    }
+
+    setSaving(true);
+
+    try {
+      const { error } = await supabase
+        .from("trailers")
+        .insert({
+          company_id: companyId,
+          trailer_number: newTrailer.trailer_number,
+          type: newTrailer.type,
+          make: newTrailer.make || null,
+          model: newTrailer.model || null,
+          year: newTrailer.year,
+          year_purchased: newTrailer.year_purchased,
+          purchase_price: newTrailer.purchase_price ? parseFloat(newTrailer.purchase_price) : null,
+          vin: newTrailer.vin || null,
+          license_plate: newTrailer.license_plate || null,
+          status: "available",
+          is_rented: false,
+          total_maintenance_cost: 0,
+          rental_income: 0,
+        });
+
+      if (error) throw error;
+
+      toast.success("Trailer added successfully");
+      setIsAddDialogOpen(false);
+      setNewTrailer({
+        trailer_number: "",
+        type: "Dry Van",
+        make: "",
+        model: "",
+        year: new Date().getFullYear(),
+        year_purchased: new Date().getFullYear(),
+        purchase_price: "",
+        vin: "",
+        license_plate: "",
+      });
+    } catch (error) {
+      console.error("Error adding trailer:", error);
+      toast.error("Failed to add trailer");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDeleteTrailer = async (trailerId: string, trailerNumber: string) => {
+    if (!confirm(`Are you sure you want to delete trailer ${trailerNumber}?`)) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from("trailers")
+        .delete()
+        .eq("id", trailerId);
+
+      if (error) throw error;
+      toast.success(`Trailer ${trailerNumber} deleted`);
+    } catch (error) {
+      console.error("Error deleting trailer:", error);
+      toast.error("Failed to delete trailer");
+    }
+  };
 
   const filteredTrailers = trailers.filter(
     (trailer) =>
@@ -230,9 +212,10 @@ export default function Fleet() {
       trailer.make?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const calculateROI = (trailer: typeof trailers[0]) => {
-    const totalInvestment = trailer.purchase_price + trailer.total_maintenance_cost;
-    const roi = ((trailer.rental_income - totalInvestment) / totalInvestment) * 100;
+  const calculateROI = (trailer: Trailer) => {
+    const totalInvestment = (trailer.purchase_price || 0) + (trailer.total_maintenance_cost || 0);
+    if (totalInvestment === 0) return "0.0";
+    const roi = (((trailer.rental_income || 0) - totalInvestment) / totalInvestment) * 100;
     return roi.toFixed(1);
   };
 
@@ -240,17 +223,18 @@ export default function Fleet() {
     const variants: Record<string, "default" | "secondary" | "destructive"> = {
       rented: "default",
       available: "secondary",
-      maintenance: "destructive"
+      maintenance: "destructive",
+      in_use: "default"
     };
-    return <Badge variant={variants[status]}>{status}</Badge>;
+    return <Badge variant={variants[status] || "secondary"}>{status}</Badge>;
   };
 
   const totalFleetCount = trailers.length;
   const totalOut = trailers.filter(t => t.is_rented).length;
   const totalIn = trailers.filter(t => !t.is_rented).length;
-  const totalFleetValue = trailers.reduce((sum, t) => sum + t.purchase_price, 0);
-  const totalMaintenanceCost = trailers.reduce((sum, t) => sum + t.total_maintenance_cost, 0);
-  const totalRentalIncome = trailers.reduce((sum, t) => sum + t.rental_income, 0);
+  const totalFleetValue = trailers.reduce((sum, t) => sum + (t.purchase_price || 0), 0);
+  const totalMaintenanceCost = trailers.reduce((sum, t) => sum + (t.total_maintenance_cost || 0), 0);
+  const totalRentalIncome = trailers.reduce((sum, t) => sum + (t.rental_income || 0), 0);
   const availableCount = trailers.filter(t => t.status === "available").length;
 
   return (
@@ -263,10 +247,135 @@ export default function Fleet() {
             <SidebarTrigger />
             <div className="flex-1 flex items-center justify-between ml-4">
               <h1 className="text-2xl font-bold text-foreground">Fleet Management</h1>
-              <Button>
-                <Plus className="h-4 w-4 mr-2" />
-                Add Trailer
-              </Button>
+              <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Trailer
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-2xl">
+                  <DialogHeader>
+                    <DialogTitle>Add New Trailer</DialogTitle>
+                    <DialogDescription>
+                      Enter the details for the new trailer
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="grid grid-cols-2 gap-4 py-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="trailer_number">Trailer Number *</Label>
+                      <Input
+                        id="trailer_number"
+                        value={newTrailer.trailer_number}
+                        onChange={(e) => setNewTrailer({ ...newTrailer, trailer_number: e.target.value })}
+                        placeholder="TRL-001"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="type">Type *</Label>
+                      <Select
+                        value={newTrailer.type}
+                        onValueChange={(value) => setNewTrailer({ ...newTrailer, type: value })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Dry Van">Dry Van</SelectItem>
+                          <SelectItem value="Refrigerated">Refrigerated</SelectItem>
+                          <SelectItem value="Flatbed">Flatbed</SelectItem>
+                          <SelectItem value="Lowboy">Lowboy</SelectItem>
+                          <SelectItem value="Step Deck">Step Deck</SelectItem>
+                          <SelectItem value="Container">Container</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="make">Make</Label>
+                      <Input
+                        id="make"
+                        value={newTrailer.make}
+                        onChange={(e) => setNewTrailer({ ...newTrailer, make: e.target.value })}
+                        placeholder="Utility, Great Dane, etc."
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="model">Model</Label>
+                      <Input
+                        id="model"
+                        value={newTrailer.model}
+                        onChange={(e) => setNewTrailer({ ...newTrailer, model: e.target.value })}
+                        placeholder="3000R, Everest, etc."
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="year">Year</Label>
+                      <Input
+                        id="year"
+                        type="number"
+                        value={newTrailer.year}
+                        onChange={(e) => setNewTrailer({ ...newTrailer, year: parseInt(e.target.value) })}
+                        min="1900"
+                        max={new Date().getFullYear() + 1}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="year_purchased">Year Purchased</Label>
+                      <Input
+                        id="year_purchased"
+                        type="number"
+                        value={newTrailer.year_purchased}
+                        onChange={(e) => setNewTrailer({ ...newTrailer, year_purchased: parseInt(e.target.value) })}
+                        min="1900"
+                        max={new Date().getFullYear()}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="purchase_price">Purchase Price</Label>
+                      <Input
+                        id="purchase_price"
+                        type="number"
+                        value={newTrailer.purchase_price}
+                        onChange={(e) => setNewTrailer({ ...newTrailer, purchase_price: e.target.value })}
+                        placeholder="35000"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="vin">VIN</Label>
+                      <Input
+                        id="vin"
+                        value={newTrailer.vin}
+                        onChange={(e) => setNewTrailer({ ...newTrailer, vin: e.target.value })}
+                        placeholder="1UYVS25387A123456"
+                      />
+                    </div>
+                    <div className="space-y-2 col-span-2">
+                      <Label htmlFor="license_plate">License Plate</Label>
+                      <Input
+                        id="license_plate"
+                        value={newTrailer.license_plate}
+                        onChange={(e) => setNewTrailer({ ...newTrailer, license_plate: e.target.value })}
+                        placeholder="ABC1234"
+                      />
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
+                      Cancel
+                    </Button>
+                    <Button onClick={handleAddTrailer} disabled={saving}>
+                      {saving ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Adding...
+                        </>
+                      ) : (
+                        "Add Trailer"
+                      )}
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
             </div>
           </header>
 
@@ -365,71 +474,89 @@ export default function Fleet() {
             {/* Fleet Table */}
             <Card>
               <CardHeader>
-                <CardTitle>Fleet Overview</CardTitle>
+                <div className="flex items-center justify-between">
+                  <CardTitle>Fleet Overview</CardTitle>
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Search trailers..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="pl-9 w-64"
+                    />
+                  </div>
+                </div>
               </CardHeader>
               <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Trailer #</TableHead>
-                      <TableHead>Type</TableHead>
-                      <TableHead>Make/Model</TableHead>
-                      <TableHead>Year</TableHead>
-                      <TableHead>Mileage</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Purchase Price</TableHead>
-                      <TableHead>Maintenance</TableHead>
-                      <TableHead>Revenue</TableHead>
-                      <TableHead>ROI</TableHead>
-                      <TableHead>Location</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredTrailers.map((trailer) => (
-                      <TableRow key={trailer.id} className="cursor-pointer hover:bg-muted/50">
-                        <TableCell className="font-medium">{trailer.trailer_number}</TableCell>
-                        <TableCell>{trailer.type}</TableCell>
-                        <TableCell>{trailer.make} {trailer.model}</TableCell>
-                        <TableCell>{trailer.year}</TableCell>
-                        <TableCell className="text-muted-foreground">
-                          {trailer.mileage.toLocaleString()} mi
-                        </TableCell>
-                        <TableCell>{getStatusBadge(trailer.status)}</TableCell>
-                        <TableCell>${trailer.purchase_price.toLocaleString()}</TableCell>
-                        <TableCell className="text-red-600">
-                          ${trailer.total_maintenance_cost.toLocaleString()}
-                        </TableCell>
-                        <TableCell className="text-green-600">
-                          ${trailer.rental_income.toLocaleString()}
-                        </TableCell>
-                        <TableCell>
-                          <span className={parseFloat(calculateROI(trailer)) > 0 ? "text-green-600" : "text-red-600"}>
-                            {calculateROI(trailer)}%
-                          </span>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-1 text-muted-foreground">
-                            <MapPin className="h-3 w-3" />
-                            <span className="text-xs">
-                              {trailer.is_rented ? trailer.assigned_to : "Yard"}
-                            </span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex gap-2">
-                            <Button variant="ghost" size="sm">
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive">
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
+                {loading ? (
+                  <div className="flex justify-center py-8">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                  </div>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Trailer #</TableHead>
+                        <TableHead>Type</TableHead>
+                        <TableHead>Make/Model</TableHead>
+                        <TableHead>Year</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Assigned To</TableHead>
+                        <TableHead>Purchase Price</TableHead>
+                        <TableHead>Maintenance Cost</TableHead>
+                        <TableHead>Rental Income</TableHead>
+                        <TableHead>ROI</TableHead>
+                        <TableHead>Actions</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredTrailers.map((trailer) => (
+                        <TableRow key={trailer.id}>
+                          <TableCell className="font-medium">
+                            {trailer.trailer_number}
+                          </TableCell>
+                          <TableCell>{trailer.type}</TableCell>
+                          <TableCell>
+                            {trailer.make} {trailer.model}
+                          </TableCell>
+                          <TableCell>{trailer.year}</TableCell>
+                          <TableCell>{getStatusBadge(trailer.status)}</TableCell>
+                          <TableCell>
+                            {trailer.assigned_to || "-"}
+                          </TableCell>
+                          <TableCell>
+                            ${(trailer.purchase_price || 0).toLocaleString()}
+                          </TableCell>
+                          <TableCell className="text-red-600">
+                            ${(trailer.total_maintenance_cost || 0).toLocaleString()}
+                          </TableCell>
+                          <TableCell className="text-green-600">
+                            ${(trailer.rental_income || 0).toLocaleString()}
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={parseFloat(calculateROI(trailer)) > 0 ? "default" : "destructive"}>
+                              {calculateROI(trailer)}%
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex gap-2">
+                              <Button size="sm" variant="ghost">
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                              <Button 
+                                size="sm" 
+                                variant="ghost"
+                                onClick={() => handleDeleteTrailer(trailer.id, trailer.trailer_number)}
+                              >
+                                <Trash2 className="h-4 w-4 text-destructive" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
               </CardContent>
             </Card>
           </main>
