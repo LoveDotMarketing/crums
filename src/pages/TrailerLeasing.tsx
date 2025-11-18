@@ -41,8 +41,6 @@ const TrailerLeasing = () => {
                 controls
                 playsInline
                 loop
-                muted
-                autoPlay
               >
                 <source src={crumsVideo} type="video/webm" />
                 Your browser does not support the video tag.
