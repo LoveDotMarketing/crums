@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Phone, Mail, MapPin, Clock } from "lucide-react";
+import { Phone, Mail, MapPin, Clock, Facebook, Instagram, Linkedin } from "lucide-react";
 
 const Contact = () => {
   return (
@@ -155,6 +155,39 @@ const Contact = () => {
                         <p className="text-sm text-muted-foreground mt-2">
                           24/7 Emergency Support Available
                         </p>
+                      </div>
+                    </div>
+
+                    <div className="pt-6 border-t">
+                      <h3 className="font-semibold text-foreground mb-4">Follow Us</h3>
+                      <div className="flex space-x-4">
+                        <a 
+                          href="https://www.facebook.com/people/Crums-Leasing/100090574399864/" 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center hover:bg-primary hover:text-primary-foreground transition-colors"
+                          aria-label="Visit our Facebook page"
+                        >
+                          <Facebook className="h-5 w-5" />
+                        </a>
+                        <a 
+                          href="https://www.instagram.com/crumsleasingllc/" 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="h-10 w-10 rounded-full bg-secondary/10 flex items-center justify-center hover:bg-secondary hover:text-secondary-foreground transition-colors"
+                          aria-label="Visit our Instagram page"
+                        >
+                          <Instagram className="h-5 w-5" />
+                        </a>
+                        <a 
+                          href="https://www.linkedin.com/company/crums-leasing/" 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="h-10 w-10 rounded-full bg-accent/10 flex items-center justify-center hover:bg-accent hover:text-accent-foreground transition-colors"
+                          aria-label="Visit our LinkedIn page"
+                        >
+                          <Linkedin className="h-5 w-5" />
+                        </a>
                       </div>
                     </div>
                   </div>
