@@ -103,10 +103,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
 
     if (!error && data.user) {
-      // Create user role
-      const { error: roleError } = await supabase
-        .from("user_roles")
-        .insert({ user_id: data.user.id, role });
+      // Call secure database function to set user role
+      const { error: roleError } = await supabase.rpc('set_user_role', {
+        _role: role
+      });
 
       if (roleError) {
         console.error("Error creating user role:", roleError);
