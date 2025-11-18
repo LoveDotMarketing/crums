@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { Loader2, Upload, CheckCircle, AlertCircle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Progress } from "@/components/ui/progress";
+import { validateFile, sanitizeInput } from "@/lib/validations";
 
 interface ApplicationData {
   id?: string;
@@ -146,6 +147,13 @@ export default function Application() {
   const handleFileUpload = async (file: File, fieldName: string) => {
     if (!user) return;
 
+    // Validate file before upload
+    const validation = validateFile(file);
+    if (!validation.valid) {
+      toast.error(validation.error || "Invalid file");
+      return;
+    }
+
     setUploadingDoc(fieldName);
     try {
       const fileExt = file.name.split('.').pop();
@@ -201,27 +209,28 @@ export default function Application() {
     setSaving(true);
 
     try {
+      // Sanitize text inputs
       const dataToSave = {
         user_id: user?.id,
-        phone_number: application.phone_number,
-        mc_dot_number: application.mc_dot_number,
-        company_address: application.company_address,
-        business_type: application.business_type,
+        phone_number: sanitizeInput(application.phone_number),
+        mc_dot_number: sanitizeInput(application.mc_dot_number),
+        company_address: sanitizeInput(application.company_address),
+        business_type: sanitizeInput(application.business_type),
         number_of_trailers: application.number_of_trailers ? parseInt(application.number_of_trailers.toString()) : null,
         date_needed: application.date_needed || null,
-        insurance_company: application.insurance_company,
-        message: application.message,
-        secondary_contact_name: application.secondary_contact_name,
-        secondary_contact_phone: application.secondary_contact_phone,
-        secondary_contact_relationship: application.secondary_contact_relationship,
+        insurance_company: sanitizeInput(application.insurance_company),
+        message: sanitizeInput(application.message),
+        secondary_contact_name: sanitizeInput(application.secondary_contact_name),
+        secondary_contact_phone: sanitizeInput(application.secondary_contact_phone),
+        secondary_contact_relationship: sanitizeInput(application.secondary_contact_relationship),
         ssn_card_url: application.ssn_card_url,
         drivers_license_url: application.drivers_license_url,
         insurance_docs_url: application.insurance_docs_url,
         contract_url: application.contract_url,
-        bank_name: application.bank_name,
-        account_holder_name: application.account_holder_name,
-        account_number: application.account_number,
-        routing_number: application.routing_number,
+        bank_name: sanitizeInput(application.bank_name),
+        account_holder_name: sanitizeInput(application.account_holder_name),
+        account_number: sanitizeInput(application.account_number),
+        routing_number: sanitizeInput(application.routing_number),
         payment_method: application.payment_method,
         status: calculateProgress() === 100 ? "pending" : "incomplete",
       };

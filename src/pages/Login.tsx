@@ -9,6 +9,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
+import { loginSchema, signupSchema } from "@/lib/validations";
+import { z } from "zod";
 
 const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -36,6 +38,33 @@ const Login = () => {
     setIsLoading(true);
 
     try {
+      // Validate input
+      if (isSignUp) {
+        const validationResult = signupSchema.safeParse({ 
+          email, 
+          password,
+          firstName: "",
+          lastName: "",
+          phone: ""
+        });
+        
+        if (!validationResult.success) {
+          const firstError = validationResult.error.errors[0];
+          toast.error(firstError.message);
+          setIsLoading(false);
+          return;
+        }
+      } else {
+        const validationResult = loginSchema.safeParse({ email, password });
+        
+        if (!validationResult.success) {
+          const firstError = validationResult.error.errors[0];
+          toast.error(firstError.message);
+          setIsLoading(false);
+          return;
+        }
+      }
+
       if (isSignUp) {
         const { error } = await signUp(email, password, selectedRole);
         if (error) {
