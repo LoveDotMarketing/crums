@@ -15,7 +15,7 @@ interface Message {
 }
 
 interface ChatBotProps {
-  userType: "admin" | "customer";
+  userType: "admin" | "customer" | "mechanic";
 }
 
 export const ChatBot = ({ userType }: ChatBotProps) => {
@@ -25,6 +25,8 @@ export const ChatBot = ({ userType }: ChatBotProps) => {
       role: "assistant",
       content: userType === "admin" 
         ? "Hello! I'm your AI assistant. I can help you manage tolls, customers, and fleet operations. Try asking me to 'mark toll #142 as paid' or 'show me unpaid tolls'."
+        : userType === "mechanic"
+        ? "Hello! I'm your AI assistant. I can help you with trailer maintenance, service tracking, and fleet status. Ask me about trailers needing service or maintenance costs!"
         : "Hello! I'm your AI assistant. I can help you with toll information, payment links, and account questions. Ask me anything!",
       timestamp: new Date(),
     },
