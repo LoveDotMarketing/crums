@@ -227,12 +227,64 @@ export type Database = {
           },
         ]
       }
+      notifications: {
+        Row: {
+          created_at: string | null
+          id: string
+          message: string
+          read: boolean | null
+          title: string
+          toll_id: string
+          type: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          message: string
+          read?: boolean | null
+          title: string
+          toll_id: string
+          type?: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          message?: string
+          read?: boolean | null
+          title?: string
+          toll_id?: string
+          type?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_toll_id_fkey"
+            columns: ["toll_id"]
+            isOneToOne: false
+            referencedRelation: "tolls"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
           company_id: string | null
           created_at: string
           email: string
+          email_notifications_enabled: boolean | null
           first_name: string | null
           id: string
           last_name: string | null
@@ -244,6 +296,7 @@ export type Database = {
           company_id?: string | null
           created_at?: string
           email: string
+          email_notifications_enabled?: boolean | null
           first_name?: string | null
           id: string
           last_name?: string | null
@@ -255,6 +308,7 @@ export type Database = {
           company_id?: string | null
           created_at?: string
           email?: string
+          email_notifications_enabled?: boolean | null
           first_name?: string | null
           id?: string
           last_name?: string | null
