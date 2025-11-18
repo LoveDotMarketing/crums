@@ -16,6 +16,7 @@ import Locations from "./pages/Locations";
 import Contact from "./pages/Contact";
 import Careers from "./pages/Careers";
 import Login from "./pages/Login";
+import GetStarted from "./pages/GetStarted";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import Fleet from "./pages/admin/Fleet";
 import Customers from "./pages/admin/Customers";
@@ -53,6 +54,7 @@ const App = () => (
             <Route path="/contact" element={<Contact />} />
             <Route path="/careers" element={<Careers />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/get-started" element={<GetStarted />} />
             <Route 
               path="/dashboard/admin" 
               element={
