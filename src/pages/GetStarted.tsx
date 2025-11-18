@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowRight, ArrowLeft, Check } from "lucide-react";
 import { Navigation } from "@/components/Navigation";
@@ -25,8 +26,14 @@ export default function GetStarted() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [companyName, setCompanyName] = useState("");
+  const [mcDotNumber, setMcDotNumber] = useState("");
   const [primaryContactName, setPrimaryContactName] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
+  const [companyAddress, setCompanyAddress] = useState("");
+  const [businessType, setBusinessType] = useState("");
+  const [numberOfTrailers, setNumberOfTrailers] = useState("");
+  const [dateNeeded, setDateNeeded] = useState("");
+  const [message, setMessage] = useState("");
 
   // Step 2 - Banking (optional)
   const [bankName, setBankName] = useState("");
@@ -39,6 +46,7 @@ export default function GetStarted() {
   const [driversLicense, setDriversLicense] = useState<File | null>(null);
   const [ssnCard, setSsnCard] = useState<File | null>(null);
   const [insuranceDocs, setInsuranceDocs] = useState<File | null>(null);
+  const [insuranceCompany, setInsuranceCompany] = useState("");
   const [secondaryContactName, setSecondaryContactName] = useState("");
   const [secondaryContactPhone, setSecondaryContactPhone] = useState("");
   const [secondaryContactRelationship, setSecondaryContactRelationship] = useState("");
@@ -47,7 +55,7 @@ export default function GetStarted() {
   const [acceptedTerms, setAcceptedTerms] = useState(false);
 
   const validateStep1 = () => {
-    if (!email || !password || !confirmPassword || !companyName || !primaryContactName || !phoneNumber) {
+    if (!email || !password || !confirmPassword || !companyName || !primaryContactName || !phoneNumber || !companyAddress || !businessType || !numberOfTrailers || !dateNeeded) {
       toast({ title: "Error", description: "Please fill in all required fields", variant: "destructive" });
       return false;
     }
@@ -149,6 +157,13 @@ export default function GetStarted() {
         .insert({
           user_id: session.user.id,
           phone_number: phoneNumber,
+          mc_dot_number: mcDotNumber || null,
+          company_address: companyAddress,
+          business_type: businessType,
+          number_of_trailers: parseInt(numberOfTrailers),
+          date_needed: dateNeeded,
+          insurance_company: insuranceCompany || null,
+          message: message || null,
           bank_name: bankName || null,
           account_holder_name: accountHolderName || null,
           account_number: accountNumber || null,
@@ -294,6 +309,15 @@ export default function GetStarted() {
                     />
                   </div>
                   <div>
+                    <Label htmlFor="mcDotNumber">MC/DOT Number (Optional)</Label>
+                    <Input 
+                      id="mcDotNumber" 
+                      value={mcDotNumber} 
+                      onChange={(e) => setMcDotNumber(e.target.value)}
+                      placeholder="MC/DOT#"
+                    />
+                  </div>
+                  <div>
                     <Label htmlFor="primaryContactName">Primary Contact Name *</Label>
                     <Input 
                       id="primaryContactName" 
@@ -310,6 +334,59 @@ export default function GetStarted() {
                       value={phoneNumber} 
                       onChange={(e) => setPhoneNumber(e.target.value)}
                       placeholder="(555) 123-4567"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="companyAddress">Company Address *</Label>
+                    <Input 
+                      id="companyAddress" 
+                      value={companyAddress} 
+                      onChange={(e) => setCompanyAddress(e.target.value)}
+                      placeholder="Street address, City, State, ZIP"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="businessType">Business Type *</Label>
+                    <Select value={businessType} onValueChange={setBusinessType}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select business type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="individual">Individual</SelectItem>
+                        <SelectItem value="proprietorship">Proprietorship</SelectItem>
+                        <SelectItem value="partnership">Partnership</SelectItem>
+                        <SelectItem value="corporation">Corporation</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="numberOfTrailers">Number of Trailers Needed *</Label>
+                    <Input 
+                      id="numberOfTrailers" 
+                      type="number"
+                      min="1"
+                      value={numberOfTrailers} 
+                      onChange={(e) => setNumberOfTrailers(e.target.value)}
+                      placeholder="1"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="dateNeeded">Date Needed *</Label>
+                    <Input 
+                      id="dateNeeded" 
+                      type="date"
+                      value={dateNeeded} 
+                      onChange={(e) => setDateNeeded(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="message">Message (Optional)</Label>
+                    <Textarea 
+                      id="message" 
+                      value={message} 
+                      onChange={(e) => setMessage(e.target.value)}
+                      placeholder="Any additional information or special requests..."
+                      rows={3}
                     />
                   </div>
                 </div>
@@ -400,6 +477,15 @@ export default function GetStarted() {
                       onChange={(e) => setInsuranceDocs(e.target.files?.[0] || null)}
                     />
                   </div>
+                  <div>
+                    <Label htmlFor="insuranceCompany">Insurance Company Name</Label>
+                    <Input 
+                      id="insuranceCompany" 
+                      value={insuranceCompany} 
+                      onChange={(e) => setInsuranceCompany(e.target.value)}
+                      placeholder="Insurance company name"
+                    />
+                  </div>
                   <div className="pt-4 border-t">
                     <h3 className="font-semibold mb-4">Secondary Contact (Optional)</h3>
                     <div className="space-y-4">
@@ -445,8 +531,25 @@ export default function GetStarted() {
                       <div className="bg-muted/50 p-4 rounded-lg space-y-1">
                         <p className="text-sm"><span className="font-medium">Email:</span> {email}</p>
                         <p className="text-sm"><span className="font-medium">Company:</span> {companyName}</p>
+                        {mcDotNumber && <p className="text-sm"><span className="font-medium">MC/DOT#:</span> {mcDotNumber}</p>}
                         <p className="text-sm"><span className="font-medium">Contact:</span> {primaryContactName}</p>
                         <p className="text-sm"><span className="font-medium">Phone:</span> {phoneNumber}</p>
+                        <p className="text-sm"><span className="font-medium">Address:</span> {companyAddress}</p>
+                        <p className="text-sm"><span className="font-medium">Business Type:</span> {businessType}</p>
+                        <p className="text-sm"><span className="font-medium">Trailers Needed:</span> {numberOfTrailers}</p>
+                        <p className="text-sm"><span className="font-medium">Date Needed:</span> {dateNeeded}</p>
+                        {message && <p className="text-sm"><span className="font-medium">Message:</span> {message}</p>}
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <h3 className="font-semibold text-sm text-muted-foreground">Insurance</h3>
+                      <div className="bg-muted/50 p-4 rounded-lg">
+                        {insuranceCompany ? (
+                          <p className="text-sm"><span className="font-medium">Company:</span> {insuranceCompany}</p>
+                        ) : (
+                          <p className="text-sm text-muted-foreground italic">Not provided</p>
+                        )}
                       </div>
                     </div>
                     
