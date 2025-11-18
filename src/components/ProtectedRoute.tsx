@@ -4,7 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
-  requiredRole?: "admin" | "customer";
+  requiredRole?: "admin" | "customer" | "mechanic";
 }
 
 export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) {
@@ -21,6 +21,8 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
           navigate("/dashboard/admin");
         } else if (userRole === "customer") {
           navigate("/dashboard/customer");
+        } else if (userRole === "mechanic") {
+          navigate("/dashboard/mechanic");
         }
       }
     }

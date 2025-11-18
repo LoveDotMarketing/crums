@@ -17,6 +17,7 @@ import Careers from "./pages/Careers";
 import Login from "./pages/Login";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import CustomerDashboard from "./pages/customer/CustomerDashboard";
+import MechanicDashboard from "./pages/mechanic/MechanicDashboard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -52,6 +53,14 @@ const App = () => (
               element={
                 <ProtectedRoute requiredRole="customer">
                   <CustomerDashboard />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/dashboard/mechanic" 
+              element={
+                <ProtectedRoute requiredRole="mechanic">
+                  <MechanicDashboard />
                 </ProtectedRoute>
               } 
             />

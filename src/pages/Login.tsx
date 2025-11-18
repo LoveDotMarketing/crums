@@ -15,7 +15,7 @@ const Login = () => {
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [selectedRole, setSelectedRole] = useState<"customer" | "admin">("customer");
+  const [selectedRole, setSelectedRole] = useState<"customer" | "admin" | "mechanic">("customer");
   const navigate = useNavigate();
   const { signIn, signUp, user, userRole } = useAuth();
 
@@ -23,6 +23,8 @@ const Login = () => {
     if (user && userRole) {
       if (userRole === "admin") {
         navigate("/dashboard/admin");
+      } else if (userRole === "mechanic") {
+        navigate("/dashboard/mechanic");
       } else {
         navigate("/dashboard/customer");
       }
@@ -46,6 +48,8 @@ const Login = () => {
           // Navigate based on role
           if (selectedRole === "admin") {
             navigate("/dashboard/admin");
+          } else if (selectedRole === "mechanic") {
+            navigate("/dashboard/mechanic");
           } else {
             navigate("/dashboard/customer");
           }
@@ -80,10 +84,11 @@ const Login = () => {
             <Tabs 
               defaultValue="customer" 
               className="w-full"
-              onValueChange={(value) => setSelectedRole(value as "customer" | "admin")}
+              onValueChange={(value) => setSelectedRole(value as "customer" | "admin" | "mechanic")}
             >
-              <TabsList className="grid w-full grid-cols-2 mb-8">
+              <TabsList className="grid w-full grid-cols-3 mb-8">
                 <TabsTrigger value="customer">Customer</TabsTrigger>
+                <TabsTrigger value="mechanic">Mechanic</TabsTrigger>
                 <TabsTrigger value="admin">Admin</TabsTrigger>
               </TabsList>
 
@@ -156,6 +161,69 @@ const Login = () => {
                 </Card>
               </TabsContent>
 
+              <TabsContent value="mechanic">
+                <Card className="border-2">
+                  <CardHeader>
+                    <CardTitle>{isSignUp ? "Create Mechanic Account" : "Mechanic Portal"}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <form onSubmit={handleSubmit} className="space-y-4">
+                      <div>
+                        <Label htmlFor="mechanic-email">Email</Label>
+                        <Input
+                          id="mechanic-email"
+                          type="email"
+                          placeholder="mechanic@crumsleasing.com"
+                          required
+                          className="mt-2"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="mechanic-password">Password</Label>
+                        <Input
+                          id="mechanic-password"
+                          type="password"
+                          required
+                          className="mt-2"
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                        />
+                      </div>
+                      {!isSignUp && (
+                        <div className="flex items-center justify-between text-sm">
+                          <label className="flex items-center">
+                            <input type="checkbox" className="mr-2" />
+                            <span className="text-muted-foreground">Remember me</span>
+                          </label>
+                          <a href="#" className="text-primary hover:underline">
+                            Forgot password?
+                          </a>
+                        </div>
+                      )}
+                      <Button
+                        type="submit"
+                        className="w-full bg-primary hover:bg-primary/90"
+                        size="lg"
+                        disabled={isLoading}
+                      >
+                        {isLoading ? "Please wait..." : isSignUp ? "Create Mechanic Account" : "Sign In"}
+                      </Button>
+                    </form>
+                    <div className="mt-6 text-center text-sm text-muted-foreground">
+                      {isSignUp ? "Already have an account? " : "Don't have an account? "}
+                      <button 
+                        onClick={() => setIsSignUp(!isSignUp)}
+                        className="text-primary hover:underline"
+                      >
+                        {isSignUp ? "Sign in" : "Create account"}
+                      </button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
               <TabsContent value="admin">
                 <Card className="border-2">
                   <CardHeader>
@@ -186,24 +254,35 @@ const Login = () => {
                           onChange={(e) => setPassword(e.target.value)}
                         />
                       </div>
-                      <div className="flex items-center justify-between text-sm">
-                        <label className="flex items-center">
-                          <input type="checkbox" className="mr-2" />
-                          <span className="text-muted-foreground">Remember me</span>
-                        </label>
-                        <a href="#" className="text-primary hover:underline">
-                          Forgot password?
-                        </a>
-                      </div>
+                      {!isSignUp && (
+                        <div className="flex items-center justify-between text-sm">
+                          <label className="flex items-center">
+                            <input type="checkbox" className="mr-2" />
+                            <span className="text-muted-foreground">Remember me</span>
+                          </label>
+                          <a href="#" className="text-primary hover:underline">
+                            Forgot password?
+                          </a>
+                        </div>
+                      )}
                       <Button
                         type="submit"
                         className="w-full bg-secondary hover:bg-secondary/90"
                         size="lg"
                         disabled={isLoading}
                       >
-                        {isLoading ? "Logging in..." : "Admin Sign In"}
+                        {isLoading ? "Please wait..." : isSignUp ? "Create Admin Account" : "Sign In"}
                       </Button>
                     </form>
+                    <div className="mt-6 text-center text-sm text-muted-foreground">
+                      {isSignUp ? "Already have an account? " : "Don't have an account? "}
+                      <button 
+                        onClick={() => setIsSignUp(!isSignUp)}
+                        className="text-primary hover:underline"
+                      >
+                        {isSignUp ? "Sign in" : "Create account"}
+                      </button>
+                    </div>
                   </CardContent>
                 </Card>
               </TabsContent>
