@@ -11,6 +11,7 @@ import { CustomerNav } from "@/components/customer/CustomerNav";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Progress } from "@/components/ui/progress";
 import { ChatBot } from "@/components/ChatBot";
+import { ApplicationAlert } from "@/components/customer/ApplicationAlert";
 
 
 export default function CustomerDashboard() {
@@ -107,32 +108,10 @@ export default function CustomerDashboard() {
           </div>
 
           {/* Application Status Alert */}
-          {applicationProgress < 100 && (
-            <Alert className="mb-8 border-yellow-500/50 bg-yellow-50 dark:bg-yellow-900/20">
-              <AlertCircle className="h-4 w-4 text-yellow-600" />
-              <AlertTitle className="text-yellow-800 dark:text-yellow-200">Application Incomplete</AlertTitle>
-              <AlertDescription className="text-yellow-700 dark:text-yellow-300">
-                <div className="space-y-3">
-                  <p>Complete your rental application to get approved ({applicationProgress}% complete)</p>
-                  <Progress value={applicationProgress} className="h-2" />
-                  <Link to="/dashboard/customer/application">
-                    <Button variant="outline" size="sm" className="mt-2">
-                      Complete Application
-                    </Button>
-                  </Link>
-                </div>
-              </AlertDescription>
-            </Alert>
-          )}
-
-          {applicationProgress === 100 && applicationStatus === "pending" && (
-            <Alert className="mb-8 border-blue-500/50 bg-blue-50 dark:bg-blue-900/20">
-              <CheckCircle className="h-4 w-4 text-blue-600" />
-              <AlertTitle className="text-blue-800 dark:text-blue-200">Application Under Review</AlertTitle>
-              <AlertDescription className="text-blue-700 dark:text-blue-300">
-                Your application is complete and under review. We'll notify you within 24-48 hours.
-              </AlertDescription>
-            </Alert>
+          {user && (
+            <div className="mb-8">
+              <ApplicationAlert userId={user.id} />
+            </div>
           )}
 
           {/* Stats */}
