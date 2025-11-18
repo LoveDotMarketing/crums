@@ -24,6 +24,9 @@ import Billing from "./pages/admin/Billing";
 import Support from "./pages/admin/Support";
 import Reports from "./pages/admin/Reports";
 import CustomerDashboard from "./pages/customer/CustomerDashboard";
+import Profile from "./pages/customer/Profile";
+import Rentals from "./pages/customer/Rentals";
+import RentalRequest from "./pages/customer/RentalRequest";
 import MechanicDashboard from "./pages/mechanic/MechanicDashboard";
 import NotFound from "./pages/NotFound";
 
@@ -116,6 +119,30 @@ const App = () => (
               element={
                 <ProtectedRoute requiredRole="customer">
                   <CustomerDashboard />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/dashboard/customer/profile" 
+              element={
+                <ProtectedRoute requiredRole="customer">
+                  <Profile />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/dashboard/customer/rentals" 
+              element={
+                <ProtectedRoute requiredRole="customer">
+                  <Rentals />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/dashboard/customer/request" 
+              element={
+                <ProtectedRoute requiredRole="customer">
+                  <RentalRequest />
                 </ProtectedRoute>
               } 
             />
