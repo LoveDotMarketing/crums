@@ -16,7 +16,7 @@ import {
   Target,
 } from "lucide-react";
 import heroImage from "@/assets/hero-truck.jpg";
-import fleetImage from "@/assets/fleet-overview.jpg";
+import fleetImage from "@/assets/crums-trailer.png";
 import teamImage from "@/assets/team-handshake.jpg";
 import { ChatBot } from "@/components/ChatBot";
 
