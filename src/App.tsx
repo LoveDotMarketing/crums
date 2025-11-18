@@ -16,6 +16,11 @@ import Contact from "./pages/Contact";
 import Careers from "./pages/Careers";
 import Login from "./pages/Login";
 import AdminDashboard from "./pages/admin/AdminDashboard";
+import Fleet from "./pages/admin/Fleet";
+import Customers from "./pages/admin/Customers";
+import Mechanics from "./pages/admin/Mechanics";
+import Tolls from "./pages/admin/Tolls";
+import Billing from "./pages/admin/Billing";
 import CustomerDashboard from "./pages/customer/CustomerDashboard";
 import MechanicDashboard from "./pages/mechanic/MechanicDashboard";
 import NotFound from "./pages/NotFound";
@@ -45,6 +50,46 @@ const App = () => (
               element={
                 <ProtectedRoute requiredRole="admin">
                   <AdminDashboard />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/dashboard/admin/fleet" 
+              element={
+                <ProtectedRoute requiredRole="admin">
+                  <Fleet />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/dashboard/admin/customers" 
+              element={
+                <ProtectedRoute requiredRole="admin">
+                  <Customers />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/dashboard/admin/mechanics" 
+              element={
+                <ProtectedRoute requiredRole="admin">
+                  <Mechanics />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/dashboard/admin/tolls" 
+              element={
+                <ProtectedRoute requiredRole="admin">
+                  <Tolls />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/dashboard/admin/billing" 
+              element={
+                <ProtectedRoute requiredRole="admin">
+                  <Billing />
                 </ProtectedRoute>
               } 
             />

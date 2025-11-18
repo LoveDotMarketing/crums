@@ -5,7 +5,9 @@ import {
   Truck, 
   Building2, 
   HelpCircle,
-  LogOut
+  LogOut,
+  Wrench,
+  DollarSign
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/hooks/useAuth";
@@ -25,9 +27,11 @@ import { Button } from "@/components/ui/button";
 
 const menuItems = [
   { title: "Dashboard", url: "/dashboard/admin", icon: LayoutDashboard },
-  { title: "Tolls", url: "/dashboard/admin/tolls", icon: Receipt },
+  { title: "Fleet", url: "/dashboard/admin/fleet", icon: Truck },
   { title: "Customers", url: "/dashboard/admin/customers", icon: Users },
-  { title: "Trailers", url: "/dashboard/admin/trailers", icon: Truck },
+  { title: "Mechanics", url: "/dashboard/admin/mechanics", icon: Wrench },
+  { title: "Tolls", url: "/dashboard/admin/tolls", icon: Receipt },
+  { title: "Billing", url: "/dashboard/admin/billing", icon: DollarSign },
   { title: "Companies", url: "/dashboard/admin/companies", icon: Building2 },
   { title: "Support", url: "/dashboard/admin/support", icon: HelpCircle },
 ];
