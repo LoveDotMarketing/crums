@@ -27,10 +27,7 @@ const Mission = () => {
               Our Mission
             </h2>
             <p className="text-xl text-center text-muted-foreground leading-relaxed mb-12">
-              At Crums Leasing, we see a future where every trucker has the freedom, tools, and
-              support to build a life they're proud of both on and off the road. Guided by family
-              values, integrity, and a commitment to our customers' success, we're creating lasting
-              partnerships that move people forward and bring them safely home.
+              At Crums Leasing, we believe every hardworking trucker deserves the freedom and stability to build a better life for their family. Inspired by the values of hard work and dedication passed down from "Crums" herself, we are more than a leasing company we are a partner on the road to success. With high quality trailers, flexible solutions, and a people first approach, we make sure our customers always have the tools they need to keep moving forward and make it home safe.
             </p>
             <div className="bg-gradient-to-r from-secondary/20 to-primary/20 rounded-lg p-8 text-center border-l-4 border-secondary">
               <p className="text-2xl font-semibold text-foreground italic">

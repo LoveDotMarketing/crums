@@ -15,8 +15,7 @@ const TrailerRentals = () => {
         <div className="container mx-auto px-4 text-center">
           <h1 className="text-4xl md:text-6xl font-bold mb-6">Trailer Rental Solutions</h1>
           <p className="text-xl md:text-2xl max-w-4xl mx-auto mb-8 text-secondary-foreground/90">
-            Flexible short-term rental options for peak seasons, special projects, or testing new
-            equipment before you commit.
+            Flexible short-term rental options for peak seasons, special projects, or testing new equipment before you commit. We ship trailers anywhere in the United States.
           </p>
           <Link to="/contact">
             <Button
@@ -37,7 +36,7 @@ const TrailerRentals = () => {
           <h2 className="text-3xl md:text-4xl font-bold text-center mb-16 text-foreground">
             Why Rent From Crums?
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             <Card className="text-center border-2 hover:shadow-lg transition-shadow">
               <CardContent className="p-6">
                 <div className="h-14 w-14 rounded-full bg-secondary/10 flex items-center justify-center mx-auto mb-4">
@@ -66,17 +65,6 @@ const TrailerRentals = () => {
                 <h3 className="text-lg font-bold mb-2">Quality Equipment</h3>
                 <p className="text-sm text-muted-foreground">
                   Well-maintained, late-model trailers
-                </p>
-              </CardContent>
-            </Card>
-            <Card className="text-center border-2 hover:shadow-lg transition-shadow">
-              <CardContent className="p-6">
-                <div className="h-14 w-14 rounded-full bg-secondary/10 flex items-center justify-center mx-auto mb-4">
-                  <TrendingUp className="h-7 w-7 text-secondary" />
-                </div>
-                <h3 className="text-lg font-bold mb-2">Try Before Lease</h3>
-                <p className="text-sm text-muted-foreground">
-                  Test equipment before long-term commitment
                 </p>
               </CardContent>
             </Card>
