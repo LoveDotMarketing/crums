@@ -120,9 +120,9 @@ const TrailerRentals = () => {
                 <div className="h-12 w-12 rounded-lg bg-secondary/10 flex items-center justify-center mb-4">
                   <CheckCircle className="h-6 w-6 text-secondary" />
                 </div>
-                <h3 className="text-xl font-bold mb-3 text-foreground">Testing New Markets</h3>
+                <h3 className="text-xl font-bold mb-3 text-foreground">Nationwide Shipping</h3>
                 <p className="text-muted-foreground">
-                  Explore new opportunities without major capital investment.
+                  We ship trailers anywhere in the United States.
                 </p>
               </CardContent>
             </Card>
