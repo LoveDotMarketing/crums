@@ -47,7 +47,7 @@ export function AdminSidebar() {
             <span className="text-primary-foreground font-bold text-sm">C</span>
           </div>
           <div>
-            <p className="font-semibold text-sm">Crums Leasing</p>
+            <p className="font-semibold text-sm">CRUMS Leasing</p>
             <p className="text-xs text-muted-foreground">Admin Portal</p>
           </div>
         </div>

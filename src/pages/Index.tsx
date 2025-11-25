@@ -73,7 +73,7 @@ const Index = () => {
               Core Values
             </h2>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-              At Crums Leasing, we see a future where every trucker has the freedom, tools, and
+              At CRUMS Leasing, we see a future where every trucker has the freedom, tools, and
               support to build a life they're proud of both on and off the road.
             </p>
           </div>
@@ -104,7 +104,7 @@ const Index = () => {
                   Hard Work & Dedication
                 </h3>
                 <p className="text-muted-foreground leading-relaxed">
-                  We honor the spirit of "Crums" by showing up every day with pride, effort, and a
+                  We honor the spirit of "CRUMS" by showing up every day with pride, effort, and a
                   willingness to go the extra mile for our customers and our team.
                 </p>
               </CardContent>
@@ -177,7 +177,7 @@ const Index = () => {
 
           <div className="text-center mt-12">
             <p className="text-lg text-muted-foreground italic max-w-4xl mx-auto">
-              Follow the <span className="text-secondary font-semibold">Crums</span> home — to a
+              Follow the <span className="text-secondary font-semibold">CRUMS</span> home — to a
               future built on trust, family, and opportunity.
             </p>
           </div>
@@ -256,7 +256,7 @@ const Index = () => {
             </div>
             <div>
               <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
-                Why Choose Crums Leasing?
+                Why Choose CRUMS Leasing?
               </h2>
               <p className="text-xl text-muted-foreground mb-8">
                 We're more than an equipment provider — we're your partner in success.
@@ -322,7 +322,7 @@ const Index = () => {
             Ready to Get Started?
           </h2>
           <p className="text-xl mb-8 max-w-2xl mx-auto text-primary-foreground/90">
-            Join the Crums family and experience the difference that integrity, dedication, and
+            Join the CRUMS family and experience the difference that integrity, dedication, and
             family values make.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">

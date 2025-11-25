@@ -27,11 +27,11 @@ const Mission = () => {
               Our Mission
             </h2>
             <p className="text-xl text-center text-muted-foreground leading-relaxed mb-12">
-              At Crums Leasing, we believe every hardworking trucker deserves the freedom and stability to build a better life for their family. Inspired by the values of hard work and dedication passed down from "Crums" herself, we are more than a leasing company we are a partner on the road to success. With high quality trailers, flexible solutions, and a people first approach, we make sure our customers always have the tools they need to keep moving forward and make it home safe.
+              At CRUMS Leasing, we believe every hardworking trucker deserves the freedom and stability to build a better life for their family. Inspired by the values of hard work and dedication passed down from "CRUMS" herself, we are more than a leasing company we are a partner on the road to success. With high quality trailers, flexible solutions, and a people first approach, we make sure our customers always have the tools they need to keep moving forward and make it home safe.
             </p>
             <div className="bg-gradient-to-r from-secondary/20 to-primary/20 rounded-lg p-8 text-center border-l-4 border-secondary">
               <p className="text-2xl font-semibold text-foreground italic">
-                "Follow the <span className="text-secondary">Crums</span> home — to a future built
+                "Follow the <span className="text-secondary">CRUMS</span> home — to a future built
                 on trust, family, and opportunity."
               </p>
             </div>
@@ -86,7 +86,7 @@ const Mission = () => {
                   Hard Work & Dedication
                 </h3>
                 <p className="text-muted-foreground leading-relaxed mb-4">
-                  We honor the spirit of "Crums" by showing up every day with pride, effort, and a
+                  We honor the spirit of "CRUMS" by showing up every day with pride, effort, and a
                   willingness to go the extra mile for our customers and our team.
                 </p>
                 <ul className="space-y-2 text-muted-foreground">
@@ -240,7 +240,7 @@ const Mission = () => {
               that help our customers succeed.
             </p>
             <p className="text-lg text-muted-foreground leading-relaxed">
-              We envision a future where the Crums name is synonymous with integrity, reliability,
+              We envision a future where the CRUMS name is synonymous with integrity, reliability,
               and a genuine commitment to the success and well-being of every trucker and fleet
               operator we serve.
             </p>

@@ -9,13 +9,13 @@ export const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
           {/* Company Info */}
           <div>
-            <img src={crumsLogo} alt="Crums Leasing Logo" className="h-10 w-auto mb-4 brightness-0 invert" />
+            <img src={crumsLogo} alt="CRUMS Leasing Logo" className="h-10 w-auto mb-4 brightness-0 invert" />
             <p className="text-sm text-primary-foreground/80 mb-4">
               Building trust, family, and opportunity in trailer leasing and logistics nationwide.
             </p>
             <div className="flex space-x-4">
               <a 
-                href="https://www.facebook.com/people/Crums-Leasing/100090574399864/" 
+                href="https://www.facebook.com/people/CRUMS-Leasing/100090574399864/" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="hover:text-secondary transition-colors"
@@ -114,7 +114,7 @@ export const Footer = () => {
 
         <div className="border-t border-primary-foreground/20 pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center text-sm text-primary-foreground/60">
-            <p>&copy; {new Date().getFullYear()} Crums Leasing. All rights reserved.</p>
+            <p>&copy; {new Date().getFullYear()} CRUMS Leasing. All rights reserved.</p>
             <div className="flex space-x-6 mt-4 md:mt-0">
               <Link to="/privacy" className="hover:text-secondary transition-colors">
                 Privacy Policy

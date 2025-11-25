@@ -106,7 +106,7 @@ const Login = () => {
             <div className="text-center mb-8">
               <h1 className="text-4xl font-bold mb-4 text-foreground">Welcome Back</h1>
               <p className="text-muted-foreground">
-                Access your Crums Leasing customer portal
+                Access your CRUMS Leasing customer portal
               </p>
             </div>
 
