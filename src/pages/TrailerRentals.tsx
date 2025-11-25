@@ -129,18 +129,6 @@ const TrailerRentals = () => {
 
             <Card className="border-2 hover:shadow-lg transition-shadow">
               <CardContent className="p-6">
-                <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
-                  <TrendingUp className="h-6 w-6 text-primary" />
-                </div>
-                <h3 className="text-xl font-bold mb-3 text-foreground">Fleet Evaluation</h3>
-                <p className="text-muted-foreground">
-                  Try different trailer types before deciding on a lease.
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="border-2 hover:shadow-lg transition-shadow">
-              <CardContent className="p-6">
                 <div className="h-12 w-12 rounded-lg bg-accent/10 flex items-center justify-center mb-4">
                   <Calendar className="h-6 w-6 text-accent" />
                 </div>
