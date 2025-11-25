@@ -196,10 +196,10 @@ const Index = () => {
               />
             </div>
             <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
-              53-Foot Dry Van Trailer Leasing
+              53-Foot Dry Van Trailers & Flatbeds
             </h2>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-              Specialized capacity solutions for companies looking to expand their supply chain capabilities with reliable, well-maintained dry van trailers.
+              Specialized capacity solutions for companies looking to expand their supply chain capabilities with reliable, well-maintained 53-foot dry van trailers and flatbeds.
             </p>
           </div>
 
@@ -223,7 +223,7 @@ const Index = () => {
                 </div>
                 <h3 className="text-2xl font-bold mb-4 text-foreground">Flexible Leasing Terms</h3>
                 <p className="text-muted-foreground mb-6 leading-relaxed">
-                  Long-term leasing solutions designed to scale with your business and optimize your supply chain operations.
+                  Long-term leasing solutions starting at 12 months, designed to scale with your business and optimize your supply chain operations.
                 </p>
               </CardContent>
             </Card>
