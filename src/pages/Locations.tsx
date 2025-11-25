@@ -35,7 +35,7 @@ const Locations = () => {
         <div className="container mx-auto px-4 text-center">
           <h1 className="text-4xl md:text-6xl font-bold mb-6">Our Locations</h1>
           <p className="text-xl md:text-2xl max-w-4xl mx-auto text-primary-foreground/90">
-            Serving the Texas area and all over the USA
+            Serving the Texas area and all over the USA. we are nation wide. we ship trailers anywhere in the United States
           </p>
         </div>
       </section>
