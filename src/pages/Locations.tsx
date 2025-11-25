@@ -47,7 +47,7 @@ const Locations = () => {
             <div>
               <img 
                 src={crumsTruckHighway} 
-                alt="Crums Leasing 53-foot dry van trailer on the highway" 
+                alt="CRUMS Leasing 53-foot dry van trailer on the highway"
                 className="w-full h-auto rounded-lg shadow-lg object-cover"
               />
             </div>

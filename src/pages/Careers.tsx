@@ -14,7 +14,7 @@ const Careers = () => {
       {/* Hero */}
       <section className="bg-gradient-to-r from-primary to-brand-teal-dark text-primary-foreground py-20">
         <div className="container mx-auto px-4 text-center">
-          <h1 className="text-4xl md:text-6xl font-bold mb-6">Join The Crums Family</h1>
+          <h1 className="text-4xl md:text-6xl font-bold mb-6">Join The CRUMS Family</h1>
           <p className="text-xl md:text-2xl max-w-4xl mx-auto text-primary-foreground/90 mb-8">
             Build your career with a company that values integrity, hard work, and putting people
             first.
@@ -34,10 +34,10 @@ const Careers = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div>
               <h2 className="text-3xl md:text-4xl font-bold mb-6 text-foreground">
-                Why Work at Crums?
+                Why Work at CRUMS?
               </h2>
               <p className="text-lg text-muted-foreground mb-8 leading-relaxed">
-                At Crums Leasing, we don't just hire employees — we welcome family members. We
+                At CRUMS Leasing, we don't just hire employees — we welcome family members. We
                 believe that when you invest in people, they invest back in the mission. That's why
                 we're committed to creating an environment where everyone can thrive.
               </p>
@@ -84,7 +84,7 @@ const Careers = () => {
             <div>
               <img
                 src={teamImage}
-                alt="Crums Leasing team"
+                alt="CRUMS Leasing team"
                 className="rounded-lg shadow-2xl"
               />
             </div>
@@ -224,7 +224,7 @@ const Careers = () => {
           </h2>
           <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
             We're always looking for talented individuals who share our values. Send us your resume
-            and let's talk about how you can contribute to the Crums family.
+            and let's talk about how you can contribute to the CRUMS family.
           </p>
           <Link to="/contact">
             <Button size="lg" className="bg-secondary hover:bg-secondary/90">

@@ -16,7 +16,7 @@ const About = () => {
       {/* Hero Section */}
       <section className="bg-gradient-to-r from-primary to-brand-teal-dark text-primary-foreground py-20">
         <div className="container mx-auto px-4 text-center">
-          <h1 className="text-4xl md:text-6xl font-bold mb-6">About Crums Leasing</h1>
+          <h1 className="text-4xl md:text-6xl font-bold mb-6">About CRUMS Leasing</h1>
           <p className="text-xl md:text-2xl max-w-4xl mx-auto text-primary-foreground/90">
             A family-rooted legacy built on trust, integrity, and a genuine commitment to the success
             of every trucker we serve.
@@ -32,13 +32,13 @@ const About = () => {
               <h2 className="text-3xl md:text-4xl font-bold mb-6 text-foreground">Our Story</h2>
               <div className="space-y-4 text-lg text-muted-foreground leading-relaxed">
                 <p>
-                  Crums Leasing was built on a foundation of family values and an unwavering
+                  CRUMS Leasing was built on a foundation of family values and an unwavering
                   commitment to the trucking industry. What started as a vision to provide reliable,
                   high-quality trailer solutions has grown into a nationwide enterprise serving
                   thousands of customers.
                 </p>
                 <p>
-                  The Crums name represents more than just equipment leasing — it stands for hard
+                  The CRUMS name represents more than just equipment leasing — it stands for hard
                   work, dedication, and the belief that every trucker deserves the tools and support
                   to build a life they're proud of, both on and off the road.
                 </p>
@@ -52,7 +52,7 @@ const About = () => {
             <div>
               <img
                 src={ourStoryImage}
-                alt="Crums Leasing leadership team"
+                alt="CRUMS Leasing leadership team"
                 className="rounded-lg shadow-2xl"
               />
             </div>
@@ -124,7 +124,7 @@ const About = () => {
             <div className="order-2 lg:order-1">
               <img
                 src={fleetImage}
-                alt="Crums Leasing fleet operations"
+                alt="CRUMS Leasing fleet operations"
                 className="rounded-lg shadow-2xl"
               />
             </div>
@@ -135,14 +135,14 @@ const About = () => {
               <div className="space-y-4 text-lg text-muted-foreground leading-relaxed">
                 <p>
                   As we've grown, we've carefully selected acquisition partners that share our
-                  values and commitment to customer service. Each company we bring into the Crums
+                  values and commitment to customer service. Each company we bring into the CRUMS
                   family adds unique strengths while maintaining the integrity and quality our
                   customers expect.
                 </p>
                 <p>
                   Our multi-company structure allows us to serve diverse markets while providing
                   unified backend support, advanced technology, and the personal touch that defines
-                  the Crums experience.
+                  the CRUMS experience.
                 </p>
                 <p>
                   Whether you're working with an acquired company or our flagship operation, you can
@@ -158,7 +158,7 @@ const About = () => {
       <section className="py-20 bg-primary text-primary-foreground">
         <div className="container mx-auto px-4">
           <h2 className="text-3xl md:text-4xl font-bold text-center mb-16">
-            Crums Leasing By The Numbers
+            CRUMS Leasing By The Numbers
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div className="text-center">
@@ -185,7 +185,7 @@ const About = () => {
       <section className="py-20 bg-background">
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-3xl md:text-4xl font-bold mb-6 text-foreground">
-            Ready to Join the Crums Family?
+            Ready to Join the CRUMS Family?
           </h2>
           <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
             Experience the difference that family values, integrity, and dedication make in your
