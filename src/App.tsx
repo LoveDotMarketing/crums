@@ -32,6 +32,7 @@ import RentalRequest from "./pages/customer/RentalRequest";
 import Application from "./pages/customer/Application";
 import MechanicDashboard from "./pages/mechanic/MechanicDashboard";
 import NotFound from "./pages/NotFound";
+import Review from "./pages/Review";
 
 const queryClient = new QueryClient();
 
@@ -168,6 +169,7 @@ const App = () => (
               } 
             />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="/review" element={<Review />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
