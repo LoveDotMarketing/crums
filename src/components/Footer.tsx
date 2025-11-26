@@ -29,13 +29,13 @@ export const Footer = () => {
               </a>
               <a 
                 href="tel:+14807498996"
-                className="hover:text-secondary transition-colors"
+                className="hover:text-secondary transition-colors block"
               >
                 (480) 749-8996
               </a>
               <a 
                 href="https://crumsleasing.com" 
-                className="hover:text-secondary transition-colors"
+                className="hover:text-secondary transition-colors block"
               >
                 crumsleasing.com
               </a>
