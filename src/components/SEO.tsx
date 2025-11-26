@@ -12,7 +12,7 @@ export const SEO = ({
   title, 
   description, 
   canonical, 
-  ogImage = "https://crumsleasing.com/og-image.jpg",
+  ogImage = "/og-image.jpg",
   structuredData 
 }: SEOProps) => {
   const fullTitle = `${title} | CRUMS Leasing`;
@@ -28,12 +28,16 @@ export const SEO = ({
       <meta property="og:title" content={fullTitle} />
       <meta property="og:description" content={description} />
       <meta property="og:url" content={canonicalUrl} />
-      <meta property="og:image" content={ogImage} />
+      <meta property="og:image" content={`https://crumsleasing.com${ogImage}`} />
+      <meta property="og:image:width" content="1200" />
+      <meta property="og:image:height" content="630" />
+      <meta property="og:type" content="website" />
       
       {/* Twitter Card */}
+      <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:title" content={fullTitle} />
       <meta name="twitter:description" content={description} />
-      <meta name="twitter:image" content={ogImage} />
+      <meta name="twitter:image" content={`https://crumsleasing.com${ogImage}`} />
       
       {/* Structured Data */}
       {structuredData && (
