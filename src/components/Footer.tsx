@@ -9,7 +9,9 @@ export const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
           {/* Company Info */}
           <div>
-            <img src={crumsLogo} alt="CRUMS Leasing Logo" className="h-10 w-auto mb-4 brightness-0 invert" />
+            <a href="https://crumsleasing.com/" target="_blank" rel="noopener noreferrer">
+              <img src={crumsLogo} alt="CRUMS Leasing Logo" className="h-10 w-auto mb-4 brightness-0 invert" />
+            </a>
             <p className="text-sm text-primary-foreground/80 mb-4">
               Building trust, family, and opportunity in trailer leasing and logistics nationwide.
             </p>
@@ -25,7 +27,12 @@ export const Footer = () => {
                 4070 FM1863<br />
                 Bulverde, TX 78163
               </a>
-              <p>480-749-8996</p>
+              <a 
+                href="tel:+14807498996"
+                className="hover:text-secondary transition-colors"
+              >
+                (480) 749-8996
+              </a>
               <a 
                 href="https://crumsleasing.com" 
                 className="hover:text-secondary transition-colors"
@@ -82,6 +89,16 @@ export const Footer = () => {
               <li>
                 <Link to="/services/fleet-solutions" className="hover:text-secondary transition-colors">
                   Fleet Solutions
+                </Link>
+              </li>
+              <li>
+                <Link to="/login" className="hover:text-secondary transition-colors">
+                  Customer Login
+                </Link>
+              </li>
+              <li>
+                <Link to="/get-started" className="hover:text-secondary transition-colors">
+                  Get Started
                 </Link>
               </li>
             </ul>
