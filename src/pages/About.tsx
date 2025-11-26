@@ -72,6 +72,9 @@ const About = () => {
                 src={ourStoryImage}
                 alt="CRUMS Leasing leadership team"
                 className="rounded-lg shadow-2xl"
+                loading="lazy"
+                width="800"
+                height="600"
               />
             </div>
           </div>
@@ -144,6 +147,9 @@ const About = () => {
                 src={fleetImage}
                 alt="CRUMS Leasing fleet operations"
                 className="rounded-lg shadow-2xl"
+                loading="lazy"
+                width="800"
+                height="600"
               />
             </div>
             <div className="order-1 lg:order-2">
