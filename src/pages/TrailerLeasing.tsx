@@ -5,8 +5,27 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Link } from "react-router-dom";
 import { CheckCircle, TrendingUp, Shield, DollarSign, ArrowRight } from "lucide-react";
 import crumsVideo from "@/assets/crums-just-add-water.webm";
+import { SEO } from "@/components/SEO";
+import { trailerLeasingServiceSchema, generateBreadcrumbSchema } from "@/lib/structuredData";
+
 const TrailerLeasing = () => {
+  const breadcrumbSchema = generateBreadcrumbSchema([
+    { name: "Home", url: "https://crumsleasing.com/" },
+    { name: "Trailer Leasing", url: "https://crumsleasing.com/trailer-leasing" }
+  ]);
+
+  const combinedSchema = {
+    "@context": "https://schema.org",
+    "@graph": [trailerLeasingServiceSchema, breadcrumbSchema]
+  };
+
   return <div className="min-h-screen flex flex-col">
+      <SEO
+        title="Trailer Leasing Solutions - 53-Foot Dry Van & Flatbed"
+        description="Long-term trailer leasing starting at 12 months. 53-foot dry van and flatbed trailers with flexible terms, predictable payments, and modern equipment. Get a quote today!"
+        canonical="https://crumsleasing.com/trailer-leasing"
+        structuredData={combinedSchema}
+      />
       <Navigation />
 
       {/* Hero */}

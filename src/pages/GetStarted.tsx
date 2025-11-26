@@ -15,8 +15,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { signupSchema, customerApplicationSchema, validateFile, sanitizeInput } from "@/lib/validations";
 import { z } from "zod";
+import { SEO } from "@/components/SEO";
+import { generateBreadcrumbSchema } from "@/lib/structuredData";
 
 export default function GetStarted() {
+  const breadcrumbSchema = generateBreadcrumbSchema([
+    { name: "Home", url: "https://crumsleasing.com/" },
+    { name: "Get Started", url: "https://crumsleasing.com/get-started" }
+  ]);
+
   const [currentStep, setCurrentStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
@@ -256,6 +263,12 @@ export default function GetStarted() {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <SEO
+        title="Get Started - Apply for Trailer Leasing"
+        description="Start your trailer leasing application with CRUMS Leasing. Fast approval process for 53-foot dry van and flatbed trailers. Create your account and submit your application today."
+        canonical="https://crumsleasing.com/get-started"
+        structuredData={breadcrumbSchema}
+      />
       <Navigation />
       
       <main className="flex-1 bg-gradient-to-b from-background to-muted py-12">

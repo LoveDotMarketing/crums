@@ -20,10 +20,27 @@ import fleetImage from "@/assets/crums-trailer.png";
 import teamImage from "@/assets/team-handshake.jpg";
 import trailerFleetImage from "@/assets/trailer-fleet.png";
 import { ChatBot } from "@/components/ChatBot";
+import { SEO } from "@/components/SEO";
+import { organizationSchema, generateBreadcrumbSchema } from "@/lib/structuredData";
 
 const Index = () => {
+  const breadcrumbSchema = generateBreadcrumbSchema([
+    { name: "Home", url: "https://crumsleasing.com/" }
+  ]);
+
+  const combinedSchema = {
+    "@context": "https://schema.org",
+    "@graph": [organizationSchema, breadcrumbSchema]
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
+      <SEO
+        title="53-Foot Dry Van Trailer Leasing & Rentals in Texas"
+        description="CRUMS Leasing offers quality 53-foot dry van trailers and flatbed leasing & rental solutions. Family-owned, nationwide service from Bulverde, TX. Get a quote today!"
+        canonical="https://crumsleasing.com/"
+        structuredData={combinedSchema}
+      />
       <Navigation />
 
       {/* Hero Section */}

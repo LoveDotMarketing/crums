@@ -4,10 +4,28 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Link } from "react-router-dom";
 import { CheckCircle, Calendar, Zap, TrendingUp, ArrowRight } from "lucide-react";
+import { SEO } from "@/components/SEO";
+import { trailerRentalServiceSchema, generateBreadcrumbSchema } from "@/lib/structuredData";
 
 const TrailerRentals = () => {
+  const breadcrumbSchema = generateBreadcrumbSchema([
+    { name: "Home", url: "https://crumsleasing.com/" },
+    { name: "Trailer Rentals", url: "https://crumsleasing.com/trailer-rentals" }
+  ]);
+
+  const combinedSchema = {
+    "@context": "https://schema.org",
+    "@graph": [trailerRentalServiceSchema, breadcrumbSchema]
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
+      <SEO
+        title="Trailer Rentals - Short-Term 53-Foot Dry Van & Flatbed"
+        description="Flexible short-term trailer rentals for peak seasons and special projects. 53-foot dry van and flatbed trailers shipped anywhere in the US. Fast availability!"
+        canonical="https://crumsleasing.com/trailer-rentals"
+        structuredData={combinedSchema}
+      />
       <Navigation />
 
       {/* Hero */}

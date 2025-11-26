@@ -12,10 +12,23 @@ import {
   MapPin,
   ArrowRight,
 } from "lucide-react";
+import { SEO } from "@/components/SEO";
+import { generateBreadcrumbSchema } from "@/lib/structuredData";
 
 const FleetSolutions = () => {
+  const breadcrumbSchema = generateBreadcrumbSchema([
+    { name: "Home", url: "https://crumsleasing.com/" },
+    { name: "Fleet Solutions", url: "https://crumsleasing.com/fleet-solutions" }
+  ]);
+
   return (
     <div className="min-h-screen flex flex-col">
+      <SEO
+        title="Fleet Solutions - Comprehensive Fleet Management Services"
+        description="Complete fleet management with 24/7 support, digital portal, GPS tracking, and maintenance coordination. Perfect for growing businesses with multiple trailers."
+        canonical="https://crumsleasing.com/fleet-solutions"
+        structuredData={breadcrumbSchema}
+      />
       <Navigation />
 
       {/* Hero */}
