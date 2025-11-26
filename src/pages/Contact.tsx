@@ -9,8 +9,19 @@ import { Label } from "@/components/ui/label";
 import { Phone, Mail, MapPin, Clock, Facebook, Instagram, Linkedin } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { SEO } from "@/components/SEO";
+import { localBusinessSchema, generateBreadcrumbSchema } from "@/lib/structuredData";
 
 const Contact = () => {
+  const breadcrumbSchema = generateBreadcrumbSchema([
+    { name: "Home", url: "https://crumsleasing.com/" },
+    { name: "Contact", url: "https://crumsleasing.com/contact" }
+  ]);
+
+  const combinedSchema = {
+    "@context": "https://schema.org",
+    "@graph": [localBusinessSchema, breadcrumbSchema]
+  };
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
@@ -90,6 +101,12 @@ const Contact = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <SEO
+        title="Contact Us - Get A Quote"
+        description="Contact CRUMS Leasing for trailer leasing and rental quotes. Located in Bulverde, TX. Call (800) 555-CRUMS or email info@crumsleasing.com. 24/7 emergency support available."
+        canonical="https://crumsleasing.com/contact"
+        structuredData={combinedSchema}
+      />
       <Navigation />
 
       {/* Hero */}

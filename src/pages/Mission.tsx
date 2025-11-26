@@ -2,10 +2,23 @@ import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
 import { Card, CardContent } from "@/components/ui/card";
 import { Heart, Award, CheckCircle, Shield, Users, TrendingUp } from "lucide-react";
+import { SEO } from "@/components/SEO";
+import { generateBreadcrumbSchema } from "@/lib/structuredData";
 
 const Mission = () => {
+  const breadcrumbSchema = generateBreadcrumbSchema([
+    { name: "Home", url: "https://crumsleasing.com/" },
+    { name: "Mission", url: "https://crumsleasing.com/mission" }
+  ]);
+
   return (
     <div className="min-h-screen flex flex-col">
+      <SEO
+        title="Our Mission & Values - People-First Trailer Leasing"
+        description="Discover CRUMS Leasing's mission: empowering truckers with freedom and stability. Our core values include integrity, family-first approach, and quality you can count on."
+        canonical="https://crumsleasing.com/mission"
+        structuredData={breadcrumbSchema}
+      />
       <Navigation />
 
       {/* Hero Section */}

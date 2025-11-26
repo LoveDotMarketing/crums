@@ -3,8 +3,20 @@ import { Footer } from "@/components/Footer";
 import { Card, CardContent } from "@/components/ui/card";
 import { MapPin, Phone, Mail, Navigation as NavigationIcon } from "lucide-react";
 import crumsTruckHighway from "@/assets/crums-truck-highway.png";
+import { SEO } from "@/components/SEO";
+import { localBusinessSchema, generateBreadcrumbSchema } from "@/lib/structuredData";
 
 const Locations = () => {
+  const breadcrumbSchema = generateBreadcrumbSchema([
+    { name: "Home", url: "https://crumsleasing.com/" },
+    { name: "Locations", url: "https://crumsleasing.com/locations" }
+  ]);
+
+  const combinedSchema = {
+    "@context": "https://schema.org",
+    "@graph": [localBusinessSchema, breadcrumbSchema]
+  };
+
   const locations = [
     {
       city: "Bulverde",
@@ -28,6 +40,12 @@ const Locations = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <SEO
+        title="Locations & Service Areas - Trailer Leasing Across the US"
+        description="CRUMS Leasing is based in Bulverde, TX with service areas in San Antonio, Austin, and Houston. We ship trailers anywhere in the United States."
+        canonical="https://crumsleasing.com/locations"
+        structuredData={combinedSchema}
+      />
       <Navigation />
 
       {/* Hero */}

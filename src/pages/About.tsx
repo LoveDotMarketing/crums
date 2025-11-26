@@ -7,10 +7,28 @@ import { Users, TrendingUp, MapPin, Award, ArrowRight } from "lucide-react";
 import teamImage from "@/assets/team-leaders.png";
 import fleetImage from "@/assets/fleet-overview.jpg";
 import ourStoryImage from "@/assets/our-story-image.png";
+import { SEO } from "@/components/SEO";
+import { organizationSchema, generateBreadcrumbSchema } from "@/lib/structuredData";
 
 const About = () => {
+  const breadcrumbSchema = generateBreadcrumbSchema([
+    { name: "Home", url: "https://crumsleasing.com/" },
+    { name: "About", url: "https://crumsleasing.com/about" }
+  ]);
+
+  const combinedSchema = {
+    "@context": "https://schema.org",
+    "@graph": [organizationSchema, breadcrumbSchema]
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
+      <SEO
+        title="About Us - Family-Owned Trailer Leasing Company"
+        description="Learn about CRUMS Leasing's family-rooted legacy. Founded on trust and integrity, we provide quality trailer leasing solutions with a people-first approach."
+        canonical="https://crumsleasing.com/about"
+        structuredData={combinedSchema}
+      />
       <Navigation />
 
       {/* Hero Section */}

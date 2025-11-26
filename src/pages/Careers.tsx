@@ -5,10 +5,74 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Link } from "react-router-dom";
 import { Heart, TrendingUp, Users, Award, ArrowRight } from "lucide-react";
 import teamImage from "@/assets/team-handshake.jpg";
+import { SEO } from "@/components/SEO";
+import { generateBreadcrumbSchema } from "@/lib/structuredData";
 
 const Careers = () => {
+  const jobPostings = [
+    {
+      title: "Fleet Manager",
+      location: "Bulverde, TX",
+      type: "Full-Time",
+      description: "Lead our growing fleet operations and help shape the future of our company."
+    },
+    {
+      title: "Customer Service Representative",
+      location: "Bulverde, TX",
+      type: "Full-Time",
+      description: "Be the friendly voice that helps our customers succeed every day."
+    },
+    {
+      title: "Trailer Mechanic",
+      location: "Bulverde, TX",
+      type: "Full-Time",
+      description: "Keep our fleet in top condition with your expert maintenance skills."
+    }
+  ];
+
+  const jobPostingSchema = jobPostings.map((job) => ({
+    "@context": "https://schema.org",
+    "@type": "JobPosting",
+    "title": job.title,
+    "description": job.description,
+    "employmentType": job.type,
+    "hiringOrganization": {
+      "@type": "Organization",
+      "name": "CRUMS Leasing",
+      "sameAs": "https://crumsleasing.com"
+    },
+    "jobLocation": {
+      "@type": "Place",
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "4070 FM1863",
+        "addressLocality": "Bulverde",
+        "addressRegion": "TX",
+        "postalCode": "78163",
+        "addressCountry": "US"
+      }
+    },
+    "datePosted": "2025-11-26"
+  }));
+
+  const breadcrumbSchema = generateBreadcrumbSchema([
+    { name: "Home", url: "https://crumsleasing.com/" },
+    { name: "Careers", url: "https://crumsleasing.com/careers" }
+  ]);
+
+  const combinedSchema = {
+    "@context": "https://schema.org",
+    "@graph": [...jobPostingSchema, breadcrumbSchema]
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
+      <SEO
+        title="Careers - Join The CRUMS Family"
+        description="Build your career at CRUMS Leasing. We're hiring fleet managers, customer service reps, and trailer mechanics. Join a company that values integrity and hard work."
+        canonical="https://crumsleasing.com/careers"
+        structuredData={combinedSchema}
+      />
       <Navigation />
 
       {/* Hero */}
