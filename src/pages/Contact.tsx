@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -6,8 +7,87 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Phone, Mail, MapPin, Clock, Facebook, Instagram, Linkedin } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 const Contact = () => {
+  const { toast } = useToast();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formData, setFormData] = useState({
+    name: "",
+    company: "",
+    email: "",
+    phone: "",
+    service: "",
+    message: "",
+  });
+
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) => {
+    const { id, value } = e.target;
+    setFormData((prev) => ({ ...prev, [id]: value }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Validate required fields
+    if (!formData.name || !formData.company || !formData.email || !formData.phone) {
+      toast({
+        title: "Missing Information",
+        description: "Please fill in all required fields marked with *",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      toast({
+        title: "Invalid Email",
+        description: "Please enter a valid email address",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const { error } = await supabase.functions.invoke('send-contact-email', {
+        body: formData,
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Success!",
+        description: "Your request has been submitted. We'll be in touch soon!",
+      });
+
+      // Clear form
+      setFormData({
+        name: "",
+        company: "",
+        email: "",
+        phone: "",
+        service: "",
+        message: "",
+      });
+    } catch (error: any) {
+      console.error('Error submitting form:', error);
+      toast({
+        title: "Submission Failed",
+        description: "There was an error sending your request. Please try again or contact us directly.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navigation />
@@ -30,14 +110,30 @@ const Contact = () => {
             <Card className="border-2">
               <CardContent className="p-8">
                 <h2 className="text-2xl font-bold mb-6 text-foreground">Get A Quote</h2>
-                <form className="space-y-6">
+                <form onSubmit={handleSubmit} className="space-y-6">
                   <div>
                     <Label htmlFor="name">Full Name *</Label>
-                    <Input id="name" placeholder="John Smith" className="mt-2" />
+                    <Input 
+                      id="name" 
+                      placeholder="John Smith" 
+                      className="mt-2"
+                      value={formData.name}
+                      onChange={handleInputChange}
+                      required
+                      disabled={isSubmitting}
+                    />
                   </div>
                   <div>
                     <Label htmlFor="company">Company Name *</Label>
-                    <Input id="company" placeholder="Your Company LLC" className="mt-2" />
+                    <Input 
+                      id="company" 
+                      placeholder="Your Company LLC" 
+                      className="mt-2"
+                      value={formData.company}
+                      onChange={handleInputChange}
+                      required
+                      disabled={isSubmitting}
+                    />
                   </div>
                   <div>
                     <Label htmlFor="email">Email Address *</Label>
@@ -46,6 +142,10 @@ const Contact = () => {
                       type="email"
                       placeholder="john@yourcompany.com"
                       className="mt-2"
+                      value={formData.email}
+                      onChange={handleInputChange}
+                      required
+                      disabled={isSubmitting}
                     />
                   </div>
                   <div>
@@ -55,6 +155,10 @@ const Contact = () => {
                       type="tel"
                       placeholder="(555) 123-4567"
                       className="mt-2"
+                      value={formData.phone}
+                      onChange={handleInputChange}
+                      required
+                      disabled={isSubmitting}
                     />
                   </div>
                   <div>
@@ -62,12 +166,15 @@ const Contact = () => {
                     <select
                       id="service"
                       className="mt-2 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                      value={formData.service}
+                      onChange={handleInputChange}
+                      disabled={isSubmitting}
                     >
                       <option value="">Select a service...</option>
-                      <option value="leasing">Trailer Leasing</option>
-                      <option value="rentals">Trailer Rentals</option>
-                      <option value="fleet">Fleet Solutions</option>
-                      <option value="other">Other</option>
+                      <option value="Trailer Leasing">Trailer Leasing</option>
+                      <option value="Trailer Rentals">Trailer Rentals</option>
+                      <option value="Fleet Solutions">Fleet Solutions</option>
+                      <option value="Other">Other</option>
                     </select>
                   </div>
                   <div>
@@ -77,14 +184,18 @@ const Contact = () => {
                       placeholder="Tell us about your needs..."
                       rows={4}
                       className="mt-2"
+                      value={formData.message}
+                      onChange={handleInputChange}
+                      disabled={isSubmitting}
                     />
                   </div>
                   <Button
                     type="submit"
                     className="w-full bg-secondary hover:bg-secondary/90"
                     size="lg"
+                    disabled={isSubmitting}
                   >
-                    Submit Request
+                    {isSubmitting ? "Sending..." : "Submit Request"}
                   </Button>
                 </form>
               </CardContent>
