@@ -210,6 +210,9 @@ const Index = () => {
                 src={trailerFleetImage} 
                 alt="CRUM'S Leasing trailer fleet" 
                 className="w-full max-w-5xl mx-auto rounded-lg shadow-lg"
+                loading="lazy"
+                width="1280"
+                height="720"
               />
             </div>
             <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
@@ -269,6 +272,9 @@ const Index = () => {
                 src={fleetImage}
                 alt="Professional fleet management"
                 className="rounded-lg shadow-2xl"
+                loading="lazy"
+                width="800"
+                height="600"
               />
             </div>
             <div>

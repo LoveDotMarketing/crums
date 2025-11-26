@@ -1,3 +1,4 @@
+import { Suspense, lazy } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -6,33 +7,50 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { ScrollToTop } from "@/components/ScrollToTop";
+
+// Eager load critical pages
 import Index from "./pages/Index";
-import Mission from "./pages/Mission";
-import About from "./pages/About";
-import TrailerLeasing from "./pages/TrailerLeasing";
-import TrailerRentals from "./pages/TrailerRentals";
-import FleetSolutions from "./pages/FleetSolutions";
-import Locations from "./pages/Locations";
-import Contact from "./pages/Contact";
-import Careers from "./pages/Careers";
 import Login from "./pages/Login";
-import GetStarted from "./pages/GetStarted";
-import AdminDashboard from "./pages/admin/AdminDashboard";
-import Fleet from "./pages/admin/Fleet";
-import Customers from "./pages/admin/Customers";
-import Mechanics from "./pages/admin/Mechanics";
-import Tolls from "./pages/admin/Tolls";
-import Billing from "./pages/admin/Billing";
-import Support from "./pages/admin/Support";
-import Reports from "./pages/admin/Reports";
-import CustomerDashboard from "./pages/customer/CustomerDashboard";
-import Profile from "./pages/customer/Profile";
-import Rentals from "./pages/customer/Rentals";
-import RentalRequest from "./pages/customer/RentalRequest";
-import Application from "./pages/customer/Application";
-import MechanicDashboard from "./pages/mechanic/MechanicDashboard";
-import NotFound from "./pages/NotFound";
-import Review from "./pages/Review";
+
+// Lazy load all other pages
+const Mission = lazy(() => import("./pages/Mission"));
+const About = lazy(() => import("./pages/About"));
+const TrailerLeasing = lazy(() => import("./pages/TrailerLeasing"));
+const TrailerRentals = lazy(() => import("./pages/TrailerRentals"));
+const FleetSolutions = lazy(() => import("./pages/FleetSolutions"));
+const Locations = lazy(() => import("./pages/Locations"));
+const Contact = lazy(() => import("./pages/Contact"));
+const Careers = lazy(() => import("./pages/Careers"));
+const GetStarted = lazy(() => import("./pages/GetStarted"));
+const Review = lazy(() => import("./pages/Review"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+
+// Admin pages
+const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
+const Fleet = lazy(() => import("./pages/admin/Fleet"));
+const Customers = lazy(() => import("./pages/admin/Customers"));
+const Mechanics = lazy(() => import("./pages/admin/Mechanics"));
+const Tolls = lazy(() => import("./pages/admin/Tolls"));
+const Billing = lazy(() => import("./pages/admin/Billing"));
+const Support = lazy(() => import("./pages/admin/Support"));
+const Reports = lazy(() => import("./pages/admin/Reports"));
+
+// Customer pages
+const CustomerDashboard = lazy(() => import("./pages/customer/CustomerDashboard"));
+const Profile = lazy(() => import("./pages/customer/Profile"));
+const Rentals = lazy(() => import("./pages/customer/Rentals"));
+const RentalRequest = lazy(() => import("./pages/customer/RentalRequest"));
+const Application = lazy(() => import("./pages/customer/Application"));
+
+// Mechanic pages
+const MechanicDashboard = lazy(() => import("./pages/mechanic/MechanicDashboard"));
+
+// Loading fallback component
+const PageLoader = () => (
+  <div className="flex items-center justify-center min-h-screen">
+    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+  </div>
+);
 
 const queryClient = new QueryClient();
 
@@ -44,7 +62,8 @@ const App = () => (
       <BrowserRouter>
         <ScrollToTop />
         <AuthProvider>
-          <Routes>
+          <Suspense fallback={<PageLoader />}>
+            <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/mission" element={<Mission />} />
             <Route path="/about" element={<About />} />
@@ -172,7 +191,8 @@ const App = () => (
             <Route path="/qr" element={<Navigate to="/review" replace />} />
             <Route path="/review" element={<Review />} />
             <Route path="*" element={<NotFound />} />
-          </Routes>
+            </Routes>
+          </Suspense>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
