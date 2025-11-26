@@ -13,6 +13,27 @@ export const Footer = () => {
             <p className="text-sm text-primary-foreground/80 mb-4">
               Building trust, family, and opportunity in trailer leasing and logistics nationwide.
             </p>
+            
+            <div className="text-sm text-primary-foreground/90 mb-4 space-y-1">
+              <p className="font-semibold">CRUMS Leasing</p>
+              <a 
+                href="https://maps.app.goo.gl/Ua1WNSa48j2ujnYg9" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="hover:text-secondary transition-colors block"
+              >
+                4070 FM1863<br />
+                Bulverde, TX 78163
+              </a>
+              <p>480-749-8996</p>
+              <a 
+                href="https://crumsleasing.com" 
+                className="hover:text-secondary transition-colors"
+              >
+                crumsleasing.com
+              </a>
+            </div>
+            
             <div className="flex space-x-4">
               <a 
                 href="https://www.facebook.com/people/CRUMS-Leasing/100090574399864/" 
