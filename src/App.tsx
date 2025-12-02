@@ -25,7 +25,6 @@ const GetStarted = lazy(() => import("./pages/GetStarted"));
 const Review = lazy(() => import("./pages/Review"));
 const Privacy = lazy(() => import("./pages/Privacy"));
 const Terms = lazy(() => import("./pages/Terms"));
-const Trailers = lazy(() => import("./pages/Trailers"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const ApiDocs = lazy(() => import("./pages/ApiDocs"));
 
@@ -214,7 +213,6 @@ const App = () => (
             <Route path="/review" element={<Review />} />
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/terms" element={<Terms />} />
-            <Route path="/trailers" element={<Trailers />} />
             <Route path="/api-docs" element={<ApiDocs />} />
             <Route path="*" element={<NotFound />} />
             </Routes>
