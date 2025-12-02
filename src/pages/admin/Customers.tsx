@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,7 +13,9 @@ import {
   Mail,
   Phone,
   Building2,
-  DollarSign
+  DollarSign,
+  MapPin,
+  Loader2
 } from "lucide-react";
 import {
   Table,
@@ -22,121 +25,113 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { supabase } from "@/integrations/supabase/client";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+interface Customer {
+  id: string;
+  account_number: string;
+  full_name: string;
+  company_name: string | null;
+  city: string | null;
+  state: string | null;
+  zip: string | null;
+  phone: string | null;
+  email: string | null;
+  status: string;
+  archived_at: string | null;
+  archived_by: string | null;
+  notes: string | null;
+  created_at: string;
+  trailers_count?: number;
+  outstanding_tolls?: number;
+}
 
 export default function Customers() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
 
-  // Mock customer data
-  const customers = [
-    {
-      id: "1",
-      name: "ABC Transport",
-      email: "contact@abctransport.com",
-      phone: "(555) 123-4567",
-      company: "ABC Transport Inc.",
-      status: "active",
-      trailers_rented: 3,
-      total_spent: 48000,
-      outstanding_tolls: 1250
-    },
-    {
-      id: "2",
-      name: "XYZ Logistics",
-      email: "info@xyzlogistics.com",
-      phone: "(555) 234-5678",
-      company: "XYZ Logistics LLC",
-      status: "active",
-      trailers_rented: 2,
-      total_spent: 32000,
-      outstanding_tolls: 890
-    },
-    {
-      id: "3",
-      name: "FastTrack Inc",
-      email: "admin@fasttrack.com",
-      phone: "(555) 345-6789",
-      company: "FastTrack Inc.",
-      status: "active",
-      trailers_rented: 1,
-      total_spent: 18000,
-      outstanding_tolls: 450
-    },
-    {
-      id: "4",
-      name: "Global Shipping",
-      email: "dispatch@globalship.com",
-      phone: "(555) 456-7890",
-      company: "Global Shipping Co.",
-      status: "pending",
-      trailers_rented: 0,
-      total_spent: 0,
-      outstanding_tolls: 0
-    },
-    {
-      id: "5",
-      name: "Heavy Haul Co",
-      email: "heavy@haul.com",
-      phone: "(555) 567-8901",
-      company: "Heavy Haul Co.",
-      status: "active",
-      trailers_rented: 4,
-      total_spent: 85000,
-      outstanding_tolls: 2340
-    },
-    {
-      id: "6",
-      name: "Fuel Express",
-      email: "ops@fuelexpress.com",
-      phone: "(555) 678-9012",
-      company: "Fuel Express Ltd.",
-      status: "active",
-      trailers_rented: 2,
-      total_spent: 45000,
-      outstanding_tolls: 670
-    },
-    {
-      id: "7",
-      name: "Cold Chain LLC",
-      email: "info@coldchain.com",
-      phone: "(555) 789-0123",
-      company: "Cold Chain LLC",
-      status: "active",
-      trailers_rented: 1,
-      total_spent: 28000,
-      outstanding_tolls: 320
-    },
-    {
-      id: "8",
-      name: "Swift Movers",
-      email: "contact@swiftmovers.com",
-      phone: "(555) 890-1234",
-      company: "Swift Movers Inc.",
-      status: "inactive",
-      trailers_rented: 0,
-      total_spent: 12000,
-      outstanding_tolls: 0
+  // Fetch customers from database
+  const { data: customers = [], isLoading } = useQuery({
+    queryKey: ['customers'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('customers')
+        .select('*')
+        .order('full_name');
+      
+      if (error) throw error;
+      
+      // Fetch trailer counts for each customer
+      const { data: trailers } = await supabase
+        .from('trailers')
+        .select('customer_id')
+        .not('customer_id', 'is', null);
+      
+      // Fetch pending tolls
+      const { data: tolls } = await supabase
+        .from('tolls')
+        .select('customer_id, amount')
+        .eq('status', 'pending');
+      
+      // Map trailer counts and tolls to customers
+      return (data || []).map((customer: Customer) => {
+        const trailerCount = trailers?.filter(t => t.customer_id === customer.id).length || 0;
+        const customerTolls = tolls?.filter(t => t.customer_id === customer.id) || [];
+        const totalOutstanding = customerTolls.reduce((sum, t) => sum + Number(t.amount), 0);
+        
+        return {
+          ...customer,
+          trailers_count: trailerCount,
+          outstanding_tolls: totalOutstanding
+        };
+      });
     }
-  ];
+  });
 
-  const filteredCustomers = customers.filter(
-    (customer) =>
-      customer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      customer.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      customer.company.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredCustomers = customers.filter((customer) => {
+    const matchesSearch = 
+      customer.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (customer.email?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false) ||
+      (customer.company_name?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false) ||
+      customer.account_number.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    const matchesStatus = statusFilter === "all" || customer.status === statusFilter;
+    
+    return matchesSearch && matchesStatus;
+  });
 
   const getStatusBadge = (status: string) => {
     const variants: Record<string, "default" | "secondary" | "destructive"> = {
       active: "default",
       pending: "secondary",
-      inactive: "destructive"
+      archived: "destructive"
     };
-    return <Badge variant={variants[status]}>{status}</Badge>;
+    return <Badge variant={variants[status] || "secondary"}>{status}</Badge>;
   };
 
   const activeCustomers = customers.filter(c => c.status === "active").length;
-  const totalRevenue = customers.reduce((sum, c) => sum + c.total_spent, 0);
-  const totalOutstanding = customers.reduce((sum, c) => sum + c.outstanding_tolls, 0);
+  const archivedCustomers = customers.filter(c => c.status === "archived").length;
+  const totalOutstanding = customers.reduce((sum, c) => sum + (c.outstanding_tolls || 0), 0);
+
+  if (isLoading) {
+    return (
+      <SidebarProvider>
+        <div className="min-h-screen flex w-full bg-background">
+          <AdminSidebar />
+          <div className="flex-1 flex items-center justify-center">
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          </div>
+        </div>
+      </SidebarProvider>
+    );
+  }
 
   return (
     <SidebarProvider>
@@ -168,7 +163,7 @@ export default function Customers() {
                 <CardContent>
                   <div className="text-2xl font-bold">{activeCustomers}</div>
                   <p className="text-xs text-muted-foreground mt-1">
-                    of {customers.length} total
+                    of {customers.length} total ({archivedCustomers} archived)
                   </p>
                 </CardContent>
               </Card>
@@ -176,14 +171,14 @@ export default function Customers() {
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
                   <CardTitle className="text-sm font-medium text-muted-foreground">
-                    Total Revenue
+                    Total Customers
                   </CardTitle>
-                  <DollarSign className="h-4 w-4 text-muted-foreground" />
+                  <Building2 className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">${totalRevenue.toLocaleString()}</div>
-                  <p className="text-xs text-green-600 mt-1">
-                    All-time earnings
+                  <div className="text-2xl font-bold">{customers.length}</div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Registered accounts
                   </p>
                 </CardContent>
               </Card>
@@ -204,75 +199,109 @@ export default function Customers() {
               </Card>
             </div>
 
-            {/* Search */}
-            <div className="mb-6">
-              <div className="relative max-w-md">
+            {/* Search and Filter */}
+            <div className="mb-6 flex flex-col sm:flex-row gap-4">
+              <div className="relative flex-1 max-w-md">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Search customers..."
+                  placeholder="Search by name, email, company, or account..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-10"
                 />
               </div>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Filter by status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Statuses</SelectItem>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="archived">Archived</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             {/* Customers Table */}
             <Card>
               <CardHeader>
-                <CardTitle>All Customers</CardTitle>
+                <CardTitle>All Customers ({filteredCustomers.length})</CardTitle>
               </CardHeader>
               <CardContent>
                 <Table>
                   <TableHeader>
                     <TableRow>
+                      <TableHead>Account</TableHead>
                       <TableHead>Name</TableHead>
                       <TableHead>Company</TableHead>
+                      <TableHead>Location</TableHead>
                       <TableHead>Contact</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Trailers</TableHead>
-                      <TableHead>Total Spent</TableHead>
                       <TableHead>Outstanding</TableHead>
-                      <TableHead>Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredCustomers.map((customer) => (
-                      <TableRow key={customer.id} className="cursor-pointer hover:bg-muted/50">
-                        <TableCell className="font-medium">{customer.name}</TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            <Building2 className="h-4 w-4 text-muted-foreground" />
-                            {customer.company}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="space-y-1">
-                            <div className="flex items-center gap-2 text-sm">
-                              <Mail className="h-3 w-3 text-muted-foreground" />
-                              {customer.email}
-                            </div>
-                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                              <Phone className="h-3 w-3" />
-                              {customer.phone}
-                            </div>
-                          </div>
-                        </TableCell>
-                        <TableCell>{getStatusBadge(customer.status)}</TableCell>
-                        <TableCell>{customer.trailers_rented}</TableCell>
-                        <TableCell className="text-green-600">
-                          ${customer.total_spent.toLocaleString()}
-                        </TableCell>
-                        <TableCell className={customer.outstanding_tolls > 0 ? "text-red-600" : ""}>
-                          ${customer.outstanding_tolls.toLocaleString()}
-                        </TableCell>
-                        <TableCell>
-                          <Button variant="ghost" size="sm">
-                            View Details
-                          </Button>
+                    {filteredCustomers.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                          No customers found
                         </TableCell>
                       </TableRow>
-                    ))}
+                    ) : (
+                      filteredCustomers.map((customer) => (
+                        <TableRow key={customer.id} className="cursor-pointer hover:bg-muted/50">
+                          <TableCell className="font-mono text-sm">{customer.account_number}</TableCell>
+                          <TableCell className="font-medium">{customer.full_name}</TableCell>
+                          <TableCell>
+                            {customer.company_name ? (
+                              <div className="flex items-center gap-2">
+                                <Building2 className="h-4 w-4 text-muted-foreground" />
+                                {customer.company_name}
+                              </div>
+                            ) : (
+                              <span className="text-muted-foreground">—</span>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            {customer.city && customer.state ? (
+                              <div className="flex items-center gap-2 text-sm">
+                                <MapPin className="h-3 w-3 text-muted-foreground" />
+                                {customer.city}, {customer.state}
+                              </div>
+                            ) : (
+                              <span className="text-muted-foreground">—</span>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            <div className="space-y-1">
+                              {customer.email && (
+                                <div className="flex items-center gap-2 text-sm">
+                                  <Mail className="h-3 w-3 text-muted-foreground" />
+                                  <a href={`mailto:${customer.email}`} className="hover:underline">
+                                    {customer.email}
+                                  </a>
+                                </div>
+                              )}
+                              {customer.phone && (
+                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                  <Phone className="h-3 w-3" />
+                                  <a href={`tel:${customer.phone}`} className="hover:underline">
+                                    {customer.phone}
+                                  </a>
+                                </div>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell>{getStatusBadge(customer.status)}</TableCell>
+                          <TableCell>{customer.trailers_count || 0}</TableCell>
+                          <TableCell className={(customer.outstanding_tolls || 0) > 0 ? "text-red-600" : ""}>
+                            ${(customer.outstanding_tolls || 0).toLocaleString()}
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
                   </TableBody>
                 </Table>
               </CardContent>

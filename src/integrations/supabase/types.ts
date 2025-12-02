@@ -197,6 +197,60 @@ export type Database = {
           },
         ]
       }
+      customers: {
+        Row: {
+          account_number: string
+          archived_at: string | null
+          archived_by: string | null
+          city: string | null
+          company_name: string | null
+          created_at: string | null
+          email: string | null
+          full_name: string
+          id: string
+          notes: string | null
+          phone: string | null
+          state: string | null
+          status: string | null
+          updated_at: string | null
+          zip: string | null
+        }
+        Insert: {
+          account_number: string
+          archived_at?: string | null
+          archived_by?: string | null
+          city?: string | null
+          company_name?: string | null
+          created_at?: string | null
+          email?: string | null
+          full_name: string
+          id?: string
+          notes?: string | null
+          phone?: string | null
+          state?: string | null
+          status?: string | null
+          updated_at?: string | null
+          zip?: string | null
+        }
+        Update: {
+          account_number?: string
+          archived_at?: string | null
+          archived_by?: string | null
+          city?: string | null
+          company_name?: string | null
+          created_at?: string | null
+          email?: string | null
+          full_name?: string
+          id?: string
+          notes?: string | null
+          phone?: string | null
+          state?: string | null
+          status?: string | null
+          updated_at?: string | null
+          zip?: string | null
+        }
+        Relationships: []
+      }
       error_logs: {
         Row: {
           created_at: string
@@ -539,6 +593,7 @@ export type Database = {
           assigned_to: string | null
           company_id: string
           created_at: string
+          customer_id: string | null
           gps_latitude: number | null
           gps_longitude: number | null
           id: string
@@ -563,6 +618,7 @@ export type Database = {
           assigned_to?: string | null
           company_id: string
           created_at?: string
+          customer_id?: string | null
           gps_latitude?: number | null
           gps_longitude?: number | null
           id?: string
@@ -587,6 +643,7 @@ export type Database = {
           assigned_to?: string | null
           company_id?: string
           created_at?: string
+          customer_id?: string | null
           gps_latitude?: number | null
           gps_longitude?: number | null
           id?: string
@@ -620,6 +677,13 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trailers_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
             referencedColumns: ["id"]
           },
         ]
