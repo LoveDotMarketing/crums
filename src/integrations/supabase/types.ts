@@ -210,6 +210,7 @@ export type Database = {
           full_name: string
           id: string
           notes: string | null
+          payment_type: string | null
           phone: string | null
           state: string | null
           status: string | null
@@ -228,6 +229,7 @@ export type Database = {
           full_name: string
           id?: string
           notes?: string | null
+          payment_type?: string | null
           phone?: string | null
           state?: string | null
           status?: string | null
@@ -246,6 +248,7 @@ export type Database = {
           full_name?: string
           id?: string
           notes?: string | null
+          payment_type?: string | null
           phone?: string | null
           state?: string | null
           status?: string | null

@@ -50,6 +50,7 @@ interface Customer {
   archived_at: string | null;
   archived_by: string | null;
   notes: string | null;
+  payment_type: string | null;
   created_at: string;
   birthday?: string | null;
   trailers_count?: number;
@@ -239,19 +240,16 @@ export default function Customers() {
                     <TableRow>
                       <TableHead>Account</TableHead>
                       <TableHead>Name</TableHead>
-                      <TableHead>Company</TableHead>
-                      <TableHead>Location</TableHead>
+                      <TableHead>Type</TableHead>
                       <TableHead>Contact</TableHead>
                       <TableHead>Status</TableHead>
-                      <TableHead>Trailers</TableHead>
-                      <TableHead>Outstanding</TableHead>
                       <TableHead className="w-[80px]">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {filteredCustomers.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
+                        <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
                           No customers found
                         </TableCell>
                       </TableRow>
@@ -264,25 +262,8 @@ export default function Customers() {
                         >
                           <TableCell className="font-mono text-sm">{customer.account_number}</TableCell>
                           <TableCell className="font-medium">{customer.full_name}</TableCell>
-                          <TableCell>
-                            {customer.company_name ? (
-                              <div className="flex items-center gap-2">
-                                <Building2 className="h-4 w-4 text-muted-foreground" />
-                                {customer.company_name}
-                              </div>
-                            ) : (
-                              <span className="text-muted-foreground">—</span>
-                            )}
-                          </TableCell>
-                          <TableCell>
-                            {customer.city && customer.state ? (
-                              <div className="flex items-center gap-2 text-sm">
-                                <MapPin className="h-3 w-3 text-muted-foreground" />
-                                {customer.city}, {customer.state}
-                              </div>
-                            ) : (
-                              <span className="text-muted-foreground">—</span>
-                            )}
+                          <TableCell className="text-sm max-w-[300px]">
+                            {customer.payment_type || <span className="text-muted-foreground">—</span>}
                           </TableCell>
                           <TableCell>
                             <div className="space-y-1">
@@ -294,21 +275,9 @@ export default function Customers() {
                                   </a>
                                 </div>
                               )}
-                              {customer.phone && (
-                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                  <Phone className="h-3 w-3" />
-                                  <a href={`tel:${customer.phone}`} className="hover:underline" onClick={(e) => e.stopPropagation()}>
-                                    {customer.phone}
-                                  </a>
-                                </div>
-                              )}
                             </div>
                           </TableCell>
                           <TableCell>{getStatusBadge(customer.status)}</TableCell>
-                          <TableCell>{customer.trailers_count || 0}</TableCell>
-                          <TableCell className={(customer.outstanding_tolls || 0) > 0 ? "text-red-600" : ""}>
-                            ${(customer.outstanding_tolls || 0).toLocaleString()}
-                          </TableCell>
                           <TableCell>
                             <Button
                               variant="ghost"

@@ -55,9 +55,10 @@ const customerSchema = z.object({
   phone: z.string().max(20).optional().or(z.literal("")),
   birthday: z.date().optional().nullable(),
   city: z.string().max(50).optional().or(z.literal("")),
-  state: z.string().max(2).optional().or(z.literal("")),
+  state: z.string().max(20).optional().or(z.literal("")),
   zip: z.string().max(10).optional().or(z.literal("")),
   status: z.enum(["active", "pending", "archived"]),
+  payment_type: z.string().max(200).optional().or(z.literal("")),
   notes: z.string().max(500).optional().or(z.literal("")),
 });
 
@@ -75,6 +76,7 @@ interface Customer {
   email: string | null;
   status: string;
   notes: string | null;
+  payment_type: string | null;
   birthday?: string | null;
 }
 
@@ -106,6 +108,7 @@ export function CustomerFormDialog({ open, onOpenChange, customer }: CustomerFor
       state: "",
       zip: "",
       status: "active",
+      payment_type: "",
       notes: "",
     },
   });
@@ -124,6 +127,7 @@ export function CustomerFormDialog({ open, onOpenChange, customer }: CustomerFor
           state: customer.state || "",
           zip: customer.zip || "",
           status: customer.status as "active" | "pending" | "archived",
+          payment_type: customer.payment_type || "",
           notes: customer.notes || "",
         });
       } else {
@@ -138,6 +142,7 @@ export function CustomerFormDialog({ open, onOpenChange, customer }: CustomerFor
           state: "",
           zip: "",
           status: "active",
+          payment_type: "",
           notes: "",
         });
       }
@@ -157,6 +162,7 @@ export function CustomerFormDialog({ open, onOpenChange, customer }: CustomerFor
         state: values.state || null,
         zip: values.zip || null,
         status: values.status,
+        payment_type: values.payment_type || null,
         notes: values.notes || null,
       });
       if (error) throw error;
@@ -186,6 +192,7 @@ export function CustomerFormDialog({ open, onOpenChange, customer }: CustomerFor
           state: values.state || null,
           zip: values.zip || null,
           status: values.status,
+          payment_type: values.payment_type || null,
           notes: values.notes || null,
         })
         .eq("id", customer!.id);
@@ -408,6 +415,20 @@ export function CustomerFormDialog({ open, onOpenChange, customer }: CustomerFor
                 )}
               />
             </div>
+
+            <FormField
+              control={form.control}
+              name="payment_type"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Payment Type</FormLabel>
+                  <FormControl>
+                    <Input placeholder="e.g. Payment- $2,000.00 Due- 1st of month" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             <FormField
               control={form.control}
