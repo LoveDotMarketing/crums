@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
 import { 
   Wrench, 
   Plus, 
@@ -120,7 +121,7 @@ export default function Mechanics() {
             <SidebarTrigger />
             <div className="flex-1 flex items-center justify-between ml-4">
               <h1 className="text-2xl font-bold text-foreground">Mechanic Management</h1>
-              <Button>
+              <Button onClick={() => toast.info("Mechanic accounts are created through the Staff registration flow. Contact admin to set up a new mechanic account.")}>
                 <Plus className="h-4 w-4 mr-2" />
                 Add Mechanic
               </Button>
