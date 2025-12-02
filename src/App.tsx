@@ -37,6 +37,7 @@ const Tolls = lazy(() => import("./pages/admin/Tolls"));
 const Billing = lazy(() => import("./pages/admin/Billing"));
 const Support = lazy(() => import("./pages/admin/Support"));
 const Reports = lazy(() => import("./pages/admin/Reports"));
+const Analytics = lazy(() => import("./pages/admin/Analytics"));
 
 // Customer pages
 const CustomerDashboard = lazy(() => import("./pages/customer/CustomerDashboard"));
@@ -151,7 +152,15 @@ const App = () => (
               } 
             />
             <Route 
-              path="/dashboard/customer/application" 
+              path="/dashboard/admin/analytics" 
+              element={
+                <ProtectedRoute requiredRole="admin">
+                  <Analytics />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/dashboard/customer/application"
               element={
                 <ProtectedRoute requiredRole="customer">
                   <Application />
