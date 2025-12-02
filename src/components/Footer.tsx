@@ -28,10 +28,10 @@ export const Footer = () => {
                 Bulverde, TX 78163
               </a>
               <a 
-                href="tel:+14807498996"
+                href="tel:+18885704564"
                 className="hover:text-secondary transition-colors block"
               >
-                (480) 749-8996
+                (888) 570-4564
               </a>
               <a 
                 href="https://crumsleasing.com" 
