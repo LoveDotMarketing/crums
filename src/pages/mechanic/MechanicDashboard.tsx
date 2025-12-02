@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Wrench, LogOut, Truck, Search, MapPin, DollarSign, ClipboardList } from "lucide-react";
 import { toast } from "sonner";
 import { ChatBot } from "@/components/ChatBot";
+import { SEO } from "@/components/SEO";
 import {
   Table,
   TableBody,
@@ -216,8 +217,14 @@ export default function MechanicDashboard() {
   const totalMaintenanceCost = trailers.reduce((sum, t) => sum + (t.total_maintenance_cost || 0), 0);
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b border-border bg-card">
+    <>
+      <SEO
+        title="Mechanic Dashboard"
+        description="CRUMS Leasing mechanic dashboard for fleet maintenance management."
+        noindex
+      />
+      <div className="min-h-screen bg-background">
+        <header className="border-b border-border bg-card">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Wrench className="h-6 w-6 text-primary" />
@@ -523,6 +530,7 @@ export default function MechanicDashboard() {
 
       <ChatBot userType="mechanic" />
     </div>
+    </>
   );
 }
 

@@ -7,6 +7,7 @@ import { ChatBot } from "@/components/ChatBot";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDistanceToNow } from "date-fns";
+import { SEO } from "@/components/SEO";
 
 export default function AdminDashboard() {
   const { user } = useAuth();
@@ -197,7 +198,13 @@ export default function AdminDashboard() {
   ];
 
   return (
-    <SidebarProvider>
+    <>
+      <SEO
+        title="Admin Dashboard"
+        description="CRUMS Leasing admin dashboard for fleet and customer management."
+        noindex
+      />
+      <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background">
         <AdminSidebar />
         
@@ -345,5 +352,6 @@ export default function AdminDashboard() {
       </div>
       <ChatBot userType="admin" />
     </SidebarProvider>
+    </>
   );
 }
