@@ -61,6 +61,8 @@ export default function Fleet() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [companyId, setCompanyId] = useState<string>("");
+  const [sortColumn, setSortColumn] = useState<keyof Trailer | null>(null);
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
   
   const [newTrailer, setNewTrailer] = useState({
     trailer_number: "",
@@ -204,12 +206,66 @@ export default function Fleet() {
     }
   };
 
-  const filteredTrailers = trailers.filter(
-    (trailer) =>
-      trailer.trailer_number.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      trailer.type.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      trailer.make?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      trailer.vin?.toLowerCase().includes(searchQuery.toLowerCase())
+  const handleSort = (column: keyof Trailer) => {
+    if (sortColumn === column) {
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+    } else {
+      setSortColumn(column);
+      setSortDirection("asc");
+    }
+  };
+
+  const filteredTrailers = trailers
+    .filter(
+      (trailer) =>
+        trailer.trailer_number.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        trailer.type.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        trailer.make?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        trailer.vin?.toLowerCase().includes(searchQuery.toLowerCase())
+    )
+    .sort((a, b) => {
+      if (!sortColumn) return 0;
+      
+      const aVal = a[sortColumn];
+      const bVal = b[sortColumn];
+      
+      // Handle null/undefined values
+      if (aVal == null && bVal == null) return 0;
+      if (aVal == null) return sortDirection === "asc" ? 1 : -1;
+      if (bVal == null) return sortDirection === "asc" ? -1 : 1;
+      
+      // Compare values
+      if (typeof aVal === "string" && typeof bVal === "string") {
+        return sortDirection === "asc" 
+          ? aVal.localeCompare(bVal) 
+          : bVal.localeCompare(aVal);
+      }
+      
+      if (typeof aVal === "number" && typeof bVal === "number") {
+        return sortDirection === "asc" ? aVal - bVal : bVal - aVal;
+      }
+      
+      if (typeof aVal === "boolean" && typeof bVal === "boolean") {
+        return sortDirection === "asc" 
+          ? (aVal === bVal ? 0 : aVal ? -1 : 1)
+          : (aVal === bVal ? 0 : aVal ? 1 : -1);
+      }
+      
+      return 0;
+    });
+
+  const SortableHeader = ({ column, children }: { column: keyof Trailer; children: React.ReactNode }) => (
+    <TableHead 
+      className="cursor-pointer select-none hover:bg-muted/50 transition-colors"
+      onClick={() => handleSort(column)}
+    >
+      <div className="flex items-center gap-1">
+        {children}
+        {sortColumn === column && (
+          <span className="text-xs">{sortDirection === "asc" ? "↑" : "↓"}</span>
+        )}
+      </div>
+    </TableHead>
   );
 
   const calculateROI = (trailer: Trailer) => {
@@ -496,14 +552,14 @@ export default function Fleet() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Trailer #</TableHead>
-                        <TableHead>VIN</TableHead>
-                        <TableHead>Type</TableHead>
-                        <TableHead>Year</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Purchase Price</TableHead>
-                        <TableHead>Maintenance</TableHead>
-                        <TableHead>Income</TableHead>
+                        <SortableHeader column="trailer_number">Trailer #</SortableHeader>
+                        <SortableHeader column="vin">VIN</SortableHeader>
+                        <SortableHeader column="type">Type</SortableHeader>
+                        <SortableHeader column="year">Year</SortableHeader>
+                        <SortableHeader column="status">Status</SortableHeader>
+                        <SortableHeader column="purchase_price">Purchase Price</SortableHeader>
+                        <SortableHeader column="total_maintenance_cost">Maintenance</SortableHeader>
+                        <SortableHeader column="rental_income">Income</SortableHeader>
                         <TableHead>ROI</TableHead>
                         <TableHead>Actions</TableHead>
                       </TableRow>
