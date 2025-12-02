@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,12 +13,9 @@ import {
   Truck, 
   Plus, 
   Search, 
-  MapPin, 
   DollarSign, 
   Wrench,
-  Calendar,
-  TrendingUp,
-  Edit,
+  Eye,
   Trash2,
   Loader2
 } from "lucide-react";
@@ -56,6 +54,7 @@ interface Trailer {
 
 export default function Fleet() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [trailers, setTrailers] = useState<Trailer[]>([]);
   const [loading, setLoading] = useState(true);
@@ -209,7 +208,8 @@ export default function Fleet() {
     (trailer) =>
       trailer.trailer_number.toLowerCase().includes(searchQuery.toLowerCase()) ||
       trailer.type.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      trailer.make?.toLowerCase().includes(searchQuery.toLowerCase())
+      trailer.make?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      trailer.vin?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const calculateROI = (trailer: Trailer) => {
@@ -497,37 +497,37 @@ export default function Fleet() {
                     <TableHeader>
                       <TableRow>
                         <TableHead>Trailer #</TableHead>
+                        <TableHead>VIN</TableHead>
                         <TableHead>Type</TableHead>
-                        <TableHead>Make/Model</TableHead>
                         <TableHead>Year</TableHead>
                         <TableHead>Status</TableHead>
-                        <TableHead>Assigned To</TableHead>
                         <TableHead>Purchase Price</TableHead>
-                        <TableHead>Maintenance Cost</TableHead>
-                        <TableHead>Rental Income</TableHead>
+                        <TableHead>Maintenance</TableHead>
+                        <TableHead>Income</TableHead>
                         <TableHead>ROI</TableHead>
                         <TableHead>Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {filteredTrailers.map((trailer) => (
-                        <TableRow key={trailer.id}>
+                        <TableRow 
+                          key={trailer.id} 
+                          className="cursor-pointer hover:bg-muted/50"
+                          onClick={() => navigate(`/dashboard/admin/fleet/${trailer.id}`)}
+                        >
                           <TableCell className="font-medium">
                             {trailer.trailer_number}
                           </TableCell>
-                          <TableCell>{trailer.type}</TableCell>
-                          <TableCell>
-                            {trailer.make} {trailer.model}
+                          <TableCell className="font-mono text-xs text-muted-foreground">
+                            {trailer.vin ? `...${trailer.vin.slice(-6)}` : "-"}
                           </TableCell>
+                          <TableCell>{trailer.type}</TableCell>
                           <TableCell>{trailer.year}</TableCell>
                           <TableCell>{getStatusBadge(trailer.status)}</TableCell>
                           <TableCell>
-                            {trailer.assigned_to || "-"}
-                          </TableCell>
-                          <TableCell>
                             ${(trailer.purchase_price || 0).toLocaleString()}
                           </TableCell>
-                          <TableCell className="text-red-600">
+                          <TableCell className="text-destructive">
                             ${(trailer.total_maintenance_cost || 0).toLocaleString()}
                           </TableCell>
                           <TableCell className="text-green-600">
@@ -539,9 +539,13 @@ export default function Fleet() {
                             </Badge>
                           </TableCell>
                           <TableCell>
-                            <div className="flex gap-2">
-                              <Button size="sm" variant="ghost">
-                                <Edit className="h-4 w-4" />
+                            <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
+                              <Button 
+                                size="sm" 
+                                variant="ghost"
+                                onClick={() => navigate(`/dashboard/admin/fleet/${trailer.id}`)}
+                              >
+                                <Eye className="h-4 w-4" />
                               </Button>
                               <Button 
                                 size="sm" 

@@ -30,6 +30,7 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 // Admin pages
 const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
 const Fleet = lazy(() => import("./pages/admin/Fleet"));
+const TrailerDetail = lazy(() => import("./pages/admin/TrailerDetail"));
 const Customers = lazy(() => import("./pages/admin/Customers"));
 const Mechanics = lazy(() => import("./pages/admin/Mechanics"));
 const Tolls = lazy(() => import("./pages/admin/Tolls"));
@@ -90,6 +91,14 @@ const App = () => (
               element={
                 <ProtectedRoute requiredRole="admin">
                   <Fleet />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/dashboard/admin/fleet/:trailerId" 
+              element={
+                <ProtectedRoute requiredRole="admin">
+                  <TrailerDetail />
                 </ProtectedRoute>
               } 
             />
