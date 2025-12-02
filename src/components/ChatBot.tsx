@@ -181,7 +181,8 @@ export const ChatBot = ({ userType }: ChatBotProps) => {
       {/* Chat Window */}
       <Card
         className={cn(
-          "fixed bottom-6 right-6 w-96 h-[600px] shadow-2xl z-50 flex flex-col",
+          "fixed bottom-6 right-6 w-[calc(100vw-3rem)] max-w-96 h-[600px] shadow-2xl z-50 flex flex-col",
+          "sm:w-96",
           "transition-all duration-300 origin-bottom-right",
           isOpen ? "scale-100 opacity-100" : "scale-0 opacity-0 pointer-events-none"
         )}
