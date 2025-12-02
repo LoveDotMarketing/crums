@@ -39,19 +39,6 @@ export const Navigation = () => {
                       <li>
                         <NavigationMenuLink asChild>
                           <Link
-                            to="/trailers"
-                            className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
-                          >
-                            <div className="text-sm font-medium leading-none">Trailer Inventory</div>
-                            <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
-                              View our live trailer availability
-                            </p>
-                          </Link>
-                        </NavigationMenuLink>
-                      </li>
-                      <li>
-                        <NavigationMenuLink asChild>
-                          <Link
                             to="/services/trailer-leasing"
                             className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
                           >
@@ -172,13 +159,6 @@ export const Navigation = () => {
         {mobileMenuOpen && (
           <div className="lg:hidden py-4 border-t border-border">
             <div className="flex flex-col space-y-4">
-              <Link
-                to="/trailers"
-                className="text-sm font-medium text-foreground hover:text-primary"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Trailer Inventory
-              </Link>
               <Link
                 to="/services/trailer-leasing"
                 className="text-sm font-medium text-foreground hover:text-primary"
