@@ -1,12 +1,28 @@
 import { useLocation, Link } from "react-router-dom";
 import { useEffect } from "react";
 import { Helmet } from "react-helmet-async";
+import { supabase } from "@/integrations/supabase/client";
 
 const NotFound = () => {
   const location = useLocation();
 
   useEffect(() => {
     console.error("404 Error: User attempted to access non-existent route:", location.pathname);
+    
+    // Log 404 error to database
+    const logError = async () => {
+      try {
+        await supabase.from("error_logs").insert({
+          url: location.pathname,
+          referrer: document.referrer || null,
+          user_agent: navigator.userAgent,
+        });
+      } catch (error) {
+        console.error("Failed to log 404 error:", error);
+      }
+    };
+    
+    logError();
   }, [location.pathname]);
 
   return (

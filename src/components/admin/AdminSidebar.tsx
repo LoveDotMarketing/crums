@@ -3,11 +3,11 @@ import {
   Receipt, 
   Users, 
   Truck, 
-  Building2, 
   HelpCircle,
   LogOut,
   Wrench,
-  DollarSign
+  DollarSign,
+  BarChart3
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/hooks/useAuth";
@@ -34,6 +34,7 @@ const menuItems = [
   { title: "Billing", url: "/dashboard/admin/billing", icon: DollarSign },
   { title: "Support", url: "/dashboard/admin/support", icon: HelpCircle },
   { title: "Reports", url: "/dashboard/admin/reports", icon: Receipt },
+  { title: "Analytics", url: "/dashboard/admin/analytics", icon: BarChart3 },
 ];
 
 export function AdminSidebar() {
