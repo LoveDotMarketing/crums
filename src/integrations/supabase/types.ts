@@ -202,6 +202,7 @@ export type Database = {
           account_number: string
           archived_at: string | null
           archived_by: string | null
+          birthday: string | null
           city: string | null
           company_name: string | null
           created_at: string | null
@@ -219,6 +220,7 @@ export type Database = {
           account_number: string
           archived_at?: string | null
           archived_by?: string | null
+          birthday?: string | null
           city?: string | null
           company_name?: string | null
           created_at?: string | null
@@ -236,6 +238,7 @@ export type Database = {
           account_number?: string
           archived_at?: string | null
           archived_by?: string | null
+          birthday?: string | null
           city?: string | null
           company_name?: string | null
           created_at?: string | null

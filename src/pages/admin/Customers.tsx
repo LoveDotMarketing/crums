@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { CustomerFormDialog } from "@/components/admin/CustomerFormDialog";
 import { 
   Users, 
   Plus, 
@@ -15,7 +16,8 @@ import {
   Building2,
   DollarSign,
   MapPin,
-  Loader2
+  Loader2,
+  Pencil
 } from "lucide-react";
 import {
   Table,
@@ -49,6 +51,7 @@ interface Customer {
   archived_by: string | null;
   notes: string | null;
   created_at: string;
+  birthday?: string | null;
   trailers_count?: number;
   outstanding_tolls?: number;
 }
@@ -56,6 +59,8 @@ interface Customer {
 export default function Customers() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
 
   // Fetch customers from database
   const { data: customers = [], isLoading } = useQuery({
@@ -143,7 +148,7 @@ export default function Customers() {
             <SidebarTrigger />
             <div className="flex-1 flex items-center justify-between ml-4">
               <h1 className="text-2xl font-bold text-foreground">Customer Management</h1>
-              <Button>
+              <Button onClick={() => { setSelectedCustomer(null); setDialogOpen(true); }}>
                 <Plus className="h-4 w-4 mr-2" />
                 Add Customer
               </Button>
@@ -240,18 +245,23 @@ export default function Customers() {
                       <TableHead>Status</TableHead>
                       <TableHead>Trailers</TableHead>
                       <TableHead>Outstanding</TableHead>
+                      <TableHead className="w-[80px]">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {filteredCustomers.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                        <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
                           No customers found
                         </TableCell>
                       </TableRow>
                     ) : (
                       filteredCustomers.map((customer) => (
-                        <TableRow key={customer.id} className="cursor-pointer hover:bg-muted/50">
+                        <TableRow 
+                          key={customer.id} 
+                          className="cursor-pointer hover:bg-muted/50"
+                          onClick={() => { setSelectedCustomer(customer); setDialogOpen(true); }}
+                        >
                           <TableCell className="font-mono text-sm">{customer.account_number}</TableCell>
                           <TableCell className="font-medium">{customer.full_name}</TableCell>
                           <TableCell>
@@ -279,7 +289,7 @@ export default function Customers() {
                               {customer.email && (
                                 <div className="flex items-center gap-2 text-sm">
                                   <Mail className="h-3 w-3 text-muted-foreground" />
-                                  <a href={`mailto:${customer.email}`} className="hover:underline">
+                                  <a href={`mailto:${customer.email}`} className="hover:underline" onClick={(e) => e.stopPropagation()}>
                                     {customer.email}
                                   </a>
                                 </div>
@@ -287,7 +297,7 @@ export default function Customers() {
                               {customer.phone && (
                                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                                   <Phone className="h-3 w-3" />
-                                  <a href={`tel:${customer.phone}`} className="hover:underline">
+                                  <a href={`tel:${customer.phone}`} className="hover:underline" onClick={(e) => e.stopPropagation()}>
                                     {customer.phone}
                                   </a>
                                 </div>
@@ -299,6 +309,19 @@ export default function Customers() {
                           <TableCell className={(customer.outstanding_tolls || 0) > 0 ? "text-red-600" : ""}>
                             ${(customer.outstanding_tolls || 0).toLocaleString()}
                           </TableCell>
+                          <TableCell>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedCustomer(customer);
+                                setDialogOpen(true);
+                              }}
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                          </TableCell>
                         </TableRow>
                       ))
                     )}
@@ -309,6 +332,12 @@ export default function Customers() {
           </main>
         </div>
       </div>
+
+      <CustomerFormDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        customer={selectedCustomer}
+      />
     </SidebarProvider>
   );
 }
