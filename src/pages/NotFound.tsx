@@ -9,14 +9,17 @@ const NotFound = () => {
   useEffect(() => {
     console.error("404 Error: User attempted to access non-existent route:", location.pathname);
     
-    // Log 404 error to database
+    // Log 404 error to database using type assertion for new table
     const logError = async () => {
       try {
-        await supabase.from("error_logs").insert({
+        const { error } = await (supabase as any).from("error_logs").insert({
           url: location.pathname,
           referrer: document.referrer || null,
           user_agent: navigator.userAgent,
         });
+        if (error) {
+          console.error("Failed to log 404 error:", error);
+        }
       } catch (error) {
         console.error("Failed to log 404 error:", error);
       }
