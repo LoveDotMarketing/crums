@@ -15,8 +15,7 @@ import {
   TrendingUp,
   AlertTriangle,
   Trash2,
-  RefreshCw,
-  ExternalLink
+  RefreshCw
 } from "lucide-react";
 
 interface ErrorLog {
@@ -401,28 +400,6 @@ export default function Analytics() {
                     </TableBody>
                   </Table>
                 )}
-              </CardContent>
-            </Card>
-
-            {/* Link to full analytics */}
-            <Card className="bg-muted/50">
-              <CardContent className="py-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium">View Full Analytics</p>
-                    <p className="text-sm text-muted-foreground">Access detailed analytics with charts and real-time data</p>
-                  </div>
-                  <Button variant="outline" asChild>
-                    <a 
-                      href="https://lovable.dev/projects/ae486bb4-1096-49ca-8857-9500ccfeed45?settings=analytics" 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                    >
-                      <ExternalLink className="h-4 w-4 mr-2" />
-                      Open Analytics
-                    </a>
-                  </Button>
-                </div>
               </CardContent>
             </Card>
           </div>
