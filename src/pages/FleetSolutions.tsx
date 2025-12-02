@@ -18,7 +18,7 @@ import { generateBreadcrumbSchema } from "@/lib/structuredData";
 const FleetSolutions = () => {
   const breadcrumbSchema = generateBreadcrumbSchema([
     { name: "Home", url: "https://crumsleasing.com/" },
-    { name: "Fleet Solutions", url: "https://crumsleasing.com/fleet-solutions" }
+    { name: "Fleet Solutions", url: "https://crumsleasing.com/services/fleet-solutions" }
   ]);
 
   return (
@@ -26,7 +26,7 @@ const FleetSolutions = () => {
       <SEO
         title="Fleet Solutions - Comprehensive Fleet Management Services"
         description="Complete fleet management with 24/7 support, digital portal, GPS tracking, and maintenance coordination. Perfect for growing businesses with multiple trailers."
-        canonical="https://crumsleasing.com/fleet-solutions"
+        canonical="https://crumsleasing.com/services/fleet-solutions"
         structuredData={breadcrumbSchema}
       />
       <Navigation />
