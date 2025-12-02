@@ -1,18 +1,21 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { supabase } from "@/integrations/supabase/client";
+import { TollFormDialog } from "@/components/admin/TollFormDialog";
+import { toast } from "sonner";
 import { 
-  Receipt, 
   Plus, 
   Search, 
   DollarSign,
   AlertCircle,
   CheckCircle,
-  Clock
+  Clock,
+  Loader2
 } from "lucide-react";
 import {
   Table,
@@ -23,107 +26,93 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
+interface Toll {
+  id: string;
+  customer_id: string;
+  trailer_id: string | null;
+  toll_location: string | null;
+  toll_authority: string | null;
+  amount: number;
+  toll_date: string;
+  status: string;
+  payment_date: string | null;
+  profiles: { first_name: string | null; last_name: string | null; email: string } | null;
+  trailers: { trailer_number: string } | null;
+}
+
 export default function Tolls() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [tolls, setTolls] = useState<Toll[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-  // Mock toll data
-  const tolls = [
-    {
-      id: "1",
-      customer: "ABC Transport",
-      trailer: "TRL-001",
-      location: "I-95 Delaware",
-      authority: "Delaware River Port Authority",
-      amount: 145.50,
-      toll_date: "2024-01-15",
-      status: "pending",
-      payment_date: null
-    },
-    {
-      id: "2",
-      customer: "XYZ Logistics",
-      trailer: "TRL-003",
-      location: "Golden Gate Bridge",
-      authority: "Golden Gate Bridge District",
-      amount: 890.00,
-      toll_date: "2024-01-14",
-      status: "paid",
-      payment_date: "2024-01-16"
-    },
-    {
-      id: "3",
-      customer: "FastTrack Inc",
-      trailer: "TRL-002",
-      location: "NJ Turnpike",
-      authority: "NJ Turnpike Authority",
-      amount: 67.25,
-      toll_date: "2024-01-13",
-      status: "pending",
-      payment_date: null
-    },
-    {
-      id: "4",
-      customer: "Heavy Haul Co",
-      trailer: "TRL-005",
-      location: "PA Turnpike",
-      authority: "PA Turnpike Commission",
-      amount: 234.75,
-      toll_date: "2024-01-12",
-      status: "overdue",
-      payment_date: null
-    },
-    {
-      id: "5",
-      customer: "Fuel Express",
-      trailer: "TRL-007",
-      location: "Texas Toll Road",
-      authority: "NTTA",
-      amount: 45.00,
-      toll_date: "2024-01-11",
-      status: "paid",
-      payment_date: "2024-01-12"
-    },
-    {
-      id: "6",
-      customer: "Cold Chain LLC",
-      trailer: "TRL-009",
-      location: "Illinois Tollway",
-      authority: "Illinois State Toll Highway Authority",
-      amount: 78.50,
-      toll_date: "2024-01-10",
-      status: "pending",
-      payment_date: null
-    },
-    {
-      id: "7",
-      customer: "ABC Transport",
-      trailer: "TRL-001",
-      location: "I-95 Maryland",
-      authority: "Maryland Transportation Authority",
-      amount: 156.00,
-      toll_date: "2024-01-09",
-      status: "paid",
-      payment_date: "2024-01-15"
-    },
-    {
-      id: "8",
-      customer: "Heavy Haul Co",
-      trailer: "TRL-005",
-      location: "Ohio Turnpike",
-      authority: "Ohio Turnpike Commission",
-      amount: 289.25,
-      toll_date: "2024-01-08",
-      status: "overdue",
-      payment_date: null
+  useEffect(() => {
+    fetchTolls();
+  }, []);
+
+  const fetchTolls = async () => {
+    setIsLoading(true);
+    const { data, error } = await supabase
+      .from("tolls")
+      .select(`
+        id,
+        customer_id,
+        trailer_id,
+        toll_location,
+        toll_authority,
+        amount,
+        toll_date,
+        status,
+        payment_date,
+        profiles:customer_id(first_name, last_name, email),
+        trailers(trailer_number)
+      `)
+      .order("toll_date", { ascending: false });
+
+    if (error) {
+      toast.error("Failed to load tolls");
+      console.error(error);
+    } else {
+      setTolls((data as unknown as Toll[]) || []);
     }
-  ];
+    setIsLoading(false);
+  };
+
+  const markAsPaid = async (tollId: string) => {
+    const { error } = await supabase
+      .from("tolls")
+      .update({ status: "paid", payment_date: new Date().toISOString() })
+      .eq("id", tollId);
+
+    if (error) {
+      toast.error("Failed to update toll");
+    } else {
+      toast.success("Toll marked as paid");
+      fetchTolls();
+    }
+  };
+
+  const getCustomerName = (toll: Toll) => {
+    if (toll.profiles) {
+      const { first_name, last_name, email } = toll.profiles;
+      if (first_name || last_name) {
+        return `${first_name || ''} ${last_name || ''}`.trim();
+      }
+      return email;
+    }
+    return "Unknown";
+  };
 
   const filteredTolls = tolls.filter((toll) => {
+    const customerName = getCustomerName(toll).toLowerCase();
+    const trailerNum = toll.trailers?.trailer_number?.toLowerCase() || "";
+    const location = toll.toll_location?.toLowerCase() || "";
+    
     const matchesSearch = 
-      toll.customer.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      toll.trailer.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      toll.location.toLowerCase().includes(searchQuery.toLowerCase());
+      customerName.includes(searchQuery.toLowerCase()) ||
+      trailerNum.includes(searchQuery.toLowerCase()) ||
+      location.includes(searchQuery.toLowerCase());
     
     const matchesStatus = statusFilter === "all" || toll.status === statusFilter;
     
@@ -137,7 +126,8 @@ export default function Tolls() {
       overdue: { variant: "destructive", icon: AlertCircle }
     };
     
-    const { variant, icon: Icon } = config[status];
+    const statusConfig = config[status] || config.pending;
+    const { variant, icon: Icon } = statusConfig;
     return (
       <Badge variant={variant} className="flex items-center gap-1 w-fit">
         <Icon className="h-3 w-3" />
@@ -146,9 +136,9 @@ export default function Tolls() {
     );
   };
 
-  const totalPending = tolls.filter(t => t.status === "pending").reduce((sum, t) => sum + t.amount, 0);
-  const totalOverdue = tolls.filter(t => t.status === "overdue").reduce((sum, t) => sum + t.amount, 0);
-  const totalPaid = tolls.filter(t => t.status === "paid").reduce((sum, t) => sum + t.amount, 0);
+  const totalPending = tolls.filter(t => t.status === "pending").reduce((sum, t) => sum + Number(t.amount), 0);
+  const totalOverdue = tolls.filter(t => t.status === "overdue").reduce((sum, t) => sum + Number(t.amount), 0);
+  const totalPaid = tolls.filter(t => t.status === "paid").reduce((sum, t) => sum + Number(t.amount), 0);
 
   return (
     <SidebarProvider>
@@ -160,7 +150,7 @@ export default function Tolls() {
             <SidebarTrigger />
             <div className="flex-1 flex items-center justify-between ml-4">
               <h1 className="text-2xl font-bold text-foreground">Toll Management</h1>
-              <Button>
+              <Button onClick={() => setIsDialogOpen(true)}>
                 <Plus className="h-4 w-4 mr-2" />
                 Add Toll
               </Button>
@@ -217,7 +207,7 @@ export default function Tolls() {
             </div>
 
             {/* Search and Filters */}
-            <div className="flex gap-4 mb-6">
+            <div className="flex gap-4 mb-6 flex-wrap">
               <div className="relative flex-1 max-w-md">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -261,59 +251,83 @@ export default function Tolls() {
                 <CardTitle>All Tolls</CardTitle>
               </CardHeader>
               <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Date</TableHead>
-                      <TableHead>Customer</TableHead>
-                      <TableHead>Trailer</TableHead>
-                      <TableHead>Location</TableHead>
-                      <TableHead>Authority</TableHead>
-                      <TableHead>Amount</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Payment Date</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredTolls.map((toll) => (
-                      <TableRow key={toll.id} className="cursor-pointer hover:bg-muted/50">
-                        <TableCell className="font-medium">
-                          {new Date(toll.toll_date).toLocaleDateString()}
-                        </TableCell>
-                        <TableCell>{toll.customer}</TableCell>
-                        <TableCell>
-                          <Badge variant="outline">{toll.trailer}</Badge>
-                        </TableCell>
-                        <TableCell>{toll.location}</TableCell>
-                        <TableCell className="text-sm text-muted-foreground">
-                          {toll.authority}
-                        </TableCell>
-                        <TableCell className="font-medium">
-                          ${toll.amount.toFixed(2)}
-                        </TableCell>
-                        <TableCell>{getStatusBadge(toll.status)}</TableCell>
-                        <TableCell className="text-sm text-muted-foreground">
-                          {toll.payment_date 
-                            ? new Date(toll.payment_date).toLocaleDateString()
-                            : "-"}
-                        </TableCell>
-                        <TableCell>
-                          {toll.status !== "paid" && (
-                            <Button variant="ghost" size="sm">
-                              Mark Paid
-                            </Button>
-                          )}
-                        </TableCell>
+                {isLoading ? (
+                  <div className="flex justify-center py-8">
+                    <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                  </div>
+                ) : filteredTolls.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    {tolls.length === 0 ? "No tolls found. Add your first toll above." : "No tolls match your search."}
+                  </div>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Date</TableHead>
+                        <TableHead>Customer</TableHead>
+                        <TableHead>Trailer</TableHead>
+                        <TableHead>Location</TableHead>
+                        <TableHead>Authority</TableHead>
+                        <TableHead>Amount</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Payment Date</TableHead>
+                        <TableHead>Actions</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredTolls.map((toll) => (
+                        <TableRow key={toll.id} className="hover:bg-muted/50">
+                          <TableCell className="font-medium">
+                            {new Date(toll.toll_date).toLocaleDateString()}
+                          </TableCell>
+                          <TableCell>{getCustomerName(toll)}</TableCell>
+                          <TableCell>
+                            {toll.trailers?.trailer_number ? (
+                              <Badge variant="outline">{toll.trailers.trailer_number}</Badge>
+                            ) : (
+                              <span className="text-muted-foreground">-</span>
+                            )}
+                          </TableCell>
+                          <TableCell>{toll.toll_location || "-"}</TableCell>
+                          <TableCell className="text-sm text-muted-foreground">
+                            {toll.toll_authority || "-"}
+                          </TableCell>
+                          <TableCell className="font-medium">
+                            ${Number(toll.amount).toFixed(2)}
+                          </TableCell>
+                          <TableCell>{getStatusBadge(toll.status)}</TableCell>
+                          <TableCell className="text-sm text-muted-foreground">
+                            {toll.payment_date 
+                              ? new Date(toll.payment_date).toLocaleDateString()
+                              : "-"}
+                          </TableCell>
+                          <TableCell>
+                            {toll.status !== "paid" && (
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                onClick={() => markAsPaid(toll.id)}
+                              >
+                                Mark Paid
+                              </Button>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
               </CardContent>
             </Card>
           </main>
         </div>
       </div>
+
+      <TollFormDialog 
+        open={isDialogOpen} 
+        onOpenChange={setIsDialogOpen}
+        onSuccess={fetchTolls}
+      />
     </SidebarProvider>
   );
 }
