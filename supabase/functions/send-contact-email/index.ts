@@ -20,6 +20,18 @@ interface ContactFormData {
   message: string;
 }
 
+// HTML entity encoding to prevent injection attacks
+function escapeHtml(text: string): string {
+  const map: Record<string, string> = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#039;'
+  };
+  return text.replace(/[&<>"']/g, (char) => map[char]);
+}
+
 // Handle shutdown events
 addEventListener('beforeunload', (ev: any) => {
   console.log('Function shutdown:', ev.detail?.reason || 'unknown reason');
@@ -46,9 +58,15 @@ serve(async (req) => {
     // Background task to send email
     const sendEmailTask = async () => {
       try {
-        // Prepare email content
-        const serviceLabel = formData.service || 'Not specified';
-        const emailSubject = `New Quote Request from ${formData.name} - ${serviceLabel}`;
+        // Prepare email content - escape all user inputs to prevent HTML injection
+        const safeName = escapeHtml(formData.name);
+        const safeCompany = escapeHtml(formData.company);
+        const safeEmail = escapeHtml(formData.email);
+        const safePhone = escapeHtml(formData.phone);
+        const safeService = escapeHtml(formData.service || 'Not specified');
+        const safeMessage = formData.message ? escapeHtml(formData.message) : '';
+        
+        const emailSubject = `New Quote Request from ${safeName} - ${safeService}`;
         
         const emailBody = `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -57,18 +75,18 @@ serve(async (req) => {
             </h2>
             
             <div style="background-color: #f9f9f9; padding: 20px; border-radius: 5px; margin: 20px 0;">
-              <p style="margin: 10px 0;"><strong>Name:</strong> ${formData.name}</p>
-              <p style="margin: 10px 0;"><strong>Company:</strong> ${formData.company}</p>
-              <p style="margin: 10px 0;"><strong>Email:</strong> <a href="mailto:${formData.email}">${formData.email}</a></p>
-              <p style="margin: 10px 0;"><strong>Phone:</strong> ${formData.phone}</p>
-              <p style="margin: 10px 0;"><strong>Service Interest:</strong> ${serviceLabel}</p>
+              <p style="margin: 10px 0;"><strong>Name:</strong> ${safeName}</p>
+              <p style="margin: 10px 0;"><strong>Company:</strong> ${safeCompany}</p>
+              <p style="margin: 10px 0;"><strong>Email:</strong> <a href="mailto:${safeEmail}">${safeEmail}</a></p>
+              <p style="margin: 10px 0;"><strong>Phone:</strong> ${safePhone}</p>
+              <p style="margin: 10px 0;"><strong>Service Interest:</strong> ${safeService}</p>
             </div>
             
-            ${formData.message ? `
+            ${safeMessage ? `
               <div style="margin: 20px 0;">
                 <h3 style="color: #555;">Message:</h3>
                 <p style="white-space: pre-wrap; background-color: #f9f9f9; padding: 15px; border-left: 3px solid #f97316; border-radius: 3px;">
-                  ${formData.message}
+                  ${safeMessage}
                 </p>
               </div>
             ` : ''}
