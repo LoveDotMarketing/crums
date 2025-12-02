@@ -6,8 +6,29 @@ verify_jwt = false
 [functions.chat-proxy]
 verify_jwt = false
 
-[functions.agent-trailers]
+[functions.agent-trailers-list]
 verify_jwt = false
 
-[functions.agent-customers]
+[functions.agent-trailers-available]
+verify_jwt = false
+
+[functions.agent-trailers-stats]
+verify_jwt = false
+
+[functions.agent-trailers-get]
+verify_jwt = false
+
+[functions.agent-customers-search]
+verify_jwt = false
+
+[functions.agent-customers-profile]
+verify_jwt = false
+
+[functions.agent-customers-applications]
+verify_jwt = false
+
+[functions.agent-customers-rentals]
+verify_jwt = false
+
+[functions.agent-customers-tolls]
 verify_jwt = false
