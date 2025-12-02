@@ -1,5 +1,6 @@
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
+import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { Card, CardContent } from "@/components/ui/card";
 import { MapPin, Phone, Mail, Navigation as NavigationIcon } from "lucide-react";
 import crumsTruckHighway from "@/assets/crums-truck-highway.png";
@@ -57,6 +58,8 @@ const Locations = () => {
           </p>
         </div>
       </section>
+
+      <Breadcrumbs />
 
       <section className="py-20 bg-background">
         <div className="container mx-auto px-4">
