@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Link } from "react-router-dom";
 import { CheckCircle, TrendingUp, Shield, DollarSign, ArrowRight } from "lucide-react";
-import crumsVideo from "@/assets/crums-just-add-water.webm";
 import { SEO } from "@/components/SEO";
 import { trailerLeasingServiceSchema, generateBreadcrumbSchema } from "@/lib/structuredData";
 
@@ -42,23 +41,6 @@ const TrailerLeasing = () => {
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
           </Link>
-        </div>
-      </section>
-
-      {/* Video Section */}
-      <section className="py-20 bg-muted">
-        <div className="container mx-auto px-4">
-          <div className="max-w-2xl mx-auto">
-            <h2 className="text-3xl md:text-4xl font-bold text-center mb-8 text-foreground">
-              Just Add Your Truck         
-            </h2>
-            <div className="relative w-full max-w-md mx-auto aspect-[9/16] rounded-lg overflow-hidden shadow-2xl">
-              <video className="w-full h-full object-cover" controls playsInline loop>
-                <source src={crumsVideo} type="video/webm" />
-                Your browser does not support the video tag.
-              </video>
-            </div>
-          </div>
         </div>
       </section>
 
