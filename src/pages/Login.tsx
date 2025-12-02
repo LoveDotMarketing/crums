@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
+import { SEO } from "@/components/SEO";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -98,6 +99,11 @@ const Login = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <SEO
+        title="Login"
+        description="Access your CRUMS Leasing customer portal. Sign in to manage your trailer rentals, view your account, and request support."
+        canonical="https://crumsleasing.com/login"
+      />
       <Navigation />
 
       <section className="flex-1 bg-gradient-to-b from-muted to-background py-20">
