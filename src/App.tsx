@@ -23,6 +23,8 @@ const Contact = lazy(() => import("./pages/Contact"));
 const Careers = lazy(() => import("./pages/Careers"));
 const GetStarted = lazy(() => import("./pages/GetStarted"));
 const Review = lazy(() => import("./pages/Review"));
+const Privacy = lazy(() => import("./pages/Privacy"));
+const Terms = lazy(() => import("./pages/Terms"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 // Admin pages
@@ -190,6 +192,8 @@ const App = () => (
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="/qr" element={<Navigate to="/review" replace />} />
             <Route path="/review" element={<Review />} />
+            <Route path="/privacy" element={<Privacy />} />
+            <Route path="/terms" element={<Terms />} />
             <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>
