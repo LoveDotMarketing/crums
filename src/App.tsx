@@ -27,6 +27,7 @@ const Privacy = lazy(() => import("./pages/Privacy"));
 const Terms = lazy(() => import("./pages/Terms"));
 const Trailers = lazy(() => import("./pages/Trailers"));
 const NotFound = lazy(() => import("./pages/NotFound"));
+const ApiDocs = lazy(() => import("./pages/ApiDocs"));
 
 // Admin pages
 const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
@@ -214,6 +215,7 @@ const App = () => (
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/terms" element={<Terms />} />
             <Route path="/trailers" element={<Trailers />} />
+            <Route path="/api-docs" element={<ApiDocs />} />
             <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>
