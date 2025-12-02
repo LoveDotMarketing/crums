@@ -113,6 +113,29 @@ export const ChatBot = ({ userType }: ChatBotProps) => {
     return "I understand you need help with that. As a demo, I can currently help you mark tolls as paid (try 'mark toll #142 as paid') or show unpaid tolls. More features coming soon!";
   };
 
+  // Simulate streaming effect for text that arrives all at once
+  const simulateStreaming = async (fullText: string): Promise<void> => {
+    const words = fullText.split(/(\s+)/); // Split by whitespace, keeping delimiters
+    let displayed = "";
+    
+    for (const word of words) {
+      displayed += word;
+      setMessages((prev) => {
+        const newMessages = [...prev];
+        const lastIdx = newMessages.length - 1;
+        if (lastIdx >= 0 && newMessages[lastIdx].role === "assistant") {
+          newMessages[lastIdx] = {
+            ...newMessages[lastIdx],
+            content: displayed,
+          };
+        }
+        return newMessages;
+      });
+      // Small delay between words for streaming effect
+      await new Promise((resolve) => setTimeout(resolve, 20));
+    }
+  };
+
   const handleCustomerStream = async (message: string): Promise<void> => {
     // Add placeholder assistant message that will be updated as stream comes in
     const assistantMessage: Message = {
@@ -135,7 +158,7 @@ export const ChatBot = ({ userType }: ChatBotProps) => {
             message,
             sessionId,
             userType,
-            userId: null, // Will be populated if user is logged in
+            userId: null,
           }),
         }
       );
@@ -150,7 +173,7 @@ export const ChatBot = ({ userType }: ChatBotProps) => {
       }
 
       const decoder = new TextDecoder();
-      let accumulatedContent = "";
+      let fullContent = "";
       let buffer = "";
 
       while (true) {
@@ -161,7 +184,7 @@ export const ChatBot = ({ userType }: ChatBotProps) => {
 
         // Process SSE lines
         const lines = buffer.split("\n");
-        buffer = lines.pop() || ""; // Keep incomplete line in buffer
+        buffer = lines.pop() || "";
 
         for (const line of lines) {
           const trimmedLine = line.trim();
@@ -174,44 +197,20 @@ export const ChatBot = ({ userType }: ChatBotProps) => {
             try {
               const parsed = JSON.parse(data);
               const content = parsed.output || parsed.text || parsed.delta?.content || "";
-              
               if (content) {
-                accumulatedContent += content;
-                // Update the last assistant message with accumulated content
-                setMessages((prev) => {
-                  const newMessages = [...prev];
-                  const lastIdx = newMessages.length - 1;
-                  if (lastIdx >= 0 && newMessages[lastIdx].role === "assistant") {
-                    newMessages[lastIdx] = {
-                      ...newMessages[lastIdx],
-                      content: accumulatedContent,
-                    };
-                  }
-                  return newMessages;
-                });
+                fullContent += content;
               }
             } catch {
-              // Non-JSON data, try to use directly
+              // Non-JSON data
               if (data && data !== "[DONE]") {
-                accumulatedContent += data;
-                setMessages((prev) => {
-                  const newMessages = [...prev];
-                  const lastIdx = newMessages.length - 1;
-                  if (lastIdx >= 0 && newMessages[lastIdx].role === "assistant") {
-                    newMessages[lastIdx] = {
-                      ...newMessages[lastIdx],
-                      content: accumulatedContent,
-                    };
-                  }
-                  return newMessages;
-                });
+                fullContent += data;
               }
             }
           }
         }
       }
 
-      // Handle any remaining buffer content
+      // Handle remaining buffer
       if (buffer.trim()) {
         const trimmedLine = buffer.trim();
         if (trimmedLine.startsWith("data: ")) {
@@ -220,18 +219,18 @@ export const ChatBot = ({ userType }: ChatBotProps) => {
             try {
               const parsed = JSON.parse(data);
               const content = parsed.output || parsed.text || "";
-              if (content) {
-                accumulatedContent += content;
-              }
+              if (content) fullContent += content;
             } catch {
-              if (data) accumulatedContent += data;
+              if (data) fullContent += data;
             }
           }
         }
       }
 
-      // If no content was received, show fallback
-      if (!accumulatedContent.trim()) {
+      // Simulate streaming display if we got content
+      if (fullContent.trim()) {
+        await simulateStreaming(fullContent);
+      } else {
         setMessages((prev) => {
           const newMessages = [...prev];
           const lastIdx = newMessages.length - 1;
@@ -246,7 +245,6 @@ export const ChatBot = ({ userType }: ChatBotProps) => {
       }
     } catch (error) {
       console.error("Stream error:", error);
-      // Update the placeholder message with error
       setMessages((prev) => {
         const newMessages = [...prev];
         const lastIdx = newMessages.length - 1;
