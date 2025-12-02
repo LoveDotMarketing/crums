@@ -66,7 +66,7 @@ const Privacy = () => {
                 <strong>CRUMS Leasing</strong><br />
                 4070 FM1863<br />
                 Bulverde, TX 78163<br />
-                Phone: (480) 749-8996<br />
+                Phone: (888) 570-4564<br />
                 Email: info@crumsleasing.com
               </p>
             </section>

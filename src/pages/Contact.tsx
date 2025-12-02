@@ -103,7 +103,7 @@ const Contact = () => {
     <div className="min-h-screen flex flex-col">
       <SEO
         title="Contact Us - Get A Quote"
-        description="Contact CRUMS Leasing for trailer leasing and rental quotes. Located in Bulverde, TX. Call (480) 749-8996 or email info@crumsleasing.com. 24/7 emergency support available."
+        description="Contact CRUMS Leasing for trailer leasing and rental quotes. Located in Bulverde, TX. Call (888) 570-4564 or email info@crumsleasing.com. 24/7 emergency support available."
         canonical="https://crumsleasing.com/contact"
         structuredData={combinedSchema}
       />
@@ -237,7 +237,7 @@ const Contact = () => {
                       </div>
                       <div>
                         <h3 className="font-semibold text-foreground mb-1">Phone</h3>
-                        <p className="text-muted-foreground">(480) 749-8996</p>
+                        <p className="text-muted-foreground">(888) 570-4564</p>
                       </div>
                     </div>
 

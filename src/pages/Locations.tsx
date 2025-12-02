@@ -22,7 +22,7 @@ const Locations = () => {
       city: "Bulverde",
       state: "TX",
       address: "4070 FM1863, Bulverde, TX 78163",
-      phone: "(480) 749-8996",
+      phone: "(888) 570-4564",
       email: "info@crumsleasing.com",
     },
   ];
