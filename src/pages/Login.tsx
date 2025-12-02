@@ -11,14 +11,13 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { loginSchema, signupSchema } from "@/lib/validations";
-import { z } from "zod";
 
 const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [selectedRole, setSelectedRole] = useState<"customer" | "admin" | "mechanic">("customer");
+  const [activeTab, setActiveTab] = useState<"customer" | "staff">("customer");
   const navigate = useNavigate();
   const { signIn, signUp, user, userRole } = useAuth();
 
@@ -67,22 +66,18 @@ const Login = () => {
       }
 
       if (isSignUp) {
-        const { error } = await signUp(email, password, selectedRole);
+        // Only customers can self-register - admin/mechanic accounts must be created by an admin
+        const { error } = await signUp(email, password, "customer");
         if (error) {
           if (error.message.includes("already registered")) {
             toast.error("This email is already registered. Please sign in instead.");
+          } else if (error.message.includes("Only customer role")) {
+            toast.error("Please contact an administrator to create staff accounts.");
           } else {
             toast.error(error.message || "Failed to create account");
           }
         } else {
-          // Navigate based on role
-          if (selectedRole === "admin") {
-            navigate("/dashboard/admin");
-          } else if (selectedRole === "mechanic") {
-            navigate("/dashboard/mechanic");
-          } else {
-            navigate("/dashboard/customer");
-          }
+          navigate("/dashboard/customer");
         }
       } else {
         const { error } = await signIn(email, password);
@@ -112,19 +107,24 @@ const Login = () => {
             <div className="text-center mb-8">
               <h1 className="text-4xl font-bold mb-4 text-foreground">Welcome Back</h1>
               <p className="text-muted-foreground">
-                Access your CRUMS Leasing customer portal
+                Access your CRUMS Leasing portal
               </p>
             </div>
 
             <Tabs 
               defaultValue="customer" 
               className="w-full"
-              onValueChange={(value) => setSelectedRole(value as "customer" | "admin" | "mechanic")}
+              onValueChange={(value) => {
+                setActiveTab(value as "customer" | "staff");
+                // Staff can only sign in, not sign up
+                if (value === "staff") {
+                  setIsSignUp(false);
+                }
+              }}
             >
-              <TabsList className="grid w-full grid-cols-3 mb-8">
+              <TabsList className="grid w-full grid-cols-2 mb-8">
                 <TabsTrigger value="customer">Customer</TabsTrigger>
-                <TabsTrigger value="mechanic">Mechanic</TabsTrigger>
-                <TabsTrigger value="admin">Admin</TabsTrigger>
+                <TabsTrigger value="staff">Staff</TabsTrigger>
               </TabsList>
 
               <TabsContent value="customer">
@@ -174,7 +174,7 @@ const Login = () => {
                         size="lg"
                         disabled={isLoading}
                       >
-                        {isLoading ? "Please wait..." : isSignUp ? "Create Admin Account" : "Sign In"}
+                        {isLoading ? "Please wait..." : isSignUp ? "Create Account" : "Sign In"}
                       </Button>
                     </form>
                     <div className="mt-6 text-center text-sm text-muted-foreground">
@@ -186,29 +186,31 @@ const Login = () => {
                         {isSignUp ? "Sign in" : "Create account"}
                       </button>
                     </div>
-                    <div className="mt-6 text-center text-sm text-muted-foreground">
-                      Don't have an account?{" "}
-                      <a href="/contact" className="text-primary hover:underline">
-                        Contact us
-                      </a>
-                    </div>
+                    {!isSignUp && (
+                      <div className="mt-4 text-center text-sm text-muted-foreground">
+                        Need help?{" "}
+                        <a href="/contact" className="text-primary hover:underline">
+                          Contact us
+                        </a>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               </TabsContent>
 
-              <TabsContent value="mechanic">
+              <TabsContent value="staff">
                 <Card className="border-2">
                   <CardHeader>
-                    <CardTitle>{isSignUp ? "Create Mechanic Account" : "Mechanic Portal"}</CardTitle>
+                    <CardTitle>Staff Portal</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <form onSubmit={handleSubmit} className="space-y-4">
                       <div>
-                        <Label htmlFor="mechanic-email">Email</Label>
+                        <Label htmlFor="staff-email">Email</Label>
                         <Input
-                          id="mechanic-email"
+                          id="staff-email"
                           type="email"
-                          placeholder="mechanic@crumsleasing.com"
+                          placeholder="staff@crumsleasing.com"
                           required
                           className="mt-2"
                           value={email}
@@ -216,9 +218,9 @@ const Login = () => {
                         />
                       </div>
                       <div>
-                        <Label htmlFor="mechanic-password">Password</Label>
+                        <Label htmlFor="staff-password">Password</Label>
                         <Input
-                          id="mechanic-password"
+                          id="staff-password"
                           type="password"
                           required
                           className="mt-2"
@@ -226,97 +228,28 @@ const Login = () => {
                           onChange={(e) => setPassword(e.target.value)}
                         />
                       </div>
-                      {!isSignUp && (
-                        <div className="flex items-center justify-between text-sm">
-                          <label className="flex items-center">
-                            <input type="checkbox" className="mr-2" />
-                            <span className="text-muted-foreground">Remember me</span>
-                          </label>
-                          <a href="#" className="text-primary hover:underline">
-                            Forgot password?
-                          </a>
-                        </div>
-                      )}
-                      <Button
-                        type="submit"
-                        className="w-full bg-primary hover:bg-primary/90"
-                        size="lg"
-                        disabled={isLoading}
-                      >
-                        {isLoading ? "Please wait..." : isSignUp ? "Create Mechanic Account" : "Sign In"}
-                      </Button>
-                    </form>
-                    <div className="mt-6 text-center text-sm text-muted-foreground">
-                      {isSignUp ? "Already have an account? " : "Don't have an account? "}
-                      <button 
-                        onClick={() => setIsSignUp(!isSignUp)}
-                        className="text-primary hover:underline"
-                      >
-                        {isSignUp ? "Sign in" : "Create account"}
-                      </button>
-                    </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
-              <TabsContent value="admin">
-                <Card className="border-2">
-                  <CardHeader>
-                    <CardTitle>{isSignUp ? "Create Admin Account" : "Admin Portal"}</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <form onSubmit={handleSubmit} className="space-y-4">
-                      <div>
-                        <Label htmlFor="admin-email">Admin Email</Label>
-                        <Input
-                          id="admin-email"
-                          type="email"
-                          placeholder="admin@crumsleasing.com"
-                          required
-                          className="mt-2"
-                          value={email}
-                          onChange={(e) => setEmail(e.target.value)}
-                        />
+                      <div className="flex items-center justify-between text-sm">
+                        <label className="flex items-center">
+                          <input type="checkbox" className="mr-2" />
+                          <span className="text-muted-foreground">Remember me</span>
+                        </label>
+                        <a href="#" className="text-primary hover:underline">
+                          Forgot password?
+                        </a>
                       </div>
-                      <div>
-                        <Label htmlFor="admin-password">Password</Label>
-                        <Input
-                          id="admin-password"
-                          type="password"
-                          required
-                          className="mt-2"
-                          value={password}
-                          onChange={(e) => setPassword(e.target.value)}
-                        />
-                      </div>
-                      {!isSignUp && (
-                        <div className="flex items-center justify-between text-sm">
-                          <label className="flex items-center">
-                            <input type="checkbox" className="mr-2" />
-                            <span className="text-muted-foreground">Remember me</span>
-                          </label>
-                          <a href="#" className="text-primary hover:underline">
-                            Forgot password?
-                          </a>
-                        </div>
-                      )}
                       <Button
                         type="submit"
                         className="w-full bg-secondary hover:bg-secondary/90"
                         size="lg"
                         disabled={isLoading}
                       >
-                        {isLoading ? "Please wait..." : isSignUp ? "Create Admin Account" : "Sign In"}
+                        {isLoading ? "Please wait..." : "Sign In"}
                       </Button>
                     </form>
                     <div className="mt-6 text-center text-sm text-muted-foreground">
-                      {isSignUp ? "Already have an account? " : "Don't have an account? "}
-                      <button 
-                        onClick={() => setIsSignUp(!isSignUp)}
-                        className="text-primary hover:underline"
-                      >
-                        {isSignUp ? "Sign in" : "Create account"}
-                      </button>
+                      Staff accounts are created by administrators.
+                      <br />
+                      Contact your manager if you need access.
                     </div>
                   </CardContent>
                 </Card>
