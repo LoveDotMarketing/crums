@@ -27,67 +27,19 @@ import {
 export default function Mechanics() {
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Mock mechanic data
+  // Mechanics data
   const mechanics = [
     {
       id: "1",
-      name: "Mike Johnson",
-      email: "mike.johnson@crumsleasing.com",
-      phone: "(555) 111-2222",
-      specialty: "Refrigeration",
-      status: "active",
-      active_jobs: 2,
-      completed_jobs: 145,
-      avg_rating: 4.8,
-      joined: "2020-03-15"
-    },
-    {
-      id: "2",
-      name: "Sarah Williams",
-      email: "sarah.w@crumsleasing.com",
-      phone: "(555) 222-3333",
-      specialty: "Hydraulics",
-      status: "active",
-      active_jobs: 1,
-      completed_jobs: 98,
-      avg_rating: 4.9,
-      joined: "2021-06-20"
-    },
-    {
-      id: "3",
-      name: "David Martinez",
-      email: "david.m@crumsleasing.com",
-      phone: "(555) 333-4444",
+      name: "Oscar Tejas Fleet Services",
+      email: "contact@oscartejasfleet.com",
+      phone: "(210) 555-0100",
       specialty: "General Maintenance",
       status: "active",
-      active_jobs: 3,
-      completed_jobs: 203,
-      avg_rating: 4.7,
-      joined: "2019-01-10"
-    },
-    {
-      id: "4",
-      name: "Lisa Chen",
-      email: "lisa.chen@crumsleasing.com",
-      phone: "(555) 444-5555",
-      specialty: "Electrical Systems",
-      status: "active",
       active_jobs: 0,
-      completed_jobs: 76,
-      avg_rating: 4.9,
-      joined: "2022-09-01"
-    },
-    {
-      id: "5",
-      name: "Robert Taylor",
-      email: "robert.t@crumsleasing.com",
-      phone: "(555) 555-6666",
-      specialty: "Brakes & Suspension",
-      status: "on-leave",
-      active_jobs: 0,
-      completed_jobs: 167,
-      avg_rating: 4.6,
-      joined: "2020-11-15"
+      completed_jobs: 0,
+      avg_rating: 5.0,
+      joined: "2024-01-01"
     }
   ];
 
