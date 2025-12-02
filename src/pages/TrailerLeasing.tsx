@@ -11,7 +11,7 @@ import { trailerLeasingServiceSchema, generateBreadcrumbSchema } from "@/lib/str
 const TrailerLeasing = () => {
   const breadcrumbSchema = generateBreadcrumbSchema([
     { name: "Home", url: "https://crumsleasing.com/" },
-    { name: "Trailer Leasing", url: "https://crumsleasing.com/trailer-leasing" }
+    { name: "Trailer Leasing", url: "https://crumsleasing.com/services/trailer-leasing" }
   ]);
 
   const combinedSchema = {
@@ -23,7 +23,7 @@ const TrailerLeasing = () => {
       <SEO
         title="Trailer Leasing Solutions - 53-Foot Dry Van & Flatbed"
         description="Long-term trailer leasing starting at 12 months. 53-foot dry van and flatbed trailers with flexible terms, predictable payments, and modern equipment. Get a quote today!"
-        canonical="https://crumsleasing.com/trailer-leasing"
+        canonical="https://crumsleasing.com/services/trailer-leasing"
         structuredData={combinedSchema}
       />
       <Navigation />
