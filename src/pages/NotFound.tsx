@@ -7,18 +7,22 @@ const NotFound = () => {
   const location = useLocation();
 
   useEffect(() => {
-    console.error("404 Error: User attempted to access non-existent route:", location.pathname);
+    console.log("NotFound component loaded for path:", location.pathname);
     
-    // Log 404 error to database using type assertion for new table
+    // Log 404 error to database
     const logError = async () => {
+      console.log("Attempting to log 404 error to database...");
       try {
-        const { error } = await (supabase as any).from("error_logs").insert({
+        const { data, error } = await (supabase as any).from("error_logs").insert({
           url: location.pathname,
           referrer: document.referrer || null,
           user_agent: navigator.userAgent,
-        });
+        }).select();
+        
         if (error) {
-          console.error("Failed to log 404 error:", error);
+          console.error("Supabase insert error:", error);
+        } else {
+          console.log("404 error logged successfully:", data);
         }
       } catch (error) {
         console.error("Failed to log 404 error:", error);
