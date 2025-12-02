@@ -286,7 +286,11 @@ export type Database = {
           description: string
           id: string
           maintenance_date: string
+          maintenance_type: string | null
           mechanic_id: string | null
+          reported_by: string | null
+          source: string | null
+          status: string | null
           trailer_id: string
           updated_at: string
         }
@@ -297,7 +301,11 @@ export type Database = {
           description: string
           id?: string
           maintenance_date: string
+          maintenance_type?: string | null
           mechanic_id?: string | null
+          reported_by?: string | null
+          source?: string | null
+          status?: string | null
           trailer_id: string
           updated_at?: string
         }
@@ -308,7 +316,11 @@ export type Database = {
           description?: string
           id?: string
           maintenance_date?: string
+          maintenance_type?: string | null
           mechanic_id?: string | null
+          reported_by?: string | null
+          source?: string | null
+          status?: string | null
           trailer_id?: string
           updated_at?: string
         }
