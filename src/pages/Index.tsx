@@ -2,7 +2,6 @@ import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Link } from "react-router-dom";
 import {
   Truck,
   Users,
@@ -63,13 +62,13 @@ const Index = () => {
             partnerships that move people forward and bring them safely home.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link to="/get-started">
+            <a href="/get-started">
               <Button size="lg" className="bg-secondary hover:bg-secondary/90 text-secondary-foreground text-lg px-8 py-6">
                 Get Started
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
-            </Link>
-            <Link to="/mission">
+            </a>
+            <a href="/mission">
               <Button
                 size="lg"
                 variant="outline"
@@ -77,7 +76,7 @@ const Index = () => {
               >
                 Our Mission & Values
               </Button>
-            </Link>
+            </a>
           </div>
         </div>
       </section>
@@ -327,12 +326,12 @@ const Index = () => {
                   </div>
                 </div>
               </div>
-              <Link to="/about" className="inline-block mt-8">
+              <a href="/about" className="inline-block mt-8">
                 <Button size="lg" variant="outline">
                   Learn More About Us
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
-              </Link>
+              </a>
             </div>
           </div>
         </div>
@@ -349,13 +348,13 @@ const Index = () => {
             family values make.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link to="/contact">
+            <a href="/contact">
               <Button size="lg" className="bg-secondary hover:bg-secondary/90 text-secondary-foreground text-lg px-8 py-6">
                 Request A Quote
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
-            </Link>
-            <Link to="/login">
+            </a>
+            <a href="/login">
               <Button
                 size="lg"
                 variant="outline"
@@ -363,7 +362,7 @@ const Index = () => {
               >
                 Customer Portal Login
               </Button>
-            </Link>
+            </a>
           </div>
         </div>
       </section>
