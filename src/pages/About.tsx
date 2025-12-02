@@ -1,5 +1,6 @@
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
+import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
@@ -41,6 +42,8 @@ const About = () => {
           </p>
         </div>
       </section>
+
+      <Breadcrumbs />
 
       {/* Our Story */}
       <section className="py-20 bg-background">

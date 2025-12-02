@@ -1,5 +1,6 @@
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
+import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Heart, Award, CheckCircle, Shield, Users, TrendingUp } from "lucide-react";
 import { SEO } from "@/components/SEO";
@@ -31,6 +32,8 @@ const Mission = () => {
           </p>
         </div>
       </section>
+
+      <Breadcrumbs />
 
       {/* Mission Statement */}
       <section className="py-20 bg-background">

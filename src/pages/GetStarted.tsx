@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ArrowRight, ArrowLeft, Check } from "lucide-react";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
+import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { signupSchema, customerApplicationSchema, validateFile, sanitizeInput } from "@/lib/validations";
@@ -270,6 +271,7 @@ export default function GetStarted() {
         structuredData={breadcrumbSchema}
       />
       <Navigation />
+      <Breadcrumbs />
       
       <main className="flex-1 bg-gradient-to-b from-background to-muted py-12">
         <div className="container mx-auto px-4 max-w-4xl">
