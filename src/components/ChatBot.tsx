@@ -18,6 +18,11 @@ interface ChatBotProps {
   userType: "admin" | "customer" | "mechanic";
 }
 
+// Generate a unique session ID for conversation continuity
+const generateSessionId = () => {
+  return `session_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+};
+
 export const ChatBot = ({ userType }: ChatBotProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
@@ -27,12 +32,13 @@ export const ChatBot = ({ userType }: ChatBotProps) => {
         ? "Hello! I'm your AI assistant. I can help you manage tolls, customers, and fleet operations. Try asking me to 'mark toll #142 as paid' or 'show me unpaid tolls'."
         : userType === "mechanic"
         ? "Hello! I'm your AI assistant. I can help you with trailer maintenance, service tracking, and fleet status. Ask me about trailers needing service or maintenance costs!"
-        : "Hello! I'm your AI assistant. I can help you with toll information, payment links, and account questions. Ask me anything!",
+        : "Hello! I'm your CRUMS AI assistant. I can help you with trailer leasing, rentals, toll information, and account questions. How can I help you today?",
       timestamp: new Date(),
     },
   ]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [sessionId] = useState(() => generateSessionId());
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -107,26 +113,152 @@ export const ChatBot = ({ userType }: ChatBotProps) => {
     return "I understand you need help with that. As a demo, I can currently help you mark tolls as paid (try 'mark toll #142 as paid') or show unpaid tolls. More features coming soon!";
   };
 
-  const handleCustomerCommand = async (message: string): Promise<string> => {
-    const lowerMsg = message.toLowerCase();
+  const handleCustomerStream = async (message: string): Promise<void> => {
+    // Add placeholder assistant message that will be updated as stream comes in
+    const assistantMessage: Message = {
+      role: "assistant",
+      content: "",
+      timestamp: new Date(),
+    };
+    setMessages((prev) => [...prev, assistantMessage]);
 
-    if (lowerMsg.includes("toll") && (lowerMsg.includes("pay") || lowerMsg.includes("payment"))) {
-      return `To pay your toll, please visit one of these toll authority websites:\n\n• E-ZPass: https://www.e-zpassny.com\n• SunPass: https://www.sunpass.com\n• FasTrak: https://www.bayareafastrak.org\n\nOnce you've made payment, you can mark it as paid in your dashboard to stop email reminders.`;
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat-proxy`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+          body: JSON.stringify({
+            message,
+            sessionId,
+            userType,
+            userId: null, // Will be populated if user is logged in
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to connect to chat service");
+      }
+
+      const reader = response.body?.getReader();
+      if (!reader) {
+        throw new Error("No response stream available");
+      }
+
+      const decoder = new TextDecoder();
+      let accumulatedContent = "";
+      let buffer = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+
+        // Process SSE lines
+        const lines = buffer.split("\n");
+        buffer = lines.pop() || ""; // Keep incomplete line in buffer
+
+        for (const line of lines) {
+          const trimmedLine = line.trim();
+          if (!trimmedLine || trimmedLine.startsWith(":")) continue;
+
+          if (trimmedLine.startsWith("data: ")) {
+            const data = trimmedLine.slice(6);
+            if (data === "[DONE]") continue;
+
+            try {
+              const parsed = JSON.parse(data);
+              const content = parsed.output || parsed.text || parsed.delta?.content || "";
+              
+              if (content) {
+                accumulatedContent += content;
+                // Update the last assistant message with accumulated content
+                setMessages((prev) => {
+                  const newMessages = [...prev];
+                  const lastIdx = newMessages.length - 1;
+                  if (lastIdx >= 0 && newMessages[lastIdx].role === "assistant") {
+                    newMessages[lastIdx] = {
+                      ...newMessages[lastIdx],
+                      content: accumulatedContent,
+                    };
+                  }
+                  return newMessages;
+                });
+              }
+            } catch {
+              // Non-JSON data, try to use directly
+              if (data && data !== "[DONE]") {
+                accumulatedContent += data;
+                setMessages((prev) => {
+                  const newMessages = [...prev];
+                  const lastIdx = newMessages.length - 1;
+                  if (lastIdx >= 0 && newMessages[lastIdx].role === "assistant") {
+                    newMessages[lastIdx] = {
+                      ...newMessages[lastIdx],
+                      content: accumulatedContent,
+                    };
+                  }
+                  return newMessages;
+                });
+              }
+            }
+          }
+        }
+      }
+
+      // Handle any remaining buffer content
+      if (buffer.trim()) {
+        const trimmedLine = buffer.trim();
+        if (trimmedLine.startsWith("data: ")) {
+          const data = trimmedLine.slice(6);
+          if (data !== "[DONE]") {
+            try {
+              const parsed = JSON.parse(data);
+              const content = parsed.output || parsed.text || "";
+              if (content) {
+                accumulatedContent += content;
+              }
+            } catch {
+              if (data) accumulatedContent += data;
+            }
+          }
+        }
+      }
+
+      // If no content was received, show fallback
+      if (!accumulatedContent.trim()) {
+        setMessages((prev) => {
+          const newMessages = [...prev];
+          const lastIdx = newMessages.length - 1;
+          if (lastIdx >= 0 && newMessages[lastIdx].role === "assistant") {
+            newMessages[lastIdx] = {
+              ...newMessages[lastIdx],
+              content: "I apologize, but I couldn't process your request. Please try again.",
+            };
+          }
+          return newMessages;
+        });
+      }
+    } catch (error) {
+      console.error("Stream error:", error);
+      // Update the placeholder message with error
+      setMessages((prev) => {
+        const newMessages = [...prev];
+        const lastIdx = newMessages.length - 1;
+        if (lastIdx >= 0 && newMessages[lastIdx].role === "assistant") {
+          newMessages[lastIdx] = {
+            ...newMessages[lastIdx],
+            content: "I'm having trouble connecting right now. Please try again in a moment.",
+          };
+        }
+        return newMessages;
+      });
     }
-
-    if (lowerMsg.includes("toll") && lowerMsg.includes("my")) {
-      return "You can view all your tolls in the dashboard above. Click on any toll to see details and mark it as paid once you've contacted the toll authority.";
-    }
-
-    if (lowerMsg.includes("email") || lowerMsg.includes("notification")) {
-      return "You can manage email notifications in your Profile settings. You'll find an option to turn off email reminders for paid tolls.";
-    }
-
-    if (lowerMsg.includes("rental") || lowerMsg.includes("trailer")) {
-      return "For rental information, please check the 'My Rentals' section or submit a new rental request. Need help with a specific trailer?";
-    }
-
-    return "I'm here to help! You can ask me about:\n• Paying tolls\n• Viewing your toll history\n• Managing email notifications\n• Rental information\n\nWhat would you like to know?";
   };
 
   const handleSend = async () => {
@@ -139,24 +271,26 @@ export const ChatBot = ({ userType }: ChatBotProps) => {
     };
 
     setMessages((prev) => [...prev, userMessage]);
+    const currentInput = input;
     setInput("");
     setIsLoading(true);
 
     try {
-      // Simulate processing delay
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      const response = userType === "admin" 
-        ? await handleAdminCommand(input)
-        : await handleCustomerCommand(input);
-
-      const assistantMessage: Message = {
-        role: "assistant",
-        content: response,
-        timestamp: new Date(),
-      };
-
-      setMessages((prev) => [...prev, assistantMessage]);
+      if (userType === "customer") {
+        // Use n8n agent with streaming for customers
+        await handleCustomerStream(currentInput);
+      } else {
+        // Fallback to local handlers for admin/mechanic (for now)
+        await new Promise((resolve) => setTimeout(resolve, 500));
+        const response = await handleAdminCommand(currentInput);
+        
+        const assistantMessage: Message = {
+          role: "assistant",
+          content: response,
+          timestamp: new Date(),
+        };
+        setMessages((prev) => [...prev, assistantMessage]);
+      }
     } catch (error) {
       toast.error("Failed to process your message");
     } finally {
@@ -192,9 +326,9 @@ export const ChatBot = ({ userType }: ChatBotProps) => {
           <div className="flex items-center gap-2">
             <MessageCircle className="h-5 w-5" />
             <div>
-              <h3 className="font-semibold">AI Assistant</h3>
+              <h3 className="font-semibold">CRUMS AI Assistant</h3>
               <p className="text-xs opacity-90">
-                {userType === "admin" ? "Admin Support" : "Customer Support"}
+                {userType === "admin" ? "Admin Support" : userType === "mechanic" ? "Mechanic Support" : "Customer Support"}
               </p>
             </div>
           </div>
@@ -237,7 +371,7 @@ export const ChatBot = ({ userType }: ChatBotProps) => {
                 </div>
               </div>
             ))}
-            {isLoading && (
+            {isLoading && messages[messages.length - 1]?.role !== "assistant" && (
               <div className="flex justify-start">
                 <div className="bg-muted rounded-lg p-3">
                   <Loader2 className="h-4 w-4 animate-spin" />
