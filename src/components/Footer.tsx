@@ -1,4 +1,3 @@
-import { Link } from "react-router-dom";
 import { Facebook, Linkedin, Instagram } from "lucide-react";
 import crumsLogo from "@/assets/crums-logo.png";
 
@@ -77,29 +76,29 @@ export const Footer = () => {
             <h3 className="font-semibold text-lg mb-4">Services</h3>
             <ul className="space-y-2 text-sm">
               <li>
-                <Link to="/services/trailer-leasing" className="hover:text-secondary transition-colors">
+                <a href="/services/trailer-leasing" className="hover:text-secondary transition-colors">
                   Trailer Leasing
-                </Link>
+                </a>
               </li>
               <li>
-                <Link to="/services/trailer-rentals" className="hover:text-secondary transition-colors">
+                <a href="/services/trailer-rentals" className="hover:text-secondary transition-colors">
                   Trailer Rentals
-                </Link>
+                </a>
               </li>
               <li>
-                <Link to="/services/fleet-solutions" className="hover:text-secondary transition-colors">
+                <a href="/services/fleet-solutions" className="hover:text-secondary transition-colors">
                   Fleet Solutions
-                </Link>
+                </a>
               </li>
               <li>
-                <Link to="/login" className="hover:text-secondary transition-colors">
+                <a href="/login" className="hover:text-secondary transition-colors">
                   Customer Login
-                </Link>
+                </a>
               </li>
               <li>
-                <Link to="/get-started" className="hover:text-secondary transition-colors">
+                <a href="/get-started" className="hover:text-secondary transition-colors">
                   Get Started
-                </Link>
+                </a>
               </li>
             </ul>
           </div>
@@ -109,29 +108,29 @@ export const Footer = () => {
             <h3 className="font-semibold text-lg mb-4">Company</h3>
             <ul className="space-y-2 text-sm">
               <li>
-                <Link to="/about" className="hover:text-secondary transition-colors">
+                <a href="/about" className="hover:text-secondary transition-colors">
                   About Us
-                </Link>
+                </a>
               </li>
               <li>
-                <Link to="/mission" className="hover:text-secondary transition-colors">
+                <a href="/mission" className="hover:text-secondary transition-colors">
                   Mission & Values
-                </Link>
+                </a>
               </li>
               <li>
-                <Link to="/locations" className="hover:text-secondary transition-colors">
+                <a href="/locations" className="hover:text-secondary transition-colors">
                   Locations
-                </Link>
+                </a>
               </li>
               <li>
-                <Link to="/careers" className="hover:text-secondary transition-colors">
+                <a href="/careers" className="hover:text-secondary transition-colors">
                   Careers
-                </Link>
+                </a>
               </li>
               <li>
-                <Link to="/contact" className="hover:text-secondary transition-colors">
+                <a href="/contact" className="hover:text-secondary transition-colors">
                   Contact
-                </Link>
+                </a>
               </li>
             </ul>
           </div>
@@ -154,12 +153,12 @@ export const Footer = () => {
           <div className="flex flex-col md:flex-row justify-between items-center text-sm text-primary-foreground/60">
             <p>&copy; {new Date().getFullYear()} CRUMS Leasing. All rights reserved.</p>
             <div className="flex space-x-6 mt-4 md:mt-0">
-              <Link to="/privacy" className="hover:text-secondary transition-colors">
+              <a href="/privacy" className="hover:text-secondary transition-colors">
                 Privacy Policy
-              </Link>
-              <Link to="/terms" className="hover:text-secondary transition-colors">
+              </a>
+              <a href="/terms" className="hover:text-secondary transition-colors">
                 Terms of Service
-              </Link>
+              </a>
             </div>
           </div>
         </div>
