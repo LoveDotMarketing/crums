@@ -98,6 +98,7 @@ const Login = () => {
         title="Login"
         description="Access your CRUMS Leasing customer portal. Sign in to manage your trailer rentals, view your account, and request support."
         canonical="https://crumsleasing.com/login"
+        noindex
       />
       <Navigation />
 

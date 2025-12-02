@@ -12,6 +12,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Progress } from "@/components/ui/progress";
 import { ChatBot } from "@/components/ChatBot";
 import { ApplicationAlert } from "@/components/customer/ApplicationAlert";
+import { SEO } from "@/components/SEO";
 
 
 export default function CustomerDashboard() {
@@ -91,6 +92,11 @@ export default function CustomerDashboard() {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <SEO
+        title="Customer Dashboard"
+        description="Manage your CRUMS Leasing account, view tolls, and access your trailer information."
+        noindex
+      />
       <Navigation />
       <CustomerNav />
 

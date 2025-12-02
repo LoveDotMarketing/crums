@@ -151,8 +151,11 @@ const Careers = () => {
             <div>
               <img
                 src={teamImage}
-                alt="CRUMS Leasing team"
+                alt="CRUMS Leasing team members shaking hands in partnership"
                 className="rounded-lg shadow-2xl"
+                loading="lazy"
+                width="800"
+                height="600"
               />
             </div>
           </div>

@@ -6,6 +6,7 @@ interface SEOProps {
   canonical?: string;
   ogImage?: string;
   structuredData?: object;
+  noindex?: boolean;
 }
 
 export const SEO = ({ 
@@ -13,16 +14,39 @@ export const SEO = ({
   description, 
   canonical, 
   ogImage = "/og-image.jpg",
-  structuredData 
+  structuredData,
+  noindex = false
 }: SEOProps) => {
   const fullTitle = `${title} | CRUMS Leasing`;
-  const canonicalUrl = canonical || `https://crumsleasing.com${window.location.pathname}`;
+  
+  // Normalize canonical URL - remove trailing slashes except for root, handle query params
+  const normalizeUrl = (url: string): string => {
+    try {
+      const parsed = new URL(url);
+      // Remove query params and hash for canonical
+      let path = parsed.pathname;
+      // Remove trailing slash unless it's the root
+      if (path !== '/' && path.endsWith('/')) {
+        path = path.slice(0, -1);
+      }
+      return `${parsed.origin}${path}`;
+    } catch {
+      return url;
+    }
+  };
+  
+  const canonicalUrl = canonical 
+    ? normalizeUrl(canonical)
+    : normalizeUrl(`https://crumsleasing.com${window.location.pathname}`);
 
   return (
     <Helmet>
       <title>{fullTitle}</title>
       <meta name="description" content={description} />
       <link rel="canonical" href={canonicalUrl} />
+      
+      {/* Robots directive */}
+      {noindex && <meta name="robots" content="noindex, nofollow" />}
       
       {/* Open Graph */}
       <meta property="og:title" content={fullTitle} />
