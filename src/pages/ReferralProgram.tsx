@@ -65,7 +65,7 @@ const ReferralProgram = () => {
                 </Button>
               </Link>
               <Link to="/get-started">
-                <Button size="lg" variant="outline" className="border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10">
+                <Button size="lg" variant="ghost" className="border border-primary-foreground/50 text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground">
                   New to CRUMS? Sign Up
                 </Button>
               </Link>
