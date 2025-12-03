@@ -1,16 +1,25 @@
+import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Receipt, Users, Truck, DollarSign, TrendingUp, AlertCircle, Loader2 } from "lucide-react";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { ChatBot } from "@/components/ChatBot";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDistanceToNow } from "date-fns";
 import { SEO } from "@/components/SEO";
+import { useNavigate } from "react-router-dom";
+import { TollFormDialog } from "@/components/admin/TollFormDialog";
+import { CustomerFormDialog } from "@/components/admin/CustomerFormDialog";
 
 export default function AdminDashboard() {
   const { user } = useAuth();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  
+  const [tollDialogOpen, setTollDialogOpen] = useState(false);
+  const [customerDialogOpen, setCustomerDialogOpen] = useState(false);
 
   // Fetch fleet stats
   const { data: fleetStats } = useQuery({
@@ -76,10 +85,10 @@ export default function AdminDashboard() {
   });
 
   // Fetch recent activity (tolls and applications)
-  const { data: recentActivity } = useQuery({
+  const { data: recentActivity, isLoading: isLoadingActivity } = useQuery({
     queryKey: ["admin-recent-activity"],
     queryFn: async () => {
-      const [tollsResult, applicationsResult] = await Promise.all([
+      const [tollsResult, applicationsResult, profilesResult] = await Promise.all([
         supabase
           .from("tolls")
           .select("id, amount, status, created_at, customer_id, profiles:customer_id(first_name, last_name, company_name)")
@@ -95,7 +104,7 @@ export default function AdminDashboard() {
           .select("id, first_name, last_name, company_name"),
       ]);
 
-      const profilesData = applicationsResult[1].data || [];
+      const profilesData = profilesResult.data || [];
       const profilesMap = new Map<string, { id: string; first_name: string | null; last_name: string | null; company_name: string | null }>(
         profilesData.map(p => [p.id, p])
       );
@@ -122,7 +131,7 @@ export default function AdminDashboard() {
         });
       });
 
-      applicationsResult[0].data?.forEach(app => {
+      applicationsResult.data?.forEach(app => {
         const profile = profilesMap.get(app.user_id);
         const customerName = profile?.company_name || 
           [profile?.first_name, profile?.last_name].filter(Boolean).join(" ") || 
@@ -197,6 +206,11 @@ export default function AdminDashboard() {
     },
   ];
 
+  const handleTollSuccess = () => {
+    queryClient.invalidateQueries({ queryKey: ["admin-toll-stats"] });
+    queryClient.invalidateQueries({ queryKey: ["admin-recent-activity"] });
+  };
+
   return (
     <>
       <SEO
@@ -251,11 +265,11 @@ export default function AdminDashboard() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {!recentActivity ? (
+                    {isLoadingActivity ? (
                       <div className="flex items-center justify-center py-8">
                         <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
                       </div>
-                    ) : recentActivity.length === 0 ? (
+                    ) : !recentActivity || recentActivity.length === 0 ? (
                       <p className="text-muted-foreground text-center py-8">No recent activity</p>
                     ) : (
                       recentActivity.map((activity, i) => (
@@ -291,7 +305,10 @@ export default function AdminDashboard() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
-                    <button className="w-full p-4 text-left border border-border rounded-lg hover:bg-accent transition-colors">
+                    <button 
+                      onClick={() => setTollDialogOpen(true)}
+                      className="w-full p-4 text-left border border-border rounded-lg hover:bg-accent transition-colors"
+                    >
                       <div className="flex items-center gap-3">
                         <Receipt className="h-5 w-5 text-primary" />
                         <div>
@@ -300,7 +317,10 @@ export default function AdminDashboard() {
                         </div>
                       </div>
                     </button>
-                    <button className="w-full p-4 text-left border border-border rounded-lg hover:bg-accent transition-colors">
+                    <button 
+                      onClick={() => setCustomerDialogOpen(true)}
+                      className="w-full p-4 text-left border border-border rounded-lg hover:bg-accent transition-colors"
+                    >
                       <div className="flex items-center gap-3">
                         <Users className="h-5 w-5 text-primary" />
                         <div>
@@ -309,7 +329,10 @@ export default function AdminDashboard() {
                         </div>
                       </div>
                     </button>
-                    <button className="w-full p-4 text-left border border-border rounded-lg hover:bg-accent transition-colors">
+                    <button 
+                      onClick={() => navigate("/dashboard/admin/fleet")}
+                      className="w-full p-4 text-left border border-border rounded-lg hover:bg-accent transition-colors"
+                    >
                       <div className="flex items-center gap-3">
                         <Truck className="h-5 w-5 text-primary" />
                         <div>
@@ -335,13 +358,28 @@ export default function AdminDashboard() {
                 <CardContent>
                   <div className="space-y-2">
                     {(tollStats?.overdueCount || 0) > 0 && (
-                      <p className="text-sm text-foreground">• {tollStats?.overdueCount} tolls are overdue by more than 30 days</p>
+                      <button 
+                        onClick={() => navigate("/dashboard/admin/tolls")}
+                        className="block text-sm text-foreground hover:text-primary hover:underline transition-colors text-left"
+                      >
+                        • {tollStats?.overdueCount} tolls are overdue by more than 30 days
+                      </button>
                     )}
                     {(pendingApplications || 0) > 0 && (
-                      <p className="text-sm text-foreground">• {pendingApplications} new customer applications need review</p>
+                      <button 
+                        onClick={() => navigate("/dashboard/admin/customers")}
+                        className="block text-sm text-foreground hover:text-primary hover:underline transition-colors text-left"
+                      >
+                        • {pendingApplications} new customer applications need review
+                      </button>
                     )}
                     {(maintenanceAlerts || 0) > 0 && (
-                      <p className="text-sm text-foreground">• {maintenanceAlerts} trailers have open maintenance requests</p>
+                      <button 
+                        onClick={() => navigate("/dashboard/admin/fleet")}
+                        className="block text-sm text-foreground hover:text-primary hover:underline transition-colors text-left"
+                      >
+                        • {maintenanceAlerts} trailers have open maintenance requests
+                      </button>
                     )}
                   </div>
                 </CardContent>
@@ -351,6 +389,16 @@ export default function AdminDashboard() {
         </div>
       </div>
       <ChatBot userType="admin" />
+      
+      <TollFormDialog 
+        open={tollDialogOpen} 
+        onOpenChange={setTollDialogOpen}
+        onSuccess={handleTollSuccess}
+      />
+      <CustomerFormDialog 
+        open={customerDialogOpen} 
+        onOpenChange={setCustomerDialogOpen}
+      />
     </SidebarProvider>
     </>
   );
