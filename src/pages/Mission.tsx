@@ -16,7 +16,7 @@ const Mission = () => {
     <div className="min-h-screen flex flex-col">
       <SEO
         title="Our Mission & Values - People-First Trailer Leasing"
-        description="Discover CRUMS Leasing's mission: empowering truckers with freedom and stability. Our core values include integrity, family-first approach, and quality you can count on."
+        description="Discover CRUMS Leasing's mission: empowering carriers with freedom and stability. Our core values include integrity, family-first approach, and quality you can count on."
         canonical="https://crumsleasing.com/mission"
         structuredData={breadcrumbSchema}
       />
@@ -27,7 +27,7 @@ const Mission = () => {
         <div className="container mx-auto px-4 text-center">
           <h1 className="text-4xl md:text-6xl font-bold mb-6">Our Mission & Values</h1>
           <p className="text-xl md:text-2xl max-w-4xl mx-auto text-primary-foreground/90">
-            Building a future where every trucker has the freedom, tools, and support to build a
+            Building a future where every carrier has the freedom, tools, and support to build a
             life they're proud of both on and off the road.
           </p>
         </div>
@@ -43,7 +43,7 @@ const Mission = () => {
               Our Mission
             </h2>
             <p className="text-xl text-center text-muted-foreground leading-relaxed mb-12">
-              At CRUMS Leasing, we believe every hardworking trucker deserves the freedom and stability to build a better life for their family. Inspired by the values of hard work and dedication passed down from "CRUMS" herself, we are more than a leasing company we are a partner on the road to success. With high quality trailers, flexible solutions, and a people first approach, we make sure our customers always have the tools they need to keep moving forward and make it home safe.
+              At CRUMS Leasing, we believe every hardworking carrier deserves the freedom and stability to build a better life for their family. Inspired by the values of hard work and dedication passed down from "CRUMS" herself, we are more than a leasing company we are a partner on the road to success. With high quality trailers, flexible solutions, and a people first approach, we make sure our customers always have the tools they need to keep moving forward and make it home safe.
             </p>
             <div className="bg-gradient-to-r from-secondary/20 to-primary/20 rounded-lg p-8 text-center border-l-4 border-secondary">
               <p className="text-2xl font-semibold text-foreground italic">
@@ -257,7 +257,7 @@ const Mission = () => {
             </p>
             <p className="text-lg text-muted-foreground leading-relaxed">
               We envision a future where the CRUMS name is synonymous with integrity, reliability,
-              and a genuine commitment to the success and well-being of every trucker and fleet
+              and a genuine commitment to the success and well-being of every carrier and fleet
               operator we serve.
             </p>
           </div>

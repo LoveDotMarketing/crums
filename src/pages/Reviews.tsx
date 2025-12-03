@@ -27,7 +27,7 @@ const Reviews = () => {
   const reviewPlatforms = [
     {
       name: "Google Reviews",
-      description: "Share your experience on Google to help other truckers find quality trailer leasing services.",
+      description: "Share your experience on Google to help other carriers find quality trailer leasing services.",
       url: "https://search.google.com/local/writereview?placeid=ChIJv4g00VWHXIYRXgCdneji-DI",
       buttonText: "Write a Google Review",
       bgColor: "from-blue-500/10 to-background",
@@ -43,7 +43,7 @@ const Reviews = () => {
     },
     {
       name: "Yelp",
-      description: "Help local truckers discover CRUMS Leasing by sharing your experience on Yelp.",
+      description: "Help local carriers discover CRUMS Leasing by sharing your experience on Yelp.",
       url: "https://www.yelp.com",
       buttonText: "Review on Yelp",
       bgColor: "from-red-500/10 to-background",
@@ -186,7 +186,7 @@ const Reviews = () => {
             Ready to Experience the CRUMS Difference?
           </h2>
           <p className="text-xl mb-8 max-w-2xl mx-auto text-primary-foreground/90">
-            Join our growing family of satisfied customers and see why truckers across Texas choose CRUMS Leasing.
+            Join our growing family of satisfied customers and see why carriers across Texas choose CRUMS Leasing.
           </p>
           <a href="/get-started">
             <Button size="lg" className="bg-secondary hover:bg-secondary/90 text-secondary-foreground">

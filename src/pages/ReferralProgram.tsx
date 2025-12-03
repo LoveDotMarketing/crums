@@ -16,7 +16,7 @@ const ReferralProgram = () => {
     {
       icon: Gift,
       title: "Share Your Code",
-      description: "Share your referral code with fellow truckers and fleet operators."
+      description: "Share your referral code with fellow carriers and fleet operators."
     },
     {
       icon: DollarSign,
@@ -54,7 +54,7 @@ const ReferralProgram = () => {
               Earn $250 For Every Referral
             </h1>
             <p className="text-xl text-primary-foreground/90 mb-8">
-              Join the CRUMS family and help fellow truckers find quality trailer leasing. 
+              Join the CRUMS family and help fellow carriers find quality trailer leasing. 
               For every referral who signs a lease, you'll receive $250 off your next payment.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
