@@ -143,11 +143,13 @@ Deno.serve(async (req) => {
       }
 
       // Helper to replace template variables
+      const unsubscribeUrl = `${baseUrl}/unsubscribe?email=${encodeURIComponent(customer.email)}`;
       const replaceVariables = (text: string) => {
         return text
           .replace(/\{\{customer_name\}\}/g, customer.full_name || "Valued Customer")
           .replace(/\{\{login_url\}\}/g, loginUrl)
-          .replace(/\{\{profile_url\}\}/g, profileUrl);
+          .replace(/\{\{profile_url\}\}/g, profileUrl)
+          .replace(/\{\{unsubscribe_url\}\}/g, unsubscribeUrl);
       };
 
       // 1. WELCOME EMAIL

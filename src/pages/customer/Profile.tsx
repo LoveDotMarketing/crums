@@ -75,6 +75,13 @@ export default function Profile() {
 
       if (error) throw error;
 
+      // Track profile completion in outreach status
+      if (profile.first_name && profile.last_name && profile.phone) {
+        supabase.functions.invoke("update-outreach-status", {
+          body: { action: "profile_completed", email: user?.email },
+        }).catch(err => console.error("Failed to update outreach status:", err));
+      }
+
       toast.success("Profile updated successfully");
     } catch (error) {
       console.error("Error updating profile:", error);
@@ -105,6 +112,11 @@ export default function Profile() {
       });
 
       if (error) throw error;
+
+      // Track password set in outreach status
+      supabase.functions.invoke("update-outreach-status", {
+        body: { action: "password_set", email: user?.email },
+      }).catch(err => console.error("Failed to update outreach status:", err));
 
       toast.success("Password updated successfully");
       setPasswordData({ newPassword: "", confirmPassword: "" });
