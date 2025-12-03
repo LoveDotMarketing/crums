@@ -187,12 +187,10 @@ const Contact = () => {
     setIsSubmitting(true);
 
     try {
-      // Send form data without honeypot field
-      const { website, ...submitData } = formData;
-      
+      // Send form data including honeypot for server-side validation
       const { data, error } = await supabase.functions.invoke('send-contact-email', {
         body: {
-          ...submitData,
+          ...formData,
           _timestamp: formLoadTime, // Send load time for server-side validation
         },
       });
