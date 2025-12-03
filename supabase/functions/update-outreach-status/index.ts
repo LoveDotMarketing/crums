@@ -5,6 +5,10 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// Actions that require authentication vs public actions
+const PUBLIC_ACTIONS = ["unsubscribe", "resubscribe"];
+const AUTHENTICATED_ACTIONS = ["password_set", "profile_completed"];
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -18,6 +22,55 @@ Deno.serve(async (req) => {
     const { action, email, customer_id } = await req.json();
 
     console.log(`[OutreachStatus] Action: ${action}, Email: ${email}, Customer ID: ${customer_id}`);
+
+    // Validate action
+    if (!action || ![...PUBLIC_ACTIONS, ...AUTHENTICATED_ACTIONS].includes(action)) {
+      return new Response(
+        JSON.stringify({ success: false, error: "Invalid action" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // For authenticated actions, verify the user is logged in
+    if (AUTHENTICATED_ACTIONS.includes(action)) {
+      const authHeader = req.headers.get("authorization");
+      if (!authHeader) {
+        console.log("[OutreachStatus] Auth required but no header for action:", action);
+        return new Response(
+          JSON.stringify({ error: "Authentication required" }),
+          { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      const token = authHeader.replace("Bearer ", "");
+      const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+      
+      if (authError || !user) {
+        console.log("[OutreachStatus] Invalid token:", authError?.message);
+        return new Response(
+          JSON.stringify({ error: "Invalid authorization token" }),
+          { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      // For authenticated actions, verify the email matches the logged-in user
+      // This prevents users from updating other users' statuses
+      if (email && user.email !== email) {
+        console.log("[OutreachStatus] Email mismatch:", user.email, "vs", email);
+        return new Response(
+          JSON.stringify({ error: "Email does not match authenticated user" }),
+          { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+    }
+
+    // For public actions (unsubscribe), require email to be provided
+    if (PUBLIC_ACTIONS.includes(action) && !email && !customer_id) {
+      return new Response(
+        JSON.stringify({ success: false, error: "Email or customer_id required" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
     // Find customer by email if no customer_id provided
     let targetCustomerId = customer_id;
@@ -106,7 +159,7 @@ Deno.serve(async (req) => {
     }
 
     const now = new Date().toISOString();
-    let updateData: Record<string, string> = {};
+    let updateData: Record<string, string | boolean | null> = {};
 
     switch (action) {
       case "password_set":
@@ -118,18 +171,13 @@ Deno.serve(async (req) => {
         console.log(`[OutreachStatus] Marking profile completed for customer ${targetCustomerId}`);
         break;
       case "unsubscribe":
-        updateData = { unsubscribed: "true", unsubscribed_at: now };
+        updateData = { unsubscribed: true, unsubscribed_at: now };
         console.log(`[OutreachStatus] Marking unsubscribed for customer ${targetCustomerId}`);
         break;
       case "resubscribe":
-        updateData = { unsubscribed: "false", unsubscribed_at: null as any };
+        updateData = { unsubscribed: false, unsubscribed_at: null };
         console.log(`[OutreachStatus] Marking resubscribed for customer ${targetCustomerId}`);
         break;
-      default:
-        return new Response(
-          JSON.stringify({ success: false, error: "Invalid action" }),
-          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
     }
 
     const { error: updateError } = await supabase
