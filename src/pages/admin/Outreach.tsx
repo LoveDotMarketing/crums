@@ -75,6 +75,18 @@ interface OutreachSetting {
   description: string;
 }
 
+interface OutreachLog {
+  id: string;
+  email: string;
+  email_type: string;
+  status: string;
+  sent_at: string | null;
+  error_message: string | null;
+  created_at: string;
+  customer_id: string | null;
+  campaign_id: string | null;
+}
+
 interface PlannedEmail {
   customer_id: string;
   customer_name: string;
@@ -224,6 +236,20 @@ export default function Outreach() {
         .select("*");
       if (error) throw error;
       return data as OutreachSetting[];
+    },
+  });
+
+  // Fetch outreach logs
+  const { data: outreachLogs = [], isLoading: loadingLogs } = useQuery({
+    queryKey: ["outreach-logs"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("outreach_logs")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(200);
+      if (error) throw error;
+      return data as OutreachLog[];
     },
   });
 
@@ -530,6 +556,9 @@ export default function Outreach() {
               <TabsTrigger value="campaigns" className="gap-2">
                 <History className="h-4 w-4" /> Campaigns
               </TabsTrigger>
+              <TabsTrigger value="logs" className="gap-2">
+                <FileText className="h-4 w-4" /> Logs
+              </TabsTrigger>
               <TabsTrigger value="customers" className="gap-2">
                 <UserCheck className="h-4 w-4" /> Customers
               </TabsTrigger>
@@ -826,6 +855,64 @@ export default function Outreach() {
                             <TableCell className="text-destructive">{campaign.failed_count}</TableCell>
                             <TableCell>{getStatusBadge(campaign.status)}</TableCell>
                             <TableCell>{format(new Date(campaign.created_at), "MMM d, yyyy")}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Logs Tab */}
+            <TabsContent value="logs">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Email Logs</CardTitle>
+                  <CardDescription>View all sent emails and their delivery status</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {loadingLogs ? (
+                    <div className="flex justify-center p-8">
+                      <Loader2 className="h-8 w-8 animate-spin" />
+                    </div>
+                  ) : outreachLogs.length === 0 ? (
+                    <p className="text-center text-muted-foreground py-8">No email logs yet</p>
+                  ) : (
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Email</TableHead>
+                          <TableHead>Type</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead>Sent At</TableHead>
+                          <TableHead>Error</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {outreachLogs.map((log) => (
+                          <TableRow key={log.id}>
+                            <TableCell className="font-medium">{log.email}</TableCell>
+                            <TableCell>
+                              <Badge variant="outline">{log.email_type}</Badge>
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant={log.status === "sent" ? "default" : log.status === "failed" ? "destructive" : "secondary"}>
+                                {log.status === "sent" ? (
+                                  <><CheckCircle className="h-3 w-3 mr-1" /> Sent</>
+                                ) : log.status === "failed" ? (
+                                  <><XCircle className="h-3 w-3 mr-1" /> Failed</>
+                                ) : (
+                                  <><Clock className="h-3 w-3 mr-1" /> {log.status}</>
+                                )}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              {log.sent_at ? format(new Date(log.sent_at), "MMM d, yyyy HH:mm") : "-"}
+                            </TableCell>
+                            <TableCell className="max-w-[200px] truncate text-destructive">
+                              {log.error_message || "-"}
+                            </TableCell>
                           </TableRow>
                         ))}
                       </TableBody>

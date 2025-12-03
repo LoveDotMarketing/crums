@@ -99,10 +99,11 @@ Deno.serve(async (req) => {
     const passwordTemplate = templates?.find((t) => t.template_type === "password_reminder");
     const profileTemplate = templates?.find((t) => t.template_type === "profile_reminder");
 
-    // Fetch customers with email
+    // Fetch only ACTIVE customers with email (exclude archived customers)
     const { data: customers, error: customersError } = await supabase
       .from("customers")
       .select("id, full_name, email")
+      .eq("status", "active")
       .not("email", "is", null);
 
     if (customersError) throw customersError;
