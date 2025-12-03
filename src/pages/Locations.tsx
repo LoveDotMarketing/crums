@@ -2,7 +2,7 @@ import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { Card, CardContent } from "@/components/ui/card";
-import { MapPin, Phone, Mail, Navigation as NavigationIcon } from "lucide-react";
+import { MapPin, Phone, Navigation as NavigationIcon } from "lucide-react";
 import crumsTruckHighway from "@/assets/crums-truck-highway.png";
 import { SEO } from "@/components/SEO";
 import { localBusinessSchema, generateBreadcrumbSchema } from "@/lib/structuredData";
@@ -24,7 +24,6 @@ const Locations = () => {
       state: "TX",
       address: "4070 FM1863, Bulverde, TX 78163",
       phone: "(888) 570-4564",
-      email: "info@crumsleasing.com",
     },
   ];
 
@@ -97,10 +96,6 @@ const Locations = () => {
                       <div className="flex items-center text-muted-foreground">
                         <Phone className="h-4 w-4 mr-3 text-primary" />
                         <span>{location.phone}</span>
-                      </div>
-                      <div className="flex items-center text-muted-foreground">
-                        <Mail className="h-4 w-4 mr-3 text-primary" />
-                        <span className="text-sm">{location.email}</span>
                       </div>
                     </div>
                   </CardContent>

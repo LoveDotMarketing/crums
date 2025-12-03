@@ -487,7 +487,7 @@ const ApiDocs = () => {
           {/* Footer */}
           <div className="mt-12 text-center text-sm text-muted-foreground">
             <p>© 2025 CRUMS Leasing. All rights reserved.</p>
-            <p className="mt-1">For support, contact <a href="mailto:info@crumsleasing.com" className="text-primary hover:underline">info@crumsleasing.com</a></p>
+            <p className="mt-1">For support, call <a href="tel:+18885704564" className="text-primary hover:underline">(888) 570-4564</a></p>
           </div>
         </div>
       </div>
