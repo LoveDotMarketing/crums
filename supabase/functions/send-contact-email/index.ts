@@ -102,7 +102,7 @@ serve(async (req) => {
           'bledsoe@crumstrailers.com',
           'ambrosia@crumstrailers.com',
           'hector@crumstrailers.com',
-          'info@crumsleasing.com',
+          'sales@crumsleasing.com',
           'lovedotmarketing@gmail.com'
         ];
 
@@ -121,7 +121,7 @@ serve(async (req) => {
               }
             ],
             from: {
-              email: 'info@crumsleasing.com',
+              email: 'sales@crumsleasing.com',
               name: 'CRUMS Leasing Contact Form'
             },
             reply_to: {
