@@ -41,3 +41,6 @@ verify_jwt = false
 
 [functions.update-outreach-status]
 verify_jwt = false
+
+[functions.invite-staff]
+verify_jwt = false
