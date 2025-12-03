@@ -8,7 +8,8 @@ import {
   Wrench,
   DollarSign,
   BarChart3,
-  Send
+  Send,
+  UserCog
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/hooks/useAuth";
@@ -30,6 +31,7 @@ const menuItems = [
   { title: "Dashboard", url: "/dashboard/admin", icon: LayoutDashboard },
   { title: "Fleet", url: "/dashboard/admin/fleet", icon: Truck },
   { title: "Customers", url: "/dashboard/admin/customers", icon: Users },
+  { title: "Staff", url: "/dashboard/admin/staff", icon: UserCog },
   { title: "Mechanics", url: "/dashboard/admin/mechanics", icon: Wrench },
   { title: "Tolls", url: "/dashboard/admin/tolls", icon: Receipt },
   { title: "Billing", url: "/dashboard/admin/billing", icon: DollarSign },

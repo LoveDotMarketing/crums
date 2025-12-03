@@ -45,6 +45,7 @@ const Reports = lazy(() => import("./pages/admin/Reports"));
 const Analytics = lazy(() => import("./pages/admin/Analytics"));
 const Outreach = lazy(() => import("./pages/admin/Outreach"));
 const Referrals = lazy(() => import("./pages/admin/Referrals"));
+const Staff = lazy(() => import("./pages/admin/Staff"));
 
 // Public pages
 const ReferralProgram = lazy(() => import("./pages/ReferralProgram"));
@@ -184,6 +185,14 @@ const App = () => (
               element={
                 <ProtectedRoute requiredRole="admin">
                   <Referrals />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/dashboard/admin/staff" 
+              element={
+                <ProtectedRoute requiredRole="admin">
+                  <Staff />
                 </ProtectedRoute>
               } 
             />
