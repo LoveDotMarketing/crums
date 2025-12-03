@@ -21,6 +21,7 @@ interface ContactFormData {
   phone: string;
   service: string;
   message: string;
+  website?: string; // Honeypot field
   _timestamp?: number;
 }
 
@@ -73,17 +74,37 @@ function isValidCompany(company: string): boolean {
   return !isGibberish(company);
 }
 
-// Known disposable email domains
+// Expanded list of known disposable email domains (50+)
 const disposableEmailDomains = [
+  // Common disposable services
   'mailinator.com', 'tempmail.com', 'throwaway.email', 'guerrillamail.com',
   'sharklasers.com', 'temp-mail.org', '10minutemail.com', 'fakeinbox.com',
   'trashmail.com', 'mailnesia.com', 'tempinbox.com', 'dispostable.com',
-  'yopmail.com', 'maildrop.cc', 'getairmail.com', 'mohmal.com'
+  'yopmail.com', 'maildrop.cc', 'getairmail.com', 'mohmal.com',
+  // Additional common disposable domains
+  'guerrillamail.info', 'guerrillamail.biz', 'guerrillamail.de', 'guerrillamail.net',
+  'spam4.me', 'grr.la', 'guerrillamail.org', 'spamgourmet.com', 'mytemp.email',
+  'getnada.com', 'tempail.com', 'emailondeck.com', 'mailcatch.com', 'trbvm.com',
+  'tempr.email', 'fakemail.net', 'throwawaymail.com', 'mintemail.com', 'spambox.us',
+  'mailsac.com', 'burnermail.io', 'inboxkitten.com', 'mailforspam.com', 'tempmailaddress.com',
+  'disposablemail.com', 'mailtemp.net', 'fakermail.com', 'emailfake.com', '33mail.com',
+  'anonymbox.com', 'courrieltemporaire.com', 'spamfree24.org', 'incognitomail.org',
+  'crazymailing.com', 'deadaddress.com', 'e4ward.com', 'jetable.org', 'kasmail.com',
+  'mailexpire.com', 'mailmoat.com', 'mailnull.com', 'mailzilla.org', 'nomail.xl.cx',
+  'sofimail.com', 'spamcero.com', 'spamherelots.com', 'trashymail.com', 'uggsrock.com',
+  'wegwerfmail.de', 'wegwerfmail.net', 'wegwerfmail.org', 'zoemail.org', 'mailinator2.com'
 ];
 
 function isDisposableEmail(email: string): boolean {
   const domain = email.split('@')[1]?.toLowerCase();
-  return disposableEmailDomains.includes(domain);
+  if (!domain) return false;
+  
+  // Exact match check
+  if (disposableEmailDomains.includes(domain)) return true;
+  
+  // Check for common disposable patterns in domain name
+  const disposablePatterns = ['tempmail', 'throwaway', 'fakeinbox', 'trashmail', 'disposable', 'mailinator'];
+  return disposablePatterns.some(pattern => domain.includes(pattern));
 }
 
 // Handle shutdown events
@@ -116,7 +137,20 @@ serve(async (req) => {
     // === SPAM DETECTION ===
     let spamReason: string | null = null;
 
-    // 1. Validate required fields
+    // 1. Honeypot check - if filled, it's a bot (bots fill all fields)
+    if (formData.website && formData.website.trim() !== '') {
+      spamReason = 'Honeypot triggered';
+    }
+
+    // 2. Timestamp validation - reject if submitted too quickly (< 3 seconds)
+    if (!spamReason && formData._timestamp) {
+      const timeSpent = Date.now() - formData._timestamp;
+      if (timeSpent < 3000) {
+        spamReason = 'Submission too fast';
+      }
+    }
+
+    // 3. Validate required fields
     if (!formData.name || !formData.company || !formData.email || !formData.phone) {
       return new Response(
         JSON.stringify({ error: 'Missing required fields' }),
@@ -124,27 +158,27 @@ serve(async (req) => {
       );
     }
 
-    // 2. Name validation
-    if (!isValidName(formData.name)) {
+    // 4. Name validation
+    if (!spamReason && !isValidName(formData.name)) {
       spamReason = 'Invalid name pattern';
     }
 
-    // 3. Company validation
+    // 5. Company validation
     if (!spamReason && !isValidCompany(formData.company)) {
       spamReason = 'Invalid company pattern';
     }
 
-    // 4. Phone validation
+    // 6. Phone validation
     if (!spamReason && !isValidPhone(formData.phone)) {
       spamReason = 'Invalid phone pattern';
     }
 
-    // 5. Disposable email check
+    // 7. Disposable email check
     if (!spamReason && isDisposableEmail(formData.email)) {
       spamReason = 'Disposable email domain';
     }
 
-    // 6. Rate limiting - check submissions in last hour
+    // 8. Rate limiting - check submissions in last hour
     if (!spamReason && clientIP !== 'unknown') {
       const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
       const { count, error: countError } = await supabase
@@ -255,8 +289,10 @@ serve(async (req) => {
               name: 'CRUMS Leasing Contact Form'
             },
             reply_to: {
-              email: formData.email,
-              name: formData.name
+              // Sanitize email header values to prevent header injection
+              // Remove newlines, carriage returns, and other control characters
+              email: formData.email.replace(/[\r\n\t\x00-\x1f]/g, '').trim(),
+              name: formData.name.replace(/[\r\n\t\x00-\x1f]/g, '').trim().substring(0, 100)
             },
             content: [
               {
