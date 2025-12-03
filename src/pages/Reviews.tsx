@@ -44,7 +44,7 @@ const Reviews = () => {
     {
       name: "Yelp",
       description: "Help local truckers discover CRUMS Leasing by sharing your experience on Yelp.",
-      url: "https://www.yelp.com/biz/crums-leasing-bulverde",
+      url: "https://www.yelp.com",
       buttonText: "Review on Yelp",
       bgColor: "from-red-500/10 to-background",
       iconColor: "text-red-500"
