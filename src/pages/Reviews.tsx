@@ -28,7 +28,7 @@ const Reviews = () => {
     {
       name: "Google Reviews",
       description: "Share your experience on Google to help other truckers find quality trailer leasing services.",
-      url: "https://g.page/r/CQsqLJ0d_LqmEAE/review",
+      url: "https://search.google.com/local/writereview?placeid=ChIJv4g00VWHXIYRXgCdneji-DI",
       buttonText: "Write a Google Review",
       bgColor: "from-blue-500/10 to-background",
       iconColor: "text-blue-500"
@@ -126,7 +126,7 @@ const Reviews = () => {
 
           <div className="text-center mt-12">
             <a
-              href="https://g.page/r/CQsqLJ0d_LqmEAE/review"
+              href="https://search.google.com/local/writereview?placeid=ChIJv4g00VWHXIYRXgCdneji-DI"
               target="_blank"
               rel="noopener noreferrer"
             >
