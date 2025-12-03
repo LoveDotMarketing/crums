@@ -53,6 +53,33 @@ export type Database = {
         }
         Relationships: []
       }
+      contact_submissions: {
+        Row: {
+          created_at: string | null
+          email: string | null
+          id: string
+          ip_address: string | null
+          is_spam: boolean | null
+          spam_reason: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          ip_address?: string | null
+          is_spam?: boolean | null
+          spam_reason?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          ip_address?: string | null
+          is_spam?: boolean | null
+          spam_reason?: string | null
+        }
+        Relationships: []
+      }
       customer_applications: {
         Row: {
           account_holder_name: string | null
