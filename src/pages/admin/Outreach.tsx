@@ -75,10 +75,27 @@ interface OutreachSetting {
   description: string;
 }
 
+interface PlannedEmail {
+  customer_id: string;
+  customer_name: string;
+  email: string;
+  type: "welcome" | "password_reminder" | "profile_reminder";
+  reason: string;
+}
+
 interface AutomationResult {
   success: boolean;
-  emails_sent: number;
-  results: { email: string; type: string; success: boolean; error?: string }[];
+  dry_run: boolean;
+  message?: string;
+  // For actual runs
+  emails_sent?: number;
+  results?: { customer: string; type: string; status: string }[];
+  // For dry runs (preview)
+  total_planned?: number;
+  welcome_count?: number;
+  password_reminder_count?: number;
+  profile_reminder_count?: number;
+  planned_emails?: PlannedEmail[];
 }
 
 export default function Outreach() {
@@ -238,10 +255,30 @@ export default function Outreach() {
     }
   };
 
+  // Preview automation (dry run)
+  const previewAutomationMutation = useMutation({
+    mutationFn: async () => {
+      const { data, error } = await supabase.functions.invoke("process-outreach-automation", {
+        body: { dry_run: true },
+      });
+      if (error) throw error;
+      return data as AutomationResult;
+    },
+    onSuccess: (data) => {
+      setAutomationResults(data);
+      setShowAutomationResults(true);
+    },
+    onError: (error: Error) => {
+      toast.error(`Preview failed: ${error.message}`);
+    },
+  });
+
   // Run automation manually
   const runAutomationMutation = useMutation({
     mutationFn: async () => {
-      const { data, error } = await supabase.functions.invoke("process-outreach-automation");
+      const { data, error } = await supabase.functions.invoke("process-outreach-automation", {
+        body: { dry_run: false },
+      });
       if (error) throw error;
       return data as AutomationResult;
     },
@@ -1013,27 +1050,47 @@ export default function Outreach() {
                       <div>
                         <CardTitle className="text-xl">Run Automation Now</CardTitle>
                         <CardDescription>
-                          Manually trigger the automation process to test or send emails immediately without waiting for the scheduled run.
+                          Preview what emails would be sent, or run automation immediately without waiting for the scheduled run.
                         </CardDescription>
                       </div>
                     </div>
-                    <Button
-                      size="lg"
-                      onClick={() => runAutomationMutation.mutate()}
-                      disabled={runAutomationMutation.isPending || getSetting("automation_enabled") !== "true"}
-                    >
-                      {runAutomationMutation.isPending ? (
-                        <>
-                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                          Running...
-                        </>
-                      ) : (
-                        <>
-                          <Play className="h-4 w-4 mr-2" />
-                          Run Automation
-                        </>
-                      )}
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button
+                        size="lg"
+                        variant="outline"
+                        onClick={() => previewAutomationMutation.mutate()}
+                        disabled={previewAutomationMutation.isPending || getSetting("automation_enabled") !== "true"}
+                      >
+                        {previewAutomationMutation.isPending ? (
+                          <>
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            Loading...
+                          </>
+                        ) : (
+                          <>
+                            <Eye className="h-4 w-4 mr-2" />
+                            Preview
+                          </>
+                        )}
+                      </Button>
+                      <Button
+                        size="lg"
+                        onClick={() => runAutomationMutation.mutate()}
+                        disabled={runAutomationMutation.isPending || getSetting("automation_enabled") !== "true"}
+                      >
+                        {runAutomationMutation.isPending ? (
+                          <>
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            Running...
+                          </>
+                        ) : (
+                          <>
+                            <Play className="h-4 w-4 mr-2" />
+                            Run Automation
+                          </>
+                        )}
+                      </Button>
+                    </div>
                   </div>
                 </CardHeader>
                 {getSetting("automation_enabled") !== "true" && (
@@ -1041,7 +1098,7 @@ export default function Outreach() {
                     <Alert>
                       <AlertTriangle className="h-4 w-4" />
                       <AlertDescription>
-                        Enable the Master Automation Switch above to run automation.
+                        Enable the Master Automation Switch above to preview or run automation.
                       </AlertDescription>
                     </Alert>
                   </CardContent>
@@ -1319,43 +1376,131 @@ export default function Outreach() {
           <Dialog open={showAutomationResults} onOpenChange={setShowAutomationResults}>
             <DialogContent className="max-w-2xl">
               <DialogHeader>
-                <DialogTitle>Automation Results</DialogTitle>
+                <DialogTitle>
+                  {automationResults?.dry_run ? "Automation Preview" : "Automation Results"}
+                </DialogTitle>
                 <DialogDescription>
-                  {automationResults?.success ? "Automation completed successfully" : "Automation encountered issues"}
+                  {automationResults?.dry_run
+                    ? "This is a preview - no emails have been sent"
+                    : automationResults?.success
+                      ? "Automation completed successfully"
+                      : "Automation encountered issues"}
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4">
-                <div className="p-4 bg-muted rounded-lg text-center">
-                  <p className="text-3xl font-bold text-primary">{automationResults?.emails_sent || 0}</p>
-                  <p className="text-sm text-muted-foreground">Emails Sent</p>
-                </div>
-                
-                {automationResults?.results && automationResults.results.length > 0 && (
-                  <div className="space-y-2">
-                    <Label>Details</Label>
-                    <ScrollArea className="h-[200px] border rounded-md p-3">
-                      {automationResults.results.map((result, idx) => (
-                        <div key={idx} className="flex items-center justify-between py-2 border-b last:border-0">
-                          <div>
-                            <p className="text-sm font-medium">{result.email}</p>
-                            <p className="text-xs text-muted-foreground">{result.type}</p>
-                          </div>
-                          {result.success ? (
-                            <CheckCircle className="h-4 w-4 text-green-600" />
-                          ) : (
-                            <div className="flex items-center gap-2">
-                              <XCircle className="h-4 w-4 text-destructive" />
-                              <span className="text-xs text-destructive">{result.error}</span>
+                {automationResults?.dry_run ? (
+                  <>
+                    {/* Preview Mode Stats */}
+                    <div className="grid grid-cols-4 gap-3">
+                      <div className="p-3 bg-muted rounded-lg text-center">
+                        <p className="text-2xl font-bold text-primary">{automationResults?.total_planned || 0}</p>
+                        <p className="text-xs text-muted-foreground">Total Emails</p>
+                      </div>
+                      <div className="p-3 bg-muted rounded-lg text-center">
+                        <p className="text-2xl font-bold text-blue-600">{automationResults?.welcome_count || 0}</p>
+                        <p className="text-xs text-muted-foreground">Welcome</p>
+                      </div>
+                      <div className="p-3 bg-muted rounded-lg text-center">
+                        <p className="text-2xl font-bold text-orange-600">{automationResults?.password_reminder_count || 0}</p>
+                        <p className="text-xs text-muted-foreground">Password</p>
+                      </div>
+                      <div className="p-3 bg-muted rounded-lg text-center">
+                        <p className="text-2xl font-bold text-green-600">{automationResults?.profile_reminder_count || 0}</p>
+                        <p className="text-xs text-muted-foreground">Profile</p>
+                      </div>
+                    </div>
+
+                    {automationResults?.planned_emails && automationResults.planned_emails.length > 0 && (
+                      <div className="space-y-2">
+                        <Label>Emails to be sent:</Label>
+                        <ScrollArea className="h-[250px] border rounded-md p-3">
+                          {automationResults.planned_emails.map((planned, idx) => (
+                            <div key={idx} className="flex items-center justify-between py-2 border-b last:border-0">
+                              <div className="flex-1">
+                                <p className="text-sm font-medium">{planned.customer_name}</p>
+                                <p className="text-xs text-muted-foreground">{planned.email}</p>
+                              </div>
+                              <div className="text-right">
+                                <Badge variant={
+                                  planned.type === "welcome" ? "default" :
+                                  planned.type === "password_reminder" ? "secondary" : "outline"
+                                }>
+                                  {planned.type.replace("_", " ")}
+                                </Badge>
+                                <p className="text-xs text-muted-foreground mt-1">{planned.reason}</p>
+                              </div>
                             </div>
-                          )}
-                        </div>
-                      ))}
-                    </ScrollArea>
-                  </div>
+                          ))}
+                        </ScrollArea>
+                      </div>
+                    )}
+
+                    {automationResults?.total_planned === 0 && (
+                      <Alert>
+                        <CheckCircle className="h-4 w-4" />
+                        <AlertTitle>No emails to send</AlertTitle>
+                        <AlertDescription>
+                          All customers are up to date or do not meet the criteria for automated emails.
+                        </AlertDescription>
+                      </Alert>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    {/* Actual Run Stats */}
+                    <div className="p-4 bg-muted rounded-lg text-center">
+                      <p className="text-3xl font-bold text-primary">{automationResults?.emails_sent || 0}</p>
+                      <p className="text-sm text-muted-foreground">Emails Sent</p>
+                    </div>
+                    
+                    {automationResults?.results && automationResults.results.length > 0 && (
+                      <div className="space-y-2">
+                        <Label>Details</Label>
+                        <ScrollArea className="h-[200px] border rounded-md p-3">
+                          {automationResults.results.map((result, idx) => (
+                            <div key={idx} className="flex items-center justify-between py-2 border-b last:border-0">
+                              <div>
+                                <p className="text-sm font-medium">{result.customer}</p>
+                                <p className="text-xs text-muted-foreground">{result.type}</p>
+                              </div>
+                              {result.status === "sent" ? (
+                                <CheckCircle className="h-4 w-4 text-green-600" />
+                              ) : (
+                                <XCircle className="h-4 w-4 text-destructive" />
+                              )}
+                            </div>
+                          ))}
+                        </ScrollArea>
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
               <DialogFooter>
-                <Button onClick={() => setShowAutomationResults(false)}>Close</Button>
+                {automationResults?.dry_run && automationResults?.total_planned && automationResults.total_planned > 0 && (
+                  <Button
+                    onClick={() => {
+                      setShowAutomationResults(false);
+                      runAutomationMutation.mutate();
+                    }}
+                    disabled={runAutomationMutation.isPending}
+                  >
+                    {runAutomationMutation.isPending ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Sending...
+                      </>
+                    ) : (
+                      <>
+                        <Send className="h-4 w-4 mr-2" />
+                        Send {automationResults.total_planned} Emails Now
+                      </>
+                    )}
+                  </Button>
+                )}
+                <Button variant={automationResults?.dry_run ? "outline" : "default"} onClick={() => setShowAutomationResults(false)}>
+                  Close
+                </Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
