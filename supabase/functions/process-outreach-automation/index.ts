@@ -5,12 +5,6 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-interface Customer {
-  id: string;
-  full_name: string;
-  email: string;
-}
-
 interface OutreachStatus {
   id: string;
   customer_id: string;
@@ -21,12 +15,6 @@ interface OutreachStatus {
   last_profile_reminder_at: string | null;
   reminder_count: number;
   unsubscribed: boolean;
-}
-
-interface EmailTemplate {
-  id: string;
-  subject: string;
-  body: string;
 }
 
 interface PlannedEmail {
@@ -46,6 +34,44 @@ Deno.serve(async (req) => {
   const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
   const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
+  // Verify admin authentication
+  const authHeader = req.headers.get("authorization");
+  if (!authHeader) {
+    console.log("[Automation] No authorization header");
+    return new Response(
+      JSON.stringify({ error: "Missing authorization header" }),
+      { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  }
+
+  // Get user from JWT
+  const token = authHeader.replace("Bearer ", "");
+  const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+  
+  if (authError || !user) {
+    console.log("[Automation] Invalid token:", authError?.message);
+    return new Response(
+      JSON.stringify({ error: "Invalid authorization token" }),
+      { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  }
+
+  // Check if user has admin role
+  const { data: roleData } = await supabase
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", user.id)
+    .eq("role", "admin")
+    .single();
+
+  if (!roleData) {
+    console.log("[Automation] User is not admin:", user.id);
+    return new Response(
+      JSON.stringify({ error: "Admin access required" }),
+      { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  }
+
   // Parse request body for dry_run flag
   let dryRun = false;
   try {
@@ -55,7 +81,7 @@ Deno.serve(async (req) => {
     // No body or invalid JSON, proceed with default (not dry run)
   }
 
-  console.log(`[Automation] Starting outreach automation process... (dry_run: ${dryRun})`);
+  console.log(`[Automation] Admin ${user.email} starting outreach automation (dry_run: ${dryRun})`);
 
   try {
     // Fetch all settings
@@ -147,12 +173,10 @@ Deno.serve(async (req) => {
 
     for (const customer of customers) {
       let status = statuses[customer.id];
-      let justSentWelcome = false; // Track if we sent welcome this run
+      let justSentWelcome = false;
 
-      // Create outreach status record if doesn't exist (only if not dry run)
       if (!status) {
         if (dryRun) {
-          // For dry run, simulate an empty status
           status = {
             id: "simulated",
             customer_id: customer.id,
@@ -179,13 +203,11 @@ Deno.serve(async (req) => {
         }
       }
 
-      // Skip if unsubscribed
       if (status.unsubscribed) {
         console.log(`[Automation] Skipping ${customer.email} - unsubscribed`);
         continue;
       }
 
-      // Helper to replace template variables
       const unsubscribeUrl = `${baseUrl}/unsubscribe?email=${encodeURIComponent(customer.email)}`;
       const replaceVariables = (text: string) => {
         return text
@@ -239,20 +261,20 @@ Deno.serve(async (req) => {
         }
       }
 
-      // 2. PASSWORD REMINDER - Skip if we just sent welcome email this run
+      // 2. PASSWORD REMINDER
       if (
         settings.password_reminder_enabled === "true" &&
         !status.password_set_at &&
         passwordTemplate &&
         status.reminder_count < maxReminders &&
-        !justSentWelcome // Don't send password reminder same run as welcome
+        !justSentWelcome
       ) {
         const lastReminder = status.last_password_reminder_at
           ? new Date(status.last_password_reminder_at)
           : null;
         const daysSinceLastReminder = lastReminder
           ? (now.getTime() - lastReminder.getTime()) / (1000 * 60 * 60 * 24)
-          : passwordReminderDays + 1; // Trigger on first run
+          : passwordReminderDays + 1;
 
         if (daysSinceLastReminder >= passwordReminderDays) {
           if (dryRun) {
@@ -300,7 +322,7 @@ Deno.serve(async (req) => {
       // 3. PROFILE COMPLETION REMINDER
       if (
         settings.profile_reminder_enabled === "true" &&
-        status.password_set_at && // Only send if password is set
+        status.password_set_at &&
         !status.profile_completed_at &&
         profileTemplate
       ) {
@@ -353,7 +375,6 @@ Deno.serve(async (req) => {
     }
 
     if (dryRun) {
-      // Count by type
       const welcomeCount = plannedEmails.filter(e => e.type === "welcome").length;
       const passwordCount = plannedEmails.filter(e => e.type === "password_reminder").length;
       const profileCount = plannedEmails.filter(e => e.type === "profile_reminder").length;

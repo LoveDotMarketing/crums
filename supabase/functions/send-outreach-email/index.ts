@@ -23,13 +23,52 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  try {
-    const supabaseClient = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
-    );
+  const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
+  const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+  const supabaseClient = createClient(supabaseUrl, supabaseServiceKey);
 
+  // Verify admin authentication
+  const authHeader = req.headers.get("authorization");
+  if (!authHeader) {
+    console.log("[SendOutreachEmail] No authorization header");
+    return new Response(
+      JSON.stringify({ error: "Missing authorization header" }),
+      { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  }
+
+  // Get user from JWT
+  const token = authHeader.replace("Bearer ", "");
+  const { data: { user }, error: authError } = await supabaseClient.auth.getUser(token);
+  
+  if (authError || !user) {
+    console.log("[SendOutreachEmail] Invalid token:", authError?.message);
+    return new Response(
+      JSON.stringify({ error: "Invalid authorization token" }),
+      { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  }
+
+  // Check if user has admin role
+  const { data: roleData } = await supabaseClient
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", user.id)
+    .eq("role", "admin")
+    .single();
+
+  if (!roleData) {
+    console.log("[SendOutreachEmail] User is not admin:", user.id);
+    return new Response(
+      JSON.stringify({ error: "Admin access required" }),
+      { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  }
+
+  try {
     const { to, subject, body, campaign_id, template_id, customer_ids, email_type = "manual" }: EmailRequest = await req.json();
+
+    console.log(`[SendOutreachEmail] Admin ${user.email} sending email to ${Array.isArray(to) ? to.length : 1} recipients`);
 
     const recipients = Array.isArray(to) ? to : [to];
     const results: { email: string; success: boolean; error?: string }[] = [];
