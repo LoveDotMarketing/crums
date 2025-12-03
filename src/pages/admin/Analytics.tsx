@@ -5,8 +5,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { RedirectFormDialog } from "@/components/admin/RedirectFormDialog";
 import { 
   Users, 
   Eye, 
@@ -15,7 +17,9 @@ import {
   TrendingUp,
   AlertTriangle,
   Trash2,
-  RefreshCw
+  RefreshCw,
+  ArrowRightLeft,
+  Plus
 } from "lucide-react";
 
 interface ErrorLog {
@@ -23,6 +27,15 @@ interface ErrorLog {
   url: string;
   referrer: string | null;
   user_agent: string | null;
+  created_at: string;
+}
+
+interface Redirect {
+  id: string;
+  source_path: string;
+  target_path: string;
+  is_active: boolean;
+  hit_count: number;
   created_at: string;
 }
 
@@ -69,6 +82,11 @@ const ANALYTICS_STATS = {
 export default function Analytics() {
   const [errorLogs, setErrorLogs] = useState<ErrorLog[]>([]);
   const [errorLogsLoading, setErrorLogsLoading] = useState(true);
+  const [redirects, setRedirects] = useState<Redirect[]>([]);
+  const [redirectsLoading, setRedirectsLoading] = useState(true);
+  const [redirectDialogOpen, setRedirectDialogOpen] = useState(false);
+  const [selectedErrorUrl, setSelectedErrorUrl] = useState("");
+  const [editingRedirect, setEditingRedirect] = useState<Redirect | null>(null);
   const { toast } = useToast();
 
   const fetchErrorLogs = async () => {
@@ -86,6 +104,23 @@ export default function Analytics() {
       console.error("Error fetching error logs:", error);
     } finally {
       setErrorLogsLoading(false);
+    }
+  };
+
+  const fetchRedirects = async () => {
+    setRedirectsLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from("redirects")
+        .select("*")
+        .order("created_at", { ascending: false });
+      
+      if (error) throw error;
+      setRedirects(data || []);
+    } catch (error) {
+      console.error("Error fetching redirects:", error);
+    } finally {
+      setRedirectsLoading(false);
     }
   };
 
@@ -121,8 +156,55 @@ export default function Analytics() {
     }
   };
 
+  const toggleRedirectActive = async (redirect: Redirect) => {
+    try {
+      const { error } = await supabase
+        .from("redirects")
+        .update({ is_active: !redirect.is_active })
+        .eq("id", redirect.id);
+      
+      if (error) throw error;
+      
+      setRedirects(prev => prev.map(r => 
+        r.id === redirect.id ? { ...r, is_active: !r.is_active } : r
+      ));
+      toast({ title: `Redirect ${!redirect.is_active ? "enabled" : "disabled"}` });
+    } catch (error) {
+      toast({ title: "Failed to update redirect", variant: "destructive" });
+    }
+  };
+
+  const deleteRedirect = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from("redirects")
+        .delete()
+        .eq("id", id);
+      
+      if (error) throw error;
+      
+      setRedirects(prev => prev.filter(r => r.id !== id));
+      toast({ title: "Redirect deleted" });
+    } catch (error) {
+      toast({ title: "Failed to delete redirect", variant: "destructive" });
+    }
+  };
+
+  const handleAddRedirect = (url: string) => {
+    setSelectedErrorUrl(url);
+    setEditingRedirect(null);
+    setRedirectDialogOpen(true);
+  };
+
+  const handleEditRedirect = (redirect: Redirect) => {
+    setSelectedErrorUrl("");
+    setEditingRedirect(redirect);
+    setRedirectDialogOpen(true);
+  };
+
   useEffect(() => {
     fetchErrorLogs();
+    fetchRedirects();
   }, []);
 
   // Group 404 errors by URL
@@ -144,6 +226,9 @@ export default function Analytics() {
     return acc;
   }, [] as { url: string; count: number; lastOccurrence: string; referrer: string | null }[])
     .sort((a, b) => b.count - a.count);
+
+  // Check if a URL already has a redirect
+  const hasRedirect = (url: string) => redirects.some(r => r.source_path === url);
 
   const formatDuration = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -321,6 +406,85 @@ export default function Analytics() {
               </div>
             </div>
 
+            {/* Active Redirects Section */}
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="flex items-center gap-2">
+                      <ArrowRightLeft className="h-5 w-5 text-primary" />
+                      Active Redirects
+                    </CardTitle>
+                    <CardDescription>URL redirects to fix broken links</CardDescription>
+                  </div>
+                  <Button size="sm" onClick={() => handleAddRedirect("")}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Redirect
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {redirectsLoading ? (
+                  <div className="flex items-center justify-center h-32">
+                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+                  </div>
+                ) : redirects.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <ArrowRightLeft className="h-12 w-12 mx-auto mb-2 opacity-20" />
+                    <p>No redirects configured</p>
+                    <p className="text-sm">Add redirects from the 404 errors below</p>
+                  </div>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Source</TableHead>
+                        <TableHead>Target</TableHead>
+                        <TableHead className="text-center">Hits</TableHead>
+                        <TableHead className="text-center">Active</TableHead>
+                        <TableHead className="w-[80px]"></TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {redirects.map((redirect) => (
+                        <TableRow key={redirect.id}>
+                          <TableCell className="font-mono text-sm">{redirect.source_path}</TableCell>
+                          <TableCell className="font-mono text-sm text-muted-foreground">{redirect.target_path}</TableCell>
+                          <TableCell className="text-center">
+                            <Badge variant="secondary">{redirect.hit_count}</Badge>
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <Switch
+                              checked={redirect.is_active}
+                              onCheckedChange={() => toggleRedirectActive(redirect)}
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex gap-1">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleEditRedirect(redirect)}
+                              >
+                                <ArrowRightLeft className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => deleteRedirect(redirect.id)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
+              </CardContent>
+            </Card>
+
             {/* 404 Errors Section */}
             <Card>
               <CardHeader>
@@ -364,7 +528,7 @@ export default function Analytics() {
                         <TableHead className="text-center">Count</TableHead>
                         <TableHead>Last Occurrence</TableHead>
                         <TableHead>Referrer</TableHead>
-                        <TableHead className="w-[50px]"></TableHead>
+                        <TableHead className="w-[100px]"></TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -383,17 +547,29 @@ export default function Analytics() {
                             {error.referrer || "-"}
                           </TableCell>
                           <TableCell>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => {
-                                errorLogs
-                                  .filter(log => log.url === error.url)
-                                  .forEach(log => deleteErrorLog(log.id));
-                              }}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
+                            <div className="flex gap-1">
+                              {!hasRedirect(error.url) && (
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => handleAddRedirect(error.url)}
+                                  title="Add Redirect"
+                                >
+                                  <ArrowRightLeft className="h-4 w-4" />
+                                </Button>
+                              )}
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => {
+                                  errorLogs
+                                    .filter(log => log.url === error.url)
+                                    .forEach(log => deleteErrorLog(log.id));
+                                }}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
                           </TableCell>
                         </TableRow>
                       ))}
@@ -405,6 +581,14 @@ export default function Analytics() {
           </div>
         </main>
       </div>
+
+      <RedirectFormDialog
+        open={redirectDialogOpen}
+        onOpenChange={setRedirectDialogOpen}
+        sourceUrl={selectedErrorUrl}
+        redirect={editingRedirect}
+        onSuccess={fetchRedirects}
+      />
     </SidebarProvider>
   );
 }
