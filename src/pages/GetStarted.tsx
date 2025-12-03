@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowRight, ArrowLeft, Check } from "lucide-react";
+import { ArrowRight, ArrowLeft, Check, Gift } from "lucide-react";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
@@ -30,6 +30,7 @@ export default function GetStarted() {
   const navigate = useNavigate();
   const { signUp } = useAuth();
   const { toast } = useToast();
+  const [searchParams] = useSearchParams();
 
   // Step 1 - Required fields
   const [email, setEmail] = useState("");
@@ -44,6 +45,7 @@ export default function GetStarted() {
   const [numberOfTrailers, setNumberOfTrailers] = useState("");
   const [dateNeeded, setDateNeeded] = useState("");
   const [message, setMessage] = useState("");
+  const [referralCode, setReferralCode] = useState("");
 
   // Step 2 - Banking (optional)
   const [bankName, setBankName] = useState("");
@@ -63,6 +65,18 @@ export default function GetStarted() {
 
   // Step 4 - Terms
   const [acceptedTerms, setAcceptedTerms] = useState(false);
+
+  // Check for referral code in URL on mount
+  useEffect(() => {
+    const refCode = searchParams.get("ref");
+    if (refCode) {
+      setReferralCode(refCode.toUpperCase());
+      toast({ 
+        title: "Referral code applied!", 
+        description: `Code ${refCode} will be applied to your account.` 
+      });
+    }
+  }, [searchParams]);
 
   const validateStep1 = () => {
     if (!email || !password || !confirmPassword || !companyName || !primaryContactName || !phoneNumber || !companyAddress || !businessType || !numberOfTrailers || !dateNeeded) {
@@ -227,6 +241,35 @@ export default function GetStarted() {
         });
 
       if (applicationError) throw applicationError;
+
+      // Track referral if a code was provided
+      if (referralCode.trim()) {
+        try {
+          // Validate and get the referral code
+          const { data: codeData } = await supabase
+            .from("referral_codes")
+            .select("id")
+            .eq("code", referralCode.trim().toUpperCase())
+            .eq("is_active", true)
+            .maybeSingle();
+
+          if (codeData) {
+            // Create referral record
+            await supabase.from("referrals").insert({
+              referrer_code_id: codeData.id,
+              referred_email: email,
+              status: "pending"
+            });
+            toast({ 
+              title: "Referral Applied!", 
+              description: "You'll receive $250 off after lease approval." 
+            });
+          }
+        } catch (error) {
+          // Non-critical, don't block signup flow
+          console.error("Referral tracking error:", error);
+        }
+      }
 
       toast({ 
         title: "Success!", 
@@ -443,6 +486,22 @@ export default function GetStarted() {
                       placeholder="Any additional information or special requests..."
                       rows={3}
                     />
+                  </div>
+                  <div>
+                    <Label htmlFor="referralCode" className="flex items-center gap-2">
+                      <Gift className="h-4 w-4 text-primary" />
+                      Referral Code (Optional)
+                    </Label>
+                    <Input 
+                      id="referralCode" 
+                      type="text"
+                      value={referralCode} 
+                      onChange={(e) => setReferralCode(e.target.value.toUpperCase())}
+                      placeholder="e.g. CRUMS-ABC123"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Have a referral code? Enter it to save $250 on your lease!
+                    </p>
                   </div>
                 </div>
               )}
