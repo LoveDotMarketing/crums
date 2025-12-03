@@ -175,10 +175,10 @@ const Index = () => {
             </Card>
 
             {/* Keep Moving Forward */}
-            <Card className="border-2 hover:shadow-lg transition-shadow bg-gradient-to-br from-accent/10 to-background">
+            <Card className="border-2 hover:shadow-lg transition-shadow bg-gradient-to-br from-primary/10 to-background">
               <CardContent className="p-8">
-                <div className="h-14 w-14 rounded-full bg-accent/20 flex items-center justify-center mb-6">
-                  <TrendingUp className="h-7 w-7 text-accent" />
+                <div className="h-14 w-14 rounded-full bg-primary/20 flex items-center justify-center mb-6">
+                  <TrendingUp className="h-7 w-7 text-primary" />
                 </div>
                 <h3 className="text-2xl font-bold mb-4 text-foreground">
                   Keep Moving Forward
