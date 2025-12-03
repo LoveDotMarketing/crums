@@ -7,7 +7,8 @@ import {
   LogOut,
   Wrench,
   DollarSign,
-  BarChart3
+  BarChart3,
+  Send
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/hooks/useAuth";
@@ -33,6 +34,7 @@ const menuItems = [
   { title: "Tolls", url: "/dashboard/admin/tolls", icon: Receipt },
   { title: "Billing", url: "/dashboard/admin/billing", icon: DollarSign },
   { title: "Support", url: "/dashboard/admin/support", icon: HelpCircle },
+  { title: "Outreach", url: "/dashboard/admin/outreach", icon: Send },
   { title: "Reports", url: "/dashboard/admin/reports", icon: Receipt },
   { title: "Analytics", url: "/dashboard/admin/analytics", icon: BarChart3 },
 ];

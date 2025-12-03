@@ -197,6 +197,59 @@ export type Database = {
           },
         ]
       }
+      customer_outreach_status: {
+        Row: {
+          created_at: string
+          customer_id: string
+          id: string
+          last_password_reminder_at: string | null
+          last_profile_reminder_at: string | null
+          password_set_at: string | null
+          profile_completed_at: string | null
+          reminder_count: number | null
+          unsubscribed: boolean | null
+          unsubscribed_at: string | null
+          updated_at: string
+          welcome_sent_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          customer_id: string
+          id?: string
+          last_password_reminder_at?: string | null
+          last_profile_reminder_at?: string | null
+          password_set_at?: string | null
+          profile_completed_at?: string | null
+          reminder_count?: number | null
+          unsubscribed?: boolean | null
+          unsubscribed_at?: string | null
+          updated_at?: string
+          welcome_sent_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          customer_id?: string
+          id?: string
+          last_password_reminder_at?: string | null
+          last_profile_reminder_at?: string | null
+          password_set_at?: string | null
+          profile_completed_at?: string | null
+          reminder_count?: number | null
+          unsubscribed?: boolean | null
+          unsubscribed_at?: string | null
+          updated_at?: string
+          welcome_sent_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_outreach_status_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: true
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       customers: {
         Row: {
           account_number: string
@@ -254,6 +307,107 @@ export type Database = {
           status?: string | null
           updated_at?: string | null
           zip?: string | null
+        }
+        Relationships: []
+      }
+      email_campaigns: {
+        Row: {
+          body: string | null
+          completed_at: string | null
+          created_at: string
+          created_by: string | null
+          custom_recipients: string[] | null
+          failed_count: number | null
+          id: string
+          name: string
+          recipient_count: number | null
+          scheduled_at: string | null
+          sent_count: number | null
+          status: string
+          subject: string | null
+          target_audience: string
+          template_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          body?: string | null
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          custom_recipients?: string[] | null
+          failed_count?: number | null
+          id?: string
+          name: string
+          recipient_count?: number | null
+          scheduled_at?: string | null
+          sent_count?: number | null
+          status?: string
+          subject?: string | null
+          target_audience?: string
+          template_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          body?: string | null
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          custom_recipients?: string[] | null
+          failed_count?: number | null
+          id?: string
+          name?: string
+          recipient_count?: number | null
+          scheduled_at?: string | null
+          sent_count?: number | null
+          status?: string
+          subject?: string | null
+          target_audience?: string
+          template_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_campaigns_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "email_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      email_templates: {
+        Row: {
+          body: string
+          created_at: string
+          created_by: string | null
+          id: string
+          is_active: boolean
+          name: string
+          subject: string
+          template_type: string
+          updated_at: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          subject: string
+          template_type?: string
+          updated_at?: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          subject?: string
+          template_type?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -397,6 +551,94 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      outreach_logs: {
+        Row: {
+          campaign_id: string | null
+          created_at: string
+          customer_id: string | null
+          email: string
+          email_type: string
+          error_message: string | null
+          id: string
+          sent_at: string | null
+          status: string
+          template_id: string | null
+        }
+        Insert: {
+          campaign_id?: string | null
+          created_at?: string
+          customer_id?: string | null
+          email: string
+          email_type?: string
+          error_message?: string | null
+          id?: string
+          sent_at?: string | null
+          status?: string
+          template_id?: string | null
+        }
+        Update: {
+          campaign_id?: string | null
+          created_at?: string
+          customer_id?: string | null
+          email?: string
+          email_type?: string
+          error_message?: string | null
+          id?: string
+          sent_at?: string | null
+          status?: string
+          template_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "outreach_logs_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "email_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "outreach_logs_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "outreach_logs_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "email_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      outreach_settings: {
+        Row: {
+          description: string | null
+          id: string
+          setting_key: string
+          setting_value: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          description?: string | null
+          id?: string
+          setting_key: string
+          setting_value: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          description?: string | null
+          id?: string
+          setting_key?: string
+          setting_value?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
       }
       profiles: {
         Row: {

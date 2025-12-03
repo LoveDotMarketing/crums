@@ -32,3 +32,6 @@ verify_jwt = false
 
 [functions.agent-customers-tolls]
 verify_jwt = false
+
+[functions.send-outreach-email]
+verify_jwt = false
