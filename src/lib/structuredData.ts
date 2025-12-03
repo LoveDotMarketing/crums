@@ -20,7 +20,6 @@ export const organizationSchema = {
     "@type": "ContactPoint",
     "telephone": "+1-888-570-4564",
     "contactType": "Customer Service",
-    "email": "info@crumsleasing.com",
     "areaServed": "US",
     "availableLanguage": "English"
   },
@@ -40,7 +39,6 @@ export const localBusinessSchema = {
   "image": "https://crumsleasing.com/og-image.jpg",
   "url": "https://crumsleasing.com",
   "telephone": "+1-888-570-4564",
-  "email": "info@crumsleasing.com",
   "address": {
     "@type": "PostalAddress",
     "streetAddress": "4070 FM1863",

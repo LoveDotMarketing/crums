@@ -7,7 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Phone, Mail, MapPin, Clock, Facebook, Instagram, Linkedin } from "lucide-react";
+import { Phone, MapPin, Clock, Facebook, Instagram, Linkedin } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { SEO } from "@/components/SEO";
@@ -236,9 +236,9 @@ const Contact = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <SEO
+        <SEO
         title="Contact Us - Get A Quote"
-        description="Contact CRUMS Leasing for trailer leasing and rental quotes. Located in Bulverde, TX. Call (888) 570-4564 or email info@crumsleasing.com. 24/7 emergency support available."
+        description="Contact CRUMS Leasing for trailer leasing and rental quotes. Located in Bulverde, TX. Call (888) 570-4564. 24/7 emergency support available."
         canonical="https://crumsleasing.com/contact"
         structuredData={combinedSchema}
       />
@@ -396,16 +396,6 @@ const Contact = () => {
                       </div>
                     </div>
 
-                    <div className="flex items-start">
-                      <div className="h-12 w-12 rounded-full bg-secondary/10 flex items-center justify-center mr-4 flex-shrink-0">
-                        <Mail className="h-6 w-6 text-secondary" />
-                      </div>
-                      <div>
-                        <h3 className="font-semibold text-foreground mb-1">Email</h3>
-                        <p className="text-muted-foreground">info@crumsleasing.com</p>
-                        <p className="text-sm text-muted-foreground">We respond within 24 hours</p>
-                      </div>
-                    </div>
 
                     <div className="flex items-start">
                       <div className="h-12 w-12 rounded-full bg-accent/10 flex items-center justify-center mr-4 flex-shrink-0">
