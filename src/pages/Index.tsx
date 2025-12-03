@@ -13,6 +13,7 @@ import {
   Heart,
   Award,
   Target,
+  Star,
 } from "lucide-react";
 import heroImage from "@/assets/hero-truck.jpg";
 import fleetImage from "@/assets/crums-trailer.png";
@@ -20,16 +21,18 @@ import teamImage from "@/assets/team-handshake.jpg";
 import trailerFleetImage from "@/assets/trailer-fleet.png";
 import { ChatBot } from "@/components/ChatBot";
 import { SEO } from "@/components/SEO";
-import { organizationSchema, generateBreadcrumbSchema } from "@/lib/structuredData";
+import { organizationSchema, generateBreadcrumbSchema, customerReviews, generateReviewSchema } from "@/lib/structuredData";
 
 const Index = () => {
   const breadcrumbSchema = generateBreadcrumbSchema([
     { name: "Home", url: "https://crumsleasing.com/" }
   ]);
 
+  const reviewSchema = generateReviewSchema(customerReviews);
+
   const combinedSchema = {
     "@context": "https://schema.org",
-    "@graph": [organizationSchema, breadcrumbSchema]
+    "@graph": [organizationSchema, breadcrumbSchema, reviewSchema]
   };
 
   return (
@@ -75,6 +78,61 @@ const Index = () => {
                 className="bg-transparent border-2 border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary text-lg px-8 py-6"
               >
                 Our Mission & Values
+              </Button>
+            </a>
+          </div>
+        </div>
+      </section>
+
+      {/* Customer Reviews Section */}
+      <section className="py-16 bg-gradient-to-b from-secondary/5 to-background">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <div className="flex items-center justify-center gap-1 mb-4">
+              {[...Array(5)].map((_, i) => (
+                <Star key={i} className="h-6 w-6 fill-secondary text-secondary" />
+              ))}
+            </div>
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+              What Our Customers Say
+            </h2>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              Trusted by trucking professionals across Texas
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+            {customerReviews.map((review, index) => (
+              <Card key={index} className="border hover:shadow-lg transition-shadow bg-card">
+                <CardContent className="p-6">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center">
+                      <span className="text-sm font-bold text-primary">
+                        {review.author.charAt(0)}
+                      </span>
+                    </div>
+                    <div>
+                      <p className="font-semibold text-foreground text-sm">{review.author}</p>
+                      <div className="flex items-center gap-0.5">
+                        {[...Array(review.rating)].map((_, i) => (
+                          <Star key={i} className="h-3 w-3 fill-secondary text-secondary" />
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                  <p className="text-muted-foreground text-sm leading-relaxed line-clamp-4">
+                    "{review.text}"
+                  </p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          <div className="text-center">
+            <a href="/reviews">
+              <Button size="lg" variant="outline" className="border-2 border-secondary text-secondary hover:bg-secondary hover:text-secondary-foreground">
+                Read Reviews
+                <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
             </a>
           </div>
