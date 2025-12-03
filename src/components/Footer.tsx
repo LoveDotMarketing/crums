@@ -133,6 +133,11 @@ export const Footer = () => {
                 </a>
               </li>
               <li>
+                <a href="/referral-program" className="hover:text-secondary transition-colors">
+                  Referral Program
+                </a>
+              </li>
+              <li>
                 <a href="/contact" className="hover:text-secondary transition-colors">
                   Contact
                 </a>
