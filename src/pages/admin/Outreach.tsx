@@ -17,8 +17,9 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, Send, Save, FileText, Settings, History, Mail, Users, TestTube, Trash2, Edit, Eye } from "lucide-react";
+import { Loader2, Send, Save, FileText, Settings, History, Mail, Users, TestTube, Trash2, Edit, Eye, Power, AlertTriangle } from "lucide-react";
 import { format } from "date-fns";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 interface Customer {
   id: string;
@@ -677,6 +678,53 @@ export default function Outreach() {
 
             {/* Settings Tab */}
             <TabsContent value="settings">
+              {/* Master Automation Switch */}
+              <Card className={`mb-6 border-2 ${getSetting("automation_enabled") === "true" ? "border-green-500 bg-green-50/50 dark:bg-green-950/20" : "border-destructive bg-destructive/5"}`}>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <Power className={`h-6 w-6 ${getSetting("automation_enabled") === "true" ? "text-green-600" : "text-destructive"}`} />
+                      <div>
+                        <CardTitle className="text-xl">Master Automation Switch</CardTitle>
+                        <CardDescription>
+                          {getSetting("automation_enabled") === "true" 
+                            ? "Automation is ACTIVE - automated emails will be sent based on settings below"
+                            : "Automation is OFF - no automated emails will be sent regardless of other settings"
+                          }
+                        </CardDescription>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <Badge 
+                        variant={getSetting("automation_enabled") === "true" ? "default" : "destructive"}
+                        className={`text-sm px-3 py-1 ${getSetting("automation_enabled") === "true" ? "bg-green-600" : ""}`}
+                      >
+                        {getSetting("automation_enabled") === "true" ? "ACTIVE" : "OFF"}
+                      </Badge>
+                      <Switch
+                        id="automation-master"
+                        checked={getSetting("automation_enabled") === "true"}
+                        onCheckedChange={(checked) =>
+                          updateSettingMutation.mutate({ key: "automation_enabled", value: String(checked) })
+                        }
+                        className="scale-125"
+                      />
+                    </div>
+                  </div>
+                </CardHeader>
+                {getSetting("automation_enabled") !== "true" && (
+                  <CardContent>
+                    <Alert variant="default" className="border-amber-500 bg-amber-50 dark:bg-amber-950/20">
+                      <AlertTriangle className="h-4 w-4 text-amber-600" />
+                      <AlertTitle className="text-amber-800 dark:text-amber-200">Automation Disabled</AlertTitle>
+                      <AlertDescription className="text-amber-700 dark:text-amber-300">
+                        Configure your templates and settings below, then turn on the master switch when ready to start sending automated emails.
+                      </AlertDescription>
+                    </Alert>
+                  </CardContent>
+                )}
+              </Card>
+
               <div className="grid gap-6 md:grid-cols-2">
                 <Card>
                   <CardHeader>
@@ -692,6 +740,7 @@ export default function Outreach() {
                         onCheckedChange={(checked) =>
                           updateSettingMutation.mutate({ key: "welcome_email_enabled", value: String(checked) })
                         }
+                        disabled={getSetting("automation_enabled") !== "true"}
                       />
                     </div>
                   </CardContent>
@@ -711,6 +760,7 @@ export default function Outreach() {
                         onCheckedChange={(checked) =>
                           updateSettingMutation.mutate({ key: "password_reminder_enabled", value: String(checked) })
                         }
+                        disabled={getSetting("automation_enabled") !== "true"}
                       />
                     </div>
                     <div className="space-y-2">
@@ -722,6 +772,7 @@ export default function Outreach() {
                         onChange={(e) =>
                           updateSettingMutation.mutate({ key: "password_reminder_days", value: e.target.value })
                         }
+                        disabled={getSetting("automation_enabled") !== "true"}
                       />
                     </div>
                   </CardContent>
@@ -741,6 +792,7 @@ export default function Outreach() {
                         onCheckedChange={(checked) =>
                           updateSettingMutation.mutate({ key: "profile_reminder_enabled", value: String(checked) })
                         }
+                        disabled={getSetting("automation_enabled") !== "true"}
                       />
                     </div>
                     <div className="space-y-2">
@@ -752,6 +804,7 @@ export default function Outreach() {
                         onChange={(e) =>
                           updateSettingMutation.mutate({ key: "profile_reminder_days", value: e.target.value })
                         }
+                        disabled={getSetting("automation_enabled") !== "true"}
                       />
                     </div>
                   </CardContent>
