@@ -56,7 +56,7 @@ const Index = () => {
 
         <div className="relative z-10 container mx-auto px-4 text-center text-primary-foreground">
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
-            Empowering Every Trucker
+            Empowering Every Carrier
             <br />
             <span className="text-secondary">To Build the Life They're Proud Of</span>
           </h1>
@@ -172,7 +172,7 @@ const Index = () => {
               Core Values
             </h2>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-              At CRUMS Leasing, we see a future where every trucker has the freedom, tools, and
+              At CRUMS Leasing, we see a future where every carrier has the freedom, tools, and
               support to build a life they're proud of both on and off the road.
             </p>
           </div>

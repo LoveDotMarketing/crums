@@ -38,7 +38,7 @@ const About = () => {
           <h1 className="text-4xl md:text-6xl font-bold mb-6">About CRUMS Leasing</h1>
           <p className="text-xl md:text-2xl max-w-4xl mx-auto text-primary-foreground/90">
             A family-rooted legacy built on trust, integrity, and a genuine commitment to the success
-            of every trucker we serve.
+            of every carrier we serve.
           </p>
         </div>
       </section>
@@ -60,7 +60,7 @@ const About = () => {
                 </p>
                 <p>
                   The CRUMS name represents more than just equipment leasing — it stands for hard
-                  work, dedication, and the belief that every trucker deserves the tools and support
+                  work, dedication, and the belief that every carrier deserves the tools and support
                   to build a life they're proud of, both on and off the road.
                 </p>
                 <p>
