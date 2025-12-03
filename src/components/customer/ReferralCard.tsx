@@ -101,7 +101,7 @@ export function ReferralCard() {
         await navigator.share({
           title: "CRUMS Leasing Referral",
           text: `Use my referral code ${referralCode.code} when you sign up for CRUMS Leasing and we both save $250!`,
-          url: `https://crumsleasing.com/get-started?ref=${referralCode.code}`
+          url: `https://crumsleasing.com/login?ref=${referralCode.code}`
         });
       } catch (err) {
         // User cancelled or share not supported

@@ -1236,6 +1236,7 @@ export type Database = {
       }
     }
     Functions: {
+      generate_account_number: { Args: never; Returns: string }
       generate_referral_code: { Args: never; Returns: string }
       has_role: {
         Args: {
