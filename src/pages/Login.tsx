@@ -7,10 +7,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { loginSchema, signupSchema } from "@/lib/validations";
+import { supabase } from "@/integrations/supabase/client";
 
 const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -77,6 +78,14 @@ const Login = () => {
             toast.error(error.message || "Failed to create account");
           }
         } else {
+          // Track that this customer has set their password (for outreach tracking)
+          try {
+            await supabase.functions.invoke("update-outreach-status", {
+              body: { action: "password_set", email },
+            });
+          } catch {
+            // Non-critical, don't block signup flow
+          }
           navigate("/dashboard/customer");
         }
       } else {
@@ -164,9 +173,9 @@ const Login = () => {
                             <input type="checkbox" className="mr-2" />
                             <span className="text-muted-foreground">Remember me</span>
                           </label>
-                          <a href="#" className="text-primary hover:underline">
+                          <Link to="/forgot-password" className="text-primary hover:underline">
                             Forgot password?
-                          </a>
+                          </Link>
                         </div>
                       )}
                       <Button
@@ -234,9 +243,9 @@ const Login = () => {
                           <input type="checkbox" className="mr-2" />
                           <span className="text-muted-foreground">Remember me</span>
                         </label>
-                        <a href="#" className="text-primary hover:underline">
+                        <Link to="/forgot-password" className="text-primary hover:underline">
                           Forgot password?
-                        </a>
+                        </Link>
                       </div>
                       <Button
                         type="submit"
