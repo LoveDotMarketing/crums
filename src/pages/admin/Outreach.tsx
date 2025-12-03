@@ -17,7 +17,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, Send, Save, FileText, Settings, History, Mail, Users, TestTube, Trash2, Edit, Eye, Power, AlertTriangle } from "lucide-react";
+import { Loader2, Send, Save, FileText, Settings, History, Mail, Users, TestTube, Trash2, Edit, Eye, Power, AlertTriangle, Play, CheckCircle, XCircle, Clock, UserCheck } from "lucide-react";
 import { format } from "date-fns";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
@@ -26,6 +26,23 @@ interface Customer {
   full_name: string;
   email: string;
   status: string;
+}
+
+interface CustomerOutreachStatus {
+  id: string;
+  customer_id: string;
+  welcome_sent_at: string | null;
+  password_set_at: string | null;
+  profile_completed_at: string | null;
+  last_password_reminder_at: string | null;
+  last_profile_reminder_at: string | null;
+  reminder_count: number;
+  unsubscribed: boolean;
+  unsubscribed_at: string | null;
+}
+
+interface CustomerWithOutreach extends Customer {
+  outreach_status?: CustomerOutreachStatus | null;
 }
 
 interface EmailTemplate {
@@ -58,6 +75,12 @@ interface OutreachSetting {
   description: string;
 }
 
+interface AutomationResult {
+  success: boolean;
+  emails_sent: number;
+  results: { email: string; type: string; success: boolean; error?: string }[];
+}
+
 export default function Outreach() {
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState("compose");
@@ -78,6 +101,14 @@ export default function Outreach() {
   const [editingTemplate, setEditingTemplate] = useState<EmailTemplate | null>(null);
   const [showTemplateDialog, setShowTemplateDialog] = useState(false);
 
+  // Automation run state
+  const [showAutomationResults, setShowAutomationResults] = useState(false);
+  const [automationResults, setAutomationResults] = useState<AutomationResult | null>(null);
+
+  // Customer status filter
+  const [customerStatusFilter, setCustomerStatusFilter] = useState("all");
+  const [outreachFilter, setOutreachFilter] = useState("all");
+
   // Fetch customers
   const { data: customers = [], isLoading: loadingCustomers } = useQuery({
     queryKey: ["customers-outreach"],
@@ -91,6 +122,55 @@ export default function Outreach() {
       return data as Customer[];
     },
   });
+
+  // Fetch customer outreach status
+  const { data: outreachStatuses = [], isLoading: loadingOutreachStatus } = useQuery({
+    queryKey: ["customer-outreach-status"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("customer_outreach_status")
+        .select("*");
+      if (error) throw error;
+      return data as CustomerOutreachStatus[];
+    },
+  });
+
+  // Merge customers with outreach status
+  const customersWithOutreach: CustomerWithOutreach[] = customers.map(customer => ({
+    ...customer,
+    outreach_status: outreachStatuses.find(s => s.customer_id === customer.id) || null,
+  }));
+
+  // Filter customers for status tab
+  const filteredCustomersForStatus = customersWithOutreach.filter(c => {
+    // Status filter
+    if (customerStatusFilter !== "all" && c.status !== customerStatusFilter) return false;
+    
+    // Outreach filter
+    if (outreachFilter === "needs_password") {
+      return !c.outreach_status?.password_set_at;
+    }
+    if (outreachFilter === "needs_profile") {
+      return c.outreach_status?.password_set_at && !c.outreach_status?.profile_completed_at;
+    }
+    if (outreachFilter === "unsubscribed") {
+      return c.outreach_status?.unsubscribed;
+    }
+    if (outreachFilter === "complete") {
+      return c.outreach_status?.password_set_at && c.outreach_status?.profile_completed_at;
+    }
+    
+    return true;
+  });
+
+  // Stats for customer status tab
+  const statusStats = {
+    total: customers.length,
+    welcomeSent: outreachStatuses.filter(s => s.welcome_sent_at).length,
+    passwordSet: outreachStatuses.filter(s => s.password_set_at).length,
+    profileComplete: outreachStatuses.filter(s => s.profile_completed_at).length,
+    unsubscribed: outreachStatuses.filter(s => s.unsubscribed).length,
+  };
 
   // Fetch templates
   const { data: templates = [], isLoading: loadingTemplates } = useQuery({
@@ -157,6 +237,45 @@ export default function Outreach() {
       setSelectedTemplate(templateId);
     }
   };
+
+  // Run automation manually
+  const runAutomationMutation = useMutation({
+    mutationFn: async () => {
+      const { data, error } = await supabase.functions.invoke("process-outreach-automation");
+      if (error) throw error;
+      return data as AutomationResult;
+    },
+    onSuccess: (data) => {
+      setAutomationResults(data);
+      setShowAutomationResults(true);
+      queryClient.invalidateQueries({ queryKey: ["customer-outreach-status"] });
+      toast.success(`Automation complete! ${data.emails_sent} emails sent.`);
+    },
+    onError: (error: Error) => {
+      toast.error(`Automation failed: ${error.message}`);
+    },
+  });
+
+  // Toggle unsubscribe status
+  const toggleUnsubscribeMutation = useMutation({
+    mutationFn: async ({ customerId, email, unsubscribe }: { customerId: string; email: string; unsubscribe: boolean }) => {
+      const { error } = await supabase.functions.invoke("update-outreach-status", {
+        body: {
+          action: unsubscribe ? "unsubscribed" : "resubscribed",
+          customer_id: customerId,
+          email,
+        },
+      });
+      if (error) throw error;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["customer-outreach-status"] });
+      toast.success(variables.unsubscribe ? "Customer unsubscribed" : "Customer resubscribed");
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
+    },
+  });
 
   // Send test email
   const sendTestEmailMutation = useMutation({
@@ -374,6 +493,9 @@ export default function Outreach() {
               <TabsTrigger value="campaigns" className="gap-2">
                 <History className="h-4 w-4" /> Campaigns
               </TabsTrigger>
+              <TabsTrigger value="customers" className="gap-2">
+                <UserCheck className="h-4 w-4" /> Customers
+              </TabsTrigger>
               <TabsTrigger value="settings" className="gap-2">
                 <Settings className="h-4 w-4" /> Settings
               </TabsTrigger>
@@ -436,7 +558,7 @@ export default function Outreach() {
                           className="min-h-[300px] font-mono text-sm"
                         />
                         <p className="text-xs text-muted-foreground">
-                          Variables: {"{{customer_name}}"}, {"{{login_url}}"}, {"{{profile_url}}"}
+                          Variables: {"{{customer_name}}"}, {"{{login_url}}"}, {"{{profile_url}}"}, {"{{unsubscribe_url}}"}
                         </p>
                       </div>
 
@@ -676,6 +798,163 @@ export default function Outreach() {
               </Card>
             </TabsContent>
 
+            {/* Customers Tab */}
+            <TabsContent value="customers">
+              {/* Stats Cards */}
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+                <Card>
+                  <CardContent className="p-4 text-center">
+                    <p className="text-2xl font-bold">{statusStats.total}</p>
+                    <p className="text-sm text-muted-foreground">Total Customers</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="p-4 text-center">
+                    <p className="text-2xl font-bold text-blue-600">{statusStats.welcomeSent}</p>
+                    <p className="text-sm text-muted-foreground">Welcome Sent</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="p-4 text-center">
+                    <p className="text-2xl font-bold text-green-600">{statusStats.passwordSet}</p>
+                    <p className="text-sm text-muted-foreground">Password Set</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="p-4 text-center">
+                    <p className="text-2xl font-bold text-purple-600">{statusStats.profileComplete}</p>
+                    <p className="text-sm text-muted-foreground">Profile Complete</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="p-4 text-center">
+                    <p className="text-2xl font-bold text-destructive">{statusStats.unsubscribed}</p>
+                    <p className="text-sm text-muted-foreground">Unsubscribed</p>
+                  </CardContent>
+                </Card>
+              </div>
+
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <div>
+                    <CardTitle>Customer Outreach Status</CardTitle>
+                    <CardDescription>Track customer engagement and onboarding progress</CardDescription>
+                  </div>
+                  <div className="flex gap-2">
+                    <Select value={customerStatusFilter} onValueChange={setCustomerStatusFilter}>
+                      <SelectTrigger className="w-[140px]">
+                        <SelectValue placeholder="Status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Status</SelectItem>
+                        <SelectItem value="active">Active</SelectItem>
+                        <SelectItem value="archived">Archived</SelectItem>
+                        <SelectItem value="pending">Pending</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Select value={outreachFilter} onValueChange={setOutreachFilter}>
+                      <SelectTrigger className="w-[160px]">
+                        <SelectValue placeholder="Outreach" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Outreach</SelectItem>
+                        <SelectItem value="needs_password">Needs Password</SelectItem>
+                        <SelectItem value="needs_profile">Needs Profile</SelectItem>
+                        <SelectItem value="complete">Complete</SelectItem>
+                        <SelectItem value="unsubscribed">Unsubscribed</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  {loadingCustomers || loadingOutreachStatus ? (
+                    <div className="flex justify-center p-8">
+                      <Loader2 className="h-8 w-8 animate-spin" />
+                    </div>
+                  ) : filteredCustomersForStatus.length === 0 ? (
+                    <p className="text-center text-muted-foreground py-8">No customers match the filters</p>
+                  ) : (
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Customer</TableHead>
+                          <TableHead>Email</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead className="text-center">Welcome</TableHead>
+                          <TableHead className="text-center">Password</TableHead>
+                          <TableHead className="text-center">Profile</TableHead>
+                          <TableHead className="text-center">Reminders</TableHead>
+                          <TableHead className="text-center">Subscribed</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {filteredCustomersForStatus.map((customer) => (
+                          <TableRow key={customer.id}>
+                            <TableCell className="font-medium">{customer.full_name}</TableCell>
+                            <TableCell className="text-sm text-muted-foreground">{customer.email}</TableCell>
+                            <TableCell>
+                              <Badge variant="outline">{customer.status}</Badge>
+                            </TableCell>
+                            <TableCell className="text-center">
+                              {customer.outreach_status?.welcome_sent_at ? (
+                                <div className="flex flex-col items-center">
+                                  <CheckCircle className="h-4 w-4 text-green-600" />
+                                  <span className="text-xs text-muted-foreground">
+                                    {format(new Date(customer.outreach_status.welcome_sent_at), "M/d")}
+                                  </span>
+                                </div>
+                              ) : (
+                                <XCircle className="h-4 w-4 text-muted-foreground mx-auto" />
+                              )}
+                            </TableCell>
+                            <TableCell className="text-center">
+                              {customer.outreach_status?.password_set_at ? (
+                                <div className="flex flex-col items-center">
+                                  <CheckCircle className="h-4 w-4 text-green-600" />
+                                  <span className="text-xs text-muted-foreground">
+                                    {format(new Date(customer.outreach_status.password_set_at), "M/d")}
+                                  </span>
+                                </div>
+                              ) : (
+                                <Clock className="h-4 w-4 text-amber-500 mx-auto" />
+                              )}
+                            </TableCell>
+                            <TableCell className="text-center">
+                              {customer.outreach_status?.profile_completed_at ? (
+                                <div className="flex flex-col items-center">
+                                  <CheckCircle className="h-4 w-4 text-green-600" />
+                                  <span className="text-xs text-muted-foreground">
+                                    {format(new Date(customer.outreach_status.profile_completed_at), "M/d")}
+                                  </span>
+                                </div>
+                              ) : (
+                                <Clock className="h-4 w-4 text-amber-500 mx-auto" />
+                              )}
+                            </TableCell>
+                            <TableCell className="text-center">
+                              <span className="text-sm">{customer.outreach_status?.reminder_count || 0}</span>
+                            </TableCell>
+                            <TableCell className="text-center">
+                              <Switch
+                                checked={!customer.outreach_status?.unsubscribed}
+                                onCheckedChange={(checked) => {
+                                  toggleUnsubscribeMutation.mutate({
+                                    customerId: customer.id,
+                                    email: customer.email,
+                                    unsubscribe: !checked,
+                                  });
+                                }}
+                              />
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
             {/* Settings Tab */}
             <TabsContent value="settings">
               {/* Master Automation Switch */}
@@ -719,6 +998,50 @@ export default function Outreach() {
                       <AlertTitle className="text-amber-800 dark:text-amber-200">Automation Disabled</AlertTitle>
                       <AlertDescription className="text-amber-700 dark:text-amber-300">
                         Configure your templates and settings below, then turn on the master switch when ready to start sending automated emails.
+                      </AlertDescription>
+                    </Alert>
+                  </CardContent>
+                )}
+              </Card>
+
+              {/* Run Automation Now Card */}
+              <Card className="mb-6 border-2 border-primary/50">
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <Play className="h-6 w-6 text-primary" />
+                      <div>
+                        <CardTitle className="text-xl">Run Automation Now</CardTitle>
+                        <CardDescription>
+                          Manually trigger the automation process to test or send emails immediately without waiting for the scheduled run.
+                        </CardDescription>
+                      </div>
+                    </div>
+                    <Button
+                      size="lg"
+                      onClick={() => runAutomationMutation.mutate()}
+                      disabled={runAutomationMutation.isPending || getSetting("automation_enabled") !== "true"}
+                    >
+                      {runAutomationMutation.isPending ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          Running...
+                        </>
+                      ) : (
+                        <>
+                          <Play className="h-4 w-4 mr-2" />
+                          Run Automation
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </CardHeader>
+                {getSetting("automation_enabled") !== "true" && (
+                  <CardContent>
+                    <Alert>
+                      <AlertTriangle className="h-4 w-4" />
+                      <AlertDescription>
+                        Enable the Master Automation Switch above to run automation.
                       </AlertDescription>
                     </Alert>
                   </CardContent>
@@ -988,6 +1311,51 @@ export default function Outreach() {
                   {saveTemplateMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                   Save Template
                 </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
+          {/* Automation Results Dialog */}
+          <Dialog open={showAutomationResults} onOpenChange={setShowAutomationResults}>
+            <DialogContent className="max-w-2xl">
+              <DialogHeader>
+                <DialogTitle>Automation Results</DialogTitle>
+                <DialogDescription>
+                  {automationResults?.success ? "Automation completed successfully" : "Automation encountered issues"}
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div className="p-4 bg-muted rounded-lg text-center">
+                  <p className="text-3xl font-bold text-primary">{automationResults?.emails_sent || 0}</p>
+                  <p className="text-sm text-muted-foreground">Emails Sent</p>
+                </div>
+                
+                {automationResults?.results && automationResults.results.length > 0 && (
+                  <div className="space-y-2">
+                    <Label>Details</Label>
+                    <ScrollArea className="h-[200px] border rounded-md p-3">
+                      {automationResults.results.map((result, idx) => (
+                        <div key={idx} className="flex items-center justify-between py-2 border-b last:border-0">
+                          <div>
+                            <p className="text-sm font-medium">{result.email}</p>
+                            <p className="text-xs text-muted-foreground">{result.type}</p>
+                          </div>
+                          {result.success ? (
+                            <CheckCircle className="h-4 w-4 text-green-600" />
+                          ) : (
+                            <div className="flex items-center gap-2">
+                              <XCircle className="h-4 w-4 text-destructive" />
+                              <span className="text-xs text-destructive">{result.error}</span>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </ScrollArea>
+                  </div>
+                )}
+              </div>
+              <DialogFooter>
+                <Button onClick={() => setShowAutomationResults(false)}>Close</Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
