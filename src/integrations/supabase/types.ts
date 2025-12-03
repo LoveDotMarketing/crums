@@ -448,6 +448,36 @@ export type Database = {
           },
         ]
       }
+      redirects: {
+        Row: {
+          created_at: string | null
+          hit_count: number | null
+          id: string
+          is_active: boolean | null
+          source_path: string
+          target_path: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          hit_count?: number | null
+          id?: string
+          is_active?: boolean | null
+          source_path: string
+          target_path: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          hit_count?: number | null
+          id?: string
+          is_active?: boolean | null
+          source_path?: string
+          target_path?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       support_tickets: {
         Row: {
           assigned_to: string | null

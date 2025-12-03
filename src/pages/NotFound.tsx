@@ -1,5 +1,5 @@
 import { useLocation, Link } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { supabase } from "@/integrations/supabase/client";
 import { Navigation } from "@/components/Navigation";
@@ -9,12 +9,38 @@ import { Home, Phone, MapPin, FileText, ArrowLeft, Search } from "lucide-react";
 
 const NotFound = () => {
   const location = useLocation();
+  const [isChecking, setIsChecking] = useState(true);
 
   useEffect(() => {
-    console.log("NotFound component loaded for path:", location.pathname);
-    
-    // Log 404 error to database
-    const logError = async () => {
+    const checkRedirectAndLog = async () => {
+      console.log("NotFound component loaded for path:", location.pathname);
+      
+      // Check for redirect first
+      try {
+        const { data: redirect, error: redirectError } = await supabase
+          .from("redirects")
+          .select("id, target_path, hit_count")
+          .eq("source_path", location.pathname)
+          .eq("is_active", true)
+          .maybeSingle();
+
+        if (!redirectError && redirect) {
+          // Increment hit count (fire and forget)
+          supabase
+            .from("redirects")
+            .update({ hit_count: redirect.hit_count + 1 })
+            .eq("id", redirect.id)
+            .then(() => {});
+
+          // Redirect to target
+          window.location.replace(redirect.target_path);
+          return;
+        }
+      } catch (error) {
+        console.error("Error checking redirect:", error);
+      }
+
+      // No redirect found, log 404 error
       console.log("Attempting to log 404 error to database...");
       try {
         const { data, error } = await (supabase as any).from("error_logs").insert({
@@ -31,9 +57,11 @@ const NotFound = () => {
       } catch (error) {
         console.error("Failed to log 404 error:", error);
       }
+
+      setIsChecking(false);
     };
     
-    logError();
+    checkRedirectAndLog();
   }, [location.pathname]);
 
   const helpfulLinks = [
@@ -42,6 +70,15 @@ const NotFound = () => {
     { to: "/locations", icon: MapPin, label: "Locations", description: "Find a location near you" },
     { to: "/contact", icon: Phone, label: "Contact Us", description: "Get in touch with our team" },
   ];
+
+  // Show loading while checking for redirect
+  if (isChecking) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   return (
     <>
