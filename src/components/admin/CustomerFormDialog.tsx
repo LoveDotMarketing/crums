@@ -2,9 +2,9 @@ import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { CalendarIcon, Loader2 } from "lucide-react";
+import { CalendarIcon, Loader2, Copy, Gift, UserCheck, Check, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -26,6 +26,10 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Calendar } from "@/components/ui/calendar";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { Switch } from "@/components/ui/switch";
 import {
   Popover,
   PopoverContent,
@@ -78,6 +82,17 @@ interface Customer {
   notes: string | null;
   payment_type: string | null;
   birthday?: string | null;
+  // Referral data from parent
+  referral_code?: string;
+  referral_code_id?: string;
+  referral_code_active?: boolean;
+  referrals_sent?: number;
+  referrals_pending?: number;
+  referrals_approved?: number;
+  referrals_credited?: number;
+  credits_earned?: number;
+  was_referred?: boolean;
+  referred_by_name?: string;
 }
 
 interface CustomerFormDialogProps {
@@ -111,6 +126,32 @@ export function CustomerFormDialog({ open, onOpenChange, customer }: CustomerFor
       payment_type: "",
       notes: "",
     },
+  });
+
+  // Fetch referral history for this customer
+  const { data: referralHistory = [] } = useQuery({
+    queryKey: ['customer-referrals', customer?.referral_code_id],
+    queryFn: async () => {
+      if (!customer?.referral_code_id) return [];
+      
+      const { data, error } = await supabase
+        .from('referrals')
+        .select(`
+          id,
+          referred_email,
+          status,
+          credit_amount,
+          created_at,
+          approved_at,
+          credited_at
+        `)
+        .eq('referrer_code_id', customer.referral_code_id)
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!customer?.referral_code_id && open,
   });
 
   useEffect(() => {
@@ -208,6 +249,24 @@ export function CustomerFormDialog({ open, onOpenChange, customer }: CustomerFor
     },
   });
 
+  const toggleReferralCodeMutation = useMutation({
+    mutationFn: async (active: boolean) => {
+      if (!customer?.referral_code_id) return;
+      const { error } = await supabase
+        .from("referral_codes")
+        .update({ is_active: active })
+        .eq("id", customer.referral_code_id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["customers"] });
+      toast({ title: "Referral code updated" });
+    },
+    onError: (error: Error) => {
+      toast({ title: "Error updating referral code", description: error.message, variant: "destructive" });
+    },
+  });
+
   const onSubmit = (values: CustomerFormValues) => {
     if (isEditing) {
       updateMutation.mutate(values);
@@ -216,11 +275,33 @@ export function CustomerFormDialog({ open, onOpenChange, customer }: CustomerFor
     }
   };
 
+  const copyReferralCode = () => {
+    if (customer?.referral_code) {
+      navigator.clipboard.writeText(customer.referral_code);
+      toast({ title: "Referral code copied!" });
+    }
+  };
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'pending':
+        return <Badge variant="secondary">Pending</Badge>;
+      case 'approved':
+        return <Badge variant="default" className="bg-blue-500">Approved</Badge>;
+      case 'credited':
+        return <Badge variant="default" className="bg-green-600">Credited</Badge>;
+      case 'rejected':
+        return <Badge variant="destructive">Rejected</Badge>;
+      default:
+        return <Badge variant="outline">{status}</Badge>;
+    }
+  };
+
   const isSubmitting = createMutation.isPending || updateMutation.isPending;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{isEditing ? "Edit Customer" : "Add Customer"}</DialogTitle>
         </DialogHeader>
@@ -443,6 +524,115 @@ export function CustomerFormDialog({ open, onOpenChange, customer }: CustomerFor
                 </FormItem>
               )}
             />
+
+            {/* Referral Information Section - Only show when editing */}
+            {isEditing && (
+              <>
+                <Separator className="my-6" />
+                
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <Gift className="h-5 w-5" />
+                      Referral Information
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {/* Referral Code */}
+                    {customer?.referral_code ? (
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm text-muted-foreground">Referral Code</p>
+                            <div className="flex items-center gap-2 mt-1">
+                              <code className="bg-muted px-3 py-1 rounded text-lg font-mono">
+                                {customer.referral_code}
+                              </code>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                onClick={copyReferralCode}
+                              >
+                                <Copy className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm text-muted-foreground">Active</span>
+                            <Switch
+                              checked={customer.referral_code_active}
+                              onCheckedChange={(checked) => toggleReferralCodeMutation.mutate(checked)}
+                              disabled={toggleReferralCodeMutation.isPending}
+                            />
+                          </div>
+                        </div>
+
+                        {/* Stats */}
+                        <div className="grid grid-cols-4 gap-3 pt-2">
+                          <div className="text-center p-2 bg-muted rounded">
+                            <p className="text-2xl font-bold">{customer.referrals_sent || 0}</p>
+                            <p className="text-xs text-muted-foreground">Total Sent</p>
+                          </div>
+                          <div className="text-center p-2 bg-muted rounded">
+                            <p className="text-2xl font-bold">{customer.referrals_pending || 0}</p>
+                            <p className="text-xs text-muted-foreground">Pending</p>
+                          </div>
+                          <div className="text-center p-2 bg-muted rounded">
+                            <p className="text-2xl font-bold">{customer.referrals_credited || 0}</p>
+                            <p className="text-xs text-muted-foreground">Credited</p>
+                          </div>
+                          <div className="text-center p-2 bg-green-500/10 rounded">
+                            <p className="text-2xl font-bold text-green-600">${customer.credits_earned || 0}</p>
+                            <p className="text-xs text-muted-foreground">Earned</p>
+                          </div>
+                        </div>
+
+                        {/* Was Referred By */}
+                        {customer.was_referred && (
+                          <div className="flex items-center gap-2 p-3 bg-secondary/20 rounded-lg">
+                            <UserCheck className="h-4 w-4 text-muted-foreground" />
+                            <span className="text-sm">
+                              This customer was referred by{" "}
+                              <strong>{customer.referred_by_name || "another customer"}</strong>
+                            </span>
+                          </div>
+                        )}
+
+                        {/* Referral History */}
+                        {referralHistory.length > 0 && (
+                          <div className="space-y-2">
+                            <p className="text-sm font-medium">Referral History</p>
+                            <div className="max-h-48 overflow-y-auto space-y-2">
+                              {referralHistory.map((referral) => (
+                                <div
+                                  key={referral.id}
+                                  className="flex items-center justify-between p-2 bg-muted/50 rounded text-sm"
+                                >
+                                  <div className="flex items-center gap-2">
+                                    <span className="font-medium">{referral.referred_email}</span>
+                                    {getStatusBadge(referral.status)}
+                                  </div>
+                                  <div className="flex items-center gap-2 text-muted-foreground">
+                                    <span>${referral.credit_amount}</span>
+                                    <span>·</span>
+                                    <span>{format(new Date(referral.created_at), "MMM d, yyyy")}</span>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">
+                        No referral code assigned to this customer.
+                      </p>
+                    )}
+                  </CardContent>
+                </Card>
+              </>
+            )}
 
             <div className="flex justify-end gap-3 pt-4">
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
