@@ -44,6 +44,10 @@ const Support = lazy(() => import("./pages/admin/Support"));
 const Reports = lazy(() => import("./pages/admin/Reports"));
 const Analytics = lazy(() => import("./pages/admin/Analytics"));
 const Outreach = lazy(() => import("./pages/admin/Outreach"));
+const Referrals = lazy(() => import("./pages/admin/Referrals"));
+
+// Public pages
+const ReferralProgram = lazy(() => import("./pages/ReferralProgram"));
 
 // Customer pages
 const CustomerDashboard = lazy(() => import("./pages/customer/CustomerDashboard"));
@@ -176,6 +180,14 @@ const App = () => (
               } 
             />
             <Route 
+              path="/dashboard/admin/referrals" 
+              element={
+                <ProtectedRoute requiredRole="admin">
+                  <Referrals />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
               path="/dashboard/customer/application"
               element={
                 <ProtectedRoute requiredRole="customer">
@@ -224,6 +236,7 @@ const App = () => (
               } 
             />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="/referral-program" element={<ReferralProgram />} />
             <Route path="/reviews" element={<Reviews />} />
             <Route path="/qr" element={<Navigate to="/review" replace />} />
             <Route path="/review" element={<Review />} />

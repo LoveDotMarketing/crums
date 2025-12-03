@@ -7,20 +7,32 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { loginSchema, signupSchema } from "@/lib/validations";
 import { supabase } from "@/integrations/supabase/client";
+import { Gift } from "lucide-react";
 
 const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [referralCode, setReferralCode] = useState("");
   const [activeTab, setActiveTab] = useState<"customer" | "staff">("customer");
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { signIn, signUp, user, userRole } = useAuth();
+
+  // Check for referral code in URL
+  useEffect(() => {
+    const refCode = searchParams.get("ref");
+    if (refCode) {
+      setReferralCode(refCode);
+      setIsSignUp(true);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     if (user && userRole) {
@@ -86,6 +98,32 @@ const Login = () => {
           } catch {
             // Non-critical, don't block signup flow
           }
+
+          // Track referral if a code was provided
+          if (referralCode.trim()) {
+            try {
+              // Validate and get the referral code
+              const { data: codeData } = await supabase
+                .from("referral_codes")
+                .select("id")
+                .eq("code", referralCode.trim().toUpperCase())
+                .eq("is_active", true)
+                .maybeSingle();
+
+              if (codeData) {
+                // Create referral record
+                await supabase.from("referrals").insert({
+                  referrer_code_id: codeData.id,
+                  referred_email: email,
+                  status: "pending"
+                });
+                toast.success("Referral code applied! You'll receive $250 off after lease approval.");
+              }
+            } catch {
+              // Non-critical, don't block signup flow
+            }
+          }
+
           navigate("/dashboard/customer");
         }
       } else {
@@ -167,6 +205,25 @@ const Login = () => {
                           onChange={(e) => setPassword(e.target.value)}
                         />
                       </div>
+                      {isSignUp && (
+                        <div>
+                          <Label htmlFor="referral-code" className="flex items-center gap-2">
+                            <Gift className="h-4 w-4 text-primary" />
+                            Referral Code (optional)
+                          </Label>
+                          <Input
+                            id="referral-code"
+                            type="text"
+                            placeholder="e.g. CRUMS-ABC123"
+                            className="mt-2"
+                            value={referralCode}
+                            onChange={(e) => setReferralCode(e.target.value.toUpperCase())}
+                          />
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Have a referral code? Enter it to save $250 on your lease!
+                          </p>
+                        </div>
+                      )}
                       {!isSignUp && (
                         <div className="flex items-center justify-between text-sm">
                           <label className="flex items-center">

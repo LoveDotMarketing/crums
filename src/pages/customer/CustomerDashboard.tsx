@@ -13,6 +13,7 @@ import { Progress } from "@/components/ui/progress";
 import { ChatBot } from "@/components/ChatBot";
 import { ApplicationAlert } from "@/components/customer/ApplicationAlert";
 import { SEO } from "@/components/SEO";
+import { ReferralCard } from "@/components/customer/ReferralCard";
 
 
 export default function CustomerDashboard() {
@@ -167,7 +168,7 @@ export default function CustomerDashboard() {
           </Card>
 
           {/* Alert */}
-          <Card className="border-yellow-500/50 bg-yellow-50 dark:bg-yellow-900/20">
+          <Card className="border-yellow-500/50 bg-yellow-50 dark:bg-yellow-900/20 mb-8">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-yellow-700 dark:text-yellow-400">
                 <AlertCircle className="h-5 w-5" />
@@ -180,6 +181,12 @@ export default function CustomerDashboard() {
               </p>
             </CardContent>
           </Card>
+
+          {/* Referral Section */}
+          <div className="mb-8">
+            <h2 className="text-xl font-semibold text-foreground mb-4">Referral Program</h2>
+            <ReferralCard />
+          </div>
         </div>
       </main>
 
