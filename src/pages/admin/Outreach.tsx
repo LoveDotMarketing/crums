@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import DOMPurify from "dompurify";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -1375,7 +1376,7 @@ export default function Outreach() {
               <ScrollArea className="h-[500px]">
                 <div
                   className="p-4 bg-white text-black rounded"
-                  dangerouslySetInnerHTML={{ __html: body }}
+                  dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(body) }}
                 />
               </ScrollArea>
             </DialogContent>
