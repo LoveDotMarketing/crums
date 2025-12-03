@@ -29,6 +29,14 @@ interface EmailTemplate {
   body: string;
 }
 
+interface PlannedEmail {
+  customer_id: string;
+  customer_name: string;
+  email: string;
+  type: "welcome" | "password_reminder" | "profile_reminder";
+  reason: string;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -38,7 +46,16 @@ Deno.serve(async (req) => {
   const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
   const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-  console.log("[Automation] Starting outreach automation process...");
+  // Parse request body for dry_run flag
+  let dryRun = false;
+  try {
+    const body = await req.json();
+    dryRun = body?.dry_run === true;
+  } catch {
+    // No body or invalid JSON, proceed with default (not dry run)
+  }
+
+  console.log(`[Automation] Starting outreach automation process... (dry_run: ${dryRun})`);
 
   try {
     // Fetch all settings
@@ -60,7 +77,9 @@ Deno.serve(async (req) => {
         JSON.stringify({ 
           success: true, 
           message: "Automation is disabled",
-          emails_sent: 0 
+          emails_sent: 0,
+          dry_run: dryRun,
+          planned_emails: []
         }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
@@ -90,7 +109,13 @@ Deno.serve(async (req) => {
     if (!customers || customers.length === 0) {
       console.log("[Automation] No customers with email found.");
       return new Response(
-        JSON.stringify({ success: true, message: "No customers to process", emails_sent: 0 }),
+        JSON.stringify({ 
+          success: true, 
+          message: "No customers to process", 
+          emails_sent: 0,
+          dry_run: dryRun,
+          planned_emails: []
+        }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -117,23 +142,40 @@ Deno.serve(async (req) => {
 
     let emailsSent = 0;
     const results: { customer: string; type: string; status: string }[] = [];
+    const plannedEmails: PlannedEmail[] = [];
 
     for (const customer of customers) {
       let status = statuses[customer.id];
+      let justSentWelcome = false; // Track if we sent welcome this run
 
-      // Create outreach status record if doesn't exist
+      // Create outreach status record if doesn't exist (only if not dry run)
       if (!status) {
-        const { data: newStatus, error: insertError } = await supabase
-          .from("customer_outreach_status")
-          .insert({ customer_id: customer.id })
-          .select()
-          .single();
+        if (dryRun) {
+          // For dry run, simulate an empty status
+          status = {
+            id: "simulated",
+            customer_id: customer.id,
+            welcome_sent_at: null,
+            password_set_at: null,
+            profile_completed_at: null,
+            last_password_reminder_at: null,
+            last_profile_reminder_at: null,
+            reminder_count: 0,
+            unsubscribed: false,
+          };
+        } else {
+          const { data: newStatus, error: insertError } = await supabase
+            .from("customer_outreach_status")
+            .insert({ customer_id: customer.id })
+            .select()
+            .single();
 
-        if (insertError) {
-          console.error(`[Automation] Failed to create status for ${customer.email}:`, insertError);
-          continue;
+          if (insertError) {
+            console.error(`[Automation] Failed to create status for ${customer.email}:`, insertError);
+            continue;
+          }
+          status = newStatus as OutreachStatus;
         }
-        status = newStatus as OutreachStatus;
       }
 
       // Skip if unsubscribed
@@ -158,38 +200,51 @@ Deno.serve(async (req) => {
         !status.welcome_sent_at &&
         welcomeTemplate
       ) {
-        console.log(`[Automation] Sending welcome email to ${customer.email}`);
-        
-        const { error: sendError } = await supabase.functions.invoke("send-outreach-email", {
-          body: {
-            to: customer.email,
-            subject: replaceVariables(welcomeTemplate.subject),
-            body: replaceVariables(welcomeTemplate.body),
+        if (dryRun) {
+          plannedEmails.push({
             customer_id: customer.id,
-            template_id: welcomeTemplate.id,
-            email_type: "welcome",
-          },
-        });
-
-        if (!sendError) {
-          await supabase
-            .from("customer_outreach_status")
-            .update({ welcome_sent_at: now.toISOString() })
-            .eq("customer_id", customer.id);
-          emailsSent++;
-          results.push({ customer: customer.email, type: "welcome", status: "sent" });
+            customer_name: customer.full_name,
+            email: customer.email,
+            type: "welcome",
+            reason: "No welcome email sent yet",
+          });
+          justSentWelcome = true;
         } else {
-          console.error(`[Automation] Failed to send welcome to ${customer.email}:`, sendError);
-          results.push({ customer: customer.email, type: "welcome", status: "failed" });
+          console.log(`[Automation] Sending welcome email to ${customer.email}`);
+          
+          const { error: sendError } = await supabase.functions.invoke("send-outreach-email", {
+            body: {
+              to: customer.email,
+              subject: replaceVariables(welcomeTemplate.subject),
+              body: replaceVariables(welcomeTemplate.body),
+              customer_id: customer.id,
+              template_id: welcomeTemplate.id,
+              email_type: "welcome",
+            },
+          });
+
+          if (!sendError) {
+            await supabase
+              .from("customer_outreach_status")
+              .update({ welcome_sent_at: now.toISOString() })
+              .eq("customer_id", customer.id);
+            emailsSent++;
+            results.push({ customer: customer.email, type: "welcome", status: "sent" });
+            justSentWelcome = true;
+          } else {
+            console.error(`[Automation] Failed to send welcome to ${customer.email}:`, sendError);
+            results.push({ customer: customer.email, type: "welcome", status: "failed" });
+          }
         }
       }
 
-      // 2. PASSWORD REMINDER
+      // 2. PASSWORD REMINDER - Skip if we just sent welcome email this run
       if (
         settings.password_reminder_enabled === "true" &&
         !status.password_set_at &&
         passwordTemplate &&
-        status.reminder_count < maxReminders
+        status.reminder_count < maxReminders &&
+        !justSentWelcome // Don't send password reminder same run as welcome
       ) {
         const lastReminder = status.last_password_reminder_at
           ? new Date(status.last_password_reminder_at)
@@ -199,32 +254,44 @@ Deno.serve(async (req) => {
           : passwordReminderDays + 1; // Trigger on first run
 
         if (daysSinceLastReminder >= passwordReminderDays) {
-          console.log(`[Automation] Sending password reminder to ${customer.email}`);
-          
-          const { error: sendError } = await supabase.functions.invoke("send-outreach-email", {
-            body: {
-              to: customer.email,
-              subject: replaceVariables(passwordTemplate.subject),
-              body: replaceVariables(passwordTemplate.body),
+          if (dryRun) {
+            plannedEmails.push({
               customer_id: customer.id,
-              template_id: passwordTemplate.id,
-              email_type: "password_reminder",
-            },
-          });
-
-          if (!sendError) {
-            await supabase
-              .from("customer_outreach_status")
-              .update({
-                last_password_reminder_at: now.toISOString(),
-                reminder_count: (status.reminder_count || 0) + 1,
-              })
-              .eq("customer_id", customer.id);
-            emailsSent++;
-            results.push({ customer: customer.email, type: "password_reminder", status: "sent" });
+              customer_name: customer.full_name,
+              email: customer.email,
+              type: "password_reminder",
+              reason: lastReminder 
+                ? `${Math.floor(daysSinceLastReminder)} days since last reminder`
+                : "No password reminder sent yet",
+            });
           } else {
-            console.error(`[Automation] Failed to send password reminder to ${customer.email}:`, sendError);
-            results.push({ customer: customer.email, type: "password_reminder", status: "failed" });
+            console.log(`[Automation] Sending password reminder to ${customer.email}`);
+            
+            const { error: sendError } = await supabase.functions.invoke("send-outreach-email", {
+              body: {
+                to: customer.email,
+                subject: replaceVariables(passwordTemplate.subject),
+                body: replaceVariables(passwordTemplate.body),
+                customer_id: customer.id,
+                template_id: passwordTemplate.id,
+                email_type: "password_reminder",
+              },
+            });
+
+            if (!sendError) {
+              await supabase
+                .from("customer_outreach_status")
+                .update({
+                  last_password_reminder_at: now.toISOString(),
+                  reminder_count: (status.reminder_count || 0) + 1,
+                })
+                .eq("customer_id", customer.id);
+              emailsSent++;
+              results.push({ customer: customer.email, type: "password_reminder", status: "sent" });
+            } else {
+              console.error(`[Automation] Failed to send password reminder to ${customer.email}:`, sendError);
+              results.push({ customer: customer.email, type: "password_reminder", status: "failed" });
+            }
           }
         }
       }
@@ -244,32 +311,67 @@ Deno.serve(async (req) => {
           : profileReminderDays + 1;
 
         if (daysSinceLastProfileReminder >= profileReminderDays) {
-          console.log(`[Automation] Sending profile reminder to ${customer.email}`);
-          
-          const { error: sendError } = await supabase.functions.invoke("send-outreach-email", {
-            body: {
-              to: customer.email,
-              subject: replaceVariables(profileTemplate.subject),
-              body: replaceVariables(profileTemplate.body),
+          if (dryRun) {
+            plannedEmails.push({
               customer_id: customer.id,
-              template_id: profileTemplate.id,
-              email_type: "profile_reminder",
-            },
-          });
-
-          if (!sendError) {
-            await supabase
-              .from("customer_outreach_status")
-              .update({ last_profile_reminder_at: now.toISOString() })
-              .eq("customer_id", customer.id);
-            emailsSent++;
-            results.push({ customer: customer.email, type: "profile_reminder", status: "sent" });
+              customer_name: customer.full_name,
+              email: customer.email,
+              type: "profile_reminder",
+              reason: lastProfileReminder
+                ? `${Math.floor(daysSinceLastProfileReminder)} days since last reminder`
+                : "No profile reminder sent yet",
+            });
           } else {
-            console.error(`[Automation] Failed to send profile reminder to ${customer.email}:`, sendError);
-            results.push({ customer: customer.email, type: "profile_reminder", status: "failed" });
+            console.log(`[Automation] Sending profile reminder to ${customer.email}`);
+            
+            const { error: sendError } = await supabase.functions.invoke("send-outreach-email", {
+              body: {
+                to: customer.email,
+                subject: replaceVariables(profileTemplate.subject),
+                body: replaceVariables(profileTemplate.body),
+                customer_id: customer.id,
+                template_id: profileTemplate.id,
+                email_type: "profile_reminder",
+              },
+            });
+
+            if (!sendError) {
+              await supabase
+                .from("customer_outreach_status")
+                .update({ last_profile_reminder_at: now.toISOString() })
+                .eq("customer_id", customer.id);
+              emailsSent++;
+              results.push({ customer: customer.email, type: "profile_reminder", status: "sent" });
+            } else {
+              console.error(`[Automation] Failed to send profile reminder to ${customer.email}:`, sendError);
+              results.push({ customer: customer.email, type: "profile_reminder", status: "failed" });
+            }
           }
         }
       }
+    }
+
+    if (dryRun) {
+      // Count by type
+      const welcomeCount = plannedEmails.filter(e => e.type === "welcome").length;
+      const passwordCount = plannedEmails.filter(e => e.type === "password_reminder").length;
+      const profileCount = plannedEmails.filter(e => e.type === "profile_reminder").length;
+
+      console.log(`[Automation] Dry run complete. Would send ${plannedEmails.length} emails.`);
+      
+      return new Response(
+        JSON.stringify({
+          success: true,
+          dry_run: true,
+          message: `Preview: ${plannedEmails.length} emails would be sent`,
+          total_planned: plannedEmails.length,
+          welcome_count: welcomeCount,
+          password_reminder_count: passwordCount,
+          profile_reminder_count: profileCount,
+          planned_emails: plannedEmails,
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
     console.log(`[Automation] Completed. ${emailsSent} emails sent.`);
@@ -277,6 +379,7 @@ Deno.serve(async (req) => {
     return new Response(
       JSON.stringify({
         success: true,
+        dry_run: false,
         message: `Automation completed`,
         emails_sent: emailsSent,
         results,
