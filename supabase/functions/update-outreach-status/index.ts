@@ -35,8 +35,49 @@ Deno.serve(async (req) => {
       }
     }
 
+    // If no customer found AND action is password_set, create a new customer record
+    // This handles new website signups who aren't in the imported customers list
+    if (!targetCustomerId && email && action === "password_set") {
+      console.log(`[OutreachStatus] No customer found for ${email}, creating new customer record...`);
+      
+      // Look up profile to get name and phone
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("first_name, last_name, phone")
+        .eq("email", email)
+        .maybeSingle();
+      
+      // Generate unique account number
+      const accountNumber = `ACC-${Date.now().toString(36).toUpperCase()}`;
+      
+      // Build full name from profile or use email prefix
+      const fullName = profile 
+        ? `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || email.split('@')[0]
+        : email.split('@')[0];
+      
+      // Create customer record
+      const { data: newCustomer, error: createError } = await supabase
+        .from("customers")
+        .insert({
+          email,
+          full_name: fullName,
+          account_number: accountNumber,
+          phone: profile?.phone || null,
+          status: "active",
+        })
+        .select()
+        .single();
+      
+      if (createError) {
+        console.error("[OutreachStatus] Failed to create customer:", createError);
+      } else if (newCustomer) {
+        targetCustomerId = newCustomer.id;
+        console.log(`[OutreachStatus] Created new customer record for ${email}: ${targetCustomerId}`);
+      }
+    }
+
     if (!targetCustomerId) {
-      console.log("[OutreachStatus] No matching customer found");
+      console.log("[OutreachStatus] No matching customer found and could not create one");
       return new Response(
         JSON.stringify({ success: true, message: "No matching customer found" }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
