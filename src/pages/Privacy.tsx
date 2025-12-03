@@ -70,6 +70,11 @@ const Privacy = () => {
                 Bulverde, TX 78163<br />
                 Phone: (888) 570-4564
               </p>
+              <p className="pt-4">
+                <a href="/contact" className="text-primary hover:underline font-medium">
+                  Visit our Contact Page →
+                </a>
+              </p>
             </section>
           </div>
         </div>
