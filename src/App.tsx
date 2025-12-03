@@ -40,6 +40,7 @@ const Billing = lazy(() => import("./pages/admin/Billing"));
 const Support = lazy(() => import("./pages/admin/Support"));
 const Reports = lazy(() => import("./pages/admin/Reports"));
 const Analytics = lazy(() => import("./pages/admin/Analytics"));
+const Outreach = lazy(() => import("./pages/admin/Outreach"));
 
 // Customer pages
 const CustomerDashboard = lazy(() => import("./pages/customer/CustomerDashboard"));
@@ -158,6 +159,14 @@ const App = () => (
               element={
                 <ProtectedRoute requiredRole="admin">
                   <Analytics />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/dashboard/admin/outreach" 
+              element={
+                <ProtectedRoute requiredRole="admin">
+                  <Outreach />
                 </ProtectedRoute>
               } 
             />
