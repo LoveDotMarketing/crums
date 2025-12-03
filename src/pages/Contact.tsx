@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
@@ -13,6 +13,62 @@ import { supabase } from "@/integrations/supabase/client";
 import { SEO } from "@/components/SEO";
 import { localBusinessSchema, generateBreadcrumbSchema } from "@/lib/structuredData";
 
+// Spam detection utilities
+const isGibberish = (text: string): boolean => {
+  if (!text || text.length < 2) return false;
+  
+  // Check for excessive consonants in a row (more than 4)
+  const consonantPattern = /[bcdfghjklmnpqrstvwxyz]{5,}/i;
+  if (consonantPattern.test(text)) return true;
+  
+  // Check for random character sequences (mix of numbers and letters in unusual patterns)
+  const randomPattern = /[a-z]{1,2}[0-9]{1,2}[a-z]{1,2}[0-9]{1,2}/i;
+  if (randomPattern.test(text)) return true;
+  
+  // Check vowel ratio - natural text has ~40% vowels
+  const vowels = (text.match(/[aeiou]/gi) || []).length;
+  const letters = (text.match(/[a-z]/gi) || []).length;
+  if (letters > 5 && vowels / letters < 0.15) return true;
+  
+  return false;
+};
+
+const isValidName = (name: string): boolean => {
+  // Allow letters, spaces, hyphens, apostrophes, periods (for initials)
+  const namePattern = /^[a-zA-Z][a-zA-Z\s\-'.]{1,99}$/;
+  return namePattern.test(name) && !isGibberish(name);
+};
+
+const isValidPhone = (phone: string): boolean => {
+  // Extract digits only
+  const digits = phone.replace(/\D/g, '');
+  // Must have at least 10 digits
+  return digits.length >= 10 && digits.length <= 15;
+};
+
+const isValidCompany = (company: string): boolean => {
+  // At least 2 characters, not too many special characters
+  if (company.length < 2 || company.length > 200) return false;
+  
+  // Check for excessive special characters
+  const specialChars = (company.match(/[^a-zA-Z0-9\s\-&'.]/g) || []).length;
+  if (specialChars > company.length * 0.3) return false;
+  
+  return !isGibberish(company);
+};
+
+// List of known disposable email domains
+const disposableEmailDomains = [
+  'mailinator.com', 'tempmail.com', 'throwaway.email', 'guerrillamail.com',
+  'sharklasers.com', 'temp-mail.org', '10minutemail.com', 'fakeinbox.com',
+  'trashmail.com', 'mailnesia.com', 'tempinbox.com', 'dispostable.com'
+];
+
+const isDisposableEmail = (email: string): boolean => {
+  const domain = email.split('@')[1]?.toLowerCase();
+  return disposableEmailDomains.includes(domain);
+};
+
 const Contact = () => {
   const breadcrumbSchema = generateBreadcrumbSchema([
     { name: "Home", url: "https://crumsleasing.com/" },
@@ -25,6 +81,7 @@ const Contact = () => {
   };
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formLoadTime] = useState(Date.now());
   const [formData, setFormData] = useState({
     name: "",
     company: "",
@@ -32,6 +89,7 @@ const Contact = () => {
     phone: "",
     service: "",
     message: "",
+    website: "", // Honeypot field - should always be empty
   });
 
   const handleInputChange = (
@@ -44,11 +102,52 @@ const Contact = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Honeypot check - if filled, silently "succeed" (bots fill hidden fields)
+    if (formData.website) {
+      // Fake success to fool bots
+      toast({
+        title: "Success!",
+        description: "Your request has been submitted. We'll be in touch soon!",
+      });
+      return;
+    }
+    
+    // Time-based check - reject if submitted too quickly (< 3 seconds)
+    const timeSpent = Date.now() - formLoadTime;
+    if (timeSpent < 3000) {
+      toast({
+        title: "Please slow down",
+        description: "Please take a moment to fill out the form completely.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     // Validate required fields
     if (!formData.name || !formData.company || !formData.email || !formData.phone) {
       toast({
         title: "Missing Information",
         description: "Please fill in all required fields marked with *",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Name validation
+    if (!isValidName(formData.name)) {
+      toast({
+        title: "Invalid Name",
+        description: "Please enter a valid name (letters, spaces, and hyphens only)",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Company validation
+    if (!isValidCompany(formData.company)) {
+      toast({
+        title: "Invalid Company Name",
+        description: "Please enter a valid company name",
         variant: "destructive",
       });
       return;
@@ -65,14 +164,50 @@ const Contact = () => {
       return;
     }
 
+    // Disposable email check
+    if (isDisposableEmail(formData.email)) {
+      toast({
+        title: "Invalid Email",
+        description: "Please use a business or personal email address",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Phone validation
+    if (!isValidPhone(formData.phone)) {
+      toast({
+        title: "Invalid Phone Number",
+        description: "Please enter a valid phone number with at least 10 digits",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
-      const { error } = await supabase.functions.invoke('send-contact-email', {
-        body: formData,
+      // Send form data without honeypot field
+      const { website, ...submitData } = formData;
+      
+      const { data, error } = await supabase.functions.invoke('send-contact-email', {
+        body: {
+          ...submitData,
+          _timestamp: formLoadTime, // Send load time for server-side validation
+        },
       });
 
       if (error) throw error;
+      
+      // Check if server flagged as spam
+      if (data?.spam) {
+        toast({
+          title: "Submission Failed",
+          description: data.message || "Please try again later.",
+          variant: "destructive",
+        });
+        return;
+      }
 
       toast({
         title: "Success!",
@@ -87,6 +222,7 @@ const Contact = () => {
         phone: "",
         service: "",
         message: "",
+        website: "",
       });
     } catch (error: any) {
       console.error('Error submitting form:', error);
@@ -131,6 +267,19 @@ const Contact = () => {
               <CardContent className="p-8">
                 <h2 className="text-2xl font-bold mb-6 text-foreground">Get A Quote</h2>
                 <form onSubmit={handleSubmit} className="space-y-6">
+                  {/* Honeypot field - hidden from humans, visible to bots */}
+                  <div className="absolute -left-[9999px] opacity-0 h-0 w-0 overflow-hidden" aria-hidden="true">
+                    <Label htmlFor="website">Website (leave blank)</Label>
+                    <Input 
+                      id="website" 
+                      name="website"
+                      tabIndex={-1}
+                      autoComplete="off"
+                      value={formData.website}
+                      onChange={handleInputChange}
+                    />
+                  </div>
+                  
                   <div>
                     <Label htmlFor="name">Full Name *</Label>
                     <Input 
@@ -141,6 +290,7 @@ const Contact = () => {
                       onChange={handleInputChange}
                       required
                       disabled={isSubmitting}
+                      maxLength={100}
                     />
                   </div>
                   <div>
@@ -153,6 +303,7 @@ const Contact = () => {
                       onChange={handleInputChange}
                       required
                       disabled={isSubmitting}
+                      maxLength={200}
                     />
                   </div>
                   <div>
@@ -166,6 +317,7 @@ const Contact = () => {
                       onChange={handleInputChange}
                       required
                       disabled={isSubmitting}
+                      maxLength={255}
                     />
                   </div>
                   <div>
@@ -179,6 +331,7 @@ const Contact = () => {
                       onChange={handleInputChange}
                       required
                       disabled={isSubmitting}
+                      maxLength={20}
                     />
                   </div>
                   <div>
@@ -207,6 +360,7 @@ const Contact = () => {
                       value={formData.message}
                       onChange={handleInputChange}
                       disabled={isSubmitting}
+                      maxLength={2000}
                     />
                   </div>
                   <Button
