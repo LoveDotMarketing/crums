@@ -139,6 +139,31 @@ const Index = () => {
         </div>
       </section>
 
+      {/* Referral Program CTA */}
+      <section className="py-12 bg-primary">
+        <div className="container mx-auto px-4">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="text-center md:text-left">
+              <h2 className="text-2xl md:text-3xl font-bold text-primary-foreground mb-2">
+                Refer a Friend, Earn $250
+              </h2>
+              <p className="text-primary-foreground/90 text-lg">
+                Share the CRUMS experience and get rewarded for every successful referral.
+              </p>
+            </div>
+            <a href="/referral-program">
+              <Button 
+                size="lg" 
+                className="bg-secondary hover:bg-secondary/90 text-secondary-foreground text-lg px-8 py-6 whitespace-nowrap"
+              >
+                Join the Referral Program
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </Button>
+            </a>
+          </div>
+        </div>
+      </section>
+
       {/* Core Values Section */}
       <section className="py-20 bg-gradient-to-b from-muted to-background">
         <div className="container mx-auto px-4">
