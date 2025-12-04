@@ -25,6 +25,9 @@ import {
   Shield,
   Users
 } from "lucide-react";
+import dryVanTrailerImg from "@/assets/dry-van-trailer.png";
+import flatbedTrailerImg from "@/assets/flatbed-trailer.png";
+import refrigeratedTrailerImg from "@/assets/refrigerated-trailer.png";
 
 // Article metadata
 const articleData = {
@@ -145,6 +148,8 @@ const trailerTypes = [
   {
     name: "Dry Van",
     icon: Package,
+    image: dryVanTrailerImg,
+    imageAlt: "CRUMS Leasing 53-foot dry van trailer - enclosed cargo protection for general freight",
     description: "The workhorse of the trucking industry. Enclosed trailers ideal for general freight that doesn't require temperature control.",
     bestFor: [
       "Consumer packaged goods",
@@ -164,13 +169,15 @@ const trailerTypes = [
       volume: "3,000+ cubic feet"
     },
     marketShare: "~70% of all freight",
-    color: "primary",
+    colorClass: "text-secondary",
     learnMoreLink: "/dry-van-trailers",
     learnMoreText: "Learn more about dry van trailers"
   },
   {
     name: "Flatbed",
     icon: Layers,
+    image: flatbedTrailerImg,
+    imageAlt: "CRUMS Leasing flatbed trailer - open-deck design for oversized and heavy cargo hauling",
     description: "Open-deck trailers with no sides or roof, perfect for oversized, heavy, or irregularly shaped cargo.",
     bestFor: [
       "Construction materials (steel, lumber)",
@@ -190,13 +197,15 @@ const trailerTypes = [
       width: "8.5 feet standard"
     },
     marketShare: "~15% of freight market",
-    color: "secondary",
+    colorClass: "text-secondary",
     learnMoreLink: "/flatbed-trailers",
     learnMoreText: "Learn more about flatbed trailers"
   },
   {
     name: "Refrigerated (Reefer)",
     icon: Snowflake,
+    image: refrigeratedTrailerImg,
+    imageAlt: "CRUMS Leasing refrigerated reefer trailer - temperature-controlled transport for perishable goods",
     description: "Temperature-controlled trailers equipped with refrigeration units for perishable and temperature-sensitive cargo.",
     bestFor: [
       "Fresh produce and fruits",
@@ -216,7 +225,7 @@ const trailerTypes = [
       capacity: "Up to 44,000 lbs"
     },
     marketShare: "~10% of freight market",
-    color: "accent",
+    colorClass: "text-accent",
     learnMoreLink: "/refrigerated-trailers",
     learnMoreText: "Learn more about refrigerated trailers"
   }
@@ -344,6 +353,17 @@ const ChoosingTrailer = () => {
               <div className="space-y-12">
                 {trailerTypes.map((trailer, index) => (
                   <Card key={index} className="overflow-hidden border-2 hover:border-primary/50 transition-colors">
+                    {/* Trailer Image */}
+                    <Link to={trailer.learnMoreLink} className="block bg-muted/30 p-4 border-b hover:bg-muted/50 transition-colors">
+                      <img 
+                        src={trailer.image} 
+                        alt={trailer.imageAlt}
+                        className="w-full h-48 object-contain"
+                        loading="lazy"
+                        width="400"
+                        height="192"
+                      />
+                    </Link>
                     <div className="bg-gradient-to-r from-primary/10 to-transparent p-6 border-b">
                       <div className="flex items-center gap-4">
                         <div className="w-16 h-16 bg-primary rounded-xl flex items-center justify-center">
@@ -409,7 +429,7 @@ const ChoosingTrailer = () => {
                         <div className="mt-6 pt-4 border-t">
                           <Link 
                             to={trailer.learnMoreLink} 
-                            className="inline-flex items-center text-primary hover:underline font-medium"
+                            className={`inline-flex items-center ${trailer.colorClass} hover:underline font-medium`}
                           >
                             {trailer.learnMoreText}
                             <ArrowRight className="h-4 w-4 ml-1" />
