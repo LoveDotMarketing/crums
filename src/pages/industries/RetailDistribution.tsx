@@ -95,8 +95,8 @@ const RetailDistribution = () => {
             <p className="text-primary-foreground/80 mb-8 max-w-2xl mx-auto">
               Contact us to discuss trailer solutions that keep your retail supply chain running smoothly.
             </p>
-            <Button asChild size="lg" variant="secondary">
-              <Link to="/contact">Contact Us</Link>
+            <Button asChild size="lg" className="bg-background text-foreground hover:bg-background/90">
+              <Link to="/contact">Contact Us <ArrowRight className="ml-2 h-4 w-4" /></Link>
             </Button>
           </div>
         </section>
