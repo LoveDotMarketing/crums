@@ -235,7 +235,7 @@ const TrailerRentals = () => {
               <Link to="/flatbed-trailers" className="text-secondary hover:underline font-medium">
                 flatbed trailers
               </Link>. Not sure which is right for your cargo? Check out our{" "}
-              <Link to="/guides/choosing-trailer" className="text-secondary hover:underline font-medium">
+              <Link to="/resources/guides/choosing-trailer" className="text-secondary hover:underline font-medium">
                 guide to choosing the right trailer
               </Link>.
             </p>

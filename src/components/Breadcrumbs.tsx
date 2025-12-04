@@ -13,6 +13,12 @@ interface BreadcrumbsProps {
 const routeLabels: Record<string, string> = {
   "/": "Home",
   "/about": "About",
+  "/about/mama-crums": "Mama CRUMS",
+  "/about/eric": "Eric",
+  "/about/hector": "Hector",
+  "/about/ambrosia": "Ambrosia",
+  "/about/jr": "Jr",
+  "/about/john": "John",
   "/mission": "Mission",
   "/services/trailer-leasing": "Trailer Leasing",
   "/services/trailer-rentals": "Trailer Rentals",
@@ -61,6 +67,24 @@ const parentRoutes: Record<string, { label: string; href: string }[]> = {
   "/resources/guides/choosing-trailer": [
     { label: "Resources", href: "/resources" },
     { label: "Industry Guides", href: "/resources/guides" }
+  ],
+  "/about/mama-crums": [
+    { label: "About", href: "/about" }
+  ],
+  "/about/eric": [
+    { label: "About", href: "/about" }
+  ],
+  "/about/hector": [
+    { label: "About", href: "/about" }
+  ],
+  "/about/ambrosia": [
+    { label: "About", href: "/about" }
+  ],
+  "/about/jr": [
+    { label: "About", href: "/about" }
+  ],
+  "/about/john": [
+    { label: "About", href: "/about" }
   ],
 };
 

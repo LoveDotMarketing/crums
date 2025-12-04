@@ -283,7 +283,7 @@ const FleetSolutions = () => {
               <Link to="/flatbed-trailers" className="text-secondary hover:underline font-medium">
                 flatbed trailers
               </Link>. Need help choosing? Read our{" "}
-              <Link to="/guides/choosing-trailer" className="text-secondary hover:underline font-medium">
+              <Link to="/resources/guides/choosing-trailer" className="text-secondary hover:underline font-medium">
                 guide to selecting the right trailer
               </Link>.
             </p>
