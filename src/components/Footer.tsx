@@ -145,17 +145,17 @@ export const Footer = () => {
             </ul>
           </div>
 
-          {/* Core Values */}
+          {/* Hours of Operation */}
           <div>
-            <h3 className="font-semibold text-lg mb-4">Our Values</h3>
+            <h3 className="font-semibold text-lg mb-4">Hours of Operation</h3>
             <ul className="space-y-2 text-sm text-primary-foreground/80">
-              <li>• Family First</li>
-              <li>• Hard Work & Dedication</li>
-              <li>• Quality You Can Count On</li>
-              <li>• Integrity in Every Mile</li>
-              <li>• Relationships Fuel Success</li>
-              <li>• Keep Moving Forward</li>
+              <li>Monday - Friday: 9:00 AM - 5:30 PM</li>
+              <li>Saturday: 9:00 AM - 12:00 PM</li>
+              <li>Sunday: Closed</li>
             </ul>
+            <p className="text-xs text-primary-foreground/60 mt-3">
+              24/7 Emergency Support Available
+            </p>
           </div>
         </div>
 
