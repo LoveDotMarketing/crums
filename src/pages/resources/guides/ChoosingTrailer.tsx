@@ -422,7 +422,7 @@ const ChoosingTrailer = () => {
                           <ArrowRight className="h-4 w-4 ml-2" />
                         </Link>
                       </Button>
-                      <Button asChild variant="outline" size="lg" className="border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary">
+                      <Button asChild size="lg" className="bg-background text-primary hover:bg-background/90">
                         <Link to="/get-started">Get a Quote</Link>
                       </Button>
                     </div>
