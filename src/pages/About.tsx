@@ -95,20 +95,20 @@ const About = () => {
           </div>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6 max-w-5xl mx-auto">
             {[
-              { name: "Mama CRUMS", role: "Founder" },
-              { name: "Eric", role: "CEO" },
-              { name: "Hector", role: "Fleet Management" },
-              { name: "Ambrosia", role: "Customer Relations" },
-              { name: "Jr", role: "Accounting" },
-              { name: "John", role: "Marketing" },
+              { name: "Mama CRUMS", role: "Founder", slug: "mama-crums" },
+              { name: "Eric", role: "CEO", slug: "eric" },
+              { name: "Hector", role: "Fleet Management", slug: "hector" },
+              { name: "Ambrosia", role: "Customer Relations", slug: "ambrosia" },
+              { name: "Jr", role: "Accounting", slug: "jr" },
+              { name: "John", role: "Marketing", slug: "john" },
             ].map((member) => (
-              <div key={member.name} className="text-center">
-                <div className="w-24 h-24 md:w-28 md:h-28 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4 border-2 border-primary/20">
-                  <Users className="h-10 w-10 md:h-12 md:w-12 text-primary/60" />
+              <Link key={member.name} to={`/about/${member.slug}`} className="text-center group">
+                <div className="w-24 h-24 md:w-28 md:h-28 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4 border-2 border-primary/20 group-hover:border-primary group-hover:bg-primary/20 transition-all">
+                  <Users className="h-10 w-10 md:h-12 md:w-12 text-primary/60 group-hover:text-primary transition-colors" />
                 </div>
-                <h3 className="font-semibold text-foreground">{member.name}</h3>
+                <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">{member.name}</h3>
                 <p className="text-sm text-muted-foreground">{member.role}</p>
-              </div>
+              </Link>
             ))}
           </div>
         </div>

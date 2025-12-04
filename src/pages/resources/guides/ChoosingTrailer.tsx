@@ -37,7 +37,8 @@ const articleData = {
   publishedDate: "2025-12-04",
   updatedDate: "2025-12-04",
   readTime: "8 min read",
-  author: "CRUMS Leasing Team"
+  author: "Hector",
+  authorSlug: "hector"
 };
 
 // Structured data for SEO
@@ -49,9 +50,10 @@ const articleSchema = {
   "datePublished": articleData.publishedDate,
   "dateModified": articleData.updatedDate,
   "author": {
-    "@type": "Organization",
-    "name": "CRUMS Leasing",
-    "url": "https://crumsleasing.com"
+    "@type": "Person",
+    "name": "Hector",
+    "url": "https://crumsleasing.com/about/hector",
+    "jobTitle": "Fleet Management Director"
   },
   "publisher": {
     "@type": "Organization",
@@ -271,7 +273,7 @@ const ChoosingTrailer = () => {
                 {articleData.readTime}
               </span>
               <span>•</span>
-              <span>By {articleData.author}</span>
+              <span>By <Link to={`/about/${articleData.authorSlug}`} className="underline hover:text-primary-foreground transition-colors">{articleData.author}</Link></span>
               <span>•</span>
               <span>Updated {new Date(articleData.updatedDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</span>
             </div>
