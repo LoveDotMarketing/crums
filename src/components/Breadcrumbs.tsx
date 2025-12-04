@@ -41,20 +41,40 @@ const routeLabels: Record<string, string> = {
   "/guides/choosing-trailer": "Choosing the Right Trailer",
 };
 
+// Define parent routes for pages that should be nested under a different path
+const parentRoutes: Record<string, { label: string; href: string }[]> = {
+  "/dry-van-trailers": [{ label: "Trailer Leasing", href: "/services/trailer-leasing" }],
+  "/refrigerated-trailers": [{ label: "Trailer Leasing", href: "/services/trailer-leasing" }],
+  "/flatbed-trailers": [{ label: "Trailer Leasing", href: "/services/trailer-leasing" }],
+};
+
 export const Breadcrumbs = ({ items }: BreadcrumbsProps) => {
   const location = useLocation();
 
   // Generate breadcrumbs from route if items not provided
   const breadcrumbItems: BreadcrumbItem[] = items || (() => {
-    const pathSegments = location.pathname.split("/").filter(Boolean);
     const crumbs: BreadcrumbItem[] = [{ label: "Home", href: "/" }];
-
-    let currentPath = "";
-    pathSegments.forEach((segment) => {
-      currentPath += `/${segment}`;
-      const label = routeLabels[currentPath] || segment.charAt(0).toUpperCase() + segment.slice(1).replace(/-/g, " ");
-      crumbs.push({ label, href: currentPath });
-    });
+    
+    // Check if current path has parent routes defined
+    const parents = parentRoutes[location.pathname];
+    if (parents) {
+      // Add parent breadcrumbs
+      parents.forEach((parent) => {
+        crumbs.push(parent);
+      });
+      // Add current page
+      const label = routeLabels[location.pathname] || location.pathname.split("/").pop()?.replace(/-/g, " ") || "";
+      crumbs.push({ label, href: location.pathname });
+    } else {
+      // Default behavior: build from path segments
+      const pathSegments = location.pathname.split("/").filter(Boolean);
+      let currentPath = "";
+      pathSegments.forEach((segment) => {
+        currentPath += `/${segment}`;
+        const label = routeLabels[currentPath] || segment.charAt(0).toUpperCase() + segment.slice(1).replace(/-/g, " ");
+        crumbs.push({ label, href: currentPath });
+      });
+    }
 
     return crumbs;
   })();
