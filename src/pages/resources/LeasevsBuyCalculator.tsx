@@ -70,7 +70,7 @@ const LeasevsBuyCalculator = () => {
     annualMaintenance: 600,
   });
 
-  const [analysisYears, setAnalysisYears] = useState(5);
+  const [analysisYears, setAnalysisYears] = useState(3);
 
   const calculations = useMemo(() => {
     // Buy calculations
@@ -193,7 +193,7 @@ const LeasevsBuyCalculator = () => {
       annualInsurance: 1800,
       annualMaintenance: 600,
     });
-    setAnalysisYears(5);
+    setAnalysisYears(3);
   };
 
   return (
@@ -244,20 +244,20 @@ const LeasevsBuyCalculator = () => {
                     )}
                     <div>
                       <p className="text-sm text-muted-foreground uppercase tracking-wide">
-                        Based on {analysisYears}-Year Analysis
+                        {analysisYears}-Year Comparison
                       </p>
                       <p className="text-2xl font-bold text-foreground">
                         {calculations.recommendation === 'buy' 
-                          ? 'Buying shows lower total cost' 
+                          ? 'Buying may show lower long-term cost' 
                           : calculations.recommendation === 'lease'
-                          ? 'Leasing preserves capital & provides flexibility'
+                          ? 'Leasing is the smarter choice'
                           : 'Both options are financially similar'}
                       </p>
                       <p className="text-sm text-muted-foreground mt-1">
                         {calculations.recommendation === 'buy' 
-                          ? "However, this doesn't account for capital opportunity cost, depreciation risk, or cash flow flexibility."
+                          ? "But you're tying up capital, taking on depreciation risk, and losing flexibility. See the real story below."
                           : calculations.recommendation === 'lease'
-                          ? 'Plus predictable expenses, no depreciation risk, and easier fleet scaling.'
+                          ? 'Lower upfront cost, predictable expenses, no depreciation risk, and easier fleet scaling.'
                           : 'Consider the non-financial factors below to help decide.'}
                       </p>
                     </div>
