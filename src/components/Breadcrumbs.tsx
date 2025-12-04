@@ -37,7 +37,7 @@ const routeLabels: Record<string, string> = {
   "/resources/tools/fuel-calculator": "Fuel Cost Calculator",
   "/resources/tools/tax-deductions": "Tax Deduction Guide",
   
-  "/guides": "Industry Guides",
+  "/resources/guides": "Industry Guides",
   "/guides/choosing-trailer": "Choosing the Right Trailer",
 };
 
@@ -57,7 +57,7 @@ const parentRoutes: Record<string, { label: string; href: string }[]> = {
   ],
   "/guides/choosing-trailer": [
     { label: "Resources", href: "/resources" },
-    { label: "Industry Guides", href: "/guides" }
+    { label: "Industry Guides", href: "/resources/guides" }
   ],
 };
 
