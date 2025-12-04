@@ -39,6 +39,7 @@ const IFTACalculator = lazy(() => import("./pages/resources/IFTACalculator"));
 const FuelCostCalculator = lazy(() => import("./pages/resources/FuelCostCalculator"));
 const TaxDeductionGuide = lazy(() => import("./pages/resources/TaxDeductionGuide"));
 const Tools = lazy(() => import("./pages/resources/Tools"));
+const Guides = lazy(() => import("./pages/resources/Guides"));
 
 // Admin pages
 const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
@@ -254,7 +255,8 @@ const App = () => (
             />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="/resources" element={<Resources />} />
-<Route path="/resources/tools" element={<Tools />} />
+            <Route path="/guides" element={<Guides />} />
+            <Route path="/resources/tools" element={<Tools />} />
 <Route path="/resources/tools/cost-per-mile" element={<CostPerMileCalculator />} />
 <Route path="/resources/tools/lease-vs-buy" element={<LeasevsBuyCalculator />} />
 <Route path="/resources/tools/profit-calculator" element={<ProfitPerLoadCalculator />} />

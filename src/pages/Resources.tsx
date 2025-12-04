@@ -40,9 +40,14 @@ const Resources = () => {
     {
       icon: BookOpen,
       title: "Industry Guides",
-      description: "Comprehensive guides covering trucking regulations, best practices, and industry standards.",
-      items: ["FMCSA Compliance Guide", "Hours of Service Regulations", "ELD Requirements"],
-      comingSoon: true
+      description: "How-to guides for carriers covering safety, comfort, career building, and life on the road.",
+      items: [
+        { name: "View All Guides", href: "/guides", available: true, featured: true },
+        { name: "Choosing the Right Trailer", href: "/guides/choosing-trailer", available: false },
+        { name: "Pre-Trip Inspection Checklist", href: "/guides/pre-trip-inspection", available: false },
+        { name: "Winter Driving Tips", href: "/guides/winter-driving", available: false }
+      ],
+      comingSoon: false
     },
     {
       icon: FileText,
@@ -150,6 +155,14 @@ const Resources = () => {
                       <Link to="/resources/tools">
                         <Calculator className="h-4 w-4 mr-2" />
                         View All Tools
+                      </Link>
+                    </Button>
+                  )}
+                  {!category.comingSoon && category.title === "Industry Guides" && (
+                    <Button asChild variant="default" size="sm" className="mt-4 w-full">
+                      <Link to="/guides">
+                        <BookOpen className="h-4 w-4 mr-2" />
+                        View All Guides
                       </Link>
                     </Button>
                   )}
