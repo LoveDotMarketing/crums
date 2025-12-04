@@ -418,12 +418,20 @@ const LeasevsBuyCalculator = () => {
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="loanTermYears">Loan Term (Years)</Label>
-                      <Input
+                      <select
                         id="loanTermYears"
-                        type="number"
                         value={buyInputs.loanTermYears}
                         onChange={(e) => handleBuyInputChange("loanTermYears", e.target.value)}
-                      />
+                        className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                      >
+                        <option value={3}>3 Years (36 months)</option>
+                        <option value={5}>5 Years (60 months)</option>
+                        <option value={6}>6 Years (72 months)</option>
+                        <option value={7}>7 Years (84 months)</option>
+                      </select>
+                      <p className="text-xs text-muted-foreground">
+                        ⚠️ Financing locks you in for 3-7 years. <span className="text-secondary font-medium">Leasing starts at just 12 months.</span>
+                      </p>
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="buyAnnualInsurance">Annual Insurance ($)</Label>
