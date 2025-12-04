@@ -12,7 +12,7 @@ export const Footer = () => {
             <Link to="/">
               <img src={crumsLogo} alt="CRUMS Leasing Logo" className="h-10 w-auto mb-4 brightness-0 invert" />
             </Link>
-            <p className="text-sm text-primary-foreground/80 mb-4">
+            <p className="text-sm text-primary-foreground mb-4">
               Building trust, family, and opportunity in trailer leasing and logistics nationwide.
             </p>
             
@@ -154,19 +154,19 @@ export const Footer = () => {
           {/* Hours of Operation */}
           <div>
             <h3 className="font-semibold text-lg mb-4">Hours of Operation</h3>
-            <ul className="space-y-2 text-sm text-primary-foreground/80">
+            <ul className="space-y-2 text-sm text-primary-foreground">
               <li>Monday - Friday: 9:00 AM - 5:30 PM</li>
               <li>Saturday: 9:00 AM - 12:00 PM</li>
               <li>Sunday: Closed</li>
             </ul>
-            <p className="text-xs text-primary-foreground/60 mt-3">
+            <p className="text-xs text-primary-foreground/80 mt-3">
               24/7 Emergency Support Available
             </p>
           </div>
         </div>
 
         <div className="border-t border-primary-foreground/20 pt-8">
-          <div className="flex flex-col md:flex-row justify-between items-center text-sm text-primary-foreground/60">
+          <div className="flex flex-col md:flex-row justify-between items-center text-sm text-primary-foreground/80">
             <p>&copy; {new Date().getFullYear()} CRUMS Leasing. All rights reserved.</p>
             <div className="flex space-x-6 mt-4 md:mt-0">
               <Link to="/privacy" className="hover:text-secondary transition-colors">

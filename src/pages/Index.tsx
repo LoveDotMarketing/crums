@@ -52,6 +52,7 @@ const Index = () => {
       />
       <Navigation />
 
+      <main className="flex-grow">
       {/* Hero Section */}
       <section className="relative h-[600px] lg:h-[700px] flex items-center justify-center overflow-hidden">
         <div
@@ -67,7 +68,7 @@ const Index = () => {
             <br />
             <span className="text-secondary">To Build the Life They're Proud Of</span>
           </h1>
-          <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto text-primary-foreground/90">
+          <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto text-primary-foreground">
             Guided by family values, integrity, and commitment to your success — creating lasting
             partnerships that move people forward and bring them safely home.
           </p>
@@ -154,7 +155,7 @@ const Index = () => {
               <h2 className="text-2xl md:text-3xl font-bold text-primary-foreground mb-2">
                 Refer a Friend, Earn $250
               </h2>
-              <p className="text-primary-foreground/90 text-lg">
+              <p className="text-primary-foreground text-lg">
                 Share the CRUMS experience and get rewarded for every successful referral.
               </p>
             </div>
@@ -578,9 +579,9 @@ const Index = () => {
                     <CheckCircle className="h-6 w-6 text-secondary" />
                   </div>
                   <div>
-                    <h4 className="text-lg font-semibold text-foreground mb-2">
+                    <p className="text-lg font-semibold text-foreground mb-2">
                       Nationwide Coverage
-                    </h4>
+                    </p>
                     <p className="text-muted-foreground">
                       Access to equipment across all major markets with convenient locations
                       coast-to-coast.
@@ -592,9 +593,9 @@ const Index = () => {
                     <CheckCircle className="h-6 w-6 text-primary" />
                   </div>
                   <div>
-                    <h4 className="text-lg font-semibold text-foreground mb-2">
+                    <p className="text-lg font-semibold text-foreground mb-2">
                       24/7 Customer Support
-                    </h4>
+                    </p>
                     <p className="text-muted-foreground">
                       Our dedicated team is always here to help, ensuring your operations never stop.
                     </p>
@@ -605,9 +606,9 @@ const Index = () => {
                     <CheckCircle className="h-6 w-6 text-accent" />
                   </div>
                   <div>
-                    <h4 className="text-lg font-semibold text-foreground mb-2">
+                    <p className="text-lg font-semibold text-foreground mb-2">
                       Modern Technology
-                    </h4>
+                    </p>
                     <p className="text-muted-foreground">
                       Advanced customer portal for managing payments, tolls, and fleet operations
                       seamlessly.
@@ -632,7 +633,7 @@ const Index = () => {
           <h2 className="text-4xl md:text-5xl font-bold mb-6">
             Ready to Get Started?
           </h2>
-          <p className="text-xl mb-8 max-w-2xl mx-auto text-primary-foreground/90">
+          <p className="text-xl mb-8 max-w-2xl mx-auto text-primary-foreground">
             Join the CRUMS family and experience the difference that integrity, dedication, and
             family values make.
           </p>
@@ -655,6 +656,7 @@ const Index = () => {
           </div>
         </div>
       </section>
+      </main>
 
       <Footer />
       <Suspense fallback={null}>
