@@ -71,7 +71,7 @@ export const tools: Tool[] = [
     changefreq: "monthly"
   },
   {
-    slug: "tax-deduction-guide",
+    slug: "tax-deductions",
     title: "Tax Deduction Guide",
     description: "Comprehensive guide to tax deductions available for owner-operators.",
     icon: Receipt,
