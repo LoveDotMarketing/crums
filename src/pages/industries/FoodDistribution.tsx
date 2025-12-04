@@ -38,7 +38,7 @@ const FoodDistribution = () => {
               <Button asChild size="lg" className="bg-secondary hover:bg-secondary/90 text-secondary-foreground">
                 <Link to="/get-started">Get a Quote <ArrowRight className="ml-2 h-4 w-4" /></Link>
               </Button>
-              <Button asChild variant="outline" size="lg" className="border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10">
+              <Button asChild variant="outline" size="lg" className="border-primary-foreground text-primary-foreground bg-transparent hover:bg-primary-foreground/10">
                 <Link to="/refrigerated-trailers">View Reefer Options</Link>
               </Button>
             </div>
