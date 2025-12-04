@@ -2,7 +2,7 @@ import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { Card, CardContent } from "@/components/ui/card";
-import { MapPin, Phone, Navigation as NavigationIcon } from "lucide-react";
+import { MapPin, Navigation as NavigationIcon } from "lucide-react";
 import crumsTruckHighway from "@/assets/crums-truck-highway.png";
 import { SEO } from "@/components/SEO";
 import { localBusinessSchema, generateBreadcrumbSchema } from "@/lib/structuredData";
@@ -17,15 +17,6 @@ const Locations = () => {
     "@context": "https://schema.org",
     "@graph": [localBusinessSchema, breadcrumbSchema]
   };
-
-  const locations = [
-    {
-      city: "Bulverde",
-      state: "TX",
-      address: "4070 FM1863, Bulverde, TX 78163",
-      phone: "(888) 570-4564",
-    },
-  ];
 
   const serviceAreas = [
     {
@@ -77,30 +68,6 @@ const Locations = () => {
 
             {/* Location and Service Areas - Right Side */}
             <div className="space-y-6">
-              {/* Bulverde Location */}
-              {locations.map((location, index) => (
-                <Card key={index} className="border-2 hover:shadow-lg transition-shadow">
-                  <CardContent className="p-6">
-                    <div className="flex items-start mb-4">
-                      <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mr-4 flex-shrink-0">
-                        <MapPin className="h-6 w-6 text-primary" />
-                      </div>
-                      <div>
-                        <h3 className="text-2xl font-bold text-foreground">
-                          {location.city}, {location.state}
-                        </h3>
-                        <p className="text-muted-foreground">{location.address}</p>
-                      </div>
-                    </div>
-                    <div className="space-y-3 mt-4">
-                      <div className="flex items-center text-muted-foreground">
-                        <Phone className="h-4 w-4 mr-3 text-primary" />
-                        <span>{location.phone}</span>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
 
               {/* Service Areas */}
               <Card className="border-2">
