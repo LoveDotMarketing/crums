@@ -53,6 +53,7 @@ const Resources = () => {
         { name: "Lease vs Buy Calculator", href: "/resources/lease-vs-buy", available: true },
         { name: "Profit Per Load Calculator", href: "/resources/profit-calculator", available: true },
         { name: "IFTA Tax Estimator", href: "/resources/ifta-calculator", available: true },
+        { name: "Fuel Cost Calculator", href: "/resources/fuel-calculator", available: true },
         { name: "Tax Deduction Guide", available: false }
       ],
       comingSoon: false
