@@ -35,6 +35,7 @@ const Resources = lazy(() => import("./pages/Resources"));
 const CostPerMileCalculator = lazy(() => import("./pages/resources/CostPerMileCalculator"));
 const LeasevsBuyCalculator = lazy(() => import("./pages/resources/LeasevsBuyCalculator"));
 const ProfitPerLoadCalculator = lazy(() => import("./pages/resources/ProfitPerLoadCalculator"));
+const IFTACalculator = lazy(() => import("./pages/resources/IFTACalculator"));
 
 // Admin pages
 const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
@@ -253,6 +254,7 @@ const App = () => (
             <Route path="/resources/cost-per-mile" element={<CostPerMileCalculator />} />
             <Route path="/resources/lease-vs-buy" element={<LeasevsBuyCalculator />} />
             <Route path="/resources/profit-calculator" element={<ProfitPerLoadCalculator />} />
+            <Route path="/resources/ifta-calculator" element={<IFTACalculator />} />
             <Route path="/referral-program" element={<ReferralProgram />} />
             <Route path="/reviews" element={<Reviews />} />
             <Route path="/qr" element={<Navigate to="/review" replace />} />
