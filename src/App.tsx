@@ -262,8 +262,11 @@ const App = () => (
             />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="/resources" element={<Resources />} />
-            <Route path="/guides" element={<Guides />} />
-            <Route path="/guides/choosing-trailer" element={<ChoosingTrailer />} />
+            <Route path="/resources/guides" element={<Guides />} />
+            <Route path="/resources/guides/choosing-trailer" element={<ChoosingTrailer />} />
+            {/* Redirects for old guide URLs */}
+            <Route path="/guides" element={<Navigate to="/resources/guides" replace />} />
+            <Route path="/guides/choosing-trailer" element={<Navigate to="/resources/guides/choosing-trailer" replace />} />
             <Route path="/resources/tools" element={<Tools />} />
 <Route path="/resources/tools/cost-per-mile" element={<CostPerMileCalculator />} />
 <Route path="/resources/tools/lease-vs-buy" element={<LeasevsBuyCalculator />} />

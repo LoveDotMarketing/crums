@@ -42,10 +42,10 @@ const Resources = () => {
       title: "Industry Guides",
       description: "How-to guides for carriers covering safety, comfort, career building, and life on the road.",
       items: [
-        { name: "View All Guides", href: "/guides", available: true, featured: true },
-        { name: "Choosing the Right Trailer", href: "/guides/choosing-trailer", available: true },
-        { name: "Pre-Trip Inspection Checklist", href: "/guides/pre-trip-inspection", available: false },
-        { name: "Winter Driving Tips", href: "/guides/winter-driving", available: false }
+        { name: "View All Guides", href: "/resources/guides", available: true, featured: true },
+        { name: "Choosing the Right Trailer", href: "/resources/guides/choosing-trailer", available: true },
+        { name: "Pre-Trip Inspection Checklist", href: "/resources/guides/pre-trip-inspection", available: false },
+        { name: "Winter Driving Tips", href: "/resources/guides/winter-driving", available: false }
       ],
       comingSoon: false
     },
@@ -160,7 +160,7 @@ const Resources = () => {
                   )}
                   {!category.comingSoon && category.title === "Industry Guides" && (
                     <Button asChild variant="default" size="sm" className="mt-4 w-full">
-                      <Link to="/guides">
+                      <Link to="/resources/guides">
                         <BookOpen className="h-4 w-4 mr-2" />
                         View All Guides
                       </Link>

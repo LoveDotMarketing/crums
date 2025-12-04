@@ -28,7 +28,7 @@ const guidesCollectionSchema = {
   "@type": "CollectionPage",
   "name": "Industry Guides for Carriers - CRUMS Leasing",
   "description": "Free educational guides for carriers and owner-operators. Learn about trailer selection, safety, budgeting, and building a successful trucking career.",
-  "url": "https://crumsleasing.com/guides",
+  "url": "https://crumsleasing.com/resources/guides",
   "publisher": {
     "@type": "Organization",
     "name": "CRUMS Leasing",
@@ -41,84 +41,84 @@ const guides = [
     icon: Truck,
     title: "How to Choose the Right Trailer for Your Haul",
     description: "Break down the difference between flatbeds, reefers, dry vans, and more — with examples of what jobs fit each type.",
-    href: "/guides/choosing-trailer",
+    href: "/resources/guides/choosing-trailer",
     available: true
   },
   {
     icon: ClipboardCheck,
     title: "How to Check Your Trailer Before Every Trip",
     description: "Quick, visual pre-trip inspection checklist to avoid breakdowns and DOT violations.",
-    href: "/guides/pre-trip-inspection",
+    href: "/resources/guides/pre-trip-inspection",
     available: false
   },
   {
     icon: Sofa,
     title: "How to Stay Comfortable on the Road (Without Breaking the Bank)",
     description: "Cab organization hacks, sleeping tips, and small upgrades to make life easier in your rig.",
-    href: "/guides/road-comfort",
+    href: "/resources/guides/road-comfort",
     available: false
   },
   {
     icon: Snowflake,
     title: "How to Handle Winter Roads Like a Pro",
     description: "Driving tips for snow, black ice awareness, and emergency prep — plus, how CRUMS Leasing maintains equipment for safety.",
-    href: "/guides/winter-driving",
+    href: "/resources/guides/winter-driving",
     available: false
   },
   {
     icon: Wallet,
     title: "How to Budget as a Truck Driver",
     description: "Simple financial strategies for saving on fuel, meals, and maintenance — linking to CRUMS' mission to help drivers build stability.",
-    href: "/guides/budgeting",
+    href: "/resources/guides/budgeting",
     available: false
   },
   {
     icon: ChefHat,
     title: "How to Cook a Hot Meal in Your Truck",
     description: "Showcase easy recipes using compact appliances (microwave, hot plate, etc.) — home-cooked comfort on the road.",
-    href: "/guides/truck-cooking",
+    href: "/resources/guides/truck-cooking",
     available: false
   },
   {
     icon: Heart,
     title: "How to Balance Work and Family Time as a Trucker",
     description: "Staying connected with loved ones while on the road — reinforcing CRUMS' family first values.",
-    href: "/guides/work-life-balance",
+    href: "/resources/guides/work-life-balance",
     available: false
   },
   {
     icon: AlertTriangle,
     title: "How to Handle a Breakdown Safely",
     description: "Step-by-step on what to do when stranded — who to call, what to check, and how CRUMS Leasing supports carriers through it.",
-    href: "/guides/breakdown-safety",
+    href: "/resources/guides/breakdown-safety",
     available: false
   },
   {
     icon: FileCheck,
     title: "How to Get the Most Out of Your Lease",
     description: "Tips on maintenance, payments, upgrades, and how to protect your investment — perfect for current and future clients.",
-    href: "/guides/maximize-lease",
+    href: "/resources/guides/maximize-lease",
     available: false
   },
   {
     icon: Fuel,
     title: "How to Boost Your Fuel Efficiency",
     description: "Tire pressure, weight distribution, and idle-time tips saving carriers money while promoting CRUMS' well-maintained fleet.",
-    href: "/guides/fuel-efficiency",
+    href: "/resources/guides/fuel-efficiency",
     available: false
   },
   {
     icon: GraduationCap,
     title: "How to Build a Career in Trucking",
     description: "Advice on networking, certification, and career progression — highlighting CRUMS as a company that believes in long-term success.",
-    href: "/guides/trucking-career",
+    href: "/resources/guides/trucking-career",
     available: false
   },
   {
     icon: Brain,
     title: "How to Keep Your Mind Sharp and Positive on the Road",
     description: "Focus on mental health, staying alert, reducing stress, and keeping a positive mindset during long hauls.",
-    href: "/guides/mental-health",
+    href: "/resources/guides/mental-health",
     available: false
   }
 ];
@@ -129,7 +129,7 @@ const Guides = () => {
       <SEO
         title="Industry Guides for Carriers"
         description="Free educational guides for carriers and owner-operators. Learn about trailer selection, safety, budgeting, and building a successful trucking career with CRUMS Leasing."
-        canonical="https://crumsleasing.com/guides"
+        canonical="https://crumsleasing.com/resources/guides"
         structuredData={guidesCollectionSchema}
       />
       <Navigation />

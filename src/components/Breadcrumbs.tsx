@@ -37,8 +37,8 @@ const routeLabels: Record<string, string> = {
   "/resources/tools/fuel-calculator": "Fuel Cost Calculator",
   "/resources/tools/tax-deductions": "Tax Deduction Guide",
   
-  "/guides": "Industry Guides",
-  "/guides/choosing-trailer": "Choosing the Right Trailer",
+  "/resources/guides": "Industry Guides",
+  "/resources/guides/choosing-trailer": "Choosing the Right Trailer",
 };
 
 // Define parent routes for pages that should be nested under a different path
@@ -55,12 +55,12 @@ const parentRoutes: Record<string, { label: string; href: string }[]> = {
     { label: "Services", href: "/services/trailer-leasing" },
     { label: "Trailer Leasing", href: "/services/trailer-leasing" }
   ],
-  "/guides": [
+  "/resources/guides": [
     { label: "Resources", href: "/resources" }
   ],
-  "/guides/choosing-trailer": [
+  "/resources/guides/choosing-trailer": [
     { label: "Resources", href: "/resources" },
-    { label: "Industry Guides", href: "/guides" }
+    { label: "Industry Guides", href: "/resources/guides" }
   ],
 };
 

@@ -81,7 +81,7 @@ export const Navigation = () => {
                       <li>
                         <NavigationMenuLink asChild>
                           <Link
-                            to="/equipment/dry-van-trailers"
+                            to="/dry-van-trailers"
                             className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
                           >
                             <div className="text-sm font-medium leading-none">Dry Van Trailers</div>
@@ -94,7 +94,7 @@ export const Navigation = () => {
                       <li>
                         <NavigationMenuLink asChild>
                           <Link
-                            to="/equipment/flatbed-trailers"
+                            to="/flatbed-trailers"
                             className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
                           >
                             <div className="text-sm font-medium leading-none">Flatbed Trailers</div>
@@ -107,7 +107,7 @@ export const Navigation = () => {
                       <li>
                         <NavigationMenuLink asChild>
                           <Link
-                            to="/equipment/refrigerated-trailers"
+                            to="/refrigerated-trailers"
                             className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
                           >
                             <div className="text-sm font-medium leading-none">Refrigerated Trailers</div>
@@ -263,21 +263,21 @@ export const Navigation = () => {
               </Link>
               <div className="text-xs font-semibold text-muted-foreground pt-2">Equipment Types</div>
               <Link
-                to="/equipment/dry-van-trailers"
+                to="/dry-van-trailers"
                 className="text-sm font-medium text-foreground hover:text-primary pl-2"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Dry Van Trailers
               </Link>
               <Link
-                to="/equipment/flatbed-trailers"
+                to="/flatbed-trailers"
                 className="text-sm font-medium text-foreground hover:text-primary pl-2"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Flatbed Trailers
               </Link>
               <Link
-                to="/equipment/refrigerated-trailers"
+                to="/refrigerated-trailers"
                 className="text-sm font-medium text-foreground hover:text-primary pl-2"
                 onClick={() => setMobileMenuOpen(false)}
               >
