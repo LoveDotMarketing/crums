@@ -306,6 +306,7 @@ export const ChatBot = ({ userType }: ChatBotProps) => {
           "bg-primary hover:bg-primary/90 transition-all duration-200",
           isOpen && "scale-0"
         )}
+        aria-label="Open chat assistant"
       >
         <MessageCircle className="h-6 w-6" />
       </Button>
@@ -335,6 +336,7 @@ export const ChatBot = ({ userType }: ChatBotProps) => {
             size="icon"
             onClick={() => setIsOpen(false)}
             className="text-primary-foreground hover:bg-primary-foreground/20"
+            aria-label="Close chat"
           >
             <X className="h-5 w-5" />
           </Button>
@@ -389,7 +391,7 @@ export const ChatBot = ({ userType }: ChatBotProps) => {
               onKeyDown={(e) => e.key === "Enter" && handleSend()}
               disabled={isLoading}
             />
-            <Button onClick={handleSend} disabled={isLoading || !input.trim()}>
+            <Button onClick={handleSend} disabled={isLoading || !input.trim()} aria-label="Send message">
               <Send className="h-4 w-4" />
             </Button>
           </div>

@@ -30,7 +30,7 @@ const FleetLeasing = () => {
             <h1 className="text-4xl md:text-6xl font-bold text-primary-foreground mb-6">
               Fleet Leasing Solutions
             </h1>
-            <p className="text-lg text-primary-foreground/80 mb-8 max-w-2xl mx-auto">
+            <p className="text-lg text-primary-foreground/90 mb-8 max-w-2xl mx-auto">
               Whether you're managing 5 trailers or 500, CRUMS Leasing provides the scalable 
               trailer solutions your fleet needs to grow and succeed.
             </p>
@@ -57,7 +57,7 @@ const FleetLeasing = () => {
                     <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
                       <benefit.icon className="h-6 w-6 text-primary" />
                     </div>
-                    <h3 className="font-semibold text-lg mb-2">{benefit.title}</h3>
+                    <p className="font-semibold text-lg mb-2">{benefit.title}</p>
                     <p className="text-muted-foreground text-sm">{benefit.description}</p>
                   </CardContent>
                 </Card>
@@ -92,7 +92,7 @@ const FleetLeasing = () => {
         <section className="py-16 bg-primary text-primary-foreground">
           <div className="container mx-auto px-4 text-center">
             <h2 className="text-3xl font-bold mb-4">Ready to Scale Your Fleet?</h2>
-            <p className="text-primary-foreground/80 mb-8 max-w-2xl mx-auto">
+            <p className="text-primary-foreground/90 mb-8 max-w-2xl mx-auto">
               Contact us today to discuss your fleet trailer needs and get a customized quote.
             </p>
             <Button asChild size="lg" className="bg-background text-foreground hover:bg-background/90">

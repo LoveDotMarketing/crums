@@ -30,7 +30,7 @@ const FoodDistribution = () => {
             <h1 className="text-4xl md:text-6xl font-bold text-primary-foreground mb-6">
               Food Distribution Solutions
             </h1>
-            <p className="text-lg text-primary-foreground/80 mb-8 max-w-2xl mx-auto">
+            <p className="text-lg text-primary-foreground/90 mb-8 max-w-2xl mx-auto">
               From farm-fresh produce to packaged goods, CRUMS Leasing provides the trailer 
               solutions food distributors need to keep America fed safely and efficiently.
             </p>
@@ -57,7 +57,7 @@ const FoodDistribution = () => {
                     <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
                       <benefit.icon className="h-6 w-6 text-primary" />
                     </div>
-                    <h3 className="font-semibold text-lg mb-2">{benefit.title}</h3>
+                    <p className="font-semibold text-lg mb-2">{benefit.title}</p>
                     <p className="text-muted-foreground text-sm">{benefit.description}</p>
                   </CardContent>
                 </Card>
@@ -92,7 +92,7 @@ const FoodDistribution = () => {
         <section className="py-16 bg-primary text-primary-foreground">
           <div className="container mx-auto px-4 text-center">
             <h2 className="text-3xl font-bold mb-4">Keep Your Supply Chain Moving</h2>
-            <p className="text-primary-foreground/80 mb-8 max-w-2xl mx-auto">
+            <p className="text-primary-foreground/90 mb-8 max-w-2xl mx-auto">
               Partner with CRUMS Leasing for reliable trailer solutions that support your food distribution operations.
             </p>
             <Button asChild size="lg" className="bg-background text-foreground hover:bg-background/90">
