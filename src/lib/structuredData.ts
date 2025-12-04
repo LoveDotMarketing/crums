@@ -56,14 +56,14 @@ export const localBusinessSchema = {
     {
       "@type": "OpeningHoursSpecification",
       "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
-      "opens": "07:00",
-      "closes": "19:00"
+      "opens": "09:00",
+      "closes": "17:30"
     },
     {
       "@type": "OpeningHoursSpecification",
       "dayOfWeek": "Saturday",
-      "opens": "08:00",
-      "closes": "16:00"
+      "opens": "09:00",
+      "closes": "12:00"
     }
   ],
   "priceRange": "$$",
