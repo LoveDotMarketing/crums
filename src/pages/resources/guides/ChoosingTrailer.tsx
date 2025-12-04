@@ -64,6 +64,70 @@ const articleSchema = {
   }
 };
 
+// FAQ Schema for AI/Voice Search
+const faqSchema = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "What is the best type of trailer for general freight?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "A dry van trailer is the best choice for general freight. Dry vans are enclosed 53-foot trailers that protect cargo from weather and theft, making them ideal for consumer goods, retail merchandise, electronics, and non-perishable items. Approximately 70% of all freight in the United States moves in dry van trailers."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What is the difference between a dry van and a flatbed trailer?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "A dry van is an enclosed trailer with walls and a roof, perfect for protecting cargo from weather and theft. A flatbed is an open-deck trailer with no sides or roof, designed for oversized, heavy, or irregularly shaped cargo like construction materials, machinery, and vehicles."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What trailer do I need to haul refrigerated goods?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "You need a refrigerated trailer, also called a reefer, to haul temperature-sensitive cargo. Reefers have built-in refrigeration units that maintain temperatures from -20°F to 70°F, making them essential for fresh produce, frozen foods, dairy products, pharmaceuticals, and floral shipments."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How long is a standard semi-trailer?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "The standard length for a semi-trailer in the United States is 53 feet. This applies to dry vans, reefers, and most flatbeds. The maximum gross vehicle weight allowed is 80,000 pounds."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How much weight can a dry van trailer carry?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "A standard 53-foot dry van trailer can carry up to 45,000 pounds of cargo. The total gross vehicle weight cannot exceed 80,000 pounds per federal regulations. Dry vans also offer over 3,000 cubic feet of cargo space."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Should I lease or buy a trailer for my trucking business?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Leasing a trailer is often better for owner-operators and small carriers because it preserves capital, offers predictable monthly expenses, and eliminates depreciation risk. CRUMS Leasing offers flexible trailer lease terms starting at 12 months with well-maintained dry van and flatbed trailers."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What types of trailers does CRUMS Leasing offer?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "CRUMS Leasing offers 53-foot dry van trailers and flatbed trailers for lease and short-term rental. The fleet is well-maintained and available for carriers operating locally in Texas or shipping nationwide across the United States."
+      }
+    }
+  ]
+};
+
 // Guide navigation for prev/next
 const guideNavigation = {
   previous: {
@@ -159,7 +223,7 @@ const ChoosingTrailer = () => {
         title={articleData.title}
         description={articleData.description}
         canonical="https://crumsleasing.com/guides/choosing-trailer"
-        structuredData={articleSchema}
+        structuredData={[articleSchema, faqSchema]}
       />
       <Navigation />
 
@@ -216,12 +280,12 @@ const ChoosingTrailer = () => {
                   <div className="text-4xl font-bold text-primary mb-2">70%</div>
                   <p className="text-sm text-muted-foreground">of freight moves in dry vans</p>
                 </Card>
-                <Card className="text-center p-6 bg-secondary/10 border-secondary/20">
-                  <div className="text-4xl font-bold text-secondary-foreground mb-2">53 ft</div>
+                <Card className="text-center p-6 bg-primary/5 border-primary/20">
+                  <div className="text-4xl font-bold text-primary mb-2">53 ft</div>
                   <p className="text-sm text-muted-foreground">standard trailer length</p>
                 </Card>
-                <Card className="text-center p-6 bg-accent/10 border-accent/20">
-                  <div className="text-4xl font-bold text-accent-foreground mb-2">80K lbs</div>
+                <Card className="text-center p-6 bg-primary/5 border-primary/20">
+                  <div className="text-4xl font-bold text-primary mb-2">80K lbs</div>
                   <p className="text-sm text-muted-foreground">max gross vehicle weight<sup>[2]</sup></p>
                 </Card>
               </div>
@@ -511,6 +575,79 @@ const ChoosingTrailer = () => {
                   </Button>
                 </div>
               </Card>
+            </section>
+
+            <Separator className="my-12" />
+
+            {/* FAQ Section - Optimized for AI/Voice Search */}
+            <section className="mb-16">
+              <h2 className="text-3xl font-bold mb-6 text-foreground">
+                Frequently Asked Questions
+              </h2>
+              <div className="space-y-4">
+                <Card className="p-6">
+                  <h3 className="font-bold text-lg text-foreground mb-2">
+                    What is the best type of trailer for general freight?
+                  </h3>
+                  <p className="text-muted-foreground">
+                    A dry van trailer is the best choice for general freight. Dry vans are enclosed 53-foot trailers that protect cargo from weather and theft, making them ideal for consumer goods, retail merchandise, electronics, and non-perishable items. Approximately 70% of all freight in the United States moves in dry van trailers.
+                  </p>
+                </Card>
+                
+                <Card className="p-6">
+                  <h3 className="font-bold text-lg text-foreground mb-2">
+                    What is the difference between a dry van and a flatbed trailer?
+                  </h3>
+                  <p className="text-muted-foreground">
+                    A dry van is an enclosed trailer with walls and a roof, perfect for protecting cargo from weather and theft. A flatbed is an open-deck trailer with no sides or roof, designed for oversized, heavy, or irregularly shaped cargo like construction materials, machinery, and vehicles. Dry vans handle about 70% of freight while flatbeds cover roughly 15% of the market.
+                  </p>
+                </Card>
+                
+                <Card className="p-6">
+                  <h3 className="font-bold text-lg text-foreground mb-2">
+                    What trailer do I need to haul refrigerated goods?
+                  </h3>
+                  <p className="text-muted-foreground">
+                    You need a refrigerated trailer, also called a "reefer," to haul temperature-sensitive cargo. Reefers have built-in refrigeration units that maintain temperatures from -20°F to 70°F, making them essential for fresh produce, frozen foods, dairy products, pharmaceuticals, and floral shipments.
+                  </p>
+                </Card>
+                
+                <Card className="p-6">
+                  <h3 className="font-bold text-lg text-foreground mb-2">
+                    How long is a standard semi-trailer?
+                  </h3>
+                  <p className="text-muted-foreground">
+                    The standard length for a semi-trailer in the United States is 53 feet. This applies to dry vans, reefers, and most flatbeds. The maximum gross vehicle weight allowed is 80,000 pounds, which includes the truck, trailer, and cargo combined.
+                  </p>
+                </Card>
+                
+                <Card className="p-6">
+                  <h3 className="font-bold text-lg text-foreground mb-2">
+                    How much weight can a dry van trailer carry?
+                  </h3>
+                  <p className="text-muted-foreground">
+                    A standard 53-foot dry van trailer can carry up to 45,000 pounds of cargo, though the exact capacity depends on the weight of your truck and trailer combined. The total gross vehicle weight cannot exceed 80,000 pounds per federal regulations. Dry vans also offer over 3,000 cubic feet of cargo space.
+                  </p>
+                </Card>
+                
+                <Card className="p-6">
+                  <h3 className="font-bold text-lg text-foreground mb-2">
+                    Should I lease or buy a trailer for my trucking business?
+                  </h3>
+                  <p className="text-muted-foreground">
+                    Leasing a trailer is often better for owner-operators and small carriers because it preserves capital, offers predictable monthly expenses, and eliminates depreciation risk. At CRUMS Leasing, we offer flexible trailer lease terms starting at 12 months with well-maintained dry van and flatbed trailers. Use our <Link to="/resources/tools/lease-vs-buy" className="text-primary hover:underline">Lease vs Buy Calculator</Link> to compare options for your situation.
+                  </p>
+                </Card>
+                
+                <Card className="p-6">
+                  <h3 className="font-bold text-lg text-foreground mb-2">
+                    What types of trailers does CRUMS Leasing offer?
+                  </h3>
+                  <p className="text-muted-foreground">
+                    CRUMS Leasing offers 53-foot dry van trailers and flatbed trailers for lease and short-term rental. Our fleet is well-maintained and available for carriers operating locally in Texas or shipping nationwide across the United States. We offer flexible lease terms starting at 12 months with a people-first approach to help every carrier succeed.
+                  </p>
+                </Card>
+              </div>
             </section>
 
             <Separator className="my-12" />
