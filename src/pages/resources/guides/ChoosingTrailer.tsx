@@ -30,8 +30,8 @@ import {
 const articleData = {
   title: "How to Choose the Right Trailer for Your Haul",
   description: "Learn the key differences between dry vans, flatbeds, reefers, and specialty trailers. Find the perfect match for your cargo with this comprehensive guide from CRUMS Leasing.",
-  publishedDate: "2024-12-04",
-  updatedDate: "2024-12-04",
+  publishedDate: "2025-12-04",
+  updatedDate: "2025-12-04",
   readTime: "8 min read",
   author: "CRUMS Leasing Team"
 };
