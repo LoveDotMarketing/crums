@@ -64,7 +64,7 @@ const articleSchema = {
   },
   "mainEntityOfPage": {
     "@type": "WebPage",
-    "@id": "https://crumsleasing.com/guides/choosing-trailer"
+    "@id": "https://crumsleasing.com/resources/guides/choosing-trailer"
   }
 };
 
@@ -136,18 +136,18 @@ const faqSchema = {
 const breadcrumbSchema = generateBreadcrumbSchema([
   { name: "Home", url: "https://crumsleasing.com/" },
   { name: "Resources", url: "https://crumsleasing.com/resources" },
-  { name: "Industry Guides", url: "https://crumsleasing.com/guides" },
-  { name: "Choosing the Right Trailer", url: "https://crumsleasing.com/guides/choosing-trailer" }
+  { name: "Industry Guides", url: "https://crumsleasing.com/resources/guides" },
+  { name: "Choosing the Right Trailer", url: "https://crumsleasing.com/resources/guides/choosing-trailer" }
 ]);
 
 const guideNavigation = {
   previous: {
     title: "Keep Your Mind Sharp on the Road",
-    href: "/guides/mental-health"
+    href: "/resources/guides/mental-health"
   },
   next: {
     title: "Pre-Trip Inspection Checklist",
-    href: "/guides/pre-trip-inspection"
+    href: "/resources/guides/pre-trip-inspection"
   }
 };
 
@@ -245,7 +245,7 @@ const ChoosingTrailer = () => {
       <SEO
         title={articleData.title}
         description={articleData.description}
-        canonical="https://crumsleasing.com/guides/choosing-trailer"
+        canonical="https://crumsleasing.com/resources/guides/choosing-trailer"
         structuredData={[articleSchema, faqSchema, breadcrumbSchema]}
       />
       <Navigation />
