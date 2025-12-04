@@ -55,12 +55,15 @@ const Index = () => {
       <main className="flex-grow">
       {/* Hero Section */}
       <section className="relative h-[600px] lg:h-[700px] flex items-center justify-center overflow-hidden">
-        <div
-          className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: `url(${heroImage})` }}
-        >
-          <div className="absolute inset-0 bg-gradient-to-r from-primary/95 to-primary/70"></div>
-        </div>
+        <img 
+          src={heroImage} 
+          alt="CRUMS Leasing semi-truck on highway" 
+          className="absolute inset-0 w-full h-full object-cover"
+          fetchPriority="high"
+          width={1920}
+          height={1080}
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-primary/95 to-primary/70"></div>
 
         <div className="relative z-10 container mx-auto px-4 text-center text-primary-foreground">
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
