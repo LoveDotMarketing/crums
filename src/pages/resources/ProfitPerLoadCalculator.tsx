@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Calculator, DollarSign, Route, Fuel, TrendingUp, AlertTriangle } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from "recharts";
+import { PrintButton } from "@/components/PrintButton";
 
 const ProfitPerLoadCalculator = () => {
   const [loadRate, setLoadRate] = useState<string>("2500");
@@ -225,9 +226,12 @@ const ProfitPerLoadCalculator = () => {
                 </CardContent>
               </Card>
 
-              <Button onClick={resetForm} variant="outline" className="w-full">
-                Reset to Defaults
-              </Button>
+              <div className="flex gap-2">
+                <Button onClick={resetForm} variant="outline" className="flex-1">
+                  Reset to Defaults
+                </Button>
+                <PrintButton className="flex-1" />
+              </div>
             </div>
 
             {/* Results Section */}

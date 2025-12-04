@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Calculator, Plus, Trash2, AlertTriangle, CheckCircle } from "lucide-react";
+import { PrintButton } from "@/components/PrintButton";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, Legend } from "recharts";
 
 // IFTA fuel tax rates per gallon (as of 2024 - these should be updated periodically)
@@ -282,10 +283,13 @@ const IFTACalculator = () => {
                       </p>
                     </div>
                   ))}
-                  <Button onClick={addStateEntry} variant="outline" className="w-full">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Another State
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button onClick={addStateEntry} variant="outline" className="flex-1">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Another State
+                    </Button>
+                    <PrintButton className="flex-1" />
+                  </div>
                 </CardContent>
               </Card>
             </div>
