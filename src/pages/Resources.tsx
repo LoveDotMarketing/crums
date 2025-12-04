@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
+import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { SEO } from "@/components/SEO";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -74,6 +75,8 @@ const Resources = () => {
           </p>
         </div>
       </section>
+
+      <Breadcrumbs />
 
       {/* Resources Grid */}
       <section className="py-20 bg-background">
