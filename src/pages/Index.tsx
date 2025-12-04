@@ -382,35 +382,37 @@ const Index = () => {
               </Card>
             </Link>
 
-            {/* Industry Guides */}
-            <Card className="h-full border-2 hover:shadow-lg transition-all duration-300">
-              <CardContent className="p-8">
-                <div className="h-16 w-16 rounded-lg bg-primary/10 flex items-center justify-center mb-6">
-                  <BookOpen className="h-8 w-8 text-primary" />
-                </div>
-                <h3 className="text-2xl font-bold mb-3 text-foreground">
-                  Industry Guides
-                </h3>
-                <p className="text-muted-foreground mb-4 leading-relaxed">
-                  FMCSA compliance, hours of service regulations, ELD requirements, and best practices for the road.
-                </p>
-                <span className="inline-flex items-center text-muted-foreground text-sm italic">
-                  Coming Soon
-                </span>
-              </CardContent>
-            </Card>
+            {/* Industry Guides - Featured */}
+            <Link to="/guides/choosing-trailer" className="group">
+              <Card className="h-full border-2 border-primary/50 hover:border-primary hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-primary/10 to-background">
+                <CardContent className="p-8">
+                  <div className="h-16 w-16 rounded-lg bg-primary/20 flex items-center justify-center mb-6 group-hover:bg-primary group-hover:scale-110 transition-all">
+                    <BookOpen className="h-8 w-8 text-primary group-hover:text-primary-foreground" />
+                  </div>
+                  <h3 className="text-2xl font-bold mb-3 text-foreground group-hover:text-primary transition-colors">
+                    How to Choose the Right Trailer
+                  </h3>
+                  <p className="text-muted-foreground mb-4 leading-relaxed">
+                    Learn the key differences between dry vans, flatbeds, and reefers. Find the perfect match for your cargo.
+                  </p>
+                  <span className="inline-flex items-center text-primary font-semibold group-hover:gap-2 transition-all">
+                    Read the Guide <ArrowRight className="ml-1 h-4 w-4" />
+                  </span>
+                </CardContent>
+              </Card>
+            </Link>
 
-            {/* Documentation & Forms */}
+            {/* More Guides Coming Soon */}
             <Card className="h-full border-2 hover:shadow-lg transition-all duration-300">
               <CardContent className="p-8">
                 <div className="h-16 w-16 rounded-lg bg-accent/10 flex items-center justify-center mb-6">
                   <FileText className="h-8 w-8 text-accent" />
                 </div>
                 <h3 className="text-2xl font-bold mb-3 text-foreground">
-                  Documentation & Forms
+                  Pre-Trip Inspection Checklist
                 </h3>
                 <p className="text-muted-foreground mb-4 leading-relaxed">
-                  Bill of lading templates, inspection checklists, maintenance logs, and essential carrier forms.
+                  A comprehensive DOT-compliant checklist to keep you safe and compliant before every haul.
                 </p>
                 <span className="inline-flex items-center text-muted-foreground text-sm italic">
                   Coming Soon
@@ -420,9 +422,9 @@ const Index = () => {
           </div>
 
           <div className="text-center">
-            <Link to="/resources">
+            <Link to="/guides">
               <Button size="lg" variant="outline" className="border-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground">
-                View All Resources
+                View All Guides & Resources
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
             </Link>

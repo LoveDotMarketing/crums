@@ -164,7 +164,9 @@ const trailerTypes = [
       volume: "3,000+ cubic feet"
     },
     marketShare: "~70% of all freight",
-    color: "primary"
+    color: "primary",
+    learnMoreLink: "/dry-van-trailers",
+    learnMoreText: "Learn more about dry van trailers"
   },
   {
     name: "Flatbed",
@@ -188,7 +190,9 @@ const trailerTypes = [
       width: "8.5 feet standard"
     },
     marketShare: "~15% of freight market",
-    color: "secondary"
+    color: "secondary",
+    learnMoreLink: "/flatbed-trailers",
+    learnMoreText: "Learn more about flatbed trailers"
   },
   {
     name: "Refrigerated (Reefer)",
@@ -212,7 +216,9 @@ const trailerTypes = [
       capacity: "Up to 44,000 lbs"
     },
     marketShare: "~10% of freight market",
-    color: "accent"
+    color: "accent",
+    learnMoreLink: "/refrigerated-trailers",
+    learnMoreText: "Learn more about refrigerated trailers"
   }
 ];
 
@@ -397,6 +403,19 @@ const ChoosingTrailer = () => {
                           </ul>
                         </div>
                       </div>
+                      
+                      {/* Learn More Link */}
+                      {trailer.learnMoreLink && (
+                        <div className="mt-6 pt-4 border-t">
+                          <Link 
+                            to={trailer.learnMoreLink} 
+                            className="inline-flex items-center text-primary hover:underline font-medium"
+                          >
+                            {trailer.learnMoreText}
+                            <ArrowRight className="h-4 w-4 ml-1" />
+                          </Link>
+                        </div>
+                      )}
                     </CardContent>
                   </Card>
                 ))}
@@ -590,7 +609,7 @@ const ChoosingTrailer = () => {
                     What is the best type of trailer for general freight?
                   </h3>
                   <p className="text-muted-foreground">
-                    A dry van trailer is the best choice for general freight. Dry vans are enclosed 53-foot trailers that protect cargo from weather and theft, making them ideal for consumer goods, retail merchandise, electronics, and non-perishable items. Approximately 70% of all freight in the United States moves in dry van trailers.
+                    A <Link to="/dry-van-trailers" className="text-primary hover:underline font-medium">dry van trailer</Link> is the best choice for general freight. Dry vans are enclosed 53-foot trailers that protect cargo from weather and theft, making them ideal for consumer goods, retail merchandise, electronics, and non-perishable items. Approximately 70% of all freight in the United States moves in dry van trailers.
                   </p>
                 </Card>
                 
@@ -599,7 +618,7 @@ const ChoosingTrailer = () => {
                     What is the difference between a dry van and a flatbed trailer?
                   </h3>
                   <p className="text-muted-foreground">
-                    A dry van is an enclosed trailer with walls and a roof, perfect for protecting cargo from weather and theft. A flatbed is an open-deck trailer with no sides or roof, designed for oversized, heavy, or irregularly shaped cargo like construction materials, machinery, and vehicles. Dry vans handle about 70% of freight while flatbeds cover roughly 15% of the market.
+                    A <Link to="/dry-van-trailers" className="text-primary hover:underline font-medium">dry van</Link> is an enclosed trailer with walls and a roof, perfect for protecting cargo from weather and theft. A <Link to="/flatbed-trailers" className="text-primary hover:underline font-medium">flatbed</Link> is an open-deck trailer with no sides or roof, designed for oversized, heavy, or irregularly shaped cargo like construction materials, machinery, and vehicles. Dry vans handle about 70% of freight while flatbeds cover roughly 15% of the market.
                   </p>
                 </Card>
                 
@@ -608,7 +627,7 @@ const ChoosingTrailer = () => {
                     What trailer do I need to haul refrigerated goods?
                   </h3>
                   <p className="text-muted-foreground">
-                    You need a refrigerated trailer, also called a "reefer," to haul temperature-sensitive cargo. Reefers have built-in refrigeration units that maintain temperatures from -20°F to 70°F, making them essential for fresh produce, frozen foods, dairy products, pharmaceuticals, and floral shipments.
+                    You need a <Link to="/refrigerated-trailers" className="text-primary hover:underline font-medium">refrigerated trailer</Link>, also called a "reefer," to haul temperature-sensitive cargo. Reefers have built-in refrigeration units that maintain temperatures from -20°F to 70°F, making them essential for fresh produce, frozen foods, dairy products, pharmaceuticals, and floral shipments.
                   </p>
                 </Card>
                 
@@ -626,7 +645,7 @@ const ChoosingTrailer = () => {
                     How much weight can a dry van trailer carry?
                   </h3>
                   <p className="text-muted-foreground">
-                    A standard 53-foot dry van trailer can carry up to 45,000 pounds of cargo, though the exact capacity depends on the weight of your truck and trailer combined. The total gross vehicle weight cannot exceed 80,000 pounds per federal regulations. Dry vans also offer over 3,000 cubic feet of cargo space.
+                    A standard 53-foot <Link to="/dry-van-trailers" className="text-primary hover:underline font-medium">dry van trailer</Link> can carry up to 45,000 pounds of cargo, though the exact capacity depends on the weight of your truck and trailer combined. The total gross vehicle weight cannot exceed 80,000 pounds per federal regulations. Dry vans also offer over 3,000 cubic feet of cargo space.
                   </p>
                 </Card>
                 
@@ -644,7 +663,7 @@ const ChoosingTrailer = () => {
                     What types of trailers does CRUMS Leasing offer?
                   </h3>
                   <p className="text-muted-foreground">
-                    CRUMS Leasing offers 53-foot dry van trailers and flatbed trailers for lease and short-term rental. Our fleet is well-maintained and available for carriers operating locally in Texas or shipping nationwide across the United States. We offer flexible lease terms starting at 12 months with a people-first approach to help every carrier succeed.
+                    CRUMS Leasing offers 53-foot <Link to="/dry-van-trailers" className="text-primary hover:underline font-medium">dry van trailers</Link> and <Link to="/flatbed-trailers" className="text-primary hover:underline font-medium">flatbed trailers</Link> for lease and short-term rental. Our fleet is well-maintained and available for carriers operating locally in Texas or shipping nationwide across the United States. We offer flexible lease terms starting at 12 months with a people-first approach to help every carrier succeed.
                   </p>
                 </Card>
               </div>

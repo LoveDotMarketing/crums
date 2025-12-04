@@ -274,6 +274,19 @@ const FleetSolutions = () => {
               </Link>{" "}
               for short-term projects and seasonal demands.
             </p>
+            <p className="text-muted-foreground mb-6">
+              Explore our equipment options:{" "}
+              <Link to="/dry-van-trailers" className="text-secondary hover:underline font-medium">
+                53-foot dry van trailers
+              </Link>{" "}
+              and{" "}
+              <Link to="/flatbed-trailers" className="text-secondary hover:underline font-medium">
+                flatbed trailers
+              </Link>. Need help choosing? Read our{" "}
+              <Link to="/guides/choosing-trailer" className="text-secondary hover:underline font-medium">
+                guide to selecting the right trailer
+              </Link>.
+            </p>
             <p className="text-muted-foreground">
               Learn more{" "}
               <Link to="/about" className="text-primary hover:underline font-medium">
