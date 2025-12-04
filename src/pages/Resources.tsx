@@ -1,8 +1,10 @@
+import { Link } from "react-router-dom";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
 import { SEO } from "@/components/SEO";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { BookOpen, FileText, TrendingUp, Shield, Truck, Calculator } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { BookOpen, FileText, TrendingUp, Shield, Truck, Calculator, ArrowRight } from "lucide-react";
 
 const Resources = () => {
   const resourceCategories = [
@@ -10,37 +12,47 @@ const Resources = () => {
       icon: BookOpen,
       title: "Industry Guides",
       description: "Comprehensive guides covering trucking regulations, best practices, and industry standards.",
-      items: ["FMCSA Compliance Guide", "Hours of Service Regulations", "ELD Requirements"]
+      items: ["FMCSA Compliance Guide", "Hours of Service Regulations", "ELD Requirements"],
+      comingSoon: true
     },
     {
       icon: FileText,
       title: "Documentation & Forms",
       description: "Essential forms and documentation templates for carriers and owner-operators.",
-      items: ["Bill of Lading Templates", "Inspection Checklists", "Maintenance Logs"]
+      items: ["Bill of Lading Templates", "Inspection Checklists", "Maintenance Logs"],
+      comingSoon: true
     },
     {
       icon: TrendingUp,
       title: "Business Tips",
       description: "Strategies and insights to help grow your trucking business and maximize profitability.",
-      items: ["Fuel Cost Management", "Route Optimization", "Load Board Tips"]
+      items: ["Fuel Cost Management", "Route Optimization", "Load Board Tips"],
+      comingSoon: true
     },
     {
       icon: Shield,
       title: "Safety Resources",
       description: "Safety guidelines, training materials, and best practices for safe operations.",
-      items: ["Pre-Trip Inspection Guide", "Weather Driving Tips", "Cargo Securement"]
+      items: ["Pre-Trip Inspection Guide", "Weather Driving Tips", "Cargo Securement"],
+      comingSoon: true
     },
     {
       icon: Truck,
       title: "Equipment Knowledge",
       description: "Learn about trailer types, maintenance schedules, and equipment specifications.",
-      items: ["Trailer Types Explained", "Maintenance Schedules", "Tire Care Guide"]
+      items: ["Trailer Types Explained", "Maintenance Schedules", "Tire Care Guide"],
+      comingSoon: true
     },
     {
       icon: Calculator,
       title: "Financial Tools",
       description: "Calculators and tools to help you manage costs and plan your business finances.",
-      items: ["Cost Per Mile Calculator", "Lease vs Buy Analysis", "Tax Deduction Guide"]
+      items: [
+        { name: "Cost Per Mile Calculator", href: "/resources/cost-per-mile", available: true },
+        { name: "Lease vs Buy Analysis", available: false },
+        { name: "Tax Deduction Guide", available: false }
+      ],
+      comingSoon: false
     }
   ];
 
@@ -87,16 +99,39 @@ const Resources = () => {
                 </CardHeader>
                 <CardContent>
                   <ul className="space-y-2">
-                    {category.items.map((item, itemIndex) => (
-                      <li key={itemIndex} className="text-sm text-muted-foreground flex items-center">
-                        <span className="w-1.5 h-1.5 bg-secondary rounded-full mr-2" />
-                        {item}
-                      </li>
-                    ))}
+                    {category.items.map((item, itemIndex) => {
+                      const isObject = typeof item === 'object';
+                      const itemName = isObject ? item.name : item;
+                      const itemHref = isObject && item.available ? item.href : null;
+                      
+                      return (
+                        <li key={itemIndex} className="text-sm flex items-center">
+                          <span className="w-1.5 h-1.5 bg-secondary rounded-full mr-2" />
+                          {itemHref ? (
+                            <Link to={itemHref} className="text-primary hover:underline flex items-center gap-1">
+                              {itemName}
+                              <ArrowRight className="h-3 w-3" />
+                            </Link>
+                          ) : (
+                            <span className="text-muted-foreground">{itemName}</span>
+                          )}
+                        </li>
+                      );
+                    })}
                   </ul>
-                  <p className="text-xs text-muted-foreground mt-4 italic">
-                    Coming soon
-                  </p>
+                  {category.comingSoon && (
+                    <p className="text-xs text-muted-foreground mt-4 italic">
+                      Coming soon
+                    </p>
+                  )}
+                  {!category.comingSoon && category.title === "Financial Tools" && (
+                    <Button asChild variant="outline" size="sm" className="mt-4 w-full">
+                      <Link to="/resources/cost-per-mile">
+                        <Calculator className="h-4 w-4 mr-2" />
+                        Try Cost Per Mile Calculator
+                      </Link>
+                    </Button>
+                  )}
                 </CardContent>
               </Card>
             ))}
