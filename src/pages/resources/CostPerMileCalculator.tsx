@@ -93,7 +93,6 @@ const CostPerMileCalculator = () => {
         {/* Hero Section */}
         <section className="bg-primary py-12 md:py-16">
           <div className="container mx-auto px-4">
-            <Breadcrumbs />
             <div className="flex items-center gap-4 mb-4">
               <div className="p-3 bg-primary-foreground/10 rounded-lg">
                 <Calculator className="h-8 w-8 text-primary-foreground" />
@@ -107,6 +106,8 @@ const CostPerMileCalculator = () => {
             </p>
           </div>
         </section>
+
+        <Breadcrumbs />
 
         {/* Calculator Section */}
         <section className="py-12 md:py-16">
