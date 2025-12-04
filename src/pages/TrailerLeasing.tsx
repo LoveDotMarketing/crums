@@ -123,19 +123,19 @@ const TrailerLeasing = () => {
                 <h3 className="text-xl font-bold mb-4">Dry Van Trailers</h3>
                 <ul className="space-y-2 text-muted-foreground mb-6">
                   <li className="flex items-start">
-                    <CheckCircle className="h-5 w-5 text-primary mr-2 mt-0.5 flex-shrink-0" />
+                    <CheckCircle className="h-5 w-5 text-secondary mr-2 mt-0.5 flex-shrink-0" />
                     <span>53' and 48' options</span>
                   </li>
                   <li className="flex items-start">
-                    <CheckCircle className="h-5 w-5 text-primary mr-2 mt-0.5 flex-shrink-0" />
+                    <CheckCircle className="h-5 w-5 text-secondary mr-2 mt-0.5 flex-shrink-0" />
                     <span>Swing and roll-up doors</span>
                   </li>
                   <li className="flex items-start">
-                    <CheckCircle className="h-5 w-5 text-primary mr-2 mt-0.5 flex-shrink-0" />
+                    <CheckCircle className="h-5 w-5 text-secondary mr-2 mt-0.5 flex-shrink-0" />
                     <span>Logistic posts available</span>
                   </li>
                 </ul>
-                <Link to="/dry-van-trailers" className="text-primary hover:underline font-medium inline-flex items-center">
+                <Link to="/dry-van-trailers" className="text-secondary hover:underline font-medium inline-flex items-center">
                   Learn more about dry van trailers
                   <ArrowRight className="h-4 w-4 ml-1" />
                 </Link>
@@ -156,19 +156,19 @@ const TrailerLeasing = () => {
                 <h3 className="text-xl font-bold mb-4">Flatbed Trailers</h3>
                 <ul className="space-y-2 text-muted-foreground mb-6">
                   <li className="flex items-start">
-                    <CheckCircle className="h-5 w-5 text-accent mr-2 mt-0.5 flex-shrink-0" />
+                    <CheckCircle className="h-5 w-5 text-secondary mr-2 mt-0.5 flex-shrink-0" />
                     <span>Standard and step deck</span>
                   </li>
                   <li className="flex items-start">
-                    <CheckCircle className="h-5 w-5 text-accent mr-2 mt-0.5 flex-shrink-0" />
+                    <CheckCircle className="h-5 w-5 text-secondary mr-2 mt-0.5 flex-shrink-0" />
                     <span>Heavy-duty construction</span>
                   </li>
                   <li className="flex items-start">
-                    <CheckCircle className="h-5 w-5 text-accent mr-2 mt-0.5 flex-shrink-0" />
+                    <CheckCircle className="h-5 w-5 text-secondary mr-2 mt-0.5 flex-shrink-0" />
                     <span>Multiple tie-down points</span>
                   </li>
                 </ul>
-                <Link to="/flatbed-trailers" className="text-accent hover:underline font-medium inline-flex items-center">
+                <Link to="/flatbed-trailers" className="text-secondary hover:underline font-medium inline-flex items-center">
                   Learn more about flatbed trailers
                   <ArrowRight className="h-4 w-4 ml-1" />
                 </Link>
