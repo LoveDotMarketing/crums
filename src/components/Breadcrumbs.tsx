@@ -24,7 +24,7 @@ const routeLabels: Record<string, string> = {
   "/login": "Login",
   "/privacy": "Privacy Policy",
   "/terms": "Terms of Service",
-  "/trailers": "Trailers",
+  
   "/resources": "Resources",
   "/resources/tools": "Financial Tools",
   "/resources/tools/cost-per-mile": "Cost Per Mile Calculator",
