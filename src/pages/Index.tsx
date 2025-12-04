@@ -8,6 +8,9 @@ import {
   Shield,
   TrendingUp,
   MapPin,
+  Calculator,
+  BookOpen,
+  FileText,
   CheckCircle,
   ArrowRight,
   Heart,
@@ -341,6 +344,87 @@ const Index = () => {
                 </p>
               </CardContent>
             </Card>
+          </div>
+        </div>
+      </section>
+
+      {/* Featured Resources Section */}
+      <section className="py-20 bg-gradient-to-b from-background to-muted/50">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
+              Carrier Resources
+            </h2>
+            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+              Free tools and guides to help you run a more profitable and efficient operation.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-10">
+            {/* Financial Tools - Featured */}
+            <a href="/resources/tools" className="group">
+              <Card className="h-full border-2 border-secondary/50 hover:border-secondary hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-secondary/10 to-background">
+                <CardContent className="p-8">
+                  <div className="h-16 w-16 rounded-lg bg-secondary/20 flex items-center justify-center mb-6 group-hover:bg-secondary group-hover:scale-110 transition-all">
+                    <Calculator className="h-8 w-8 text-secondary group-hover:text-secondary-foreground" />
+                  </div>
+                  <h3 className="text-2xl font-bold mb-3 text-foreground group-hover:text-secondary transition-colors">
+                    Financial Tools
+                  </h3>
+                  <p className="text-muted-foreground mb-4 leading-relaxed">
+                    Cost per mile calculator, lease vs buy comparison, profit calculators, and more to optimize your business finances.
+                  </p>
+                  <span className="inline-flex items-center text-secondary font-semibold group-hover:gap-2 transition-all">
+                    Try Our Tools <ArrowRight className="ml-1 h-4 w-4" />
+                  </span>
+                </CardContent>
+              </Card>
+            </a>
+
+            {/* Industry Guides */}
+            <Card className="h-full border-2 hover:shadow-lg transition-all duration-300">
+              <CardContent className="p-8">
+                <div className="h-16 w-16 rounded-lg bg-primary/10 flex items-center justify-center mb-6">
+                  <BookOpen className="h-8 w-8 text-primary" />
+                </div>
+                <h3 className="text-2xl font-bold mb-3 text-foreground">
+                  Industry Guides
+                </h3>
+                <p className="text-muted-foreground mb-4 leading-relaxed">
+                  FMCSA compliance, hours of service regulations, ELD requirements, and best practices for the road.
+                </p>
+                <span className="inline-flex items-center text-muted-foreground text-sm italic">
+                  Coming Soon
+                </span>
+              </CardContent>
+            </Card>
+
+            {/* Documentation & Forms */}
+            <Card className="h-full border-2 hover:shadow-lg transition-all duration-300">
+              <CardContent className="p-8">
+                <div className="h-16 w-16 rounded-lg bg-accent/10 flex items-center justify-center mb-6">
+                  <FileText className="h-8 w-8 text-accent" />
+                </div>
+                <h3 className="text-2xl font-bold mb-3 text-foreground">
+                  Documentation & Forms
+                </h3>
+                <p className="text-muted-foreground mb-4 leading-relaxed">
+                  Bill of lading templates, inspection checklists, maintenance logs, and essential carrier forms.
+                </p>
+                <span className="inline-flex items-center text-muted-foreground text-sm italic">
+                  Coming Soon
+                </span>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="text-center">
+            <a href="/resources">
+              <Button size="lg" variant="outline" className="border-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground">
+                View All Resources
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </Button>
+            </a>
           </div>
         </div>
       </section>
