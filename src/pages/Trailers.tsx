@@ -111,6 +111,7 @@ const Trailers = () => {
       <SEO
         title="Trailer Inventory"
         description="Browse our live trailer inventory. View available 53-foot dry van trailers and flatbeds for lease or rent. Real-time availability updated instantly."
+        canonical="https://crumsleasing.com/trailers"
       />
       <Navigation />
 
