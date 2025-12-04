@@ -6,6 +6,53 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Link } from "react-router-dom";
 import { Gift, Users, DollarSign, ArrowRight, CheckCircle } from "lucide-react";
 
+const faqSchema = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "How do I get my referral code?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Sign up for a CRUMS Leasing account and your unique referral code will be automatically generated. You can find it in your customer dashboard."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "When do I receive my referral credit?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Your $250 credit is applied after your referral signs a lease agreement and their first payment is processed. We'll notify you when the credit is applied."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Is there a limit to how many people I can refer?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "No limits! Refer as many people as you like and earn $250 for each successful referral. The more you refer, the more you save."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Do referral codes expire?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "No, your referral code never expires. Share it whenever you want, and you'll always receive credit when someone signs up using your code."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can I combine referral credits?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes! All your referral credits accumulate and can be applied to your future lease payments until they're fully used."
+      }
+    }
+  ]
+};
+
 const ReferralProgram = () => {
   const steps = [
     {
@@ -39,6 +86,7 @@ const ReferralProgram = () => {
         title="Referral Program - Earn $250 Per Referral"
         description="Join the CRUMS Leasing referral program. Earn $250 off your trailer lease for every referral who signs a lease. Unlimited rewards, no expiration."
         canonical="https://crumsleasing.com/referral-program"
+        structuredData={faqSchema}
       />
       <Navigation />
 

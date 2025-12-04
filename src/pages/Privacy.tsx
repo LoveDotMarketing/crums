@@ -3,6 +3,19 @@ import { Footer } from "@/components/Footer";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { SEO } from "@/components/SEO";
 
+const webPageSchema = {
+  "@context": "https://schema.org",
+  "@type": "WebPage",
+  "name": "Privacy Policy | CRUMS Leasing",
+  "description": "CRUMS Leasing privacy policy. Learn how we collect, use, and protect your personal information when you use our trailer leasing services.",
+  "url": "https://crumsleasing.com/privacy",
+  "publisher": {
+    "@type": "Organization",
+    "name": "CRUMS Leasing",
+    "url": "https://crumsleasing.com"
+  }
+};
+
 const Privacy = () => {
   return (
     <div className="min-h-screen flex flex-col">
@@ -10,6 +23,7 @@ const Privacy = () => {
         title="Privacy Policy"
         description="CRUMS Leasing privacy policy. Learn how we collect, use, and protect your personal information when you use our trailer leasing services."
         canonical="https://crumsleasing.com/privacy"
+        structuredData={webPageSchema}
       />
       <Navigation />
       <Breadcrumbs />

@@ -7,6 +7,19 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { BookOpen, FileText, TrendingUp, Shield, Truck, Calculator, ArrowRight } from "lucide-react";
 
+const webPageSchema = {
+  "@context": "https://schema.org",
+  "@type": "CollectionPage",
+  "name": "Carrier Resources - Educational Guides for the Trucking Industry",
+  "description": "Access free educational resources for carriers and the trucking industry. Guides on FMCSA compliance, safety, business tips, and equipment maintenance from CRUMS Leasing.",
+  "url": "https://crumsleasing.com/resources",
+  "publisher": {
+    "@type": "Organization",
+    "name": "CRUMS Leasing",
+    "url": "https://crumsleasing.com"
+  }
+};
+
 const Resources = () => {
   const resourceCategories = [
     {
@@ -67,6 +80,7 @@ const Resources = () => {
         title="Carrier Resources - Educational Guides for the Trucking Industry"
         description="Access free educational resources for carriers and the trucking industry. Guides on FMCSA compliance, safety, business tips, and equipment maintenance from CRUMS Leasing."
         canonical="https://crumsleasing.com/resources"
+        structuredData={webPageSchema}
       />
       <Navigation />
 

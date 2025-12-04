@@ -320,6 +320,8 @@ const ApiDocs = () => {
       <SEO
         title="API Documentation"
         description="Complete API documentation for CRUMS Leasing n8n agent endpoints"
+        canonical="https://crumsleasing.com/api-docs"
+        noindex
       />
       <div className="min-h-screen bg-background">
         <div className="container max-w-5xl py-12 px-4">

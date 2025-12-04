@@ -3,6 +3,19 @@ import { Footer } from "@/components/Footer";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { SEO } from "@/components/SEO";
 
+const webPageSchema = {
+  "@context": "https://schema.org",
+  "@type": "WebPage",
+  "name": "Terms of Service | CRUMS Leasing",
+  "description": "CRUMS Leasing terms of service. Read about the terms and conditions governing your use of our trailer leasing and rental services.",
+  "url": "https://crumsleasing.com/terms",
+  "publisher": {
+    "@type": "Organization",
+    "name": "CRUMS Leasing",
+    "url": "https://crumsleasing.com"
+  }
+};
+
 const Terms = () => {
   return (
     <div className="min-h-screen flex flex-col">
@@ -10,6 +23,7 @@ const Terms = () => {
         title="Terms of Service"
         description="CRUMS Leasing terms of service. Read about the terms and conditions governing your use of our trailer leasing and rental services."
         canonical="https://crumsleasing.com/terms"
+        structuredData={webPageSchema}
       />
       <Navigation />
       <Breadcrumbs />
