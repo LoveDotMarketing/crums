@@ -208,6 +208,70 @@ const About = () => {
         </div>
       </section>
 
+      {/* Explore Our Services */}
+      <section className="py-16 bg-muted">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4 text-foreground">
+              Explore Our Services
+            </h2>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              Discover how CRUMS Leasing can support your business with quality equipment and flexible solutions.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-5xl mx-auto">
+            <Link to="/services/trailer-leasing" className="group">
+              <Card className="h-full border-2 hover:border-primary transition-colors">
+                <CardContent className="p-6 text-center">
+                  <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">
+                    Trailer Leasing Solutions
+                  </h3>
+                  <p className="text-sm text-muted-foreground mt-2">
+                    Long-term 53-foot dry van and flatbed leasing
+                  </p>
+                </CardContent>
+              </Card>
+            </Link>
+            <Link to="/services/trailer-rentals" className="group">
+              <Card className="h-full border-2 hover:border-secondary transition-colors">
+                <CardContent className="p-6 text-center">
+                  <h3 className="font-semibold text-foreground group-hover:text-secondary transition-colors">
+                    Flexible Trailer Rentals
+                  </h3>
+                  <p className="text-sm text-muted-foreground mt-2">
+                    Short-term rentals for seasonal needs
+                  </p>
+                </CardContent>
+              </Card>
+            </Link>
+            <Link to="/services/fleet-solutions" className="group">
+              <Card className="h-full border-2 hover:border-accent transition-colors">
+                <CardContent className="p-6 text-center">
+                  <h3 className="font-semibold text-foreground group-hover:text-accent transition-colors">
+                    Enterprise Fleet Management
+                  </h3>
+                  <p className="text-sm text-muted-foreground mt-2">
+                    Multi-trailer solutions for growing fleets
+                  </p>
+                </CardContent>
+              </Card>
+            </Link>
+            <Link to="/careers" className="group">
+              <Card className="h-full border-2 hover:border-primary transition-colors">
+                <CardContent className="p-6 text-center">
+                  <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">
+                    Career Opportunities
+                  </h3>
+                  <p className="text-sm text-muted-foreground mt-2">
+                    Join the CRUMS family team
+                  </p>
+                </CardContent>
+              </Card>
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* CTA */}
       <section className="py-20 bg-background">
         <div className="container mx-auto px-4 text-center">

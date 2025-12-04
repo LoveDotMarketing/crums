@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -179,6 +180,30 @@ const Reviews = () => {
         </div>
       </section>
 
+      {/* Internal Links Section */}
+      <section className="py-12 bg-background">
+        <div className="container mx-auto px-4">
+          <div className="max-w-3xl mx-auto text-center">
+            <h2 className="text-2xl font-bold text-foreground mb-6">
+              Learn More About CRUMS Leasing
+            </h2>
+            <div className="flex flex-wrap justify-center gap-4">
+              <Link to="/services/trailer-leasing" className="text-primary hover:underline font-medium">
+                Trailer leasing services
+              </Link>
+              <span className="text-muted-foreground">•</span>
+              <Link to="/about" className="text-primary hover:underline font-medium">
+                Our company story
+              </Link>
+              <span className="text-muted-foreground">•</span>
+              <Link to="/referral-program" className="text-secondary hover:underline font-medium">
+                Earn $250 for referrals
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* CTA Section */}
       <section className="py-16 bg-primary text-primary-foreground overflow-hidden">
         <div className="container mx-auto px-4 text-center">
@@ -188,11 +213,11 @@ const Reviews = () => {
           <p className="text-xl mb-8 max-w-2xl mx-auto text-primary-foreground/90">
             Join our growing family of satisfied customers and see why carriers across Texas choose CRUMS Leasing.
           </p>
-          <a href="/get-started">
+          <Link to="/get-started">
             <Button size="lg" className="bg-secondary hover:bg-secondary/90 text-secondary-foreground">
               Get Started Today
             </Button>
-          </a>
+          </Link>
         </div>
       </section>
 

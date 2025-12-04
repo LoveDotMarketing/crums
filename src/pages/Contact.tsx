@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Phone, MapPin, Clock, Facebook, Instagram, Linkedin } from "lucide-react";
+import { Link } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { SEO } from "@/components/SEO";
@@ -382,6 +383,35 @@ const Contact = () => {
                   the form and we'll get back to you within 24 hours.
                 </p>
               </div>
+
+              {/* Quick Links */}
+              <Card className="border-2 bg-muted/50">
+                <CardContent className="p-6">
+                  <h3 className="font-semibold text-foreground mb-4">Explore Our Services</h3>
+                  <ul className="space-y-3">
+                    <li>
+                      <Link to="/services/trailer-leasing" className="text-primary hover:underline">
+                        53-foot dry van trailer leasing
+                      </Link>
+                    </li>
+                    <li>
+                      <Link to="/services/trailer-rentals" className="text-primary hover:underline">
+                        Short-term trailer rentals
+                      </Link>
+                    </li>
+                    <li>
+                      <Link to="/services/fleet-solutions" className="text-primary hover:underline">
+                        Fleet management solutions
+                      </Link>
+                    </li>
+                    <li>
+                      <Link to="/referral-program" className="text-secondary hover:underline">
+                        Save $250 with our referral program
+                      </Link>
+                    </li>
+                  </ul>
+                </CardContent>
+              </Card>
 
               <Card className="border-2">
                 <CardContent className="p-6">
