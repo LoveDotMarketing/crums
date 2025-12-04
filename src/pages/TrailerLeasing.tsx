@@ -194,6 +194,39 @@ const TrailerLeasing = () => {
         </div>
       </section>
 
+      {/* Related Services */}
+      <section className="py-16 bg-muted">
+        <div className="container mx-auto px-4">
+          <h2 className="text-2xl md:text-3xl font-bold text-center mb-8 text-foreground">
+            Explore More Services
+          </h2>
+          <div className="max-w-3xl mx-auto text-center">
+            <p className="text-lg text-muted-foreground mb-6">
+              Need something different? Check out our{" "}
+              <Link to="/services/trailer-rentals" className="text-secondary hover:underline font-semibold">
+                short-term trailer rentals
+              </Link>{" "}
+              for flexible, commitment-free options, or explore our{" "}
+              <Link to="/services/fleet-solutions" className="text-secondary hover:underline font-semibold">
+                comprehensive fleet management solutions
+              </Link>{" "}
+              for businesses managing multiple trailers.
+            </p>
+            <p className="text-muted-foreground">
+              Not sure which option is right for you? Use our{" "}
+              <Link to="/resources/tools/lease-vs-buy" className="text-primary hover:underline font-medium">
+                lease vs buy calculator
+              </Link>{" "}
+              to compare costs, or{" "}
+              <Link to="/contact" className="text-primary hover:underline font-medium">
+                contact our team
+              </Link>{" "}
+              for personalized guidance.
+            </p>
+          </div>
+        </div>
+      </section>
+
       {/* CTA */}
       <section className="py-20 bg-gradient-to-r from-primary to-brand-teal-dark text-primary-foreground">
         <div className="container mx-auto px-4 text-center">

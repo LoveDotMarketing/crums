@@ -1,4 +1,5 @@
 import { Facebook, Linkedin, Instagram } from "lucide-react";
+import { Link } from "react-router-dom";
 import crumsLogo from "@/assets/crums-logo.png";
 
 export const Footer = () => {
@@ -8,9 +9,9 @@ export const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
           {/* Company Info */}
           <div>
-            <a href="https://crumsleasing.com/" target="_blank" rel="noopener noreferrer">
+            <Link to="/">
               <img src={crumsLogo} alt="CRUMS Leasing Logo" className="h-10 w-auto mb-4 brightness-0 invert" />
-            </a>
+            </Link>
             <p className="text-sm text-primary-foreground/80 mb-4">
               Building trust, family, and opportunity in trailer leasing and logistics nationwide.
             </p>
@@ -76,29 +77,29 @@ export const Footer = () => {
             <h3 className="font-semibold text-lg mb-4">Services</h3>
             <ul className="space-y-2 text-sm">
               <li>
-                <a href="/services/trailer-leasing" className="hover:text-secondary transition-colors">
+                <Link to="/services/trailer-leasing" className="hover:text-secondary transition-colors">
                   Trailer Leasing
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="/services/trailer-rentals" className="hover:text-secondary transition-colors">
+                <Link to="/services/trailer-rentals" className="hover:text-secondary transition-colors">
                   Trailer Rentals
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="/services/fleet-solutions" className="hover:text-secondary transition-colors">
+                <Link to="/services/fleet-solutions" className="hover:text-secondary transition-colors">
                   Fleet Solutions
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="/login" className="hover:text-secondary transition-colors">
+                <Link to="/login" className="hover:text-secondary transition-colors">
                   Customer Login
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="/get-started" className="hover:text-secondary transition-colors">
+                <Link to="/get-started" className="hover:text-secondary transition-colors">
                   Get Started
-                </a>
+                </Link>
               </li>
             </ul>
           </div>
@@ -108,44 +109,44 @@ export const Footer = () => {
             <h3 className="font-semibold text-lg mb-4">Company</h3>
             <ul className="space-y-2 text-sm">
               <li>
-                <a href="/about" className="hover:text-secondary transition-colors">
+                <Link to="/about" className="hover:text-secondary transition-colors">
                   About Us
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="/reviews" className="hover:text-secondary transition-colors">
+                <Link to="/reviews" className="hover:text-secondary transition-colors">
                   Reviews
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="/mission" className="hover:text-secondary transition-colors">
+                <Link to="/mission" className="hover:text-secondary transition-colors">
                   Mission & Values
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="/locations" className="hover:text-secondary transition-colors">
+                <Link to="/locations" className="hover:text-secondary transition-colors">
                   Locations
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="/careers" className="hover:text-secondary transition-colors">
+                <Link to="/careers" className="hover:text-secondary transition-colors">
                   Careers
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="/referral-program" className="hover:text-secondary transition-colors">
+                <Link to="/referral-program" className="hover:text-secondary transition-colors">
                   Referral Program
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="/resources" className="hover:text-secondary transition-colors">
+                <Link to="/resources" className="hover:text-secondary transition-colors">
                   Resources
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="/contact" className="hover:text-secondary transition-colors">
+                <Link to="/contact" className="hover:text-secondary transition-colors">
                   Contact
-                </a>
+                </Link>
               </li>
             </ul>
           </div>
@@ -168,12 +169,12 @@ export const Footer = () => {
           <div className="flex flex-col md:flex-row justify-between items-center text-sm text-primary-foreground/60">
             <p>&copy; {new Date().getFullYear()} CRUMS Leasing. All rights reserved.</p>
             <div className="flex space-x-6 mt-4 md:mt-0">
-              <a href="/privacy" className="hover:text-secondary transition-colors">
+              <Link to="/privacy" className="hover:text-secondary transition-colors">
                 Privacy Policy
-              </a>
-              <a href="/terms" className="hover:text-secondary transition-colors">
+              </Link>
+              <Link to="/terms" className="hover:text-secondary transition-colors">
                 Terms of Service
-              </a>
+              </Link>
             </div>
           </div>
         </div>

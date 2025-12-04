@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Calculator, Plus, Trash2, AlertTriangle, CheckCircle } from "lucide-react";
 import { PrintButton } from "@/components/PrintButton";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, Legend } from "recharts";
+import { Link } from "react-router-dom";
 
 // IFTA fuel tax rates per gallon (as of 2024 - these should be updated periodically)
 const STATE_TAX_RATES: Record<string, { name: string; rate: number }> = {
@@ -483,6 +484,23 @@ const IFTACalculator = () => {
                     Always verify current rates with your state's Department of Transportation and consult with a qualified tax professional for official filings. 
                     CRUMS Leasing is not responsible for decisions made based on these estimates.
                   </p>
+                </CardContent>
+              </Card>
+
+              {/* CTA Section */}
+              <Card className="bg-primary/5 border-primary/20">
+                <CardContent className="pt-6 text-center">
+                  <h3 className="text-xl font-bold mb-3 text-foreground">Simplify Your Operations</h3>
+                  <p className="text-muted-foreground mb-4">
+                    Focus on driving, not paperwork. With{" "}
+                    <Link to="/services/trailer-leasing" className="text-primary hover:underline font-semibold">
+                      affordable trailer leasing from CRUMS
+                    </Link>, 
+                    you get predictable payments and reliable equipment.
+                  </p>
+                  <Button asChild variant="outline">
+                    <Link to="/contact">Explore Leasing Options</Link>
+                  </Button>
                 </CardContent>
               </Card>
             </div>
