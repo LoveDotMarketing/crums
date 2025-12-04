@@ -175,3 +175,81 @@ export const generateReviewSchema = (reviews: typeof customerReviews) => ({
     }
   }))
 });
+
+// Industry-Specific Service Schemas
+export const ownerOperatorsServiceSchema = {
+  "@context": "https://schema.org",
+  "@type": "Service",
+  "serviceType": "Owner Operator Trailer Leasing",
+  "provider": { "@type": "Organization", "name": "CRUMS Leasing" },
+  "name": "Owner Operator Trailer Leasing",
+  "description": "Flexible trailer leasing for independent owner operators. Affordable rates, simple contracts, and a people-first approach for independent carriers.",
+  "areaServed": { "@type": "Country", "name": "United States" },
+  "audience": { "@type": "Audience", "audienceType": "Owner Operators" }
+};
+
+export const fleetLeasingServiceSchema = {
+  "@context": "https://schema.org",
+  "@type": "Service",
+  "serviceType": "Fleet Trailer Leasing",
+  "provider": { "@type": "Organization", "name": "CRUMS Leasing" },
+  "name": "Fleet Leasing Solutions",
+  "description": "Scalable trailer leasing solutions for growing fleets. Flexible terms, maintained equipment, and multiple trailer types for fleet operators.",
+  "areaServed": { "@type": "Country", "name": "United States" },
+  "audience": { "@type": "Audience", "audienceType": "Fleet Operators" }
+};
+
+export const logisticsServiceSchema = {
+  "@context": "https://schema.org",
+  "@type": "Service",
+  "serviceType": "Logistics Company Trailer Solutions",
+  "provider": { "@type": "Organization", "name": "CRUMS Leasing" },
+  "name": "Logistics Company Trailer Solutions",
+  "description": "Trailer leasing solutions for 3PL providers, freight brokers, and logistics companies. Flexible capacity to match customer demands.",
+  "areaServed": { "@type": "Country", "name": "United States" },
+  "audience": { "@type": "Audience", "audienceType": "Logistics Companies" }
+};
+
+export const foodDistributionServiceSchema = {
+  "@context": "https://schema.org",
+  "@type": "Service",
+  "serviceType": "Food Distribution Trailer Leasing",
+  "provider": { "@type": "Organization", "name": "CRUMS Leasing" },
+  "name": "Food Distribution Trailer Leasing",
+  "description": "Trailer leasing for food distribution companies. Refrigerated and dry van trailers for safe, reliable food transport.",
+  "areaServed": { "@type": "Country", "name": "United States" },
+  "audience": { "@type": "Audience", "audienceType": "Food Distributors" }
+};
+
+export const retailDistributionServiceSchema = {
+  "@context": "https://schema.org",
+  "@type": "Service",
+  "serviceType": "Retail Distribution Trailer Leasing",
+  "provider": { "@type": "Organization", "name": "CRUMS Leasing" },
+  "name": "Retail Distribution Trailer Leasing",
+  "description": "Trailer leasing solutions for retail distribution and e-commerce fulfillment. Scalable capacity for retail supply chains.",
+  "areaServed": { "@type": "Country", "name": "United States" },
+  "audience": { "@type": "Audience", "audienceType": "Retail Distributors" }
+};
+
+export const manufacturingServiceSchema = {
+  "@context": "https://schema.org",
+  "@type": "Service",
+  "serviceType": "Manufacturing Logistics Trailer Leasing",
+  "provider": { "@type": "Organization", "name": "CRUMS Leasing" },
+  "name": "Manufacturing Logistics Trailer Leasing",
+  "description": "Trailer leasing for manufacturing companies. Dry van and flatbed trailers to support manufacturing logistics and supply chains.",
+  "areaServed": { "@type": "Country", "name": "United States" },
+  "audience": { "@type": "Audience", "audienceType": "Manufacturers" }
+};
+
+export const seasonalDemandServiceSchema = {
+  "@context": "https://schema.org",
+  "@type": "Service",
+  "serviceType": "Seasonal Trailer Rentals",
+  "provider": { "@type": "Organization", "name": "CRUMS Leasing" },
+  "name": "Seasonal Trailer Rentals",
+  "description": "Short-term trailer rentals for seasonal demand spikes. Flexible capacity solutions for holiday seasons, harvest, and peak shipping periods.",
+  "areaServed": { "@type": "Country", "name": "United States" },
+  "audience": { "@type": "Audience", "audienceType": "Seasonal Shippers" }
+};

@@ -6,6 +6,13 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { UtensilsCrossed, CheckCircle, Thermometer, Shield, Clock, Leaf, ArrowRight } from "lucide-react";
+import { foodDistributionServiceSchema, generateBreadcrumbSchema } from "@/lib/structuredData";
+
+const breadcrumbSchema = generateBreadcrumbSchema([
+  { name: "Home", url: "https://crumsleasing.com" },
+  { name: "Industries", url: "https://crumsleasing.com/industries" },
+  { name: "Food Distribution", url: "https://crumsleasing.com/industries/food-distribution" }
+]);
 
 const FoodDistribution = () => {
   const benefits = [
@@ -21,6 +28,7 @@ const FoodDistribution = () => {
         title="Food Distribution Trailer Leasing | CRUMS Leasing"
         description="Trailer leasing for food distribution companies. CRUMS Leasing offers refrigerated and dry van trailers for safe, reliable food transport."
         canonical="https://crumsleasing.com/industries/food-distribution"
+        structuredData={[foodDistributionServiceSchema, breadcrumbSchema]}
       />
       <Navigation />
       

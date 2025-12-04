@@ -5,6 +5,7 @@ import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Truck, User, Building2, UtensilsCrossed, ShoppingCart, Factory, Calendar, ArrowRight } from "lucide-react";
+import { generateBreadcrumbSchema } from "@/lib/structuredData";
 
 const industries = [
   {
@@ -76,6 +77,11 @@ const industriesSchema = {
   }
 };
 
+const breadcrumbSchema = generateBreadcrumbSchema([
+  { name: "Home", url: "https://crumsleasing.com" },
+  { name: "Industries", url: "https://crumsleasing.com/industries" }
+]);
+
 const Industries = () => {
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -83,7 +89,7 @@ const Industries = () => {
         title="Industries We Serve | Trailer Leasing for Every Sector | CRUMS Leasing"
         description="CRUMS Leasing provides specialized trailer solutions for fleet operators, owner operators, logistics companies, food distribution, retail, manufacturing, and seasonal demand across the United States."
         canonical="https://crumsleasing.com/industries"
-        structuredData={industriesSchema}
+        structuredData={[industriesSchema, breadcrumbSchema]}
       />
       <Navigation />
       

@@ -6,6 +6,13 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ShoppingCart, CheckCircle, Package, Zap, TrendingUp, Store, ArrowRight } from "lucide-react";
+import { retailDistributionServiceSchema, generateBreadcrumbSchema } from "@/lib/structuredData";
+
+const breadcrumbSchema = generateBreadcrumbSchema([
+  { name: "Home", url: "https://crumsleasing.com" },
+  { name: "Industries", url: "https://crumsleasing.com/industries" },
+  { name: "Retail Distribution", url: "https://crumsleasing.com/industries/retail-distribution" }
+]);
 
 const RetailDistribution = () => {
   const benefits = [
@@ -21,6 +28,7 @@ const RetailDistribution = () => {
         title="Retail Distribution Trailer Leasing | CRUMS Leasing"
         description="Trailer leasing solutions for retail distribution and e-commerce fulfillment. CRUMS Leasing offers scalable capacity for retail supply chains."
         canonical="https://crumsleasing.com/industries/retail-distribution"
+        structuredData={[retailDistributionServiceSchema, breadcrumbSchema]}
       />
       <Navigation />
       

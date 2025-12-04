@@ -6,6 +6,13 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { User, CheckCircle, DollarSign, Wrench, FileText, Heart, ArrowRight } from "lucide-react";
+import { ownerOperatorsServiceSchema, generateBreadcrumbSchema } from "@/lib/structuredData";
+
+const breadcrumbSchema = generateBreadcrumbSchema([
+  { name: "Home", url: "https://crumsleasing.com" },
+  { name: "Industries", url: "https://crumsleasing.com/industries" },
+  { name: "Owner Operators", url: "https://crumsleasing.com/industries/owner-operators" }
+]);
 
 const OwnerOperators = () => {
   const benefits = [
@@ -21,6 +28,7 @@ const OwnerOperators = () => {
         title="Owner Operator Trailer Leasing | CRUMS Leasing"
         description="Flexible trailer leasing for independent owner operators. CRUMS Leasing offers affordable rates, simple contracts, and a people-first approach for independent carriers."
         canonical="https://crumsleasing.com/industries/owner-operators"
+        structuredData={[ownerOperatorsServiceSchema, breadcrumbSchema]}
       />
       <Navigation />
       

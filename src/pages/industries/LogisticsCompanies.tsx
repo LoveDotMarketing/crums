@@ -6,6 +6,13 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Building2, CheckCircle, Network, Clock, BarChart3, Handshake, ArrowRight } from "lucide-react";
+import { logisticsServiceSchema, generateBreadcrumbSchema } from "@/lib/structuredData";
+
+const breadcrumbSchema = generateBreadcrumbSchema([
+  { name: "Home", url: "https://crumsleasing.com" },
+  { name: "Industries", url: "https://crumsleasing.com/industries" },
+  { name: "Logistics Companies", url: "https://crumsleasing.com/industries/logistics-companies" }
+]);
 
 const LogisticsCompanies = () => {
   const benefits = [
@@ -21,6 +28,7 @@ const LogisticsCompanies = () => {
         title="Logistics Company Trailer Solutions | CRUMS Leasing"
         description="Trailer leasing solutions for 3PL providers, freight brokers, and logistics companies. CRUMS Leasing offers flexible capacity to match your customer demands."
         canonical="https://crumsleasing.com/industries/logistics-companies"
+        structuredData={[logisticsServiceSchema, breadcrumbSchema]}
       />
       <Navigation />
       
