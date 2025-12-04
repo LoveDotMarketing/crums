@@ -18,6 +18,9 @@ const About = lazy(() => import("./pages/About"));
 const TrailerLeasing = lazy(() => import("./pages/TrailerLeasing"));
 const TrailerRentals = lazy(() => import("./pages/TrailerRentals"));
 const FleetSolutions = lazy(() => import("./pages/FleetSolutions"));
+const DryVanTrailers = lazy(() => import("./pages/DryVanTrailers"));
+const RefrigeratedTrailers = lazy(() => import("./pages/RefrigeratedTrailers"));
+const FlatbedTrailers = lazy(() => import("./pages/FlatbedTrailers"));
 const Locations = lazy(() => import("./pages/Locations"));
 const Contact = lazy(() => import("./pages/Contact"));
 const Careers = lazy(() => import("./pages/Careers"));
@@ -95,6 +98,9 @@ const App = () => (
             <Route path="/services/trailer-leasing" element={<TrailerLeasing />} />
             <Route path="/services/trailer-rentals" element={<TrailerRentals />} />
             <Route path="/services/fleet-solutions" element={<FleetSolutions />} />
+            <Route path="/dry-van-trailers" element={<DryVanTrailers />} />
+            <Route path="/refrigerated-trailers" element={<RefrigeratedTrailers />} />
+            <Route path="/flatbed-trailers" element={<FlatbedTrailers />} />
             <Route path="/locations" element={<Locations />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/careers" element={<Careers />} />
