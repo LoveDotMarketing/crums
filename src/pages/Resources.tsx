@@ -10,6 +10,20 @@ import { BookOpen, FileText, TrendingUp, Shield, Truck, Calculator, ArrowRight }
 const Resources = () => {
   const resourceCategories = [
     {
+      icon: Calculator,
+      title: "Financial Tools",
+      description: "Calculators and tools to help you manage costs and plan your business finances.",
+      items: [
+        { name: "Cost Per Mile Calculator", href: "/resources/cost-per-mile", available: true },
+        { name: "Lease vs Buy Calculator", href: "/resources/lease-vs-buy", available: true },
+        { name: "Profit Per Load Calculator", href: "/resources/profit-calculator", available: true },
+        { name: "IFTA Tax Estimator", href: "/resources/ifta-calculator", available: true },
+        { name: "Fuel Cost Calculator", href: "/resources/fuel-calculator", available: true },
+        { name: "Tax Deduction Guide", href: "/resources/tax-deductions", available: true }
+      ],
+      comingSoon: false
+    },
+    {
       icon: BookOpen,
       title: "Industry Guides",
       description: "Comprehensive guides covering trucking regulations, best practices, and industry standards.",
@@ -43,20 +57,6 @@ const Resources = () => {
       description: "Learn about trailer types, maintenance schedules, and equipment specifications.",
       items: ["Trailer Types Explained", "Maintenance Schedules", "Tire Care Guide"],
       comingSoon: true
-    },
-    {
-      icon: Calculator,
-      title: "Financial Tools",
-      description: "Calculators and tools to help you manage costs and plan your business finances.",
-      items: [
-        { name: "Cost Per Mile Calculator", href: "/resources/cost-per-mile", available: true },
-        { name: "Lease vs Buy Calculator", href: "/resources/lease-vs-buy", available: true },
-        { name: "Profit Per Load Calculator", href: "/resources/profit-calculator", available: true },
-        { name: "IFTA Tax Estimator", href: "/resources/ifta-calculator", available: true },
-        { name: "Fuel Cost Calculator", href: "/resources/fuel-calculator", available: true },
-        { name: "Tax Deduction Guide", href: "/resources/tax-deductions", available: true }
-      ],
-      comingSoon: false
     }
   ];
 
