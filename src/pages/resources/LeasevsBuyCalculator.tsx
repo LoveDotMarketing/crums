@@ -7,10 +7,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar } from "recharts";
-import { Scale, DollarSign, TrendingUp, TrendingDown, Calculator, CheckCircle2, XCircle } from "lucide-react";
+import { Scale, DollarSign, TrendingUp, RefreshCw, Calculator, CheckCircle2, XCircle, Shield, Wallet, ArrowRight, Lightbulb } from "lucide-react";
 import { PrintButton } from "@/components/PrintButton";
+import { Link } from "react-router-dom";
 
 const toolSchema = {
   "@context": "https://schema.org",
@@ -57,14 +57,14 @@ const LeasevsBuyCalculator = () => {
     loanInterestRate: 7.5,
     loanTermYears: 5,
     annualInsurance: 2400,
-    annualMaintenance: 1500,
+    annualMaintenance: 2500,
     annualRegistration: 500,
-    resaleValuePercent: 40,
+    resaleValuePercent: 25,
   });
 
   const [leaseInputs, setLeaseInputs] = useState<LeaseInputs>({
-    monthlyPayment: 1500,
-    leaseTerm: 36,
+    monthlyPayment: 1100,
+    leaseTerm: 60,
     securityDeposit: 3000,
     annualInsurance: 1800,
     annualMaintenance: 600,
@@ -136,6 +136,18 @@ const LeasevsBuyCalculator = () => {
     const buyMonthlyAvg = totalBuyCost / (analysisYears * 12);
     const leaseMonthlyAvg = totalLeaseCost / (analysisYears * 12);
 
+    // Capital preserved calculation
+    const capitalPreserved = buyInputs.downPayment - leaseInputs.securityDeposit;
+
+    // Find break-even point
+    let breakEvenYear = null;
+    for (let i = 0; i < yearlyData.length; i++) {
+      if (yearlyData[i].buyAdjusted < yearlyData[i].leaseAdjusted) {
+        breakEvenYear = yearlyData[i].yearNum;
+        break;
+      }
+    }
+
     return {
       monthlyLoanPayment,
       totalLoanPayments,
@@ -148,6 +160,8 @@ const LeasevsBuyCalculator = () => {
       buyMonthlyAvg,
       leaseMonthlyAvg,
       yearlyData,
+      capitalPreserved,
+      breakEvenYear,
     };
   }, [buyInputs, leaseInputs, analysisYears]);
 
@@ -168,13 +182,13 @@ const LeasevsBuyCalculator = () => {
       loanInterestRate: 7.5,
       loanTermYears: 5,
       annualInsurance: 2400,
-      annualMaintenance: 1500,
+      annualMaintenance: 2500,
       annualRegistration: 500,
-      resaleValuePercent: 40,
+      resaleValuePercent: 25,
     });
     setLeaseInputs({
-      monthlyPayment: 1500,
-      leaseTerm: 36,
+      monthlyPayment: 1100,
+      leaseTerm: 60,
       securityDeposit: 3000,
       annualInsurance: 1800,
       annualMaintenance: 600,
@@ -234,15 +248,22 @@ const LeasevsBuyCalculator = () => {
                       </p>
                       <p className="text-2xl font-bold text-foreground">
                         {calculations.recommendation === 'buy' 
-                          ? 'Buying is more cost-effective' 
+                          ? 'Buying shows lower total cost' 
                           : calculations.recommendation === 'lease'
-                          ? 'Leasing is more cost-effective'
-                          : 'Both options are equal'}
+                          ? 'Leasing preserves capital & provides flexibility'
+                          : 'Both options are financially similar'}
+                      </p>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        {calculations.recommendation === 'buy' 
+                          ? "However, this doesn't account for capital opportunity cost, depreciation risk, or cash flow flexibility."
+                          : calculations.recommendation === 'lease'
+                          ? 'Plus predictable expenses, no depreciation risk, and easier fleet scaling.'
+                          : 'Consider the non-financial factors below to help decide.'}
                       </p>
                     </div>
                   </div>
                   <div className="text-center md:text-right">
-                    <p className="text-sm text-muted-foreground">Potential Savings</p>
+                    <p className="text-sm text-muted-foreground">Cost Difference</p>
                     <p className="text-3xl font-bold text-foreground">
                       ${calculations.difference.toLocaleString()}
                     </p>
@@ -317,6 +338,7 @@ const LeasevsBuyCalculator = () => {
                         value={buyInputs.annualMaintenance}
                         onChange={(e) => handleBuyInputChange("annualMaintenance", e.target.value)}
                       />
+                      <p className="text-xs text-muted-foreground">Includes tires, brakes, DOT inspections, and unexpected repairs</p>
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="annualRegistration">Annual Registration ($)</Label>
@@ -335,6 +357,7 @@ const LeasevsBuyCalculator = () => {
                         value={buyInputs.resaleValuePercent}
                         onChange={(e) => handleBuyInputChange("resaleValuePercent", e.target.value)}
                       />
+                      <p className="text-xs text-muted-foreground">Realistic depreciation: 20-30% after 5 years</p>
                     </div>
                   </div>
                   <div className="pt-4 border-t space-y-2">
@@ -358,7 +381,7 @@ const LeasevsBuyCalculator = () => {
               <Card>
                 <CardHeader className="bg-secondary/10 rounded-t-lg">
                   <CardTitle className="flex items-center gap-2 text-secondary">
-                    <TrendingDown className="h-5 w-5" />
+                    <RefreshCw className="h-5 w-5" />
                     Lease
                   </CardTitle>
                   <CardDescription>Enter the costs associated with leasing a trailer</CardDescription>
@@ -451,6 +474,64 @@ const LeasevsBuyCalculator = () => {
               </Button>
               <PrintButton />
             </div>
+
+            {/* Pro Tip */}
+            <Card className="mb-8 bg-secondary/5 border-secondary/20">
+              <CardContent className="py-4">
+                <div className="flex items-start gap-3">
+                  <Lightbulb className="h-5 w-5 text-secondary mt-0.5 flex-shrink-0" />
+                  <p className="text-sm text-muted-foreground">
+                    <strong className="text-foreground">Pro Tip:</strong> For 1-3 year needs, leasing almost always makes more financial sense. 
+                    Try selecting "3 Years" above to see the comparison. Most carriers find leasing provides better cash flow flexibility.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Capital & Cash Flow Insight Card */}
+            <Card className="mb-8 bg-gradient-to-br from-secondary/5 to-secondary/10 border-secondary/30">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Wallet className="h-5 w-5 text-secondary" />
+                  Capital & Cash Flow Advantage
+                </CardTitle>
+                <CardDescription>What the numbers don't always show</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid sm:grid-cols-3 gap-6">
+                  <div className="text-center p-4 bg-background rounded-lg">
+                    <p className="text-sm text-muted-foreground mb-1">Capital Preserved</p>
+                    <p className="text-3xl font-bold text-secondary">${calculations.capitalPreserved.toLocaleString()}</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Down payment vs security deposit
+                    </p>
+                  </div>
+                  <div className="text-center p-4 bg-background rounded-lg">
+                    <p className="text-sm text-muted-foreground mb-1">Monthly Cash Flow</p>
+                    <p className="text-3xl font-bold text-foreground">
+                      ${Math.abs(calculations.monthlyLoanPayment - leaseInputs.monthlyPayment).toFixed(0)}
+                      <span className="text-sm font-normal text-muted-foreground">/mo</span>
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {calculations.monthlyLoanPayment > leaseInputs.monthlyPayment 
+                        ? 'Lower with leasing' 
+                        : calculations.monthlyLoanPayment < leaseInputs.monthlyPayment 
+                        ? 'Lower with buying' 
+                        : 'Same payment'}
+                    </p>
+                  </div>
+                  <div className="text-center p-4 bg-background rounded-lg">
+                    <p className="text-sm text-muted-foreground mb-1">Capital Opportunity</p>
+                    <p className="text-xl font-bold text-foreground">
+                      What could ${calculations.capitalPreserved.toLocaleString()} do?
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      More loads, equipment, or emergency fund
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
 
             {/* Results */}
             <div className="grid lg:grid-cols-2 gap-8 mb-8">
@@ -585,6 +666,63 @@ const LeasevsBuyCalculator = () => {
               </CardContent>
             </Card>
 
+            {/* Beyond the Numbers Section */}
+            <Card className="mt-8 bg-gradient-to-r from-secondary/5 via-secondary/10 to-secondary/5 border-secondary/20">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Shield className="h-5 w-5 text-secondary" />
+                  Beyond the Numbers: What This Calculator Can't Measure
+                </CardTitle>
+                <CardDescription>Important factors that favor leasing but don't show up in cost calculations</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div className="flex items-start gap-3 p-4 bg-background rounded-lg">
+                    <CheckCircle2 className="h-5 w-5 text-secondary flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-medium">No Depreciation Risk</p>
+                      <p className="text-sm text-muted-foreground">CRUMS takes the risk on market value fluctuations, not you</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3 p-4 bg-background rounded-lg">
+                    <CheckCircle2 className="h-5 w-5 text-secondary flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-medium">No Surprise Repair Bills</p>
+                      <p className="text-sm text-muted-foreground">Budget with confidence - major repairs are typically covered</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3 p-4 bg-background rounded-lg">
+                    <CheckCircle2 className="h-5 w-5 text-secondary flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-medium">Flexibility to Scale</p>
+                      <p className="text-sm text-muted-foreground">Add or reduce trailers as your business needs change</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3 p-4 bg-background rounded-lg">
+                    <CheckCircle2 className="h-5 w-5 text-secondary flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-medium">Always Newer Equipment</p>
+                      <p className="text-sm text-muted-foreground">Upgrade at end of term - no selling hassle</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3 p-4 bg-background rounded-lg">
+                    <CheckCircle2 className="h-5 w-5 text-secondary flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-medium">Preserve Working Capital</p>
+                      <p className="text-sm text-muted-foreground">Use your cash for loads, not locked in depreciating assets</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3 p-4 bg-background rounded-lg">
+                    <CheckCircle2 className="h-5 w-5 text-secondary flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-medium">Simpler Taxes</p>
+                      <p className="text-sm text-muted-foreground">Lease payments are typically 100% deductible operating expense</p>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
             {/* Pros & Cons */}
             <div className="grid md:grid-cols-2 gap-8 mt-8">
               <Card>
@@ -610,10 +748,14 @@ const LeasevsBuyCalculator = () => {
                         <XCircle className="h-4 w-4" /> Disadvantages
                       </h4>
                       <ul className="text-sm text-muted-foreground space-y-1 ml-6">
-                        <li>• Higher upfront costs</li>
-                        <li>• Responsible for all maintenance</li>
-                        <li>• Depreciation risk</li>
-                        <li>• Tied up capital</li>
+                        <li>• Higher upfront capital required</li>
+                        <li>• Responsible for ALL maintenance & repairs</li>
+                        <li>• Depreciation risk - market value fluctuates</li>
+                        <li>• Capital locked in depreciating asset</li>
+                        <li>• Unexpected major repairs can exceed budget</li>
+                        <li>• Selling takes time, effort, and negotiation</li>
+                        <li>• May get less than expected at resale</li>
+                        <li>• Stuck with equipment if business needs change</li>
                       </ul>
                     </div>
                   </div>
@@ -631,11 +773,15 @@ const LeasevsBuyCalculator = () => {
                         <CheckCircle2 className="h-4 w-4" /> Advantages
                       </h4>
                       <ul className="text-sm text-muted-foreground space-y-1 ml-6">
-                        <li>• Lower upfront costs</li>
-                        <li>• Predictable monthly payments</li>
-                        <li>• Maintenance often included</li>
+                        <li>• Much lower upfront costs - preserve capital</li>
+                        <li>• Predictable monthly payments for budgeting</li>
+                        <li>• Major maintenance often included</li>
                         <li>• Upgrade to newer equipment easily</li>
-                        <li>• Preserve capital for other needs</li>
+                        <li>• Preserve capital for other business needs</li>
+                        <li>• No depreciation risk - return the trailer</li>
+                        <li>• Flexibility to scale fleet up or down</li>
+                        <li>• 100% tax deductible as operating expense</li>
+                        <li>• Registration often included</li>
                       </ul>
                     </div>
                     <div>
@@ -646,7 +792,7 @@ const LeasevsBuyCalculator = () => {
                         <li>• No equity built</li>
                         <li>• Possible mileage restrictions</li>
                         <li>• Committed for lease term</li>
-                        <li>• May cost more long-term</li>
+                        <li>• May cost more if kept 7+ years</li>
                       </ul>
                     </div>
                   </div>
@@ -669,17 +815,28 @@ const LeasevsBuyCalculator = () => {
         </section>
 
         {/* CTA Section */}
-        <section className="py-12 bg-muted/50">
+        <section className="py-16 bg-secondary">
           <div className="container mx-auto px-4 text-center">
-            <h2 className="text-2xl md:text-3xl font-bold mb-4">
-              Ready to Lease?
+            <h2 className="text-2xl md:text-3xl font-bold mb-4 text-secondary-foreground">
+              Ready to Keep Your Capital Working?
             </h2>
-            <p className="text-muted-foreground mb-6 max-w-2xl mx-auto">
-              CRUMS Leasing offers flexible trailer leasing options with competitive rates. Let us help you keep your business moving without the burden of ownership.
+            <p className="text-secondary-foreground/80 mb-8 max-w-2xl mx-auto">
+              CRUMS Leasing offers flexible terms starting at just 12 months. Preserve your cash, eliminate depreciation risk, 
+              and keep your fleet moving. Get a personalized quote today.
             </p>
-            <Button asChild size="lg">
-              <a href="/contact">Get a Lease Quote</a>
-            </Button>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Button asChild size="lg" variant="outline" className="bg-secondary-foreground text-secondary hover:bg-secondary-foreground/90">
+                <Link to="/contact">
+                  Get a Lease Quote
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Link>
+              </Button>
+              <Button asChild size="lg" variant="ghost" className="text-secondary-foreground hover:text-secondary-foreground hover:bg-secondary-foreground/10">
+                <a href="tel:+18885704564">
+                  Call (888) 570-4564
+                </a>
+              </Button>
+            </div>
           </div>
         </section>
       </main>
