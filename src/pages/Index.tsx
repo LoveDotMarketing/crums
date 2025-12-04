@@ -1,3 +1,5 @@
+import { lazy, Suspense } from "react";
+import { Link } from "react-router-dom";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -7,7 +9,6 @@ import {
   Users,
   Shield,
   TrendingUp,
-  MapPin,
   Calculator,
   BookOpen,
   FileText,
@@ -15,16 +16,16 @@ import {
   ArrowRight,
   Heart,
   Award,
-  Target,
   Star,
 } from "lucide-react";
 import heroImage from "@/assets/hero-truck.jpg";
 import fleetImage from "@/assets/crums-trailer.png";
-import teamImage from "@/assets/team-handshake.jpg";
 import trailerFleetImage from "@/assets/trailer-fleet.png";
-import { ChatBot } from "@/components/ChatBot";
 import { SEO } from "@/components/SEO";
 import { organizationSchema, generateBreadcrumbSchema, customerReviews, generateReviewSchema } from "@/lib/structuredData";
+
+// Lazy load ChatBot for better initial page load
+const ChatBot = lazy(() => import("@/components/ChatBot").then(m => ({ default: m.ChatBot })));
 
 const Index = () => {
   const breadcrumbSchema = generateBreadcrumbSchema([
@@ -68,13 +69,13 @@ const Index = () => {
             partnerships that move people forward and bring them safely home.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <a href="/get-started">
+            <Link to="/get-started">
               <Button size="lg" className="bg-secondary hover:bg-secondary/90 text-secondary-foreground text-lg px-8 py-6">
                 Get Started
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
-            </a>
-            <a href="/mission">
+            </Link>
+            <Link to="/mission">
               <Button
                 size="lg"
                 variant="outline"
@@ -82,7 +83,7 @@ const Index = () => {
               >
                 Our Mission & Values
               </Button>
-            </a>
+            </Link>
           </div>
         </div>
       </section>
@@ -132,12 +133,12 @@ const Index = () => {
           </div>
 
           <div className="text-center">
-            <a href="/reviews">
+            <Link to="/reviews">
               <Button size="lg" variant="outline" className="border-2 border-secondary text-secondary hover:bg-secondary hover:text-secondary-foreground">
                 Read Reviews
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
-            </a>
+            </Link>
           </div>
         </div>
       </section>
@@ -154,7 +155,7 @@ const Index = () => {
                 Share the CRUMS experience and get rewarded for every successful referral.
               </p>
             </div>
-            <a href="/referral-program">
+            <Link to="/referral-program">
               <Button 
                 size="lg" 
                 className="bg-secondary hover:bg-secondary/90 text-secondary-foreground text-lg px-8 py-6 whitespace-nowrap"
@@ -162,7 +163,7 @@ const Index = () => {
                 Join the Referral Program
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
-            </a>
+            </Link>
           </div>
         </div>
       </section>
@@ -362,7 +363,7 @@ const Index = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-10">
             {/* Financial Tools - Featured */}
-            <a href="/resources/tools" className="group">
+            <Link to="/resources/tools" className="group">
               <Card className="h-full border-2 border-secondary/50 hover:border-secondary hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-secondary/10 to-background">
                 <CardContent className="p-8">
                   <div className="h-16 w-16 rounded-lg bg-secondary/20 flex items-center justify-center mb-6 group-hover:bg-secondary group-hover:scale-110 transition-all">
@@ -379,7 +380,7 @@ const Index = () => {
                   </span>
                 </CardContent>
               </Card>
-            </a>
+            </Link>
 
             {/* Industry Guides */}
             <Card className="h-full border-2 hover:shadow-lg transition-all duration-300">
@@ -419,12 +420,12 @@ const Index = () => {
           </div>
 
           <div className="text-center">
-            <a href="/resources">
+            <Link to="/resources">
               <Button size="lg" variant="outline" className="border-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground">
                 View All Resources
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
-            </a>
+            </Link>
           </div>
         </div>
       </section>
@@ -493,12 +494,12 @@ const Index = () => {
                   </div>
                 </div>
               </div>
-              <a href="/about" className="inline-block mt-8">
+              <Link to="/about" className="inline-block mt-8">
                 <Button size="lg" variant="outline">
                   Learn More About Us
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
-              </a>
+              </Link>
             </div>
           </div>
         </div>
@@ -515,13 +516,13 @@ const Index = () => {
             family values make.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <a href="/contact">
+            <Link to="/contact">
               <Button size="lg" className="bg-secondary hover:bg-secondary/90 text-secondary-foreground text-lg px-8 py-6">
                 Request A Quote
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
-            </a>
-            <a href="/login">
+            </Link>
+            <Link to="/login">
               <Button
                 size="lg"
                 variant="outline"
@@ -529,13 +530,15 @@ const Index = () => {
               >
                 Customer Portal Login
               </Button>
-            </a>
+            </Link>
           </div>
         </div>
       </section>
 
       <Footer />
-      <ChatBot userType="customer" />
+      <Suspense fallback={null}>
+        <ChatBot userType="customer" />
+      </Suspense>
     </div>
   );
 };
