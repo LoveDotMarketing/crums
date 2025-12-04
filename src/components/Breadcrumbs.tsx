@@ -55,6 +55,10 @@ const parentRoutes: Record<string, { label: string; href: string }[]> = {
     { label: "Services", href: "/services/trailer-leasing" },
     { label: "Trailer Leasing", href: "/services/trailer-leasing" }
   ],
+  "/guides/choosing-trailer": [
+    { label: "Resources", href: "/resources" },
+    { label: "Industry Guides", href: "/guides" }
+  ],
 };
 
 export const Breadcrumbs = ({ items }: BreadcrumbsProps) => {
