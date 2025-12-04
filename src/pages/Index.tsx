@@ -19,7 +19,6 @@ import {
   Star,
 } from "lucide-react";
 import heroImage from "@/assets/hero-truck.jpg";
-import heroImageWebP from "@/assets/hero-truck.webp";
 import fleetImage from "@/assets/crums-trailer.png";
 import trailerFleetImage from "@/assets/trailer-fleet.png";
 import dryVanTrailerImg from "@/assets/dry-van-trailer.png";
@@ -56,18 +55,14 @@ const Index = () => {
       <main className="flex-grow">
       {/* Hero Section */}
       <section className="relative h-[600px] lg:h-[700px] flex items-center justify-center overflow-hidden">
-        <picture>
-          <source srcSet={heroImageWebP} type="image/webp" />
-          <img 
-            src={heroImage} 
-            alt="CRUMS Leasing semi-truck on highway" 
-            className="absolute inset-0 w-full h-full object-cover"
-            fetchPriority="high"
-            decoding="async"
-            width={1920}
-            height={1080}
-          />
-        </picture>
+        <img 
+          src={heroImage} 
+          alt="CRUMS Leasing semi-truck on highway" 
+          className="absolute inset-0 w-full h-full object-cover"
+          fetchPriority="high"
+          width={1920}
+          height={1080}
+        />
         <div className="absolute inset-0 bg-gradient-to-r from-primary/95 to-primary/70"></div>
 
         <div className="relative z-10 container mx-auto px-4 text-center text-primary-foreground">
