@@ -9,6 +9,59 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Fuel, Route, DollarSign, Gauge } from "lucide-react";
 
+const toolSchema = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "Fuel Cost Calculator",
+  "description": "Estimate your trip fuel costs with our free calculator. Enter distance, fuel price, and MPG to plan your fuel budget.",
+  "url": "https://crumsleasing.com/resources/tools/fuel-calculator",
+  "applicationCategory": "BusinessApplication",
+  "operatingSystem": "Web Browser",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD"
+  },
+  "provider": {
+    "@type": "Organization",
+    "name": "CRUMS Leasing"
+  }
+};
+
+const howToSchema = {
+  "@context": "https://schema.org",
+  "@type": "HowTo",
+  "name": "How to Calculate Trip Fuel Costs",
+  "description": "Learn how to estimate fuel costs for your next trucking trip using distance, fuel price, and MPG.",
+  "totalTime": "PT2M",
+  "tool": {
+    "@type": "HowToTool",
+    "name": "Fuel Cost Calculator"
+  },
+  "step": [
+    {
+      "@type": "HowToStep",
+      "name": "Enter Route Distance",
+      "text": "Input the total miles of your planned route."
+    },
+    {
+      "@type": "HowToStep",
+      "name": "Enter Fuel Price",
+      "text": "Input the current or expected fuel price per gallon."
+    },
+    {
+      "@type": "HowToStep",
+      "name": "Enter Average MPG",
+      "text": "Input your truck's average miles per gallon fuel efficiency."
+    },
+    {
+      "@type": "HowToStep",
+      "name": "View Results",
+      "text": "See the estimated gallons needed, total fuel cost, and cost per mile for your trip."
+    }
+  ]
+};
+
 const FuelCostCalculator = () => {
   const [distance, setDistance] = useState<number>(500);
   const [fuelPrice, setFuelPrice] = useState<number>(3.50);
@@ -24,6 +77,7 @@ const FuelCostCalculator = () => {
         title="Fuel Cost Calculator"
         description="Estimate your trip fuel costs with CRUMS Leasing's free fuel cost calculator. Enter your route distance, fuel price, and MPG to plan your fuel budget."
         canonical="https://crumsleasing.com/resources/tools/fuel-calculator"
+        structuredData={[toolSchema, howToSchema]}
       />
       <Navigation />
       

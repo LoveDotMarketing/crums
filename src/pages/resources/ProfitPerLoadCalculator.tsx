@@ -11,6 +11,59 @@ import { Calculator, DollarSign, Route, Fuel, TrendingUp, AlertTriangle } from "
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from "recharts";
 import { PrintButton } from "@/components/PrintButton";
 
+const toolSchema = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "Profit Per Load Calculator",
+  "description": "Calculate your profit per load with our free trucking calculator. Input rate, miles, fuel costs, and expenses to see your true profit margin.",
+  "url": "https://crumsleasing.com/resources/tools/profit-calculator",
+  "applicationCategory": "BusinessApplication",
+  "operatingSystem": "Web Browser",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD"
+  },
+  "provider": {
+    "@type": "Organization",
+    "name": "CRUMS Leasing"
+  }
+};
+
+const howToSchema = {
+  "@context": "https://schema.org",
+  "@type": "HowTo",
+  "name": "How to Calculate Profit Per Load",
+  "description": "Learn how to calculate the true profitability of each trucking load including all expenses and deadhead miles.",
+  "totalTime": "PT5M",
+  "tool": {
+    "@type": "HowToTool",
+    "name": "Profit Per Load Calculator"
+  },
+  "step": [
+    {
+      "@type": "HowToStep",
+      "name": "Enter Load Details",
+      "text": "Input the load rate, loaded miles, and deadhead miles for the trip."
+    },
+    {
+      "@type": "HowToStep",
+      "name": "Add Fuel Information",
+      "text": "Enter your fuel cost per gallon and average miles per gallon (MPG)."
+    },
+    {
+      "@type": "HowToStep",
+      "name": "Enter Driver and Fee Costs",
+      "text": "Input driver pay per mile, dispatch fee percentage, factoring fee percentage, and any other expenses."
+    },
+    {
+      "@type": "HowToStep",
+      "name": "Review Profitability",
+      "text": "View your net profit, profit margin, rate per loaded mile, and expense breakdown charts."
+    }
+  ]
+};
+
 const ProfitPerLoadCalculator = () => {
   const [loadRate, setLoadRate] = useState<string>("2500");
   const [loadedMiles, setLoadedMiles] = useState<string>("800");
@@ -72,6 +125,7 @@ const ProfitPerLoadCalculator = () => {
         title="Profit Per Load Calculator - Trucking Load Profitability Tool"
         description="Calculate your profit per load with our free trucking calculator. Input rate, miles, fuel costs, and expenses to see your true profit margin and per-mile earnings."
         canonical="https://crumsleasing.com/resources/tools/profit-calculator"
+        structuredData={[toolSchema, howToSchema]}
       />
       <Navigation />
 

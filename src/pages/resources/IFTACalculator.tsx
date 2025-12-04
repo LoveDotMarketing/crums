@@ -65,6 +65,59 @@ const STATE_TAX_RATES: Record<string, { name: string; rate: number }> = {
   WY: { name: "Wyoming", rate: 0.24 },
 };
 
+const toolSchema = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "IFTA Tax Calculator",
+  "description": "Estimate your IFTA fuel tax liability or credit by state with our free calculator. Track miles driven and fuel purchased across all states.",
+  "url": "https://crumsleasing.com/resources/tools/ifta-calculator",
+  "applicationCategory": "BusinessApplication",
+  "operatingSystem": "Web Browser",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD"
+  },
+  "provider": {
+    "@type": "Organization",
+    "name": "CRUMS Leasing"
+  }
+};
+
+const howToSchema = {
+  "@context": "https://schema.org",
+  "@type": "HowTo",
+  "name": "How to Estimate IFTA Fuel Taxes",
+  "description": "Learn how to estimate your IFTA (International Fuel Tax Agreement) fuel tax liability or credit for each state you operate in.",
+  "totalTime": "PT10M",
+  "tool": {
+    "@type": "HowToTool",
+    "name": "IFTA Tax Calculator"
+  },
+  "step": [
+    {
+      "@type": "HowToStep",
+      "name": "Enter Fleet MPG",
+      "text": "Input your fleet's average miles per gallon to calculate fuel consumption across all states."
+    },
+    {
+      "@type": "HowToStep",
+      "name": "Add State Entries",
+      "text": "For each state you operated in, add an entry with the state, miles driven, and gallons of fuel purchased."
+    },
+    {
+      "@type": "HowToStep",
+      "name": "Review State Calculations",
+      "text": "The calculator automatically determines gallons used per state and applies state-specific tax rates."
+    },
+    {
+      "@type": "HowToStep",
+      "name": "Analyze Tax Summary",
+      "text": "View your total tax due or credit for each state, plus overall summary of miles and fuel usage."
+    }
+  ]
+};
+
 interface StateEntry {
   id: string;
   state: string;
@@ -150,6 +203,7 @@ const IFTACalculator = () => {
         title="IFTA Tax Estimator - Calculate Fuel Tax by State"
         description="Free IFTA tax calculator for carriers. Estimate your fuel tax liability or credits by state based on miles driven and fuel purchased. Simplify your IFTA reporting."
         canonical="https://crumsleasing.com/resources/tools/ifta-calculator"
+        structuredData={[toolSchema, howToSchema]}
       />
       <Navigation />
 

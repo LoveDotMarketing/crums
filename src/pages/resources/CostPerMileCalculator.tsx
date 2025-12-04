@@ -30,6 +30,40 @@ const toolSchema = {
   }
 };
 
+const howToSchema = {
+  "@context": "https://schema.org",
+  "@type": "HowTo",
+  "name": "How to Calculate Your Trucking Cost Per Mile",
+  "description": "Learn how to calculate your true operating cost per mile as a carrier using our free calculator.",
+  "totalTime": "PT5M",
+  "tool": {
+    "@type": "HowToTool",
+    "name": "Cost Per Mile Calculator"
+  },
+  "step": [
+    {
+      "@type": "HowToStep",
+      "name": "Enter Monthly Mileage",
+      "text": "Input the total number of miles you drive per month to establish your base calculation."
+    },
+    {
+      "@type": "HowToStep",
+      "name": "Add Fuel Costs",
+      "text": "Enter your average fuel cost per gallon and your truck's miles per gallon (MPG) to calculate monthly fuel expenses."
+    },
+    {
+      "@type": "HowToStep",
+      "name": "Enter Fixed Expenses",
+      "text": "Input your monthly insurance, maintenance, lease payment, tolls, permits, and other recurring costs."
+    },
+    {
+      "@type": "HowToStep",
+      "name": "Review Results",
+      "text": "View your total monthly cost, cost per mile breakdown, and visual charts showing where your money goes."
+    }
+  ]
+};
+
 interface CostInputs {
   milesPerMonth: number;
   fuelCostPerGallon: number;
@@ -105,7 +139,7 @@ const CostPerMileCalculator = () => {
         title="Cost Per Mile Calculator - Trucking Operating Cost Tool"
         description="Calculate your true cost per mile with our free trucking calculator. Input fuel, insurance, maintenance, lease payments, and more to understand your operating costs."
         canonical="https://crumsleasing.com/resources/tools/cost-per-mile"
-        structuredData={toolSchema}
+        structuredData={[toolSchema, howToSchema]}
       />
 
       <Navigation />

@@ -31,6 +31,45 @@ const toolSchema = {
   }
 };
 
+const howToSchema = {
+  "@context": "https://schema.org",
+  "@type": "HowTo",
+  "name": "How to Compare Leasing vs Buying a Trailer",
+  "description": "Learn how to evaluate whether leasing or buying a trailer makes more financial sense for your trucking business.",
+  "totalTime": "PT10M",
+  "tool": {
+    "@type": "HowToTool",
+    "name": "Lease vs Buy Calculator"
+  },
+  "step": [
+    {
+      "@type": "HowToStep",
+      "name": "Enter Purchase Details",
+      "text": "Input the trailer purchase price, down payment, loan interest rate, term length, and expected resale value percentage."
+    },
+    {
+      "@type": "HowToStep",
+      "name": "Enter Lease Details",
+      "text": "Input your monthly lease payment, lease term, and security deposit amount."
+    },
+    {
+      "@type": "HowToStep",
+      "name": "Add Operating Costs",
+      "text": "Enter annual insurance, maintenance, and registration costs for both buying and leasing scenarios."
+    },
+    {
+      "@type": "HowToStep",
+      "name": "Select Analysis Period",
+      "text": "Choose how many years you want to compare (1-10 years) to see total cost projections."
+    },
+    {
+      "@type": "HowToStep",
+      "name": "Review Comparison",
+      "text": "Analyze the side-by-side comparison showing total costs, monthly averages, and break-even points."
+    }
+  ]
+};
+
 interface BuyInputs {
   purchasePrice: number;
   downPayment: number;
@@ -202,7 +241,7 @@ const LeasevsBuyCalculator = () => {
         title="Why Leasing Makes Sense - Trailer Lease Calculator"
         description="Discover why leasing trailers makes more sense for most carriers. Our free calculator shows how leasing preserves capital, reduces risk, and keeps your business flexible."
         canonical="https://crumsleasing.com/resources/tools/lease-vs-buy"
-        structuredData={toolSchema}
+        structuredData={[toolSchema, howToSchema]}
       />
 
       <Navigation />
