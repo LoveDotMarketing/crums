@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar } from "recharts";
 import { Scale, DollarSign, TrendingUp, TrendingDown, Calculator, CheckCircle2, XCircle } from "lucide-react";
+import { PrintButton } from "@/components/PrintButton";
 
 interface BuyInputs {
   purchasePrice: number;
@@ -428,6 +429,7 @@ const LeasevsBuyCalculator = () => {
               <Button variant="outline" onClick={resetCalculator}>
                 Reset to Defaults
               </Button>
+              <PrintButton />
             </div>
 
             {/* Results */}

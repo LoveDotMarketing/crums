@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
 import { Calculator, DollarSign, Fuel, Shield, Wrench, Truck, MoreHorizontal } from "lucide-react";
+import { PrintButton } from "@/components/PrintButton";
 
 interface CostInputs {
   milesPerMonth: number;
@@ -247,9 +248,12 @@ const CostPerMileCalculator = () => {
                     </div>
                   </div>
 
-                  <Button variant="outline" onClick={resetCalculator} className="w-full">
-                    Reset to Defaults
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button variant="outline" onClick={resetCalculator} className="flex-1">
+                      Reset to Defaults
+                    </Button>
+                    <PrintButton className="flex-1" />
+                  </div>
                 </CardContent>
               </Card>
 
