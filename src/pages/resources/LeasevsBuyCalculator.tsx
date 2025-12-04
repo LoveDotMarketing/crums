@@ -558,7 +558,7 @@ const LeasevsBuyCalculator = () => {
             </div>
 
             {/* Analysis Period & Reset */}
-            <div className="flex flex-wrap items-center gap-4 mb-8">
+            <div className="flex flex-wrap items-center gap-4 mb-4">
               <div className="flex items-center gap-2">
                 <Label htmlFor="analysisYears" className="whitespace-nowrap">Analysis Period:</Label>
                 <select
@@ -567,6 +567,8 @@ const LeasevsBuyCalculator = () => {
                   onChange={(e) => setAnalysisYears(parseInt(e.target.value))}
                   className="rounded-md border border-input bg-background px-3 py-2 text-sm"
                 >
+                  <option value={1}>1 Year</option>
+                  <option value={2}>2 Years</option>
                   <option value={3}>3 Years</option>
                   <option value={5}>5 Years</option>
                   <option value={7}>7 Years</option>
@@ -578,6 +580,10 @@ const LeasevsBuyCalculator = () => {
               </Button>
               <PrintButton />
             </div>
+            <p className="text-sm text-secondary font-medium mb-8">
+              <CheckCircle2 className="h-4 w-4 inline mr-1" />
+              CRUMS Leasing offers flexible terms starting at just 12 months — no long-term commitment required.
+            </p>
 
             {/* Pro Tip */}
             <Card className="mb-8 bg-secondary/5 border-secondary/20">
