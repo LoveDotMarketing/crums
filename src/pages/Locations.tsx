@@ -41,8 +41,8 @@ const Locations = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <SEO
-        title="Locations & Service Areas - Trailer Leasing Across the US"
-        description="CRUMS Leasing is based in Bulverde, TX with service areas in San Antonio, Austin, and Houston. We ship trailers anywhere in the United States."
+        title="Locations & Service Areas - Trailer Leasing Across North America"
+        description="CRUMS Leasing is based in Bulverde, TX with service areas in San Antonio, Austin, and Houston. We ship trailers anywhere in North America including the USA, Canada, and Mexico."
         canonical="https://crumsleasing.com/locations"
         structuredData={combinedSchema}
       />
@@ -53,7 +53,7 @@ const Locations = () => {
         <div className="container mx-auto px-4 text-center">
           <h1 className="text-4xl md:text-6xl font-bold mb-6">Our Locations</h1>
           <p className="text-xl md:text-2xl max-w-4xl mx-auto text-primary-foreground/90">
-            Serving the Texas area and all over the USA. We are nationwide. We ship trailers anywhere in the United States.
+            Headquartered in Texas, serving all of North America. We ship trailers anywhere in the USA, Canada, and Mexico.
           </p>
         </div>
       </section>
@@ -129,8 +129,11 @@ const Locations = () => {
                   ))}
 
                   <div className="mt-6 pt-6 border-t border-border">
+                    <p className="font-semibold text-foreground mb-2">
+                      Serving All of North America
+                    </p>
                     <p className="text-sm text-muted-foreground">
-                      We proudly serve these areas and surrounding regions with reliable trailer solutions.
+                      We proudly serve the USA, Canada, and Mexico with reliable trailer solutions. No matter where your routes take you, we've got you covered.
                     </p>
                   </div>
                 </CardContent>
@@ -154,12 +157,10 @@ const Locations = () => {
       <section className="py-20 bg-muted">
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-3xl md:text-4xl font-bold mb-8 text-foreground">
-            Coast-to-Coast Coverage
+            North America-Wide Coverage
           </h2>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            With service centers strategically located across the United States, we provide fast
-            access to quality equipment and exceptional local support, no matter where your business
-            takes you.
+            From coast to coast and beyond, we provide fast access to quality equipment and exceptional support across the United States, Canada, and Mexico — no matter where your business takes you.
           </p>
         </div>
       </section>
