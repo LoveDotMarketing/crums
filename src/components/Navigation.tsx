@@ -75,6 +75,48 @@ export const Navigation = () => {
                           </Link>
                         </NavigationMenuLink>
                       </li>
+                      <li className="border-t border-border pt-3 mt-1">
+                        <span className="text-xs font-semibold text-muted-foreground px-3">Equipment Types</span>
+                      </li>
+                      <li>
+                        <NavigationMenuLink asChild>
+                          <Link
+                            to="/equipment/dry-van-trailers"
+                            className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+                          >
+                            <div className="text-sm font-medium leading-none">Dry Van Trailers</div>
+                            <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+                              53' enclosed cargo trailers
+                            </p>
+                          </Link>
+                        </NavigationMenuLink>
+                      </li>
+                      <li>
+                        <NavigationMenuLink asChild>
+                          <Link
+                            to="/equipment/flatbed-trailers"
+                            className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+                          >
+                            <div className="text-sm font-medium leading-none">Flatbed Trailers</div>
+                            <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+                              Open deck for oversized loads
+                            </p>
+                          </Link>
+                        </NavigationMenuLink>
+                      </li>
+                      <li>
+                        <NavigationMenuLink asChild>
+                          <Link
+                            to="/equipment/refrigerated-trailers"
+                            className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+                          >
+                            <div className="text-sm font-medium leading-none">Refrigerated Trailers</div>
+                            <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+                              Temperature-controlled reefers
+                            </p>
+                          </Link>
+                        </NavigationMenuLink>
+                      </li>
                     </ul>
                   </NavigationMenuContent>
                 </NavigationMenuItem>
@@ -218,6 +260,28 @@ export const Navigation = () => {
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Fleet Solutions
+              </Link>
+              <div className="text-xs font-semibold text-muted-foreground pt-2">Equipment Types</div>
+              <Link
+                to="/equipment/dry-van-trailers"
+                className="text-sm font-medium text-foreground hover:text-primary pl-2"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Dry Van Trailers
+              </Link>
+              <Link
+                to="/equipment/flatbed-trailers"
+                className="text-sm font-medium text-foreground hover:text-primary pl-2"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Flatbed Trailers
+              </Link>
+              <Link
+                to="/equipment/refrigerated-trailers"
+                className="text-sm font-medium text-foreground hover:text-primary pl-2"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Refrigerated Trailers
               </Link>
               <Link
                 to="/about"
