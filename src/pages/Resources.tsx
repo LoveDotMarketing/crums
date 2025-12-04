@@ -43,7 +43,7 @@ const Resources = () => {
       description: "How-to guides for carriers covering safety, comfort, career building, and life on the road.",
       items: [
         { name: "View All Guides", href: "/guides", available: true, featured: true },
-        { name: "Choosing the Right Trailer", href: "/guides/choosing-trailer", available: false },
+        { name: "Choosing the Right Trailer", href: "/guides/choosing-trailer", available: true },
         { name: "Pre-Trip Inspection Checklist", href: "/guides/pre-trip-inspection", available: false },
         { name: "Winter Driving Tips", href: "/guides/winter-driving", available: false }
       ],

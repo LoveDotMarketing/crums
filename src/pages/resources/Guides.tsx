@@ -42,7 +42,7 @@ const guides = [
     title: "How to Choose the Right Trailer for Your Haul",
     description: "Break down the difference between flatbeds, reefers, dry vans, and more — with examples of what jobs fit each type.",
     href: "/guides/choosing-trailer",
-    available: false
+    available: true
   },
   {
     icon: ClipboardCheck,
