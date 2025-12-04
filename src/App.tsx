@@ -46,6 +46,16 @@ const Tools = lazy(() => import("./pages/resources/Tools"));
 const Guides = lazy(() => import("./pages/resources/Guides"));
 const ChoosingTrailer = lazy(() => import("./pages/resources/guides/ChoosingTrailer"));
 
+// Industries pages
+const Industries = lazy(() => import("./pages/Industries"));
+const FleetLeasing = lazy(() => import("./pages/industries/FleetLeasing"));
+const OwnerOperators = lazy(() => import("./pages/industries/OwnerOperators"));
+const LogisticsCompanies = lazy(() => import("./pages/industries/LogisticsCompanies"));
+const FoodDistribution = lazy(() => import("./pages/industries/FoodDistribution"));
+const RetailDistribution = lazy(() => import("./pages/industries/RetailDistribution"));
+const Manufacturing = lazy(() => import("./pages/industries/Manufacturing"));
+const SeasonalDemand = lazy(() => import("./pages/industries/SeasonalDemand"));
+
 // Admin pages
 const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
 const Fleet = lazy(() => import("./pages/admin/Fleet"));
@@ -104,6 +114,14 @@ const App = () => (
             <Route path="/dry-van-trailers" element={<DryVanTrailers />} />
             <Route path="/refrigerated-trailers" element={<RefrigeratedTrailers />} />
             <Route path="/flatbed-trailers" element={<FlatbedTrailers />} />
+            <Route path="/industries" element={<Industries />} />
+            <Route path="/industries/fleet-leasing" element={<FleetLeasing />} />
+            <Route path="/industries/owner-operators" element={<OwnerOperators />} />
+            <Route path="/industries/logistics-companies" element={<LogisticsCompanies />} />
+            <Route path="/industries/food-distribution" element={<FoodDistribution />} />
+            <Route path="/industries/retail-distribution" element={<RetailDistribution />} />
+            <Route path="/industries/manufacturing" element={<Manufacturing />} />
+            <Route path="/industries/seasonal-demand" element={<SeasonalDemand />} />
             <Route path="/locations" element={<Locations />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/careers" element={<Careers />} />

@@ -45,6 +45,15 @@ const routeLabels: Record<string, string> = {
   
   "/resources/guides": "Industry Guides",
   "/resources/guides/choosing-trailer": "Choosing the Right Trailer",
+  
+  "/industries": "Industries",
+  "/industries/fleet-leasing": "Fleet Leasing",
+  "/industries/owner-operators": "Owner Operators",
+  "/industries/logistics-companies": "Logistics Companies",
+  "/industries/food-distribution": "Food Distribution",
+  "/industries/retail-distribution": "Retail Distribution",
+  "/industries/manufacturing": "Manufacturing",
+  "/industries/seasonal-demand": "Seasonal Demand",
 };
 
 // Define parent routes for pages that should be nested under a different path
@@ -85,6 +94,27 @@ const parentRoutes: Record<string, { label: string; href: string }[]> = {
   ],
   "/about/john": [
     { label: "About", href: "/about" }
+  ],
+  "/industries/fleet-leasing": [
+    { label: "Industries", href: "/industries" }
+  ],
+  "/industries/owner-operators": [
+    { label: "Industries", href: "/industries" }
+  ],
+  "/industries/logistics-companies": [
+    { label: "Industries", href: "/industries" }
+  ],
+  "/industries/food-distribution": [
+    { label: "Industries", href: "/industries" }
+  ],
+  "/industries/retail-distribution": [
+    { label: "Industries", href: "/industries" }
+  ],
+  "/industries/manufacturing": [
+    { label: "Industries", href: "/industries" }
+  ],
+  "/industries/seasonal-demand": [
+    { label: "Industries", href: "/industries" }
   ],
 };
 
