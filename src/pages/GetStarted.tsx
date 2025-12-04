@@ -14,7 +14,7 @@ import { Footer } from "@/components/Footer";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { signupSchema, customerApplicationSchema, validateFile, sanitizeInput } from "@/lib/validations";
+import { fullSignupSchema, customerApplicationSchema, validateFile, sanitizeInput } from "@/lib/validations";
 import { z } from "zod";
 import { SEO } from "@/components/SEO";
 import { generateBreadcrumbSchema } from "@/lib/structuredData";
@@ -89,7 +89,7 @@ export default function GetStarted() {
     }
 
     // Validate with zod schema
-    const validationResult = signupSchema.safeParse({
+    const validationResult = fullSignupSchema.safeParse({
       email,
       password,
       firstName: primaryContactName.split(" ")[0] || "",

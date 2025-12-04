@@ -25,7 +25,19 @@ export const loginSchema = z.object({
   password: z.string().min(8, "Password must be at least 8 characters"),
 });
 
-export const signupSchema = z.object({
+// Quick signup - just email + password for Login page
+export const quickSignupSchema = z.object({
+  email: z.string().email("Invalid email address").max(255),
+  password: z
+    .string()
+    .min(8, "Password must be at least 8 characters")
+    .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
+    .regex(/[a-z]/, "Password must contain at least one lowercase letter")
+    .regex(/[0-9]/, "Password must contain at least one number"),
+});
+
+// Full signup - used by GetStarted page for complete registration
+export const fullSignupSchema = z.object({
   email: z.string().email("Invalid email address").max(255),
   password: z
     .string()
