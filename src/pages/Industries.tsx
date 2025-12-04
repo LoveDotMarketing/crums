@@ -4,67 +4,86 @@ import { Footer } from "@/components/Footer";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Truck, User, Building2, UtensilsCrossed, ShoppingCart, Factory, Calendar } from "lucide-react";
+import { Truck, User, Building2, UtensilsCrossed, ShoppingCart, Factory, Calendar, ArrowRight } from "lucide-react";
 
 const industries = [
   {
     title: "Fleet Leasing",
-    description: "Scalable trailer solutions for growing fleets of all sizes.",
+    description: "Scalable trailer solutions for growing fleets of all sizes. From small operations to enterprise-level fleet management.",
     icon: Truck,
     href: "/industries/fleet-leasing",
-    color: "bg-primary/10 text-primary"
+    linkText: "Fleet leasing solutions"
   },
   {
     title: "Owner Operators",
-    description: "Flexible leasing options designed for independent carriers.",
+    description: "Flexible leasing options designed for independent carriers. Build your business with reliable equipment.",
     icon: User,
     href: "/industries/owner-operators",
-    color: "bg-secondary/10 text-secondary-foreground"
+    linkText: "Owner operator programs"
   },
   {
     title: "Logistics Companies",
-    description: "Comprehensive trailer solutions for 3PL and freight brokers.",
+    description: "Comprehensive trailer solutions for 3PL providers and freight brokers seeking scalable capacity.",
     icon: Building2,
     href: "/industries/logistics-companies",
-    color: "bg-accent/10 text-accent-foreground"
+    linkText: "Logistics trailer solutions"
   },
   {
     title: "Food Distribution",
-    description: "Temperature-controlled and dry van trailers for food transport.",
+    description: "Temperature-controlled and dry van trailers for safe, compliant food transport operations.",
     icon: UtensilsCrossed,
     href: "/industries/food-distribution",
-    color: "bg-primary/10 text-primary"
+    linkText: "Food distribution trailers"
   },
   {
     title: "Retail Distribution",
-    description: "Reliable trailer capacity for retail supply chains.",
+    description: "Reliable trailer capacity for retail supply chains. Meet consumer demand with flexible equipment.",
     icon: ShoppingCart,
     href: "/industries/retail-distribution",
-    color: "bg-secondary/10 text-secondary-foreground"
+    linkText: "Retail distribution options"
   },
   {
     title: "Manufacturing",
-    description: "Dedicated trailer solutions for manufacturing logistics.",
+    description: "Dedicated trailer solutions for manufacturing logistics and just-in-time delivery requirements.",
     icon: Factory,
     href: "/industries/manufacturing",
-    color: "bg-accent/10 text-accent-foreground"
+    linkText: "Manufacturing logistics"
   },
   {
     title: "Seasonal Demand",
-    description: "Flexible short-term rentals for peak season capacity.",
+    description: "Flexible short-term rentals for peak season capacity. Scale up when you need it most.",
     icon: Calendar,
     href: "/industries/seasonal-demand",
-    color: "bg-primary/10 text-primary"
+    linkText: "Seasonal rental programs"
   }
 ];
+
+const industriesSchema = {
+  "@context": "https://schema.org",
+  "@type": "CollectionPage",
+  "name": "Industries We Serve - CRUMS Leasing",
+  "description": "CRUMS Leasing provides specialized trailer leasing and rental solutions for fleet operators, owner operators, logistics companies, food distribution, retail, manufacturing, and seasonal demand.",
+  "url": "https://crumsleasing.com/industries",
+  "mainEntity": {
+    "@type": "ItemList",
+    "itemListElement": industries.map((industry, index) => ({
+      "@type": "ListItem",
+      "position": index + 1,
+      "name": industry.title,
+      "description": industry.description,
+      "url": `https://crumsleasing.com${industry.href}`
+    }))
+  }
+};
 
 const Industries = () => {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <SEO
-        title="Industries We Serve | CRUMS Leasing"
-        description="CRUMS Leasing provides trailer solutions for fleet operators, owner operators, logistics companies, food distribution, retail, manufacturing, and seasonal demand."
+        title="Industries We Serve | Trailer Leasing for Every Sector | CRUMS Leasing"
+        description="CRUMS Leasing provides specialized trailer solutions for fleet operators, owner operators, logistics companies, food distribution, retail, manufacturing, and seasonal demand across the United States."
         canonical="https://crumsleasing.com/industries"
+        structuredData={industriesSchema}
       />
       <Navigation />
       
@@ -88,17 +107,18 @@ const Industries = () => {
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {industries.map((industry) => (
                 <Link key={industry.href} to={industry.href}>
-                  <Card className="h-full hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border-border/50">
+                  <Card className="h-full hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border-border/50 group">
                     <CardHeader>
-                      <div className={`w-12 h-12 rounded-lg ${industry.color} flex items-center justify-center mb-4`}>
-                        <industry.icon className="h-6 w-6" />
+                      <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
+                        <industry.icon className="h-6 w-6 text-primary" />
                       </div>
-                      <CardTitle className="text-xl">{industry.title}</CardTitle>
-                      <CardDescription>{industry.description}</CardDescription>
+                      <CardTitle className="text-xl text-foreground">{industry.title}</CardTitle>
+                      <CardDescription className="text-muted-foreground">{industry.description}</CardDescription>
                     </CardHeader>
                     <CardContent>
-                      <span className="text-primary font-medium text-sm">
-                        Learn more →
+                      <span className="text-primary font-medium text-sm inline-flex items-center gap-1 group-hover:gap-2 transition-all">
+                        {industry.linkText}
+                        <ArrowRight className="h-4 w-4" />
                       </span>
                     </CardContent>
                   </Card>
@@ -116,9 +136,10 @@ const Industries = () => {
             </p>
             <Link
               to="/contact"
-              className="inline-flex items-center justify-center px-8 py-3 bg-background text-foreground font-semibold rounded-lg hover:bg-background/90 transition-colors"
+              className="inline-flex items-center justify-center gap-2 px-8 py-3 bg-secondary text-secondary-foreground font-semibold rounded-lg hover:bg-secondary/90 transition-colors"
             >
               Contact Us
+              <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
         </section>
