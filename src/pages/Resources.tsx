@@ -51,6 +51,7 @@ const Resources = () => {
       items: [
         { name: "Cost Per Mile Calculator", href: "/resources/cost-per-mile", available: true },
         { name: "Lease vs Buy Calculator", href: "/resources/lease-vs-buy", available: true },
+        { name: "Profit Per Load Calculator", href: "/resources/profit-calculator", available: true },
         { name: "Tax Deduction Guide", available: false }
       ],
       comingSoon: false
