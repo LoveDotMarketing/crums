@@ -11,6 +11,7 @@ import { generateBreadcrumbSchema } from "@/lib/structuredData";
 const RefrigeratedTrailers = () => {
   const breadcrumbSchema = generateBreadcrumbSchema([
     { name: "Home", url: "https://crumsleasing.com/" },
+    { name: "Services", url: "https://crumsleasing.com/services/trailer-leasing" },
     { name: "Trailer Leasing", url: "https://crumsleasing.com/services/trailer-leasing" },
     { name: "Refrigerated Trailers", url: "https://crumsleasing.com/refrigerated-trailers" }
   ]);
