@@ -199,8 +199,8 @@ const LeasevsBuyCalculator = () => {
   return (
     <>
       <SEO
-        title="Lease vs Buy Calculator - Compare Trailer Ownership Costs"
-        description="Compare the costs of leasing versus buying a trailer with our free calculator. See side-by-side projections to make the best decision for your business."
+        title="Why Leasing Makes Sense - Trailer Lease Calculator"
+        description="Discover why leasing trailers makes more sense for most carriers. Our free calculator shows how leasing preserves capital, reduces risk, and keeps your business flexible."
         canonical="https://crumsleasing.com/resources/tools/lease-vs-buy"
         structuredData={toolSchema}
       />
@@ -216,20 +216,124 @@ const LeasevsBuyCalculator = () => {
                 <Scale className="h-8 w-8 text-primary-foreground" />
               </div>
               <h1 className="text-3xl md:text-4xl font-bold text-primary-foreground">
-                Lease vs Buy Calculator
+                Why Leasing Makes Sense for Your Business
               </h1>
             </div>
             <p className="text-primary-foreground/80 text-lg max-w-2xl">
-              Compare the total cost of ownership versus leasing to make an informed decision for your trucking business.
+              Preserve your capital, eliminate risk, and stay flexible. See why most carriers choose leasing over buying.
             </p>
           </div>
         </section>
 
         <Breadcrumbs />
 
+        {/* Quick Facts Banner */}
+        <section className="bg-secondary/10 border-y border-secondary/20 py-6">
+          <div className="container mx-auto px-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+              <div className="flex items-center gap-3">
+                <Wallet className="h-8 w-8 text-secondary flex-shrink-0" />
+                <div>
+                  <p className="font-bold text-foreground">$6,000+ Preserved</p>
+                  <p className="text-xs text-muted-foreground">Less capital tied up</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <DollarSign className="h-8 w-8 text-secondary flex-shrink-0" />
+                <div>
+                  <p className="font-bold text-foreground">100% Deductible</p>
+                  <p className="text-xs text-muted-foreground">Operating expense</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <Shield className="h-8 w-8 text-secondary flex-shrink-0" />
+                <div>
+                  <p className="font-bold text-foreground">No Repair Surprises</p>
+                  <p className="text-xs text-muted-foreground">Major maintenance covered</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <RefreshCw className="h-8 w-8 text-secondary flex-shrink-0" />
+                <div>
+                  <p className="font-bold text-foreground">Upgrade Anytime</p>
+                  <p className="text-xs text-muted-foreground">Never stuck with old equipment</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* Calculator Section */}
         <section className="py-12 md:py-16">
           <div className="container mx-auto px-4">
+            {/* Intro Text */}
+            <div className="mb-8 p-6 bg-muted/50 rounded-lg border border-border">
+              <div className="flex items-start gap-3">
+                <Lightbulb className="h-6 w-6 text-secondary flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-foreground font-medium mb-2">For carriers operating trailers 1-5 years, leasing almost always makes more financial sense.</p>
+                  <p className="text-muted-foreground text-sm">You'll preserve working capital, avoid depreciation risk, and maintain the flexibility to scale your fleet as your business grows. Use this calculator to see the real numbers for your situation.</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Beyond the Numbers Section - Moved Higher */}
+            <Card className="mb-8 bg-gradient-to-r from-secondary/5 via-secondary/10 to-secondary/5 border-secondary/20">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Shield className="h-5 w-5 text-secondary" />
+                  What This Calculator Can't Measure
+                </CardTitle>
+                <CardDescription>Important factors that favor leasing but don't show up in cost calculations</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div className="flex items-start gap-3 p-4 bg-background rounded-lg">
+                    <CheckCircle2 className="h-5 w-5 text-secondary flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-medium">No Depreciation Risk</p>
+                      <p className="text-sm text-muted-foreground">CRUMS takes the risk on market value fluctuations, not you</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3 p-4 bg-background rounded-lg">
+                    <CheckCircle2 className="h-5 w-5 text-secondary flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-medium">No Surprise Repair Bills</p>
+                      <p className="text-sm text-muted-foreground">Budget with confidence - major repairs are typically covered</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3 p-4 bg-background rounded-lg">
+                    <CheckCircle2 className="h-5 w-5 text-secondary flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-medium">Flexibility to Scale</p>
+                      <p className="text-sm text-muted-foreground">Add or reduce trailers as your business needs change</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3 p-4 bg-background rounded-lg">
+                    <CheckCircle2 className="h-5 w-5 text-secondary flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-medium">Always Newer Equipment</p>
+                      <p className="text-sm text-muted-foreground">Upgrade at end of term - no selling hassle</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3 p-4 bg-background rounded-lg">
+                    <CheckCircle2 className="h-5 w-5 text-secondary flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-medium">Preserve Working Capital</p>
+                      <p className="text-sm text-muted-foreground">Use your cash for loads, not locked in depreciating assets</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3 p-4 bg-background rounded-lg">
+                    <CheckCircle2 className="h-5 w-5 text-secondary flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-medium">Simpler Taxes</p>
+                      <p className="text-sm text-muted-foreground">Lease payments are typically 100% deductible operating expense</p>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
             {/* Recommendation Banner */}
             <Card className={`mb-8 ${calculations.recommendation === 'buy' ? 'bg-emerald-50 border-emerald-200 dark:bg-emerald-950/20 dark:border-emerald-800' : calculations.recommendation === 'lease' ? 'bg-secondary/10 border-secondary' : 'bg-muted'}`}>
               <CardContent className="py-6">
@@ -666,62 +770,6 @@ const LeasevsBuyCalculator = () => {
               </CardContent>
             </Card>
 
-            {/* Beyond the Numbers Section */}
-            <Card className="mt-8 bg-gradient-to-r from-secondary/5 via-secondary/10 to-secondary/5 border-secondary/20">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Shield className="h-5 w-5 text-secondary" />
-                  Beyond the Numbers: What This Calculator Can't Measure
-                </CardTitle>
-                <CardDescription>Important factors that favor leasing but don't show up in cost calculations</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  <div className="flex items-start gap-3 p-4 bg-background rounded-lg">
-                    <CheckCircle2 className="h-5 w-5 text-secondary flex-shrink-0 mt-0.5" />
-                    <div>
-                      <p className="font-medium">No Depreciation Risk</p>
-                      <p className="text-sm text-muted-foreground">CRUMS takes the risk on market value fluctuations, not you</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3 p-4 bg-background rounded-lg">
-                    <CheckCircle2 className="h-5 w-5 text-secondary flex-shrink-0 mt-0.5" />
-                    <div>
-                      <p className="font-medium">No Surprise Repair Bills</p>
-                      <p className="text-sm text-muted-foreground">Budget with confidence - major repairs are typically covered</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3 p-4 bg-background rounded-lg">
-                    <CheckCircle2 className="h-5 w-5 text-secondary flex-shrink-0 mt-0.5" />
-                    <div>
-                      <p className="font-medium">Flexibility to Scale</p>
-                      <p className="text-sm text-muted-foreground">Add or reduce trailers as your business needs change</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3 p-4 bg-background rounded-lg">
-                    <CheckCircle2 className="h-5 w-5 text-secondary flex-shrink-0 mt-0.5" />
-                    <div>
-                      <p className="font-medium">Always Newer Equipment</p>
-                      <p className="text-sm text-muted-foreground">Upgrade at end of term - no selling hassle</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3 p-4 bg-background rounded-lg">
-                    <CheckCircle2 className="h-5 w-5 text-secondary flex-shrink-0 mt-0.5" />
-                    <div>
-                      <p className="font-medium">Preserve Working Capital</p>
-                      <p className="text-sm text-muted-foreground">Use your cash for loads, not locked in depreciating assets</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3 p-4 bg-background rounded-lg">
-                    <CheckCircle2 className="h-5 w-5 text-secondary flex-shrink-0 mt-0.5" />
-                    <div>
-                      <p className="font-medium">Simpler Taxes</p>
-                      <p className="text-sm text-muted-foreground">Lease payments are typically 100% deductible operating expense</p>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
 
             {/* Pros & Cons */}
             <div className="grid md:grid-cols-2 gap-8 mt-8">
