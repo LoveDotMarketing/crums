@@ -5,7 +5,8 @@ import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { SEO } from "@/components/SEO";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Calculator, ArrowRight, Fuel, Scale, TrendingUp, Receipt, FileText, ArrowLeft } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Calculator, ArrowRight, Fuel, Scale, TrendingUp, Receipt, FileText, ArrowLeft, AlertTriangle } from "lucide-react";
 
 const tools = [
   {
@@ -105,6 +106,22 @@ const Tools = () => {
       </section>
 
       <Breadcrumbs />
+
+      {/* Legal Disclaimer */}
+      <section className="py-6 bg-background">
+        <div className="container mx-auto px-4">
+          <Alert variant="default" className="border-amber-500/50 bg-amber-50 dark:bg-amber-950/20">
+            <AlertTriangle className="h-4 w-4 text-amber-600" />
+            <AlertTitle className="text-amber-800 dark:text-amber-400">Important Disclaimer</AlertTitle>
+            <AlertDescription className="text-amber-700 dark:text-amber-300">
+              These calculators provide estimates for informational purposes only and do not constitute financial, tax, or legal advice. 
+              Results are based on the information you provide and may not reflect actual costs, taxes, or outcomes. 
+              Always consult with a qualified accountant, tax professional, or financial advisor before making business decisions. 
+              CRUMS Leasing is not responsible for decisions made based on these estimates.
+            </AlertDescription>
+          </Alert>
+        </div>
+      </section>
 
       {/* Tools Grid */}
       <section className="py-16 bg-background">

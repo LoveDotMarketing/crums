@@ -421,14 +421,13 @@ const IFTACalculator = () => {
                 </Card>
               )}
 
-              <Card className="bg-muted/50">
+              <Card className="bg-muted/50 border-muted">
                 <CardContent className="pt-6">
-                  <p className="text-sm text-muted-foreground">
-                    <strong>Disclaimer:</strong> This calculator provides estimates only
-                    and should not be used as official IFTA reporting. Tax rates are
-                    approximate and may change. Always verify current rates with your
-                    state's Department of Transportation and consult with a tax
-                    professional for official filings.
+                  <p className="text-xs text-muted-foreground">
+                    <strong>Disclaimer:</strong> This calculator provides estimates for informational purposes only and does not constitute financial, tax, or legal advice. 
+                    Tax rates are approximate and may change. This tool should not be used for official IFTA reporting. 
+                    Always verify current rates with your state's Department of Transportation and consult with a qualified tax professional for official filings. 
+                    CRUMS Leasing is not responsible for decisions made based on these estimates.
                   </p>
                 </CardContent>
               </Card>

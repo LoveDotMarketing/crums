@@ -412,6 +412,18 @@ const CostPerMileCalculator = () => {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Legal Disclaimer */}
+            <Card className="mt-8 bg-muted/50 border-muted">
+              <CardContent className="pt-6">
+                <p className="text-xs text-muted-foreground">
+                  <strong>Disclaimer:</strong> This calculator provides estimates for informational purposes only and does not constitute financial, tax, or legal advice. 
+                  Results are based on the information you provide and may not reflect actual costs. 
+                  Always consult with a qualified accountant or financial advisor before making business decisions. 
+                  CRUMS Leasing is not responsible for decisions made based on these estimates.
+                </p>
+              </CardContent>
+            </Card>
           </div>
         </section>
 

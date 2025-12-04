@@ -133,9 +133,16 @@ const FuelCostCalculator = () => {
               </CardContent>
             </Card>
 
-            <p className="text-xs text-muted-foreground text-center mt-6">
-              * This calculator provides estimates only. Actual fuel consumption may vary based on load weight, terrain, weather, and driving conditions.
-            </p>
+            {/* Legal Disclaimer */}
+            <Card className="mt-8 bg-muted/50 border-muted">
+              <CardContent className="pt-6">
+                <p className="text-xs text-muted-foreground">
+                  <strong>Disclaimer:</strong> This calculator provides estimates for informational purposes only and does not constitute financial, tax, or legal advice. 
+                  Actual fuel consumption may vary based on load weight, terrain, weather, and driving conditions. 
+                  Always consult with a qualified professional before making business decisions. CRUMS Leasing is not responsible for decisions made based on these estimates.
+                </p>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </main>
