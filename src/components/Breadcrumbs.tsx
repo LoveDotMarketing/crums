@@ -43,9 +43,18 @@ const routeLabels: Record<string, string> = {
 
 // Define parent routes for pages that should be nested under a different path
 const parentRoutes: Record<string, { label: string; href: string }[]> = {
-  "/dry-van-trailers": [{ label: "Trailer Leasing", href: "/services/trailer-leasing" }],
-  "/refrigerated-trailers": [{ label: "Trailer Leasing", href: "/services/trailer-leasing" }],
-  "/flatbed-trailers": [{ label: "Trailer Leasing", href: "/services/trailer-leasing" }],
+  "/dry-van-trailers": [
+    { label: "Services", href: "/services/trailer-leasing" },
+    { label: "Trailer Leasing", href: "/services/trailer-leasing" }
+  ],
+  "/refrigerated-trailers": [
+    { label: "Services", href: "/services/trailer-leasing" },
+    { label: "Trailer Leasing", href: "/services/trailer-leasing" }
+  ],
+  "/flatbed-trailers": [
+    { label: "Services", href: "/services/trailer-leasing" },
+    { label: "Trailer Leasing", href: "/services/trailer-leasing" }
+  ],
 };
 
 export const Breadcrumbs = ({ items }: BreadcrumbsProps) => {
