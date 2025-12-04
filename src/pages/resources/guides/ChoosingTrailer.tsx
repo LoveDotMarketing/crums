@@ -4,6 +4,7 @@ import { Footer } from "@/components/Footer";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { SEO } from "@/components/SEO";
 import { Card, CardContent } from "@/components/ui/card";
+import { generateBreadcrumbSchema } from "@/lib/structuredData";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -131,7 +132,14 @@ const faqSchema = {
   ]
 };
 
-// Guide navigation for prev/next
+// Breadcrumb Schema
+const breadcrumbSchema = generateBreadcrumbSchema([
+  { name: "Home", url: "https://crumsleasing.com/" },
+  { name: "Resources", url: "https://crumsleasing.com/resources" },
+  { name: "Industry Guides", url: "https://crumsleasing.com/guides" },
+  { name: "Choosing the Right Trailer", url: "https://crumsleasing.com/guides/choosing-trailer" }
+]);
+
 const guideNavigation = {
   previous: {
     title: "Keep Your Mind Sharp on the Road",
@@ -238,7 +246,7 @@ const ChoosingTrailer = () => {
         title={articleData.title}
         description={articleData.description}
         canonical="https://crumsleasing.com/guides/choosing-trailer"
-        structuredData={[articleSchema, faqSchema]}
+        structuredData={[articleSchema, faqSchema, breadcrumbSchema]}
       />
       <Navigation />
 

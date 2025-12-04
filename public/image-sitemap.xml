@@ -8,6 +8,21 @@
       <image:title>CRUMS Leasing - Trailer Leasing Solutions</image:title>
       <image:caption>CRUMS Leasing provides flexible trailer leasing and rental solutions for carriers across the United States</image:caption>
     </image:image>
+    <image:image>
+      <image:loc>https://crumsleasing.com/assets/dry-van-trailer.png</image:loc>
+      <image:title>Dry Van Trailer</image:title>
+      <image:caption>53-foot enclosed dry van trailer for general freight hauling</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://crumsleasing.com/assets/flatbed-trailer.png</image:loc>
+      <image:title>Flatbed Trailer</image:title>
+      <image:caption>Open-deck flatbed trailer for oversized and heavy cargo</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://crumsleasing.com/assets/refrigerated-trailer.png</image:loc>
+      <image:title>Refrigerated Trailer</image:title>
+      <image:caption>Temperature-controlled reefer trailer for perishable goods</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://crumsleasing.com/about</loc>
@@ -28,6 +43,45 @@
       <image:loc>https://crumsleasing.com/assets/trailer-fleet.png</image:loc>
       <image:title>CRUMS Trailer Fleet</image:title>
       <image:caption>53-foot dry van and flatbed trailers available for lease</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://crumsleasing.com/assets/dry-van-trailer.png</image:loc>
+      <image:title>CRUMS Dry Van Trailer</image:title>
+      <image:caption>53-foot enclosed dry van trailer for general freight</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://crumsleasing.com/assets/flatbed-trailer.png</image:loc>
+      <image:title>CRUMS Flatbed Trailer</image:title>
+      <image:caption>Open-deck flatbed trailer for oversized cargo</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://crumsleasing.com/assets/refrigerated-trailer.png</image:loc>
+      <image:title>CRUMS Refrigerated Trailer</image:title>
+      <image:caption>Temperature-controlled reefer trailer for perishable goods</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://crumsleasing.com/dry-van-trailers</loc>
+    <image:image>
+      <image:loc>https://crumsleasing.com/assets/dry-van-trailer.png</image:loc>
+      <image:title>Dry Van Trailer Leasing - CRUMS Leasing</image:title>
+      <image:caption>53-foot and 48-foot enclosed dry van trailers for lease with swing and roll-up door options</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://crumsleasing.com/flatbed-trailers</loc>
+    <image:image>
+      <image:loc>https://crumsleasing.com/assets/flatbed-trailer.png</image:loc>
+      <image:title>Flatbed Trailer Leasing - CRUMS Leasing</image:title>
+      <image:caption>Standard and step deck flatbed trailers for heavy and oversized cargo hauling</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://crumsleasing.com/refrigerated-trailers</loc>
+    <image:image>
+      <image:loc>https://crumsleasing.com/assets/refrigerated-trailer.png</image:loc>
+      <image:title>Refrigerated Trailer Leasing - CRUMS Leasing</image:title>
+      <image:caption>Temperature-controlled reefer trailers with multi-zone capability for perishable freight</image:caption>
     </image:image>
   </url>
   <url>
@@ -68,6 +122,24 @@
       <image:loc>https://crumsleasing.com/assets/crums-g-review.svg</image:loc>
       <image:title>CRUMS Leasing Customer Reviews</image:title>
       <image:caption>Read what our customers say about CRUMS Leasing</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://crumsleasing.com/guides/choosing-trailer</loc>
+    <image:image>
+      <image:loc>https://crumsleasing.com/assets/dry-van-trailer.png</image:loc>
+      <image:title>Dry Van Trailer - Choosing the Right Trailer Guide</image:title>
+      <image:caption>Enclosed dry van trailers for general freight - most common trailer type in trucking</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://crumsleasing.com/assets/flatbed-trailer.png</image:loc>
+      <image:title>Flatbed Trailer - Choosing the Right Trailer Guide</image:title>
+      <image:caption>Open-deck flatbed trailers for oversized and heavy cargo</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://crumsleasing.com/assets/refrigerated-trailer.png</image:loc>
+      <image:title>Refrigerated Trailer - Choosing the Right Trailer Guide</image:title>
+      <image:caption>Temperature-controlled reefer trailers for perishable goods</image:caption>
     </image:image>
   </url>
 </urlset>
