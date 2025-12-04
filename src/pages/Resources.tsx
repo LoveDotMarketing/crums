@@ -28,12 +28,12 @@ const Resources = () => {
       description: "Calculators and tools to help you manage costs and plan your business finances.",
       items: [
         { name: "View All Tools", href: "/resources/tools", available: true, featured: true },
-        { name: "Cost Per Mile Calculator", href: "/resources/cost-per-mile", available: true },
-        { name: "Lease vs Buy Calculator", href: "/resources/lease-vs-buy", available: true },
-        { name: "Profit Per Load Calculator", href: "/resources/profit-calculator", available: true },
-        { name: "IFTA Tax Estimator", href: "/resources/ifta-calculator", available: true },
-        { name: "Fuel Cost Calculator", href: "/resources/fuel-calculator", available: true },
-        { name: "Tax Deduction Guide", href: "/resources/tax-deductions", available: true }
+        { name: "Cost Per Mile Calculator", href: "/resources/tools/cost-per-mile", available: true },
+        { name: "Lease vs Buy Calculator", href: "/resources/tools/lease-vs-buy", available: true },
+        { name: "Profit Per Load Calculator", href: "/resources/tools/profit-calculator", available: true },
+        { name: "IFTA Tax Estimator", href: "/resources/tools/ifta-calculator", available: true },
+        { name: "Fuel Cost Calculator", href: "/resources/tools/fuel-calculator", available: true },
+        { name: "Tax Deduction Guide", href: "/resources/tools/tax-deductions", available: true }
       ],
       comingSoon: false
     },
