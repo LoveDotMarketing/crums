@@ -96,11 +96,11 @@ const About = () => {
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6 max-w-5xl mx-auto">
             {[
               { name: "Momma CRUMS", role: "Founder" },
-              { name: "Eric", role: "Operations" },
+              { name: "Eric", role: "CEO" },
               { name: "Hector", role: "Fleet Management" },
               { name: "Ambrosia", role: "Customer Relations" },
-              { name: "Jr", role: "Sales" },
-              { name: "John", role: "Support" },
+              { name: "Jr", role: "Accounting" },
+              { name: "John", role: "Marketing" },
             ].map((member) => (
               <div key={member.name} className="text-center">
                 <div className="w-24 h-24 md:w-28 md:h-28 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4 border-2 border-primary/20">
