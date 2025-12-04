@@ -96,8 +96,8 @@ const OwnerOperators = () => {
             <p className="text-primary-foreground/80 mb-8 max-w-2xl mx-auto">
               Join the CRUMS family and get the trailer you need to succeed on the road.
             </p>
-            <Button asChild size="lg" variant="secondary">
-              <Link to="/get-started">Apply Today</Link>
+            <Button asChild size="lg" className="bg-background text-foreground hover:bg-background/90">
+              <Link to="/get-started">Apply Today <ArrowRight className="ml-2 h-4 w-4" /></Link>
             </Button>
           </div>
         </section>
