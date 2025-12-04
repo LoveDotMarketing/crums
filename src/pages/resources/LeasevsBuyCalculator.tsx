@@ -653,6 +653,18 @@ const LeasevsBuyCalculator = () => {
                 </CardContent>
               </Card>
             </div>
+
+            {/* Legal Disclaimer */}
+            <Card className="mt-8 bg-muted/50 border-muted">
+              <CardContent className="pt-6">
+                <p className="text-xs text-muted-foreground">
+                  <strong>Disclaimer:</strong> This calculator provides estimates for informational purposes only and does not constitute financial, tax, or legal advice. 
+                  Results are based on the information you provide and may not reflect actual costs, depreciation, or market conditions. 
+                  Always consult with a qualified accountant or financial advisor before making leasing or purchasing decisions. 
+                  CRUMS Leasing is not responsible for decisions made based on these estimates.
+                </p>
+              </CardContent>
+            </Card>
           </div>
         </section>
 
