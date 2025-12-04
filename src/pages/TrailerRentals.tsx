@@ -226,13 +226,26 @@ const TrailerRentals = () => {
               </Link>{" "}
               provide comprehensive management and support.
             </p>
+            <p className="text-muted-foreground mb-6">
+              Browse our available equipment: {" "}
+              <Link to="/dry-van-trailers" className="text-secondary hover:underline font-medium">
+                53-foot dry van trailers
+              </Link>{" "}
+              and{" "}
+              <Link to="/flatbed-trailers" className="text-secondary hover:underline font-medium">
+                flatbed trailers
+              </Link>. Not sure which is right for your cargo? Check out our{" "}
+              <Link to="/guides/choosing-trailer" className="text-secondary hover:underline font-medium">
+                guide to choosing the right trailer
+              </Link>.
+            </p>
             <p className="text-muted-foreground">
               Calculate your potential savings with our{" "}
-              <Link to="/resources/tools/cost-per-mile" className="text-secondary hover:underline font-medium">
+              <Link to="/resources/tools/cost-per-mile" className="text-primary hover:underline font-medium">
                 cost per mile calculator
               </Link>{" "}
               or view our{" "}
-              <Link to="/locations" className="text-secondary hover:underline font-medium">
+              <Link to="/locations" className="text-primary hover:underline font-medium">
                 service locations across the United States
               </Link>.
             </p>
