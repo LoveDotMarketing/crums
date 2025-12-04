@@ -27,6 +27,7 @@ const routeLabels: Record<string, string> = {
   "/trailers": "Trailers",
   "/resources": "Resources",
   "/resources/cost-per-mile": "Cost Per Mile Calculator",
+  "/resources/lease-vs-buy": "Lease vs Buy Calculator",
 };
 
 export const Breadcrumbs = ({ items }: BreadcrumbsProps) => {
