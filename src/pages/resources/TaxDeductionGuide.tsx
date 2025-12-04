@@ -51,7 +51,7 @@ const TaxDeductionGuide = () => {
       <SEO
         title="Tax Deduction Guide for Truckers - Common Deductions & Record-Keeping"
         description="Comprehensive tax deduction guide for carriers and owner-operators. Learn about common deductible expenses, per diem allowances, depreciation rules, and record-keeping best practices."
-        canonical="https://crumsleasing.com/resources/tax-deductions"
+        canonical="https://crumsleasing.com/resources/tools/tax-deductions"
       />
       <Navigation />
 

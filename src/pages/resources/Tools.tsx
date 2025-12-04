@@ -13,42 +13,42 @@ const tools = [
     icon: Calculator,
     title: "Cost Per Mile Calculator",
     description: "Calculate your true operating costs per mile including fuel, insurance, maintenance, lease payments, and more.",
-    href: "/resources/cost-per-mile",
+    href: "/resources/tools/cost-per-mile",
     features: ["Comprehensive expense tracking", "Visual cost breakdown", "Per-mile analysis"]
   },
   {
     icon: Scale,
     title: "Lease vs Buy Calculator",
     description: "Compare the total cost of leasing versus buying a trailer with multi-year projections.",
-    href: "/resources/lease-vs-buy",
+    href: "/resources/tools/lease-vs-buy",
     features: ["Side-by-side comparison", "Resale value analysis", "Monthly payment breakdown"]
   },
   {
     icon: TrendingUp,
     title: "Profit Per Load Calculator",
     description: "Calculate the true profitability of each load by factoring in all expenses including deadhead miles.",
-    href: "/resources/profit-calculator",
+    href: "/resources/tools/profit-calculator",
     features: ["Load profitability analysis", "Deadhead mile tracking", "Expense breakdown"]
   },
   {
     icon: Receipt,
     title: "IFTA Tax Estimator",
     description: "Estimate your fuel tax liability or credits by state for IFTA reporting.",
-    href: "/resources/ifta-calculator",
+    href: "/resources/tools/ifta-calculator",
     features: ["State-by-state tracking", "Tax rate database", "Credit/liability calculation"]
   },
   {
     icon: Fuel,
     title: "Fuel Cost Calculator",
     description: "Quickly estimate fuel costs for your next trip based on distance and fuel efficiency.",
-    href: "/resources/fuel-calculator",
+    href: "/resources/tools/fuel-calculator",
     features: ["Trip planning", "Cost estimation", "MPG-based calculations"]
   },
   {
     icon: FileText,
     title: "Tax Deduction Guide",
     description: "Comprehensive guide to tax deductions for carriers including per diem rates and depreciation rules.",
-    href: "/resources/tax-deductions",
+    href: "/resources/tools/tax-deductions",
     features: ["Common deductions list", "Per diem rates", "Record-keeping tips"]
   }
 ];

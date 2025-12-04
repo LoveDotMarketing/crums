@@ -27,12 +27,12 @@ const routeLabels: Record<string, string> = {
   "/trailers": "Trailers",
   "/resources": "Resources",
   "/resources/tools": "Financial Tools",
-  "/resources/cost-per-mile": "Cost Per Mile Calculator",
-  "/resources/lease-vs-buy": "Lease vs Buy Calculator",
-  "/resources/profit-calculator": "Profit Per Load Calculator",
-  "/resources/ifta-calculator": "IFTA Tax Estimator",
-  "/resources/fuel-calculator": "Fuel Cost Calculator",
-  "/resources/tax-deductions": "Tax Deduction Guide",
+  "/resources/tools/cost-per-mile": "Cost Per Mile Calculator",
+  "/resources/tools/lease-vs-buy": "Lease vs Buy Calculator",
+  "/resources/tools/profit-calculator": "Profit Per Load Calculator",
+  "/resources/tools/ifta-calculator": "IFTA Tax Estimator",
+  "/resources/tools/fuel-calculator": "Fuel Cost Calculator",
+  "/resources/tools/tax-deductions": "Tax Deduction Guide",
 };
 
 export const Breadcrumbs = ({ items }: BreadcrumbsProps) => {

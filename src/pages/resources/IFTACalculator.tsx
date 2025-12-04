@@ -149,7 +149,7 @@ const IFTACalculator = () => {
       <SEO
         title="IFTA Tax Estimator - Calculate Fuel Tax by State"
         description="Free IFTA tax calculator for carriers. Estimate your fuel tax liability or credits by state based on miles driven and fuel purchased. Simplify your IFTA reporting."
-        canonical="https://crumsleasing.com/resources/ifta-calculator"
+        canonical="https://crumsleasing.com/resources/tools/ifta-calculator"
       />
       <Navigation />
 

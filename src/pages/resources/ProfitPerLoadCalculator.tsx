@@ -71,7 +71,7 @@ const ProfitPerLoadCalculator = () => {
       <SEO
         title="Profit Per Load Calculator - Trucking Load Profitability Tool"
         description="Calculate your profit per load with our free trucking calculator. Input rate, miles, fuel costs, and expenses to see your true profit margin and per-mile earnings."
-        canonical="https://crumsleasing.com/resources/profit-calculator"
+        canonical="https://crumsleasing.com/resources/tools/profit-calculator"
       />
       <Navigation />
 
