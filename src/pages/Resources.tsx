@@ -14,6 +14,7 @@ const Resources = () => {
       title: "Financial Tools",
       description: "Calculators and tools to help you manage costs and plan your business finances.",
       items: [
+        { name: "View All Tools", href: "/resources/tools", available: true, featured: true },
         { name: "Cost Per Mile Calculator", href: "/resources/cost-per-mile", available: true },
         { name: "Lease vs Buy Calculator", href: "/resources/lease-vs-buy", available: true },
         { name: "Profit Per Load Calculator", href: "/resources/profit-calculator", available: true },
@@ -131,10 +132,10 @@ const Resources = () => {
                     </p>
                   )}
                   {!category.comingSoon && category.title === "Financial Tools" && (
-                    <Button asChild variant="outline" size="sm" className="mt-4 w-full">
-                      <Link to="/resources/cost-per-mile">
+                    <Button asChild variant="default" size="sm" className="mt-4 w-full">
+                      <Link to="/resources/tools">
                         <Calculator className="h-4 w-4 mr-2" />
-                        Try Cost Per Mile Calculator
+                        View All Tools
                       </Link>
                     </Button>
                   )}

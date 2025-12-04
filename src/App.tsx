@@ -38,6 +38,7 @@ const ProfitPerLoadCalculator = lazy(() => import("./pages/resources/ProfitPerLo
 const IFTACalculator = lazy(() => import("./pages/resources/IFTACalculator"));
 const FuelCostCalculator = lazy(() => import("./pages/resources/FuelCostCalculator"));
 const TaxDeductionGuide = lazy(() => import("./pages/resources/TaxDeductionGuide"));
+const Tools = lazy(() => import("./pages/resources/Tools"));
 
 // Admin pages
 const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
@@ -253,11 +254,12 @@ const App = () => (
             />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="/resources" element={<Resources />} />
+            <Route path="/resources/tools" element={<Tools />} />
             <Route path="/resources/cost-per-mile" element={<CostPerMileCalculator />} />
             <Route path="/resources/lease-vs-buy" element={<LeasevsBuyCalculator />} />
             <Route path="/resources/profit-calculator" element={<ProfitPerLoadCalculator />} />
             <Route path="/resources/ifta-calculator" element={<IFTACalculator />} />
-<Route path="/resources/fuel-calculator" element={<FuelCostCalculator />} />
+            <Route path="/resources/fuel-calculator" element={<FuelCostCalculator />} />
             <Route path="/resources/tax-deductions" element={<TaxDeductionGuide />} />
             <Route path="/referral-program" element={<ReferralProgram />} />
             <Route path="/reviews" element={<Reviews />} />
