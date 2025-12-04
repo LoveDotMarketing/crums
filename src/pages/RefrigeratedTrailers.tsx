@@ -343,7 +343,7 @@ const RefrigeratedTrailers = () => {
             </p>
             <p className="text-muted-foreground">
               Not sure which trailer is right for your operation? Read our{" "}
-              <Link to="/guides/choosing-trailer" className="text-primary hover:underline font-medium">
+              <Link to="/resources/guides/choosing-trailer" className="text-primary hover:underline font-medium">
                 comprehensive guide to choosing the right trailer for your haul
               </Link>{" "}
               or{" "}

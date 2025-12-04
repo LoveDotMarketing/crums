@@ -502,7 +502,7 @@ const Index = () => {
             </Link>
 
             {/* Industry Guides - Featured */}
-            <Link to="/guides/choosing-trailer" className="group">
+            <Link to="/resources/guides/choosing-trailer" className="group">
               <Card className="h-full border-2 border-primary/50 hover:border-primary hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-primary/10 to-background">
                 <CardContent className="p-8">
                   <div className="h-16 w-16 rounded-lg bg-primary/20 flex items-center justify-center mb-6 group-hover:bg-primary group-hover:scale-110 transition-all">
@@ -541,7 +541,7 @@ const Index = () => {
           </div>
 
           <div className="text-center">
-            <Link to="/guides">
+            <Link to="/resources/guides">
               <Button size="lg" variant="outline" className="border-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground">
                 View All Guides & Resources
                 <ArrowRight className="ml-2 h-5 w-5" />
