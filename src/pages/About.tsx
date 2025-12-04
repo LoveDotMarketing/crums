@@ -84,7 +84,36 @@ const About = () => {
         </div>
       </section>
 
-      {/* Leadership Philosophy */}
+      {/* Our Team */}
+      <section className="py-20 bg-muted/50">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4 text-foreground">Our Team</h2>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              The dedicated people behind CRUMS Leasing who work every day to serve our carriers.
+            </p>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6 max-w-5xl mx-auto">
+            {[
+              { name: "Momma CRUMS", role: "Founder" },
+              { name: "Eric", role: "Operations" },
+              { name: "Hector", role: "Fleet Management" },
+              { name: "Ambrosia", role: "Customer Relations" },
+              { name: "Jr", role: "Sales" },
+              { name: "John", role: "Support" },
+            ].map((member) => (
+              <div key={member.name} className="text-center">
+                <div className="w-24 h-24 md:w-28 md:h-28 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4 border-2 border-primary/20">
+                  <Users className="h-10 w-10 md:h-12 md:w-12 text-primary/60" />
+                </div>
+                <h3 className="font-semibold text-foreground">{member.name}</h3>
+                <p className="text-sm text-muted-foreground">{member.role}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       <section className="py-20 bg-muted">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto text-center mb-16">
