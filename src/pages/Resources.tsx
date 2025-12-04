@@ -10,41 +10,7 @@ import { BookOpen, FileText, TrendingUp, Shield, Truck, Calculator, ArrowRight }
 const Resources = () => {
   const resourceCategories = [
     {
-      icon: BookOpen,
-      title: "Industry Guides",
-      description: "Comprehensive guides covering trucking regulations, best practices, and industry standards.",
-      items: ["FMCSA Compliance Guide", "Hours of Service Regulations", "ELD Requirements"],
-      comingSoon: true
-    },
-    {
-      icon: FileText,
-      title: "Documentation & Forms",
-      description: "Essential forms and documentation templates for carriers and owner-operators.",
-      items: ["Bill of Lading Templates", "Inspection Checklists", "Maintenance Logs"],
-      comingSoon: true
-    },
-    {
-      icon: TrendingUp,
-      title: "Business Tips",
-      description: "Strategies and insights to help grow your trucking business and maximize profitability.",
-      items: ["Fuel Cost Management", "Route Optimization", "Load Board Tips"],
-      comingSoon: true
-    },
-    {
-      icon: Shield,
-      title: "Safety Resources",
-      description: "Safety guidelines, training materials, and best practices for safe operations.",
-      items: ["Pre-Trip Inspection Guide", "Weather Driving Tips", "Cargo Securement"],
-      comingSoon: true
-    },
-    {
-      icon: Truck,
-      title: "Equipment Knowledge",
-      description: "Learn about trailer types, maintenance schedules, and equipment specifications.",
-      items: ["Trailer Types Explained", "Maintenance Schedules", "Tire Care Guide"],
-      comingSoon: true
-    },
-    {
+      id: "financial-tools",
       icon: Calculator,
       title: "Financial Tools",
       description: "Calculators and tools to help you manage costs and plan your business finances.",
@@ -57,8 +23,57 @@ const Resources = () => {
         { name: "Tax Deduction Guide", href: "/resources/tax-deductions", available: true }
       ],
       comingSoon: false
+    },
+    {
+      id: "industry-guides",
+      icon: BookOpen,
+      title: "Industry Guides",
+      description: "Comprehensive guides covering trucking regulations, best practices, and industry standards.",
+      items: ["FMCSA Compliance Guide", "Hours of Service Regulations", "ELD Requirements"],
+      comingSoon: true
+    },
+    {
+      id: "documentation",
+      icon: FileText,
+      title: "Documentation & Forms",
+      description: "Essential forms and documentation templates for carriers and owner-operators.",
+      items: ["Bill of Lading Templates", "Inspection Checklists", "Maintenance Logs"],
+      comingSoon: true
+    },
+    {
+      id: "business-tips",
+      icon: TrendingUp,
+      title: "Business Tips",
+      description: "Strategies and insights to help grow your trucking business and maximize profitability.",
+      items: ["Fuel Cost Management", "Route Optimization", "Load Board Tips"],
+      comingSoon: true
+    },
+    {
+      id: "safety",
+      icon: Shield,
+      title: "Safety Resources",
+      description: "Safety guidelines, training materials, and best practices for safe operations.",
+      items: ["Pre-Trip Inspection Guide", "Weather Driving Tips", "Cargo Securement"],
+      comingSoon: true
+    },
+    {
+      id: "equipment",
+      icon: Truck,
+      title: "Equipment Knowledge",
+      description: "Learn about trailer types, maintenance schedules, and equipment specifications.",
+      items: ["Trailer Types Explained", "Maintenance Schedules", "Tire Care Guide"],
+      comingSoon: true
     }
   ];
+
+  const scrollToSection = (id: string) => {
+    const element = document.getElementById(id);
+    if (element) {
+      const offset = 100;
+      const elementPosition = element.getBoundingClientRect().top + window.scrollY;
+      window.scrollTo({ top: elementPosition - offset, behavior: "smooth" });
+    }
+  };
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -81,6 +96,25 @@ const Resources = () => {
 
       <Breadcrumbs />
 
+      {/* Section Navigation */}
+      <nav className="sticky top-0 z-40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
+        <div className="container mx-auto px-4">
+          <div className="flex items-center gap-1 py-3 overflow-x-auto scrollbar-hide">
+            {resourceCategories.map((category) => (
+              <button
+                key={category.id}
+                onClick={() => scrollToSection(category.id)}
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors whitespace-nowrap"
+              >
+                <category.icon className="h-4 w-4" />
+                <span className="hidden sm:inline">{category.title}</span>
+                <span className="sm:hidden">{category.title.split(' ')[0]}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      </nav>
+
       {/* Resources Grid */}
       <section className="py-20 bg-background">
         <div className="container mx-auto px-4">
@@ -95,7 +129,11 @@ const Resources = () => {
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {resourceCategories.map((category, index) => (
-              <Card key={index} className="hover:shadow-lg transition-shadow">
+              <Card 
+                key={index} 
+                id={category.id}
+                className="hover:shadow-lg transition-shadow scroll-mt-28"
+              >
                 <CardHeader>
                   <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
                     <category.icon className="h-6 w-6 text-primary" />
