@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
-import { loginSchema, signupSchema } from "@/lib/validations";
+import { loginSchema, quickSignupSchema } from "@/lib/validations";
 import { supabase } from "@/integrations/supabase/client";
 import { Gift } from "lucide-react";
 
@@ -53,13 +53,7 @@ const Login = () => {
     try {
       // Validate input
       if (isSignUp) {
-        const validationResult = signupSchema.safeParse({ 
-          email, 
-          password,
-          firstName: "",
-          lastName: "",
-          phone: ""
-        });
+        const validationResult = quickSignupSchema.safeParse({ email, password });
         
         if (!validationResult.success) {
           const firstError = validationResult.error.errors[0];
