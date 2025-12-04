@@ -124,6 +124,12 @@ All colors MUST be HSL.
   }
 }
 
+/* Performance: Defer rendering of below-fold content */
+.content-deferred {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 500px;
+}
+
 /* Print styles for calculator export */
 @media print {
   /* Hide non-essential elements */
