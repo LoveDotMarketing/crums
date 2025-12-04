@@ -1,8 +1,8 @@
 import { useState, useMemo } from "react";
-import { Helmet } from "react-helmet-async";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
+import { SEO } from "@/components/SEO";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,6 +10,25 @@ import { Button } from "@/components/ui/button";
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
 import { Calculator, DollarSign, Fuel, Shield, Wrench, Truck, MoreHorizontal } from "lucide-react";
 import { PrintButton } from "@/components/PrintButton";
+
+const toolSchema = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "Cost Per Mile Calculator",
+  "description": "Calculate your true cost per mile with our free trucking calculator. Input fuel, insurance, maintenance, lease payments, and more to understand your operating costs.",
+  "url": "https://crumsleasing.com/resources/cost-per-mile",
+  "applicationCategory": "BusinessApplication",
+  "operatingSystem": "Web Browser",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD"
+  },
+  "provider": {
+    "@type": "Organization",
+    "name": "CRUMS Leasing"
+  }
+};
 
 interface CostInputs {
   milesPerMonth: number;
@@ -82,11 +101,12 @@ const CostPerMileCalculator = () => {
 
   return (
     <>
-      <Helmet>
-        <title>Cost Per Mile Calculator | CRUMS Leasing Resources</title>
-        <meta name="description" content="Calculate your true cost per mile with our free trucking calculator. Input fuel, insurance, maintenance, lease payments, and more to understand your operating costs." />
-        <link rel="canonical" href="https://crumsleasing.com/resources/cost-per-mile" />
-      </Helmet>
+      <SEO
+        title="Cost Per Mile Calculator - Trucking Operating Cost Tool"
+        description="Calculate your true cost per mile with our free trucking calculator. Input fuel, insurance, maintenance, lease payments, and more to understand your operating costs."
+        canonical="https://crumsleasing.com/resources/cost-per-mile"
+        structuredData={toolSchema}
+      />
 
       <Navigation />
 

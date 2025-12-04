@@ -1,8 +1,8 @@
 import { useState, useMemo } from "react";
-import { Helmet } from "react-helmet-async";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
+import { SEO } from "@/components/SEO";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,6 +11,25 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar } from "recharts";
 import { Scale, DollarSign, TrendingUp, TrendingDown, Calculator, CheckCircle2, XCircle } from "lucide-react";
 import { PrintButton } from "@/components/PrintButton";
+
+const toolSchema = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "Lease vs Buy Calculator",
+  "description": "Compare the costs of leasing versus buying a trailer with our free calculator. See side-by-side projections to make the best decision for your business.",
+  "url": "https://crumsleasing.com/resources/lease-vs-buy",
+  "applicationCategory": "BusinessApplication",
+  "operatingSystem": "Web Browser",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD"
+  },
+  "provider": {
+    "@type": "Organization",
+    "name": "CRUMS Leasing"
+  }
+};
 
 interface BuyInputs {
   purchasePrice: number;
@@ -165,11 +184,12 @@ const LeasevsBuyCalculator = () => {
 
   return (
     <>
-      <Helmet>
-        <title>Lease vs Buy Calculator | CRUMS Leasing Resources</title>
-        <meta name="description" content="Compare the costs of leasing versus buying a trailer with our free calculator. See side-by-side projections to make the best decision for your business." />
-        <link rel="canonical" href="https://crumsleasing.com/resources/lease-vs-buy" />
-      </Helmet>
+      <SEO
+        title="Lease vs Buy Calculator - Compare Trailer Ownership Costs"
+        description="Compare the costs of leasing versus buying a trailer with our free calculator. See side-by-side projections to make the best decision for your business."
+        canonical="https://crumsleasing.com/resources/lease-vs-buy"
+        structuredData={toolSchema}
+      />
 
       <Navigation />
 
