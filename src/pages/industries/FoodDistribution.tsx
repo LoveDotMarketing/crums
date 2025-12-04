@@ -5,7 +5,7 @@ import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { UtensilsCrossed, CheckCircle, Thermometer, Shield, Clock, Leaf } from "lucide-react";
+import { UtensilsCrossed, CheckCircle, Thermometer, Shield, Clock, Leaf, ArrowRight } from "lucide-react";
 
 const FoodDistribution = () => {
   const benefits = [
@@ -25,32 +25,27 @@ const FoodDistribution = () => {
       <Navigation />
       
       <main className="flex-grow">
-        <section className="bg-gradient-to-br from-primary/5 via-background to-secondary/5 py-16 md:py-24">
-          <div className="container mx-auto px-4">
-            <Breadcrumbs />
-            <div className="max-w-3xl">
-              <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full text-sm font-medium mb-6">
-                <UtensilsCrossed className="h-4 w-4" />
-                Food & Beverage
-              </div>
-              <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
-                Food Distribution Solutions
-              </h1>
-              <p className="text-lg text-muted-foreground mb-8">
-                From farm-fresh produce to packaged goods, CRUMS Leasing provides the trailer 
-                solutions food distributors need to keep America fed safely and efficiently.
-              </p>
-              <div className="flex flex-wrap gap-4">
-                <Button asChild size="lg">
-                  <Link to="/get-started">Get a Quote</Link>
-                </Button>
-                <Button asChild variant="outline" size="lg">
-                  <Link to="/refrigerated-trailers">View Reefer Options</Link>
-                </Button>
-              </div>
+        <section className="bg-gradient-to-r from-primary to-brand-teal-dark py-16 md:py-24">
+          <div className="container mx-auto px-4 text-center">
+            <h1 className="text-4xl md:text-6xl font-bold text-primary-foreground mb-6">
+              Food Distribution Solutions
+            </h1>
+            <p className="text-lg text-primary-foreground/80 mb-8 max-w-2xl mx-auto">
+              From farm-fresh produce to packaged goods, CRUMS Leasing provides the trailer 
+              solutions food distributors need to keep America fed safely and efficiently.
+            </p>
+            <div className="flex flex-wrap gap-4 justify-center">
+              <Button asChild size="lg" className="bg-secondary hover:bg-secondary/90 text-secondary-foreground">
+                <Link to="/get-started">Get a Quote <ArrowRight className="ml-2 h-4 w-4" /></Link>
+              </Button>
+              <Button asChild variant="outline" size="lg" className="border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10">
+                <Link to="/refrigerated-trailers">View Reefer Options</Link>
+              </Button>
             </div>
           </div>
         </section>
+
+        <Breadcrumbs />
 
         <section className="py-16 md:py-20">
           <div className="container mx-auto px-4">

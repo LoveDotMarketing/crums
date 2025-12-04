@@ -5,7 +5,7 @@ import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Calendar, CheckCircle, TrendingUp, Clock, DollarSign, Repeat } from "lucide-react";
+import { Calendar, CheckCircle, TrendingUp, Clock, DollarSign, Repeat, ArrowRight } from "lucide-react";
 
 const SeasonalDemand = () => {
   const benefits = [
@@ -25,32 +25,27 @@ const SeasonalDemand = () => {
       <Navigation />
       
       <main className="flex-grow">
-        <section className="bg-gradient-to-br from-primary/5 via-background to-secondary/5 py-16 md:py-24">
-          <div className="container mx-auto px-4">
-            <Breadcrumbs />
-            <div className="max-w-3xl">
-              <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full text-sm font-medium mb-6">
-                <Calendar className="h-4 w-4" />
-                Peak Season Support
-              </div>
-              <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
-                Seasonal Demand Solutions
-              </h1>
-              <p className="text-lg text-muted-foreground mb-8">
-                Don't let peak season catch you short on capacity. CRUMS Leasing provides flexible 
-                short-term trailer rentals to help you handle seasonal demand spikes efficiently.
-              </p>
-              <div className="flex flex-wrap gap-4">
-                <Button asChild size="lg">
-                  <Link to="/get-started">Reserve Now</Link>
-                </Button>
-                <Button asChild variant="outline" size="lg">
-                  <Link to="/trailer-rentals">View Rental Options</Link>
-                </Button>
-              </div>
+        <section className="bg-gradient-to-r from-primary to-brand-teal-dark py-16 md:py-24">
+          <div className="container mx-auto px-4 text-center">
+            <h1 className="text-4xl md:text-6xl font-bold text-primary-foreground mb-6">
+              Seasonal Demand Solutions
+            </h1>
+            <p className="text-lg text-primary-foreground/80 mb-8 max-w-2xl mx-auto">
+              Don't let peak season catch you short on capacity. CRUMS Leasing provides flexible 
+              short-term trailer rentals to help you handle seasonal demand spikes efficiently.
+            </p>
+            <div className="flex flex-wrap gap-4 justify-center">
+              <Button asChild size="lg" className="bg-secondary hover:bg-secondary/90 text-secondary-foreground">
+                <Link to="/get-started">Reserve Now <ArrowRight className="ml-2 h-4 w-4" /></Link>
+              </Button>
+              <Button asChild variant="outline" size="lg" className="border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10">
+                <Link to="/trailer-rentals">View Rental Options</Link>
+              </Button>
             </div>
           </div>
         </section>
+
+        <Breadcrumbs />
 
         <section className="py-16 md:py-20">
           <div className="container mx-auto px-4">

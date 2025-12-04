@@ -69,20 +69,19 @@ const Industries = () => {
       <Navigation />
       
       <main className="flex-grow">
-        <section className="bg-gradient-to-br from-primary/5 via-background to-secondary/5 py-16 md:py-24">
-          <div className="container mx-auto px-4">
-            <Breadcrumbs />
-            <div className="max-w-3xl mx-auto text-center">
-              <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
-                Industries We Serve
-              </h1>
-              <p className="text-lg text-muted-foreground">
-                From independent owner operators to large fleet operations, CRUMS Leasing provides 
-                tailored trailer solutions for every segment of the transportation industry.
-              </p>
-            </div>
+        <section className="bg-gradient-to-r from-primary to-brand-teal-dark py-16 md:py-24">
+          <div className="container mx-auto px-4 text-center">
+            <h1 className="text-4xl md:text-6xl font-bold text-primary-foreground mb-6">
+              Industries We Serve
+            </h1>
+            <p className="text-lg text-primary-foreground/80 max-w-2xl mx-auto">
+              From independent owner operators to large fleet operations, CRUMS Leasing provides 
+              tailored trailer solutions for every segment of the transportation industry.
+            </p>
           </div>
         </section>
+
+        <Breadcrumbs />
 
         <section className="py-16 md:py-20">
           <div className="container mx-auto px-4">

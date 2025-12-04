@@ -5,7 +5,7 @@ import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Truck, CheckCircle, TrendingUp, Shield, Clock } from "lucide-react";
+import { Truck, CheckCircle, TrendingUp, Shield, Clock, ArrowRight } from "lucide-react";
 
 const FleetLeasing = () => {
   const benefits = [
@@ -25,32 +25,27 @@ const FleetLeasing = () => {
       <Navigation />
       
       <main className="flex-grow">
-        <section className="bg-gradient-to-br from-primary/5 via-background to-secondary/5 py-16 md:py-24">
-          <div className="container mx-auto px-4">
-            <Breadcrumbs />
-            <div className="max-w-3xl">
-              <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full text-sm font-medium mb-6">
-                <Truck className="h-4 w-4" />
-                Fleet Operations
-              </div>
-              <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
-                Fleet Leasing Solutions
-              </h1>
-              <p className="text-lg text-muted-foreground mb-8">
-                Whether you're managing 5 trailers or 500, CRUMS Leasing provides the scalable 
-                trailer solutions your fleet needs to grow and succeed.
-              </p>
-              <div className="flex flex-wrap gap-4">
-                <Button asChild size="lg">
-                  <Link to="/get-started">Get a Fleet Quote</Link>
-                </Button>
-                <Button asChild variant="outline" size="lg">
-                  <Link to="/contact">Contact Sales</Link>
-                </Button>
-              </div>
+        <section className="bg-gradient-to-r from-primary to-brand-teal-dark py-16 md:py-24">
+          <div className="container mx-auto px-4 text-center">
+            <h1 className="text-4xl md:text-6xl font-bold text-primary-foreground mb-6">
+              Fleet Leasing Solutions
+            </h1>
+            <p className="text-lg text-primary-foreground/80 mb-8 max-w-2xl mx-auto">
+              Whether you're managing 5 trailers or 500, CRUMS Leasing provides the scalable 
+              trailer solutions your fleet needs to grow and succeed.
+            </p>
+            <div className="flex flex-wrap gap-4 justify-center">
+              <Button asChild size="lg" className="bg-secondary hover:bg-secondary/90 text-secondary-foreground">
+                <Link to="/get-started">Get a Fleet Quote <ArrowRight className="ml-2 h-4 w-4" /></Link>
+              </Button>
+              <Button asChild variant="outline" size="lg" className="border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10">
+                <Link to="/contact">Contact Sales</Link>
+              </Button>
             </div>
           </div>
         </section>
+
+        <Breadcrumbs />
 
         <section className="py-16 md:py-20">
           <div className="container mx-auto px-4">
