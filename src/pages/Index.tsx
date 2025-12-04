@@ -21,6 +21,9 @@ import {
 import heroImage from "@/assets/hero-truck.jpg";
 import fleetImage from "@/assets/crums-trailer.png";
 import trailerFleetImage from "@/assets/trailer-fleet.png";
+import dryVanTrailerImg from "@/assets/dry-van-trailer.png";
+import flatbedTrailerImg from "@/assets/flatbed-trailer.png";
+import refrigeratedTrailerImg from "@/assets/refrigerated-trailer.png";
 import { SEO } from "@/components/SEO";
 import { organizationSchema, generateBreadcrumbSchema, customerReviews, generateReviewSchema } from "@/lib/structuredData";
 
@@ -343,6 +346,122 @@ const Index = () => {
                 <p className="text-muted-foreground mb-6 leading-relaxed">
                   Comprehensive support services to keep your leased trailers operational and your supply chain running smoothly.
                 </p>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </section>
+
+      {/* Equipment Types Section */}
+      <section className="py-20 bg-muted">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
+              Our Equipment
+            </h2>
+            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+              Quality trailers for every hauling need — lease or rent with flexible terms.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+            <Card className="border-2 hover:shadow-lg transition-shadow">
+              <CardContent className="p-6">
+                <Link to="/dry-van-trailers" className="block hover:opacity-80 transition-opacity">
+                  <img 
+                    src={dryVanTrailerImg} 
+                    alt="CRUMS Leasing 53-foot dry van trailer - enclosed cargo protection for general freight" 
+                    className="w-full h-40 object-contain mb-4"
+                    loading="lazy"
+                    width="300"
+                    height="160"
+                  />
+                </Link>
+                <h3 className="text-xl font-bold mb-4">Dry Van Trailers</h3>
+                <ul className="space-y-2 text-muted-foreground mb-6">
+                  <li className="flex items-start">
+                    <CheckCircle className="h-5 w-5 text-secondary mr-2 mt-0.5 flex-shrink-0" />
+                    <span>53' and 48' options</span>
+                  </li>
+                  <li className="flex items-start">
+                    <CheckCircle className="h-5 w-5 text-secondary mr-2 mt-0.5 flex-shrink-0" />
+                    <span>Swing and roll-up doors</span>
+                  </li>
+                  <li className="flex items-start">
+                    <CheckCircle className="h-5 w-5 text-secondary mr-2 mt-0.5 flex-shrink-0" />
+                    <span>Logistic posts available</span>
+                  </li>
+                </ul>
+                <Link to="/dry-van-trailers" className="text-secondary hover:underline font-medium inline-flex items-center">
+                  Learn more about dry van trailers
+                  <ArrowRight className="h-4 w-4 ml-1" />
+                </Link>
+              </CardContent>
+            </Card>
+            <Card className="border-2 hover:shadow-lg transition-shadow">
+              <CardContent className="p-6">
+                <Link to="/flatbed-trailers" className="block hover:opacity-80 transition-opacity">
+                  <img 
+                    src={flatbedTrailerImg} 
+                    alt="CRUMS Leasing flatbed trailer - open-deck design for oversized and heavy cargo hauling" 
+                    className="w-full h-40 object-contain mb-4"
+                    loading="lazy"
+                    width="300"
+                    height="160"
+                  />
+                </Link>
+                <h3 className="text-xl font-bold mb-4">Flatbed Trailers</h3>
+                <ul className="space-y-2 text-muted-foreground mb-6">
+                  <li className="flex items-start">
+                    <CheckCircle className="h-5 w-5 text-secondary mr-2 mt-0.5 flex-shrink-0" />
+                    <span>Standard and step deck</span>
+                  </li>
+                  <li className="flex items-start">
+                    <CheckCircle className="h-5 w-5 text-secondary mr-2 mt-0.5 flex-shrink-0" />
+                    <span>Heavy-duty construction</span>
+                  </li>
+                  <li className="flex items-start">
+                    <CheckCircle className="h-5 w-5 text-secondary mr-2 mt-0.5 flex-shrink-0" />
+                    <span>Multiple tie-down points</span>
+                  </li>
+                </ul>
+                <Link to="/flatbed-trailers" className="text-secondary hover:underline font-medium inline-flex items-center">
+                  Learn more about flatbed trailers
+                  <ArrowRight className="h-4 w-4 ml-1" />
+                </Link>
+              </CardContent>
+            </Card>
+            <Card className="border-2 hover:shadow-lg transition-shadow">
+              <CardContent className="p-6">
+                <Link to="/refrigerated-trailers" className="block hover:opacity-80 transition-opacity">
+                  <img 
+                    src={refrigeratedTrailerImg} 
+                    alt="CRUMS Leasing refrigerated reefer trailer - temperature-controlled transport for perishable goods" 
+                    className="w-full h-40 object-contain mb-4"
+                    loading="lazy"
+                    width="300"
+                    height="160"
+                  />
+                </Link>
+                <h3 className="text-xl font-bold mb-4">Refrigerated Trailers</h3>
+                <ul className="space-y-2 text-muted-foreground mb-6">
+                  <li className="flex items-start">
+                    <CheckCircle className="h-5 w-5 text-secondary mr-2 mt-0.5 flex-shrink-0" />
+                    <span>Multi-temperature zones</span>
+                  </li>
+                  <li className="flex items-start">
+                    <CheckCircle className="h-5 w-5 text-secondary mr-2 mt-0.5 flex-shrink-0" />
+                    <span>Premium insulation</span>
+                  </li>
+                  <li className="flex items-start">
+                    <CheckCircle className="h-5 w-5 text-secondary mr-2 mt-0.5 flex-shrink-0" />
+                    <span>Latest refrigeration units</span>
+                  </li>
+                </ul>
+                <Link to="/refrigerated-trailers" className="text-secondary hover:underline font-medium inline-flex items-center">
+                  Learn more about reefer trailers
+                  <ArrowRight className="h-4 w-4 ml-1" />
+                </Link>
               </CardContent>
             </Card>
           </div>
