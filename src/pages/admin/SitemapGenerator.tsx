@@ -6,18 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { guides, BASE_URL, getGuideUrl } from "@/lib/guides";
-import { Copy, Check, FileCode, BookOpen, Calculator, RefreshCw } from "lucide-react";
+import { tools, getToolUrl, getAvailableTools } from "@/lib/tools";
+import { Copy, Check, FileCode, BookOpen, Calculator as CalculatorIcon, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
-
-// Financial tools registry
-const tools = [
-  { slug: "cost-per-mile", title: "Cost Per Mile Calculator", lastModified: "2025-12-04", priority: 0.8 },
-  { slug: "lease-vs-buy", title: "Lease vs Buy Calculator", lastModified: "2025-12-04", priority: 0.8 },
-  { slug: "profit-calculator", title: "Profit Per Load Calculator", lastModified: "2025-12-04", priority: 0.8 },
-  { slug: "ifta-calculator", title: "IFTA Tax Estimator", lastModified: "2025-12-04", priority: 0.8 },
-  { slug: "fuel-calculator", title: "Fuel Cost Calculator", lastModified: "2025-12-04", priority: 0.7 },
-  { slug: "tax-deductions", title: "Tax Deduction Guide", lastModified: "2025-12-04", priority: 0.7 },
-];
 
 const SitemapGenerator = () => {
   const [copiedSection, setCopiedSection] = useState<string | null>(null);
@@ -47,6 +38,8 @@ const SitemapGenerator = () => {
   };
 
   const generateToolsXml = (): string => {
+    const availableTools = getAvailableTools();
+    
     let xml = `  <!-- Financial Tools Hub -->\n`;
     xml += `  <url>\n`;
     xml += `    <loc>${BASE_URL}/resources/tools</loc>\n`;
@@ -56,11 +49,11 @@ const SitemapGenerator = () => {
     xml += `  </url>\n\n`;
     xml += `  <!-- Individual Tools -->\n`;
 
-    tools.forEach(tool => {
+    availableTools.forEach(tool => {
       xml += `  <url>\n`;
-      xml += `    <loc>${BASE_URL}/resources/tools/${tool.slug}</loc>\n`;
+      xml += `    <loc>${getToolUrl(tool.slug)}</loc>\n`;
       xml += `    <lastmod>${tool.lastModified}</lastmod>\n`;
-      xml += `    <changefreq>monthly</changefreq>\n`;
+      xml += `    <changefreq>${tool.changefreq}</changefreq>\n`;
       xml += `    <priority>${tool.priority}</priority>\n`;
       xml += `  </url>\n`;
     });
@@ -89,6 +82,8 @@ ${generateToolsXml()}
 
   const availableGuides = guides.filter(g => g.available);
   const unavailableGuides = guides.filter(g => !g.available);
+  const availableTools = getAvailableTools();
+  const unavailableTools = tools.filter(t => !t.available);
 
   return (
     <SidebarProvider>
@@ -122,13 +117,15 @@ ${generateToolsXml()}
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-lg flex items-center gap-2">
-                  <Calculator className="h-5 w-5 text-primary" />
+                  <CalculatorIcon className="h-5 w-5 text-primary" />
                   Tools
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold">{tools.length}</div>
-                <p className="text-sm text-muted-foreground">Financial calculators</p>
+                <div className="text-3xl font-bold">{availableTools.length}</div>
+                <p className="text-sm text-muted-foreground">
+                  {unavailableTools.length > 0 ? `${unavailableTools.length} coming soon` : "Financial calculators"}
+                </p>
               </CardContent>
             </Card>
 
@@ -140,7 +137,7 @@ ${generateToolsXml()}
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold">{availableGuides.length + tools.length + 2}</div>
+                <div className="text-3xl font-bold">{availableGuides.length + availableTools.length + 2}</div>
                 <p className="text-sm text-muted-foreground">Including hub pages</p>
               </CardContent>
             </Card>
@@ -192,7 +189,7 @@ ${generateToolsXml()}
                 <CardHeader>
                   <CardTitle>Tools Registry</CardTitle>
                   <CardDescription>
-                    Financial calculator tools. These are all published.
+                    All tools defined in src/lib/tools.ts. Add new tools there to include in sitemap.
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -200,14 +197,16 @@ ${generateToolsXml()}
                     {tools.map(tool => (
                       <div key={tool.slug} className="flex items-center justify-between p-3 border rounded-lg">
                         <div className="flex items-center gap-3">
-                          <Calculator className="h-5 w-5 text-muted-foreground" />
+                          <tool.icon className="h-5 w-5 text-muted-foreground" />
                           <div>
                             <p className="font-medium text-sm">{tool.title}</p>
                             <p className="text-xs text-muted-foreground">/resources/tools/{tool.slug}</p>
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
-                          <Badge>Published</Badge>
+                          <Badge variant={tool.available ? "default" : "secondary"}>
+                            {tool.available ? "Published" : "Coming Soon"}
+                          </Badge>
                           <span className="text-xs text-muted-foreground">
                             Priority: {tool.priority}
                           </span>
