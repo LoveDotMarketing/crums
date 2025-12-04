@@ -17,6 +17,9 @@ const routeLabels: Record<string, string> = {
   "/services/trailer-leasing": "Trailer Leasing",
   "/services/trailer-rentals": "Trailer Rentals",
   "/services/fleet-solutions": "Fleet Solutions",
+  "/dry-van-trailers": "Dry Van Trailers",
+  "/refrigerated-trailers": "Refrigerated Trailers",
+  "/flatbed-trailers": "Flatbed Trailers",
   "/locations": "Locations",
   "/contact": "Contact",
   "/careers": "Careers",
@@ -33,6 +36,9 @@ const routeLabels: Record<string, string> = {
   "/resources/tools/ifta-calculator": "IFTA Tax Estimator",
   "/resources/tools/fuel-calculator": "Fuel Cost Calculator",
   "/resources/tools/tax-deductions": "Tax Deduction Guide",
+  
+  "/guides": "Industry Guides",
+  "/guides/choosing-trailer": "Choosing the Right Trailer",
 };
 
 export const Breadcrumbs = ({ items }: BreadcrumbsProps) => {
