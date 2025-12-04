@@ -6,6 +6,13 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Truck, CheckCircle, TrendingUp, Shield, Clock, ArrowRight } from "lucide-react";
+import { fleetLeasingServiceSchema, generateBreadcrumbSchema } from "@/lib/structuredData";
+
+const breadcrumbSchema = generateBreadcrumbSchema([
+  { name: "Home", url: "https://crumsleasing.com" },
+  { name: "Industries", url: "https://crumsleasing.com/industries" },
+  { name: "Fleet Leasing", url: "https://crumsleasing.com/industries/fleet-leasing" }
+]);
 
 const FleetLeasing = () => {
   const benefits = [
@@ -21,6 +28,7 @@ const FleetLeasing = () => {
         title="Fleet Leasing Solutions | CRUMS Leasing"
         description="Scalable trailer leasing solutions for growing fleets. CRUMS Leasing offers flexible terms, maintained equipment, and multiple trailer types for fleet operators."
         canonical="https://crumsleasing.com/industries/fleet-leasing"
+        structuredData={[fleetLeasingServiceSchema, breadcrumbSchema]}
       />
       <Navigation />
       

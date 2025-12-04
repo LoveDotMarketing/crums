@@ -6,6 +6,13 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Calendar, CheckCircle, TrendingUp, Clock, DollarSign, Repeat, ArrowRight } from "lucide-react";
+import { seasonalDemandServiceSchema, generateBreadcrumbSchema } from "@/lib/structuredData";
+
+const breadcrumbSchema = generateBreadcrumbSchema([
+  { name: "Home", url: "https://crumsleasing.com" },
+  { name: "Industries", url: "https://crumsleasing.com/industries" },
+  { name: "Seasonal Demand", url: "https://crumsleasing.com/industries/seasonal-demand" }
+]);
 
 const SeasonalDemand = () => {
   const benefits = [
@@ -21,6 +28,7 @@ const SeasonalDemand = () => {
         title="Seasonal Trailer Rentals | CRUMS Leasing"
         description="Short-term trailer rentals for seasonal demand spikes. CRUMS Leasing offers flexible capacity solutions for holiday seasons, harvest, and peak shipping periods."
         canonical="https://crumsleasing.com/industries/seasonal-demand"
+        structuredData={[seasonalDemandServiceSchema, breadcrumbSchema]}
       />
       <Navigation />
       

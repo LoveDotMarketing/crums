@@ -6,6 +6,13 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Factory, CheckCircle, Cog, Shield, Clock, Layers, ArrowRight } from "lucide-react";
+import { manufacturingServiceSchema, generateBreadcrumbSchema } from "@/lib/structuredData";
+
+const breadcrumbSchema = generateBreadcrumbSchema([
+  { name: "Home", url: "https://crumsleasing.com" },
+  { name: "Industries", url: "https://crumsleasing.com/industries" },
+  { name: "Manufacturing", url: "https://crumsleasing.com/industries/manufacturing" }
+]);
 
 const Manufacturing = () => {
   const benefits = [
@@ -21,6 +28,7 @@ const Manufacturing = () => {
         title="Manufacturing Logistics Trailer Leasing | CRUMS Leasing"
         description="Trailer leasing for manufacturing companies. CRUMS Leasing offers dry van and flatbed trailers to support manufacturing logistics and supply chains."
         canonical="https://crumsleasing.com/industries/manufacturing"
+        structuredData={[manufacturingServiceSchema, breadcrumbSchema]}
       />
       <Navigation />
       
