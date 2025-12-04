@@ -1,9 +1,9 @@
 import { useLocation, Link } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { Helmet } from "react-helmet-async";
 import { supabase } from "@/integrations/supabase/client";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
+import { SEO } from "@/components/SEO";
 import { Button } from "@/components/ui/button";
 import { Home, Phone, MapPin, FileText, ArrowLeft, Search } from "lucide-react";
 
@@ -82,10 +82,11 @@ const NotFound = () => {
 
   return (
     <>
-      <Helmet>
-        <title>Page Not Found | CRUMS Leasing</title>
-        <meta name="robots" content="noindex, nofollow" />
-      </Helmet>
+      <SEO
+        title="Page Not Found"
+        description="The page you're looking for doesn't exist or has been moved. Visit our homepage or contact CRUMS Leasing for assistance."
+        noindex={true}
+      />
       
       <div className="min-h-screen flex flex-col">
         <Navigation />

@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+  <url>
+    <loc>https://crumsleasing.com/</loc>
+    <image:image>
+      <image:loc>https://crumsleasing.com/og-image.jpg</image:loc>
+      <image:title>CRUMS Leasing - Trailer Leasing Solutions</image:title>
+      <image:caption>CRUMS Leasing provides flexible trailer leasing and rental solutions for carriers across the United States</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://crumsleasing.com/about</loc>
+    <image:image>
+      <image:loc>https://crumsleasing.com/assets/our-story-image.png</image:loc>
+      <image:title>Our Story - CRUMS Leasing</image:title>
+      <image:caption>Learn about the CRUMS Leasing story and our commitment to carriers</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://crumsleasing.com/assets/team-leaders.png</image:loc>
+      <image:title>CRUMS Leasing Leadership Team</image:title>
+      <image:caption>Meet the leadership team behind CRUMS Leasing</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://crumsleasing.com/services/trailer-leasing</loc>
+    <image:image>
+      <image:loc>https://crumsleasing.com/assets/trailer-fleet.png</image:loc>
+      <image:title>CRUMS Trailer Fleet</image:title>
+      <image:caption>53-foot dry van and flatbed trailers available for lease</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://crumsleasing.com/services/trailer-rentals</loc>
+    <image:image>
+      <image:loc>https://crumsleasing.com/assets/crums-trailer.png</image:loc>
+      <image:title>CRUMS Trailer Rentals</image:title>
+      <image:caption>Short-term trailer rental options for carriers</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://crumsleasing.com/services/fleet-solutions</loc>
+    <image:image>
+      <image:loc>https://crumsleasing.com/assets/fleet-overview.jpg</image:loc>
+      <image:title>Fleet Management Solutions</image:title>
+      <image:caption>Comprehensive fleet management and leasing solutions</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://crumsleasing.com/locations</loc>
+    <image:image>
+      <image:loc>https://crumsleasing.com/assets/crums-truck-highway.png</image:loc>
+      <image:title>CRUMS Service Locations</image:title>
+      <image:caption>CRUMS Leasing serves carriers across the United States</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://crumsleasing.com/careers</loc>
+    <image:image>
+      <image:loc>https://crumsleasing.com/assets/team-handshake.jpg</image:loc>
+      <image:title>Careers at CRUMS Leasing</image:title>
+      <image:caption>Join the CRUMS Leasing team</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://crumsleasing.com/reviews</loc>
+    <image:image>
+      <image:loc>https://crumsleasing.com/assets/crums-g-review.svg</image:loc>
+      <image:title>CRUMS Leasing Customer Reviews</image:title>
+      <image:caption>Read what our customers say about CRUMS Leasing</image:caption>
+    </image:image>
+  </url>
+</urlset>

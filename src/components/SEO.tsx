@@ -5,7 +5,7 @@ interface SEOProps {
   description: string;
   canonical?: string;
   ogImage?: string;
-  structuredData?: object;
+  structuredData?: object | object[];
   noindex?: boolean;
 }
 
@@ -65,9 +65,17 @@ export const SEO = ({
       
       {/* Structured Data */}
       {structuredData && (
-        <script type="application/ld+json">
-          {JSON.stringify(structuredData)}
-        </script>
+        Array.isArray(structuredData) ? (
+          structuredData.map((schema, index) => (
+            <script key={index} type="application/ld+json">
+              {JSON.stringify(schema)}
+            </script>
+          ))
+        ) : (
+          <script type="application/ld+json">
+            {JSON.stringify(structuredData)}
+          </script>
+        )
       )}
     </Helmet>
   );

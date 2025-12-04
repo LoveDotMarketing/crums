@@ -14,3 +14,5 @@ User-agent: *
 Allow: /
 
 Sitemap: https://crumsleasing.com/sitemap.xml
+Sitemap: https://crumsleasing.com/image-sitemap.xml
+Sitemap: https://crumsleasing.com/video-sitemap.xml
