@@ -21,7 +21,7 @@ export const Navigation = () => {
         <div className="flex items-center justify-between h-20">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-3">
-            <img src={crumsLogo} alt="CRUMS Leasing Logo" className="h-12 w-auto" width={144} height={48} fetchPriority="high" decoding="async" />
+            <img src={crumsLogo} alt="CRUMS Leasing Logo" className="h-12 w-auto" width={144} height={48} fetchPriority="high" />
             <div className="hidden sm:block">
               <div className="text-xl font-bold text-primary">CRUMS Leasing</div>
               <div className="text-xs text-muted-foreground">Equipment Solutions</div>
