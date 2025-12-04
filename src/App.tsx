@@ -254,13 +254,13 @@ const App = () => (
             />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="/resources" element={<Resources />} />
-            <Route path="/resources/tools" element={<Tools />} />
-            <Route path="/resources/cost-per-mile" element={<CostPerMileCalculator />} />
-            <Route path="/resources/lease-vs-buy" element={<LeasevsBuyCalculator />} />
-            <Route path="/resources/profit-calculator" element={<ProfitPerLoadCalculator />} />
-            <Route path="/resources/ifta-calculator" element={<IFTACalculator />} />
-            <Route path="/resources/fuel-calculator" element={<FuelCostCalculator />} />
-            <Route path="/resources/tax-deductions" element={<TaxDeductionGuide />} />
+<Route path="/resources/tools" element={<Tools />} />
+<Route path="/resources/tools/cost-per-mile" element={<CostPerMileCalculator />} />
+<Route path="/resources/tools/lease-vs-buy" element={<LeasevsBuyCalculator />} />
+<Route path="/resources/tools/profit-calculator" element={<ProfitPerLoadCalculator />} />
+<Route path="/resources/tools/ifta-calculator" element={<IFTACalculator />} />
+<Route path="/resources/tools/fuel-calculator" element={<FuelCostCalculator />} />
+<Route path="/resources/tools/tax-deductions" element={<TaxDeductionGuide />} />
             <Route path="/referral-program" element={<ReferralProgram />} />
             <Route path="/reviews" element={<Reviews />} />
             <Route path="/qr" element={<Navigate to="/review" replace />} />

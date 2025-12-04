@@ -23,7 +23,7 @@ const FuelCostCalculator = () => {
       <SEO
         title="Fuel Cost Calculator"
         description="Estimate your trip fuel costs with CRUMS Leasing's free fuel cost calculator. Enter your route distance, fuel price, and MPG to plan your fuel budget."
-        canonical="https://crumsleasing.com/resources/fuel-calculator"
+        canonical="https://crumsleasing.com/resources/tools/fuel-calculator"
       />
       <Navigation />
       

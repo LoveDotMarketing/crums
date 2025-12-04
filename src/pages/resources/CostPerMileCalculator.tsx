@@ -16,7 +16,7 @@ const toolSchema = {
   "@type": "SoftwareApplication",
   "name": "Cost Per Mile Calculator",
   "description": "Calculate your true cost per mile with our free trucking calculator. Input fuel, insurance, maintenance, lease payments, and more to understand your operating costs.",
-  "url": "https://crumsleasing.com/resources/cost-per-mile",
+  "url": "https://crumsleasing.com/resources/tools/cost-per-mile",
   "applicationCategory": "BusinessApplication",
   "operatingSystem": "Web Browser",
   "offers": {
@@ -104,7 +104,7 @@ const CostPerMileCalculator = () => {
       <SEO
         title="Cost Per Mile Calculator - Trucking Operating Cost Tool"
         description="Calculate your true cost per mile with our free trucking calculator. Input fuel, insurance, maintenance, lease payments, and more to understand your operating costs."
-        canonical="https://crumsleasing.com/resources/cost-per-mile"
+        canonical="https://crumsleasing.com/resources/tools/cost-per-mile"
         structuredData={toolSchema}
       />
 

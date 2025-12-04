@@ -17,7 +17,7 @@ const toolSchema = {
   "@type": "SoftwareApplication",
   "name": "Lease vs Buy Calculator",
   "description": "Compare the costs of leasing versus buying a trailer with our free calculator. See side-by-side projections to make the best decision for your business.",
-  "url": "https://crumsleasing.com/resources/lease-vs-buy",
+  "url": "https://crumsleasing.com/resources/tools/lease-vs-buy",
   "applicationCategory": "BusinessApplication",
   "operatingSystem": "Web Browser",
   "offers": {
@@ -187,7 +187,7 @@ const LeasevsBuyCalculator = () => {
       <SEO
         title="Lease vs Buy Calculator - Compare Trailer Ownership Costs"
         description="Compare the costs of leasing versus buying a trailer with our free calculator. See side-by-side projections to make the best decision for your business."
-        canonical="https://crumsleasing.com/resources/lease-vs-buy"
+        canonical="https://crumsleasing.com/resources/tools/lease-vs-buy"
         structuredData={toolSchema}
       />
 
