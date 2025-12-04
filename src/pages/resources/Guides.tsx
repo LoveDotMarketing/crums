@@ -5,23 +5,8 @@ import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { SEO } from "@/components/SEO";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { 
-  Truck, 
-  ClipboardCheck, 
-  Sofa, 
-  Snowflake, 
-  Wallet, 
-  ChefHat, 
-  Heart, 
-  AlertTriangle, 
-  FileCheck, 
-  Fuel, 
-  GraduationCap, 
-  Brain,
-  ArrowRight,
-  Calculator,
-  BookOpen
-} from "lucide-react";
+import { ArrowRight, Calculator, BookOpen } from "lucide-react";
+import { guides, getGuideHref } from "@/lib/guides";
 
 const guidesCollectionSchema = {
   "@context": "https://schema.org",
@@ -35,93 +20,6 @@ const guidesCollectionSchema = {
     "url": "https://crumsleasing.com"
   }
 };
-
-const guides = [
-  {
-    icon: Truck,
-    title: "How to Choose the Right Trailer for Your Haul",
-    description: "Break down the difference between flatbeds, reefers, dry vans, and more — with examples of what jobs fit each type.",
-    href: "/resources/guides/choosing-trailer",
-    available: true
-  },
-  {
-    icon: ClipboardCheck,
-    title: "How to Check Your Trailer Before Every Trip",
-    description: "Quick, visual pre-trip inspection checklist to avoid breakdowns and DOT violations.",
-    href: "/resources/guides/pre-trip-inspection",
-    available: false
-  },
-  {
-    icon: Sofa,
-    title: "How to Stay Comfortable on the Road (Without Breaking the Bank)",
-    description: "Cab organization hacks, sleeping tips, and small upgrades to make life easier in your rig.",
-    href: "/resources/guides/road-comfort",
-    available: false
-  },
-  {
-    icon: Snowflake,
-    title: "How to Handle Winter Roads Like a Pro",
-    description: "Driving tips for snow, black ice awareness, and emergency prep — plus, how CRUMS Leasing maintains equipment for safety.",
-    href: "/resources/guides/winter-driving",
-    available: false
-  },
-  {
-    icon: Wallet,
-    title: "How to Budget as a Truck Driver",
-    description: "Simple financial strategies for saving on fuel, meals, and maintenance — linking to CRUMS' mission to help drivers build stability.",
-    href: "/resources/guides/budgeting",
-    available: false
-  },
-  {
-    icon: ChefHat,
-    title: "How to Cook a Hot Meal in Your Truck",
-    description: "Showcase easy recipes using compact appliances (microwave, hot plate, etc.) — home-cooked comfort on the road.",
-    href: "/resources/guides/truck-cooking",
-    available: false
-  },
-  {
-    icon: Heart,
-    title: "How to Balance Work and Family Time as a Trucker",
-    description: "Staying connected with loved ones while on the road — reinforcing CRUMS' family first values.",
-    href: "/resources/guides/work-life-balance",
-    available: false
-  },
-  {
-    icon: AlertTriangle,
-    title: "How to Handle a Breakdown Safely",
-    description: "Step-by-step on what to do when stranded — who to call, what to check, and how CRUMS Leasing supports carriers through it.",
-    href: "/resources/guides/breakdown-safety",
-    available: false
-  },
-  {
-    icon: FileCheck,
-    title: "How to Get the Most Out of Your Lease",
-    description: "Tips on maintenance, payments, upgrades, and how to protect your investment — perfect for current and future clients.",
-    href: "/resources/guides/maximize-lease",
-    available: false
-  },
-  {
-    icon: Fuel,
-    title: "How to Boost Your Fuel Efficiency",
-    description: "Tire pressure, weight distribution, and idle-time tips saving carriers money while promoting CRUMS' well-maintained fleet.",
-    href: "/resources/guides/fuel-efficiency",
-    available: false
-  },
-  {
-    icon: GraduationCap,
-    title: "How to Build a Career in Trucking",
-    description: "Advice on networking, certification, and career progression — highlighting CRUMS as a company that believes in long-term success.",
-    href: "/resources/guides/trucking-career",
-    available: false
-  },
-  {
-    icon: Brain,
-    title: "How to Keep Your Mind Sharp and Positive on the Road",
-    description: "Focus on mental health, staying alert, reducing stress, and keeping a positive mindset during long hauls.",
-    href: "/resources/guides/mental-health",
-    available: false
-  }
-];
 
 const Guides = () => {
   return (
@@ -202,7 +100,7 @@ const Guides = () => {
                 <CardContent>
                   {guide.available ? (
                     <Button asChild variant="outline" className="w-full">
-                      <Link to={guide.href}>
+                      <Link to={getGuideHref(guide.slug)}>
                         Read Guide
                         <ArrowRight className="h-4 w-4 ml-2" />
                       </Link>

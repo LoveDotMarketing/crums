@@ -59,6 +59,7 @@ const Analytics = lazy(() => import("./pages/admin/Analytics"));
 const Outreach = lazy(() => import("./pages/admin/Outreach"));
 const Referrals = lazy(() => import("./pages/admin/Referrals"));
 const Staff = lazy(() => import("./pages/admin/Staff"));
+const SitemapGenerator = lazy(() => import("./pages/admin/SitemapGenerator"));
 
 // Public pages
 const ReferralProgram = lazy(() => import("./pages/ReferralProgram"));
@@ -209,6 +210,14 @@ const App = () => (
               element={
                 <ProtectedRoute requiredRole="admin">
                   <Staff />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/dashboard/admin/sitemap-generator" 
+              element={
+                <ProtectedRoute requiredRole="admin">
+                  <SitemapGenerator />
                 </ProtectedRoute>
               } 
             />
