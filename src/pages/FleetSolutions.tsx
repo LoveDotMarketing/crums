@@ -256,6 +256,39 @@ const FleetSolutions = () => {
         </div>
       </section>
 
+      {/* Start with Individual Equipment */}
+      <section className="py-16 bg-background">
+        <div className="container mx-auto px-4">
+          <h2 className="text-2xl md:text-3xl font-bold text-center mb-8 text-foreground">
+            Start with Individual Equipment
+          </h2>
+          <div className="max-w-3xl mx-auto text-center">
+            <p className="text-lg text-muted-foreground mb-6">
+              Building your fleet? Start with{" "}
+              <Link to="/services/trailer-leasing" className="text-primary hover:underline font-semibold">
+                individual trailer leasing
+              </Link>{" "}
+              for long-term needs with predictable payments, or{" "}
+              <Link to="/services/trailer-rentals" className="text-secondary hover:underline font-semibold">
+                flexible trailer rentals
+              </Link>{" "}
+              for short-term projects and seasonal demands.
+            </p>
+            <p className="text-muted-foreground">
+              Learn more{" "}
+              <Link to="/about" className="text-primary hover:underline font-medium">
+                about CRUMS Leasing
+              </Link>{" "}
+              and our{" "}
+              <Link to="/mission" className="text-primary hover:underline font-medium">
+                mission and values
+              </Link>{" "}
+              that drive everything we do.
+            </p>
+          </div>
+        </div>
+      </section>
+
       {/* CTA */}
       <section className="py-20 bg-gradient-to-r from-accent to-primary text-accent-foreground">
         <div className="container mx-auto px-4 text-center">

@@ -7,7 +7,9 @@ import { PrintButton } from "@/components/PrintButton";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 import { Fuel, Route, DollarSign, Gauge } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const toolSchema = {
   "@context": "https://schema.org",
@@ -195,6 +197,23 @@ const FuelCostCalculator = () => {
                   Actual fuel consumption may vary based on load weight, terrain, weather, and driving conditions. 
                   Always consult with a qualified professional before making business decisions. CRUMS Leasing is not responsible for decisions made based on these estimates.
                 </p>
+              </CardContent>
+            </Card>
+
+            {/* CTA Section */}
+            <Card className="mt-8 bg-primary/5 border-primary/20">
+              <CardContent className="pt-6 text-center">
+                <h3 className="text-xl font-bold mb-3 text-foreground">Plan Better with Predictable Costs</h3>
+                <p className="text-muted-foreground mb-4">
+                  Combine fuel savings with{" "}
+                  <Link to="/services/trailer-leasing" className="text-primary hover:underline font-semibold">
+                    predictable trailer lease payments
+                  </Link>{" "}
+                  from CRUMS Leasing. Know your expenses and budget with confidence.
+                </p>
+                <Button asChild variant="outline">
+                  <Link to="/contact">Get a Leasing Quote</Link>
+                </Button>
               </CardContent>
             </Card>
           </div>

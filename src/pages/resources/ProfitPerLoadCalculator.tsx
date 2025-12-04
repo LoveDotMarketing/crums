@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Calculator, DollarSign, Route, Fuel, TrendingUp, AlertTriangle } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from "recharts";
 import { PrintButton } from "@/components/PrintButton";
+import { Link } from "react-router-dom";
 
 const toolSchema = {
   "@context": "https://schema.org",
@@ -481,6 +482,23 @@ const ProfitPerLoadCalculator = () => {
                 Always consult with a qualified accountant or financial advisor before making business decisions. 
                 CRUMS Leasing is not responsible for decisions made based on these estimates.
               </p>
+            </CardContent>
+          </Card>
+
+          {/* CTA Section */}
+          <Card className="mt-8 bg-primary/5 border-primary/20">
+            <CardContent className="pt-6 text-center">
+              <h3 className="text-xl font-bold mb-3 text-foreground">Maximize Your Profits</h3>
+              <p className="text-muted-foreground mb-4">
+                Increase your margins with{" "}
+                <Link to="/services/trailer-leasing" className="text-primary hover:underline font-semibold">
+                  quality trailer equipment from CRUMS Leasing
+                </Link>. 
+                Our well-maintained trailers help reduce downtime and keep you earning.
+              </p>
+              <Button asChild variant="outline">
+                <Link to="/contact">Get Equipment Information</Link>
+              </Button>
             </CardContent>
           </Card>
         </div>

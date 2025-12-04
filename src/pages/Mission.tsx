@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Heart, Award, CheckCircle, Shield, Users, TrendingUp } from "lucide-react";
 import { SEO } from "@/components/SEO";
 import { generateBreadcrumbSchema } from "@/lib/structuredData";
+import { Link } from "react-router-dom";
 
 const Mission = () => {
   const breadcrumbSchema = generateBreadcrumbSchema([
@@ -259,6 +260,42 @@ const Mission = () => {
               We envision a future where the CRUMS name is synonymous with integrity, reliability,
               and a genuine commitment to the success and well-being of every carrier and fleet
               operator we serve.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Discover CRUMS Leasing CTA */}
+      <section className="py-16 bg-muted">
+        <div className="container mx-auto px-4">
+          <h2 className="text-2xl md:text-3xl font-bold text-center mb-8 text-foreground">
+            Discover CRUMS Leasing
+          </h2>
+          <div className="max-w-3xl mx-auto text-center">
+            <p className="text-lg text-muted-foreground mb-6">
+              Learn more about the{" "}
+              <Link to="/about" className="text-primary hover:underline font-semibold">
+                CRUMS Leasing story and history
+              </Link>{" "}
+              and meet the team behind our commitment to carriers nationwide.
+            </p>
+            <p className="text-muted-foreground mb-6">
+              Ready to experience these values firsthand? Explore our{" "}
+              <Link to="/services/trailer-leasing" className="text-secondary hover:underline font-semibold">
+                trailer leasing services
+              </Link>{" "}
+              or browse{" "}
+              <Link to="/careers" className="text-secondary hover:underline font-semibold">
+                career opportunities at CRUMS
+              </Link>{" "}
+              if you share our passion for excellence.
+            </p>
+            <p className="text-muted-foreground">
+              Have questions?{" "}
+              <Link to="/contact" className="text-primary hover:underline font-medium">
+                Contact our team
+              </Link>{" "}
+              — we'd love to hear from you.
             </p>
           </div>
         </div>

@@ -3,6 +3,7 @@ import { Footer } from "@/components/Footer";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { Card, CardContent } from "@/components/ui/card";
 import { MapPin, Navigation as NavigationIcon } from "lucide-react";
+import { Link } from "react-router-dom";
 import crumsTruckHighway from "@/assets/crums-truck-highway.png";
 import { SEO } from "@/components/SEO";
 import { localBusinessSchema, generateBreadcrumbSchema } from "@/lib/structuredData";
@@ -129,6 +130,48 @@ const Locations = () => {
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
             From coast to coast and beyond, we provide fast access to quality equipment and exceptional support across the United States, Canada, and Mexico — no matter where your business takes you.
           </p>
+        </div>
+      </section>
+
+      {/* Get Started CTA */}
+      <section className="py-16 bg-background">
+        <div className="container mx-auto px-4">
+          <h2 className="text-2xl md:text-3xl font-bold text-center mb-8 text-foreground">
+            Get Started Today
+          </h2>
+          <div className="max-w-3xl mx-auto text-center">
+            <p className="text-lg text-muted-foreground mb-6">
+              Explore our{" "}
+              <Link to="/services/trailer-leasing" className="text-primary hover:underline font-semibold">
+                trailer leasing in Texas
+              </Link>{" "}
+              and nationwide, or check out{" "}
+              <Link to="/services/trailer-rentals" className="text-secondary hover:underline font-semibold">
+                trailer rentals shipped anywhere in the US
+              </Link>{" "}
+              for flexible short-term needs.
+            </p>
+            <p className="text-muted-foreground mb-6">
+              Ready to join the CRUMS family?{" "}
+              <Link to="/get-started" className="text-primary hover:underline font-semibold">
+                Start your leasing application
+              </Link>{" "}
+              today or{" "}
+              <Link to="/contact" className="text-primary hover:underline font-medium">
+                contact us to discuss your needs
+              </Link>.
+            </p>
+            <p className="text-muted-foreground">
+              Learn more{" "}
+              <Link to="/about" className="text-secondary hover:underline font-medium">
+                about our company
+              </Link>{" "}
+              and the{" "}
+              <Link to="/mission" className="text-secondary hover:underline font-medium">
+                values that guide us
+              </Link>.
+            </p>
+          </div>
         </div>
       </section>
 

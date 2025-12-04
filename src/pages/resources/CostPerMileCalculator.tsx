@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
 import { Calculator, DollarSign, Fuel, Shield, Wrench, Truck, MoreHorizontal } from "lucide-react";
 import { PrintButton } from "@/components/PrintButton";
+import { Link } from "react-router-dom";
 
 const toolSchema = {
   "@context": "https://schema.org",
@@ -468,10 +469,14 @@ const CostPerMileCalculator = () => {
               Looking to Reduce Your Costs?
             </h2>
             <p className="text-muted-foreground mb-6 max-w-2xl mx-auto">
-              CRUMS Leasing offers competitive trailer lease rates to help keep your cost per mile low. Contact us to learn about our flexible leasing options.
+              Lower your cost per mile with{" "}
+              <Link to="/services/trailer-leasing" className="text-primary hover:underline font-semibold">
+                competitive trailer lease rates
+              </Link>{" "}
+              from CRUMS Leasing. Our flexible terms and predictable payments help you budget better.
             </p>
             <Button asChild size="lg">
-              <a href="/contact">Get a Quote</a>
+              <Link to="/contact">Request a Trailer Leasing Quote</Link>
             </Button>
           </div>
         </section>
