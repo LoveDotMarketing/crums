@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -723,7 +723,7 @@ export default function GetStarted() {
                       onCheckedChange={(checked) => setAcceptedTerms(checked as boolean)}
                     />
                     <Label htmlFor="terms" className="text-sm leading-relaxed cursor-pointer">
-                      I accept the terms and conditions and authorize CRUM'S Trucking & Leasing to process my application.
+                      I accept the <Link to="/terms" className="text-primary hover:underline">terms and conditions</Link> and <Link to="/privacy" className="text-primary hover:underline">privacy policy</Link>, and authorize CRUM'S Trucking & Leasing to process my application.
                       I understand that incomplete applications may take longer to process.
                     </Label>
                   </div>
@@ -766,6 +766,26 @@ export default function GetStarted() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Helpful Links */}
+          <div className="mt-8 text-center">
+            <p className="text-muted-foreground mb-4">
+              Have questions before applying?
+            </p>
+            <div className="flex flex-wrap justify-center gap-4">
+              <Link to="/services/trailer-leasing" className="text-primary hover:underline font-medium">
+                Trailer leasing details
+              </Link>
+              <span className="text-muted-foreground">•</span>
+              <Link to="/contact" className="text-primary hover:underline font-medium">
+                Speak with our team
+              </Link>
+              <span className="text-muted-foreground">•</span>
+              <Link to="/resources" className="text-primary hover:underline font-medium">
+                Carrier resources & tools
+              </Link>
+            </div>
+          </div>
         </div>
       </main>
 
