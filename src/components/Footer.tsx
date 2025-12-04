@@ -10,7 +10,7 @@ export const Footer = () => {
           {/* Company Info */}
           <div>
             <Link to="/">
-              <img src={crumsLogo} alt="CRUMS Leasing Logo" className="h-10 w-auto mb-4 brightness-0 invert" />
+              <img src={crumsLogo} alt="CRUMS Leasing Logo" className="h-10 w-auto mb-4 brightness-0 invert" width={120} height={40} />
             </Link>
             <p className="text-sm text-primary-foreground mb-4">
               Building trust, family, and opportunity in trailer leasing and logistics nationwide.
