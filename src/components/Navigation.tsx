@@ -148,6 +148,19 @@ export const Navigation = () => {
                           </Link>
                         </NavigationMenuLink>
                       </li>
+                      <li>
+                        <NavigationMenuLink asChild>
+                          <Link
+                            to="/resources"
+                            className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+                          >
+                            <div className="text-sm font-medium leading-none">Resources</div>
+                            <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+                              Educational guides for carriers
+                            </p>
+                          </Link>
+                        </NavigationMenuLink>
+                      </li>
                     </ul>
                   </NavigationMenuContent>
                 </NavigationMenuItem>
@@ -233,6 +246,13 @@ export const Navigation = () => {
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Referral Program
+              </Link>
+              <Link
+                to="/resources"
+                className="text-sm font-medium text-foreground hover:text-primary"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Resources
               </Link>
               <Link
                 to="/locations"

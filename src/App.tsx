@@ -31,6 +31,7 @@ const ApiDocs = lazy(() => import("./pages/ApiDocs"));
 const Unsubscribe = lazy(() => import("./pages/Unsubscribe"));
 const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
+const Resources = lazy(() => import("./pages/Resources"));
 
 // Admin pages
 const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
@@ -245,6 +246,7 @@ const App = () => (
               } 
             />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="/resources" element={<Resources />} />
             <Route path="/referral-program" element={<ReferralProgram />} />
             <Route path="/reviews" element={<Reviews />} />
             <Route path="/qr" element={<Navigate to="/review" replace />} />
