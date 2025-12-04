@@ -19,6 +19,7 @@ import {
   Star,
 } from "lucide-react";
 import heroImage from "@/assets/hero-truck.jpg";
+import heroImageWebP from "@/assets/hero-truck.webp";
 import fleetImage from "@/assets/crums-trailer.png";
 import trailerFleetImage from "@/assets/trailer-fleet.png";
 import dryVanTrailerImg from "@/assets/dry-van-trailer.png";
@@ -55,14 +56,18 @@ const Index = () => {
       <main className="flex-grow">
       {/* Hero Section */}
       <section className="relative h-[600px] lg:h-[700px] flex items-center justify-center overflow-hidden">
-        <img 
-          src={heroImage} 
-          alt="CRUMS Leasing semi-truck on highway" 
-          className="absolute inset-0 w-full h-full object-cover"
-          fetchPriority="high"
-          width={1920}
-          height={1080}
-        />
+        <picture>
+          <source srcSet={heroImageWebP} type="image/webp" />
+          <img 
+            src={heroImage} 
+            alt="CRUMS Leasing semi-truck on highway" 
+            className="absolute inset-0 w-full h-full object-cover"
+            fetchPriority="high"
+            decoding="async"
+            width={1920}
+            height={1080}
+          />
+        </picture>
         <div className="absolute inset-0 bg-gradient-to-r from-primary/95 to-primary/70"></div>
 
         <div className="relative z-10 container mx-auto px-4 text-center text-primary-foreground">
@@ -176,7 +181,7 @@ const Index = () => {
       </section>
 
       {/* Core Values Section */}
-      <section className="py-20 bg-gradient-to-b from-muted to-background">
+      <section className="py-20 bg-gradient-to-b from-muted to-background content-deferred">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
@@ -295,7 +300,7 @@ const Index = () => {
       </section>
 
       {/* Services Overview */}
-      <section className="py-20 bg-background">
+      <section className="py-20 bg-background content-deferred">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
             <div className="mb-8">
@@ -304,6 +309,7 @@ const Index = () => {
                 alt="CRUM'S Leasing trailer fleet" 
                 className="w-full max-w-5xl mx-auto rounded-lg shadow-lg"
                 loading="lazy"
+                decoding="async"
                 width="1280"
                 height="720"
               />
@@ -357,7 +363,7 @@ const Index = () => {
       </section>
 
       {/* Equipment Types Section */}
-      <section className="py-20 bg-muted">
+      <section className="py-20 bg-muted content-deferred">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
             <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
@@ -377,6 +383,7 @@ const Index = () => {
                     alt="CRUMS Leasing 53-foot dry van trailer - enclosed cargo protection for general freight" 
                     className="w-full h-40 object-contain mb-4"
                     loading="lazy"
+                    decoding="async"
                     width="300"
                     height="160"
                   />
@@ -410,6 +417,7 @@ const Index = () => {
                     alt="CRUMS Leasing flatbed trailer - open-deck design for oversized and heavy cargo hauling" 
                     className="w-full h-40 object-contain mb-4"
                     loading="lazy"
+                    decoding="async"
                     width="300"
                     height="160"
                   />
@@ -443,6 +451,7 @@ const Index = () => {
                     alt="CRUMS Leasing refrigerated reefer trailer - temperature-controlled transport for perishable goods" 
                     className="w-full h-40 object-contain mb-4"
                     loading="lazy"
+                    decoding="async"
                     width="300"
                     height="160"
                   />
@@ -473,7 +482,7 @@ const Index = () => {
       </section>
 
       {/* Featured Resources Section */}
-      <section className="py-20 bg-gradient-to-b from-background to-muted/50">
+      <section className="py-20 bg-gradient-to-b from-background to-muted/50 content-deferred">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
             <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
