@@ -95,7 +95,7 @@ const About = () => {
           </div>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6 max-w-5xl mx-auto">
             {[
-              { name: "Momma CRUMS", role: "Founder" },
+              { name: "Mama CRUMS", role: "Founder" },
               { name: "Eric", role: "CEO" },
               { name: "Hector", role: "Fleet Management" },
               { name: "Ambrosia", role: "Customer Relations" },
