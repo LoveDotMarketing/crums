@@ -31,6 +31,7 @@ const routeLabels: Record<string, string> = {
   "/resources/profit-calculator": "Profit Per Load Calculator",
   "/resources/ifta-calculator": "IFTA Tax Estimator",
   "/resources/fuel-calculator": "Fuel Cost Calculator",
+  "/resources/tax-deductions": "Tax Deduction Guide",
 };
 
 export const Breadcrumbs = ({ items }: BreadcrumbsProps) => {
