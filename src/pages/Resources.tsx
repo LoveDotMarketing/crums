@@ -50,7 +50,7 @@ const Resources = () => {
       description: "Calculators and tools to help you manage costs and plan your business finances.",
       items: [
         { name: "Cost Per Mile Calculator", href: "/resources/cost-per-mile", available: true },
-        { name: "Lease vs Buy Analysis", available: false },
+        { name: "Lease vs Buy Calculator", href: "/resources/lease-vs-buy", available: true },
         { name: "Tax Deduction Guide", available: false }
       ],
       comingSoon: false
