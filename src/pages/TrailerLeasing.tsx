@@ -110,14 +110,16 @@ const TrailerLeasing = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
             <Card className="border-2 hover:shadow-lg transition-shadow">
               <CardContent className="p-6">
-                <img 
-                  src={dryVanTrailerImg} 
-                  alt="CRUMS Leasing 53-foot dry van trailer" 
-                  className="w-full h-40 object-contain mb-4"
-                  loading="lazy"
-                  width="300"
-                  height="160"
-                />
+                <Link to="/dry-van-trailers" className="block hover:opacity-80 transition-opacity">
+                  <img 
+                    src={dryVanTrailerImg} 
+                    alt="CRUMS Leasing 53-foot dry van trailer - enclosed cargo protection for general freight" 
+                    className="w-full h-40 object-contain mb-4"
+                    loading="lazy"
+                    width="300"
+                    height="160"
+                  />
+                </Link>
                 <h3 className="text-xl font-bold mb-4">Dry Van Trailers</h3>
                 <ul className="space-y-2 text-muted-foreground mb-6">
                   <li className="flex items-start">
@@ -141,14 +143,16 @@ const TrailerLeasing = () => {
             </Card>
             <Card className="border-2 hover:shadow-lg transition-shadow">
               <CardContent className="p-6">
-                <img 
-                  src={flatbedTrailerImg} 
-                  alt="CRUMS Leasing flatbed trailer" 
-                  className="w-full h-40 object-contain mb-4"
-                  loading="lazy"
-                  width="300"
-                  height="160"
-                />
+                <Link to="/flatbed-trailers" className="block hover:opacity-80 transition-opacity">
+                  <img 
+                    src={flatbedTrailerImg} 
+                    alt="CRUMS Leasing flatbed trailer - open-deck design for oversized and heavy cargo hauling" 
+                    className="w-full h-40 object-contain mb-4"
+                    loading="lazy"
+                    width="300"
+                    height="160"
+                  />
+                </Link>
                 <h3 className="text-xl font-bold mb-4">Flatbed Trailers</h3>
                 <ul className="space-y-2 text-muted-foreground mb-6">
                   <li className="flex items-start">
@@ -172,14 +176,16 @@ const TrailerLeasing = () => {
             </Card>
             <Card className="border-2 hover:shadow-lg transition-shadow">
               <CardContent className="p-6">
-                <img 
-                  src={refrigeratedTrailerImg} 
-                  alt="CRUMS Leasing refrigerated reefer trailer" 
-                  className="w-full h-40 object-contain mb-4"
-                  loading="lazy"
-                  width="300"
-                  height="160"
-                />
+                <Link to="/refrigerated-trailers" className="block hover:opacity-80 transition-opacity">
+                  <img 
+                    src={refrigeratedTrailerImg} 
+                    alt="CRUMS Leasing refrigerated reefer trailer - temperature-controlled transport for perishable goods" 
+                    className="w-full h-40 object-contain mb-4"
+                    loading="lazy"
+                    width="300"
+                    height="160"
+                  />
+                </Link>
                 <h3 className="text-xl font-bold mb-4">Refrigerated Trailers</h3>
                 <ul className="space-y-2 text-muted-foreground mb-6">
                   <li className="flex items-start">
