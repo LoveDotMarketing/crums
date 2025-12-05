@@ -18,7 +18,7 @@ import {
   Award,
   Star,
 } from "lucide-react";
-import heroImage from "@/assets/hero-truck.jpg";
+// Hero image moved to public folder for preloading
 import fleetImage from "@/assets/crums-trailer.png";
 import trailerFleetImage from "@/assets/trailer-fleet.png";
 import dryVanTrailerImg from "@/assets/dry-van-trailer.png";
@@ -56,7 +56,7 @@ const Index = () => {
       {/* Hero Section */}
       <section className="relative h-[600px] lg:h-[700px] flex items-center justify-center overflow-hidden">
         <img 
-          src={heroImage} 
+          src="/images/hero-truck.jpg" 
           alt="CRUMS Leasing semi-truck on highway" 
           className="absolute inset-0 w-full h-full object-cover"
           fetchPriority="high"
