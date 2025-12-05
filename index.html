@@ -12,8 +12,9 @@
     <link rel="dns-prefetch" href="https://deeeqatnqqfcxsccigyc.supabase.co">
     <link rel="dns-prefetch" href="https://maps.googleapis.com">
     
-    <!-- Preload Hero Image for LCP -->
-    <link rel="preload" as="image" href="/images/hero-truck.jpg" fetchpriority="high">
+    <!-- Preload Hero Image for LCP (WebP with JPG fallback) -->
+    <link rel="preload" as="image" href="/images/hero-truck.webp" type="image/webp" fetchpriority="high">
+    <link rel="preload" as="image" href="/images/hero-truck.jpg" fetchpriority="low">
     <title>CRUMS Leasing | 53-Foot Dry Van Trailer Leasing & Rentals in Texas</title>
     <meta name="description" content="CRUMS Leasing offers quality 53-foot dry van trailers and flatbed leasing & rental solutions. Family-owned, nationwide service from Bulverde, TX. Get a quote today!" />
     <meta name="author" content="CRUMS Leasing" />

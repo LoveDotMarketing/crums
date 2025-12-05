@@ -37,6 +37,10 @@ export default defineConfig(({ mode }) => ({
           'forms': ['react-hook-form', '@hookform/resolvers', 'zod'],
           'supabase': ['@supabase/supabase-js'],
           'dates': ['date-fns', 'react-day-picker'],
+          // Separate icon library for better tree-shaking
+          'icons': ['lucide-react'],
+          // React Query
+          'query': ['@tanstack/react-query'],
         },
       },
     },
