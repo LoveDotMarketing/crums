@@ -67,7 +67,13 @@ const Resources = () => {
       icon: Shield,
       title: "Safety Resources",
       description: "Safety guidelines, training materials, and best practices for safe operations.",
-      items: ["Pre-Trip Inspection Guide", "Weather Driving Tips", "Cargo Securement"],
+      items: [
+        { name: "FMCSA", href: "https://www.fmcsa.dot.gov/", available: true, external: true },
+        { name: "The Motor Carrier Safety Planner", href: "https://csa.fmcsa.dot.gov/safetyplanner/", available: true, external: true },
+        "Pre-Trip Inspection Guide",
+        "Weather Driving Tips",
+        "Cargo Securement"
+      ],
       comingSoon: true
     },
     {
@@ -134,10 +140,17 @@ const Resources = () => {
                         <li key={itemIndex} className="text-sm flex items-center">
                           <span className="w-1.5 h-1.5 bg-secondary rounded-full mr-2" />
                           {itemHref ? (
-                            <Link to={itemHref} className="text-primary hover:underline flex items-center gap-1">
-                              {itemName}
-                              <ArrowRight className="h-3 w-3" />
-                            </Link>
+                            isObject && item.external ? (
+                              <a href={itemHref} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline flex items-center gap-1">
+                                {itemName}
+                                <ArrowRight className="h-3 w-3" />
+                              </a>
+                            ) : (
+                              <Link to={itemHref} className="text-primary hover:underline flex items-center gap-1">
+                                {itemName}
+                                <ArrowRight className="h-3 w-3" />
+                              </Link>
+                            )
                           ) : (
                             <span className="text-muted-foreground">{itemName}</span>
                           )}
