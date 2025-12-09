@@ -87,9 +87,14 @@ export type Database = {
           admin_notes: string | null
           backup_trailer_id: string | null
           bank_name: string | null
+          billing_address: string | null
+          business_needs: string | null
           business_type: string | null
           company_address: string | null
           company_id: string | null
+          consent_autopay: boolean | null
+          consent_communications: boolean | null
+          consent_credit_check: boolean | null
           contract_url: string | null
           created_at: string
           date_needed: string | null
@@ -102,6 +107,7 @@ export type Database = {
           number_of_trailers: number | null
           payment_method: string | null
           phone_number: string
+          prepay_full_year: boolean | null
           primary_trailer_id: string | null
           rental_start_date: string | null
           reviewed_at: string | null
@@ -113,6 +119,10 @@ export type Database = {
           ssn_card_url: string | null
           status: string
           stripe_customer_id: string | null
+          terms_accepted: boolean | null
+          terms_accepted_at: string | null
+          trailer_type: string | null
+          truck_vin: string | null
           updated_at: string
           user_id: string
         }
@@ -122,9 +132,14 @@ export type Database = {
           admin_notes?: string | null
           backup_trailer_id?: string | null
           bank_name?: string | null
+          billing_address?: string | null
+          business_needs?: string | null
           business_type?: string | null
           company_address?: string | null
           company_id?: string | null
+          consent_autopay?: boolean | null
+          consent_communications?: boolean | null
+          consent_credit_check?: boolean | null
           contract_url?: string | null
           created_at?: string
           date_needed?: string | null
@@ -137,6 +152,7 @@ export type Database = {
           number_of_trailers?: number | null
           payment_method?: string | null
           phone_number: string
+          prepay_full_year?: boolean | null
           primary_trailer_id?: string | null
           rental_start_date?: string | null
           reviewed_at?: string | null
@@ -148,6 +164,10 @@ export type Database = {
           ssn_card_url?: string | null
           status?: string
           stripe_customer_id?: string | null
+          terms_accepted?: boolean | null
+          terms_accepted_at?: string | null
+          trailer_type?: string | null
+          truck_vin?: string | null
           updated_at?: string
           user_id: string
         }
@@ -157,9 +177,14 @@ export type Database = {
           admin_notes?: string | null
           backup_trailer_id?: string | null
           bank_name?: string | null
+          billing_address?: string | null
+          business_needs?: string | null
           business_type?: string | null
           company_address?: string | null
           company_id?: string | null
+          consent_autopay?: boolean | null
+          consent_communications?: boolean | null
+          consent_credit_check?: boolean | null
           contract_url?: string | null
           created_at?: string
           date_needed?: string | null
@@ -172,6 +197,7 @@ export type Database = {
           number_of_trailers?: number | null
           payment_method?: string | null
           phone_number?: string
+          prepay_full_year?: boolean | null
           primary_trailer_id?: string | null
           rental_start_date?: string | null
           reviewed_at?: string | null
@@ -183,6 +209,10 @@ export type Database = {
           ssn_card_url?: string | null
           status?: string
           stripe_customer_id?: string | null
+          terms_accepted?: boolean | null
+          terms_accepted_at?: string | null
+          trailer_type?: string | null
+          truck_vin?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -673,9 +703,11 @@ export type Database = {
           company_id: string | null
           company_name: string | null
           created_at: string
+          date_of_birth: string | null
           email: string
           email_notifications_enabled: boolean | null
           first_name: string | null
+          home_address: string | null
           id: string
           last_name: string | null
           phone: string | null
@@ -686,9 +718,11 @@ export type Database = {
           company_id?: string | null
           company_name?: string | null
           created_at?: string
+          date_of_birth?: string | null
           email: string
           email_notifications_enabled?: boolean | null
           first_name?: string | null
+          home_address?: string | null
           id: string
           last_name?: string | null
           phone?: string | null
@@ -699,9 +733,11 @@ export type Database = {
           company_id?: string | null
           company_name?: string | null
           created_at?: string
+          date_of_birth?: string | null
           email?: string
           email_notifications_enabled?: boolean | null
           first_name?: string | null
+          home_address?: string | null
           id?: string
           last_name?: string | null
           phone?: string | null
@@ -1127,9 +1163,14 @@ export type Database = {
           admin_notes: string | null
           backup_trailer_id: string | null
           bank_name: string | null
+          billing_address: string | null
+          business_needs: string | null
           business_type: string | null
           company_address: string | null
           company_id: string | null
+          consent_autopay: boolean | null
+          consent_communications: boolean | null
+          consent_credit_check: boolean | null
           created_at: string | null
           date_needed: string | null
           has_contract: boolean | null
@@ -1143,6 +1184,7 @@ export type Database = {
           number_of_trailers: number | null
           payment_method: string | null
           phone_number: string | null
+          prepay_full_year: boolean | null
           primary_trailer_id: string | null
           rental_start_date: string | null
           reviewed_at: string | null
@@ -1152,18 +1194,27 @@ export type Database = {
           secondary_contact_phone: string | null
           secondary_contact_relationship: string | null
           status: string | null
+          terms_accepted: boolean | null
+          terms_accepted_at: string | null
+          trailer_type: string | null
+          truck_vin: string | null
           updated_at: string | null
           user_id: string | null
         }
         Insert: {
-          account_holder_name?: never
+          account_holder_name?: string | null
           account_number_masked?: never
           admin_notes?: string | null
           backup_trailer_id?: string | null
           bank_name?: string | null
+          billing_address?: string | null
+          business_needs?: string | null
           business_type?: string | null
           company_address?: string | null
           company_id?: string | null
+          consent_autopay?: boolean | null
+          consent_communications?: boolean | null
+          consent_credit_check?: boolean | null
           created_at?: string | null
           date_needed?: string | null
           has_contract?: never
@@ -1177,6 +1228,7 @@ export type Database = {
           number_of_trailers?: number | null
           payment_method?: string | null
           phone_number?: string | null
+          prepay_full_year?: boolean | null
           primary_trailer_id?: string | null
           rental_start_date?: string | null
           reviewed_at?: string | null
@@ -1186,18 +1238,27 @@ export type Database = {
           secondary_contact_phone?: string | null
           secondary_contact_relationship?: string | null
           status?: string | null
+          terms_accepted?: boolean | null
+          terms_accepted_at?: string | null
+          trailer_type?: string | null
+          truck_vin?: string | null
           updated_at?: string | null
           user_id?: string | null
         }
         Update: {
-          account_holder_name?: never
+          account_holder_name?: string | null
           account_number_masked?: never
           admin_notes?: string | null
           backup_trailer_id?: string | null
           bank_name?: string | null
+          billing_address?: string | null
+          business_needs?: string | null
           business_type?: string | null
           company_address?: string | null
           company_id?: string | null
+          consent_autopay?: boolean | null
+          consent_communications?: boolean | null
+          consent_credit_check?: boolean | null
           created_at?: string | null
           date_needed?: string | null
           has_contract?: never
@@ -1211,6 +1272,7 @@ export type Database = {
           number_of_trailers?: number | null
           payment_method?: string | null
           phone_number?: string | null
+          prepay_full_year?: boolean | null
           primary_trailer_id?: string | null
           rental_start_date?: string | null
           reviewed_at?: string | null
@@ -1220,6 +1282,10 @@ export type Database = {
           secondary_contact_phone?: string | null
           secondary_contact_relationship?: string | null
           status?: string | null
+          terms_accepted?: boolean | null
+          terms_accepted_at?: string | null
+          trailer_type?: string | null
+          truck_vin?: string | null
           updated_at?: string | null
           user_id?: string | null
         }
