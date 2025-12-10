@@ -505,7 +505,7 @@ const Contact = () => {
                           <Linkedin className="h-5 w-5" />
                         </a>
                         <a 
-                          href="https://www.youtube.com/channel/UCvIeBeOpT0ql7n0XQcSmNVg" 
+                          href="https://www.youtube.com/@CRUMSLeasing" 
                           target="_blank" 
                           rel="noopener noreferrer"
                           className="h-10 w-10 rounded-full bg-destructive/10 flex items-center justify-center hover:bg-destructive hover:text-destructive-foreground transition-colors"

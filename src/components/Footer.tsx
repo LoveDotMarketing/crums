@@ -72,7 +72,7 @@ export const Footer = () => {
                 <Linkedin className="h-5 w-5" />
               </a>
               <a 
-                href="https://www.youtube.com/channel/UCvIeBeOpT0ql7n0XQcSmNVg" 
+                href="https://www.youtube.com/@CRUMSLeasing" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="hover:text-secondary transition-colors"
