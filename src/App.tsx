@@ -48,6 +48,7 @@ const TaxDeductionGuide = lazy(() => import("./pages/resources/TaxDeductionGuide
 const Tools = lazy(() => import("./pages/resources/Tools"));
 const Guides = lazy(() => import("./pages/resources/Guides"));
 const ChoosingTrailer = lazy(() => import("./pages/resources/guides/ChoosingTrailer"));
+const WhyChooseCrums = lazy(() => import("./pages/WhyChooseCrums"));
 
 // News pages
 const News = lazy(() => import("./pages/News"));
@@ -135,6 +136,7 @@ const App = () => (
             <Route path="/refrigerated-trailers" element={<RefrigeratedTrailers />} />
             <Route path="/flatbed-trailers" element={<FlatbedTrailers />} />
             <Route path="/commercial-dry-van-trailer-for-lease-56171" element={<TrailerProfile56171 />} />
+            <Route path="/why-choose-crums" element={<WhyChooseCrums />} />
             <Route path="/industries" element={<Industries />} />
             <Route path="/industries/fleet-leasing" element={<FleetLeasing />} />
             <Route path="/industries/owner-operators" element={<OwnerOperators />} />

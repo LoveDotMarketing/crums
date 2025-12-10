@@ -108,6 +108,12 @@
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
+  <url>
+    <loc>https://crumsleasing.com/why-choose-crums</loc>
+    <lastmod>2025-12-10</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
   <!-- News Section -->
   <url>
     <loc>https://crumsleasing.com/news</loc>
