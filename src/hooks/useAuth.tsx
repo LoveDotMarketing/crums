@@ -4,14 +4,30 @@ import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
+interface LoginAttemptResult {
+  allowed: boolean;
+  locked?: boolean;
+  locked_until?: string;
+  minutes_remaining?: number;
+  attempts_remaining?: number;
+}
+
+interface FailedLoginResult {
+  locked: boolean;
+  attempts: number;
+  attempts_remaining?: number;
+  minutes_remaining?: number;
+}
+
 interface AuthContextType {
   user: User | null;
   session: Session | null;
   userRole: "admin" | "customer" | "mechanic" | null;
   isLoading: boolean;
-  signIn: (email: string, password: string) => Promise<{ error: any }>;
+  signIn: (email: string, password: string) => Promise<{ error: any; locked?: boolean; minutesRemaining?: number }>;
   signUp: (email: string, password: string, role: "admin" | "customer" | "mechanic") => Promise<{ error: any }>;
   signOut: () => Promise<void>;
+  checkLoginAllowed: (email: string) => Promise<LoginAttemptResult>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -78,17 +94,68 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const checkLoginAllowed = async (email: string): Promise<LoginAttemptResult> => {
+    try {
+      const { data, error } = await supabase.rpc('check_login_attempt', { p_email: email });
+      if (error) {
+        console.error("Error checking login attempts:", error);
+        return { allowed: true, attempts_remaining: 5 }; // Fail open on error
+      }
+      return data as unknown as LoginAttemptResult;
+    } catch (err) {
+      console.error("Error in checkLoginAllowed:", err);
+      return { allowed: true, attempts_remaining: 5 };
+    }
+  };
+
   const signIn = async (email: string, password: string) => {
+    // Check if login is allowed (rate limiting)
+    const attemptCheck = await checkLoginAllowed(email);
+    
+    if (!attemptCheck.allowed) {
+      return { 
+        error: new Error(`Account temporarily locked. Please try again in ${attemptCheck.minutes_remaining} minutes.`),
+        locked: true,
+        minutesRemaining: attemptCheck.minutes_remaining
+      };
+    }
+
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
 
-    if (!error) {
-      toast.success("Welcome back!");
+    if (error) {
+      // Record failed login attempt
+      try {
+        const { data: failedResult } = await supabase.rpc('record_failed_login', { p_email: email });
+        const result = failedResult as unknown as FailedLoginResult;
+        
+        if (result?.locked) {
+          return { 
+            error: new Error(`Too many failed attempts. Account locked for ${result.minutes_remaining} minutes.`),
+            locked: true,
+            minutesRemaining: result.minutes_remaining
+          };
+        } else if (result?.attempts_remaining) {
+          toast.error(`Invalid credentials. ${result.attempts_remaining} attempts remaining.`);
+        }
+      } catch (err) {
+        console.error("Error recording failed login:", err);
+      }
+      
+      return { error };
     }
 
-    return { error };
+    // Successful login - reset attempts
+    try {
+      await supabase.rpc('reset_login_attempts', { p_email: email });
+    } catch (err) {
+      console.error("Error resetting login attempts:", err);
+    }
+
+    toast.success("Welcome back!");
+    return { error: null };
   };
 
   const signUp = async (email: string, password: string, role: "admin" | "customer" | "mechanic") => {
@@ -129,7 +196,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, userRole, isLoading, signIn, signUp, signOut }}>
+    <AuthContext.Provider value={{ user, session, userRole, isLoading, signIn, signUp, signOut, checkLoginAllowed }}>
       {children}
     </AuthContext.Provider>
   );
