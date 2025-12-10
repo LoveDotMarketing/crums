@@ -17,6 +17,7 @@ import {
   Heart,
   Award,
   Star,
+  Newspaper,
 } from "lucide-react";
 // Hero image moved to public folder for preloading
 import fleetImage from "@/assets/crums-trailer.png";
@@ -91,6 +92,25 @@ const Index = () => {
                 Our Mission & Values
               </Button>
             </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Event CTA Banner */}
+      <section className="bg-secondary py-3">
+        <div className="container mx-auto px-4">
+          <div className="flex items-center justify-center gap-3 text-secondary-foreground text-sm md:text-base">
+            <Newspaper className="h-5 w-5 flex-shrink-0" />
+            <p>
+              Join us at the{" "}
+              <Link 
+                to="/news/mats-2026-crums-leasing-booth-38024" 
+                className="font-semibold underline hover:no-underline"
+              >
+                Mid America Trucking Show
+              </Link>
+              . Booth 38024. Meet Eric Bledsoe and explore our fleet.
+            </p>
           </div>
         </div>
       </section>
