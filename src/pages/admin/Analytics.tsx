@@ -31,8 +31,10 @@ import {
   RefreshCw,
   ArrowRightLeft,
   Plus,
-  Calendar
+  Calendar,
+  ExternalLink
 } from "lucide-react";
+import { GA4_DASHBOARD_URL } from "@/lib/analytics";
 
 interface ErrorLog {
   id: string;
@@ -236,6 +238,15 @@ export default function Analytics() {
               </div>
             </div>
             <div className="flex items-center gap-2">
+              <Button 
+                asChild 
+                className="bg-secondary hover:bg-secondary/90"
+              >
+                <a href={GA4_DASHBOARD_URL} target="_blank" rel="noopener noreferrer">
+                  <ExternalLink className="h-4 w-4 mr-2" />
+                  View Live Analytics
+                </a>
+              </Button>
               <div className="flex items-center gap-1 bg-muted rounded-lg p-1">
                 {DATE_RANGE_OPTIONS.map((option) => (
                   <Button

@@ -13,6 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { SEO } from "@/components/SEO";
 import { localBusinessSchema, generateBreadcrumbSchema } from "@/lib/structuredData";
+import { trackFormSubmission, trackConversion } from "@/lib/analytics";
 
 // Spam detection utilities
 const isGibberish = (text: string): boolean => {
@@ -207,6 +208,10 @@ const Contact = () => {
         });
         return;
       }
+
+      // Track successful form submission
+      trackFormSubmission('contact_quote');
+      trackConversion('quote_request');
 
       toast({
         title: "Success!",

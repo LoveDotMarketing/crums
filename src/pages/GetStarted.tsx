@@ -18,6 +18,7 @@ import { fullSignupSchema, customerApplicationSchema, validateFile, sanitizeInpu
 import { z } from "zod";
 import { SEO } from "@/components/SEO";
 import { generateBreadcrumbSchema } from "@/lib/structuredData";
+import { trackSignup, trackConversion } from "@/lib/analytics";
 
 export default function GetStarted() {
   const breadcrumbSchema = generateBreadcrumbSchema([
@@ -270,6 +271,10 @@ export default function GetStarted() {
           console.error("Referral tracking error:", error);
         }
       }
+
+      // Track successful signup
+      trackSignup('email');
+      trackConversion('signup');
 
       toast({ 
         title: "Success!", 
