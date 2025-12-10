@@ -28,17 +28,18 @@ const News = () => {
       <Navigation />
       
       {/* Hero Section */}
-      <section className="bg-gradient-to-br from-primary via-primary to-primary/90 text-primary-foreground py-16">
-        <div className="container mx-auto px-4">
-          <Breadcrumbs />
-          <h1 className="text-4xl md:text-5xl font-bold text-center mb-4">
+      <section className="bg-gradient-to-r from-primary to-brand-teal-dark py-16 md:py-24">
+        <div className="container mx-auto px-4 text-center">
+          <h1 className="text-4xl md:text-6xl font-bold text-primary-foreground mb-6">
             News & Updates
           </h1>
-          <p className="text-xl text-center text-primary-foreground/90 max-w-3xl mx-auto">
+          <p className="text-lg text-primary-foreground/90 max-w-2xl mx-auto">
             The latest announcements, milestones, and stories from CRUMS Leasing
           </p>
         </div>
       </section>
+
+      <Breadcrumbs />
 
       {/* Featured Article */}
       <section className="py-12 bg-muted/30">
