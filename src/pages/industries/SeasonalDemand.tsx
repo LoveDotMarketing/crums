@@ -6,6 +6,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Calendar, CheckCircle, TrendingUp, Clock, DollarSign, Repeat, ArrowRight } from "lucide-react";
+import { trackCtaClick } from "@/lib/analytics";
 import { seasonalDemandServiceSchema, generateBreadcrumbSchema } from "@/lib/structuredData";
 
 const breadcrumbSchema = generateBreadcrumbSchema([
@@ -44,7 +45,7 @@ const SeasonalDemand = () => {
             </p>
             <div className="flex flex-wrap gap-4 justify-center">
               <Button asChild size="lg" className="bg-secondary hover:bg-secondary/90 text-secondary-foreground">
-                <Link to="/get-started">Reserve Now <ArrowRight className="ml-2 h-4 w-4" /></Link>
+                <Link to="/get-started" onClick={() => trackCtaClick('Reserve Now', 'industry_seasonal_demand', '/get-started')}>Reserve Now <ArrowRight className="ml-2 h-4 w-4" /></Link>
               </Button>
               <Button asChild variant="outline" size="lg" className="border-primary-foreground text-primary-foreground bg-transparent hover:bg-primary-foreground/10">
                 <Link to="/trailer-rentals">View Rental Options</Link>
@@ -135,7 +136,7 @@ const SeasonalDemand = () => {
               Don't wait until the last minute. Contact us now to plan your seasonal trailer capacity.
             </p>
             <Button asChild size="lg" className="bg-background text-foreground hover:bg-background/90">
-              <Link to="/contact">Contact Us <ArrowRight className="ml-2 h-4 w-4" /></Link>
+              <Link to="/contact" onClick={() => trackCtaClick('Contact Us', 'industry_seasonal_demand', '/contact')}>Contact Us <ArrowRight className="ml-2 h-4 w-4" /></Link>
             </Button>
           </div>
         </section>

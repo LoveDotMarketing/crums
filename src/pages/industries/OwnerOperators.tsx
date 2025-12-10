@@ -6,6 +6,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { User, CheckCircle, DollarSign, Wrench, FileText, Heart, ArrowRight } from "lucide-react";
+import { trackCtaClick } from "@/lib/analytics";
 import { ownerOperatorsServiceSchema, generateBreadcrumbSchema } from "@/lib/structuredData";
 
 const breadcrumbSchema = generateBreadcrumbSchema([
@@ -45,7 +46,7 @@ const OwnerOperators = () => {
             </p>
             <div className="flex flex-wrap gap-4 justify-center">
               <Button asChild size="lg" className="bg-secondary hover:bg-secondary/90 text-secondary-foreground">
-                <Link to="/get-started">Apply Now <ArrowRight className="ml-2 h-4 w-4" /></Link>
+                <Link to="/get-started" onClick={() => trackCtaClick('Apply Now', 'industry_owner_operators', '/get-started')}>Apply Now <ArrowRight className="ml-2 h-4 w-4" /></Link>
               </Button>
               <Button asChild variant="outline" size="lg" className="border-primary-foreground text-primary-foreground bg-transparent hover:bg-primary-foreground/10">
                 <Link to="/trailer-leasing">View Lease Options</Link>
@@ -105,7 +106,7 @@ const OwnerOperators = () => {
               Join the CRUMS family and get the trailer you need to succeed on the road.
             </p>
             <Button asChild size="lg" className="bg-background text-foreground hover:bg-background/90">
-              <Link to="/get-started">Apply Today <ArrowRight className="ml-2 h-4 w-4" /></Link>
+              <Link to="/get-started" onClick={() => trackCtaClick('Apply Today', 'industry_owner_operators', '/get-started')}>Apply Today <ArrowRight className="ml-2 h-4 w-4" /></Link>
             </Button>
           </div>
         </section>

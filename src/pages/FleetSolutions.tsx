@@ -13,6 +13,7 @@ import {
   MapPin,
   ArrowRight,
 } from "lucide-react";
+import { trackCtaClick } from "@/lib/analytics";
 import { SEO } from "@/components/SEO";
 import { generateBreadcrumbSchema } from "@/lib/structuredData";
 
@@ -41,7 +42,11 @@ const FleetSolutions = () => {
             growing businesses.
           </p>
           <Link to="/contact">
-            <Button size="lg" className="bg-secondary hover:bg-secondary/90">
+            <Button 
+              size="lg" 
+              className="bg-secondary hover:bg-secondary/90"
+              onClick={() => trackCtaClick('Discuss Your Fleet Needs', 'fleet_solutions', '/contact')}
+            >
               Discuss Your Fleet Needs
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
@@ -311,7 +316,11 @@ const FleetSolutions = () => {
             scale your operation.
           </p>
           <Link to="/contact">
-            <Button size="lg" className="bg-secondary hover:bg-secondary/90">
+            <Button 
+              size="lg" 
+              className="bg-secondary hover:bg-secondary/90"
+              onClick={() => trackCtaClick('Schedule A Consultation', 'fleet_solutions', '/contact')}
+            >
               Schedule A Consultation
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Link } from "react-router-dom";
 import { CheckCircle, TrendingUp, Shield, DollarSign, ArrowRight } from "lucide-react";
+import { trackCtaClick } from "@/lib/analytics";
 import { SEO } from "@/components/SEO";
 import { trailerLeasingServiceSchema, generateBreadcrumbSchema } from "@/lib/structuredData";
 import dryVanTrailerImg from "@/assets/dry-van-trailer.png";
@@ -40,7 +41,11 @@ const TrailerLeasing = () => {
             your return on investment.
           </p>
           <Link to="/contact">
-            <Button size="lg" className="bg-secondary hover:bg-secondary/90">
+            <Button 
+              size="lg" 
+              className="bg-secondary hover:bg-secondary/90"
+              onClick={() => trackCtaClick('Request A Quote', 'trailer_leasing', '/contact')}
+            >
               Request A Quote
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
@@ -280,7 +285,11 @@ const TrailerLeasing = () => {
             Let our team help you find the perfect leasing solution for your fleet.
           </p>
           <Link to="/contact">
-            <Button size="lg" className="bg-secondary hover:bg-secondary/90">
+            <Button 
+              size="lg" 
+              className="bg-secondary hover:bg-secondary/90"
+              onClick={() => trackCtaClick('Request A Quote Today', 'trailer_leasing', '/contact')}
+            >
               Request A Quote Today
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
