@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
@@ -23,12 +22,11 @@ const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [referralCode, setReferralCode] = useState("");
-  const [activeTab, setActiveTab] = useState<"customer" | "staff">("customer");
   const [lockoutMinutes, setLockoutMinutes] = useState<number | null>(null);
   const [showPasteHint, setShowPasteHint] = useState(false);
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { signIn, signUp, user, userRole, checkLoginAllowed } = useAuth();
+  const { signIn, signUp, user, userRole } = useAuth();
 
   // Check for referral code in URL
   useEffect(() => {
@@ -134,7 +132,7 @@ const Login = () => {
         } else {
           setLockoutMinutes(null);
           // Track successful login
-          trackLogin(activeTab === 'staff' ? 'staff_email' : 'customer_email');
+          trackLogin('email');
         }
       }
     } catch (err) {
@@ -164,248 +162,157 @@ const Login = () => {
               </p>
             </div>
 
-            <Tabs 
-              defaultValue="customer" 
-              className="w-full"
-              onValueChange={(value) => {
-                setActiveTab(value as "customer" | "staff");
-                // Staff can only sign in, not sign up
-                if (value === "staff") {
-                  setIsSignUp(false);
-                }
-              }}
-            >
-              <TabsList className="grid w-full grid-cols-2 mb-8">
-                <TabsTrigger value="customer">Customer</TabsTrigger>
-                <TabsTrigger value="staff">Staff</TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="customer">
-                <Card className="border-2">
-                  <CardHeader>
-                    <CardTitle>{isSignUp ? "Create Customer Account" : "Customer Portal"}</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    {lockoutMinutes && !isSignUp && (
-                      <Alert variant="destructive" className="mb-4">
-                        <Lock className="h-4 w-4" />
-                        <AlertDescription>
-                          Account temporarily locked due to too many failed attempts. 
-                          Please try again in {lockoutMinutes} minutes.
-                        </AlertDescription>
-                      </Alert>
-                    )}
-                    <form onSubmit={handleSubmit} className="space-y-4">
-                      <div>
-                        <Label htmlFor="customer-email">Email</Label>
-                        <Input
-                          id="customer-email"
-                          type="email"
-                          placeholder="your.email@company.com"
-                          required
-                          className="mt-2"
-                          value={email}
-                          onChange={(e) => setEmail(e.target.value)}
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="customer-password">Password</Label>
-                        <Input
-                          id="customer-password"
-                          type="password"
-                          required
-                          className="mt-2"
-                          value={password}
-                          onChange={(e) => setPassword(e.target.value)}
-                        />
-                      </div>
-                      {isSignUp && (
-                        <div>
-                          <Label htmlFor="referral-code" className="flex items-center gap-2">
-                            <Gift className="h-4 w-4 text-primary" />
-                            Referral Code (optional)
-                          </Label>
-                          <div className="flex gap-2 mt-2">
-                            <div className="relative flex-1">
-                              <Input
-                                id="referral-code"
-                                type="text"
-                                placeholder="e.g. CRUMS-ABC123"
-                                className={`pr-10 ${
-                                  referralCode.trim() 
-                                    ? validateReferralCode(referralCode).valid 
-                                      ? "border-green-500 focus-visible:ring-green-500" 
-                                      : "border-destructive focus-visible:ring-destructive"
-                                    : ""
-                                }`}
-                                value={referralCode}
-                                onChange={(e) => setReferralCode(e.target.value.toUpperCase())}
-                                onKeyDown={(e) => {
-                                  if ((e.ctrlKey || e.metaKey) && e.key === 'v') {
-                                    setShowPasteHint(true);
-                                    setTimeout(() => setShowPasteHint(false), 2000);
-                                  }
-                                }}
-                                onFocus={() => setShowPasteHint(false)}
-                              />
-                              {referralCode.trim() && (
-                                <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                                  {validateReferralCode(referralCode).valid ? (
-                                    <Check className="h-4 w-4 text-green-500" />
-                                  ) : (
-                                    <AlertCircle className="h-4 w-4 text-destructive" />
-                                  )}
-                                </div>
+            <Card className="border-2">
+              <CardHeader>
+                <CardTitle>{isSignUp ? "Create Account" : "Sign In"}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {lockoutMinutes && !isSignUp && (
+                  <Alert variant="destructive" className="mb-4">
+                    <Lock className="h-4 w-4" />
+                    <AlertDescription>
+                      Account temporarily locked due to too many failed attempts. 
+                      Please try again in {lockoutMinutes} minutes.
+                    </AlertDescription>
+                  </Alert>
+                )}
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div>
+                    <Label htmlFor="email">Email</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="your.email@company.com"
+                      required
+                      className="mt-2"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="password">Password</Label>
+                    <Input
+                      id="password"
+                      type="password"
+                      required
+                      className="mt-2"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                    />
+                  </div>
+                  {isSignUp && (
+                    <div>
+                      <Label htmlFor="referral-code" className="flex items-center gap-2">
+                        <Gift className="h-4 w-4 text-primary" />
+                        Referral Code (optional)
+                      </Label>
+                      <div className="flex gap-2 mt-2">
+                        <div className="relative flex-1">
+                          <Input
+                            id="referral-code"
+                            type="text"
+                            placeholder="e.g. CRUMS-ABC123"
+                            className={`pr-10 ${
+                              referralCode.trim() 
+                                ? validateReferralCode(referralCode).valid 
+                                  ? "border-green-500 focus-visible:ring-green-500" 
+                                  : "border-destructive focus-visible:ring-destructive"
+                                : ""
+                            }`}
+                            value={referralCode}
+                            onChange={(e) => setReferralCode(e.target.value.toUpperCase())}
+                            onKeyDown={(e) => {
+                              if ((e.ctrlKey || e.metaKey) && e.key === 'v') {
+                                setShowPasteHint(true);
+                                setTimeout(() => setShowPasteHint(false), 2000);
+                              }
+                            }}
+                            onFocus={() => setShowPasteHint(false)}
+                          />
+                          {referralCode.trim() && (
+                            <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                              {validateReferralCode(referralCode).valid ? (
+                                <Check className="h-4 w-4 text-green-500" />
+                              ) : (
+                                <AlertCircle className="h-4 w-4 text-destructive" />
                               )}
                             </div>
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="icon"
-                              onClick={async () => {
-                                try {
-                                  const text = await navigator.clipboard.readText();
-                                  setReferralCode(text.toUpperCase().trim());
-                                } catch {
-                                  toast.error("Unable to access clipboard");
-                                }
-                              }}
-                              title="Paste from clipboard"
-                            >
-                              <Clipboard className="h-4 w-4" />
-                            </Button>
-                          </div>
-                          {referralCode.trim() && !validateReferralCode(referralCode).valid ? (
-                            <p className="text-xs text-destructive mt-1">
-                              {validateReferralCode(referralCode).error}
-                            </p>
-                          ) : showPasteHint ? (
-                            <p className="text-xs text-primary mt-1 animate-pulse">
-                              Pasting... or click the clipboard button
-                            </p>
-                          ) : (
-                            <p className="text-xs text-muted-foreground mt-1">
-                              Have a referral code? Enter it to save $250 on your lease!
-                            </p>
                           )}
                         </div>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          onClick={async () => {
+                            try {
+                              const text = await navigator.clipboard.readText();
+                              setReferralCode(text.toUpperCase().trim());
+                            } catch {
+                              toast.error("Unable to access clipboard");
+                            }
+                          }}
+                          title="Paste from clipboard"
+                        >
+                          <Clipboard className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      {referralCode.trim() && !validateReferralCode(referralCode).valid ? (
+                        <p className="text-xs text-destructive mt-1">
+                          {validateReferralCode(referralCode).error}
+                        </p>
+                      ) : showPasteHint ? (
+                        <p className="text-xs text-primary mt-1 animate-pulse">
+                          Pasting... or click the clipboard button
+                        </p>
+                      ) : (
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Have a referral code? Enter it to save $250 on your lease!
+                        </p>
                       )}
-                      {!isSignUp && (
-                        <div className="flex items-center justify-between text-sm">
-                          <label className="flex items-center">
-                            <input type="checkbox" className="mr-2" />
-                            <span className="text-muted-foreground">Remember me</span>
-                          </label>
-                          <Link to="/forgot-password" className="text-primary hover:underline">
-                            Forgot password?
-                          </Link>
-                        </div>
-                      )}
-                      <Button
-                        type="submit"
-                        className="w-full bg-primary hover:bg-primary/90"
-                        size="lg"
-                        disabled={isLoading || (!isSignUp && !!lockoutMinutes)}
-                      >
-                        {isLoading ? "Please wait..." : isSignUp ? "Create Account" : lockoutMinutes ? "Account Locked" : "Sign In"}
-                      </Button>
-                    </form>
-                    <div className="mt-6 text-center text-sm text-muted-foreground">
-                      {isSignUp ? "Already have an account? " : "Don't have an account? "}
-                      <button 
-                        onClick={() => {
-                          if (!isSignUp) trackSignupStarted('login_page');
-                          setIsSignUp(!isSignUp);
-                        }}
-                        className="text-primary hover:underline"
-                      >
-                        {isSignUp ? "Sign in" : "Create account"}
-                      </button>
                     </div>
-                    {!isSignUp && (
-                      <div className="mt-4 text-center text-sm text-muted-foreground">
-                        Need help?{" "}
-                        <a href="/contact" className="text-primary hover:underline">
-                          Contact us
-                        </a>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
-              <TabsContent value="staff">
-                <Card className="border-2">
-                  <CardHeader>
-                    <CardTitle>Staff Portal</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    {lockoutMinutes && (
-                      <Alert variant="destructive" className="mb-4">
-                        <Lock className="h-4 w-4" />
-                        <AlertDescription>
-                          Account temporarily locked due to too many failed attempts. 
-                          Please try again in {lockoutMinutes} minutes.
-                        </AlertDescription>
-                      </Alert>
-                    )}
-                    <form onSubmit={handleSubmit} className="space-y-4">
-                      <div>
-                        <Label htmlFor="staff-email">Email</Label>
-                        <Input
-                          id="staff-email"
-                          type="email"
-                          placeholder="staff@crumsleasing.com"
-                          required
-                          className="mt-2"
-                          value={email}
-                          onChange={(e) => setEmail(e.target.value)}
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="staff-password">Password</Label>
-                        <Input
-                          id="staff-password"
-                          type="password"
-                          required
-                          className="mt-2"
-                          value={password}
-                          onChange={(e) => setPassword(e.target.value)}
-                        />
-                      </div>
-                      <div className="flex items-center justify-between text-sm">
-                        <label className="flex items-center">
-                          <input type="checkbox" className="mr-2" />
-                          <span className="text-muted-foreground">Remember me</span>
-                        </label>
-                        <Link to="/forgot-password" className="text-primary hover:underline">
-                          Forgot password?
-                        </Link>
-                      </div>
-                      <Button
-                        type="submit"
-                        className="w-full bg-secondary hover:bg-secondary/90"
-                        size="lg"
-                        disabled={isLoading || !!lockoutMinutes}
-                      >
-                        {isLoading ? "Please wait..." : lockoutMinutes ? "Account Locked" : "Sign In"}
-                      </Button>
-                    </form>
-                    <div className="mt-6 text-center text-sm text-muted-foreground">
-                      Staff accounts are created by administrators.
-                      <br />
-                      Contact your manager if you need access.
+                  )}
+                  {!isSignUp && (
+                    <div className="flex items-center justify-between text-sm">
+                      <label className="flex items-center">
+                        <input type="checkbox" className="mr-2" />
+                        <span className="text-muted-foreground">Remember me</span>
+                      </label>
+                      <Link to="/forgot-password" className="text-primary hover:underline">
+                        Forgot password?
+                      </Link>
                     </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-            </Tabs>
-
-            <div className="mt-8 text-center">
-              <p className="text-sm text-muted-foreground">
-                For security purposes, all login attempts are monitored and logged.
-              </p>
-            </div>
+                  )}
+                  <Button
+                    type="submit"
+                    className="w-full bg-primary hover:bg-primary/90"
+                    size="lg"
+                    disabled={isLoading || (!isSignUp && !!lockoutMinutes)}
+                  >
+                    {isLoading ? "Please wait..." : isSignUp ? "Create Account" : lockoutMinutes ? "Account Locked" : "Sign In"}
+                  </Button>
+                </form>
+                <div className="mt-6 text-center text-sm text-muted-foreground">
+                  {isSignUp ? "Already have an account? " : "Don't have an account? "}
+                  <button 
+                    onClick={() => {
+                      if (!isSignUp) trackSignupStarted('login_page');
+                      setIsSignUp(!isSignUp);
+                    }}
+                    className="text-primary hover:underline"
+                  >
+                    {isSignUp ? "Sign in" : "Create account"}
+                  </button>
+                </div>
+                {!isSignUp && (
+                  <div className="mt-4 text-center text-sm text-muted-foreground">
+                    Need help?{" "}
+                    <Link to="/contact" className="text-primary hover:underline">
+                      Contact us
+                    </Link>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </div>
         </div>
       </section>
