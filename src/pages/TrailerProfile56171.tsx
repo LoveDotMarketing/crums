@@ -20,6 +20,17 @@ import {
   Phone,
 } from "lucide-react";
 import trailerImage from "@/assets/trailers/trailer-56171.webp";
+// Inspection Gallery Images
+import exteriorSide from "@/assets/trailers/56171/exterior-side.webp";
+import exteriorFleet from "@/assets/trailers/56171/exterior-fleet.webp";
+import rearDoorsClosed from "@/assets/trailers/56171/rear-doors-closed.webp";
+import rearDoorOpenWheel from "@/assets/trailers/56171/rear-door-open-wheel.webp";
+import doorHingeDetail from "@/assets/trailers/56171/door-hinge-detail.webp";
+import doorVentDetail from "@/assets/trailers/56171/door-vent-detail.webp";
+import interiorRoofWalls from "@/assets/trailers/56171/interior-roof-walls.webp";
+import interiorDoorFrame from "@/assets/trailers/56171/interior-door-frame.webp";
+import interiorFullView from "@/assets/trailers/56171/interior-full-view.webp";
+import interiorLogisticPosts from "@/assets/trailers/56171/interior-logistic-posts.webp";
 
 const TrailerProfile56171 = () => {
   const breadcrumbSchema = generateBreadcrumbSchema([
@@ -90,6 +101,19 @@ const TrailerProfile56171 = () => {
     role: "Owner Operator",
     rating: 5,
   };
+
+  const galleryImages = [
+    { src: exteriorSide, alt: "2020 Dry Van Trailer 56171 exterior side view showing clean white panels and trailer number markings" },
+    { src: exteriorFleet, alt: "CRUMS Leasing fleet yard with multiple dry van trailers including unit 56171" },
+    { src: rearDoorsClosed, alt: "Trailer 56171 rear swing doors closed with safety reflective tape and DOT compliance stickers" },
+    { src: rearDoorOpenWheel, alt: "Rear door fully open showing swing door hinges and dual rear wheels in good condition" },
+    { src: doorHingeDetail, alt: "Close-up of trailer door hinges and aluminum side wall showing quality construction" },
+    { src: doorVentDetail, alt: "Rear door with ventilation panel and door locking mechanism detail" },
+    { src: interiorRoofWalls, alt: "Interior view showing aluminum roof crossmembers and corrugated side walls" },
+    { src: interiorDoorFrame, alt: "Interior door frame showing aluminum construction and safety decals" },
+    { src: interiorFullView, alt: "Full interior cargo area view showing clean wood floor, aluminum walls, and 53-foot length" },
+    { src: interiorLogisticPosts, alt: "Interior logistic posts and E-track rails for secure load tie-down and cargo securement" },
+  ];
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -211,6 +235,32 @@ const TrailerProfile56171 = () => {
                 <div key={index} className="flex items-center gap-3 p-4 bg-background rounded-lg shadow-sm">
                   <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0" />
                   <span className="text-foreground">{feature}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Inspection Gallery */}
+        <section className="py-12 bg-background">
+          <div className="container mx-auto px-4">
+            <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-4 text-center">
+              Inspection Gallery
+            </h2>
+            <p className="text-muted-foreground text-center mb-8 max-w-2xl mx-auto">
+              Browse detailed photos from our professional inspection showing the exterior, interior, and key features of this trailer.
+            </p>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+              {galleryImages.map((image, index) => (
+                <div key={index} className="aspect-square overflow-hidden rounded-lg shadow-md hover:shadow-xl transition-shadow cursor-pointer group">
+                  <img
+                    src={image.src}
+                    alt={image.alt}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    loading="lazy"
+                    width={300}
+                    height={300}
+                  />
                 </div>
               ))}
             </div>
