@@ -8,10 +8,11 @@ import { Button } from "@/components/ui/button";
 import { newsArticles, getArticleBySlug, generateNewsArticleSchema } from "@/lib/news";
 import { generateBreadcrumbSchema } from "@/lib/structuredData";
 
-// MATS 2026 booth images
+// MATS 2026 assets
 import matsFloorPlan from "@/assets/news/mats-2026-floor-plan.png";
 import matsBoothArea from "@/assets/news/mats-2026-booth-area.png";
 import matsBoothDetail from "@/assets/news/mats-2026-booth-detail.png";
+import matsLogo from "@/assets/news/mats-logo.png";
 
 const NewsArticlePage = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -108,14 +109,44 @@ const NewsArticlePage = () => {
                 </div>
                 
                 <div className="bg-muted/30 rounded-xl p-6 border border-border mb-6">
-                  {/* Venue Info */}
+                  {/* Event Logo & Venue Info */}
                   <div className="text-center mb-6 pb-6 border-b border-border">
+                    <a 
+                      href="https://truckingshow.com/" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="inline-block mb-4 hover:opacity-80 transition-opacity"
+                    >
+                      <img 
+                        src={matsLogo} 
+                        alt="Mid-America Trucking Show"
+                        className="h-24 mx-auto"
+                      />
+                    </a>
                     <p className="text-lg font-semibold text-foreground mb-1">March 26–28, 2026</p>
                     <p className="text-xl font-bold text-primary mb-2">Kentucky Expo Center</p>
                     <p className="text-muted-foreground">
                       937 Phillips Lane<br />
                       Louisville, KY 40209
                     </p>
+                  </div>
+
+                  {/* Event Info Highlights */}
+                  <div className="mb-6 pb-6 border-b border-border">
+                    <ul className="space-y-2 text-sm">
+                      <li className="flex items-start gap-2">
+                        <span className="text-secondary font-bold">•</span>
+                        <span className="text-muted-foreground">Attendee Registration opens <strong className="text-foreground">December 1, 2025</strong></span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-secondary font-bold">•</span>
+                        <span className="text-muted-foreground">Free Attendee Registration closes <strong className="text-foreground">February 26, 2026</strong></span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-secondary font-bold">•</span>
+                        <span className="text-muted-foreground">Call for Speakers: <strong className="text-foreground">October 1, 2025 – February 1, 2026</strong></span>
+                      </li>
+                    </ul>
                   </div>
 
                   {/* Booth Details */}
