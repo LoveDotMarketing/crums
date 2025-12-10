@@ -41,6 +41,8 @@ import greatDaneMudflap from "@/assets/trailers/56171/great-dane-mudflap.webp";
 import rearTandemWheels from "@/assets/trailers/56171/rear-tandem-wheels.webp";
 import axleBrakeAssembly from "@/assets/trailers/56171/axle-brake-assembly.webp";
 import sidePanelReflectors from "@/assets/trailers/56171/side-panel-reflectors.webp";
+import fullSideProfile from "@/assets/trailers/56171/full-side-profile.webp";
+import landingGearClearance from "@/assets/trailers/56171/landing-gear-clearance.webp";
 
 const TrailerProfile56171 = () => {
   const breadcrumbSchema = generateBreadcrumbSchema([
@@ -133,6 +135,8 @@ const TrailerProfile56171 = () => {
     { src: rearTandemWheels, alt: "Rear tandem wheels and axle assembly showing proper tire inflation and alignment" },
     { src: axleBrakeAssembly, alt: "Axle brake assembly and suspension components showing ABS system and air lines" },
     { src: sidePanelReflectors, alt: "Side panel with DOT-required reflective markers and riveted aluminum construction" },
+    { src: fullSideProfile, alt: "Full side profile view of 53-foot dry van trailer showing aluminum body, landing gear, and tandem axles" },
+    { src: landingGearClearance, alt: "Landing gear clearance marker light and lower panel showing proper ground clearance and DOT reflectors" },
   ];
 
   return (
