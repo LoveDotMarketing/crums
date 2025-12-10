@@ -31,6 +31,16 @@ import interiorRoofWalls from "@/assets/trailers/56171/interior-roof-walls.webp"
 import interiorDoorFrame from "@/assets/trailers/56171/interior-door-frame.webp";
 import interiorFullView from "@/assets/trailers/56171/interior-full-view.webp";
 import interiorLogisticPosts from "@/assets/trailers/56171/interior-logistic-posts.webp";
+import interiorLengthView from "@/assets/trailers/56171/interior-length-view.webp";
+import fmcsaInspectionLabel from "@/assets/trailers/56171/fmcsa-inspection-label.webp";
+import undercarriageSuspension from "@/assets/trailers/56171/undercarriage-suspension.webp";
+import tandemAxleTires from "@/assets/trailers/56171/tandem-axle-tires.webp";
+import dualWheelsCloseup from "@/assets/trailers/56171/dual-wheels-closeup.webp";
+import airRideSuspension from "@/assets/trailers/56171/air-ride-suspension.webp";
+import greatDaneMudflap from "@/assets/trailers/56171/great-dane-mudflap.webp";
+import rearTandemWheels from "@/assets/trailers/56171/rear-tandem-wheels.webp";
+import axleBrakeAssembly from "@/assets/trailers/56171/axle-brake-assembly.webp";
+import sidePanelReflectors from "@/assets/trailers/56171/side-panel-reflectors.webp";
 
 const TrailerProfile56171 = () => {
   const breadcrumbSchema = generateBreadcrumbSchema([
@@ -113,6 +123,16 @@ const TrailerProfile56171 = () => {
     { src: interiorDoorFrame, alt: "Interior door frame showing aluminum construction and safety decals" },
     { src: interiorFullView, alt: "Full interior cargo area view showing clean wood floor, aluminum walls, and 53-foot length" },
     { src: interiorLogisticPosts, alt: "Interior logistic posts and E-track rails for secure load tie-down and cargo securement" },
+    { src: interiorLengthView, alt: "Full-length interior view looking toward front bulkhead showing wood floor condition and cargo space" },
+    { src: fmcsaInspectionLabel, alt: "FMCSA annual vehicle inspection label and manufacturer data plate showing DOT compliance" },
+    { src: undercarriageSuspension, alt: "Undercarriage view showing air ride suspension system and brake components" },
+    { src: tandemAxleTires, alt: "Tandem axle with commercial-grade tires and mud flaps in good condition" },
+    { src: dualWheelsCloseup, alt: "Close-up of dual rear wheels showing tire tread depth and wheel condition" },
+    { src: airRideSuspension, alt: "Great Dane air ride suspension system with airbags and shock absorbers" },
+    { src: greatDaneMudflap, alt: "Great Dane branded mud flap showing manufacturer logo and undercarriage protection" },
+    { src: rearTandemWheels, alt: "Rear tandem wheels and axle assembly showing proper tire inflation and alignment" },
+    { src: axleBrakeAssembly, alt: "Axle brake assembly and suspension components showing ABS system and air lines" },
+    { src: sidePanelReflectors, alt: "Side panel with DOT-required reflective markers and riveted aluminum construction" },
   ];
 
   return (
