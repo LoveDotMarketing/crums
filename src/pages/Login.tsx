@@ -13,6 +13,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { loginSchema, quickSignupSchema } from "@/lib/validations";
 import { supabase } from "@/integrations/supabase/client";
 import { Gift } from "lucide-react";
+import { trackLogin, trackSignup } from "@/lib/analytics";
 
 const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -118,12 +119,17 @@ const Login = () => {
             }
           }
 
+          // Track successful signup
+          trackSignup('email');
           navigate("/dashboard/customer");
         }
       } else {
         const { error } = await signIn(email, password);
         if (error) {
           toast.error(error.message || "Invalid email or password");
+        } else {
+          // Track successful login
+          trackLogin(activeTab === 'staff' ? 'staff_email' : 'customer_email');
         }
       }
     } catch (err) {

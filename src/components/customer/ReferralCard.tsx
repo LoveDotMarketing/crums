@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Gift, Copy, Share2, Users, DollarSign, Clock, CheckCircle } from "lucide-react";
 import { Link } from "react-router-dom";
+import { trackReferralAction } from "@/lib/analytics";
 
 interface ReferralCode {
   id: string;
@@ -91,6 +92,7 @@ export function ReferralCard() {
   const copyCode = () => {
     if (referralCode) {
       navigator.clipboard.writeText(referralCode.code);
+      trackReferralAction('copy_code', referralCode.code);
       toast.success("Referral code copied to clipboard!");
     }
   };
@@ -103,6 +105,7 @@ export function ReferralCard() {
           text: `Use my referral code ${referralCode.code} when you sign up for CRUMS Leasing and we both save $250!`,
           url: `https://crumsleasing.com/login?ref=${referralCode.code}`
         });
+        trackReferralAction('share_code', referralCode.code);
       } catch (err) {
         // User cancelled or share not supported
         copyCode();
