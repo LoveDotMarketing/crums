@@ -21,7 +21,8 @@ export const newsArticles: NewsArticle[] = [
     date: "March 26–28, 2026",
     sortDate: "2026-03-26",
     externalLinks: [
-      "https://s19.a2zinc.net/clients/ema/mats2026/Public/EventMap.aspx?Thumbnail=1",
+      "https://mats2026.smallworldlabs.com/co/crums-leasing",
+      "https://s19.a2zinc.net/clients/EMA/MATS2026/Public/EventMap.aspx?EventId=3&MapItBoothID=104588&MapItBooth=38024&MapID=5",
       "https://truckingshow.com/",
       "https://truckingshow.com/docs/exhibitor/where-is-my-booth-located/",
       "https://truckingshow.com/media-event-info/"
