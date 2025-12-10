@@ -3,8 +3,10 @@ import {
   isValidReferralCodeFormat,
   normalizeReferralCode,
   getReferralErrorMessage,
+  validateReferralCode,
   ReferralResult,
   ProcessReferralResult,
+  ValidationResult,
 } from './referral';
 
 describe('Referral Utilities', () => {
@@ -61,6 +63,60 @@ describe('Referral Utilities', () => {
 
     it('should handle both case and whitespace', () => {
       expect(normalizeReferralCode('  crums-abc123  ')).toBe('CRUMS-ABC123');
+    });
+  });
+
+  describe('validateReferralCode', () => {
+    it('should return valid for correct format', () => {
+      const result = validateReferralCode('CRUMS-ABC123');
+      expect(result.valid).toBe(true);
+      expect(result.error).toBeUndefined();
+    });
+
+    it('should return error for empty code', () => {
+      const result = validateReferralCode('');
+      expect(result.valid).toBe(false);
+      expect(result.error).toBe('Please enter a referral code');
+    });
+
+    it('should return error for whitespace-only code', () => {
+      const result = validateReferralCode('   ');
+      expect(result.valid).toBe(false);
+      expect(result.error).toBe('Please enter a referral code');
+    });
+
+    it('should return error for missing CRUMS prefix', () => {
+      const result = validateReferralCode('ABC123');
+      expect(result.valid).toBe(false);
+      expect(result.error).toBe("Referral codes start with 'CRUMS-' (e.g., CRUMS-ABC123)");
+    });
+
+    it('should return error for wrong suffix length (too short)', () => {
+      const result = validateReferralCode('CRUMS-ABC');
+      expect(result.valid).toBe(false);
+      expect(result.error).toBe('Referral code should be in format CRUMS-XXXXXX (6 characters after dash)');
+    });
+
+    it('should return error for wrong suffix length (too long)', () => {
+      const result = validateReferralCode('CRUMS-ABCDEFGH');
+      expect(result.valid).toBe(false);
+      expect(result.error).toBe('Referral code should be in format CRUMS-XXXXXX (6 characters after dash)');
+    });
+
+    it('should return error for special characters in suffix', () => {
+      const result = validateReferralCode('CRUMS-ABC@23');
+      expect(result.valid).toBe(false);
+      expect(result.error).toBe('Referral code can only contain letters and numbers');
+    });
+
+    it('should accept lowercase codes (normalizes internally)', () => {
+      const result = validateReferralCode('crums-abc123');
+      expect(result.valid).toBe(true);
+    });
+
+    it('should accept codes with leading/trailing whitespace', () => {
+      const result = validateReferralCode('  CRUMS-ABC123  ');
+      expect(result.valid).toBe(true);
     });
   });
 

@@ -12,6 +12,11 @@ export interface ProcessReferralResult {
   variant: "default" | "destructive";
 }
 
+export interface ValidationResult {
+  valid: boolean;
+  error?: string;
+}
+
 /**
  * Validates the format of a CRUMS referral code
  * Format: CRUMS-XXXXXX (6 alphanumeric characters)
@@ -27,6 +32,45 @@ export const isValidReferralCodeFormat = (code: string): boolean => {
  */
 export const normalizeReferralCode = (code: string): string => {
   return code.trim().toUpperCase();
+};
+
+/**
+ * Validates a referral code format and returns detailed validation result
+ * Use this for client-side validation before making RPC calls
+ */
+export const validateReferralCode = (code: string): ValidationResult => {
+  if (!code || !code.trim()) {
+    return { valid: false, error: "Please enter a referral code" };
+  }
+
+  const normalizedCode = normalizeReferralCode(code);
+
+  // Check for CRUMS prefix
+  if (!normalizedCode.startsWith("CRUMS-")) {
+    return { 
+      valid: false, 
+      error: "Referral codes start with 'CRUMS-' (e.g., CRUMS-ABC123)" 
+    };
+  }
+
+  // Check suffix length
+  const suffix = normalizedCode.replace("CRUMS-", "");
+  if (suffix.length !== 6) {
+    return { 
+      valid: false, 
+      error: "Referral code should be in format CRUMS-XXXXXX (6 characters after dash)" 
+    };
+  }
+
+  // Check for valid characters (alphanumeric only)
+  if (!/^[A-Z0-9]+$/.test(suffix)) {
+    return { 
+      valid: false, 
+      error: "Referral code can only contain letters and numbers" 
+    };
+  }
+
+  return { valid: true };
 };
 
 /**
@@ -59,6 +103,7 @@ export const getReferralErrorMessage = (error: string): { message: string; varia
 
 /**
  * Processes a referral code during signup
+ * Validates format first, then makes RPC call to create referral
  * @param referralCode - The referral code entered by the user
  * @param email - The email of the user signing up
  * @returns ProcessReferralResult with success status, message, and toast variant
@@ -71,6 +116,16 @@ export const processReferralCode = async (
   
   if (!normalizedCode) {
     return null; // No code provided, nothing to process
+  }
+
+  // Validate format before making RPC call (fail fast)
+  const validation = validateReferralCode(normalizedCode);
+  if (!validation.valid) {
+    return {
+      success: false,
+      message: validation.error || "Invalid referral code format",
+      variant: "destructive",
+    };
   }
 
   try {
