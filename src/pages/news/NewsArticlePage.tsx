@@ -38,11 +38,19 @@ const NewsArticlePage = () => {
       <Navigation />
       
       {/* Hero Section */}
-      <section className="bg-gradient-to-br from-primary via-primary to-primary/90 text-primary-foreground py-12">
-        <div className="container mx-auto px-4">
-          <Breadcrumbs />
+      <section className="bg-gradient-to-r from-primary to-brand-teal-dark py-16 md:py-24">
+        <div className="container mx-auto px-4 text-center">
+          <h1 className="text-3xl md:text-5xl font-bold text-primary-foreground mb-4">
+            {article.title}
+          </h1>
+          <div className="flex items-center justify-center gap-2 text-primary-foreground/80">
+            <Calendar className="h-4 w-4" />
+            <time dateTime={article.sortDate}>{article.date}</time>
+          </div>
         </div>
       </section>
+
+      <Breadcrumbs />
 
       {/* Article Content */}
       <article className="py-12">
@@ -62,24 +70,11 @@ const NewsArticlePage = () => {
               <span className="text-5xl font-bold text-primary/30">CRUMS</span>
             </div>
 
-            {/* Article Header */}
-            <header className="mb-8">
-              <div className="flex items-center gap-2 text-muted-foreground text-sm mb-4">
-                <Calendar className="h-4 w-4" />
-                <time dateTime={article.sortDate}>{article.date}</time>
-              </div>
-              <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-6">
-                {article.title}
-              </h1>
-            </header>
-
             {/* Article Body */}
             <div className="prose prose-lg max-w-none mb-12">
               <p className="text-xl text-muted-foreground leading-relaxed">
                 {article.description}
               </p>
-              
-              {/* Placeholder content - can be expanded with full article content */}
               <div className="mt-8 p-6 bg-muted/30 rounded-lg border border-border">
                 <p className="text-foreground">
                   This milestone represents an important moment in CRUMS Leasing's journey to 
