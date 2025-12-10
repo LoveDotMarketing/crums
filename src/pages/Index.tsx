@@ -5,6 +5,7 @@ import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import {
   Truck,
   Users,
@@ -26,6 +27,7 @@ import trailerFleetImage from "@/assets/trailer-fleet.png";
 import dryVanTrailerImg from "@/assets/dry-van-trailer.png";
 import flatbedTrailerImg from "@/assets/flatbed-trailer.png";
 import refrigeratedTrailerImg from "@/assets/refrigerated-trailer.png";
+import trailer56171Img from "@/assets/trailers/trailer-56171.webp";
 import { SEO } from "@/components/SEO";
 import { organizationSchema, generateBreadcrumbSchema, customerReviews, generateReviewSchema } from "@/lib/structuredData";
 
@@ -176,6 +178,72 @@ const Index = () => {
                 Read Reviews
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Ready to Roll - Featured Trailer */}
+      <section className="py-16 bg-background">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-10">
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+              Ready to Roll
+            </h2>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              Recently returned, inspected, and prepared for your next haul
+            </p>
+          </div>
+
+          <div className="max-w-4xl mx-auto">
+            <Link to="/commercial-dry-van-trailer-for-lease-56171" className="block group">
+              <Card className="border-2 hover:border-primary hover:shadow-xl transition-all duration-300 overflow-hidden">
+                <div className="grid grid-cols-1 md:grid-cols-2">
+                  <div className="relative aspect-video md:aspect-auto">
+                    <img
+                      src={trailer56171Img}
+                      alt="2020 Dry Van Trailer 56171 available for lease"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      loading="lazy"
+                      width={600}
+                      height={400}
+                    />
+                    <Badge className="absolute top-4 left-4 bg-green-600 text-white">
+                      Available Now
+                    </Badge>
+                  </div>
+                  <CardContent className="p-6 flex flex-col justify-center">
+                    <h3 className="text-2xl font-bold text-foreground mb-4 group-hover:text-primary transition-colors">
+                      Dry Van Trailer For Lease
+                    </h3>
+                    <div className="space-y-3 mb-6">
+                      <div className="flex items-center gap-3">
+                        <span className="text-muted-foreground font-medium w-32">Year</span>
+                        <span className="text-foreground font-semibold">2020</span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span className="text-muted-foreground font-medium w-32">Type</span>
+                        <span className="text-foreground font-semibold">Dry Van</span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span className="text-muted-foreground font-medium w-32">Trailer Number</span>
+                        <span className="text-foreground font-semibold">56171</span>
+                      </div>
+                    </div>
+                    <Button 
+                      className="w-full bg-primary hover:bg-primary/90 group-hover:bg-secondary group-hover:text-secondary-foreground transition-colors"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        trackCtaClick('View Trailer Details', 'home', '/commercial-dry-van-trailer-for-lease-56171');
+                        window.location.href = '/commercial-dry-van-trailer-for-lease-56171';
+                      }}
+                    >
+                      View Trailer Details
+                      <ArrowRight className="ml-2 h-5 w-5" />
+                    </Button>
+                  </CardContent>
+                </div>
+              </Card>
             </Link>
           </div>
         </div>
