@@ -46,6 +46,7 @@ const WhyChooseCrums = () => {
         title="Why CDL Drivers Choose CRUMS Leasing for Reliable Trailer Rentals"
         description="On the road, reliability is everything. At CRUMS Leasing, we give CDL drivers access to the trailers they need to keep moving and keep earning."
         canonical="https://crumsleasing.com/why-choose-crums"
+        ogImage="/images/why-choose-crums-thumbnail.png"
         structuredData={combinedSchema}
       />
       <Navigation />
