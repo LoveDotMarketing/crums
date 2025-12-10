@@ -16,6 +16,7 @@ import Login from "./pages/Login";
 const Mission = lazy(() => import("./pages/Mission"));
 const About = lazy(() => import("./pages/About"));
 const TeamMemberPage = lazy(() => import("./pages/about/TeamMemberPage"));
+const Services = lazy(() => import("./pages/Services"));
 const TrailerLeasing = lazy(() => import("./pages/TrailerLeasing"));
 const TrailerRentals = lazy(() => import("./pages/TrailerRentals"));
 const FleetSolutions = lazy(() => import("./pages/FleetSolutions"));
@@ -112,6 +113,7 @@ const App = () => (
             <Route path="/mission" element={<Mission />} />
             <Route path="/about" element={<About />} />
             <Route path="/about/:slug" element={<TeamMemberPage />} />
+            <Route path="/services" element={<Services />} />
             <Route path="/services/trailer-leasing" element={<TrailerLeasing />} />
             <Route path="/services/trailer-rentals" element={<TrailerRentals />} />
             <Route path="/services/fleet-solutions" element={<FleetSolutions />} />

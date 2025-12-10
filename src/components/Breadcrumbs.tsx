@@ -20,6 +20,7 @@ const routeLabels: Record<string, string> = {
   "/about/jr": "Jr",
   "/about/john": "John",
   "/mission": "Mission",
+  "/services": "Services",
   "/services/trailer-leasing": "Trailer Leasing",
   "/services/trailer-rentals": "Trailer Rentals",
   "/services/fleet-solutions": "Fleet Solutions",
@@ -62,16 +63,25 @@ const routeLabels: Record<string, string> = {
 
 // Define parent routes for pages that should be nested under a different path
 const parentRoutes: Record<string, { label: string; href: string }[]> = {
+  "/services/trailer-leasing": [
+    { label: "Services", href: "/services" }
+  ],
+  "/services/trailer-rentals": [
+    { label: "Services", href: "/services" }
+  ],
+  "/services/fleet-solutions": [
+    { label: "Services", href: "/services" }
+  ],
   "/dry-van-trailers": [
-    { label: "Services", href: "/services/trailer-leasing" },
+    { label: "Services", href: "/services" },
     { label: "Trailer Leasing", href: "/services/trailer-leasing" }
   ],
   "/refrigerated-trailers": [
-    { label: "Services", href: "/services/trailer-leasing" },
+    { label: "Services", href: "/services" },
     { label: "Trailer Leasing", href: "/services/trailer-leasing" }
   ],
   "/flatbed-trailers": [
-    { label: "Services", href: "/services/trailer-leasing" },
+    { label: "Services", href: "/services" },
     { label: "Trailer Leasing", href: "/services/trailer-leasing" }
   ],
   "/resources/guides": [
