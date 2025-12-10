@@ -68,6 +68,7 @@ export const SEO = ({
       <meta property="og:image:height" content="630" />
       <meta property="og:type" content={ogType} />
       <meta property="og:site_name" content="CRUMS Leasing" />
+      <meta property="og:locale" content="en_US" />
       
       {/* Article-specific Open Graph tags */}
       {article?.publishedTime && (
