@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowRight, ArrowLeft, Check, Gift } from "lucide-react";
+import { ArrowRight, ArrowLeft, Check, Gift, AlertCircle } from "lucide-react";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
@@ -19,7 +19,7 @@ import { z } from "zod";
 import { SEO } from "@/components/SEO";
 import { generateBreadcrumbSchema } from "@/lib/structuredData";
 import { trackSignup, trackConversion, trackSignupStarted, trackSignupFailed, trackFormStart } from "@/lib/analytics";
-import { processReferralCode } from "@/lib/referral";
+import { processReferralCode, validateReferralCode } from "@/lib/referral";
 
 export default function GetStarted() {
   const breadcrumbSchema = generateBreadcrumbSchema([
@@ -488,16 +488,40 @@ export default function GetStarted() {
                       <Gift className="h-4 w-4 text-primary" />
                       Referral Code (Optional)
                     </Label>
-                    <Input 
-                      id="referralCode" 
-                      type="text"
-                      value={referralCode} 
-                      onChange={(e) => setReferralCode(e.target.value.toUpperCase())}
-                      placeholder="e.g. CRUMS-ABC123"
-                    />
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Have a referral code? Enter it to save $250 on your lease!
-                    </p>
+                    <div className="relative">
+                      <Input 
+                        id="referralCode" 
+                        type="text"
+                        value={referralCode} 
+                        onChange={(e) => setReferralCode(e.target.value.toUpperCase())}
+                        placeholder="e.g. CRUMS-ABC123"
+                        className={`pr-10 ${
+                          referralCode.trim() 
+                            ? validateReferralCode(referralCode).valid 
+                              ? "border-green-500 focus-visible:ring-green-500" 
+                              : "border-destructive focus-visible:ring-destructive"
+                            : ""
+                        }`}
+                      />
+                      {referralCode.trim() && (
+                        <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                          {validateReferralCode(referralCode).valid ? (
+                            <Check className="h-4 w-4 text-green-500" />
+                          ) : (
+                            <AlertCircle className="h-4 w-4 text-destructive" />
+                          )}
+                        </div>
+                      )}
+                    </div>
+                    {referralCode.trim() && !validateReferralCode(referralCode).valid ? (
+                      <p className="text-xs text-destructive mt-1">
+                        {validateReferralCode(referralCode).error}
+                      </p>
+                    ) : (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Have a referral code? Enter it to save $250 on your lease!
+                      </p>
+                    )}
                   </div>
                 </div>
               )}
