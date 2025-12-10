@@ -142,4 +142,33 @@
       <image:caption>Temperature-controlled reefer trailers for perishable goods</image:caption>
     </image:image>
   </url>
+  <!-- News Article Images -->
+  <url>
+    <loc>https://crumsleasing.com/news/mats-2026-crums-leasing-booth-38024</loc>
+    <image:image>
+      <image:loc>https://crumsleasing.com/assets/news/mats-2026-booth.png</image:loc>
+      <image:title>CRUMS Leasing MATS 2026 Booth #38024</image:title>
+      <image:caption>CRUMS Leasing exhibit booth at Mid-America Trucking Show 2026 in Louisville, KY</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://crumsleasing.com/assets/news/mats-2026-floor-plan.png</image:loc>
+      <image:title>MATS 2026 Floor Plan - Booth 38024 Location</image:title>
+      <image:caption>Floor plan showing CRUMS Leasing booth location at MATS 2026 Kentucky Expo Center</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://crumsleasing.com/assets/news/mats-2026-booth-area.png</image:loc>
+      <image:title>MATS 2026 South Wing Area Map</image:title>
+      <image:caption>South Wing area map showing booth 38024 near Maintenance & Repair Pavilion</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://crumsleasing.com/assets/news/mats-2026-booth-detail.png</image:loc>
+      <image:title>MATS 2026 Booth 38024 Detail View</image:title>
+      <image:caption>Detailed view of CRUMS Leasing 20x10 booth space at MATS 2026</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://crumsleasing.com/assets/news/mats-logo.png</image:loc>
+      <image:title>Mid-America Trucking Show Logo</image:title>
+      <image:caption>Official MATS Mid-America Trucking Show logo</image:caption>
+    </image:image>
+  </url>
 </urlset>

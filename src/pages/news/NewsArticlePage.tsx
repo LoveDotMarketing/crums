@@ -5,7 +5,7 @@ import { Footer } from "@/components/Footer";
 import { SEO } from "@/components/SEO";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { Button } from "@/components/ui/button";
-import { newsArticles, getArticleBySlug, generateNewsArticleSchema } from "@/lib/news";
+import { newsArticles, getArticleBySlug, generateNewsArticleSchema, generateMats2026EventSchema } from "@/lib/news";
 import { generateBreadcrumbSchema } from "@/lib/structuredData";
 
 // MATS 2026 assets
@@ -33,13 +33,36 @@ const NewsArticlePage = () => {
     { name: article.title, url: `https://crumsleasing.com/news/${article.slug}` }
   ];
 
+  // Build structured data array
+  const structuredData = [
+    generateNewsArticleSchema(article), 
+    generateBreadcrumbSchema(breadcrumbItems)
+  ];
+
+  // Add Event schema for MATS 2026 article
+  if (slug === "mats-2026-crums-leasing-booth-38024") {
+    structuredData.push(generateMats2026EventSchema());
+  }
+
+  // Determine OG image - use article image if available
+  const ogImage = article.image 
+    ? `/assets/news/${slug?.includes('mats-2026') ? 'mats-2026-booth.png' : 'placeholder.png'}`
+    : "/og-image.jpg";
+
   return (
     <div className="min-h-screen bg-background">
       <SEO
         title={article.title}
         description={article.description}
         canonical={`https://crumsleasing.com/news/${article.slug}`}
-        structuredData={[generateNewsArticleSchema(article), generateBreadcrumbSchema(breadcrumbItems)]}
+        ogImage={ogImage}
+        structuredData={structuredData}
+        article={{
+          publishedTime: article.sortDate,
+          modifiedTime: article.lastModified,
+          section: article.articleSection || "Company News",
+          author: "CRUMS Leasing"
+        }}
       />
       <Navigation />
       
