@@ -7,6 +7,7 @@ import { MessageCircle, X, Send, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { trackChatbotOpen, trackChatbotMessage } from "@/lib/analytics";
 
 interface Message {
   role: "user" | "assistant";
@@ -262,6 +263,8 @@ export const ChatBot = ({ userType }: ChatBotProps) => {
   const handleSend = async () => {
     if (!input.trim() || isLoading) return;
 
+    trackChatbotMessage();
+    
     const userMessage: Message = {
       role: "user",
       content: input,
@@ -300,7 +303,10 @@ export const ChatBot = ({ userType }: ChatBotProps) => {
     <>
       {/* Floating Chat Button */}
       <Button
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={() => {
+          if (!isOpen) trackChatbotOpen();
+          setIsOpen(!isOpen);
+        }}
         className={cn(
           "fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg z-50",
           "bg-primary hover:bg-primary/90 transition-all duration-200",

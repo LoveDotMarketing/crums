@@ -12,10 +12,12 @@ import { Footer } from "@/components/Footer";
 import { toast } from "sonner";
 import { Loader2, FileText, AlertCircle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { trackFormSubmission, trackConversion, trackFormStart } from "@/lib/analytics";
 
 export default function RentalRequest() {
   const { user } = useAuth();
   const [submitting, setSubmitting] = useState(false);
+  const [formStarted, setFormStarted] = useState(false);
   const [formData, setFormData] = useState({
     phone_number: "",
     trailer_type: "",
@@ -51,6 +53,8 @@ export default function RentalRequest() {
 
       if (error) throw error;
 
+      trackFormSubmission('rental_request', true);
+      trackConversion('rental_request');
       toast.success("Rental request submitted successfully!");
       
       // Reset form
@@ -106,6 +110,12 @@ export default function RentalRequest() {
                     required
                     value={formData.phone_number}
                     onChange={(e) => setFormData({ ...formData, phone_number: e.target.value })}
+                    onFocus={() => {
+                      if (!formStarted) {
+                        setFormStarted(true);
+                        trackFormStart('rental_request', 'phone_number');
+                      }
+                    }}
                     placeholder="(555) 123-4567"
                   />
                 </div>

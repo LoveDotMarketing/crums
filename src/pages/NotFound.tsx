@@ -6,6 +6,7 @@ import { Footer } from "@/components/Footer";
 import { SEO } from "@/components/SEO";
 import { Button } from "@/components/ui/button";
 import { Home, Phone, MapPin, FileText, ArrowLeft, Search } from "lucide-react";
+import { trackPhoneClick } from "@/lib/analytics";
 
 const NotFound = () => {
   const location = useLocation();
@@ -160,6 +161,7 @@ const NotFound = () => {
                 <a 
                   href="tel:+18885704564" 
                   className="text-lg font-semibold text-primary hover:underline"
+                  onClick={() => trackPhoneClick('404_page')}
                 >
                   Call us at (888) 570-4564
                 </a>

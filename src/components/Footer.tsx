@@ -1,6 +1,7 @@
 import { Facebook, Linkedin, Instagram } from "lucide-react";
 import { Link } from "react-router-dom";
 import crumsLogo from "@/assets/crums-logo.png";
+import { trackPhoneClick } from "@/lib/analytics";
 
 export const Footer = () => {
   return (
@@ -30,6 +31,7 @@ export const Footer = () => {
               <a 
                 href="tel:+18885704564"
                 className="hover:text-secondary transition-colors block"
+                onClick={() => trackPhoneClick('footer')}
               >
                 (888) 570-4564
               </a>

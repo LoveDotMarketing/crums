@@ -68,5 +68,77 @@ export const trackOutboundLink = (url: string) => {
   });
 };
 
+// Phone click tracking
+export const trackPhoneClick = (location: string) => {
+  trackEvent('phone_click', {
+    event_category: 'engagement',
+    location,
+    phone_number: '(888) 570-4564',
+  });
+};
+
+// Form funnel tracking
+export const trackFormStart = (formName: string, firstField?: string) => {
+  trackEvent('form_start', {
+    form_name: formName,
+    first_field: firstField || '',
+  });
+};
+
+export const trackFormProgress = (formName: string, section: string, completionPercent: number) => {
+  trackEvent('form_progress', {
+    form_name: formName,
+    section,
+    completion_percent: completionPercent,
+  });
+};
+
+// Signup funnel tracking
+export const trackSignupStarted = (source: string) => {
+  trackEvent('signup_started', { source });
+};
+
+export const trackSignupFailed = (errorType: string) => {
+  trackEvent('signup_failed', { error_type: errorType });
+};
+
+// Application tracking
+export const trackApplicationStarted = () => {
+  trackEvent('application_started', { event_category: 'conversion' });
+};
+
+export const trackApplicationSectionComplete = (section: string) => {
+  trackEvent('application_section_complete', {
+    event_category: 'conversion',
+    section,
+  });
+};
+
+// CTA clicks
+export const trackCtaClick = (buttonText: string, page: string, destination?: string) => {
+  trackEvent('cta_click', {
+    button_text: buttonText,
+    page,
+    destination: destination || '',
+  });
+};
+
+// Calculator usage
+export const trackCalculatorUse = (calculatorType: string, hasResult: boolean) => {
+  trackEvent('calculator_use', {
+    calculator_type: calculatorType,
+    has_result: hasResult,
+  });
+};
+
+// Chatbot interactions
+export const trackChatbotOpen = () => {
+  trackEvent('chatbot_open', { event_category: 'engagement' });
+};
+
+export const trackChatbotMessage = () => {
+  trackEvent('chatbot_message_sent', { event_category: 'engagement' });
+};
+
 // GA4 Dashboard URL for admin reference
 export const GA4_DASHBOARD_URL = 'https://analytics.google.com/analytics/web/#/p478449955/reports/intelligenthome';

@@ -15,6 +15,7 @@ import { Progress } from "@/components/ui/progress";
 import { Checkbox } from "@/components/ui/checkbox";
 import { validateFile, sanitizeInput } from "@/lib/validations";
 import { format } from "date-fns";
+import { trackApplicationStarted, trackFormSubmission, trackConversion } from "@/lib/analytics";
 
 interface ProfileData {
   first_name: string;
@@ -109,6 +110,11 @@ export default function Application() {
   useEffect(() => {
     fetchData();
   }, [user]);
+
+  useEffect(() => {
+    // Track application page view
+    trackApplicationStarted();
+  }, []);
 
   const fetchData = async () => {
     if (!user) return;
@@ -352,6 +358,8 @@ export default function Application() {
       }
 
       toast.success("Application saved successfully");
+      trackFormSubmission('customer_application', true);
+      trackConversion('application_submit');
       fetchData();
     } catch (error) {
       console.error("Error saving application:", error);
