@@ -7,7 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Phone, MapPin, Clock, Facebook, Instagram, Linkedin } from "lucide-react";
+import { Phone, MapPin, Clock, Facebook, Instagram, Linkedin, Youtube } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -503,6 +503,15 @@ const Contact = () => {
                           aria-label="Visit our LinkedIn page"
                         >
                           <Linkedin className="h-5 w-5" />
+                        </a>
+                        <a 
+                          href="https://www.youtube.com/channel/UCvIeBeOpT0ql7n0XQcSmNVg" 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="h-10 w-10 rounded-full bg-destructive/10 flex items-center justify-center hover:bg-destructive hover:text-destructive-foreground transition-colors"
+                          aria-label="Visit our YouTube channel"
+                        >
+                          <Youtube className="h-5 w-5" />
                         </a>
                       </div>
                     </div>
