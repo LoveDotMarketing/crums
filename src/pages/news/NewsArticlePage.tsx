@@ -1,0 +1,183 @@
+import { useParams, Link, Navigate } from "react-router-dom";
+import { Calendar, ExternalLink, ArrowLeft, ArrowRight } from "lucide-react";
+import { Navigation } from "@/components/Navigation";
+import { Footer } from "@/components/Footer";
+import { SEO } from "@/components/SEO";
+import { Breadcrumbs } from "@/components/Breadcrumbs";
+import { Button } from "@/components/ui/button";
+import { newsArticles, getArticleBySlug, generateNewsArticleSchema } from "@/lib/news";
+import { generateBreadcrumbSchema } from "@/lib/structuredData";
+
+const NewsArticlePage = () => {
+  const { slug } = useParams<{ slug: string }>();
+  const article = slug ? getArticleBySlug(slug) : undefined;
+
+  if (!article) {
+    return <Navigate to="/news" replace />;
+  }
+
+  // Find previous and next articles
+  const currentIndex = newsArticles.findIndex(a => a.slug === slug);
+  const prevArticle = currentIndex < newsArticles.length - 1 ? newsArticles[currentIndex + 1] : null;
+  const nextArticle = currentIndex > 0 ? newsArticles[currentIndex - 1] : null;
+
+  const breadcrumbItems = [
+    { name: "Home", url: "https://crumsleasing.com" },
+    { name: "News", url: "https://crumsleasing.com/news" },
+    { name: article.title, url: `https://crumsleasing.com/news/${article.slug}` }
+  ];
+
+  return (
+    <div className="min-h-screen bg-background">
+      <SEO
+        title={article.title}
+        description={article.description}
+        canonical={`https://crumsleasing.com/news/${article.slug}`}
+        structuredData={[generateNewsArticleSchema(article), generateBreadcrumbSchema(breadcrumbItems)]}
+      />
+      <Navigation />
+      
+      {/* Hero Section */}
+      <section className="bg-gradient-to-br from-primary via-primary to-primary/90 text-primary-foreground py-12">
+        <div className="container mx-auto px-4">
+          <Breadcrumbs />
+        </div>
+      </section>
+
+      {/* Article Content */}
+      <article className="py-12">
+        <div className="container mx-auto px-4">
+          <div className="max-w-4xl mx-auto">
+            {/* Back Link */}
+            <Link 
+              to="/news" 
+              className="inline-flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors mb-8"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back to News
+            </Link>
+
+            {/* Featured Image Placeholder */}
+            <div className="aspect-video bg-gradient-to-br from-primary/20 via-secondary/20 to-primary/10 rounded-xl flex items-center justify-center mb-8">
+              <span className="text-5xl font-bold text-primary/30">CRUMS</span>
+            </div>
+
+            {/* Article Header */}
+            <header className="mb-8">
+              <div className="flex items-center gap-2 text-muted-foreground text-sm mb-4">
+                <Calendar className="h-4 w-4" />
+                <time dateTime={article.sortDate}>{article.date}</time>
+              </div>
+              <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-6">
+                {article.title}
+              </h1>
+            </header>
+
+            {/* Article Body */}
+            <div className="prose prose-lg max-w-none mb-12">
+              <p className="text-xl text-muted-foreground leading-relaxed">
+                {article.description}
+              </p>
+              
+              {/* Placeholder content - can be expanded with full article content */}
+              <div className="mt-8 p-6 bg-muted/30 rounded-lg border border-border">
+                <p className="text-foreground">
+                  This milestone represents an important moment in CRUMS Leasing's journey to 
+                  empower carriers across the United States with reliable, affordable trailer 
+                  leasing solutions. Founded on the values of family, hard work, and dedication 
+                  passed down from "CRUMS" herself, the company continues to grow while 
+                  maintaining its people-first approach.
+                </p>
+              </div>
+            </div>
+
+            {/* External Sources */}
+            {article.externalLinks.length > 0 && (
+              <div className="mb-12 p-6 bg-muted/50 rounded-lg border border-border">
+                <h2 className="text-lg font-semibold text-foreground mb-4">Sources & Related Links</h2>
+                <ul className="space-y-3">
+                  {article.externalLinks.map((link, index) => (
+                    <li key={index}>
+                      <a 
+                        href={link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 text-primary hover:text-primary/80 hover:underline break-all"
+                      >
+                        <ExternalLink className="h-4 w-4 flex-shrink-0" />
+                        <span className="text-sm">{link}</span>
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* CTA */}
+            <div className="bg-secondary/10 rounded-xl p-8 text-center mb-12">
+              <h2 className="text-2xl font-bold text-foreground mb-4">
+                Ready to Get Started with CRUMS Leasing?
+              </h2>
+              <p className="text-muted-foreground mb-6">
+                Join thousands of carriers who trust CRUMS Leasing for reliable, affordable trailer solutions.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <Link to="/get-started">
+                  <Button className="bg-secondary hover:bg-secondary/90">
+                    Get Started Today
+                  </Button>
+                </Link>
+                <Link to="/contact">
+                  <Button variant="outline">
+                    Contact Us
+                  </Button>
+                </Link>
+              </div>
+            </div>
+
+            {/* Navigation */}
+            <nav className="flex flex-col sm:flex-row justify-between gap-4 pt-8 border-t border-border">
+              {prevArticle ? (
+                <Link 
+                  to={`/news/${prevArticle.slug}`}
+                  className="flex items-center gap-3 p-4 rounded-lg border border-border hover:bg-muted/50 transition-colors group flex-1"
+                >
+                  <ArrowLeft className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors flex-shrink-0" />
+                  <div className="text-left">
+                    <span className="text-xs text-muted-foreground uppercase tracking-wider">Previous</span>
+                    <p className="text-sm font-medium text-foreground group-hover:text-primary transition-colors line-clamp-1">
+                      {prevArticle.title}
+                    </p>
+                  </div>
+                </Link>
+              ) : (
+                <div className="flex-1" />
+              )}
+              
+              {nextArticle ? (
+                <Link 
+                  to={`/news/${nextArticle.slug}`}
+                  className="flex items-center gap-3 p-4 rounded-lg border border-border hover:bg-muted/50 transition-colors group flex-1 justify-end text-right"
+                >
+                  <div>
+                    <span className="text-xs text-muted-foreground uppercase tracking-wider">Next</span>
+                    <p className="text-sm font-medium text-foreground group-hover:text-primary transition-colors line-clamp-1">
+                      {nextArticle.title}
+                    </p>
+                  </div>
+                  <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors flex-shrink-0" />
+                </Link>
+              ) : (
+                <div className="flex-1" />
+              )}
+            </nav>
+          </div>
+        </div>
+      </article>
+
+      <Footer />
+    </div>
+  );
+};
+
+export default NewsArticlePage;

@@ -97,6 +97,42 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://crumsleasing.com/news</loc>
+    <lastmod>2025-12-10</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://crumsleasing.com/news/mats-2026-crums-leasing-booth-38024</loc>
+    <lastmod>2025-12-10</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://crumsleasing.com/news/major-launch-texas-expansion-march-2025</loc>
+    <lastmod>2025-12-10</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://crumsleasing.com/news/10-4-magazine-feature-february-2025</loc>
+    <lastmod>2025-12-10</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://crumsleasing.com/news/official-industry-entry-announcement</loc>
+    <lastmod>2025-12-10</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://crumsleasing.com/news/mats-2025-debut-louisville</loc>
+    <lastmod>2025-12-10</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://crumsleasing.com/resources</loc>
     <lastmod>2025-12-04</lastmod>
     <changefreq>weekly</changefreq>
