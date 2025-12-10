@@ -11,6 +11,7 @@ export interface NewsArticle {
   priority: number;
   changefreq: string;
   image?: string; // Optional featured image
+  articleSection?: string; // Category for schema
 }
 
 export const newsArticles: NewsArticle[] = [
@@ -30,7 +31,8 @@ export const newsArticles: NewsArticle[] = [
     lastModified: "2025-12-10",
     priority: 0.8,
     changefreq: "monthly",
-    image: mats2026Image
+    image: mats2026Image,
+    articleSection: "Events"
   },
   {
     slug: "family-first-core-values-reaffirmation",
@@ -41,7 +43,8 @@ export const newsArticles: NewsArticle[] = [
     externalLinks: ["https://www.instagram.com/p/DOZeCBREvLx/"],
     lastModified: "2025-12-10",
     priority: 0.6,
-    changefreq: "yearly"
+    changefreq: "yearly",
+    articleSection: "Company Culture"
   },
   {
     slug: "mats-2025-debut-louisville",
@@ -52,7 +55,8 @@ export const newsArticles: NewsArticle[] = [
     externalLinks: ["https://truckingshow.com/"],
     lastModified: "2025-12-10",
     priority: 0.8,
-    changefreq: "yearly"
+    changefreq: "yearly",
+    articleSection: "Events"
   },
   {
     slug: "major-launch-texas-expansion-march-2025",
@@ -69,7 +73,8 @@ export const newsArticles: NewsArticle[] = [
     ],
     lastModified: "2025-12-10",
     priority: 0.9,
-    changefreq: "yearly"
+    changefreq: "yearly",
+    articleSection: "Press Release"
   },
   {
     slug: "10-4-magazine-feature-february-2025",
@@ -82,7 +87,8 @@ export const newsArticles: NewsArticle[] = [
     ],
     lastModified: "2025-12-10",
     priority: 0.8,
-    changefreq: "yearly"
+    changefreq: "yearly",
+    articleSection: "Media Coverage"
   },
   {
     slug: "official-industry-entry-announcement",
@@ -93,7 +99,8 @@ export const newsArticles: NewsArticle[] = [
     externalLinks: ["https://www.truckpartsandservice.com/trucks-trailers/trailers/article/15737375/nba-star-leaps-into-trailer-leasing-business"],
     lastModified: "2025-12-10",
     priority: 0.8,
-    changefreq: "yearly"
+    changefreq: "yearly",
+    articleSection: "Media Coverage"
   },
   {
     slug: "texas-truckers-giveaway-promotion",
@@ -104,7 +111,8 @@ export const newsArticles: NewsArticle[] = [
     externalLinks: ["https://www.instagram.com/crumsleasingllc/reel/DFeGOEAyGbI/"],
     lastModified: "2025-12-10",
     priority: 0.6,
-    changefreq: "yearly"
+    changefreq: "yearly",
+    articleSection: "Promotions"
   },
   {
     slug: "new-year-launch-tease-texas-focus",
@@ -115,7 +123,8 @@ export const newsArticles: NewsArticle[] = [
     externalLinks: ["https://www.instagram.com/reel/DETJQYoSg92/"],
     lastModified: "2025-12-10",
     priority: 0.6,
-    changefreq: "yearly"
+    changefreq: "yearly",
+    articleSection: "Company News"
   },
   {
     slug: "eric-bledsoe-shanghai-sharks-contract-extension",
@@ -126,7 +135,8 @@ export const newsArticles: NewsArticle[] = [
     externalLinks: ["https://www.nationofblue.com/eric-bledsoe-reportedly-re-signs-with-the-shanghai-sharks/"],
     lastModified: "2025-12-10",
     priority: 0.7,
-    changefreq: "yearly"
+    changefreq: "yearly",
+    articleSection: "Founder News"
   },
   {
     slug: "recognition-dual-career-path",
@@ -137,7 +147,8 @@ export const newsArticles: NewsArticle[] = [
     externalLinks: ["https://www.linkedin.com/posts/eric-bledsoe-6083336a_honored-activity-7259414157215563776-2KJL"],
     lastModified: "2025-12-10",
     priority: 0.6,
-    changefreq: "yearly"
+    changefreq: "yearly",
+    articleSection: "Founder News"
   },
   {
     slug: "founder-spotlight-public-introduction",
@@ -148,7 +159,8 @@ export const newsArticles: NewsArticle[] = [
     externalLinks: ["https://www.instagram.com/p/DB1_Ew0zP0K/"],
     lastModified: "2025-12-10",
     priority: 0.7,
-    changefreq: "yearly"
+    changefreq: "yearly",
+    articleSection: "Founder News"
   },
   {
     slug: "promotional-debut-meet-greet-basketball-tournament",
@@ -159,7 +171,8 @@ export const newsArticles: NewsArticle[] = [
     externalLinks: ["https://x.com/thetournament/status/1814413634615030091"],
     lastModified: "2025-12-10",
     priority: 0.6,
-    changefreq: "yearly"
+    changefreq: "yearly",
+    articleSection: "Events"
   },
   {
     slug: "first-public-tease-fleet-preview",
@@ -170,7 +183,8 @@ export const newsArticles: NewsArticle[] = [
     externalLinks: ["https://www.linkedin.com/posts/eric-bledsoe-6083336a_crums-with-one-of-the-2024-great-danes-crums-activity-7213884559686295552-JBxY"],
     lastModified: "2025-12-10",
     priority: 0.7,
-    changefreq: "yearly"
+    changefreq: "yearly",
+    articleSection: "Company News"
   },
   {
     slug: "conception-early-planning",
@@ -181,7 +195,8 @@ export const newsArticles: NewsArticle[] = [
     externalLinks: [],
     lastModified: "2025-12-10",
     priority: 0.6,
-    changefreq: "yearly"
+    changefreq: "yearly",
+    articleSection: "Company History"
   }
 ];
 
@@ -190,30 +205,111 @@ export const getArticleBySlug = (slug: string): NewsArticle | undefined => {
   return newsArticles.find(article => article.slug === slug);
 };
 
+// Social media profiles for publisher
+const socialProfiles = [
+  "https://www.instagram.com/crumsleasingllc/",
+  "https://www.linkedin.com/company/crums-leasing/",
+  "https://www.facebook.com/crumsleasing",
+  "https://x.com/crumsleasing"
+];
+
 // Generate NewsArticle schema for SEO
-export const generateNewsArticleSchema = (article: NewsArticle) => ({
-  "@context": "https://schema.org",
-  "@type": "NewsArticle",
-  "headline": article.title,
-  "description": article.description,
-  "datePublished": article.sortDate,
-  "dateModified": article.lastModified,
-  "author": {
-    "@type": "Organization",
-    "name": "CRUMS Leasing",
-    "url": "https://crumsleasing.com"
-  },
-  "publisher": {
-    "@type": "Organization",
-    "name": "CRUMS Leasing",
-    "logo": {
+export const generateNewsArticleSchema = (article: NewsArticle) => {
+  const baseSchema: Record<string, unknown> = {
+    "@context": "https://schema.org",
+    "@type": "NewsArticle",
+    "headline": article.title,
+    "description": article.description,
+    "datePublished": article.sortDate,
+    "dateModified": article.lastModified,
+    "author": {
+      "@type": "Organization",
+      "name": "CRUMS Leasing",
+      "url": "https://crumsleasing.com"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "CRUMS Leasing",
+      "url": "https://crumsleasing.com",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://crumsleasing.com/logo.png",
+        "width": 600,
+        "height": 60
+      },
+      "sameAs": socialProfiles
+    },
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": `https://crumsleasing.com/news/${article.slug}`
+    }
+  };
+
+  // Add image if available
+  if (article.image) {
+    baseSchema.image = {
       "@type": "ImageObject",
-      "url": "https://crumsleasing.com/logo.png"
+      "url": `https://crumsleasing.com/assets/news/${article.slug.includes('mats-2026') ? 'mats-2026-booth.png' : 'placeholder.png'}`,
+      "width": 1200,
+      "height": 630
+    };
+  }
+
+  // Add article section if available
+  if (article.articleSection) {
+    baseSchema.articleSection = article.articleSection;
+  }
+
+  return baseSchema;
+};
+
+// Generate Event schema for MATS 2026
+export const generateMats2026EventSchema = () => ({
+  "@context": "https://schema.org",
+  "@type": "Event",
+  "name": "Mid-America Trucking Show 2026",
+  "description": "MATS 2026 is the largest annual heavy-duty trucking industry event in North America. CRUMS Leasing will be exhibiting at Booth #38024 in the South Wing.",
+  "startDate": "2026-03-26",
+  "endDate": "2026-03-28",
+  "eventStatus": "https://schema.org/EventScheduled",
+  "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
+  "location": {
+    "@type": "Place",
+    "name": "Kentucky Expo Center",
+    "address": {
+      "@type": "PostalAddress",
+      "streetAddress": "937 Phillips Lane",
+      "addressLocality": "Louisville",
+      "addressRegion": "KY",
+      "postalCode": "40209",
+      "addressCountry": "US"
+    },
+    "geo": {
+      "@type": "GeoCoordinates",
+      "latitude": 38.1925,
+      "longitude": -85.7419
     }
   },
-  "mainEntityOfPage": {
-    "@type": "WebPage",
-    "@id": `https://crumsleasing.com/news/${article.slug}`
+  "image": "https://crumsleasing.com/assets/news/mats-2026-booth.png",
+  "organizer": {
+    "@type": "Organization",
+    "name": "Mid-America Trucking Show",
+    "url": "https://truckingshow.com/"
+  },
+  "performer": {
+    "@type": "Organization",
+    "name": "CRUMS Leasing",
+    "url": "https://crumsleasing.com",
+    "description": "CRUMS Leasing - Exhibitor at Booth #38024"
+  },
+  "offers": {
+    "@type": "Offer",
+    "url": "https://truckingshow.com/",
+    "price": "0",
+    "priceCurrency": "USD",
+    "availability": "https://schema.org/InStock",
+    "validFrom": "2025-12-01",
+    "description": "Free attendee registration available until February 26, 2026"
   }
 });
 
