@@ -15,6 +15,7 @@ import { loginSchema, quickSignupSchema } from "@/lib/validations";
 import { supabase } from "@/integrations/supabase/client";
 import { Gift, Lock } from "lucide-react";
 import { trackLogin, trackSignup, trackSignupStarted, trackSignupFailed } from "@/lib/analytics";
+import { processReferralCode } from "@/lib/referral";
 
 const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -104,30 +105,15 @@ const Login = () => {
 
           // Track referral if a code was provided
           if (referralCode.trim()) {
-            try {
-              // Use the secure create_referral function
-              const { data: referralResult, error: referralError } = await supabase
-                .rpc("create_referral", {
-                  p_referral_code: referralCode.trim().toUpperCase(),
-                  p_referred_email: email
-                });
-
-              if (referralError) {
-                console.error("Referral error:", referralError);
-              } else if (referralResult) {
-                const result = referralResult as { success: boolean; error?: string; referral_id?: string };
-                if (result.success) {
-                  toast.success("Referral code applied! You'll receive $250 off after lease approval.");
-                } else if (result.error === "You cannot refer yourself") {
-                  toast.error("Oops! You can't use your own referral code. Ask a friend to share theirs!");
-                } else if (result.error === "This email has already been referred") {
-                  toast.info("This email has already been referred by another customer.");
-                } else if (result.error) {
-                  toast.error(result.error);
-                }
+            const referralResult = await processReferralCode(referralCode, email);
+            if (referralResult) {
+              if (referralResult.success) {
+                toast.success(referralResult.message);
+              } else if (referralResult.variant === "destructive") {
+                toast.error(referralResult.message);
+              } else {
+                toast.info(referralResult.message);
               }
-            } catch {
-              // Non-critical, don't block signup flow
             }
           }
 
