@@ -18,7 +18,7 @@ import { fullSignupSchema, customerApplicationSchema, validateFile, sanitizeInpu
 import { z } from "zod";
 import { SEO } from "@/components/SEO";
 import { generateBreadcrumbSchema } from "@/lib/structuredData";
-import { trackSignup, trackConversion } from "@/lib/analytics";
+import { trackSignup, trackConversion, trackSignupStarted, trackSignupFailed, trackFormStart } from "@/lib/analytics";
 
 export default function GetStarted() {
   const breadcrumbSchema = generateBreadcrumbSchema([
@@ -66,6 +66,12 @@ export default function GetStarted() {
 
   // Step 4 - Terms
   const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [formStarted, setFormStarted] = useState(false);
+
+  // Track signup started on page load
+  useEffect(() => {
+    trackSignupStarted('get_started_page');
+  }, []);
 
   // Check for referral code in URL on mount
   useEffect(() => {
@@ -172,6 +178,7 @@ export default function GetStarted() {
       const { error: signUpError } = await signUp(email, password, "customer");
       
       if (signUpError) {
+        trackSignupFailed(signUpError.message || 'unknown_error');
         toast({ title: "Error", description: signUpError.message, variant: "destructive" });
         setIsLoading(false);
         return;

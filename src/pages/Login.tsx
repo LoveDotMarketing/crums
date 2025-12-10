@@ -13,7 +13,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { loginSchema, quickSignupSchema } from "@/lib/validations";
 import { supabase } from "@/integrations/supabase/client";
 import { Gift } from "lucide-react";
-import { trackLogin, trackSignup } from "@/lib/analytics";
+import { trackLogin, trackSignup, trackSignupStarted, trackSignupFailed } from "@/lib/analytics";
 
 const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -83,6 +83,7 @@ const Login = () => {
             toast.error("Please contact an administrator to create staff accounts.");
           } else {
             toast.error(error.message || "Failed to create account");
+            trackSignupFailed(error.message || 'unknown_error');
           }
         } else {
           // Track that this customer has set their password (for outreach tracking)
@@ -247,7 +248,10 @@ const Login = () => {
                     <div className="mt-6 text-center text-sm text-muted-foreground">
                       {isSignUp ? "Already have an account? " : "Don't have an account? "}
                       <button 
-                        onClick={() => setIsSignUp(!isSignUp)}
+                        onClick={() => {
+                          if (!isSignUp) trackSignupStarted('login_page');
+                          setIsSignUp(!isSignUp);
+                        }}
                         className="text-primary hover:underline"
                       >
                         {isSignUp ? "Sign in" : "Create account"}

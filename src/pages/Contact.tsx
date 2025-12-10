@@ -13,7 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { SEO } from "@/components/SEO";
 import { localBusinessSchema, generateBreadcrumbSchema } from "@/lib/structuredData";
-import { trackFormSubmission, trackConversion } from "@/lib/analytics";
+import { trackFormSubmission, trackConversion, trackPhoneClick, trackFormStart } from "@/lib/analytics";
 
 // Spam detection utilities
 const isGibberish = (text: string): boolean => {
@@ -84,6 +84,7 @@ const Contact = () => {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formLoadTime] = useState(Date.now());
+  const [formStarted, setFormStarted] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     company: "",
@@ -99,6 +100,13 @@ const Contact = () => {
   ) => {
     const { id, value } = e.target;
     setFormData((prev) => ({ ...prev, [id]: value }));
+  };
+
+  const handleFormFocus = (fieldName: string) => {
+    if (!formStarted) {
+      setFormStarted(true);
+      trackFormStart('contact_quote', fieldName);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -292,6 +300,7 @@ const Contact = () => {
                       className="mt-2"
                       value={formData.name}
                       onChange={handleInputChange}
+                      onFocus={() => handleFormFocus('name')}
                       required
                       disabled={isSubmitting}
                       maxLength={100}
