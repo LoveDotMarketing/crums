@@ -222,6 +222,7 @@ export const generateNewsArticleSchema = (article: NewsArticle) => {
     "description": article.description,
     "datePublished": article.sortDate,
     "dateModified": article.lastModified,
+    "url": `https://crumsleasing.com/news/${article.slug}`,
     "author": {
       "@type": "Organization",
       "name": "CRUMS Leasing",
@@ -233,9 +234,9 @@ export const generateNewsArticleSchema = (article: NewsArticle) => {
       "url": "https://crumsleasing.com",
       "logo": {
         "@type": "ImageObject",
-        "url": "https://crumsleasing.com/logo.png",
-        "width": 600,
-        "height": 60
+        "url": "https://crumsleasing.com/images/pub-logo-112.jpg",
+        "width": 112,
+        "height": 112
       },
       "sameAs": socialProfiles
     },
@@ -249,7 +250,7 @@ export const generateNewsArticleSchema = (article: NewsArticle) => {
   if (article.image) {
     baseSchema.image = {
       "@type": "ImageObject",
-      "url": `https://crumsleasing.com/assets/news/${article.slug.includes('mats-2026') ? 'mats-2026-booth.png' : 'placeholder.png'}`,
+      "url": `https://crumsleasing.com/images/news/${article.slug.includes('mats-2026') ? 'mats-2026-booth.png' : 'placeholder.png'}`,
       "width": 1200,
       "height": 630
     };
@@ -290,16 +291,26 @@ export const generateMats2026EventSchema = () => ({
       "longitude": -85.7419
     }
   },
-  "image": "https://crumsleasing.com/assets/news/mats-2026-booth.png",
+  "image": "https://crumsleasing.com/images/news/mats-2026-booth.png",
   "organizer": {
     "@type": "Organization",
     "name": "Mid-America Trucking Show",
-    "url": "https://truckingshow.com/"
+    "url": "https://truckingshow.com/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://crumsleasing.com/images/news/mats-logo.png"
+    }
   },
   "performer": {
     "@type": "Organization",
     "name": "CRUMS Leasing",
     "url": "https://crumsleasing.com",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://crumsleasing.com/images/pub-logo-112.jpg",
+      "width": 112,
+      "height": 112
+    },
     "description": "CRUMS Leasing - Exhibitor at Booth #38024"
   },
   "offers": {
