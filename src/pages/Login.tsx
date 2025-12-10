@@ -13,7 +13,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { loginSchema, quickSignupSchema } from "@/lib/validations";
 import { supabase } from "@/integrations/supabase/client";
-import { Gift, Lock, Check, AlertCircle } from "lucide-react";
+import { Gift, Lock, Check, AlertCircle, Clipboard } from "lucide-react";
 import { trackLogin, trackSignup, trackSignupStarted, trackSignupFailed } from "@/lib/analytics";
 import { processReferralCode, validateReferralCode } from "@/lib/referral";
 
@@ -224,30 +224,48 @@ const Login = () => {
                             <Gift className="h-4 w-4 text-primary" />
                             Referral Code (optional)
                           </Label>
-                          <div className="relative">
-                            <Input
-                              id="referral-code"
-                              type="text"
-                              placeholder="e.g. CRUMS-ABC123"
-                              className={`mt-2 pr-10 ${
-                                referralCode.trim() 
-                                  ? validateReferralCode(referralCode).valid 
-                                    ? "border-green-500 focus-visible:ring-green-500" 
-                                    : "border-destructive focus-visible:ring-destructive"
-                                  : ""
-                              }`}
-                              value={referralCode}
-                              onChange={(e) => setReferralCode(e.target.value.toUpperCase())}
-                            />
-                            {referralCode.trim() && (
-                              <div className="absolute right-3 top-1/2 -translate-y-1/2 mt-1">
-                                {validateReferralCode(referralCode).valid ? (
-                                  <Check className="h-4 w-4 text-green-500" />
-                                ) : (
-                                  <AlertCircle className="h-4 w-4 text-destructive" />
-                                )}
-                              </div>
-                            )}
+                          <div className="flex gap-2 mt-2">
+                            <div className="relative flex-1">
+                              <Input
+                                id="referral-code"
+                                type="text"
+                                placeholder="e.g. CRUMS-ABC123"
+                                className={`pr-10 ${
+                                  referralCode.trim() 
+                                    ? validateReferralCode(referralCode).valid 
+                                      ? "border-green-500 focus-visible:ring-green-500" 
+                                      : "border-destructive focus-visible:ring-destructive"
+                                    : ""
+                                }`}
+                                value={referralCode}
+                                onChange={(e) => setReferralCode(e.target.value.toUpperCase())}
+                              />
+                              {referralCode.trim() && (
+                                <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                                  {validateReferralCode(referralCode).valid ? (
+                                    <Check className="h-4 w-4 text-green-500" />
+                                  ) : (
+                                    <AlertCircle className="h-4 w-4 text-destructive" />
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="icon"
+                              onClick={async () => {
+                                try {
+                                  const text = await navigator.clipboard.readText();
+                                  setReferralCode(text.toUpperCase().trim());
+                                } catch {
+                                  toast.error("Unable to access clipboard");
+                                }
+                              }}
+                              title="Paste from clipboard"
+                            >
+                              <Clipboard className="h-4 w-4" />
+                            </Button>
                           </div>
                           {referralCode.trim() && !validateReferralCode(referralCode).valid ? (
                             <p className="text-xs text-destructive mt-1">
