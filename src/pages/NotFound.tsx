@@ -41,21 +41,21 @@ const NotFound = () => {
       }
 
       // No redirect found, log 404 error
-      console.log("Attempting to log 404 error to database...");
+      console.log("Attempting to log 404 error to database for:", location.pathname);
       try {
-        const { data, error } = await (supabase as any).from("error_logs").insert({
+        const { error } = await supabase.from("error_logs").insert({
           url: location.pathname,
           referrer: document.referrer || null,
           user_agent: navigator.userAgent,
-        }).select();
+        });
         
         if (error) {
-          console.error("Supabase insert error:", error);
+          console.error("Failed to log 404:", error.message, error.code);
         } else {
-          console.log("404 error logged successfully:", data);
+          console.log("404 logged successfully for:", location.pathname);
         }
-      } catch (error) {
-        console.error("Failed to log 404 error:", error);
+      } catch (err) {
+        console.error("Exception logging 404:", err);
       }
 
       setIsChecking(false);
