@@ -8,30 +8,30 @@ import {
   Star,
   CheckCircle,
 } from "lucide-react";
-import trailerImage from "@/assets/trailers/trailer-56171.webp";
-// Inspection Gallery Images
-import exteriorSide from "@/assets/trailers/56171/exterior-side.webp";
-import exteriorFleet from "@/assets/trailers/56171/exterior-fleet.webp";
-import rearDoorsClosed from "@/assets/trailers/56171/rear-doors-closed.webp";
-import rearDoorOpenWheel from "@/assets/trailers/56171/rear-door-open-wheel.webp";
-import doorHingeDetail from "@/assets/trailers/56171/door-hinge-detail.webp";
-import doorVentDetail from "@/assets/trailers/56171/door-vent-detail.webp";
-import interiorRoofWalls from "@/assets/trailers/56171/interior-roof-walls.webp";
-import interiorDoorFrame from "@/assets/trailers/56171/interior-door-frame.webp";
-import interiorFullView from "@/assets/trailers/56171/interior-full-view.webp";
-import interiorLogisticPosts from "@/assets/trailers/56171/interior-logistic-posts.webp";
-import interiorLengthView from "@/assets/trailers/56171/interior-length-view.webp";
-import fmcsaInspectionLabel from "@/assets/trailers/56171/fmcsa-inspection-label.webp";
-import undercarriageSuspension from "@/assets/trailers/56171/undercarriage-suspension.webp";
-import tandemAxleTires from "@/assets/trailers/56171/tandem-axle-tires.webp";
-import dualWheelsCloseup from "@/assets/trailers/56171/dual-wheels-closeup.webp";
-import airRideSuspension from "@/assets/trailers/56171/air-ride-suspension.webp";
-import greatDaneMudflap from "@/assets/trailers/56171/great-dane-mudflap.webp";
-import rearTandemWheels from "@/assets/trailers/56171/rear-tandem-wheels.webp";
-import axleBrakeAssembly from "@/assets/trailers/56171/axle-brake-assembly.webp";
-import sidePanelReflectors from "@/assets/trailers/56171/side-panel-reflectors.webp";
-import fullSideProfile from "@/assets/trailers/56171/full-side-profile.webp";
-import landingGearClearance from "@/assets/trailers/56171/landing-gear-clearance.webp";
+const trailerImage = "/images/trailers/trailer-56171.webp";
+// Inspection Gallery Images - served from public folder for stable sitemap URLs
+const exteriorSide = "/images/trailers/56171/exterior-side.webp";
+const exteriorFleet = "/images/trailers/56171/exterior-fleet.webp";
+const rearDoorsClosed = "/images/trailers/56171/rear-doors-closed.webp";
+const rearDoorOpenWheel = "/images/trailers/56171/rear-door-open-wheel.webp";
+const doorHingeDetail = "/images/trailers/56171/door-hinge-detail.webp";
+const doorVentDetail = "/images/trailers/56171/door-vent-detail.webp";
+const interiorRoofWalls = "/images/trailers/56171/interior-roof-walls.webp";
+const interiorDoorFrame = "/images/trailers/56171/interior-door-frame.webp";
+const interiorFullView = "/images/trailers/56171/interior-full-view.webp";
+const interiorLogisticPosts = "/images/trailers/56171/interior-logistic-posts.webp";
+const interiorLengthView = "/images/trailers/56171/interior-length-view.webp";
+const fmcsaInspectionLabel = "/images/trailers/56171/fmcsa-inspection-label.webp";
+const undercarriageSuspension = "/images/trailers/56171/undercarriage-suspension.webp";
+const tandemAxleTires = "/images/trailers/56171/tandem-axle-tires.webp";
+const dualWheelsCloseup = "/images/trailers/56171/dual-wheels-closeup.webp";
+const airRideSuspension = "/images/trailers/56171/air-ride-suspension.webp";
+const greatDaneMudflap = "/images/trailers/56171/great-dane-mudflap.webp";
+const rearTandemWheels = "/images/trailers/56171/rear-tandem-wheels.webp";
+const axleBrakeAssembly = "/images/trailers/56171/axle-brake-assembly.webp";
+const sidePanelReflectors = "/images/trailers/56171/side-panel-reflectors.webp";
+const fullSideProfile = "/images/trailers/56171/full-side-profile.webp";
+const landingGearClearance = "/images/trailers/56171/landing-gear-clearance.webp";
 
 const trailerData: TrailerProfileData = {
   // Basic Info
@@ -45,7 +45,7 @@ const trailerData: TrailerProfileData = {
   seoTitle: "2020 Dry Van Trailer for Lease - Unit 56171",
   seoDescription: "Lease this well-maintained 2020 53' dry van trailer. Recently returned, fully inspected, and ready to roll. Contact CRUMS Leasing for flexible lease terms.",
   canonicalUrl: "https://crumsleasing.com/commercial-dry-van-trailer-for-lease-56171",
-  ogImage: "/assets/trailers/trailer-56171.webp",
+  ogImage: "/images/trailers/trailer-56171.webp",
   
   // Display
   heroTitle: "Dry Van Trailer For Lease",
@@ -56,11 +56,11 @@ const trailerData: TrailerProfileData = {
   mainImage: trailerImage,
   mainImageAlt: "2020 Dry Van Trailer 56171 - CRUMS Leasing",
   schemaImages: [
-    "https://crumsleasing.com/assets/trailers/trailer-56171.webp",
-    "https://crumsleasing.com/assets/trailers/56171/exterior-side.webp",
-    "https://crumsleasing.com/assets/trailers/56171/interior-full-view.webp",
-    "https://crumsleasing.com/assets/trailers/56171/full-side-profile.webp",
-    "https://crumsleasing.com/assets/trailers/56171/air-ride-suspension.webp",
+    "https://crumsleasing.com/images/trailers/trailer-56171.webp",
+    "https://crumsleasing.com/images/trailers/56171/exterior-side.webp",
+    "https://crumsleasing.com/images/trailers/56171/interior-full-view.webp",
+    "https://crumsleasing.com/images/trailers/56171/full-side-profile.webp",
+    "https://crumsleasing.com/images/trailers/56171/air-ride-suspension.webp",
   ],
   galleryImages: [
     { src: exteriorSide, alt: "2020 Dry Van Trailer 56171 exterior side view showing clean white panels and trailer number markings" },

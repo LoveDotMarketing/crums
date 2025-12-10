@@ -8,11 +8,11 @@ import { Button } from "@/components/ui/button";
 import { newsArticles, getArticleBySlug, generateNewsArticleSchema, generateMats2026EventSchema } from "@/lib/news";
 import { generateBreadcrumbSchema } from "@/lib/structuredData";
 
-// MATS 2026 assets
-import matsFloorPlan from "@/assets/news/mats-2026-floor-plan.png";
-import matsBoothArea from "@/assets/news/mats-2026-booth-area.png";
-import matsBoothDetail from "@/assets/news/mats-2026-booth-detail.png";
-import matsLogo from "@/assets/news/mats-logo.png";
+// MATS 2026 assets - served from public folder for stable sitemap URLs
+const matsFloorPlan = "/images/news/mats-2026-floor-plan.png";
+const matsBoothArea = "/images/news/mats-2026-booth-area.png";
+const matsBoothDetail = "/images/news/mats-2026-booth-detail.png";
+const matsLogo = "/images/news/mats-logo.png";
 
 const NewsArticlePage = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -46,7 +46,7 @@ const NewsArticlePage = () => {
 
   // Determine OG image - use article image if available
   const ogImage = article.image 
-    ? `/assets/news/${slug?.includes('mats-2026') ? 'mats-2026-booth.png' : 'placeholder.png'}`
+    ? `/images/news/${slug?.includes('mats-2026') ? 'mats-2026-booth.png' : 'placeholder.png'}`
     : "/og-image.jpg";
 
   return (

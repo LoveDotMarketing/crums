@@ -1,4 +1,4 @@
-import mats2026Image from "@/assets/news/mats-2026-booth.png";
+const mats2026Image = "/images/news/mats-2026-booth.png";
 
 export interface NewsArticle {
   slug: string;
