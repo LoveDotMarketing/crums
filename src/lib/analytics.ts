@@ -142,4 +142,4 @@ export const trackChatbotMessage = () => {
 };
 
 // GA4 Dashboard URL for admin reference
-export const GA4_DASHBOARD_URL = 'https://analytics.google.com/analytics/web/#/p478449955/reports/intelligenthome';
+export const GA4_DASHBOARD_URL = 'https://analytics.google.com/analytics/web/#/a377323275p515941987/reports/intelligenthome?params=_u..nav%3Dmaui';
