@@ -1,4 +1,4 @@
-import { Facebook, Linkedin, Instagram } from "lucide-react";
+import { Facebook, Linkedin, Instagram, Youtube } from "lucide-react";
 import { Link } from "react-router-dom";
 import crumsLogo from "@/assets/crums-logo.png";
 import { trackPhoneClick } from "@/lib/analytics"; // GA4 tracking
@@ -70,6 +70,15 @@ export const Footer = () => {
                 aria-label="Visit our LinkedIn page"
               >
                 <Linkedin className="h-5 w-5" />
+              </a>
+              <a 
+                href="https://www.youtube.com/channel/UCvIeBeOpT0ql7n0XQcSmNVg" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="hover:text-secondary transition-colors"
+                aria-label="Visit our YouTube channel"
+              >
+                <Youtube className="h-5 w-5" />
               </a>
             </div>
           </div>
