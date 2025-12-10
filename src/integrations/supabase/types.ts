@@ -1360,6 +1360,10 @@ export type Database = {
     }
     Functions: {
       check_login_attempt: { Args: { p_email: string }; Returns: Json }
+      create_referral: {
+        Args: { p_referral_code: string; p_referred_email: string }
+        Returns: Json
+      }
       generate_account_number: { Args: never; Returns: string }
       generate_referral_code: { Args: never; Returns: string }
       has_role: {
@@ -1375,6 +1379,7 @@ export type Database = {
         Args: { _role: Database["public"]["Enums"]["app_role"] }
         Returns: undefined
       }
+      validate_referral_code: { Args: { p_code: string }; Returns: string }
     }
     Enums: {
       app_role: "admin" | "customer" | "mechanic"
