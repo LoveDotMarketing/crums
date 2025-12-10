@@ -13,9 +13,9 @@ import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { loginSchema, quickSignupSchema } from "@/lib/validations";
 import { supabase } from "@/integrations/supabase/client";
-import { Gift, Lock } from "lucide-react";
+import { Gift, Lock, Check, AlertCircle } from "lucide-react";
 import { trackLogin, trackSignup, trackSignupStarted, trackSignupFailed } from "@/lib/analytics";
-import { processReferralCode } from "@/lib/referral";
+import { processReferralCode, validateReferralCode } from "@/lib/referral";
 
 const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -224,17 +224,40 @@ const Login = () => {
                             <Gift className="h-4 w-4 text-primary" />
                             Referral Code (optional)
                           </Label>
-                          <Input
-                            id="referral-code"
-                            type="text"
-                            placeholder="e.g. CRUMS-ABC123"
-                            className="mt-2"
-                            value={referralCode}
-                            onChange={(e) => setReferralCode(e.target.value.toUpperCase())}
-                          />
-                          <p className="text-xs text-muted-foreground mt-1">
-                            Have a referral code? Enter it to save $250 on your lease!
-                          </p>
+                          <div className="relative">
+                            <Input
+                              id="referral-code"
+                              type="text"
+                              placeholder="e.g. CRUMS-ABC123"
+                              className={`mt-2 pr-10 ${
+                                referralCode.trim() 
+                                  ? validateReferralCode(referralCode).valid 
+                                    ? "border-green-500 focus-visible:ring-green-500" 
+                                    : "border-destructive focus-visible:ring-destructive"
+                                  : ""
+                              }`}
+                              value={referralCode}
+                              onChange={(e) => setReferralCode(e.target.value.toUpperCase())}
+                            />
+                            {referralCode.trim() && (
+                              <div className="absolute right-3 top-1/2 -translate-y-1/2 mt-1">
+                                {validateReferralCode(referralCode).valid ? (
+                                  <Check className="h-4 w-4 text-green-500" />
+                                ) : (
+                                  <AlertCircle className="h-4 w-4 text-destructive" />
+                                )}
+                              </div>
+                            )}
+                          </div>
+                          {referralCode.trim() && !validateReferralCode(referralCode).valid ? (
+                            <p className="text-xs text-destructive mt-1">
+                              {validateReferralCode(referralCode).error}
+                            </p>
+                          ) : (
+                            <p className="text-xs text-muted-foreground mt-1">
+                              Have a referral code? Enter it to save $250 on your lease!
+                            </p>
+                          )}
                         </div>
                       )}
                       {!isSignUp && (
