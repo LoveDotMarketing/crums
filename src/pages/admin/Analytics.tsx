@@ -6,9 +6,20 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { RedirectFormDialog } from "@/components/admin/RedirectFormDialog";
+import { useAnalytics, DateRange } from "@/hooks/useAnalytics";
+import { 
+  LineChart, 
+  Line, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  ResponsiveContainer 
+} from "recharts";
 import { 
   Users, 
   Eye, 
@@ -19,7 +30,8 @@ import {
   Trash2,
   RefreshCw,
   ArrowRightLeft,
-  Plus
+  Plus,
+  Calendar
 } from "lucide-react";
 
 interface ErrorLog {
@@ -39,45 +51,11 @@ interface Redirect {
   created_at: string;
 }
 
-// Static analytics data - these are real stats from the last 30 days
-const ANALYTICS_STATS = {
-  visitors: 139,
-  pageviews: 1049,
-  pages_per_visit: 7.55,
-  bounce_rate: 53,
-  avg_session_duration: 2316,
-  top_pages: [
-    { path: "/", visitors: 102 },
-    { path: "/login", visitors: 28 },
-    { path: "/get-started", visitors: 25 },
-    { path: "/locations", visitors: 22 },
-    { path: "/about", visitors: 18 },
-    { path: "/services/trailer-leasing", visitors: 18 },
-    { path: "/contact", visitors: 15 },
-    { path: "/mission", visitors: 13 },
-    { path: "/services/trailer-rentals", visitors: 9 },
-    { path: "/dashboard/admin", visitors: 6 },
-  ],
-  traffic_sources: [
-    { source: "Direct", visitors: 118, percentage: 85 },
-    { source: "Google", visitors: 8, percentage: 6 },
-    { source: "Instagram", visitors: 2, percentage: 1 },
-    { source: "Facebook", visitors: 4, percentage: 3 },
-    { source: "Other", visitors: 7, percentage: 5 },
-  ],
-  devices: [
-    { device: "Desktop", visitors: 71, percentage: 53 },
-    { device: "Mobile", visitors: 63, percentage: 47 },
-  ],
-  countries: [
-    { country: "US", visitors: 89, percentage: 64 },
-    { country: "China", visitors: 11, percentage: 8 },
-    { country: "Italy", visitors: 5, percentage: 4 },
-    { country: "Netherlands", visitors: 4, percentage: 3 },
-    { country: "Romania", visitors: 4, percentage: 3 },
-    { country: "Other", visitors: 26, percentage: 18 },
-  ],
-};
+const DATE_RANGE_OPTIONS: { value: DateRange; label: string }[] = [
+  { value: '7d', label: 'Last 7 days' },
+  { value: '30d', label: 'Last 30 days' },
+  { value: '90d', label: 'Last 90 days' },
+];
 
 export default function Analytics() {
   const [errorLogs, setErrorLogs] = useState<ErrorLog[]>([]);
@@ -88,6 +66,8 @@ export default function Analytics() {
   const [selectedErrorUrl, setSelectedErrorUrl] = useState("");
   const [editingRedirect, setEditingRedirect] = useState<Redirect | null>(null);
   const { toast } = useToast();
+  
+  const { data: analyticsData, loading: analyticsLoading, dateRange, changeDateRange, fetchAnalytics } = useAnalytics();
 
   const fetchErrorLogs = async () => {
     setErrorLogsLoading(true);
@@ -205,6 +185,7 @@ export default function Analytics() {
   useEffect(() => {
     fetchErrorLogs();
     fetchRedirects();
+    fetchAnalytics(dateRange);
   }, []);
 
   // Group 404 errors by URL
@@ -236,6 +217,11 @@ export default function Analytics() {
     return `${mins}m ${secs}s`;
   };
 
+  const handleRefresh = () => {
+    fetchAnalytics(dateRange);
+    toast({ title: "Analytics refreshed" });
+  };
+
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background">
@@ -249,6 +235,25 @@ export default function Analytics() {
                 <p className="text-muted-foreground">Traffic insights and 404 error tracking</p>
               </div>
             </div>
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1 bg-muted rounded-lg p-1">
+                {DATE_RANGE_OPTIONS.map((option) => (
+                  <Button
+                    key={option.value}
+                    variant={dateRange === option.value ? "default" : "ghost"}
+                    size="sm"
+                    onClick={() => changeDateRange(option.value)}
+                    className="h-8"
+                  >
+                    {option.label}
+                  </Button>
+                ))}
+              </div>
+              <Button variant="outline" size="sm" onClick={handleRefresh} disabled={analyticsLoading}>
+                <RefreshCw className={`h-4 w-4 mr-2 ${analyticsLoading ? 'animate-spin' : ''}`} />
+                Refresh
+              </Button>
+            </div>
           </div>
 
           <div className="space-y-6">
@@ -258,11 +263,15 @@ export default function Analytics() {
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                     <Users className="h-4 w-4" />
-                    Visitors (30d)
+                    Visitors
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{ANALYTICS_STATS.visitors.toLocaleString()}</div>
+                  {analyticsLoading ? (
+                    <Skeleton className="h-8 w-20" />
+                  ) : (
+                    <div className="text-2xl font-bold">{analyticsData?.visitors.toLocaleString() || 0}</div>
+                  )}
                 </CardContent>
               </Card>
               <Card>
@@ -273,7 +282,11 @@ export default function Analytics() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{ANALYTICS_STATS.pageviews.toLocaleString()}</div>
+                  {analyticsLoading ? (
+                    <Skeleton className="h-8 w-20" />
+                  ) : (
+                    <div className="text-2xl font-bold">{analyticsData?.pageviews.toLocaleString() || 0}</div>
+                  )}
                 </CardContent>
               </Card>
               <Card>
@@ -284,7 +297,11 @@ export default function Analytics() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{ANALYTICS_STATS.pages_per_visit.toFixed(2)}</div>
+                  {analyticsLoading ? (
+                    <Skeleton className="h-8 w-16" />
+                  ) : (
+                    <div className="text-2xl font-bold">{analyticsData?.pagesPerVisit.toFixed(2) || 0}</div>
+                  )}
                 </CardContent>
               </Card>
               <Card>
@@ -295,7 +312,11 @@ export default function Analytics() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{ANALYTICS_STATS.bounce_rate}%</div>
+                  {analyticsLoading ? (
+                    <Skeleton className="h-8 w-16" />
+                  ) : (
+                    <div className="text-2xl font-bold">{analyticsData?.bounceRate || 0}%</div>
+                  )}
                 </CardContent>
               </Card>
               <Card>
@@ -306,35 +327,104 @@ export default function Analytics() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{formatDuration(ANALYTICS_STATS.avg_session_duration)}</div>
+                  {analyticsLoading ? (
+                    <Skeleton className="h-8 w-20" />
+                  ) : (
+                    <div className="text-2xl font-bold">{formatDuration(analyticsData?.avgSessionDuration || 0)}</div>
+                  )}
                 </CardContent>
               </Card>
             </div>
+
+            {/* Traffic Trend Chart */}
+            {analyticsData?.dailyData && analyticsData.dailyData.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Calendar className="h-5 w-5" />
+                    Traffic Trend
+                  </CardTitle>
+                  <CardDescription>Daily visitors and pageviews</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {analyticsLoading ? (
+                    <Skeleton className="h-[200px] w-full" />
+                  ) : (
+                    <ResponsiveContainer width="100%" height={200}>
+                      <LineChart data={analyticsData.dailyData}>
+                        <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                        <XAxis 
+                          dataKey="date" 
+                          tick={{ fontSize: 12 }}
+                          tickFormatter={(value) => {
+                            const date = new Date(value);
+                            return `${date.getMonth() + 1}/${date.getDate()}`;
+                          }}
+                        />
+                        <YAxis tick={{ fontSize: 12 }} />
+                        <Tooltip 
+                          labelFormatter={(value) => new Date(value).toLocaleDateString()}
+                          contentStyle={{ 
+                            backgroundColor: 'hsl(var(--background))', 
+                            border: '1px solid hsl(var(--border))',
+                            borderRadius: '8px'
+                          }}
+                        />
+                        <Line 
+                          type="monotone" 
+                          dataKey="visitors" 
+                          stroke="hsl(var(--primary))" 
+                          strokeWidth={2}
+                          dot={false}
+                          name="Visitors"
+                        />
+                        <Line 
+                          type="monotone" 
+                          dataKey="pageviews" 
+                          stroke="hsl(var(--muted-foreground))" 
+                          strokeWidth={2}
+                          dot={false}
+                          name="Pageviews"
+                        />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  )}
+                </CardContent>
+              </Card>
+            )}
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {/* Top Pages */}
               <Card className="md:col-span-2">
                 <CardHeader>
                   <CardTitle>Top Pages</CardTitle>
-                  <CardDescription>Most visited pages (last 30 days)</CardDescription>
+                  <CardDescription>Most visited pages</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Page</TableHead>
-                        <TableHead className="text-right">Visitors</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {ANALYTICS_STATS.top_pages.map((page) => (
-                        <TableRow key={page.path}>
-                          <TableCell className="font-mono text-sm">{page.path}</TableCell>
-                          <TableCell className="text-right">{page.visitors.toLocaleString()}</TableCell>
-                        </TableRow>
+                  {analyticsLoading ? (
+                    <div className="space-y-2">
+                      {[...Array(5)].map((_, i) => (
+                        <Skeleton key={i} className="h-10 w-full" />
                       ))}
-                    </TableBody>
-                  </Table>
+                    </div>
+                  ) : (
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Page</TableHead>
+                          <TableHead className="text-right">Visitors</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {analyticsData?.topPages.slice(0, 10).map((page) => (
+                          <TableRow key={page.path}>
+                            <TableCell className="font-mono text-sm">{page.path}</TableCell>
+                            <TableCell className="text-right">{page.visitors.toLocaleString()}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  )}
                 </CardContent>
               </Card>
 
@@ -345,22 +435,30 @@ export default function Analytics() {
                     <CardTitle>Traffic Sources</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-3">
-                      {ANALYTICS_STATS.traffic_sources.map((source) => (
-                        <div key={source.source} className="flex items-center justify-between">
-                          <span className="text-sm">{source.source}</span>
-                          <div className="flex items-center gap-2">
-                            <div className="w-24 h-2 bg-muted rounded-full overflow-hidden">
-                              <div 
-                                className="h-full bg-primary rounded-full" 
-                                style={{ width: `${source.percentage}%` }}
-                              />
+                    {analyticsLoading ? (
+                      <div className="space-y-3">
+                        {[...Array(4)].map((_, i) => (
+                          <Skeleton key={i} className="h-6 w-full" />
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {analyticsData?.trafficSources.map((source) => (
+                          <div key={source.source} className="flex items-center justify-between">
+                            <span className="text-sm">{source.source}</span>
+                            <div className="flex items-center gap-2">
+                              <div className="w-24 h-2 bg-muted rounded-full overflow-hidden">
+                                <div 
+                                  className="h-full bg-primary rounded-full" 
+                                  style={{ width: `${source.percentage}%` }}
+                                />
+                              </div>
+                              <span className="text-sm text-muted-foreground w-10 text-right">{source.percentage}%</span>
                             </div>
-                            <span className="text-sm text-muted-foreground w-10 text-right">{source.percentage}%</span>
                           </div>
-                        </div>
-                      ))}
-                    </div>
+                        ))}
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
 
@@ -369,22 +467,30 @@ export default function Analytics() {
                     <CardTitle>Devices</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-3">
-                      {ANALYTICS_STATS.devices.map((device) => (
-                        <div key={device.device} className="flex items-center justify-between">
-                          <span className="text-sm">{device.device}</span>
-                          <div className="flex items-center gap-2">
-                            <div className="w-24 h-2 bg-muted rounded-full overflow-hidden">
-                              <div 
-                                className="h-full bg-primary rounded-full" 
-                                style={{ width: `${device.percentage}%` }}
-                              />
+                    {analyticsLoading ? (
+                      <div className="space-y-3">
+                        {[...Array(2)].map((_, i) => (
+                          <Skeleton key={i} className="h-6 w-full" />
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {analyticsData?.devices.map((device) => (
+                          <div key={device.device} className="flex items-center justify-between">
+                            <span className="text-sm">{device.device}</span>
+                            <div className="flex items-center gap-2">
+                              <div className="w-24 h-2 bg-muted rounded-full overflow-hidden">
+                                <div 
+                                  className="h-full bg-primary rounded-full" 
+                                  style={{ width: `${device.percentage}%` }}
+                                />
+                              </div>
+                              <span className="text-sm text-muted-foreground w-10 text-right">{device.percentage}%</span>
                             </div>
-                            <span className="text-sm text-muted-foreground w-10 text-right">{device.percentage}%</span>
                           </div>
-                        </div>
-                      ))}
-                    </div>
+                        ))}
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
 
@@ -393,14 +499,22 @@ export default function Analytics() {
                     <CardTitle>Top Countries</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-2">
-                      {ANALYTICS_STATS.countries.slice(0, 5).map((country) => (
-                        <div key={country.country} className="flex items-center justify-between">
-                          <span className="text-sm">{country.country}</span>
-                          <Badge variant="secondary">{country.percentage}%</Badge>
-                        </div>
-                      ))}
-                    </div>
+                    {analyticsLoading ? (
+                      <div className="space-y-2">
+                        {[...Array(5)].map((_, i) => (
+                          <Skeleton key={i} className="h-6 w-full" />
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        {analyticsData?.countries.slice(0, 5).map((country) => (
+                          <div key={country.country} className="flex items-center justify-between">
+                            <span className="text-sm">{country.country}</span>
+                            <Badge variant="secondary">{country.percentage}%</Badge>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               </div>
@@ -471,6 +585,7 @@ export default function Analytics() {
                               <Button
                                 variant="ghost"
                                 size="icon"
+                                className="text-destructive hover:text-destructive"
                                 onClick={() => deleteRedirect(redirect.id)}
                               >
                                 <Trash2 className="h-4 w-4" />
@@ -491,18 +606,28 @@ export default function Analytics() {
                 <div className="flex items-center justify-between">
                   <div>
                     <CardTitle className="flex items-center gap-2">
-                      <AlertTriangle className="h-5 w-5 text-destructive" />
+                      <AlertTriangle className="h-5 w-5 text-yellow-500" />
                       404 Errors
                     </CardTitle>
-                    <CardDescription>Pages that users tried to access but don't exist</CardDescription>
+                    <CardDescription>Broken links and missing pages</CardDescription>
                   </div>
                   <div className="flex gap-2">
-                    <Button variant="outline" size="sm" onClick={fetchErrorLogs}>
-                      <RefreshCw className="h-4 w-4 mr-2" />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={fetchErrorLogs}
+                      disabled={errorLogsLoading}
+                    >
+                      <RefreshCw className={`h-4 w-4 mr-2 ${errorLogsLoading ? "animate-spin" : ""}`} />
                       Refresh
                     </Button>
-                    {groupedErrors.length > 0 && (
-                      <Button variant="outline" size="sm" onClick={clearAllErrorLogs}>
+                    {errorLogs.length > 0 && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={clearAllErrorLogs}
+                        className="text-destructive hover:text-destructive"
+                      >
                         <Trash2 className="h-4 w-4 mr-2" />
                         Clear All
                       </Button>
@@ -519,6 +644,7 @@ export default function Analytics() {
                   <div className="text-center py-8 text-muted-foreground">
                     <AlertTriangle className="h-12 w-12 mx-auto mb-2 opacity-20" />
                     <p>No 404 errors recorded</p>
+                    <p className="text-sm">Errors will appear here when users hit missing pages</p>
                   </div>
                 ) : (
                   <Table>
@@ -537,39 +663,26 @@ export default function Analytics() {
                           <TableCell className="font-mono text-sm">{error.url}</TableCell>
                           <TableCell className="text-center">
                             <Badge variant={error.count > 5 ? "destructive" : "secondary"}>
-                              {error.count}x
+                              {error.count}
                             </Badge>
                           </TableCell>
-                          <TableCell className="text-muted-foreground text-sm">
+                          <TableCell className="text-sm text-muted-foreground">
                             {new Date(error.lastOccurrence).toLocaleString()}
                           </TableCell>
-                          <TableCell className="text-muted-foreground text-sm truncate max-w-[200px]">
+                          <TableCell className="text-sm text-muted-foreground max-w-[200px] truncate">
                             {error.referrer || "-"}
                           </TableCell>
                           <TableCell>
-                            <div className="flex gap-1">
-                              {!hasRedirect(error.url) && (
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() => handleAddRedirect(error.url)}
-                                  title="Add Redirect"
-                                >
-                                  <ArrowRightLeft className="h-4 w-4" />
-                                </Button>
-                              )}
+                            {!hasRedirect(error.url) && (
                               <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => {
-                                  errorLogs
-                                    .filter(log => log.url === error.url)
-                                    .forEach(log => deleteErrorLog(log.id));
-                                }}
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleAddRedirect(error.url)}
                               >
-                                <Trash2 className="h-4 w-4" />
+                                <Plus className="h-4 w-4 mr-1" />
+                                Redirect
                               </Button>
-                            </div>
+                            )}
                           </TableCell>
                         </TableRow>
                       ))}
@@ -579,16 +692,19 @@ export default function Analytics() {
               </CardContent>
             </Card>
           </div>
+
+          <RedirectFormDialog
+            open={redirectDialogOpen}
+            onOpenChange={setRedirectDialogOpen}
+            sourceUrl={selectedErrorUrl}
+            redirect={editingRedirect}
+            onSuccess={() => {
+              fetchRedirects();
+              setRedirectDialogOpen(false);
+            }}
+          />
         </main>
       </div>
-
-      <RedirectFormDialog
-        open={redirectDialogOpen}
-        onOpenChange={setRedirectDialogOpen}
-        sourceUrl={selectedErrorUrl}
-        redirect={editingRedirect}
-        onSuccess={fetchRedirects}
-      />
     </SidebarProvider>
   );
 }
