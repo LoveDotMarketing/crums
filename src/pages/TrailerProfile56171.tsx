@@ -1,9 +1,11 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { SEO } from "@/components/SEO";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { generateBreadcrumbSchema } from "@/lib/structuredData";
@@ -18,6 +20,9 @@ import {
   Weight,
   Star,
   Phone,
+  X,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import trailerImage from "@/assets/trailers/trailer-56171.webp";
 // Inspection Gallery Images
@@ -45,6 +50,9 @@ import fullSideProfile from "@/assets/trailers/56171/full-side-profile.webp";
 import landingGearClearance from "@/assets/trailers/56171/landing-gear-clearance.webp";
 
 const TrailerProfile56171 = () => {
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+
   const breadcrumbSchema = generateBreadcrumbSchema([
     { name: "Home", url: "https://crumsleasing.com/" },
     { name: "Trailer Leasing", url: "https://crumsleasing.com/services/trailer-leasing" },
@@ -276,7 +284,14 @@ const TrailerProfile56171 = () => {
             </p>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
               {galleryImages.map((image, index) => (
-                <div key={index} className="aspect-square overflow-hidden rounded-lg shadow-md hover:shadow-xl transition-shadow cursor-pointer group">
+                <div 
+                  key={index} 
+                  className="aspect-square overflow-hidden rounded-lg shadow-md hover:shadow-xl transition-shadow cursor-pointer group"
+                  onClick={() => {
+                    setSelectedImageIndex(index);
+                    setLightboxOpen(true);
+                  }}
+                >
                   <img
                     src={image.src}
                     alt={image.alt}
@@ -290,6 +305,55 @@ const TrailerProfile56171 = () => {
             </div>
           </div>
         </section>
+
+        {/* Lightbox Dialog */}
+        <Dialog open={lightboxOpen} onOpenChange={setLightboxOpen}>
+          <DialogContent className="max-w-5xl w-[95vw] p-0 bg-black/95 border-none">
+            <div className="relative">
+              {/* Close button */}
+              <button
+                onClick={() => setLightboxOpen(false)}
+                className="absolute top-4 right-4 z-50 p-2 rounded-full bg-black/50 hover:bg-black/70 transition-colors"
+                aria-label="Close lightbox"
+              >
+                <X className="h-6 w-6 text-white" />
+              </button>
+
+              {/* Navigation buttons */}
+              <button
+                onClick={() => setSelectedImageIndex((prev) => (prev === 0 ? galleryImages.length - 1 : prev - 1))}
+                className="absolute left-4 top-1/2 -translate-y-1/2 z-50 p-2 rounded-full bg-black/50 hover:bg-black/70 transition-colors"
+                aria-label="Previous image"
+              >
+                <ChevronLeft className="h-8 w-8 text-white" />
+              </button>
+              <button
+                onClick={() => setSelectedImageIndex((prev) => (prev === galleryImages.length - 1 ? 0 : prev + 1))}
+                className="absolute right-4 top-1/2 -translate-y-1/2 z-50 p-2 rounded-full bg-black/50 hover:bg-black/70 transition-colors"
+                aria-label="Next image"
+              >
+                <ChevronRight className="h-8 w-8 text-white" />
+              </button>
+
+              {/* Image */}
+              <div className="flex flex-col items-center justify-center min-h-[60vh] p-4">
+                <img
+                  src={galleryImages[selectedImageIndex]?.src}
+                  alt={galleryImages[selectedImageIndex]?.alt}
+                  className="max-h-[70vh] max-w-full object-contain rounded-lg"
+                />
+                {/* Caption */}
+                <p className="text-white text-center mt-4 px-4 text-sm md:text-base max-w-3xl">
+                  {galleryImages[selectedImageIndex]?.alt}
+                </p>
+                {/* Image counter */}
+                <p className="text-white/60 text-sm mt-2">
+                  {selectedImageIndex + 1} / {galleryImages.length}
+                </p>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
 
         {/* Customer Testimonial */}
         <section className="py-12 bg-gradient-to-b from-secondary/10 to-background">
