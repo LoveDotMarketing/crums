@@ -308,6 +308,50 @@ const DryVanTrailers = () => {
         </div>
       </section>
 
+      {/* Featured Inventory */}
+      <section className="py-20 bg-muted">
+        <div className="container mx-auto px-4">
+          <h2 className="text-3xl md:text-4xl font-bold text-center mb-4 text-foreground">
+            Available Now
+          </h2>
+          <p className="text-lg text-muted-foreground text-center mb-12 max-w-2xl mx-auto">
+            Browse our featured dry van trailers ready for immediate lease
+          </p>
+          <div className="max-w-3xl mx-auto">
+            <Link to="/commercial-dry-van-trailer-for-lease-56171" className="block group">
+              <Card className="border-2 hover:border-primary hover:shadow-xl transition-all overflow-hidden">
+                <CardContent className="p-0">
+                  <div className="flex flex-col md:flex-row">
+                    <div className="md:w-1/3 bg-gradient-to-br from-primary/10 to-secondary/10 p-8 flex items-center justify-center">
+                      <div className="text-center">
+                        <Truck className="h-16 w-16 text-primary mx-auto mb-2" />
+                        <span className="text-sm font-medium text-muted-foreground">Unit 56171</span>
+                      </div>
+                    </div>
+                    <div className="md:w-2/3 p-6">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="bg-green-100 text-green-800 text-xs font-semibold px-2 py-1 rounded">Available</span>
+                        <span className="text-sm text-muted-foreground">2020 Great Dane</span>
+                      </div>
+                      <h3 className="text-xl font-bold mb-2 group-hover:text-primary transition-colors">
+                        53' Dry Van Trailer - Swing Doors
+                      </h3>
+                      <p className="text-muted-foreground text-sm mb-4">
+                        Recently returned, professionally inspected, and ready to roll. Features air ride suspension, logistic posts, and LED lighting.
+                      </p>
+                      <div className="flex items-center text-primary font-semibold">
+                        View Full Details
+                        <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* FAQ Section */}
       <section className="py-20 bg-muted">
         <div className="container mx-auto px-4">
