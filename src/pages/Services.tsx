@@ -3,8 +3,9 @@ import { Footer } from "@/components/Footer";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { SEO } from "@/components/SEO";
 import { Link } from "react-router-dom";
-import { ArrowRight, Truck, Calendar, Users, Box, Snowflake, Layers } from "lucide-react";
+import { ArrowRight, Truck, Calendar, Users, Box, Snowflake, Layers, Play } from "lucide-react";
 import { generateBreadcrumbSchema } from "@/lib/structuredData";
+import whyChooseThumb from "@/assets/why-choose-crums-video-thumb.png";
 
 const services = [
   {
@@ -106,7 +107,7 @@ const Services = () => {
           </section>
 
           {/* Equipment Types Section */}
-          <section>
+          <section className="mb-16">
             <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-8">
               Equipment Types
             </h2>
@@ -132,6 +133,45 @@ const Services = () => {
                 </Link>
               ))}
             </div>
+          </section>
+
+          {/* Featured Video Section */}
+          <section className="mb-16">
+            <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-8">
+              Featured Video
+            </h2>
+            <Link 
+              to="/why-choose-crums" 
+              className="group block bg-card border border-border rounded-lg overflow-hidden hover:border-primary/50 hover:shadow-lg transition-all"
+            >
+              <div className="flex flex-col md:flex-row">
+                <div className="relative md:w-80 aspect-video flex-shrink-0">
+                  <img 
+                    src={whyChooseThumb} 
+                    alt="Why CDL Drivers Choose CRUMS Leasing" 
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                  />
+                  <div className="absolute inset-0 bg-black/30 flex items-center justify-center group-hover:bg-black/40 transition-colors">
+                    <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center shadow-lg">
+                      <Play className="h-7 w-7 text-primary-foreground ml-1" fill="currentColor" />
+                    </div>
+                  </div>
+                </div>
+                <div className="p-6 flex flex-col justify-center">
+                  <h3 className="text-xl font-bold text-foreground group-hover:text-primary transition-colors mb-2">
+                    Why CDL Drivers Choose CRUMS Leasing
+                  </h3>
+                  <p className="text-muted-foreground mb-4">
+                    On the road, reliability is everything. At CRUMS Leasing, we give CDL drivers access to the trailers they need to keep moving and keep earning.
+                  </p>
+                  <span className="inline-flex items-center text-primary font-semibold">
+                    Watch Now
+                    <ArrowRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                  </span>
+                </div>
+              </div>
+            </Link>
           </section>
 
           {/* CTA Section */}
