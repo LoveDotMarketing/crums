@@ -37,6 +37,16 @@ export const guides: Guide[] = [
     changefreq: "monthly"
   },
   {
+    slug: "why-leasing-a-dry-van-trailer-is-a-smart-business-decision",
+    title: "Why Leasing a Dry Van Trailer is a Smart Business Decision",
+    description: "Discover the financial and operational advantages of leasing dry van trailers versus buying for your trucking business.",
+    icon: Wallet,
+    available: true,
+    lastModified: "2025-12-10",
+    priority: 0.8,
+    changefreq: "monthly"
+  },
+  {
     slug: "pre-trip-inspection",
     title: "How to Check Your Trailer Before Every Trip",
     description: "Quick, visual pre-trip inspection checklist to avoid breakdowns and DOT violations.",

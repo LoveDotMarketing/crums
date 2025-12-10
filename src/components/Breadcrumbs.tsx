@@ -54,6 +54,7 @@ const routeLabels: Record<string, string> = {
   
   "/resources/guides": "Industry Guides",
   "/resources/guides/choosing-trailer": "Choosing the Right Trailer",
+  "/resources/guides/why-leasing-a-dry-van-trailer-is-a-smart-business-decision": "Why Leasing a Dry Van is Smart",
   
   "/industries": "Industries",
   "/industries/fleet-leasing": "Fleet Leasing",
@@ -102,6 +103,10 @@ const parentRoutes: Record<string, { label: string; href: string }[]> = {
     { label: "Resources", href: "/resources" }
   ],
   "/resources/guides/choosing-trailer": [
+    { label: "Resources", href: "/resources" },
+    { label: "Industry Guides", href: "/resources/guides" }
+  ],
+  "/resources/guides/why-leasing-a-dry-van-trailer-is-a-smart-business-decision": [
     { label: "Resources", href: "/resources" },
     { label: "Industry Guides", href: "/resources/guides" }
   ],
