@@ -28,6 +28,7 @@ import dryVanTrailerImg from "@/assets/dry-van-trailer.png";
 import flatbedTrailerImg from "@/assets/flatbed-trailer.png";
 import refrigeratedTrailerImg from "@/assets/refrigerated-trailer.png";
 import trailer56171Img from "@/assets/trailers/trailer-56171.webp";
+import whyChooseCrumsThumbnail from "@/assets/why-choose-crums-thumbnail.png";
 import { SEO } from "@/components/SEO";
 import { organizationSchema, generateBreadcrumbSchema, customerReviews, generateReviewSchema } from "@/lib/structuredData";
 
@@ -120,6 +121,38 @@ const Index = () => {
               . Booth 38024. Meet Eric Bledsoe and explore our fleet.
             </p>
           </div>
+        </div>
+      </section>
+
+      {/* Featured Video Section */}
+      <section className="py-12 bg-muted">
+        <div className="container mx-auto px-4">
+          <Link 
+            to="/why-choose-crums" 
+            className="block max-w-3xl mx-auto group"
+            onClick={() => trackCtaClick('Featured Video', 'home', '/why-choose-crums')}
+          >
+            <h2 className="text-xl md:text-2xl font-bold text-foreground text-center mb-6 group-hover:text-primary transition-colors">
+              Why CDL Drivers Choose CRUMS Leasing for Reliable Trailer Rentals
+            </h2>
+            <div className="relative rounded-lg overflow-hidden shadow-xl">
+              <img
+                src={whyChooseCrumsThumbnail}
+                alt="Why CDL Drivers Choose CRUMS Leasing - trailer with basketballs video thumbnail"
+                className="w-full h-auto group-hover:scale-105 transition-transform duration-300"
+                loading="lazy"
+                width={889}
+                height={500}
+              />
+              <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors flex items-center justify-center">
+                <div className="h-16 w-16 md:h-20 md:w-20 rounded-full bg-secondary/90 flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <svg className="h-8 w-8 md:h-10 md:w-10 text-secondary-foreground ml-1" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M8 5v14l11-7z"/>
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </Link>
         </div>
       </section>
 

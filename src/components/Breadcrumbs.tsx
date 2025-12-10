@@ -58,6 +58,8 @@ const routeLabels: Record<string, string> = {
   "/industries/seasonal-demand": "Seasonal Demand",
   
   "/news": "News",
+  
+  "/why-choose-crums": "Why Choose CRUMS",
 };
 
 // News article slugs will be handled dynamically
