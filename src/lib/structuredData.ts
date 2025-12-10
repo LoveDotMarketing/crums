@@ -27,7 +27,7 @@ export const organizationSchema = {
     "https://www.facebook.com/people/Crums-Leasing/100090574399864/",
     "https://www.instagram.com/crumsleasingllc/",
     "https://www.linkedin.com/company/crums-leasing/",
-    "https://www.youtube.com/channel/UCvIeBeOpT0ql7n0XQcSmNVg"
+    "https://www.youtube.com/@CRUMSLeasing"
   ]
 };
 
