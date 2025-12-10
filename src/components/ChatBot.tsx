@@ -7,7 +7,7 @@ import { MessageCircle, X, Send, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { trackChatbotOpen, trackChatbotMessage } from "@/lib/analytics";
+import { trackChatbotOpen, trackChatbotMessage } from "@/lib/analytics"; // GA4 tracking
 
 interface Message {
   role: "user" | "assistant";

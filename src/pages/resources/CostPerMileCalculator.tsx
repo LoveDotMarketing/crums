@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
@@ -11,6 +11,7 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip, BarChart, Ba
 import { Calculator, DollarSign, Fuel, Shield, Wrench, Truck, MoreHorizontal } from "lucide-react";
 import { PrintButton } from "@/components/PrintButton";
 import { Link } from "react-router-dom";
+import { trackCalculatorUse } from "@/lib/analytics";
 
 const toolSchema = {
   "@context": "https://schema.org",
@@ -96,6 +97,11 @@ const CostPerMileCalculator = () => {
     const fuelCostPerMonth = (inputs.milesPerMonth / inputs.milesPerGallon) * inputs.fuelCostPerGallon;
     const totalMonthly = fuelCostPerMonth + inputs.insurance + inputs.maintenance + inputs.leasePayment + inputs.tolls + inputs.permits + inputs.other;
     const costPerMile = inputs.milesPerMonth > 0 ? totalMonthly / inputs.milesPerMonth : 0;
+    
+    // Track calculator usage when inputs change meaningfully
+    if (inputs.milesPerMonth > 0) {
+      trackCalculatorUse('cost_per_mile', true);
+    }
 
     const breakdown = [
       { name: "Fuel", value: fuelCostPerMonth, icon: Fuel },
