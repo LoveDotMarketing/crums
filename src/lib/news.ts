@@ -33,17 +33,6 @@ export const newsArticles: NewsArticle[] = [
     image: mats2026Image
   },
   {
-    slug: "nationwide-expansion-fleet-growth-2025",
-    title: "CRUMS Leasing Announces Nationwide Expansion and Fleet Growth",
-    description: "CRUMS Leasing grows to over 25 locations with a fleet of 5,000+ trailers and 99% customer satisfaction, maintaining focus on integrity and people-first decisions.",
-    date: "Ongoing 2025",
-    sortDate: "2025-10-01",
-    externalLinks: [],
-    lastModified: "2025-12-10",
-    priority: 0.7,
-    changefreq: "monthly"
-  },
-  {
     slug: "family-first-core-values-reaffirmation",
     title: "CRUMS Leasing Reaffirms Core Values: Family First",
     description: "Instagram post reinforces the company's foundation on family values from Eric Bledsoe's mother, highlighting hassle-free rentals and customer support as operations stabilize.",
