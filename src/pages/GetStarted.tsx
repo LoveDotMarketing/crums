@@ -68,6 +68,7 @@ export default function GetStarted() {
   // Step 4 - Terms
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [formStarted, setFormStarted] = useState(false);
+  const [showPasteHint, setShowPasteHint] = useState(false);
 
   // Track signup started on page load
   useEffect(() => {
@@ -503,6 +504,13 @@ export default function GetStarted() {
                                 : "border-destructive focus-visible:ring-destructive"
                               : ""
                           }`}
+                          onKeyDown={(e) => {
+                            if ((e.ctrlKey || e.metaKey) && e.key === 'v') {
+                              setShowPasteHint(true);
+                              setTimeout(() => setShowPasteHint(false), 2000);
+                            }
+                          }}
+                          onFocus={() => setShowPasteHint(false)}
                         />
                         {referralCode.trim() && (
                           <div className="absolute right-3 top-1/2 -translate-y-1/2">
@@ -534,6 +542,10 @@ export default function GetStarted() {
                     {referralCode.trim() && !validateReferralCode(referralCode).valid ? (
                       <p className="text-xs text-destructive mt-1">
                         {validateReferralCode(referralCode).error}
+                      </p>
+                    ) : showPasteHint ? (
+                      <p className="text-xs text-primary mt-1 animate-pulse">
+                        Pasting... or click the clipboard button
                       </p>
                     ) : (
                       <p className="text-xs text-muted-foreground mt-1">
