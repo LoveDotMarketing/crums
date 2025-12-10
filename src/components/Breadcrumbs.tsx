@@ -54,7 +54,11 @@ const routeLabels: Record<string, string> = {
   "/industries/retail-distribution": "Retail Distribution",
   "/industries/manufacturing": "Manufacturing",
   "/industries/seasonal-demand": "Seasonal Demand",
+  
+  "/news": "News",
 };
+
+// News article slugs will be handled dynamically
 
 // Define parent routes for pages that should be nested under a different path
 const parentRoutes: Record<string, { label: string; href: string }[]> = {

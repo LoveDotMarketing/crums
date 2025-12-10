@@ -141,6 +141,19 @@ export const Navigation = () => {
                       <li>
                         <NavigationMenuLink asChild>
                           <Link
+                            to="/news"
+                            className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+                          >
+                            <div className="text-sm font-medium leading-none">News</div>
+                            <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+                              Latest updates and announcements
+                            </p>
+                          </Link>
+                        </NavigationMenuLink>
+                      </li>
+                      <li>
+                        <NavigationMenuLink asChild>
+                          <Link
                             to="/mission"
                             className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
                           >
@@ -304,6 +317,13 @@ export const Navigation = () => {
                 onClick={() => setMobileMenuOpen(false)}
               >
                 About
+              </Link>
+              <Link
+                to="/news"
+                className="text-sm font-medium text-foreground hover:text-primary"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                News
               </Link>
               <Link
                 to="/mission"

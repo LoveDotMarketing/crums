@@ -46,6 +46,10 @@ const Tools = lazy(() => import("./pages/resources/Tools"));
 const Guides = lazy(() => import("./pages/resources/Guides"));
 const ChoosingTrailer = lazy(() => import("./pages/resources/guides/ChoosingTrailer"));
 
+// News pages
+const News = lazy(() => import("./pages/News"));
+const NewsArticlePage = lazy(() => import("./pages/news/NewsArticlePage"));
+
 // Industries pages
 const Industries = lazy(() => import("./pages/Industries"));
 const FleetLeasing = lazy(() => import("./pages/industries/FleetLeasing"));
@@ -304,6 +308,8 @@ const App = () => (
 <Route path="/resources/tools/fuel-calculator" element={<FuelCostCalculator />} />
 <Route path="/resources/tools/tax-deductions" element={<TaxDeductionGuide />} />
             <Route path="/referral-program" element={<ReferralProgram />} />
+            <Route path="/news" element={<News />} />
+            <Route path="/news/:slug" element={<NewsArticlePage />} />
             <Route path="/reviews" element={<Reviews />} />
             <Route path="/qr" element={<Navigate to="/review" replace />} />
             <Route path="/review" element={<Review />} />

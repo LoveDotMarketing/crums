@@ -114,6 +114,11 @@ export const Footer = () => {
                 </Link>
               </li>
               <li>
+                <Link to="/news" className="hover:text-secondary transition-colors">
+                  News
+                </Link>
+              </li>
+              <li>
                 <Link to="/reviews" className="hover:text-secondary transition-colors">
                   Reviews
                 </Link>
