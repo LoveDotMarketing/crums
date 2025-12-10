@@ -5,8 +5,9 @@ import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { SEO } from "@/components/SEO";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Calculator, BookOpen } from "lucide-react";
+import { ArrowRight, Calculator, BookOpen, Play } from "lucide-react";
 import { guides, getGuideHref } from "@/lib/guides";
+import whyChooseThumb from "@/assets/why-choose-crums-video-thumb.png";
 
 const guidesCollectionSchema = {
   "@context": "https://schema.org",
@@ -47,8 +48,38 @@ const Guides = () => {
 
       <Breadcrumbs />
 
-      {/* Financial Tools Quick Link */}
+      {/* Featured Video */}
       <section className="py-8 bg-muted/50 border-b">
+        <div className="container mx-auto px-4">
+          <Link to="/why-choose-crums" className="group flex flex-col sm:flex-row items-center gap-6 hover:opacity-90 transition-opacity">
+            <div className="relative w-full sm:w-64 aspect-video rounded-lg overflow-hidden shadow-lg flex-shrink-0">
+              <img 
+                src={whyChooseThumb} 
+                alt="Why CDL Drivers Choose CRUMS Leasing" 
+                className="w-full h-full object-cover"
+                loading="lazy"
+              />
+              <div className="absolute inset-0 bg-black/30 flex items-center justify-center group-hover:bg-black/40 transition-colors">
+                <div className="w-14 h-14 bg-primary rounded-full flex items-center justify-center shadow-lg">
+                  <Play className="h-6 w-6 text-primary-foreground ml-1" fill="currentColor" />
+                </div>
+              </div>
+            </div>
+            <div className="text-center sm:text-left">
+              <p className="text-xs uppercase tracking-wider text-primary font-semibold mb-1">Featured Video</p>
+              <h2 className="text-xl font-bold text-foreground group-hover:text-primary transition-colors mb-2">
+                Why CDL Drivers Choose CRUMS Leasing
+              </h2>
+              <p className="text-muted-foreground text-sm">
+                On the road, reliability is everything. See why carriers trust CRUMS for their trailer needs.
+              </p>
+            </div>
+          </Link>
+        </div>
+      </section>
+
+      {/* Financial Tools Quick Link */}
+      <section className="py-8 bg-background border-b">
         <div className="container mx-auto px-4">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-3">
