@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Link } from "react-router-dom";
 import { Heart, TrendingUp, Users, Award, ArrowRight } from "lucide-react";
-import teamImage from "@/assets/team-handshake.jpg";
+const teamImage = "/images/team-handshake.jpg";
 import { SEO } from "@/components/SEO";
 import { generateBreadcrumbSchema } from "@/lib/structuredData";
 

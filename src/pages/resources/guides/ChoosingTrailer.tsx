@@ -26,9 +26,9 @@ import {
   Shield,
   Users
 } from "lucide-react";
-import dryVanTrailerImg from "@/assets/dry-van-trailer.png";
-import flatbedTrailerImg from "@/assets/flatbed-trailer.png";
-import refrigeratedTrailerImg from "@/assets/refrigerated-trailer.png";
+const dryVanTrailerImg = "/images/dry-van-trailer.png";
+const flatbedTrailerImg = "/images/flatbed-trailer.png";
+const refrigeratedTrailerImg = "/images/refrigerated-trailer.png";
 
 // Article metadata
 const articleData = {

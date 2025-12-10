@@ -4,7 +4,7 @@ import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { Card, CardContent } from "@/components/ui/card";
 import { MapPin, Navigation as NavigationIcon } from "lucide-react";
 import { Link } from "react-router-dom";
-import crumsTruckHighway from "@/assets/crums-truck-highway.png";
+const crumsTruckHighway = "/images/crums-truck-highway.png";
 import { SEO } from "@/components/SEO";
 import { localBusinessSchema, generateBreadcrumbSchema } from "@/lib/structuredData";
 

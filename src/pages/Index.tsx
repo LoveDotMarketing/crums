@@ -21,13 +21,13 @@ import {
   Star,
   Newspaper,
 } from "lucide-react";
-// Hero image moved to public folder for preloading
-import fleetImage from "@/assets/crums-trailer.png";
-import trailerFleetImage from "@/assets/trailer-fleet.png";
-import dryVanTrailerImg from "@/assets/dry-van-trailer.png";
-import flatbedTrailerImg from "@/assets/flatbed-trailer.png";
-import refrigeratedTrailerImg from "@/assets/refrigerated-trailer.png";
-import trailer56171Img from "@/assets/trailers/trailer-56171.webp";
+// Marketing images served from public folder for stable sitemap URLs
+const fleetImage = "/images/crums-trailer.png";
+const trailerFleetImage = "/images/trailer-fleet.png";
+const dryVanTrailerImg = "/images/dry-van-trailer.png";
+const flatbedTrailerImg = "/images/flatbed-trailer.png";
+const refrigeratedTrailerImg = "/images/refrigerated-trailer.png";
+const trailer56171Img = "/images/trailers/trailer-56171.webp";
 import whyChooseCrumsThumbnail from "@/assets/why-choose-crums-thumbnail.png";
 import { SEO } from "@/components/SEO";
 import { organizationSchema, generateBreadcrumbSchema, customerReviews, generateReviewSchema } from "@/lib/structuredData";

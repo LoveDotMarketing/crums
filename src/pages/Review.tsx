@@ -1,5 +1,5 @@
 import { SEO } from "@/components/SEO";
-import qrCode from "@/assets/crums-g-review.svg";
+const qrCode = "/images/crums-g-review.svg";
 
 const Review = () => {
   return (
