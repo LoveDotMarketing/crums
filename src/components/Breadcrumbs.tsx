@@ -1,5 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { ChevronRight, Home } from "lucide-react";
+import { newsArticles } from "@/lib/news";
 
 interface BreadcrumbItem {
   label: string;
@@ -9,6 +10,12 @@ interface BreadcrumbItem {
 interface BreadcrumbsProps {
   items?: BreadcrumbItem[];
 }
+
+// Build news article route labels dynamically
+const newsRouteLabels: Record<string, string> = {};
+newsArticles.forEach(article => {
+  newsRouteLabels[`/news/${article.slug}`] = article.title;
+});
 
 const routeLabels: Record<string, string> = {
   "/": "Home",
@@ -139,22 +146,36 @@ const parentRoutes: Record<string, { label: string; href: string }[]> = {
   ],
 };
 
+// Build news article parent routes dynamically
+const newsParentRoutes: Record<string, { label: string; href: string }[]> = {};
+newsArticles.forEach(article => {
+  newsParentRoutes[`/news/${article.slug}`] = [
+    { label: "News", href: "/news" }
+  ];
+});
+
+// Merge all parent routes
+const allParentRoutes = { ...parentRoutes, ...newsParentRoutes };
+
 export const Breadcrumbs = ({ items }: BreadcrumbsProps) => {
   const location = useLocation();
+
+  // Merge all route labels
+  const allRouteLabels = { ...routeLabels, ...newsRouteLabels };
 
   // Generate breadcrumbs from route if items not provided
   const breadcrumbItems: BreadcrumbItem[] = items || (() => {
     const crumbs: BreadcrumbItem[] = [{ label: "Home", href: "/" }];
     
     // Check if current path has parent routes defined
-    const parents = parentRoutes[location.pathname];
+    const parents = allParentRoutes[location.pathname];
     if (parents) {
       // Add parent breadcrumbs
       parents.forEach((parent) => {
         crumbs.push(parent);
       });
       // Add current page
-      const label = routeLabels[location.pathname] || location.pathname.split("/").pop()?.replace(/-/g, " ") || "";
+      const label = allRouteLabels[location.pathname] || location.pathname.split("/").pop()?.replace(/-/g, " ") || "";
       crumbs.push({ label, href: location.pathname });
     } else {
       // Default behavior: build from path segments
@@ -162,7 +183,7 @@ export const Breadcrumbs = ({ items }: BreadcrumbsProps) => {
       let currentPath = "";
       pathSegments.forEach((segment) => {
         currentPath += `/${segment}`;
-        const label = routeLabels[currentPath] || segment.charAt(0).toUpperCase() + segment.slice(1).replace(/-/g, " ");
+        const label = allRouteLabels[currentPath] || segment.charAt(0).toUpperCase() + segment.slice(1).replace(/-/g, " ");
         crumbs.push({ label, href: currentPath });
       });
     }
