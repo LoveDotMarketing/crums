@@ -253,25 +253,40 @@ export default function GetStarted() {
       // Track referral if a code was provided
       if (referralCode.trim()) {
         try {
-          // Validate and get the referral code
-          const { data: codeData } = await supabase
-            .from("referral_codes")
-            .select("id")
-            .eq("code", referralCode.trim().toUpperCase())
-            .eq("is_active", true)
-            .maybeSingle();
+          // Use the secure create_referral function
+          const { data: referralResult, error: referralError } = await supabase
+            .rpc("create_referral", {
+              p_referral_code: referralCode.trim().toUpperCase(),
+              p_referred_email: email
+            });
 
-          if (codeData) {
-            // Create referral record
-            await supabase.from("referrals").insert({
-              referrer_code_id: codeData.id,
-              referred_email: email,
-              status: "pending"
-            });
-            toast({ 
-              title: "Referral Applied!", 
-              description: "You'll receive $250 off after lease approval." 
-            });
+          if (referralError) {
+            console.error("Referral error:", referralError);
+          } else if (referralResult) {
+            const result = referralResult as { success: boolean; error?: string; referral_id?: string };
+            if (result.success) {
+              toast({ 
+                title: "Referral Applied!", 
+                description: "You'll receive $250 off after lease approval." 
+              });
+            } else if (result.error === "You cannot refer yourself") {
+              toast({ 
+                title: "Invalid Referral Code", 
+                description: "Oops! You can't use your own referral code. Ask a friend to share theirs!",
+                variant: "destructive"
+              });
+            } else if (result.error === "This email has already been referred") {
+              toast({ 
+                title: "Already Referred", 
+                description: "This email has already been referred by another customer."
+              });
+            } else if (result.error) {
+              toast({ 
+                title: "Referral Error", 
+                description: result.error,
+                variant: "destructive"
+              });
+            }
           }
         } catch (error) {
           // Non-critical, don't block signup flow
