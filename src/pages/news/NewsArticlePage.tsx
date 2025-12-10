@@ -1,5 +1,5 @@
 import { useParams, Link, Navigate } from "react-router-dom";
-import { Calendar, ExternalLink, ArrowLeft, ArrowRight } from "lucide-react";
+import { Calendar, ExternalLink, ArrowLeft, ArrowRight, MapPin } from "lucide-react";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
 import { SEO } from "@/components/SEO";
@@ -7,6 +7,11 @@ import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { Button } from "@/components/ui/button";
 import { newsArticles, getArticleBySlug, generateNewsArticleSchema } from "@/lib/news";
 import { generateBreadcrumbSchema } from "@/lib/structuredData";
+
+// MATS 2026 booth images
+import matsFloorPlan from "@/assets/news/mats-2026-floor-plan.png";
+import matsBoothArea from "@/assets/news/mats-2026-booth-area.png";
+import matsBoothDetail from "@/assets/news/mats-2026-booth-detail.png";
 
 const NewsArticlePage = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -93,6 +98,65 @@ const NewsArticlePage = () => {
                 </p>
               </div>
             </div>
+
+            {/* Booth Location Section - MATS 2026 specific */}
+            {slug === "mats-2026-crums-leasing-booth-38024" && (
+              <div className="mb-12">
+                <div className="flex items-center gap-2 mb-6">
+                  <MapPin className="h-6 w-6 text-secondary" />
+                  <h2 className="text-2xl font-bold text-foreground">Booth Location</h2>
+                </div>
+                
+                <div className="bg-muted/30 rounded-xl p-6 border border-border mb-6">
+                  <div className="grid md:grid-cols-3 gap-4 text-center mb-6">
+                    <div className="bg-background rounded-lg p-4 border border-border">
+                      <p className="text-sm text-muted-foreground">Booth Number</p>
+                      <p className="text-3xl font-bold text-primary">38024</p>
+                    </div>
+                    <div className="bg-background rounded-lg p-4 border border-border">
+                      <p className="text-sm text-muted-foreground">Booth Size</p>
+                      <p className="text-3xl font-bold text-primary">20 x 10</p>
+                    </div>
+                    <div className="bg-background rounded-lg p-4 border border-border">
+                      <p className="text-sm text-muted-foreground">Area</p>
+                      <p className="text-3xl font-bold text-primary">200 sq ft</p>
+                    </div>
+                  </div>
+                  
+                  <p className="text-muted-foreground text-center">
+                    Located in the <strong className="text-foreground">South Wing</strong> near the Maintenance & Repair Pavilion
+                  </p>
+                </div>
+
+                {/* Floor Plan Images */}
+                <div className="space-y-6">
+                  <div className="rounded-xl overflow-hidden border border-border">
+                    <img 
+                      src={matsFloorPlan} 
+                      alt="MATS 2026 Floor Plan - CRUMS Leasing Booth 38024 Location Overview"
+                      className="w-full h-auto"
+                    />
+                  </div>
+                  
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <div className="rounded-xl overflow-hidden border border-border">
+                      <img 
+                        src={matsBoothArea} 
+                        alt="MATS 2026 South Wing Area - Booth 38024"
+                        className="w-full h-auto"
+                      />
+                    </div>
+                    <div className="rounded-xl overflow-hidden border border-border">
+                      <img 
+                        src={matsBoothDetail} 
+                        alt="MATS 2026 Booth 38024 Detail View"
+                        className="w-full h-auto"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* External Sources */}
             {article.externalLinks.length > 0 && (
