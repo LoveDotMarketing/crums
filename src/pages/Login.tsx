@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
 import { SEO } from "@/components/SEO";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -12,7 +13,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { loginSchema, quickSignupSchema } from "@/lib/validations";
 import { supabase } from "@/integrations/supabase/client";
-import { Gift } from "lucide-react";
+import { Gift, Lock } from "lucide-react";
 import { trackLogin, trackSignup, trackSignupStarted, trackSignupFailed } from "@/lib/analytics";
 
 const Login = () => {
@@ -22,9 +23,10 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [referralCode, setReferralCode] = useState("");
   const [activeTab, setActiveTab] = useState<"customer" | "staff">("customer");
+  const [lockoutMinutes, setLockoutMinutes] = useState<number | null>(null);
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { signIn, signUp, user, userRole } = useAuth();
+  const { signIn, signUp, user, userRole, checkLoginAllowed } = useAuth();
 
   // Check for referral code in URL
   useEffect(() => {
@@ -34,6 +36,11 @@ const Login = () => {
       setIsSignUp(true);
     }
   }, [searchParams]);
+
+  // Clear lockout when email changes (user might be trying a different account)
+  useEffect(() => {
+    setLockoutMinutes(null);
+  }, [email]);
 
   useEffect(() => {
     if (user && userRole) {
@@ -125,10 +132,16 @@ const Login = () => {
           navigate("/dashboard/customer");
         }
       } else {
-        const { error } = await signIn(email, password);
-        if (error) {
-          toast.error(error.message || "Invalid email or password");
+        const result = await signIn(email, password);
+        if (result.error) {
+          if (result.locked) {
+            setLockoutMinutes(result.minutesRemaining || 15);
+            toast.error(`Account locked. Please try again in ${result.minutesRemaining} minutes.`);
+          } else {
+            toast.error(result.error.message || "Invalid email or password");
+          }
         } else {
+          setLockoutMinutes(null);
           // Track successful login
           trackLogin(activeTab === 'staff' ? 'staff_email' : 'customer_email');
         }
@@ -182,6 +195,15 @@ const Login = () => {
                     <CardTitle>{isSignUp ? "Create Customer Account" : "Customer Portal"}</CardTitle>
                   </CardHeader>
                   <CardContent>
+                    {lockoutMinutes && !isSignUp && (
+                      <Alert variant="destructive" className="mb-4">
+                        <Lock className="h-4 w-4" />
+                        <AlertDescription>
+                          Account temporarily locked due to too many failed attempts. 
+                          Please try again in {lockoutMinutes} minutes.
+                        </AlertDescription>
+                      </Alert>
+                    )}
                     <form onSubmit={handleSubmit} className="space-y-4">
                       <div>
                         <Label htmlFor="customer-email">Email</Label>
@@ -240,9 +262,9 @@ const Login = () => {
                         type="submit"
                         className="w-full bg-primary hover:bg-primary/90"
                         size="lg"
-                        disabled={isLoading}
+                        disabled={isLoading || (!isSignUp && !!lockoutMinutes)}
                       >
-                        {isLoading ? "Please wait..." : isSignUp ? "Create Account" : "Sign In"}
+                        {isLoading ? "Please wait..." : isSignUp ? "Create Account" : lockoutMinutes ? "Account Locked" : "Sign In"}
                       </Button>
                     </form>
                     <div className="mt-6 text-center text-sm text-muted-foreground">
@@ -275,6 +297,15 @@ const Login = () => {
                     <CardTitle>Staff Portal</CardTitle>
                   </CardHeader>
                   <CardContent>
+                    {lockoutMinutes && (
+                      <Alert variant="destructive" className="mb-4">
+                        <Lock className="h-4 w-4" />
+                        <AlertDescription>
+                          Account temporarily locked due to too many failed attempts. 
+                          Please try again in {lockoutMinutes} minutes.
+                        </AlertDescription>
+                      </Alert>
+                    )}
                     <form onSubmit={handleSubmit} className="space-y-4">
                       <div>
                         <Label htmlFor="staff-email">Email</Label>
@@ -312,9 +343,9 @@ const Login = () => {
                         type="submit"
                         className="w-full bg-secondary hover:bg-secondary/90"
                         size="lg"
-                        disabled={isLoading}
+                        disabled={isLoading || !!lockoutMinutes}
                       >
-                        {isLoading ? "Please wait..." : "Sign In"}
+                        {isLoading ? "Please wait..." : lockoutMinutes ? "Account Locked" : "Sign In"}
                       </Button>
                     </form>
                     <div className="mt-6 text-center text-sm text-muted-foreground">

@@ -495,6 +495,36 @@ export type Database = {
         }
         Relationships: []
       }
+      login_attempts: {
+        Row: {
+          attempt_count: number
+          created_at: string
+          email: string
+          id: string
+          last_attempt_at: string
+          locked_until: string | null
+          updated_at: string
+        }
+        Insert: {
+          attempt_count?: number
+          created_at?: string
+          email: string
+          id?: string
+          last_attempt_at?: string
+          locked_until?: string | null
+          updated_at?: string
+        }
+        Update: {
+          attempt_count?: number
+          created_at?: string
+          email?: string
+          id?: string
+          last_attempt_at?: string
+          locked_until?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       maintenance_records: {
         Row: {
           completed: boolean | null
@@ -1329,6 +1359,7 @@ export type Database = {
       }
     }
     Functions: {
+      check_login_attempt: { Args: { p_email: string }; Returns: Json }
       generate_account_number: { Args: never; Returns: string }
       generate_referral_code: { Args: never; Returns: string }
       has_role: {
@@ -1338,6 +1369,8 @@ export type Database = {
         }
         Returns: boolean
       }
+      record_failed_login: { Args: { p_email: string }; Returns: Json }
+      reset_login_attempts: { Args: { p_email: string }; Returns: undefined }
       set_user_role: {
         Args: { _role: Database["public"]["Enums"]["app_role"] }
         Returns: undefined
