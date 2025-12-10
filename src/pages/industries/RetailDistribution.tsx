@@ -6,6 +6,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ShoppingCart, CheckCircle, Package, Zap, TrendingUp, Store, ArrowRight } from "lucide-react";
+import { trackCtaClick } from "@/lib/analytics";
 import { retailDistributionServiceSchema, generateBreadcrumbSchema } from "@/lib/structuredData";
 
 const breadcrumbSchema = generateBreadcrumbSchema([
@@ -44,7 +45,7 @@ const RetailDistribution = () => {
             </p>
             <div className="flex flex-wrap gap-4 justify-center">
               <Button asChild size="lg" className="bg-secondary hover:bg-secondary/90 text-secondary-foreground">
-                <Link to="/get-started">Get a Quote <ArrowRight className="ml-2 h-4 w-4" /></Link>
+                <Link to="/get-started" onClick={() => trackCtaClick('Get a Quote', 'industry_retail_distribution', '/get-started')}>Get a Quote <ArrowRight className="ml-2 h-4 w-4" /></Link>
               </Button>
               <Button asChild variant="outline" size="lg" className="border-primary-foreground text-primary-foreground bg-transparent hover:bg-primary-foreground/10">
                 <Link to="/dry-van-trailers">View Dry Vans</Link>
@@ -104,7 +105,7 @@ const RetailDistribution = () => {
               Contact us to discuss trailer solutions that keep your retail supply chain running smoothly.
             </p>
             <Button asChild size="lg" className="bg-background text-foreground hover:bg-background/90">
-              <Link to="/contact">Contact Us <ArrowRight className="ml-2 h-4 w-4" /></Link>
+              <Link to="/contact" onClick={() => trackCtaClick('Contact Us', 'industry_retail_distribution', '/contact')}>Contact Us <ArrowRight className="ml-2 h-4 w-4" /></Link>
             </Button>
           </div>
         </section>

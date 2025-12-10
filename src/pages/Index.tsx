@@ -1,5 +1,6 @@
 import { lazy, Suspense } from "react";
 import { Link } from "react-router-dom";
+import { trackCtaClick } from "@/lib/analytics";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -78,7 +79,11 @@ const Index = () => {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link to="/get-started">
-              <Button size="lg" className="bg-secondary hover:bg-secondary/90 text-secondary-foreground text-lg px-8 py-6">
+              <Button 
+                size="lg" 
+                className="bg-secondary hover:bg-secondary/90 text-secondary-foreground text-lg px-8 py-6"
+                onClick={() => trackCtaClick('Get Started', 'home', '/get-started')}
+              >
                 Get Started
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
@@ -88,6 +93,7 @@ const Index = () => {
                 size="lg"
                 variant="outline"
                 className="bg-transparent border-2 border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary text-lg px-8 py-6"
+                onClick={() => trackCtaClick('Our Mission & Values', 'home', '/mission')}
               >
                 Our Mission & Values
               </Button>
@@ -161,7 +167,12 @@ const Index = () => {
 
           <div className="text-center">
             <Link to="/reviews">
-              <Button size="lg" variant="outline" className="border-2 border-secondary text-secondary hover:bg-secondary hover:text-secondary-foreground">
+              <Button 
+                size="lg" 
+                variant="outline" 
+                className="border-2 border-secondary text-secondary hover:bg-secondary hover:text-secondary-foreground"
+                onClick={() => trackCtaClick('Read Reviews', 'home', '/reviews')}
+              >
                 Read Reviews
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
@@ -186,6 +197,7 @@ const Index = () => {
               <Button 
                 size="lg" 
                 className="bg-secondary hover:bg-secondary/90 text-secondary-foreground text-lg px-8 py-6 whitespace-nowrap"
+                onClick={() => trackCtaClick('Join the Referral Program', 'home', '/referral-program')}
               >
                 Join the Referral Program
                 <ArrowRight className="ml-2 h-5 w-5" />
@@ -570,7 +582,12 @@ const Index = () => {
 
           <div className="text-center">
             <Link to="/resources/guides">
-              <Button size="lg" variant="outline" className="border-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground">
+              <Button 
+                size="lg" 
+                variant="outline" 
+                className="border-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground"
+                onClick={() => trackCtaClick('View All Guides & Resources', 'home', '/resources/guides')}
+              >
                 View All Guides & Resources
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
@@ -644,7 +661,11 @@ const Index = () => {
                 </div>
               </div>
               <Link to="/about" className="inline-block mt-8">
-                <Button size="lg" variant="outline">
+                <Button 
+                  size="lg" 
+                  variant="outline"
+                  onClick={() => trackCtaClick('Learn More About Us', 'home', '/about')}
+                >
                   Learn More About Us
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
@@ -666,7 +687,11 @@ const Index = () => {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link to="/contact">
-              <Button size="lg" className="bg-secondary hover:bg-secondary/90 text-secondary-foreground text-lg px-8 py-6">
+              <Button 
+                size="lg" 
+                className="bg-secondary hover:bg-secondary/90 text-secondary-foreground text-lg px-8 py-6"
+                onClick={() => trackCtaClick('Request A Quote', 'home', '/contact')}
+              >
                 Request A Quote
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
@@ -676,6 +701,7 @@ const Index = () => {
                 size="lg"
                 variant="outline"
                 className="bg-transparent border-2 border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary text-lg px-8 py-6"
+                onClick={() => trackCtaClick('Customer Portal Login', 'home', '/login')}
               >
                 Customer Portal Login
               </Button>

@@ -6,6 +6,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Truck, CheckCircle, TrendingUp, Shield, Clock, ArrowRight } from "lucide-react";
+import { trackCtaClick } from "@/lib/analytics";
 import { fleetLeasingServiceSchema, generateBreadcrumbSchema } from "@/lib/structuredData";
 
 const breadcrumbSchema = generateBreadcrumbSchema([
@@ -44,7 +45,7 @@ const FleetLeasing = () => {
             </p>
             <div className="flex flex-wrap gap-4 justify-center">
               <Button asChild size="lg" className="bg-secondary hover:bg-secondary/90 text-secondary-foreground">
-                <Link to="/get-started">Get a Fleet Quote <ArrowRight className="ml-2 h-4 w-4" /></Link>
+                <Link to="/get-started" onClick={() => trackCtaClick('Get a Fleet Quote', 'industry_fleet_leasing', '/get-started')}>Get a Fleet Quote <ArrowRight className="ml-2 h-4 w-4" /></Link>
               </Button>
               <Button asChild variant="outline" size="lg" className="border-primary-foreground text-primary-foreground bg-transparent hover:bg-primary-foreground/10">
                 <Link to="/contact">Contact Sales</Link>
@@ -104,7 +105,7 @@ const FleetLeasing = () => {
               Contact us today to discuss your fleet trailer needs and get a customized quote.
             </p>
             <Button asChild size="lg" className="bg-background text-foreground hover:bg-background/90">
-              <Link to="/get-started">Get Started <ArrowRight className="ml-2 h-4 w-4" /></Link>
+              <Link to="/get-started" onClick={() => trackCtaClick('Get Started', 'industry_fleet_leasing', '/get-started')}>Get Started <ArrowRight className="ml-2 h-4 w-4" /></Link>
             </Button>
           </div>
         </section>

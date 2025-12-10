@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Link } from "react-router-dom";
 import { CheckCircle, Calendar, Zap, TrendingUp, ArrowRight } from "lucide-react";
+import { trackCtaClick } from "@/lib/analytics";
 import { SEO } from "@/components/SEO";
 import { trailerRentalServiceSchema, generateBreadcrumbSchema } from "@/lib/structuredData";
 
@@ -41,6 +42,7 @@ const TrailerRentals = () => {
               size="lg"
               variant="outline"
               className="bg-background text-foreground hover:bg-background/90 border-2"
+              onClick={() => trackCtaClick('Get Rental Quote', 'trailer_rentals', '/contact')}
             >
               Get Rental Quote
               <ArrowRight className="ml-2 h-5 w-5" />
@@ -265,6 +267,7 @@ const TrailerRentals = () => {
               size="lg"
               variant="outline"
               className="bg-background text-foreground hover:bg-background/90 border-2"
+              onClick={() => trackCtaClick('Contact Rental Team', 'trailer_rentals', '/contact')}
             >
               Contact Rental Team
               <ArrowRight className="ml-2 h-5 w-5" />
