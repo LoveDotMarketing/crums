@@ -103,22 +103,21 @@ const TrailerProfile56171 = () => {
 
       <main className="flex-grow">
         {/* Hero Section */}
-        <section className="bg-gradient-to-r from-primary to-brand-teal-dark py-12">
-          <div className="container mx-auto px-4">
-            <Breadcrumbs />
-            <div className="text-center mt-6">
-              <Badge className="bg-secondary text-secondary-foreground mb-4">
-                Available Now
-              </Badge>
-              <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-primary-foreground mb-4">
-                Dry Van Trailer For Lease
-              </h1>
-              <p className="text-lg text-primary-foreground/90 max-w-2xl mx-auto">
-                Recently returned, inspected, and ready to roll
-              </p>
-            </div>
+        <section className="bg-gradient-to-r from-primary to-brand-teal-dark text-primary-foreground py-20">
+          <div className="container mx-auto px-4 text-center">
+            <Badge className="bg-secondary text-secondary-foreground mb-4">
+              Available Now
+            </Badge>
+            <h1 className="text-4xl md:text-6xl font-bold mb-6">
+              Dry Van Trailer For Lease
+            </h1>
+            <p className="text-xl md:text-2xl max-w-4xl mx-auto text-primary-foreground/90">
+              Recently returned, inspected, and ready to roll
+            </p>
           </div>
         </section>
+
+        <Breadcrumbs />
 
         {/* Main Content */}
         <section className="py-12 bg-background">
