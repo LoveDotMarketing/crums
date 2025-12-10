@@ -78,8 +78,7 @@ export const newsArticles: NewsArticle[] = [
     date: "February 2025",
     sortDate: "2025-02-15",
     externalLinks: [
-      "https://www.tenfourmagazine.com/2025/02/for-the-record-239/",
-      "https://www.instagram.com/p/DGCJ1MgxUqM/"
+      "https://www.tenfourmagazine.com/content/2025/05/show-reports/mats-makes-moves/"
     ],
     lastModified: "2025-12-10",
     priority: 0.8,
