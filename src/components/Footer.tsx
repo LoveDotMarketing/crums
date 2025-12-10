@@ -85,7 +85,9 @@ export const Footer = () => {
 
           {/* Services */}
           <div>
-            <h3 className="font-semibold text-lg mb-4">Services</h3>
+            <Link to="/services" className="hover:text-secondary transition-colors">
+              <h3 className="font-semibold text-lg mb-4">Services</h3>
+            </Link>
             <ul className="space-y-2 text-sm">
               <li>
                 <Link to="/services/trailer-leasing" className="hover:text-secondary transition-colors">
