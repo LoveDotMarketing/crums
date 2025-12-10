@@ -108,6 +108,17 @@ const NewsArticlePage = () => {
                 </div>
                 
                 <div className="bg-muted/30 rounded-xl p-6 border border-border mb-6">
+                  {/* Venue Info */}
+                  <div className="text-center mb-6 pb-6 border-b border-border">
+                    <p className="text-lg font-semibold text-foreground mb-1">March 26–28, 2026</p>
+                    <p className="text-xl font-bold text-primary mb-2">Kentucky Expo Center</p>
+                    <p className="text-muted-foreground">
+                      937 Phillips Lane<br />
+                      Louisville, KY 40209
+                    </p>
+                  </div>
+
+                  {/* Booth Details */}
                   <div className="grid md:grid-cols-3 gap-4 text-center mb-6">
                     <div className="bg-background rounded-lg p-4 border border-border">
                       <p className="text-sm text-muted-foreground">Booth Number</p>
