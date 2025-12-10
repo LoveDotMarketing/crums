@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
@@ -64,6 +64,13 @@ const TrailerProfile56171 = () => {
     "@type": "Product",
     name: "2020 53' Dry Van Trailer for Lease - Unit 56171",
     description: "Well-maintained 2020 dry van trailer available for lease. Recently returned, fully inspected, and ready to roll. Perfect for carriers looking for reliable equipment.",
+    image: [
+      "https://crumsleasing.com/assets/trailers/trailer-56171.webp",
+      "https://crumsleasing.com/assets/trailers/56171/exterior-side.webp",
+      "https://crumsleasing.com/assets/trailers/56171/interior-full-view.webp",
+      "https://crumsleasing.com/assets/trailers/56171/full-side-profile.webp",
+      "https://crumsleasing.com/assets/trailers/56171/air-ride-suspension.webp",
+    ],
     brand: {
       "@type": "Brand",
       name: "Great Dane"
@@ -147,12 +154,31 @@ const TrailerProfile56171 = () => {
     { src: landingGearClearance, alt: "Landing gear clearance marker light and lower panel showing proper ground clearance and DOT reflectors" },
   ];
 
+  // Keyboard navigation for lightbox
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    if (!lightboxOpen) return;
+    
+    if (e.key === "ArrowLeft") {
+      setSelectedImageIndex((prev) => (prev === 0 ? galleryImages.length - 1 : prev - 1));
+    } else if (e.key === "ArrowRight") {
+      setSelectedImageIndex((prev) => (prev === galleryImages.length - 1 ? 0 : prev + 1));
+    } else if (e.key === "Escape") {
+      setLightboxOpen(false);
+    }
+  }, [lightboxOpen, galleryImages.length]);
+
+  useEffect(() => {
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [handleKeyDown]);
+
   return (
     <div className="min-h-screen flex flex-col">
       <SEO
-        title="2020 Dry Van Trailer for Lease - Unit 56171 | CRUMS Leasing"
+        title="2020 Dry Van Trailer for Lease - Unit 56171"
         description="Lease this well-maintained 2020 53' dry van trailer. Recently returned, fully inspected, and ready to roll. Contact CRUMS Leasing for flexible lease terms."
         canonical="https://crumsleasing.com/commercial-dry-van-trailer-for-lease-56171"
+        ogImage="/assets/trailers/trailer-56171.webp"
         structuredData={combinedSchema}
       />
       <Navigation />

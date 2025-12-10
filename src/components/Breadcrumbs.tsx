@@ -27,6 +27,7 @@ const routeLabels: Record<string, string> = {
   "/dry-van-trailers": "Dry Van Trailers",
   "/refrigerated-trailers": "Refrigerated Trailers",
   "/flatbed-trailers": "Flatbed Trailers",
+  "/commercial-dry-van-trailer-for-lease-56171": "2020 Dry Van Trailer 56171",
   "/locations": "Locations",
   "/contact": "Contact",
   "/careers": "Careers",
@@ -81,6 +82,10 @@ const parentRoutes: Record<string, { label: string; href: string }[]> = {
     { label: "Trailer Leasing", href: "/services/trailer-leasing" }
   ],
   "/flatbed-trailers": [
+    { label: "Services", href: "/services" },
+    { label: "Trailer Leasing", href: "/services/trailer-leasing" }
+  ],
+  "/commercial-dry-van-trailer-for-lease-56171": [
     { label: "Services", href: "/services" },
     { label: "Trailer Leasing", href: "/services/trailer-leasing" }
   ],
