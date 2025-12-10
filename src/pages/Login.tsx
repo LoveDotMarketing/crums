@@ -25,6 +25,7 @@ const Login = () => {
   const [referralCode, setReferralCode] = useState("");
   const [activeTab, setActiveTab] = useState<"customer" | "staff">("customer");
   const [lockoutMinutes, setLockoutMinutes] = useState<number | null>(null);
+  const [showPasteHint, setShowPasteHint] = useState(false);
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { signIn, signUp, user, userRole, checkLoginAllowed } = useAuth();
@@ -239,6 +240,13 @@ const Login = () => {
                                 }`}
                                 value={referralCode}
                                 onChange={(e) => setReferralCode(e.target.value.toUpperCase())}
+                                onKeyDown={(e) => {
+                                  if ((e.ctrlKey || e.metaKey) && e.key === 'v') {
+                                    setShowPasteHint(true);
+                                    setTimeout(() => setShowPasteHint(false), 2000);
+                                  }
+                                }}
+                                onFocus={() => setShowPasteHint(false)}
                               />
                               {referralCode.trim() && (
                                 <div className="absolute right-3 top-1/2 -translate-y-1/2">
@@ -270,6 +278,10 @@ const Login = () => {
                           {referralCode.trim() && !validateReferralCode(referralCode).valid ? (
                             <p className="text-xs text-destructive mt-1">
                               {validateReferralCode(referralCode).error}
+                            </p>
+                          ) : showPasteHint ? (
+                            <p className="text-xs text-primary mt-1 animate-pulse">
+                              Pasting... or click the clipboard button
                             </p>
                           ) : (
                             <p className="text-xs text-muted-foreground mt-1">
