@@ -94,18 +94,6 @@ const News = () => {
                 className="group block py-8 first:pt-0 last:pb-0"
               >
                 <article className="flex gap-6 md:gap-8">
-                  {/* Content */}
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm text-muted-foreground mb-2">
-                      {article.date}
-                    </p>
-                    <h3 className="text-xl md:text-2xl font-bold text-foreground group-hover:text-primary transition-colors mb-3">
-                      {article.title}
-                    </h3>
-                    <p className="text-muted-foreground line-clamp-2">
-                      {article.description}
-                    </p>
-                  </div>
                   {/* Thumbnail */}
                   <div className="flex-shrink-0 w-32 h-24 md:w-48 md:h-32 rounded-lg overflow-hidden bg-gradient-to-br from-primary/15 via-secondary/10 to-primary/5 flex items-center justify-center">
                     {article.image ? (
@@ -117,6 +105,18 @@ const News = () => {
                     ) : (
                       <span className="text-lg font-bold text-primary/20">CRUMS</span>
                     )}
+                  </div>
+                  {/* Content */}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm text-muted-foreground mb-2">
+                      {article.date}
+                    </p>
+                    <h3 className="text-xl md:text-2xl font-bold text-foreground group-hover:text-primary transition-colors mb-3">
+                      {article.title}
+                    </h3>
+                    <p className="text-muted-foreground line-clamp-2">
+                      {article.description}
+                    </p>
                   </div>
                 </article>
               </Link>
