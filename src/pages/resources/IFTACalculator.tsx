@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
@@ -11,6 +11,7 @@ import { Calculator, Plus, Trash2, AlertTriangle, CheckCircle } from "lucide-rea
 import { PrintButton } from "@/components/PrintButton";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, Legend } from "recharts";
 import { Link } from "react-router-dom";
+import { trackCalculatorUse } from "@/lib/analytics";
 
 // IFTA fuel tax rates per gallon (as of 2024 - these should be updated periodically)
 const STATE_TAX_RATES: Record<string, { name: string; rate: number }> = {
@@ -161,6 +162,13 @@ const IFTACalculator = () => {
   const totalMiles = stateEntries.reduce((sum, e) => sum + (e.miles || 0), 0);
   const totalGallonsPurchased = stateEntries.reduce((sum, e) => sum + (e.gallonsPurchased || 0), 0);
   const totalGallonsUsed = mpg > 0 ? totalMiles / mpg : 0;
+
+  // Track calculator usage
+  useEffect(() => {
+    if (totalMiles > 0) {
+      trackCalculatorUse('ifta_tax', true);
+    }
+  }, [totalMiles, totalGallonsPurchased, mpg]);
 
   const stateCalculations = stateEntries.map((entry) => {
     const stateName = STATE_TAX_RATES[entry.state]?.name || entry.state;

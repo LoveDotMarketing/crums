@@ -6,7 +6,7 @@ import { Footer } from "@/components/Footer";
 import { SEO } from "@/components/SEO";
 import { Button } from "@/components/ui/button";
 import { Home, Phone, MapPin, FileText, ArrowLeft, Search } from "lucide-react";
-import { trackPhoneClick } from "@/lib/analytics";
+import { trackPhoneClick } from "@/lib/analytics"; // GA4 tracking
 
 const NotFound = () => {
   const location = useLocation();

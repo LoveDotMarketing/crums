@@ -1,5 +1,6 @@
 // Google Analytics 4 Tracking Utilities
 // Measurement ID: G-FHB5E7Q0PK
+// Last updated: December 2024
 
 declare global {
   interface Window {

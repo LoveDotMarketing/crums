@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { SEO } from "@/components/SEO";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Fuel, Route, DollarSign, Gauge } from "lucide-react";
 import { Link } from "react-router-dom";
+import { trackCalculatorUse } from "@/lib/analytics";
 
 const toolSchema = {
   "@context": "https://schema.org",
@@ -72,6 +73,13 @@ const FuelCostCalculator = () => {
   const gallonsNeeded = distance / mpg;
   const totalFuelCost = gallonsNeeded * fuelPrice;
   const costPerMile = totalFuelCost / distance;
+
+  // Track calculator usage when inputs change meaningfully
+  useEffect(() => {
+    if (distance > 0 && mpg > 0) {
+      trackCalculatorUse('fuel_cost', true);
+    }
+  }, [distance, fuelPrice, mpg]);
 
   return (
     <div className="min-h-screen flex flex-col bg-background">

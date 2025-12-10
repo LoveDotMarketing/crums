@@ -1,7 +1,7 @@
 import { Facebook, Linkedin, Instagram } from "lucide-react";
 import { Link } from "react-router-dom";
 import crumsLogo from "@/assets/crums-logo.png";
-import { trackPhoneClick } from "@/lib/analytics";
+import { trackPhoneClick } from "@/lib/analytics"; // GA4 tracking
 
 export const Footer = () => {
   return (

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
@@ -11,6 +11,7 @@ import { Calculator, DollarSign, Route, Fuel, TrendingUp, AlertTriangle } from "
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from "recharts";
 import { PrintButton } from "@/components/PrintButton";
 import { Link } from "react-router-dom";
+import { trackCalculatorUse } from "@/lib/analytics";
 
 const toolSchema = {
   "@context": "https://schema.org",
@@ -77,6 +78,13 @@ const ProfitPerLoadCalculator = () => {
   const [otherExpenses, setOtherExpenses] = useState<string>("50");
 
   const parseNum = (val: string) => parseFloat(val) || 0;
+
+  // Track calculator usage
+  useEffect(() => {
+    if (parseNum(loadRate) > 0 && parseNum(loadedMiles) > 0) {
+      trackCalculatorUse('profit_per_load', true);
+    }
+  }, [loadRate, loadedMiles, deadheadMiles, fuelCostPerGallon, mpg]);
 
   // Calculations
   const totalMiles = parseNum(loadedMiles) + parseNum(deadheadMiles);
