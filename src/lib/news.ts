@@ -1,3 +1,5 @@
+import mats2026Image from "@/assets/news/mats-2026-booth.png";
+
 export interface NewsArticle {
   slug: string;
   title: string;
@@ -8,6 +10,7 @@ export interface NewsArticle {
   lastModified: string;
   priority: number;
   changefreq: string;
+  image?: string; // Optional featured image
 }
 
 export const newsArticles: NewsArticle[] = [
@@ -25,7 +28,8 @@ export const newsArticles: NewsArticle[] = [
     ],
     lastModified: "2025-12-10",
     priority: 0.8,
-    changefreq: "monthly"
+    changefreq: "monthly",
+    image: mats2026Image
   },
   {
     slug: "nationwide-expansion-fleet-growth-2025",

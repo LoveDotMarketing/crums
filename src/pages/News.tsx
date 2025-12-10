@@ -48,9 +48,17 @@ const News = () => {
           <Link to={`/news/${featuredArticle.slug}`} className="block group">
             <div className="bg-card rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow border border-border">
               <div className="grid md:grid-cols-2 gap-0">
-                {/* Featured Image Placeholder */}
-                <div className="aspect-video md:aspect-auto md:h-full bg-gradient-to-br from-primary/20 via-secondary/20 to-primary/10 flex items-center justify-center min-h-[250px]">
-                  <span className="text-4xl font-bold text-primary/30">CRUMS</span>
+                {/* Featured Image */}
+                <div className="aspect-video md:aspect-auto md:h-full bg-gradient-to-br from-primary/20 via-secondary/20 to-primary/10 flex items-center justify-center min-h-[250px] overflow-hidden">
+                  {featuredArticle.image ? (
+                    <img 
+                      src={featuredArticle.image} 
+                      alt={featuredArticle.title}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-4xl font-bold text-primary/30">CRUMS</span>
+                  )}
                 </div>
                 {/* Content */}
                 <div className="p-8 flex flex-col justify-center">
@@ -86,9 +94,17 @@ const News = () => {
                 className="group"
               >
                 <article className="bg-card rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-all border border-border h-full flex flex-col">
-                  {/* Image Placeholder */}
-                  <div className="aspect-video bg-gradient-to-br from-primary/15 via-secondary/10 to-primary/5 flex items-center justify-center">
-                    <span className="text-2xl font-bold text-primary/20">CRUMS</span>
+                  {/* Image */}
+                  <div className="aspect-video bg-gradient-to-br from-primary/15 via-secondary/10 to-primary/5 flex items-center justify-center overflow-hidden">
+                    {article.image ? (
+                      <img 
+                        src={article.image} 
+                        alt={article.title}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <span className="text-2xl font-bold text-primary/20">CRUMS</span>
+                    )}
                   </div>
                   {/* Content */}
                   <div className="p-6 flex flex-col flex-1">
