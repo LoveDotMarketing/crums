@@ -53,7 +53,8 @@ export default function GetStarted() {
 
   // Step 2 - Documents (optional)
   const [dotDocument, setDotDocument] = useState<File | null>(null);
-  const [driversLicense, setDriversLicense] = useState<File | null>(null);
+  const [driversLicenseFront, setDriversLicenseFront] = useState<File | null>(null);
+  const [driversLicenseBack, setDriversLicenseBack] = useState<File | null>(null);
   const [ssnCard, setSsnCard] = useState<File | null>(null);
   const [insuranceDocs, setInsuranceDocs] = useState<File | null>(null);
   const [insuranceCompany, setInsuranceCompany] = useState("");
@@ -200,7 +201,7 @@ export default function GetStarted() {
       return 'default';
     }
     if (step === 2) {
-      if (dotDocument && driversLicense && ssnCard && insuranceDocs) return 'complete';
+      if (dotDocument && driversLicenseFront && driversLicenseBack && ssnCard && insuranceDocs) return 'complete';
       return 'default';
     }
     if (step === 3) {
@@ -267,12 +268,16 @@ export default function GetStarted() {
       if (profileError) throw profileError;
 
       // Upload documents if provided
-      let driversLicenseUrl = null;
+      let driversLicenseFrontUrl = null;
+      let driversLicenseBackUrl = null;
       let ssnCardUrl = null;
       let insuranceDocsUrl = null;
 
-      if (driversLicense) {
-        driversLicenseUrl = await uploadFile(driversLicense, `${session.user.id}/drivers-license-${Date.now()}`);
+      if (driversLicenseFront) {
+        driversLicenseFrontUrl = await uploadFile(driversLicenseFront, `${session.user.id}/drivers-license-front-${Date.now()}`);
+      }
+      if (driversLicenseBack) {
+        driversLicenseBackUrl = await uploadFile(driversLicenseBack, `${session.user.id}/drivers-license-back-${Date.now()}`);
       }
       if (ssnCard) {
         ssnCardUrl = await uploadFile(ssnCard, `${session.user.id}/ssn-card-${Date.now()}`);
@@ -288,7 +293,7 @@ export default function GetStarted() {
       }
 
       // Check if all required fields are filled to determine status
-      const hasDocuments = driversLicenseUrl && ssnCardUrl && insuranceDocsUrl;
+      const hasDocuments = driversLicenseFrontUrl && driversLicenseBackUrl && ssnCardUrl && insuranceDocsUrl;
       const applicationStatus = hasDocuments ? 'pending' : 'incomplete';
 
       // Create customer application (banking will be collected via Stripe)
@@ -305,7 +310,7 @@ export default function GetStarted() {
           truck_vin: truckVin,
           insurance_company: insuranceCompany || null,
           message: message || null,
-          drivers_license_url: driversLicenseUrl,
+          drivers_license_url: driversLicenseFrontUrl,
           ssn_card_url: ssnCardUrl,
           insurance_docs_url: insuranceDocsUrl,
           secondary_contact_name: secondaryContactName || null,
@@ -360,7 +365,7 @@ export default function GetStarted() {
 
   const isStepComplete = (step: number) => {
     if (step === 1) return email && password && confirmPassword && firstName && lastName && dateOfBirth && phoneNumber;
-    if (step === 2) return dotDocument && driversLicense && ssnCard && insuranceDocs;
+    if (step === 2) return dotDocument && driversLicenseFront && driversLicenseBack && ssnCard && insuranceDocs;
     return false;
   };
 
@@ -680,13 +685,28 @@ export default function GetStarted() {
                     )}
                   </div>
                   <div>
-                    <Label htmlFor="driversLicense">Driver's License</Label>
+                    <Label htmlFor="driversLicenseFront">Driver's License (Front) *</Label>
                     <Input 
-                      id="driversLicense" 
+                      id="driversLicenseFront" 
                       type="file" 
                       accept="image/*,.pdf"
-                      onChange={(e) => setDriversLicense(e.target.files?.[0] || null)}
+                      onChange={(e) => setDriversLicenseFront(e.target.files?.[0] || null)}
                     />
+                    {driversLicenseFront && (
+                      <p className="text-xs text-green-600 mt-1">✓ {driversLicenseFront.name}</p>
+                    )}
+                  </div>
+                  <div>
+                    <Label htmlFor="driversLicenseBack">Driver's License (Back) *</Label>
+                    <Input 
+                      id="driversLicenseBack" 
+                      type="file" 
+                      accept="image/*,.pdf"
+                      onChange={(e) => setDriversLicenseBack(e.target.files?.[0] || null)}
+                    />
+                    {driversLicenseBack && (
+                      <p className="text-xs text-green-600 mt-1">✓ {driversLicenseBack.name}</p>
+                    )}
                   </div>
                   <div>
                     <Label htmlFor="ssnCard">SSN Card</Label>
@@ -790,8 +810,12 @@ export default function GetStarted() {
                           {dotDocument ? <Check className="h-4 w-4 text-primary" /> : <span className="text-muted-foreground italic">Not uploaded</span>}
                         </p>
                         <p className="text-sm flex items-center gap-2">
-                          <span className="font-medium">Driver's License:</span>
-                          {driversLicense ? <Check className="h-4 w-4 text-primary" /> : <span className="text-muted-foreground italic">Not uploaded</span>}
+                          <span className="font-medium">Driver's License (Front):</span>
+                          {driversLicenseFront ? <Check className="h-4 w-4 text-primary" /> : <span className="text-muted-foreground italic">Not uploaded</span>}
+                        </p>
+                        <p className="text-sm flex items-center gap-2">
+                          <span className="font-medium">Driver's License (Back):</span>
+                          {driversLicenseBack ? <Check className="h-4 w-4 text-primary" /> : <span className="text-muted-foreground italic">Not uploaded</span>}
                         </p>
                         <p className="text-sm flex items-center gap-2">
                           <span className="font-medium">SSN Card:</span>
