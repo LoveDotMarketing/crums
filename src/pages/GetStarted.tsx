@@ -158,7 +158,6 @@ export default function GetStarted() {
   };
 
   const handleNext = () => {
-    if (currentStep === 1 && !validateStep1()) return;
     setCurrentStep(prev => Math.min(prev + 1, 4));
   };
 
@@ -168,6 +167,56 @@ export default function GetStarted() {
 
   const handleDoThisLater = () => {
     setCurrentStep(4);
+  };
+
+  const handleStepClick = (step: number) => {
+    setCurrentStep(step);
+  };
+
+  const validateAllRequiredFields = (): { valid: boolean; errors: string[] } => {
+    const errors: string[] = [];
+    
+    // Step 1 required fields
+    if (!email) errors.push("Email is required");
+    if (!password) errors.push("Password is required");
+    if (!confirmPassword) errors.push("Confirm password is required");
+    if (password !== confirmPassword) errors.push("Passwords don't match");
+    if (!firstName) errors.push("First name is required");
+    if (!lastName) errors.push("Last name is required");
+    if (!dateOfBirth) errors.push("Date of birth is required");
+    if (dateOfBirth && !validateAge(dateOfBirth)) errors.push("Must be at least 18 years old");
+    if (!phoneNumber) errors.push("Phone number is required");
+    if (!companyAddress) errors.push("Address is required");
+    if (!businessType) errors.push("Business type is required");
+    if (!numberOfTrailers) errors.push("Number of trailers is required");
+    if (!dateNeeded) errors.push("Date needed is required");
+    
+    // Step 4 required
+    if (!acceptedTerms) errors.push("You must accept the terms and conditions");
+    
+    return { valid: errors.length === 0, errors };
+  };
+
+  const getStepStatus = (step: number): 'complete' | 'warning' | 'default' => {
+    if (step === 1) {
+      const hasAll = email && password && confirmPassword && firstName && lastName && dateOfBirth && phoneNumber && companyAddress && businessType && numberOfTrailers && dateNeeded;
+      if (hasAll && password === confirmPassword && validateAge(dateOfBirth)) return 'complete';
+      if (email || password || firstName || lastName) return 'warning';
+      return 'default';
+    }
+    if (step === 2) {
+      if (bankName && accountHolderName && accountNumber && routingNumber && paymentMethod) return 'complete';
+      return 'default';
+    }
+    if (step === 3) {
+      if (dotDocument && driversLicense && ssnCard && insuranceDocs) return 'complete';
+      return 'default';
+    }
+    if (step === 4) {
+      if (acceptedTerms) return 'complete';
+      return 'default';
+    }
+    return 'default';
   };
 
   const uploadFile = async (file: File, path: string) => {
@@ -186,8 +235,13 @@ export default function GetStarted() {
   };
 
   const handleSubmit = async () => {
-    if (!acceptedTerms) {
-      toast({ title: "Error", description: "Please accept the terms and conditions", variant: "destructive" });
+    const validation = validateAllRequiredFields();
+    if (!validation.valid) {
+      toast({ 
+        title: "Missing Required Information", 
+        description: validation.errors.slice(0, 3).join(", ") + (validation.errors.length > 3 ? ` (+${validation.errors.length - 3} more)` : ""),
+        variant: "destructive" 
+      });
       return;
     }
 
@@ -342,30 +396,47 @@ export default function GetStarted() {
           {/* Progress Indicator */}
           <div className="mb-8">
             <div className="flex items-center justify-between mb-4">
-              {steps.map((step, index) => (
-                <div key={step.number} className="flex items-center flex-1">
-                  <div className="flex flex-col items-center flex-1">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold transition-colors ${
-                      currentStep > step.number 
-                        ? 'bg-primary text-primary-foreground' 
-                        : currentStep === step.number 
-                        ? 'bg-secondary text-secondary-foreground' 
-                        : 'bg-muted text-muted-foreground'
-                    }`}>
-                      {currentStep > step.number ? <Check className="h-5 w-5" /> : step.number}
+              {steps.map((step, index) => {
+                const status = getStepStatus(step.number);
+                return (
+                  <div key={step.number} className="flex items-center flex-1">
+                    <div className="flex flex-col items-center flex-1">
+                      <button
+                        type="button"
+                        onClick={() => handleStepClick(step.number)}
+                        aria-label={`Go to ${step.title}`}
+                        className={`relative w-10 h-10 rounded-full flex items-center justify-center font-semibold transition-all cursor-pointer hover:scale-105 hover:ring-2 hover:ring-primary/50 ${
+                          currentStep === step.number 
+                            ? 'bg-secondary text-secondary-foreground ring-2 ring-primary' 
+                            : status === 'complete'
+                            ? 'bg-primary text-primary-foreground'
+                            : status === 'warning'
+                            ? 'bg-amber-500 text-white'
+                            : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                        }`}
+                      >
+                        {status === 'complete' && currentStep !== step.number ? (
+                          <Check className="h-5 w-5" />
+                        ) : (
+                          step.number
+                        )}
+                        {status === 'warning' && currentStep !== step.number && (
+                          <span className="absolute -top-1 -right-1 w-3 h-3 bg-amber-500 rounded-full border-2 border-background" />
+                        )}
+                      </button>
+                      <div className="text-center mt-2 hidden sm:block">
+                        <div className={`text-xs font-medium ${currentStep === step.number ? 'text-primary' : ''}`}>{step.title}</div>
+                        <div className="text-xs text-muted-foreground">{step.description}</div>
+                      </div>
                     </div>
-                    <div className="text-center mt-2 hidden sm:block">
-                      <div className="text-xs font-medium">{step.title}</div>
-                      <div className="text-xs text-muted-foreground">{step.description}</div>
-                    </div>
+                    {index < steps.length - 1 && (
+                      <div className={`h-0.5 flex-1 transition-colors ${
+                        getStepStatus(step.number) === 'complete' ? 'bg-primary' : 'bg-muted'
+                      }`} />
+                    )}
                   </div>
-                  {index < steps.length - 1 && (
-                    <div className={`h-0.5 flex-1 transition-colors ${
-                      currentStep > step.number ? 'bg-primary' : 'bg-muted'
-                    }`} />
-                  )}
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
 
