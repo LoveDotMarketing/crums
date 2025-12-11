@@ -11,7 +11,6 @@ interface ApplicationAlertProps {
 
 export function ApplicationAlert({ userId }: ApplicationAlertProps) {
   const [applicationStatus, setApplicationStatus] = useState<string | null>(null);
-  const [hasBankingInfo, setHasBankingInfo] = useState(false);
   const [hasDocuments, setHasDocuments] = useState(false);
   const navigate = useNavigate();
 
@@ -19,15 +18,14 @@ export function ApplicationAlert({ userId }: ApplicationAlertProps) {
     const fetchApplicationStatus = async () => {
       const { data, error } = await supabase
         .from('customer_application_safe')
-        .select('status, bank_name, has_drivers_license, has_ssn_card, has_insurance_docs')
+        .select('status, has_drivers_license, has_drivers_license_back, has_insurance_docs')
         .eq('user_id', userId)
         .single();
 
       if (error || !data) return;
 
       setApplicationStatus(data.status);
-      setHasBankingInfo(!!data.bank_name);
-      setHasDocuments(!!(data.has_drivers_license && data.has_ssn_card && data.has_insurance_docs));
+      setHasDocuments(!!(data.has_drivers_license && data.has_drivers_license_back && data.has_insurance_docs));
     };
 
     fetchApplicationStatus();
@@ -37,21 +35,12 @@ export function ApplicationAlert({ userId }: ApplicationAlertProps) {
 
   // If application is incomplete
   if (applicationStatus === 'incomplete') {
-    const missingItems = [];
-    if (!hasBankingInfo) missingItems.push('Banking Information');
-    if (!hasDocuments) missingItems.push('Required Documents');
-
     return (
       <Alert variant="default" className="border-secondary bg-secondary/10">
         <AlertCircle className="h-4 w-4 text-secondary" />
         <AlertTitle>Complete Your Application</AlertTitle>
         <AlertDescription className="space-y-2">
-          <p>Your application is incomplete. Please complete the following to get approved faster:</p>
-          <ul className="list-disc list-inside ml-2">
-            {missingItems.map((item) => (
-              <li key={item}>{item}</li>
-            ))}
-          </ul>
+          <p>Your application is incomplete. Please upload required documents to get approved faster.</p>
           <Button 
             onClick={() => navigate('/customer/application')}
             size="sm"

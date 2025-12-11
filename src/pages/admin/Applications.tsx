@@ -53,9 +53,18 @@ interface Application {
   status: string;
   phone_number: string;
   trailer_type: string | null;
-  business_needs: string | null;
   truck_vin: string | null;
-  mc_dot_number: string | null;
+  company_address: string | null;
+  business_type: string | null;
+  number_of_trailers: number | null;
+  date_needed: string | null;
+  insurance_company: string | null;
+  insurance_company_phone: string | null;
+  message: string | null;
+  ssn: string | null;
+  secondary_contact_name: string | null;
+  secondary_contact_phone: string | null;
+  secondary_contact_relationship: string | null;
   created_at: string;
   updated_at: string;
   reviewed_at: string | null;
@@ -454,17 +463,31 @@ export default function Applications() {
                   <p>{selectedApplication.trailer_type || "—"}</p>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-muted-foreground">MC/DOT Number</label>
-                  <p>{selectedApplication.mc_dot_number || "—"}</p>
-                </div>
-                <div>
                   <label className="text-sm font-medium text-muted-foreground">Truck VIN</label>
                   <p>{selectedApplication.truck_vin || "—"}</p>
                 </div>
-                <div className="col-span-2">
-                  <label className="text-sm font-medium text-muted-foreground">Business Needs</label>
-                  <p className="whitespace-pre-wrap">{selectedApplication.business_needs || "—"}</p>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Business Type</label>
+                  <p>{selectedApplication.business_type || "—"}</p>
                 </div>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Trailers Needed</label>
+                  <p>{selectedApplication.number_of_trailers || "—"}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Date Needed</label>
+                  <p>{selectedApplication.date_needed || "—"}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Insurance Company</label>
+                  <p>{selectedApplication.insurance_company || "—"}</p>
+                </div>
+                {selectedApplication.message && (
+                  <div className="col-span-2">
+                    <label className="text-sm font-medium text-muted-foreground">Message</label>
+                    <p className="whitespace-pre-wrap">{selectedApplication.message}</p>
+                  </div>
+                )}
                 <div>
                   <label className="text-sm font-medium text-muted-foreground">Submitted</label>
                   <p>{format(new Date(selectedApplication.created_at), "PPP 'at' p")}</p>

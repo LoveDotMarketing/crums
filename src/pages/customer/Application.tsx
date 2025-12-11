@@ -9,13 +9,19 @@ import { CustomerNav } from "@/components/customer/CustomerNav";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
 import { toast } from "sonner";
-import { Loader2, CheckCircle, AlertCircle, FileText, Percent, CreditCard, UserCheck, Truck, ClipboardCheck } from "lucide-react";
+import { Loader2, CheckCircle, AlertCircle, FileText, Upload } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Progress } from "@/components/ui/progress";
-import { Checkbox } from "@/components/ui/checkbox";
 import { validateFile, sanitizeInput } from "@/lib/validations";
 import { format } from "date-fns";
-import { trackApplicationStarted, trackFormSubmission, trackConversion } from "@/lib/analytics";
+import { trackApplicationStarted, trackFormSubmission } from "@/lib/analytics";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface ProfileData {
   first_name: string;
@@ -29,43 +35,30 @@ interface ProfileData {
 interface ApplicationData {
   id?: string;
   phone_number: string;
-  
-  // Drivers Compliance
-  company_name: string;
-  business_needs: string;
+  company_address: string;
+  business_type: string;
   truck_vin: string;
-  mc_number: string;
-  dot_number_url: string | null;
   trailer_type: string;
-  
-  // Payment
-  bank_name: string;
-  account_holder_name: string;
-  account_number: string;
-  routing_number: string;
-  billing_address: string;
-  consent_autopay: boolean;
-  prepay_full_year: boolean;
-  
-  // Agreements
-  terms_accepted: boolean;
-  terms_accepted_at: string | null;
-  consent_communications: boolean;
-  consent_credit_check: boolean;
-  
-  // Documents (legacy - still needed)
-  ssn_card_url: string | null;
+  number_of_trailers: number | null;
+  date_needed: string;
+  ssn: string;
+  insurance_company: string;
+  insurance_company_phone: string;
+  message: string;
+  secondary_contact_name: string;
+  secondary_contact_phone: string;
+  secondary_contact_relationship: string;
+  dot_number_url: string | null;
   drivers_license_url: string | null;
+  drivers_license_back_url: string | null;
   insurance_docs_url: string | null;
-  contract_url: string | null;
-  
   status: string;
 }
 
 const TRAILER_TYPES = [
-  { value: "53_dry_van", label: "53' Dry Van" },
-  { value: "48_flatbed", label: "48' Flatbed" },
-  { value: "refrigerated", label: "Refrigerated Trailer" },
+  { value: "53' Dry Van", label: "53' Dry Van" },
+  { value: "48' Flatbed", label: "48' Flatbed" },
+  { value: "Refrigerated", label: "Refrigerated" },
 ];
 
 export default function Application() {
@@ -85,27 +78,23 @@ export default function Application() {
   
   const [application, setApplication] = useState<ApplicationData>({
     phone_number: "",
-    company_name: "",
-    business_needs: "",
+    company_address: "",
+    business_type: "",
     truck_vin: "",
-    mc_number: "",
-    dot_number_url: null,
     trailer_type: "",
-    bank_name: "",
-    account_holder_name: "",
-    account_number: "",
-    routing_number: "",
-    billing_address: "",
-    consent_autopay: false,
-    prepay_full_year: false,
-    terms_accepted: false,
-    terms_accepted_at: null,
-    consent_communications: false,
-    consent_credit_check: false,
-    ssn_card_url: null,
+    number_of_trailers: null,
+    date_needed: "",
+    ssn: "",
+    insurance_company: "",
+    insurance_company_phone: "",
+    message: "",
+    secondary_contact_name: "",
+    secondary_contact_phone: "",
+    secondary_contact_relationship: "",
+    dot_number_url: null,
     drivers_license_url: null,
+    drivers_license_back_url: null,
     insurance_docs_url: null,
-    contract_url: null,
     status: "new",
   });
 
@@ -114,7 +103,6 @@ export default function Application() {
   }, [user]);
 
   useEffect(() => {
-    // Track application page view
     trackApplicationStarted();
   }, []);
 
@@ -155,27 +143,23 @@ export default function Application() {
         setApplication({
           id: appData.id,
           phone_number: appData.phone_number || "",
-          company_name: appData.company_address || "", // Using company_address for company name
-          business_needs: appData.business_needs || "",
+          company_address: appData.company_address || "",
+          business_type: appData.business_type || "",
           truck_vin: appData.truck_vin || "",
-          mc_number: (appData as any).mc_number || appData.mc_dot_number || "",
-          dot_number_url: (appData as any).dot_number_url || null,
           trailer_type: appData.trailer_type || "",
-          bank_name: appData.bank_name || "",
-          account_holder_name: appData.account_holder_name || "",
-          account_number: appData.account_number ? "****" + appData.account_number.slice(-4) : "",
-          routing_number: appData.routing_number ? "****" + appData.routing_number.slice(-4) : "",
-          billing_address: appData.billing_address || "",
-          consent_autopay: appData.consent_autopay || false,
-          prepay_full_year: appData.prepay_full_year || false,
-          terms_accepted: appData.terms_accepted || false,
-          terms_accepted_at: appData.terms_accepted_at || null,
-          consent_communications: appData.consent_communications || false,
-          consent_credit_check: appData.consent_credit_check || false,
-          ssn_card_url: appData.ssn_card_url || null,
+          number_of_trailers: appData.number_of_trailers || null,
+          date_needed: appData.date_needed || "",
+          ssn: appData.ssn ? "***-**-" + appData.ssn.slice(-4) : "",
+          insurance_company: appData.insurance_company || "",
+          insurance_company_phone: appData.insurance_company_phone || "",
+          message: appData.message || "",
+          secondary_contact_name: appData.secondary_contact_name || "",
+          secondary_contact_phone: appData.secondary_contact_phone || "",
+          secondary_contact_relationship: appData.secondary_contact_relationship || "",
+          dot_number_url: appData.dot_number_url || null,
           drivers_license_url: appData.drivers_license_url || null,
+          drivers_license_back_url: appData.drivers_license_back_url || null,
           insurance_docs_url: appData.insurance_docs_url || null,
-          contract_url: appData.contract_url || null,
           status: appData.status,
         });
       }
@@ -225,78 +209,21 @@ export default function Application() {
 
   const calculateProgress = () => {
     const requiredFields = [
-      // Section 1: Basic Information
       profile.first_name,
       profile.last_name,
-      profile.date_of_birth,
       profile.phone,
-      profile.home_address,
-      // Section 2: Drivers Compliance
-      application.business_needs,
       application.truck_vin,
-      application.mc_number,
-      application.dot_number_url,
       application.trailer_type,
-      // Section 3: Payment
-      application.bank_name,
-      application.account_holder_name,
-      application.account_number,
-      application.routing_number,
-      application.billing_address,
-      application.consent_autopay,
-      // Section 4: Agreements
-      application.terms_accepted,
-      application.consent_communications,
-      application.consent_credit_check,
+      application.drivers_license_url,
+      application.drivers_license_back_url,
     ];
     
-    const completed = requiredFields.filter(field => {
-      if (typeof field === 'boolean') return field === true;
-      return field && field.toString().length > 0;
-    }).length;
-    
+    const completed = requiredFields.filter(field => field && field.toString().length > 0).length;
     return Math.round((completed / requiredFields.length) * 100);
-  };
-
-  const validateAge = (dateOfBirth: string): boolean => {
-    if (!dateOfBirth) return false;
-    const today = new Date();
-    const birthDate = new Date(dateOfBirth);
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const monthDiff = today.getMonth() - birthDate.getMonth();
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-      age--;
-    }
-    return age >= 18;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Validate age
-    if (!validateAge(profile.date_of_birth)) {
-      toast.error("You must be at least 18 years old to apply");
-      return;
-    }
-
-    // Validate required consent checkboxes
-    if (!application.consent_autopay) {
-      toast.error("You must consent to automatic payments");
-      return;
-    }
-    if (!application.terms_accepted) {
-      toast.error("You must accept the terms and conditions");
-      return;
-    }
-    if (!application.consent_communications) {
-      toast.error("You must consent to communications");
-      return;
-    }
-    if (!application.consent_credit_check) {
-      toast.error("You must consent to credit checks");
-      return;
-    }
-
     setSaving(true);
 
     try {
@@ -314,57 +241,49 @@ export default function Application() {
 
       if (profileError) throw profileError;
 
-      // Prepare base application data
-      const baseApplicationData = {
+      // Prepare application data
+      const applicationData = {
         user_id: user?.id,
         phone_number: sanitizeInput(profile.phone),
-        company_address: sanitizeInput(application.company_name),
-        business_needs: sanitizeInput(application.business_needs),
+        company_address: sanitizeInput(application.company_address),
+        business_type: application.business_type,
         truck_vin: sanitizeInput(application.truck_vin),
-        mc_number: sanitizeInput(application.mc_number),
-        dot_number_url: application.dot_number_url,
         trailer_type: application.trailer_type,
-        bank_name: sanitizeInput(application.bank_name),
-        account_holder_name: sanitizeInput(application.account_holder_name),
-        billing_address: sanitizeInput(application.billing_address),
-        consent_autopay: application.consent_autopay,
-        prepay_full_year: application.prepay_full_year,
-        terms_accepted: application.terms_accepted,
-        terms_accepted_at: application.terms_accepted ? new Date().toISOString() : null,
-        consent_communications: application.consent_communications,
-        consent_credit_check: application.consent_credit_check,
-        ssn_card_url: application.ssn_card_url,
+        number_of_trailers: application.number_of_trailers,
+        date_needed: application.date_needed || null,
+        insurance_company: sanitizeInput(application.insurance_company),
+        insurance_company_phone: sanitizeInput(application.insurance_company_phone),
+        message: sanitizeInput(application.message),
+        secondary_contact_name: sanitizeInput(application.secondary_contact_name),
+        secondary_contact_phone: sanitizeInput(application.secondary_contact_phone),
+        secondary_contact_relationship: sanitizeInput(application.secondary_contact_relationship),
+        dot_number_url: application.dot_number_url,
         drivers_license_url: application.drivers_license_url,
+        drivers_license_back_url: application.drivers_license_back_url,
         insurance_docs_url: application.insurance_docs_url,
-        contract_url: application.contract_url,
         status: calculateProgress() === 100 ? "pending" : "incomplete",
       };
 
-      // Only include banking numbers if they're not masked
-      const bankingData: { account_number?: string; routing_number?: string } = {};
-      if (!application.account_number.startsWith("****")) {
-        bankingData.account_number = sanitizeInput(application.account_number);
-      }
-      if (!application.routing_number.startsWith("****")) {
-        bankingData.routing_number = sanitizeInput(application.routing_number);
+      // Only update SSN if it's not masked
+      if (application.ssn && !application.ssn.includes("*")) {
+        (applicationData as any).ssn = sanitizeInput(application.ssn.replace(/-/g, ""));
       }
 
       if (application.id) {
         const { error } = await supabase
           .from("customer_applications")
-          .update({ ...baseApplicationData, ...bankingData })
+          .update(applicationData)
           .eq("id", application.id);
         if (error) throw error;
       } else {
         const { error } = await supabase
           .from("customer_applications")
-          .insert({ ...baseApplicationData, ...bankingData });
+          .insert(applicationData);
         if (error) throw error;
       }
 
       toast.success("Application saved successfully");
       trackFormSubmission('customer_application', true);
-      trackConversion('application_submit');
       fetchData();
     } catch (error) {
       console.error("Error saving application:", error);
@@ -393,468 +312,343 @@ export default function Application() {
         <div className="container mx-auto px-4 max-w-4xl">
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-foreground mb-2">Rental Application</h1>
-            <p className="text-muted-foreground">Complete all required fields to submit your application</p>
+            <p className="text-muted-foreground">Review and update your application information</p>
           </div>
 
           <Card className="mb-6">
             <CardHeader>
-              <CardTitle>Application Progress</CardTitle>
-              <CardDescription>{progress}% Complete</CardDescription>
+              <CardTitle className="flex items-center gap-2">
+                <FileText className="h-5 w-5" />
+                Application Progress
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              <Progress value={progress} className="h-2" />
+              <Progress value={progress} className="mb-2" />
+              <p className="text-sm text-muted-foreground">{progress}% Complete</p>
+              
+              {application.status === "approved" && (
+                <Alert className="mt-4 border-primary bg-primary/10">
+                  <CheckCircle className="h-4 w-4 text-primary" />
+                  <AlertTitle>Application Approved</AlertTitle>
+                  <AlertDescription>
+                    Your application has been approved! You can now request trailers.
+                  </AlertDescription>
+                </Alert>
+              )}
+              
+              {application.status === "pending" && (
+                <Alert className="mt-4">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertTitle>Under Review</AlertTitle>
+                  <AlertDescription>
+                    Your application is being reviewed. We'll notify you once it's approved.
+                  </AlertDescription>
+                </Alert>
+              )}
             </CardContent>
           </Card>
 
-          {progress < 100 && (
-            <Alert className="mb-6">
-              <AlertCircle className="h-4 w-4" />
-              <AlertTitle>Action Required</AlertTitle>
-              <AlertDescription>
-                Please complete all required fields to submit your rental application for review.
-              </AlertDescription>
-            </Alert>
-          )}
-
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Section 1: Basic Information */}
+            {/* Basic Information */}
             <Card>
-              <CardHeader className="bg-primary/5 border-b">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-primary/10 rounded-lg">
-                    <UserCheck className="h-5 w-5 text-primary" />
-                  </div>
-                  <div>
-                    <CardTitle>Section 1: Basic Information</CardTitle>
-                    <CardDescription>Your personal contact details</CardDescription>
-                  </div>
-                </div>
+              <CardHeader>
+                <CardTitle>Basic Information</CardTitle>
+                <CardDescription>Your personal and contact details</CardDescription>
               </CardHeader>
-              <CardContent className="pt-6 space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="first_name">First Name *</Label>
-                    <Input
-                      id="first_name"
-                      required
-                      value={profile.first_name}
-                      onChange={(e) => setProfile({ ...profile, first_name: e.target.value })}
-                      placeholder="John"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="last_name">Last Name *</Label>
-                    <Input
-                      id="last_name"
-                      required
-                      value={profile.last_name}
-                      onChange={(e) => setProfile({ ...profile, last_name: e.target.value })}
-                      placeholder="Doe"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="date_of_birth">Date of Birth *</Label>
-                    <Input
-                      id="date_of_birth"
-                      type="date"
-                      required
-                      value={profile.date_of_birth}
-                      onChange={(e) => setProfile({ ...profile, date_of_birth: e.target.value })}
-                      max={format(new Date(new Date().setFullYear(new Date().getFullYear() - 18)), 'yyyy-MM-dd')}
-                    />
-                    <p className="text-xs text-muted-foreground">You must be at least 18 years old</p>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="phone">Phone Number *</Label>
-                    <Input
-                      id="phone"
-                      type="tel"
-                      required
-                      value={profile.phone}
-                      onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
-                      placeholder="(555) 123-4567"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="home_address">Home Address *</Label>
+              <CardContent className="grid gap-4 md:grid-cols-2">
+                <div>
+                  <Label htmlFor="firstName">First Name</Label>
                   <Input
-                    id="home_address"
-                    required
+                    id="firstName"
+                    value={profile.first_name}
+                    onChange={(e) => setProfile({ ...profile, first_name: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="lastName">Last Name</Label>
+                  <Input
+                    id="lastName"
+                    value={profile.last_name}
+                    onChange={(e) => setProfile({ ...profile, last_name: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="email">Email</Label>
+                  <Input id="email" value={profile.email} disabled className="bg-muted" />
+                </div>
+                <div>
+                  <Label htmlFor="phone">Phone</Label>
+                  <Input
+                    id="phone"
+                    type="tel"
+                    value={profile.phone}
+                    onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="dateOfBirth">Date of Birth</Label>
+                  <Input
+                    id="dateOfBirth"
+                    type="date"
+                    value={profile.date_of_birth}
+                    onChange={(e) => setProfile({ ...profile, date_of_birth: e.target.value })}
+                  />
+                </div>
+                <div className="md:col-span-2">
+                  <Label htmlFor="homeAddress">Home Address</Label>
+                  <Input
+                    id="homeAddress"
                     value={profile.home_address}
                     onChange={(e) => setProfile({ ...profile, home_address: e.target.value })}
-                    placeholder="123 Main St, City, State ZIP"
                   />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email Address</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={profile.email}
-                    disabled
-                    className="bg-muted"
-                  />
-                  <p className="text-xs text-muted-foreground">Email cannot be changed</p>
                 </div>
               </CardContent>
             </Card>
 
-            {/* Section 2: Drivers Compliance */}
+            {/* Business Information */}
             <Card>
-              <CardHeader className="bg-primary/5 border-b">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-primary/10 rounded-lg">
-                    <Truck className="h-5 w-5 text-primary" />
-                  </div>
-                  <div>
-                    <CardTitle>Section 2: Drivers Compliance</CardTitle>
-                    <CardDescription>Business and DOT information</CardDescription>
-                  </div>
-                </div>
+              <CardHeader>
+                <CardTitle>Business Information</CardTitle>
+                <CardDescription>Your trucking business details</CardDescription>
               </CardHeader>
-              <CardContent className="pt-6 space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="company_name">Business Name (if applicable)</Label>
+              <CardContent className="grid gap-4 md:grid-cols-2">
+                <div>
+                  <Label htmlFor="companyAddress">Business Address</Label>
                   <Input
-                    id="company_name"
-                    value={application.company_name}
-                    onChange={(e) => setApplication({ ...application, company_name: e.target.value })}
-                    placeholder="Your Company LLC"
+                    id="companyAddress"
+                    value={application.company_address}
+                    onChange={(e) => setApplication({ ...application, company_address: e.target.value })}
                   />
                 </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="business_needs">Business Needs for Trailer *</Label>
-                  <textarea
-                    id="business_needs"
-                    required
-                    value={application.business_needs}
-                    onChange={(e) => setApplication({ ...application, business_needs: e.target.value })}
-                    placeholder="Describe how you will use the trailer (e.g., freight hauling, local delivery, etc.)"
-                    rows={3}
-                    className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                <div>
+                  <Label htmlFor="businessType">Business Type</Label>
+                  <Select
+                    value={application.business_type}
+                    onValueChange={(value) => setApplication({ ...application, business_type: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="individual">Individual</SelectItem>
+                      <SelectItem value="proprietorship">Proprietorship</SelectItem>
+                      <SelectItem value="partnership">Partnership</SelectItem>
+                      <SelectItem value="corporation">Corporation</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="truckVin">Truck/Cab VIN</Label>
+                  <Input
+                    id="truckVin"
+                    value={application.truck_vin}
+                    onChange={(e) => setApplication({ ...application, truck_vin: e.target.value.toUpperCase() })}
+                    maxLength={17}
                   />
                 </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="truck_vin">Your Truck VIN *</Label>
-                    <Input
-                      id="truck_vin"
-                      required
-                      maxLength={17}
-                      value={application.truck_vin}
-                      onChange={(e) => setApplication({ ...application, truck_vin: e.target.value.toUpperCase() })}
-                      placeholder="1HGBH41JXMN109186"
-                    />
-                    <p className="text-xs text-muted-foreground">17-character Vehicle Identification Number</p>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="mc_number">MC Number *</Label>
-                    <Input
-                      id="mc_number"
-                      required
-                      value={application.mc_number}
-                      onChange={(e) => setApplication({ ...application, mc_number: e.target.value })}
-                      placeholder="MC123456"
-                    />
-                    <p className="text-xs text-muted-foreground">Motor Carrier number</p>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="trailer_type">Type of Trailer Leasing *</Label>
-                    <select
-                      id="trailer_type"
-                      required
-                      value={application.trailer_type}
-                      onChange={(e) => setApplication({ ...application, trailer_type: e.target.value })}
-                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                    >
-                      <option value="">Select trailer type...</option>
+                <div>
+                  <Label htmlFor="trailerType">Trailer Type</Label>
+                  <Select
+                    value={application.trailer_type}
+                    onValueChange={(value) => setApplication({ ...application, trailer_type: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select type" />
+                    </SelectTrigger>
+                    <SelectContent>
                       {TRAILER_TYPES.map((type) => (
-                        <option key={type.value} value={type.value}>
+                        <SelectItem key={type.value} value={type.value}>
                           {type.label}
-                        </option>
+                        </SelectItem>
                       ))}
-                    </select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>DOT Registration Document *</Label>
-                    <div className="flex items-center gap-2">
-                      <Input
-                        type="file"
-                        accept="image/*,.pdf"
-                        onChange={(e) => e.target.files?.[0] && handleFileUpload(e.target.files[0], 'dot_number_url')}
-                        disabled={uploadingDoc === 'dot_number_url'}
-                        className="flex-1"
-                      />
-                      {application.dot_number_url && <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0" />}
-                      {uploadingDoc === 'dot_number_url' && <Loader2 className="h-5 w-5 animate-spin flex-shrink-0" />}
-                    </div>
-                    <p className="text-xs text-muted-foreground">Upload image of your DOT registration</p>
-                  </div>
+                    </SelectContent>
+                  </Select>
                 </div>
-
-                {/* Document Uploads */}
-                <div className="border-t pt-4 mt-4">
-                  <h4 className="font-medium mb-4">Required Documents</h4>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>Driver's License *</Label>
-                      <div className="flex items-center gap-2">
-                        <Input
-                          type="file"
-                          accept="image/*,.pdf"
-                          onChange={(e) => e.target.files?.[0] && handleFileUpload(e.target.files[0], 'drivers_license_url')}
-                          disabled={uploadingDoc === 'drivers_license_url'}
-                          className="flex-1"
-                        />
-                        {application.drivers_license_url && <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0" />}
-                        {uploadingDoc === 'drivers_license_url' && <Loader2 className="h-5 w-5 animate-spin flex-shrink-0" />}
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label>Insurance Documents *</Label>
-                      <div className="flex items-center gap-2">
-                        <Input
-                          type="file"
-                          accept="image/*,.pdf"
-                          onChange={(e) => e.target.files?.[0] && handleFileUpload(e.target.files[0], 'insurance_docs_url')}
-                          disabled={uploadingDoc === 'insurance_docs_url'}
-                          className="flex-1"
-                        />
-                        {application.insurance_docs_url && <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0" />}
-                        {uploadingDoc === 'insurance_docs_url' && <Loader2 className="h-5 w-5 animate-spin flex-shrink-0" />}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Section 3: Payment */}
-            <Card>
-              <CardHeader className="bg-primary/5 border-b">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-primary/10 rounded-lg">
-                    <CreditCard className="h-5 w-5 text-primary" />
-                  </div>
-                  <div>
-                    <CardTitle>Section 3: Payment Information</CardTitle>
-                    <CardDescription>Banking and billing details</CardDescription>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className="pt-6 space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="bank_name">Bank Name *</Label>
-                    <Input
-                      id="bank_name"
-                      required
-                      value={application.bank_name}
-                      onChange={(e) => setApplication({ ...application, bank_name: e.target.value })}
-                      placeholder="Chase Bank"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="account_holder_name">Account Holder Name *</Label>
-                    <Input
-                      id="account_holder_name"
-                      required
-                      value={application.account_holder_name}
-                      onChange={(e) => setApplication({ ...application, account_holder_name: e.target.value })}
-                      placeholder="John Doe"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="routing_number">Routing Number *</Label>
-                    <Input
-                      id="routing_number"
-                      required
-                      maxLength={9}
-                      value={application.routing_number}
-                      onChange={(e) => setApplication({ ...application, routing_number: e.target.value.replace(/\D/g, '') })}
-                      placeholder="021000021"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="account_number">Account Number *</Label>
-                    <Input
-                      id="account_number"
-                      required
-                      value={application.account_number}
-                      onChange={(e) => setApplication({ ...application, account_number: e.target.value.replace(/\D/g, '') })}
-                      placeholder="123456789"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="billing_address">Billing Address *</Label>
+                <div>
+                  <Label htmlFor="numberOfTrailers">Number of Trailers</Label>
                   <Input
-                    id="billing_address"
-                    required
-                    value={application.billing_address}
-                    onChange={(e) => setApplication({ ...application, billing_address: e.target.value })}
-                    placeholder="123 Main St, City, State ZIP"
+                    id="numberOfTrailers"
+                    type="number"
+                    min="1"
+                    value={application.number_of_trailers || ""}
+                    onChange={(e) => setApplication({ ...application, number_of_trailers: parseInt(e.target.value) || null })}
                   />
                 </div>
-
-                <div className="flex items-start space-x-3 pt-2">
-                  <Checkbox
-                    id="consent_autopay"
-                    checked={application.consent_autopay}
-                    onCheckedChange={(checked) => setApplication({ ...application, consent_autopay: checked === true })}
+                <div>
+                  <Label htmlFor="dateNeeded">Date Needed</Label>
+                  <Input
+                    id="dateNeeded"
+                    type="date"
+                    value={application.date_needed}
+                    onChange={(e) => setApplication({ ...application, date_needed: e.target.value })}
                   />
-                  <div className="grid gap-1.5 leading-none">
-                    <label
-                      htmlFor="consent_autopay"
-                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                    >
-                      Consent to Automatic Payments *
-                    </label>
-                    <p className="text-sm text-muted-foreground">
-                      I authorize CRUMS Leasing to automatically debit my account for monthly lease payments.
-                    </p>
-                  </div>
                 </div>
-
-                {/* Prepay Discount Card */}
-                <Card className="border-2 border-dashed border-secondary bg-secondary/5">
-                  <CardContent className="pt-6">
-                    <div className="flex items-start space-x-3">
-                      <Checkbox
-                        id="prepay_full_year"
-                        checked={application.prepay_full_year}
-                        onCheckedChange={(checked) => setApplication({ ...application, prepay_full_year: checked === true })}
-                      />
-                      <div className="grid gap-1.5 leading-none flex-1">
-                        <div className="flex items-center gap-2">
-                          <Percent className="h-5 w-5 text-secondary" />
-                          <label
-                            htmlFor="prepay_full_year"
-                            className="text-sm font-bold leading-none text-secondary"
-                          >
-                            Save 10% - Prepay Full Year
-                          </label>
-                        </div>
-                        <p className="text-sm text-muted-foreground mt-2">
-                          Pay your full 12-month contract upfront and receive a <strong>10% discount</strong> on your total lease amount. 
-                          This option will be processed through Stripe after your application is approved.
-                        </p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
               </CardContent>
             </Card>
 
-            {/* Section 4: Agreements */}
+            {/* Insurance Information */}
             <Card>
-              <CardHeader className="bg-primary/5 border-b">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-primary/10 rounded-lg">
-                    <ClipboardCheck className="h-5 w-5 text-primary" />
-                  </div>
-                  <div>
-                    <CardTitle>Section 4: Agreements</CardTitle>
-                    <CardDescription>Required acknowledgements and consents</CardDescription>
-                  </div>
-                </div>
+              <CardHeader>
+                <CardTitle>Insurance Information</CardTitle>
+                <CardDescription>Your insurance provider details</CardDescription>
               </CardHeader>
-              <CardContent className="pt-6 space-y-6">
-                {/* Terms and Conditions */}
-                <div className="flex items-start space-x-3">
-                  <Checkbox
-                    id="terms_accepted"
-                    checked={application.terms_accepted}
-                    onCheckedChange={(checked) => setApplication({ ...application, terms_accepted: checked === true })}
+              <CardContent className="grid gap-4 md:grid-cols-2">
+                <div>
+                  <Label htmlFor="insuranceCompany">Insurance Company</Label>
+                  <Input
+                    id="insuranceCompany"
+                    value={application.insurance_company}
+                    onChange={(e) => setApplication({ ...application, insurance_company: e.target.value })}
                   />
-                  <div className="grid gap-1.5 leading-none">
-                    <label
-                      htmlFor="terms_accepted"
-                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                    >
-                      Terms & Conditions *
-                    </label>
-                    <p className="text-sm text-muted-foreground">
-                      I have read and agree to the{" "}
-                      <a href="#" className="text-primary underline inline-flex items-center gap-1">
-                        <FileText className="h-3 w-3" />
-                        CRUMS Leasing Agreement
-                      </a>
-                      {" "}(PDF will be available soon)
-                    </p>
-                  </div>
                 </div>
-
-                {/* Consent to Communications */}
-                <div className="flex items-start space-x-3">
-                  <Checkbox
-                    id="consent_communications"
-                    checked={application.consent_communications}
-                    onCheckedChange={(checked) => setApplication({ ...application, consent_communications: checked === true })}
+                <div>
+                  <Label htmlFor="insurancePhone">Insurance Company Phone</Label>
+                  <Input
+                    id="insurancePhone"
+                    type="tel"
+                    value={application.insurance_company_phone}
+                    onChange={(e) => setApplication({ ...application, insurance_company_phone: e.target.value })}
                   />
-                  <div className="grid gap-1.5 leading-none">
-                    <label
-                      htmlFor="consent_communications"
-                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                    >
-                      Consent to Communications *
-                    </label>
-                    <p className="text-sm text-muted-foreground">
-                      I consent to receive text messages, phone calls, and emails from CRUMS Leasing regarding my account, 
-                      lease payments, and important updates.
-                    </p>
-                  </div>
                 </div>
-
-                {/* Consent to Credit Check */}
-                <div className="flex items-start space-x-3">
-                  <Checkbox
-                    id="consent_credit_check"
-                    checked={application.consent_credit_check}
-                    onCheckedChange={(checked) => setApplication({ ...application, consent_credit_check: checked === true })}
-                  />
-                  <div className="grid gap-1.5 leading-none">
-                    <label
-                      htmlFor="consent_credit_check"
-                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                    >
-                      Consent to Credit Check *
-                    </label>
-                    <p className="text-sm text-muted-foreground">
-                      I understand that a credit check may be performed as part of the application review process. 
-                      Some applicants may require a routine credit review.
-                    </p>
-                  </div>
-                </div>
-
-                <Alert>
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertDescription>
-                    All checkboxes above are required to submit your application.
-                  </AlertDescription>
-                </Alert>
               </CardContent>
             </Card>
 
-            <div className="flex gap-4">
-              <Button type="submit" disabled={saving} size="lg" className="flex-1">
+            {/* Documents */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Documents</CardTitle>
+                <CardDescription>Upload required documents (JPG, PNG, PDF)</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div>
+                    <Label>DOT Registration</Label>
+                    <div className="mt-2">
+                      {application.dot_number_url ? (
+                        <div className="flex items-center gap-2 text-sm text-primary">
+                          <CheckCircle className="h-4 w-4" />
+                          Document uploaded
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <Input
+                            type="file"
+                            accept="image/*,.pdf"
+                            onChange={(e) => e.target.files?.[0] && handleFileUpload(e.target.files[0], "dot_number_url")}
+                            disabled={uploadingDoc === "dot_number_url"}
+                          />
+                          {uploadingDoc === "dot_number_url" && <Loader2 className="h-4 w-4 animate-spin" />}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <Label>Driver's License (Front)</Label>
+                    <div className="mt-2">
+                      {application.drivers_license_url ? (
+                        <div className="flex items-center gap-2 text-sm text-primary">
+                          <CheckCircle className="h-4 w-4" />
+                          Document uploaded
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <Input
+                            type="file"
+                            accept="image/*,.pdf"
+                            onChange={(e) => e.target.files?.[0] && handleFileUpload(e.target.files[0], "drivers_license_url")}
+                            disabled={uploadingDoc === "drivers_license_url"}
+                          />
+                          {uploadingDoc === "drivers_license_url" && <Loader2 className="h-4 w-4 animate-spin" />}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label>Driver's License (Back)</Label>
+                    <div className="mt-2">
+                      {application.drivers_license_back_url ? (
+                        <div className="flex items-center gap-2 text-sm text-primary">
+                          <CheckCircle className="h-4 w-4" />
+                          Document uploaded
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <Input
+                            type="file"
+                            accept="image/*,.pdf"
+                            onChange={(e) => e.target.files?.[0] && handleFileUpload(e.target.files[0], "drivers_license_back_url")}
+                            disabled={uploadingDoc === "drivers_license_back_url"}
+                          />
+                          {uploadingDoc === "drivers_license_back_url" && <Loader2 className="h-4 w-4 animate-spin" />}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label>Insurance Documents</Label>
+                    <div className="mt-2">
+                      {application.insurance_docs_url ? (
+                        <div className="flex items-center gap-2 text-sm text-primary">
+                          <CheckCircle className="h-4 w-4" />
+                          Document uploaded
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <Input
+                            type="file"
+                            accept="image/*,.pdf"
+                            onChange={(e) => e.target.files?.[0] && handleFileUpload(e.target.files[0], "insurance_docs_url")}
+                            disabled={uploadingDoc === "insurance_docs_url"}
+                          />
+                          {uploadingDoc === "insurance_docs_url" && <Loader2 className="h-4 w-4 animate-spin" />}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Secondary Contact */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Secondary Contact (Optional)</CardTitle>
+                <CardDescription>Emergency contact information</CardDescription>
+              </CardHeader>
+              <CardContent className="grid gap-4 md:grid-cols-3">
+                <div>
+                  <Label htmlFor="secondaryName">Name</Label>
+                  <Input
+                    id="secondaryName"
+                    value={application.secondary_contact_name}
+                    onChange={(e) => setApplication({ ...application, secondary_contact_name: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="secondaryPhone">Phone</Label>
+                  <Input
+                    id="secondaryPhone"
+                    type="tel"
+                    value={application.secondary_contact_phone}
+                    onChange={(e) => setApplication({ ...application, secondary_contact_phone: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="secondaryRelationship">Relationship</Label>
+                  <Input
+                    id="secondaryRelationship"
+                    value={application.secondary_contact_relationship}
+                    onChange={(e) => setApplication({ ...application, secondary_contact_relationship: e.target.value })}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            <div className="flex justify-end">
+              <Button type="submit" disabled={saving} size="lg">
                 {saving ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
