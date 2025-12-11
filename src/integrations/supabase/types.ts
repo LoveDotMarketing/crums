@@ -103,6 +103,7 @@ export type Database = {
           drivers_license_url: string | null
           id: string
           insurance_company: string | null
+          insurance_company_phone: string | null
           insurance_docs_url: string | null
           mc_dot_number: string | null
           mc_number: string | null
@@ -152,6 +153,7 @@ export type Database = {
           drivers_license_url?: string | null
           id?: string
           insurance_company?: string | null
+          insurance_company_phone?: string | null
           insurance_docs_url?: string | null
           mc_dot_number?: string | null
           mc_number?: string | null
@@ -201,6 +203,7 @@ export type Database = {
           drivers_license_url?: string | null
           id?: string
           insurance_company?: string | null
+          insurance_company_phone?: string | null
           insurance_docs_url?: string | null
           mc_dot_number?: string | null
           mc_number?: string | null
