@@ -148,8 +148,8 @@ const guideNavigation = {
     href: "/resources/guides/mental-health"
   },
   next: {
-    title: "Pre-Trip Inspection Checklist",
-    href: "/resources/guides/pre-trip-inspection"
+    title: "Why Leasing a Dry Van Trailer is a Smart Business Decision",
+    href: "/resources/guides/why-leasing-a-dry-van-trailer-is-a-smart-business-decision"
   }
 };
 
