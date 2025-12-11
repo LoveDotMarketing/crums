@@ -458,8 +458,14 @@ export default function GetStarted() {
                       type="password" 
                       value={password} 
                       onChange={(e) => setPassword(e.target.value)}
-                      placeholder="Minimum 8 characters"
+                      placeholder="Create a strong password"
                     />
+                    <ul className="text-xs text-muted-foreground mt-1 space-y-0.5 list-disc list-inside">
+                      <li className={password.length >= 8 ? "text-green-600" : ""}>At least 8 characters</li>
+                      <li className={/[A-Z]/.test(password) ? "text-green-600" : ""}>One uppercase letter</li>
+                      <li className={/[a-z]/.test(password) ? "text-green-600" : ""}>One lowercase letter</li>
+                      <li className={/[0-9]/.test(password) ? "text-green-600" : ""}>One number</li>
+                    </ul>
                   </div>
                   <div>
                     <Label htmlFor="confirmPassword">Confirm Password *</Label>
