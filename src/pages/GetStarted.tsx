@@ -48,6 +48,7 @@ export default function GetStarted() {
   const [numberOfTrailers, setNumberOfTrailers] = useState("");
   const [dateNeeded, setDateNeeded] = useState("");
   const [truckVin, setTruckVin] = useState("");
+  const [trailerType, setTrailerType] = useState("");
   const [message, setMessage] = useState("");
   const [referralCode, setReferralCode] = useState("");
 
@@ -303,6 +304,7 @@ export default function GetStarted() {
           company_address: companyAddress,
           business_type: businessType,
           number_of_trailers: parseInt(numberOfTrailers),
+          trailer_type: trailerType || null,
           date_needed: dateNeeded,
           truck_vin: truckVin,
           insurance_company: insuranceCompany || null,
@@ -567,6 +569,19 @@ export default function GetStarted() {
                     />
                   </div>
                   <div>
+                    <Label htmlFor="trailerType">Trailer Type *</Label>
+                    <Select value={trailerType} onValueChange={setTrailerType}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select trailer type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="53' Dry Van">53' Dry Van</SelectItem>
+                        <SelectItem value="48' Flatbed">48' Flatbed</SelectItem>
+                        <SelectItem value="Refrigerated">Refrigerated</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
                     <Label htmlFor="dateNeeded">Date Needed *</Label>
                     <Input 
                       id="dateNeeded" 
@@ -806,6 +821,7 @@ export default function GetStarted() {
                         <p className="text-sm"><span className="font-medium">Address:</span> {companyAddress}</p>
                         <p className="text-sm"><span className="font-medium">Business Type:</span> {businessType}</p>
                         <p className="text-sm"><span className="font-medium">Trailers Needed:</span> {numberOfTrailers}</p>
+                        <p className="text-sm"><span className="font-medium">Trailer Type:</span> {trailerType}</p>
                         <p className="text-sm"><span className="font-medium">Date Needed:</span> {dateNeeded}</p>
                         <p className="text-sm"><span className="font-medium">Cab VIN#:</span> {truckVin}</p>
                         {message && <p className="text-sm"><span className="font-medium">Message:</span> {message}</p>}
