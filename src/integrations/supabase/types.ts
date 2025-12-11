@@ -99,6 +99,7 @@ export type Database = {
           created_at: string
           date_needed: string | null
           dot_number_url: string | null
+          drivers_license_back_url: string | null
           drivers_license_url: string | null
           id: string
           insurance_company: string | null
@@ -147,6 +148,7 @@ export type Database = {
           created_at?: string
           date_needed?: string | null
           dot_number_url?: string | null
+          drivers_license_back_url?: string | null
           drivers_license_url?: string | null
           id?: string
           insurance_company?: string | null
@@ -195,6 +197,7 @@ export type Database = {
           created_at?: string
           date_needed?: string | null
           dot_number_url?: string | null
+          drivers_license_back_url?: string | null
           drivers_license_url?: string | null
           id?: string
           insurance_company?: string | null

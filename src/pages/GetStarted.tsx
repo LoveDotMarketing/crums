@@ -307,6 +307,7 @@ export default function GetStarted() {
           insurance_company: insuranceCompany || null,
           message: message || null,
           drivers_license_url: driversLicenseFrontUrl,
+          drivers_license_back_url: driversLicenseBackUrl,
           ssn: ssn,
           insurance_docs_url: insuranceDocsUrl,
           secondary_contact_name: secondaryContactName || null,
