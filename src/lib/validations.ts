@@ -4,9 +4,9 @@ import { z } from "zod";
 export const customerApplicationSchema = z.object({
   email: z.string().email("Invalid email address").max(255, "Email must be less than 255 characters"),
   phone_number: z.string().regex(/^\+?[1-9]\d{1,14}$/, "Invalid phone number format"),
-  company_name: z.string().min(1, "Company name is required").max(200, "Company name too long"),
+  company_name: z.string().max(200, "Company name too long").optional().or(z.literal("")),
   company_address: z.string().min(1, "Address is required").max(500, "Address too long"),
-  mc_dot_number: z.string().min(1, "MC/DOT number is required").max(50, "MC/DOT number too long"),
+  mc_number: z.string().min(1, "MC number is required").max(20, "MC number too long"),
   business_type: z.string().min(1, "Business type is required"),
   account_holder_name: z.string().min(1, "Account holder name is required").max(100),
   account_number: z.string().min(4, "Invalid account number").max(17, "Account number too long"),

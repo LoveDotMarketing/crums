@@ -39,7 +39,8 @@ export default function GetStarted() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [companyName, setCompanyName] = useState("");
-  const [mcDotNumber, setMcDotNumber] = useState("");
+  const [mcNumber, setMcNumber] = useState("");
+  const [dotDocument, setDotDocument] = useState<File | null>(null);
   const [primaryContactName, setPrimaryContactName] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [companyAddress, setCompanyAddress] = useState("");
@@ -88,8 +89,12 @@ export default function GetStarted() {
   }, [searchParams]);
 
   const validateStep1 = () => {
-    if (!email || !password || !confirmPassword || !companyName || !primaryContactName || !phoneNumber || !companyAddress || !businessType || !numberOfTrailers || !dateNeeded) {
+    if (!email || !password || !confirmPassword || !primaryContactName || !phoneNumber || !companyAddress || !businessType || !numberOfTrailers || !dateNeeded || !mcNumber) {
       toast({ title: "Error", description: "Please fill in all required fields", variant: "destructive" });
+      return false;
+    }
+    if (!dotDocument) {
+      toast({ title: "Error", description: "Please upload your DOT registration document", variant: "destructive" });
       return false;
     }
     if (password !== confirmPassword) {
@@ -116,9 +121,9 @@ export default function GetStarted() {
     const appValidation = customerApplicationSchema.safeParse({
       email,
       phone_number: phoneNumber,
-      company_name: companyName,
+      company_name: companyName || "",
       company_address: companyAddress,
-      mc_dot_number: mcDotNumber,
+      mc_number: mcNumber,
       business_type: businessType,
       account_holder_name: accountHolderName || "N/A",
       account_number: accountNumber || "0000",
@@ -218,6 +223,12 @@ export default function GetStarted() {
         insuranceDocsUrl = await uploadFile(insuranceDocs, `${session.user.id}/insurance-${Date.now()}`);
       }
 
+      // Upload DOT document
+      let dotNumberUrl = null;
+      if (dotDocument) {
+        dotNumberUrl = await uploadFile(dotDocument, `${session.user.id}/dot-document-${Date.now()}`);
+      }
+
       // Check if all required fields are filled to determine status
       const hasBankingInfo = bankName && accountHolderName && accountNumber && routingNumber && paymentMethod;
       const hasDocuments = driversLicenseUrl && ssnCardUrl && insuranceDocsUrl;
@@ -229,7 +240,8 @@ export default function GetStarted() {
         .insert({
           user_id: session.user.id,
           phone_number: phoneNumber,
-          mc_dot_number: mcDotNumber || null,
+          mc_number: mcNumber,
+          dot_number_url: dotNumberUrl,
           company_address: companyAddress,
           business_type: businessType,
           number_of_trailers: parseInt(numberOfTrailers),
@@ -296,7 +308,7 @@ export default function GetStarted() {
   ];
 
   const isStepComplete = (step: number) => {
-    if (step === 1) return email && password && confirmPassword && companyName && primaryContactName && phoneNumber;
+    if (step === 1) return email && password && confirmPassword && mcNumber && dotDocument && primaryContactName && phoneNumber;
     if (step === 2) return bankName && accountHolderName && accountNumber && routingNumber && paymentMethod;
     if (step === 3) return driversLicense && ssnCard && insuranceDocs;
     return false;
@@ -395,7 +407,7 @@ export default function GetStarted() {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="companyName">Company Name *</Label>
+                    <Label htmlFor="companyName">Company Name (Optional)</Label>
                     <Input 
                       id="companyName" 
                       value={companyName} 
@@ -404,13 +416,25 @@ export default function GetStarted() {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="mcDotNumber">MC/DOT Number (Optional)</Label>
+                    <Label htmlFor="mcNumber">MC Number *</Label>
                     <Input 
-                      id="mcDotNumber" 
-                      value={mcDotNumber} 
-                      onChange={(e) => setMcDotNumber(e.target.value)}
-                      placeholder="MC/DOT#"
+                      id="mcNumber" 
+                      value={mcNumber} 
+                      onChange={(e) => setMcNumber(e.target.value)}
+                      placeholder="MC123456"
                     />
+                  </div>
+                  <div>
+                    <Label htmlFor="dotDocument">DOT Registration Document *</Label>
+                    <Input 
+                      id="dotDocument" 
+                      type="file"
+                      accept="image/*,.pdf"
+                      onChange={(e) => setDotDocument(e.target.files?.[0] || null)}
+                    />
+                    {dotDocument && (
+                      <p className="text-xs text-green-600 mt-1">✓ {dotDocument.name}</p>
+                    )}
                   </div>
                   <div>
                     <Label htmlFor="primaryContactName">Primary Contact Name *</Label>
@@ -694,8 +718,9 @@ export default function GetStarted() {
                       <h3 className="font-semibold text-sm text-muted-foreground">Account Information</h3>
                       <div className="bg-muted/50 p-4 rounded-lg space-y-1">
                         <p className="text-sm"><span className="font-medium">Email:</span> {email}</p>
-                        <p className="text-sm"><span className="font-medium">Company:</span> {companyName}</p>
-                        {mcDotNumber && <p className="text-sm"><span className="font-medium">MC/DOT#:</span> {mcDotNumber}</p>}
+                        {companyName && <p className="text-sm"><span className="font-medium">Company:</span> {companyName}</p>}
+                        <p className="text-sm"><span className="font-medium">MC#:</span> {mcNumber}</p>
+                        <p className="text-sm"><span className="font-medium">DOT Document:</span> {dotDocument ? `✓ ${dotDocument.name}` : "Not uploaded"}</p>
                         <p className="text-sm"><span className="font-medium">Contact:</span> {primaryContactName}</p>
                         <p className="text-sm"><span className="font-medium">Phone:</span> {phoneNumber}</p>
                         <p className="text-sm"><span className="font-medium">Address:</span> {companyAddress}</p>

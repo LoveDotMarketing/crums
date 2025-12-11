@@ -98,11 +98,13 @@ export type Database = {
           contract_url: string | null
           created_at: string
           date_needed: string | null
+          dot_number_url: string | null
           drivers_license_url: string | null
           id: string
           insurance_company: string | null
           insurance_docs_url: string | null
           mc_dot_number: string | null
+          mc_number: string | null
           message: string | null
           number_of_trailers: number | null
           payment_method: string | null
@@ -143,11 +145,13 @@ export type Database = {
           contract_url?: string | null
           created_at?: string
           date_needed?: string | null
+          dot_number_url?: string | null
           drivers_license_url?: string | null
           id?: string
           insurance_company?: string | null
           insurance_docs_url?: string | null
           mc_dot_number?: string | null
+          mc_number?: string | null
           message?: string | null
           number_of_trailers?: number | null
           payment_method?: string | null
@@ -188,11 +192,13 @@ export type Database = {
           contract_url?: string | null
           created_at?: string
           date_needed?: string | null
+          dot_number_url?: string | null
           drivers_license_url?: string | null
           id?: string
           insurance_company?: string | null
           insurance_docs_url?: string | null
           mc_dot_number?: string | null
+          mc_number?: string | null
           message?: string | null
           number_of_trailers?: number | null
           payment_method?: string | null
