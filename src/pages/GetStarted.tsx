@@ -39,8 +39,6 @@ export default function GetStarted() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [companyName, setCompanyName] = useState("");
-  const [mcNumber, setMcNumber] = useState("");
-  const [dotDocument, setDotDocument] = useState<File | null>(null);
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [dateOfBirth, setDateOfBirth] = useState("");
@@ -60,6 +58,7 @@ export default function GetStarted() {
   const [paymentMethod, setPaymentMethod] = useState("");
 
   // Step 3 - Documents (optional)
+  const [dotDocument, setDotDocument] = useState<File | null>(null);
   const [driversLicense, setDriversLicense] = useState<File | null>(null);
   const [ssnCard, setSsnCard] = useState<File | null>(null);
   const [insuranceDocs, setInsuranceDocs] = useState<File | null>(null);
@@ -103,16 +102,12 @@ export default function GetStarted() {
   };
 
   const validateStep1 = () => {
-    if (!email || !password || !confirmPassword || !firstName || !lastName || !dateOfBirth || !phoneNumber || !companyAddress || !businessType || !numberOfTrailers || !dateNeeded || !mcNumber) {
+    if (!email || !password || !confirmPassword || !firstName || !lastName || !dateOfBirth || !phoneNumber || !companyAddress || !businessType || !numberOfTrailers || !dateNeeded) {
       toast({ title: "Error", description: "Please fill in all required fields", variant: "destructive" });
       return false;
     }
     if (!validateAge(dateOfBirth)) {
       toast({ title: "Error", description: "You must be at least 18 years old to apply", variant: "destructive" });
-      return false;
-    }
-    if (!dotDocument) {
-      toast({ title: "Error", description: "Please upload your DOT registration document", variant: "destructive" });
       return false;
     }
     if (password !== confirmPassword) {
@@ -141,7 +136,6 @@ export default function GetStarted() {
       phone_number: phoneNumber,
       company_name: companyName || "",
       company_address: companyAddress,
-      mc_number: mcNumber,
       business_type: businessType,
       account_holder_name: accountHolderName || "N/A",
       account_number: accountNumber || "0000",
@@ -259,7 +253,6 @@ export default function GetStarted() {
         .insert({
           user_id: session.user.id,
           phone_number: phoneNumber,
-          mc_number: mcNumber,
           dot_number_url: dotNumberUrl,
           company_address: companyAddress,
           business_type: businessType,
@@ -327,9 +320,9 @@ export default function GetStarted() {
   ];
 
   const isStepComplete = (step: number) => {
-    if (step === 1) return email && password && confirmPassword && mcNumber && dotDocument && firstName && lastName && dateOfBirth && phoneNumber;
+    if (step === 1) return email && password && confirmPassword && firstName && lastName && dateOfBirth && phoneNumber;
     if (step === 2) return bankName && accountHolderName && accountNumber && routingNumber && paymentMethod;
-    if (step === 3) return driversLicense && ssnCard && insuranceDocs;
+    if (step === 3) return dotDocument && driversLicense && ssnCard && insuranceDocs;
     return false;
   };
 
@@ -433,27 +426,6 @@ export default function GetStarted() {
                       onChange={(e) => setCompanyName(e.target.value)}
                       placeholder="Your company name"
                     />
-                  </div>
-                  <div>
-                    <Label htmlFor="mcNumber">MC Number *</Label>
-                    <Input 
-                      id="mcNumber" 
-                      value={mcNumber} 
-                      onChange={(e) => setMcNumber(e.target.value)}
-                      placeholder="MC123456"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="dotDocument">DOT Registration Document *</Label>
-                    <Input 
-                      id="dotDocument" 
-                      type="file"
-                      accept="image/*,.pdf"
-                      onChange={(e) => setDotDocument(e.target.files?.[0] || null)}
-                    />
-                    {dotDocument && (
-                      <p className="text-xs text-green-600 mt-1">✓ {dotDocument.name}</p>
-                    )}
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
@@ -681,6 +653,18 @@ export default function GetStarted() {
               {currentStep === 3 && (
                 <div className="space-y-4">
                   <div>
+                    <Label htmlFor="dotDocument">DOT Registration Document</Label>
+                    <Input 
+                      id="dotDocument" 
+                      type="file"
+                      accept="image/*,.pdf"
+                      onChange={(e) => setDotDocument(e.target.files?.[0] || null)}
+                    />
+                    {dotDocument && (
+                      <p className="text-xs text-green-600 mt-1">✓ {dotDocument.name}</p>
+                    )}
+                  </div>
+                  <div>
                     <Label htmlFor="driversLicense">Driver's License</Label>
                     <Input 
                       id="driversLicense" 
@@ -761,8 +745,7 @@ export default function GetStarted() {
                       <div className="bg-muted/50 p-4 rounded-lg space-y-1">
                         <p className="text-sm"><span className="font-medium">Email:</span> {email}</p>
                         {companyName && <p className="text-sm"><span className="font-medium">Company:</span> {companyName}</p>}
-                        <p className="text-sm"><span className="font-medium">MC#:</span> {mcNumber}</p>
-                        <p className="text-sm"><span className="font-medium">DOT Document:</span> {dotDocument ? `✓ ${dotDocument.name}` : "Not uploaded"}</p>
+                        <p className="text-sm"><span className="font-medium">Name:</span> {firstName} {lastName}</p>
                         <p className="text-sm"><span className="font-medium">Name:</span> {firstName} {lastName}</p>
                         <p className="text-sm"><span className="font-medium">Phone:</span> {phoneNumber}</p>
                         <p className="text-sm"><span className="font-medium">Address:</span> {companyAddress}</p>
@@ -802,6 +785,10 @@ export default function GetStarted() {
                     <div className="space-y-2">
                       <h3 className="font-semibold text-sm text-muted-foreground">Documents</h3>
                       <div className="bg-muted/50 p-4 rounded-lg space-y-1">
+                        <p className="text-sm flex items-center gap-2">
+                          <span className="font-medium">DOT Document:</span>
+                          {dotDocument ? <Check className="h-4 w-4 text-primary" /> : <span className="text-muted-foreground italic">Not uploaded</span>}
+                        </p>
                         <p className="text-sm flex items-center gap-2">
                           <span className="font-medium">Driver's License:</span>
                           {driversLicense ? <Check className="h-4 w-4 text-primary" /> : <span className="text-muted-foreground italic">Not uploaded</span>}
