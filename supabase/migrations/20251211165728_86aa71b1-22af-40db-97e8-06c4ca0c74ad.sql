@@ -1,0 +1,2 @@
+ALTER TABLE public.customer_applications
+ADD COLUMN drivers_license_back_url text;
