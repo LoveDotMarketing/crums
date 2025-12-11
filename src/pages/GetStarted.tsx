@@ -58,6 +58,7 @@ export default function GetStarted() {
   const [ssn, setSsn] = useState("");
   const [insuranceDocs, setInsuranceDocs] = useState<File | null>(null);
   const [insuranceCompany, setInsuranceCompany] = useState("");
+  const [insuranceCompanyPhone, setInsuranceCompanyPhone] = useState("");
   const [secondaryContactName, setSecondaryContactName] = useState("");
   const [secondaryContactPhone, setSecondaryContactPhone] = useState("");
   const [secondaryContactRelationship, setSecondaryContactRelationship] = useState("");
@@ -305,6 +306,7 @@ export default function GetStarted() {
           date_needed: dateNeeded,
           truck_vin: truckVin,
           insurance_company: insuranceCompany || null,
+          insurance_company_phone: insuranceCompanyPhone || null,
           message: message || null,
           drivers_license_url: driversLicenseFrontUrl,
           drivers_license_back_url: driversLicenseBackUrl,
@@ -738,6 +740,16 @@ export default function GetStarted() {
                       value={insuranceCompany} 
                       onChange={(e) => setInsuranceCompany(e.target.value)}
                       placeholder="Insurance company name"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="insuranceCompanyPhone">Insurance Company Phone</Label>
+                    <Input 
+                      id="insuranceCompanyPhone" 
+                      type="tel"
+                      value={insuranceCompanyPhone} 
+                      onChange={(e) => setInsuranceCompanyPhone(e.target.value)}
+                      placeholder="(555) 555-5555"
                     />
                   </div>
                   <div className="pt-4 border-t">
