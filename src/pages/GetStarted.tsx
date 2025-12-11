@@ -43,6 +43,7 @@ export default function GetStarted() {
   const [dotDocument, setDotDocument] = useState<File | null>(null);
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
+  const [dateOfBirth, setDateOfBirth] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [companyAddress, setCompanyAddress] = useState("");
   const [businessType, setBusinessType] = useState("");
@@ -89,9 +90,25 @@ export default function GetStarted() {
     }
   }, [searchParams]);
 
+  const validateAge = (dob: string): boolean => {
+    if (!dob) return false;
+    const birthDate = new Date(dob);
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    return age >= 18;
+  };
+
   const validateStep1 = () => {
-    if (!email || !password || !confirmPassword || !firstName || !lastName || !phoneNumber || !companyAddress || !businessType || !numberOfTrailers || !dateNeeded || !mcNumber) {
+    if (!email || !password || !confirmPassword || !firstName || !lastName || !dateOfBirth || !phoneNumber || !companyAddress || !businessType || !numberOfTrailers || !dateNeeded || !mcNumber) {
       toast({ title: "Error", description: "Please fill in all required fields", variant: "destructive" });
+      return false;
+    }
+    if (!validateAge(dateOfBirth)) {
+      toast({ title: "Error", description: "You must be at least 18 years old to apply", variant: "destructive" });
       return false;
     }
     if (!dotDocument) {
@@ -203,7 +220,8 @@ export default function GetStarted() {
           company_name: companyName,
           phone: phoneNumber,
           first_name: firstName,
-          last_name: lastName
+          last_name: lastName,
+          date_of_birth: dateOfBirth
         })
         .eq('id', session.user.id);
 
@@ -309,7 +327,7 @@ export default function GetStarted() {
   ];
 
   const isStepComplete = (step: number) => {
-    if (step === 1) return email && password && confirmPassword && mcNumber && dotDocument && firstName && lastName && phoneNumber;
+    if (step === 1) return email && password && confirmPassword && mcNumber && dotDocument && firstName && lastName && dateOfBirth && phoneNumber;
     if (step === 2) return bankName && accountHolderName && accountNumber && routingNumber && paymentMethod;
     if (step === 3) return driversLicense && ssnCard && insuranceDocs;
     return false;
@@ -458,6 +476,17 @@ export default function GetStarted() {
                     </div>
                   </div>
                   <p className="text-xs text-muted-foreground -mt-2">Name must match your driver's license exactly</p>
+                  <div>
+                    <Label htmlFor="dateOfBirth">Date of Birth *</Label>
+                    <Input 
+                      id="dateOfBirth" 
+                      type="date"
+                      value={dateOfBirth} 
+                      onChange={(e) => setDateOfBirth(e.target.value)}
+                      max={new Date(new Date().setFullYear(new Date().getFullYear() - 18)).toISOString().split('T')[0]}
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">Must be 18 years or older</p>
+                  </div>
                   <div>
                     <Label htmlFor="phoneNumber">Phone Number *</Label>
                     <Input 
