@@ -41,7 +41,8 @@ export default function GetStarted() {
   const [companyName, setCompanyName] = useState("");
   const [mcNumber, setMcNumber] = useState("");
   const [dotDocument, setDotDocument] = useState<File | null>(null);
-  const [primaryContactName, setPrimaryContactName] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [companyAddress, setCompanyAddress] = useState("");
   const [businessType, setBusinessType] = useState("");
@@ -89,7 +90,7 @@ export default function GetStarted() {
   }, [searchParams]);
 
   const validateStep1 = () => {
-    if (!email || !password || !confirmPassword || !primaryContactName || !phoneNumber || !companyAddress || !businessType || !numberOfTrailers || !dateNeeded || !mcNumber) {
+    if (!email || !password || !confirmPassword || !firstName || !lastName || !phoneNumber || !companyAddress || !businessType || !numberOfTrailers || !dateNeeded || !mcNumber) {
       toast({ title: "Error", description: "Please fill in all required fields", variant: "destructive" });
       return false;
     }
@@ -106,8 +107,8 @@ export default function GetStarted() {
     const validationResult = fullSignupSchema.safeParse({
       email,
       password,
-      firstName: primaryContactName.split(" ")[0] || "",
-      lastName: primaryContactName.split(" ")[1] || "",
+      firstName,
+      lastName,
       phone: phoneNumber
     });
 
@@ -201,8 +202,8 @@ export default function GetStarted() {
         .update({ 
           company_name: companyName,
           phone: phoneNumber,
-          first_name: primaryContactName.split(' ')[0],
-          last_name: primaryContactName.split(' ').slice(1).join(' ') || ''
+          first_name: firstName,
+          last_name: lastName
         })
         .eq('id', session.user.id);
 
@@ -308,7 +309,7 @@ export default function GetStarted() {
   ];
 
   const isStepComplete = (step: number) => {
-    if (step === 1) return email && password && confirmPassword && mcNumber && dotDocument && primaryContactName && phoneNumber;
+    if (step === 1) return email && password && confirmPassword && mcNumber && dotDocument && firstName && lastName && phoneNumber;
     if (step === 2) return bankName && accountHolderName && accountNumber && routingNumber && paymentMethod;
     if (step === 3) return driversLicense && ssnCard && insuranceDocs;
     return false;
@@ -436,15 +437,27 @@ export default function GetStarted() {
                       <p className="text-xs text-green-600 mt-1">✓ {dotDocument.name}</p>
                     )}
                   </div>
-                  <div>
-                    <Label htmlFor="primaryContactName">Primary Contact Name *</Label>
-                    <Input 
-                      id="primaryContactName" 
-                      value={primaryContactName} 
-                      onChange={(e) => setPrimaryContactName(e.target.value)}
-                      placeholder="Full name"
-                    />
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="firstName">First Name *</Label>
+                      <Input 
+                        id="firstName" 
+                        value={firstName} 
+                        onChange={(e) => setFirstName(e.target.value)}
+                        placeholder="First name"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="lastName">Last Name *</Label>
+                      <Input 
+                        id="lastName" 
+                        value={lastName} 
+                        onChange={(e) => setLastName(e.target.value)}
+                        placeholder="Last name"
+                      />
+                    </div>
                   </div>
+                  <p className="text-xs text-muted-foreground -mt-2">Name must match your driver's license exactly</p>
                   <div>
                     <Label htmlFor="phoneNumber">Phone Number *</Label>
                     <Input 
@@ -456,7 +469,7 @@ export default function GetStarted() {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="companyAddress">Company Address *</Label>
+                    <Label htmlFor="companyAddress">Address *</Label>
                     <Input 
                       id="companyAddress" 
                       value={companyAddress} 
@@ -721,7 +734,7 @@ export default function GetStarted() {
                         {companyName && <p className="text-sm"><span className="font-medium">Company:</span> {companyName}</p>}
                         <p className="text-sm"><span className="font-medium">MC#:</span> {mcNumber}</p>
                         <p className="text-sm"><span className="font-medium">DOT Document:</span> {dotDocument ? `✓ ${dotDocument.name}` : "Not uploaded"}</p>
-                        <p className="text-sm"><span className="font-medium">Contact:</span> {primaryContactName}</p>
+                        <p className="text-sm"><span className="font-medium">Name:</span> {firstName} {lastName}</p>
                         <p className="text-sm"><span className="font-medium">Phone:</span> {phoneNumber}</p>
                         <p className="text-sm"><span className="font-medium">Address:</span> {companyAddress}</p>
                         <p className="text-sm"><span className="font-medium">Business Type:</span> {businessType}</p>
