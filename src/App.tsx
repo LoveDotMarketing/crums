@@ -67,6 +67,7 @@ const SeasonalDemand = lazy(() => import("./pages/industries/SeasonalDemand"));
 
 // Admin pages
 const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
+const Applications = lazy(() => import("./pages/admin/Applications"));
 const Fleet = lazy(() => import("./pages/admin/Fleet"));
 const TrailerDetail = lazy(() => import("./pages/admin/TrailerDetail"));
 const Customers = lazy(() => import("./pages/admin/Customers"));
@@ -162,6 +163,14 @@ const App = () => (
               } 
             />
             <Route 
+              path="/dashboard/admin/applications" 
+              element={
+                <ProtectedRoute requiredRole="admin">
+                  <Applications />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
               path="/dashboard/admin/fleet" 
               element={
                 <ProtectedRoute requiredRole="admin">
@@ -169,7 +178,7 @@ const App = () => (
                 </ProtectedRoute>
               } 
             />
-            <Route 
+            <Route
               path="/dashboard/admin/fleet/:trailerId" 
               element={
                 <ProtectedRoute requiredRole="admin">

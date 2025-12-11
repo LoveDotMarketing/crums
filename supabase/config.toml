@@ -3,6 +3,9 @@ project_id = "deeeqatnqqfcxsccigyc"
 [functions.send-contact-email]
 verify_jwt = false
 
+[functions.send-application-status-email]
+verify_jwt = false
+
 [functions.chat-proxy]
 verify_jwt = false
 

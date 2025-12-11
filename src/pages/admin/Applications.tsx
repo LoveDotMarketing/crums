@@ -1,0 +1,574 @@
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { AdminSidebar } from "@/components/admin/AdminSidebar";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { 
+  FileText, 
+  Search, 
+  Loader2,
+  CheckCircle,
+  XCircle,
+  Clock,
+  Eye,
+  Mail,
+  Phone,
+  Building2,
+  Calendar
+} from "lucide-react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/components/ui/use-toast";
+import { format } from "date-fns";
+
+interface Application {
+  id: string;
+  user_id: string;
+  status: string;
+  phone_number: string;
+  trailer_type: string | null;
+  business_needs: string | null;
+  truck_vin: string | null;
+  mc_dot_number: string | null;
+  created_at: string;
+  updated_at: string;
+  reviewed_at: string | null;
+  admin_notes: string | null;
+  profiles: {
+    email: string;
+    first_name: string | null;
+    last_name: string | null;
+    company_name: string | null;
+  } | null;
+}
+
+const statusConfig: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline"; icon: React.ElementType }> = {
+  new: { label: "New", variant: "outline", icon: FileText },
+  pending_review: { label: "Under Review", variant: "secondary", icon: Clock },
+  approved: { label: "Approved", variant: "default", icon: CheckCircle },
+  rejected: { label: "Rejected", variant: "destructive", icon: XCircle },
+};
+
+export default function Applications() {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [selectedApplication, setSelectedApplication] = useState<Application | null>(null);
+  const [detailDialogOpen, setDetailDialogOpen] = useState(false);
+  const [statusDialogOpen, setStatusDialogOpen] = useState(false);
+  const [newStatus, setNewStatus] = useState("");
+  const [adminNotes, setAdminNotes] = useState("");
+  const [sendEmail, setSendEmail] = useState(true);
+  
+  const queryClient = useQueryClient();
+
+  const { data: applications = [], isLoading } = useQuery({
+    queryKey: ['applications'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('customer_applications')
+        .select(`
+          *,
+          profiles!customer_applications_user_id_fkey (
+            email,
+            first_name,
+            last_name,
+            company_name
+          )
+        `)
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data as Application[];
+    }
+  });
+
+  const updateStatusMutation = useMutation({
+    mutationFn: async ({ applicationId, status, notes, sendNotification }: { 
+      applicationId: string; 
+      status: string; 
+      notes: string;
+      sendNotification: boolean;
+    }) => {
+      // Update the application status
+      const { error: updateError } = await supabase
+        .from('customer_applications')
+        .update({ 
+          status, 
+          admin_notes: notes,
+          reviewed_at: new Date().toISOString()
+        })
+        .eq('id', applicationId);
+
+      if (updateError) throw updateError;
+
+      // Send email notification if requested
+      if (sendNotification && selectedApplication?.profiles?.email) {
+        const customerName = selectedApplication.profiles.first_name 
+          ? `${selectedApplication.profiles.first_name} ${selectedApplication.profiles.last_name || ''}`.trim()
+          : 'Customer';
+
+        const { data: sessionData } = await supabase.auth.getSession();
+        
+        const response = await supabase.functions.invoke('send-application-status-email', {
+          body: {
+            applicationId,
+            newStatus: status,
+            customerEmail: selectedApplication.profiles.email,
+            customerName,
+            adminNotes: notes || undefined
+          },
+          headers: {
+            Authorization: `Bearer ${sessionData.session?.access_token}`
+          }
+        });
+
+        if (response.error) {
+          console.error('Email send error:', response.error);
+          // Don't throw - status update succeeded, email failed
+          toast({
+            title: "Status Updated",
+            description: "Application status updated but email notification failed to send.",
+            variant: "destructive"
+          });
+          return;
+        }
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['applications'] });
+      setStatusDialogOpen(false);
+      setSelectedApplication(null);
+      setNewStatus("");
+      setAdminNotes("");
+      toast({
+        title: "Status Updated",
+        description: sendEmail 
+          ? "Application status updated and notification email sent."
+          : "Application status updated successfully."
+      });
+    },
+    onError: (error) => {
+      console.error('Status update error:', error);
+      toast({
+        title: "Update Failed",
+        description: "Failed to update application status. Please try again.",
+        variant: "destructive"
+      });
+    }
+  });
+
+  const filteredApplications = applications.filter((app) => {
+    const customerName = app.profiles 
+      ? `${app.profiles.first_name || ''} ${app.profiles.last_name || ''}`.toLowerCase()
+      : '';
+    const customerEmail = app.profiles?.email?.toLowerCase() || '';
+    
+    const matchesSearch = 
+      customerName.includes(searchQuery.toLowerCase()) ||
+      customerEmail.includes(searchQuery.toLowerCase()) ||
+      app.phone_number?.includes(searchQuery);
+    
+    const matchesStatus = statusFilter === "all" || app.status === statusFilter;
+    
+    return matchesSearch && matchesStatus;
+  });
+
+  const getStatusBadge = (status: string) => {
+    const config = statusConfig[status] || statusConfig.new;
+    const Icon = config.icon;
+    return (
+      <Badge variant={config.variant} className="flex items-center gap-1">
+        <Icon className="h-3 w-3" />
+        {config.label}
+      </Badge>
+    );
+  };
+
+  const openStatusDialog = (app: Application) => {
+    setSelectedApplication(app);
+    setNewStatus(app.status);
+    setAdminNotes(app.admin_notes || "");
+    setStatusDialogOpen(true);
+  };
+
+  const handleStatusUpdate = () => {
+    if (!selectedApplication || !newStatus) return;
+    
+    updateStatusMutation.mutate({
+      applicationId: selectedApplication.id,
+      status: newStatus,
+      notes: adminNotes,
+      sendNotification: sendEmail && ['pending_review', 'approved', 'rejected'].includes(newStatus)
+    });
+  };
+
+  const stats = {
+    total: applications.length,
+    new: applications.filter(a => a.status === 'new').length,
+    pending: applications.filter(a => a.status === 'pending_review').length,
+    approved: applications.filter(a => a.status === 'approved').length,
+    rejected: applications.filter(a => a.status === 'rejected').length,
+  };
+
+  if (isLoading) {
+    return (
+      <SidebarProvider>
+        <div className="min-h-screen flex w-full bg-background">
+          <AdminSidebar />
+          <div className="flex-1 flex items-center justify-center">
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          </div>
+        </div>
+      </SidebarProvider>
+    );
+  }
+
+  return (
+    <SidebarProvider>
+      <div className="min-h-screen flex w-full bg-background">
+        <AdminSidebar />
+        
+        <div className="flex-1 flex flex-col">
+          <header className="h-16 border-b border-border flex items-center px-6 bg-card">
+            <SidebarTrigger />
+            <div className="flex-1 flex items-center justify-between ml-4">
+              <h1 className="text-2xl font-bold text-foreground">Applications</h1>
+            </div>
+          </header>
+
+          <main className="flex-1 p-6 overflow-auto">
+            {/* Stats */}
+            <div className="grid gap-4 md:grid-cols-5 mb-8">
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">Total</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{stats.total}</div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">New</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-blue-600">{stats.new}</div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">Under Review</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-yellow-600">{stats.pending}</div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">Approved</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-green-600">{stats.approved}</div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">Rejected</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-red-600">{stats.rejected}</div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Search and Filter */}
+            <div className="mb-6 flex flex-col sm:flex-row gap-4">
+              <div className="relative flex-1 max-w-md">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search by name, email, or phone..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Filter by status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Statuses</SelectItem>
+                  <SelectItem value="new">New</SelectItem>
+                  <SelectItem value="pending_review">Under Review</SelectItem>
+                  <SelectItem value="approved">Approved</SelectItem>
+                  <SelectItem value="rejected">Rejected</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Applications Table */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Applications ({filteredApplications.length})</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Applicant</TableHead>
+                      <TableHead>Contact</TableHead>
+                      <TableHead>Trailer Type</TableHead>
+                      <TableHead>Submitted</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead className="w-[120px]">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredApplications.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                          No applications found
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      filteredApplications.map((app) => (
+                        <TableRow key={app.id}>
+                          <TableCell>
+                            <div>
+                              <p className="font-medium">
+                                {app.profiles?.first_name} {app.profiles?.last_name}
+                              </p>
+                              {app.profiles?.company_name && (
+                                <p className="text-sm text-muted-foreground">{app.profiles.company_name}</p>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="space-y-1 text-sm">
+                              <div className="flex items-center gap-1">
+                                <Mail className="h-3 w-3 text-muted-foreground" />
+                                {app.profiles?.email}
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <Phone className="h-3 w-3 text-muted-foreground" />
+                                {app.phone_number}
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell>{app.trailer_type || "—"}</TableCell>
+                          <TableCell>
+                            {format(new Date(app.created_at), "MMM d, yyyy")}
+                          </TableCell>
+                          <TableCell>{getStatusBadge(app.status)}</TableCell>
+                          <TableCell>
+                            <div className="flex gap-2">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                  setSelectedApplication(app);
+                                  setDetailDialogOpen(true);
+                                }}
+                              >
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => openStatusDialog(app)}
+                              >
+                                Update
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </main>
+        </div>
+      </div>
+
+      {/* Application Detail Dialog */}
+      <Dialog open={detailDialogOpen} onOpenChange={setDetailDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Application Details</DialogTitle>
+          </DialogHeader>
+          {selectedApplication && (
+            <div className="space-y-6">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Applicant</label>
+                  <p className="font-medium">
+                    {selectedApplication.profiles?.first_name} {selectedApplication.profiles?.last_name}
+                  </p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Status</label>
+                  <div className="mt-1">{getStatusBadge(selectedApplication.status)}</div>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Email</label>
+                  <p>{selectedApplication.profiles?.email}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Phone</label>
+                  <p>{selectedApplication.phone_number}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Company</label>
+                  <p>{selectedApplication.profiles?.company_name || "—"}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Trailer Type</label>
+                  <p>{selectedApplication.trailer_type || "—"}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">MC/DOT Number</label>
+                  <p>{selectedApplication.mc_dot_number || "—"}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Truck VIN</label>
+                  <p>{selectedApplication.truck_vin || "—"}</p>
+                </div>
+                <div className="col-span-2">
+                  <label className="text-sm font-medium text-muted-foreground">Business Needs</label>
+                  <p className="whitespace-pre-wrap">{selectedApplication.business_needs || "—"}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Submitted</label>
+                  <p>{format(new Date(selectedApplication.created_at), "PPP 'at' p")}</p>
+                </div>
+                {selectedApplication.reviewed_at && (
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">Reviewed</label>
+                    <p>{format(new Date(selectedApplication.reviewed_at), "PPP 'at' p")}</p>
+                  </div>
+                )}
+                {selectedApplication.admin_notes && (
+                  <div className="col-span-2">
+                    <label className="text-sm font-medium text-muted-foreground">Admin Notes</label>
+                    <p className="whitespace-pre-wrap bg-muted p-3 rounded-md mt-1">
+                      {selectedApplication.admin_notes}
+                    </p>
+                  </div>
+                )}
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setDetailDialogOpen(false)}>
+                  Close
+                </Button>
+                <Button onClick={() => {
+                  setDetailDialogOpen(false);
+                  openStatusDialog(selectedApplication);
+                }}>
+                  Update Status
+                </Button>
+              </DialogFooter>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Status Update Dialog */}
+      <Dialog open={statusDialogOpen} onOpenChange={setStatusDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Update Application Status</DialogTitle>
+            <DialogDescription>
+              Change the status for {selectedApplication?.profiles?.first_name}'s application
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div>
+              <label className="text-sm font-medium">New Status</label>
+              <Select value={newStatus} onValueChange={setNewStatus}>
+                <SelectTrigger className="mt-1">
+                  <SelectValue placeholder="Select status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="new">New</SelectItem>
+                  <SelectItem value="pending_review">Under Review</SelectItem>
+                  <SelectItem value="approved">Approved</SelectItem>
+                  <SelectItem value="rejected">Rejected</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="text-sm font-medium">Admin Notes (Optional)</label>
+              <Textarea
+                value={adminNotes}
+                onChange={(e) => setAdminNotes(e.target.value)}
+                placeholder="Add notes about this decision..."
+                className="mt-1"
+                rows={3}
+              />
+            </div>
+            {['pending_review', 'approved', 'rejected'].includes(newStatus) && (
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="sendEmail"
+                  checked={sendEmail}
+                  onChange={(e) => setSendEmail(e.target.checked)}
+                  className="rounded border-border"
+                />
+                <label htmlFor="sendEmail" className="text-sm">
+                  Send email notification to customer
+                </label>
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setStatusDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleStatusUpdate}
+              disabled={updateStatusMutation.isPending || !newStatus}
+            >
+              {updateStatusMutation.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Updating...
+                </>
+              ) : (
+                "Update Status"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </SidebarProvider>
+  );
+}

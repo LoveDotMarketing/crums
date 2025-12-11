@@ -10,7 +10,8 @@ import {
   BarChart3,
   Send,
   UserCog,
-  FileCode
+  FileCode,
+  FileText
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/hooks/useAuth";
@@ -30,6 +31,7 @@ import { Button } from "@/components/ui/button";
 
 const menuItems = [
   { title: "Dashboard", url: "/dashboard/admin", icon: LayoutDashboard },
+  { title: "Applications", url: "/dashboard/admin/applications", icon: FileText },
   { title: "Fleet", url: "/dashboard/admin/fleet", icon: Truck },
   { title: "Customers", url: "/dashboard/admin/customers", icon: Users },
   { title: "Staff", url: "/dashboard/admin/staff", icon: UserCog },
