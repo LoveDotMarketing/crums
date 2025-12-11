@@ -14,6 +14,7 @@ import { ChatBot } from "@/components/ChatBot";
 import { ApplicationAlert } from "@/components/customer/ApplicationAlert";
 import { SEO } from "@/components/SEO";
 import { ReferralCard } from "@/components/customer/ReferralCard";
+import { ApplicationStatusTracker } from "@/components/customer/ApplicationStatusTracker";
 
 
 export default function CustomerDashboard() {
@@ -113,6 +114,13 @@ export default function CustomerDashboard() {
               Sign Out
             </Button>
           </div>
+
+          {/* Application Status Tracker */}
+          {user && (
+            <div className="mb-8">
+              <ApplicationStatusTracker userId={user.id} />
+            </div>
+          )}
 
           {/* Application Status Alert */}
           {user && (
