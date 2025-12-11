@@ -34,7 +34,8 @@ interface ApplicationData {
   company_name: string;
   business_needs: string;
   truck_vin: string;
-  mc_dot_number: string;
+  mc_number: string;
+  dot_number_url: string | null;
   trailer_type: string;
   
   // Payment
@@ -87,7 +88,8 @@ export default function Application() {
     company_name: "",
     business_needs: "",
     truck_vin: "",
-    mc_dot_number: "",
+    mc_number: "",
+    dot_number_url: null,
     trailer_type: "",
     bank_name: "",
     account_holder_name: "",
@@ -156,7 +158,8 @@ export default function Application() {
           company_name: appData.company_address || "", // Using company_address for company name
           business_needs: appData.business_needs || "",
           truck_vin: appData.truck_vin || "",
-          mc_dot_number: appData.mc_dot_number || "",
+          mc_number: (appData as any).mc_number || appData.mc_dot_number || "",
+          dot_number_url: (appData as any).dot_number_url || null,
           trailer_type: appData.trailer_type || "",
           bank_name: appData.bank_name || "",
           account_holder_name: appData.account_holder_name || "",
@@ -231,7 +234,8 @@ export default function Application() {
       // Section 2: Drivers Compliance
       application.business_needs,
       application.truck_vin,
-      application.mc_dot_number,
+      application.mc_number,
+      application.dot_number_url,
       application.trailer_type,
       // Section 3: Payment
       application.bank_name,
@@ -317,7 +321,8 @@ export default function Application() {
         company_address: sanitizeInput(application.company_name),
         business_needs: sanitizeInput(application.business_needs),
         truck_vin: sanitizeInput(application.truck_vin),
-        mc_dot_number: sanitizeInput(application.mc_dot_number),
+        mc_number: sanitizeInput(application.mc_number),
+        dot_number_url: application.dot_number_url,
         trailer_type: application.trailer_type,
         bank_name: sanitizeInput(application.bank_name),
         account_holder_name: sanitizeInput(application.account_holder_name),
@@ -551,33 +556,51 @@ export default function Application() {
                     <p className="text-xs text-muted-foreground">17-character Vehicle Identification Number</p>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="mc_dot_number">DOT Number *</Label>
+                    <Label htmlFor="mc_number">MC Number *</Label>
                     <Input
-                      id="mc_dot_number"
+                      id="mc_number"
                       required
-                      value={application.mc_dot_number}
-                      onChange={(e) => setApplication({ ...application, mc_dot_number: e.target.value })}
-                      placeholder="DOT123456"
+                      value={application.mc_number}
+                      onChange={(e) => setApplication({ ...application, mc_number: e.target.value })}
+                      placeholder="MC123456"
                     />
+                    <p className="text-xs text-muted-foreground">Motor Carrier number</p>
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="trailer_type">Type of Trailer Leasing *</Label>
-                  <select
-                    id="trailer_type"
-                    required
-                    value={application.trailer_type}
-                    onChange={(e) => setApplication({ ...application, trailer_type: e.target.value })}
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                  >
-                    <option value="">Select trailer type...</option>
-                    {TRAILER_TYPES.map((type) => (
-                      <option key={type.value} value={type.value}>
-                        {type.label}
-                      </option>
-                    ))}
-                  </select>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="trailer_type">Type of Trailer Leasing *</Label>
+                    <select
+                      id="trailer_type"
+                      required
+                      value={application.trailer_type}
+                      onChange={(e) => setApplication({ ...application, trailer_type: e.target.value })}
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    >
+                      <option value="">Select trailer type...</option>
+                      {TRAILER_TYPES.map((type) => (
+                        <option key={type.value} value={type.value}>
+                          {type.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>DOT Registration Document *</Label>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        type="file"
+                        accept="image/*,.pdf"
+                        onChange={(e) => e.target.files?.[0] && handleFileUpload(e.target.files[0], 'dot_number_url')}
+                        disabled={uploadingDoc === 'dot_number_url'}
+                        className="flex-1"
+                      />
+                      {application.dot_number_url && <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0" />}
+                      {uploadingDoc === 'dot_number_url' && <Loader2 className="h-5 w-5 animate-spin flex-shrink-0" />}
+                    </div>
+                    <p className="text-xs text-muted-foreground">Upload image of your DOT registration</p>
+                  </div>
                 </div>
 
                 {/* Document Uploads */}
