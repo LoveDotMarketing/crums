@@ -41,7 +41,29 @@ const NotFound = () => {
         console.error("Error checking redirect:", error);
       }
 
-      // No redirect found, log 404 error
+      // No redirect found, log 404 error with rate limiting
+      const RATE_LIMIT_KEY = 'crums_404_log_timestamps';
+      const RATE_LIMIT_WINDOW = 60000; // 1 minute
+      const MAX_LOGS_PER_WINDOW = 3;
+      
+      // Check rate limit
+      const now = Date.now();
+      let timestamps: number[] = [];
+      try {
+        const stored = localStorage.getItem(RATE_LIMIT_KEY);
+        if (stored) {
+          timestamps = JSON.parse(stored).filter((t: number) => now - t < RATE_LIMIT_WINDOW);
+        }
+      } catch {
+        timestamps = [];
+      }
+      
+      if (timestamps.length >= MAX_LOGS_PER_WINDOW) {
+        console.log("404 logging rate limited for:", location.pathname);
+        setIsChecking(false);
+        return;
+      }
+      
       console.log("Attempting to log 404 error to database for:", location.pathname);
       try {
         const { error } = await supabase.from("error_logs").insert({
@@ -54,6 +76,9 @@ const NotFound = () => {
           console.error("Failed to log 404:", error.message, error.code);
         } else {
           console.log("404 logged successfully for:", location.pathname);
+          // Record successful log timestamp
+          timestamps.push(now);
+          localStorage.setItem(RATE_LIMIT_KEY, JSON.stringify(timestamps));
         }
       } catch (err) {
         console.error("Exception logging 404:", err);
