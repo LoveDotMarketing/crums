@@ -588,15 +588,17 @@ export default function GetStarted() {
                     <Input 
                       id="ssn" 
                       type="text"
-                      value={ssn} 
+                      value={ssn.replace(/(\d{3})(\d{2})(\d{0,4})/, (_, p1, p2, p3) => 
+                        p3 ? `${p1}-${p2}-${p3}` : p2 ? `${p1}-${p2}` : p1
+                      )}
                       onChange={(e) => {
-                        const value = e.target.value.replace(/\D/g, '').slice(0, 9);
-                        setSsn(value);
+                        const digits = e.target.value.replace(/\D/g, '').slice(0, 9);
+                        setSsn(digits);
                       }}
                       placeholder="XXX-XX-XXXX"
-                      maxLength={9}
+                      maxLength={11}
                     />
-                    <p className="text-xs text-muted-foreground mt-1">9 digits, no dashes. Required for credit check authorization.</p>
+                    <p className="text-xs text-muted-foreground mt-1">Required for credit check authorization.</p>
                   </div>
                   <div>
                     <Label htmlFor="message">Message (Optional)</Label>
