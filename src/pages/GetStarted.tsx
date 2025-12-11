@@ -696,6 +696,7 @@ export default function GetStarted() {
                       accept="image/*,.pdf"
                       onChange={(e) => setDotDocument(e.target.files?.[0] || null)}
                     />
+                    <p className="text-xs text-muted-foreground mt-1">Accepted: JPG, PNG, PDF</p>
                     {dotDocument && (
                       <p className="text-xs text-green-600 mt-1">✓ {dotDocument.name}</p>
                     )}
@@ -708,6 +709,7 @@ export default function GetStarted() {
                       accept="image/*,.pdf"
                       onChange={(e) => setDriversLicenseFront(e.target.files?.[0] || null)}
                     />
+                    <p className="text-xs text-muted-foreground mt-1">Accepted: JPG, PNG, PDF</p>
                     {driversLicenseFront && (
                       <p className="text-xs text-green-600 mt-1">✓ {driversLicenseFront.name}</p>
                     )}
@@ -720,6 +722,7 @@ export default function GetStarted() {
                       accept="image/*,.pdf"
                       onChange={(e) => setDriversLicenseBack(e.target.files?.[0] || null)}
                     />
+                    <p className="text-xs text-muted-foreground mt-1">Accepted: JPG, PNG, PDF</p>
                     {driversLicenseBack && (
                       <p className="text-xs text-green-600 mt-1">✓ {driversLicenseBack.name}</p>
                     )}
@@ -732,6 +735,7 @@ export default function GetStarted() {
                       accept="image/*,.pdf"
                       onChange={(e) => setInsuranceDocs(e.target.files?.[0] || null)}
                     />
+                    <p className="text-xs text-muted-foreground mt-1">Accepted: JPG, PNG, PDF</p>
                   </div>
                   <div>
                     <Label htmlFor="insuranceCompany">Insurance Company Name</Label>
