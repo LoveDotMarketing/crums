@@ -18,7 +18,10 @@ import {
   Mail,
   Phone,
   Building2,
-  Calendar
+  Calendar,
+  ExternalLink,
+  FileImage,
+  FileCheck
 } from "lucide-react";
 import {
   Table,
@@ -65,6 +68,10 @@ interface Application {
   secondary_contact_name: string | null;
   secondary_contact_phone: string | null;
   secondary_contact_relationship: string | null;
+  drivers_license_url: string | null;
+  drivers_license_back_url: string | null;
+  dot_number_url: string | null;
+  insurance_docs_url: string | null;
   created_at: string;
   updated_at: string;
   reviewed_at: string | null;
@@ -82,6 +89,54 @@ const statusConfig: Record<string, { label: string; variant: "default" | "second
   pending_review: { label: "Under Review", variant: "secondary", icon: Clock },
   approved: { label: "Approved", variant: "default", icon: CheckCircle },
   rejected: { label: "Rejected", variant: "destructive", icon: XCircle },
+};
+
+const DocumentLink = ({ label, url }: { label: string; url: string | null }) => {
+  const handleViewDocument = async () => {
+    if (!url) return;
+    
+    // Extract the path from the full URL or use as-is
+    const path = url.includes('customer-documents/') 
+      ? url.split('customer-documents/')[1] 
+      : url;
+    
+    // Get a signed URL for private bucket access
+    const { data, error } = await supabase.storage
+      .from('customer-documents')
+      .createSignedUrl(path, 3600); // 1 hour expiry
+    
+    if (error || !data?.signedUrl) {
+      toast({
+        title: "Error",
+        description: "Could not access document. It may have been removed.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    window.open(data.signedUrl, '_blank');
+  };
+
+  if (!url) {
+    return (
+      <div className="flex items-center gap-2 p-2 rounded-md bg-muted/50 text-muted-foreground">
+        <FileImage className="h-4 w-4" />
+        <span className="text-sm">{label}</span>
+        <Badge variant="outline" className="ml-auto text-xs">Not uploaded</Badge>
+      </div>
+    );
+  }
+
+  return (
+    <button
+      onClick={handleViewDocument}
+      className="flex items-center gap-2 p-2 rounded-md bg-primary/10 hover:bg-primary/20 transition-colors text-left w-full group"
+    >
+      <FileImage className="h-4 w-4 text-primary" />
+      <span className="text-sm font-medium flex-1">{label}</span>
+      <ExternalLink className="h-3 w-3 text-muted-foreground group-hover:text-primary" />
+    </button>
+  );
 };
 
 export default function Applications() {
@@ -506,6 +561,32 @@ export default function Applications() {
                     </p>
                   </div>
                 )}
+              </div>
+
+              {/* Documents Section */}
+              <div className="border-t pt-4">
+                <h4 className="text-sm font-semibold mb-3 flex items-center gap-2">
+                  <FileCheck className="h-4 w-4" />
+                  Uploaded Documents
+                </h4>
+                <div className="grid grid-cols-2 gap-3">
+                  <DocumentLink 
+                    label="Driver's License (Front)" 
+                    url={selectedApplication.drivers_license_url} 
+                  />
+                  <DocumentLink 
+                    label="Driver's License (Back)" 
+                    url={selectedApplication.drivers_license_back_url} 
+                  />
+                  <DocumentLink 
+                    label="DOT Registration" 
+                    url={selectedApplication.dot_number_url} 
+                  />
+                  <DocumentLink 
+                    label="Insurance Documents" 
+                    url={selectedApplication.insurance_docs_url} 
+                  />
+                </div>
               </div>
               <DialogFooter>
                 <Button variant="outline" onClick={() => setDetailDialogOpen(false)}>
