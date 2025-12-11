@@ -82,20 +82,9 @@ export type Database = {
       }
       customer_applications: {
         Row: {
-          account_holder_name: string | null
-          account_number: string | null
           admin_notes: string | null
-          backup_trailer_id: string | null
-          bank_name: string | null
-          billing_address: string | null
-          business_needs: string | null
           business_type: string | null
           company_address: string | null
-          company_id: string | null
-          consent_autopay: boolean | null
-          consent_communications: boolean | null
-          consent_credit_check: boolean | null
-          contract_url: string | null
           created_at: string
           date_needed: string | null
           dot_number_url: string | null
@@ -105,47 +94,26 @@ export type Database = {
           insurance_company: string | null
           insurance_company_phone: string | null
           insurance_docs_url: string | null
-          mc_dot_number: string | null
-          mc_number: string | null
           message: string | null
           number_of_trailers: number | null
-          payment_method: string | null
           phone_number: string
-          prepay_full_year: boolean | null
-          primary_trailer_id: string | null
-          rental_start_date: string | null
           reviewed_at: string | null
           reviewed_by: string | null
-          routing_number: string | null
           secondary_contact_name: string | null
           secondary_contact_phone: string | null
           secondary_contact_relationship: string | null
           ssn: string | null
-          ssn_card_url: string | null
           status: string
           stripe_customer_id: string | null
-          terms_accepted: boolean | null
-          terms_accepted_at: string | null
           trailer_type: string | null
           truck_vin: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
-          account_holder_name?: string | null
-          account_number?: string | null
           admin_notes?: string | null
-          backup_trailer_id?: string | null
-          bank_name?: string | null
-          billing_address?: string | null
-          business_needs?: string | null
           business_type?: string | null
           company_address?: string | null
-          company_id?: string | null
-          consent_autopay?: boolean | null
-          consent_communications?: boolean | null
-          consent_credit_check?: boolean | null
-          contract_url?: string | null
           created_at?: string
           date_needed?: string | null
           dot_number_url?: string | null
@@ -155,47 +123,26 @@ export type Database = {
           insurance_company?: string | null
           insurance_company_phone?: string | null
           insurance_docs_url?: string | null
-          mc_dot_number?: string | null
-          mc_number?: string | null
           message?: string | null
           number_of_trailers?: number | null
-          payment_method?: string | null
           phone_number: string
-          prepay_full_year?: boolean | null
-          primary_trailer_id?: string | null
-          rental_start_date?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
-          routing_number?: string | null
           secondary_contact_name?: string | null
           secondary_contact_phone?: string | null
           secondary_contact_relationship?: string | null
           ssn?: string | null
-          ssn_card_url?: string | null
           status?: string
           stripe_customer_id?: string | null
-          terms_accepted?: boolean | null
-          terms_accepted_at?: string | null
           trailer_type?: string | null
           truck_vin?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
-          account_holder_name?: string | null
-          account_number?: string | null
           admin_notes?: string | null
-          backup_trailer_id?: string | null
-          bank_name?: string | null
-          billing_address?: string | null
-          business_needs?: string | null
           business_type?: string | null
           company_address?: string | null
-          company_id?: string | null
-          consent_autopay?: boolean | null
-          consent_communications?: boolean | null
-          consent_credit_check?: boolean | null
-          contract_url?: string | null
           created_at?: string
           date_needed?: string | null
           dot_number_url?: string | null
@@ -205,54 +152,23 @@ export type Database = {
           insurance_company?: string | null
           insurance_company_phone?: string | null
           insurance_docs_url?: string | null
-          mc_dot_number?: string | null
-          mc_number?: string | null
           message?: string | null
           number_of_trailers?: number | null
-          payment_method?: string | null
           phone_number?: string
-          prepay_full_year?: boolean | null
-          primary_trailer_id?: string | null
-          rental_start_date?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
-          routing_number?: string | null
           secondary_contact_name?: string | null
           secondary_contact_phone?: string | null
           secondary_contact_relationship?: string | null
           ssn?: string | null
-          ssn_card_url?: string | null
           status?: string
           stripe_customer_id?: string | null
-          terms_accepted?: boolean | null
-          terms_accepted_at?: string | null
           trailer_type?: string | null
           truck_vin?: string | null
           updated_at?: string
           user_id?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "customer_applications_backup_trailer_id_fkey"
-            columns: ["backup_trailer_id"]
-            isOneToOne: false
-            referencedRelation: "trailers"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "customer_applications_company_id_fkey"
-            columns: ["company_id"]
-            isOneToOne: false
-            referencedRelation: "companies"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "customer_applications_primary_trailer_id_fkey"
-            columns: ["primary_trailer_id"]
-            isOneToOne: false
-            referencedRelation: "trailers"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "customer_applications_reviewed_by_fkey"
             columns: ["reviewed_by"]
@@ -1203,159 +1119,90 @@ export type Database = {
     Views: {
       customer_application_safe: {
         Row: {
-          account_holder_name: string | null
-          account_number_masked: string | null
           admin_notes: string | null
-          backup_trailer_id: string | null
-          bank_name: string | null
-          billing_address: string | null
-          business_needs: string | null
           business_type: string | null
           company_address: string | null
-          company_id: string | null
-          consent_autopay: boolean | null
-          consent_communications: boolean | null
-          consent_credit_check: boolean | null
           created_at: string | null
           date_needed: string | null
-          has_contract: boolean | null
+          has_dot_document: boolean | null
           has_drivers_license: boolean | null
+          has_drivers_license_back: boolean | null
           has_insurance_docs: boolean | null
-          has_ssn_card: boolean | null
           id: string | null
           insurance_company: string | null
-          mc_dot_number: string | null
+          insurance_company_phone: string | null
           message: string | null
           number_of_trailers: number | null
-          payment_method: string | null
           phone_number: string | null
-          prepay_full_year: boolean | null
-          primary_trailer_id: string | null
-          rental_start_date: string | null
           reviewed_at: string | null
           reviewed_by: string | null
-          routing_number_masked: string | null
           secondary_contact_name: string | null
           secondary_contact_phone: string | null
           secondary_contact_relationship: string | null
+          ssn_masked: string | null
           status: string | null
-          terms_accepted: boolean | null
-          terms_accepted_at: string | null
           trailer_type: string | null
           truck_vin: string | null
           updated_at: string | null
           user_id: string | null
         }
         Insert: {
-          account_holder_name?: string | null
-          account_number_masked?: never
           admin_notes?: string | null
-          backup_trailer_id?: string | null
-          bank_name?: string | null
-          billing_address?: string | null
-          business_needs?: string | null
           business_type?: string | null
           company_address?: string | null
-          company_id?: string | null
-          consent_autopay?: boolean | null
-          consent_communications?: boolean | null
-          consent_credit_check?: boolean | null
           created_at?: string | null
           date_needed?: string | null
-          has_contract?: never
+          has_dot_document?: never
           has_drivers_license?: never
+          has_drivers_license_back?: never
           has_insurance_docs?: never
-          has_ssn_card?: never
           id?: string | null
           insurance_company?: string | null
-          mc_dot_number?: string | null
+          insurance_company_phone?: string | null
           message?: string | null
           number_of_trailers?: number | null
-          payment_method?: string | null
           phone_number?: string | null
-          prepay_full_year?: boolean | null
-          primary_trailer_id?: string | null
-          rental_start_date?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
-          routing_number_masked?: never
           secondary_contact_name?: string | null
           secondary_contact_phone?: string | null
           secondary_contact_relationship?: string | null
+          ssn_masked?: never
           status?: string | null
-          terms_accepted?: boolean | null
-          terms_accepted_at?: string | null
           trailer_type?: string | null
           truck_vin?: string | null
           updated_at?: string | null
           user_id?: string | null
         }
         Update: {
-          account_holder_name?: string | null
-          account_number_masked?: never
           admin_notes?: string | null
-          backup_trailer_id?: string | null
-          bank_name?: string | null
-          billing_address?: string | null
-          business_needs?: string | null
           business_type?: string | null
           company_address?: string | null
-          company_id?: string | null
-          consent_autopay?: boolean | null
-          consent_communications?: boolean | null
-          consent_credit_check?: boolean | null
           created_at?: string | null
           date_needed?: string | null
-          has_contract?: never
+          has_dot_document?: never
           has_drivers_license?: never
+          has_drivers_license_back?: never
           has_insurance_docs?: never
-          has_ssn_card?: never
           id?: string | null
           insurance_company?: string | null
-          mc_dot_number?: string | null
+          insurance_company_phone?: string | null
           message?: string | null
           number_of_trailers?: number | null
-          payment_method?: string | null
           phone_number?: string | null
-          prepay_full_year?: boolean | null
-          primary_trailer_id?: string | null
-          rental_start_date?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
-          routing_number_masked?: never
           secondary_contact_name?: string | null
           secondary_contact_phone?: string | null
           secondary_contact_relationship?: string | null
+          ssn_masked?: never
           status?: string | null
-          terms_accepted?: boolean | null
-          terms_accepted_at?: string | null
           trailer_type?: string | null
           truck_vin?: string | null
           updated_at?: string | null
           user_id?: string | null
         }
         Relationships: [
-          {
-            foreignKeyName: "customer_applications_backup_trailer_id_fkey"
-            columns: ["backup_trailer_id"]
-            isOneToOne: false
-            referencedRelation: "trailers"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "customer_applications_company_id_fkey"
-            columns: ["company_id"]
-            isOneToOne: false
-            referencedRelation: "companies"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "customer_applications_primary_trailer_id_fkey"
-            columns: ["primary_trailer_id"]
-            isOneToOne: false
-            referencedRelation: "trailers"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "customer_applications_reviewed_by_fkey"
             columns: ["reviewed_by"]

@@ -43,16 +43,11 @@ export default function CustomerDashboard() {
         
         const requiredFields = [
           data.phone_number,
-          data.secondary_contact_name,
-          data.secondary_contact_phone,
-          data.ssn_card_url,
+          data.truck_vin,
+          data.trailer_type,
           data.drivers_license_url,
+          data.drivers_license_back_url,
           data.insurance_docs_url,
-          data.contract_url,
-          data.bank_name,
-          data.account_holder_name,
-          data.account_number,
-          data.routing_number,
         ];
         
         const completed = requiredFields.filter(field => field && field.length > 0).length;
