@@ -55,7 +55,7 @@ export default function GetStarted() {
   const [dotDocument, setDotDocument] = useState<File | null>(null);
   const [driversLicenseFront, setDriversLicenseFront] = useState<File | null>(null);
   const [driversLicenseBack, setDriversLicenseBack] = useState<File | null>(null);
-  const [ssnCard, setSsnCard] = useState<File | null>(null);
+  const [ssn, setSsn] = useState("");
   const [insuranceDocs, setInsuranceDocs] = useState<File | null>(null);
   const [insuranceCompany, setInsuranceCompany] = useState("");
   const [secondaryContactName, setSecondaryContactName] = useState("");
@@ -195,13 +195,13 @@ export default function GetStarted() {
 
   const getStepStatus = (step: number): 'complete' | 'warning' | 'default' => {
     if (step === 1) {
-      const hasAll = email && password && confirmPassword && firstName && lastName && dateOfBirth && phoneNumber && companyAddress && businessType && numberOfTrailers && dateNeeded && truckVin;
+      const hasAll = email && password && confirmPassword && firstName && lastName && dateOfBirth && phoneNumber && companyAddress && businessType && numberOfTrailers && dateNeeded && truckVin && ssn;
       if (hasAll && password === confirmPassword && validateAge(dateOfBirth)) return 'complete';
       if (email || password || firstName || lastName) return 'warning';
       return 'default';
     }
     if (step === 2) {
-      if (dotDocument && driversLicenseFront && driversLicenseBack && ssnCard && insuranceDocs) return 'complete';
+      if (dotDocument && driversLicenseFront && driversLicenseBack && insuranceDocs) return 'complete';
       return 'default';
     }
     if (step === 3) {
@@ -270,7 +270,6 @@ export default function GetStarted() {
       // Upload documents if provided
       let driversLicenseFrontUrl = null;
       let driversLicenseBackUrl = null;
-      let ssnCardUrl = null;
       let insuranceDocsUrl = null;
 
       if (driversLicenseFront) {
@@ -278,9 +277,6 @@ export default function GetStarted() {
       }
       if (driversLicenseBack) {
         driversLicenseBackUrl = await uploadFile(driversLicenseBack, `${session.user.id}/drivers-license-back-${Date.now()}`);
-      }
-      if (ssnCard) {
-        ssnCardUrl = await uploadFile(ssnCard, `${session.user.id}/ssn-card-${Date.now()}`);
       }
       if (insuranceDocs) {
         insuranceDocsUrl = await uploadFile(insuranceDocs, `${session.user.id}/insurance-${Date.now()}`);
@@ -293,7 +289,7 @@ export default function GetStarted() {
       }
 
       // Check if all required fields are filled to determine status
-      const hasDocuments = driversLicenseFrontUrl && driversLicenseBackUrl && ssnCardUrl && insuranceDocsUrl;
+      const hasDocuments = driversLicenseFrontUrl && driversLicenseBackUrl && insuranceDocsUrl;
       const applicationStatus = hasDocuments ? 'pending' : 'incomplete';
 
       // Create customer application (banking will be collected via Stripe)
@@ -311,7 +307,7 @@ export default function GetStarted() {
           insurance_company: insuranceCompany || null,
           message: message || null,
           drivers_license_url: driversLicenseFrontUrl,
-          ssn_card_url: ssnCardUrl,
+          ssn: ssn,
           insurance_docs_url: insuranceDocsUrl,
           secondary_contact_name: secondaryContactName || null,
           secondary_contact_phone: secondaryContactPhone || null,
@@ -364,8 +360,8 @@ export default function GetStarted() {
   ];
 
   const isStepComplete = (step: number) => {
-    if (step === 1) return email && password && confirmPassword && firstName && lastName && dateOfBirth && phoneNumber;
-    if (step === 2) return dotDocument && driversLicenseFront && driversLicenseBack && ssnCard && insuranceDocs;
+    if (step === 1) return email && password && confirmPassword && firstName && lastName && dateOfBirth && phoneNumber && ssn;
+    if (step === 2) return dotDocument && driversLicenseFront && driversLicenseBack && insuranceDocs;
     return false;
   };
 
@@ -588,6 +584,21 @@ export default function GetStarted() {
                     <p className="text-xs text-muted-foreground mt-1">17-character Vehicle Identification Number</p>
                   </div>
                   <div>
+                    <Label htmlFor="ssn">Social Security Number *</Label>
+                    <Input 
+                      id="ssn" 
+                      type="text"
+                      value={ssn} 
+                      onChange={(e) => {
+                        const value = e.target.value.replace(/\D/g, '').slice(0, 9);
+                        setSsn(value);
+                      }}
+                      placeholder="XXX-XX-XXXX"
+                      maxLength={9}
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">9 digits, no dashes. Required for credit check authorization.</p>
+                  </div>
+                  <div>
                     <Label htmlFor="message">Message (Optional)</Label>
                     <Textarea 
                       id="message" 
@@ -709,15 +720,6 @@ export default function GetStarted() {
                     )}
                   </div>
                   <div>
-                    <Label htmlFor="ssnCard">SSN Card</Label>
-                    <Input 
-                      id="ssnCard" 
-                      type="file" 
-                      accept="image/*,.pdf"
-                      onChange={(e) => setSsnCard(e.target.files?.[0] || null)}
-                    />
-                  </div>
-                  <div>
                     <Label htmlFor="insuranceDocs">Insurance Documents</Label>
                     <Input 
                       id="insuranceDocs" 
@@ -816,10 +818,6 @@ export default function GetStarted() {
                         <p className="text-sm flex items-center gap-2">
                           <span className="font-medium">Driver's License (Back):</span>
                           {driversLicenseBack ? <Check className="h-4 w-4 text-primary" /> : <span className="text-muted-foreground italic">Not uploaded</span>}
-                        </p>
-                        <p className="text-sm flex items-center gap-2">
-                          <span className="font-medium">SSN Card:</span>
-                          {ssnCard ? <Check className="h-4 w-4 text-primary" /> : <span className="text-muted-foreground italic">Not uploaded</span>}
                         </p>
                         <p className="text-sm flex items-center gap-2">
                           <span className="font-medium">Insurance:</span>

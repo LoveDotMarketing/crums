@@ -118,6 +118,7 @@ export type Database = {
           secondary_contact_name: string | null
           secondary_contact_phone: string | null
           secondary_contact_relationship: string | null
+          ssn: string | null
           ssn_card_url: string | null
           status: string
           stripe_customer_id: string | null
@@ -165,6 +166,7 @@ export type Database = {
           secondary_contact_name?: string | null
           secondary_contact_phone?: string | null
           secondary_contact_relationship?: string | null
+          ssn?: string | null
           ssn_card_url?: string | null
           status?: string
           stripe_customer_id?: string | null
@@ -212,6 +214,7 @@ export type Database = {
           secondary_contact_name?: string | null
           secondary_contact_phone?: string | null
           secondary_contact_relationship?: string | null
+          ssn?: string | null
           ssn_card_url?: string | null
           status?: string
           stripe_customer_id?: string | null
