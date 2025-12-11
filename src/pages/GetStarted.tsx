@@ -51,14 +51,7 @@ export default function GetStarted() {
   const [message, setMessage] = useState("");
   const [referralCode, setReferralCode] = useState("");
 
-  // Step 2 - Banking (optional)
-  const [bankName, setBankName] = useState("");
-  const [accountHolderName, setAccountHolderName] = useState("");
-  const [accountNumber, setAccountNumber] = useState("");
-  const [routingNumber, setRoutingNumber] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState("");
-
-  // Step 3 - Documents (optional)
+  // Step 2 - Documents (optional)
   const [dotDocument, setDotDocument] = useState<File | null>(null);
   const [driversLicense, setDriversLicense] = useState<File | null>(null);
   const [ssnCard, setSsnCard] = useState<File | null>(null);
@@ -68,7 +61,7 @@ export default function GetStarted() {
   const [secondaryContactPhone, setSecondaryContactPhone] = useState("");
   const [secondaryContactRelationship, setSecondaryContactRelationship] = useState("");
 
-  // Step 4 - Terms
+  // Step 3 - Terms
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [formStarted, setFormStarted] = useState(false);
   const [showPasteHint, setShowPasteHint] = useState(false);
@@ -138,10 +131,10 @@ export default function GetStarted() {
       company_name: companyName || "",
       company_address: companyAddress,
       business_type: businessType,
-      account_holder_name: accountHolderName || "N/A",
-      account_number: accountNumber || "0000",
-      routing_number: routingNumber || "000000000",
-      bank_name: bankName || "N/A",
+      account_holder_name: "N/A",
+      account_number: "0000",
+      routing_number: "000000000",
+      bank_name: "N/A",
       insurance_company: insuranceCompany || "N/A",
       secondary_contact_name: secondaryContactName,
       secondary_contact_phone: secondaryContactPhone,
@@ -159,7 +152,7 @@ export default function GetStarted() {
   };
 
   const handleNext = () => {
-    setCurrentStep(prev => Math.min(prev + 1, 4));
+    setCurrentStep(prev => Math.min(prev + 1, 3));
   };
 
   const handleBack = () => {
@@ -167,7 +160,7 @@ export default function GetStarted() {
   };
 
   const handleDoThisLater = () => {
-    setCurrentStep(4);
+    setCurrentStep(3);
   };
 
   const handleStepClick = (step: number) => {
@@ -207,14 +200,10 @@ export default function GetStarted() {
       return 'default';
     }
     if (step === 2) {
-      if (bankName && accountHolderName && accountNumber && routingNumber && paymentMethod) return 'complete';
-      return 'default';
-    }
-    if (step === 3) {
       if (dotDocument && driversLicense && ssnCard && insuranceDocs) return 'complete';
       return 'default';
     }
-    if (step === 4) {
+    if (step === 3) {
       if (acceptedTerms) return 'complete';
       return 'default';
     }
@@ -299,11 +288,10 @@ export default function GetStarted() {
       }
 
       // Check if all required fields are filled to determine status
-      const hasBankingInfo = bankName && accountHolderName && accountNumber && routingNumber && paymentMethod;
       const hasDocuments = driversLicenseUrl && ssnCardUrl && insuranceDocsUrl;
-      const applicationStatus = (hasBankingInfo && hasDocuments) ? 'pending' : 'incomplete';
+      const applicationStatus = hasDocuments ? 'pending' : 'incomplete';
 
-      // Create customer application
+      // Create customer application (banking will be collected via Stripe)
       const { error: applicationError } = await supabase
         .from('customer_applications')
         .insert({
@@ -317,11 +305,6 @@ export default function GetStarted() {
           truck_vin: truckVin,
           insurance_company: insuranceCompany || null,
           message: message || null,
-          bank_name: bankName || null,
-          account_holder_name: accountHolderName || null,
-          account_number: accountNumber || null,
-          routing_number: routingNumber || null,
-          payment_method: paymentMethod || null,
           drivers_license_url: driversLicenseUrl,
           ssn_card_url: ssnCardUrl,
           insurance_docs_url: insuranceDocsUrl,
@@ -371,15 +354,13 @@ export default function GetStarted() {
 
   const steps = [
     { number: 1, title: "Account Info", description: "Create your account" },
-    { number: 2, title: "Banking", description: "Payment information" },
-    { number: 3, title: "Documents", description: "Required documents" },
-    { number: 4, title: "Review", description: "Confirm & submit" }
+    { number: 2, title: "Documents", description: "Required documents" },
+    { number: 3, title: "Review", description: "Confirm & submit" }
   ];
 
   const isStepComplete = (step: number) => {
     if (step === 1) return email && password && confirmPassword && firstName && lastName && dateOfBirth && phoneNumber;
-    if (step === 2) return bankName && accountHolderName && accountNumber && routingNumber && paymentMethod;
-    if (step === 3) return dotDocument && driversLicense && ssnCard && insuranceDocs;
+    if (step === 2) return dotDocument && driversLicense && ssnCard && insuranceDocs;
     return false;
   };
 
@@ -447,15 +428,13 @@ export default function GetStarted() {
             <CardHeader>
               <CardTitle>
                 {currentStep === 1 && "Create Your Account"}
-                {currentStep === 2 && "Banking Information"}
-                {currentStep === 3 && "Documents & Additional Info"}
-                {currentStep === 4 && "Review & Submit"}
+                {currentStep === 2 && "Documents & Additional Info"}
+                {currentStep === 3 && "Review & Submit"}
               </CardTitle>
               <CardDescription>
                 {currentStep === 1 && "Enter your basic information to get started"}
-                {currentStep === 2 && "Optional - Add your banking details or do this later"}
-                {currentStep === 3 && "Optional - Upload required documents or do this later"}
-                {currentStep === 4 && "Review your information and submit your application"}
+                {currentStep === 2 && "Optional - Upload required documents or do this later"}
+                {currentStep === 3 && "Review your information and submit your application"}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -679,63 +658,8 @@ export default function GetStarted() {
                 </div>
               )}
 
-              {/* Step 2: Banking */}
+              {/* Step 2: Documents */}
               {currentStep === 2 && (
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="bankName">Bank Name</Label>
-                    <Input 
-                      id="bankName" 
-                      value={bankName} 
-                      onChange={(e) => setBankName(e.target.value)}
-                      placeholder="Your bank name"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="accountHolderName">Account Holder Name</Label>
-                    <Input 
-                      id="accountHolderName" 
-                      value={accountHolderName} 
-                      onChange={(e) => setAccountHolderName(e.target.value)}
-                      placeholder="Name on account"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="accountNumber">Account Number</Label>
-                    <Input 
-                      id="accountNumber" 
-                      value={accountNumber} 
-                      onChange={(e) => setAccountNumber(e.target.value)}
-                      placeholder="Account number"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="routingNumber">Routing Number</Label>
-                    <Input 
-                      id="routingNumber" 
-                      value={routingNumber} 
-                      onChange={(e) => setRoutingNumber(e.target.value)}
-                      placeholder="9-digit routing number"
-                      maxLength={9}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="paymentMethod">Payment Method</Label>
-                    <Select value={paymentMethod} onValueChange={setPaymentMethod}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select payment method" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="ach">ACH Transfer</SelectItem>
-                        <SelectItem value="wire">Wire Transfer</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              )}
-
-              {/* Step 3: Documents */}
-              {currentStep === 3 && (
                 <div className="space-y-4">
                   <div>
                     <Label htmlFor="dotDocument">DOT Registration Document</Label>
@@ -821,8 +745,8 @@ export default function GetStarted() {
                 </div>
               )}
 
-              {/* Step 4: Review */}
-              {currentStep === 4 && (
+              {/* Step 3: Review */}
+              {currentStep === 3 && (
                 <div className="space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
@@ -830,7 +754,6 @@ export default function GetStarted() {
                       <div className="bg-muted/50 p-4 rounded-lg space-y-1">
                         <p className="text-sm"><span className="font-medium">Email:</span> {email}</p>
                         {companyName && <p className="text-sm"><span className="font-medium">Company:</span> {companyName}</p>}
-                        <p className="text-sm"><span className="font-medium">Name:</span> {firstName} {lastName}</p>
                         <p className="text-sm"><span className="font-medium">Name:</span> {firstName} {lastName}</p>
                         <p className="text-sm"><span className="font-medium">Phone:</span> {phoneNumber}</p>
                         <p className="text-sm"><span className="font-medium">Address:</span> {companyAddress}</p>
@@ -849,21 +772,6 @@ export default function GetStarted() {
                           <p className="text-sm"><span className="font-medium">Company:</span> {insuranceCompany}</p>
                         ) : (
                           <p className="text-sm text-muted-foreground italic">Not provided</p>
-                        )}
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <h3 className="font-semibold text-sm text-muted-foreground">Banking Information</h3>
-                      <div className="bg-muted/50 p-4 rounded-lg">
-                        {isStepComplete(2) ? (
-                          <div className="space-y-1">
-                            <p className="text-sm"><span className="font-medium">Bank:</span> {bankName}</p>
-                            <p className="text-sm"><span className="font-medium">Account Holder:</span> {accountHolderName}</p>
-                            <p className="text-sm"><span className="font-medium">Payment Method:</span> {paymentMethod?.toUpperCase()}</p>
-                          </div>
-                        ) : (
-                          <p className="text-sm text-muted-foreground italic">Not completed - will need to add this later</p>
                         )}
                       </div>
                     </div>
@@ -932,7 +840,7 @@ export default function GetStarted() {
                 </Button>
 
                 <div className="flex gap-2">
-                  {(currentStep === 2 || currentStep === 3) && (
+                  {currentStep === 2 && (
                     <Button 
                       variant="secondary" 
                       onClick={handleDoThisLater}
@@ -942,7 +850,7 @@ export default function GetStarted() {
                     </Button>
                   )}
 
-                  {currentStep < 4 ? (
+                  {currentStep < 3 ? (
                     <Button onClick={handleNext} disabled={isLoading}>
                       Continue
                       <ArrowRight className="ml-2 h-4 w-4" />
