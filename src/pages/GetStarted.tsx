@@ -47,6 +47,7 @@ export default function GetStarted() {
   const [businessType, setBusinessType] = useState("");
   const [numberOfTrailers, setNumberOfTrailers] = useState("");
   const [dateNeeded, setDateNeeded] = useState("");
+  const [truckVin, setTruckVin] = useState("");
   const [message, setMessage] = useState("");
   const [referralCode, setReferralCode] = useState("");
 
@@ -190,6 +191,7 @@ export default function GetStarted() {
     if (!businessType) errors.push("Business type is required");
     if (!numberOfTrailers) errors.push("Number of trailers is required");
     if (!dateNeeded) errors.push("Date needed is required");
+    if (!truckVin) errors.push("Cab VIN# is required");
     
     // Step 4 required
     if (!acceptedTerms) errors.push("You must accept the terms and conditions");
@@ -199,7 +201,7 @@ export default function GetStarted() {
 
   const getStepStatus = (step: number): 'complete' | 'warning' | 'default' => {
     if (step === 1) {
-      const hasAll = email && password && confirmPassword && firstName && lastName && dateOfBirth && phoneNumber && companyAddress && businessType && numberOfTrailers && dateNeeded;
+      const hasAll = email && password && confirmPassword && firstName && lastName && dateOfBirth && phoneNumber && companyAddress && businessType && numberOfTrailers && dateNeeded && truckVin;
       if (hasAll && password === confirmPassword && validateAge(dateOfBirth)) return 'complete';
       if (email || password || firstName || lastName) return 'warning';
       return 'default';
@@ -312,6 +314,7 @@ export default function GetStarted() {
           business_type: businessType,
           number_of_trailers: parseInt(numberOfTrailers),
           date_needed: dateNeeded,
+          truck_vin: truckVin,
           insurance_company: insuranceCompany || null,
           message: message || null,
           bank_name: bankName || null,
@@ -584,6 +587,17 @@ export default function GetStarted() {
                     />
                   </div>
                   <div>
+                    <Label htmlFor="truckVin">Cab VIN# *</Label>
+                    <Input 
+                      id="truckVin" 
+                      value={truckVin} 
+                      onChange={(e) => setTruckVin(e.target.value.toUpperCase())}
+                      placeholder="Enter your cab/truck VIN"
+                      maxLength={17}
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">17-character Vehicle Identification Number</p>
+                  </div>
+                  <div>
                     <Label htmlFor="message">Message (Optional)</Label>
                     <Textarea 
                       id="message" 
@@ -823,6 +837,7 @@ export default function GetStarted() {
                         <p className="text-sm"><span className="font-medium">Business Type:</span> {businessType}</p>
                         <p className="text-sm"><span className="font-medium">Trailers Needed:</span> {numberOfTrailers}</p>
                         <p className="text-sm"><span className="font-medium">Date Needed:</span> {dateNeeded}</p>
+                        <p className="text-sm"><span className="font-medium">Cab VIN#:</span> {truckVin}</p>
                         {message && <p className="text-sm"><span className="font-medium">Message:</span> {message}</p>}
                       </div>
                     </div>
