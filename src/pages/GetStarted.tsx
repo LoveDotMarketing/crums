@@ -294,6 +294,20 @@ export default function GetStarted() {
       const hasDocuments = driversLicenseFrontUrl && driversLicenseBackUrl && insuranceDocsUrl;
       const applicationStatus = hasDocuments ? 'pending' : 'incomplete';
 
+      // Encrypt SSN before storing
+      let encryptedSSN = ssn;
+      if (ssn) {
+        const { data: encryptData, error: encryptError } = await supabase.functions.invoke('ssn-crypto', {
+          body: { action: 'encrypt', ssn: ssn }
+        });
+        
+        if (encryptError) {
+          console.error("SSN encryption error:", encryptError);
+          throw new Error("Failed to secure SSN data. Please try again.");
+        }
+        encryptedSSN = encryptData.encrypted;
+      }
+
       // Create customer application (banking will be collected via Stripe)
       const { error: applicationError } = await supabase
         .from('customer_applications')
@@ -312,7 +326,7 @@ export default function GetStarted() {
           message: message || null,
           drivers_license_url: driversLicenseFrontUrl,
           drivers_license_back_url: driversLicenseBackUrl,
-          ssn: ssn,
+          ssn: encryptedSSN,
           insurance_docs_url: insuranceDocsUrl,
           secondary_contact_name: secondaryContactName || null,
           secondary_contact_phone: secondaryContactPhone || null,

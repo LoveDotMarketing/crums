@@ -15,13 +15,16 @@ import {
   XCircle,
   Clock,
   Eye,
+  EyeOff,
   Mail,
   Phone,
   Building2,
   Calendar,
   ExternalLink,
   FileImage,
-  FileCheck
+  FileCheck,
+  Lock,
+  Loader2 as LucideLoader2
 } from "lucide-react";
 import {
   Table,
@@ -148,6 +151,8 @@ export default function Applications() {
   const [newStatus, setNewStatus] = useState("");
   const [adminNotes, setAdminNotes] = useState("");
   const [sendEmail, setSendEmail] = useState(true);
+  const [decryptedSSN, setDecryptedSSN] = useState<string | null>(null);
+  const [isDecryptingSSN, setIsDecryptingSSN] = useState(false);
   
   const queryClient = useQueryClient();
 
@@ -279,6 +284,43 @@ export default function Applications() {
     setNewStatus(app.status);
     setAdminNotes(app.admin_notes || "");
     setStatusDialogOpen(true);
+  };
+
+  const handleDecryptSSN = async () => {
+    if (!selectedApplication?.ssn) return;
+    
+    setIsDecryptingSSN(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('ssn-crypto', {
+        body: { action: 'decrypt', ssn: selectedApplication.ssn }
+      });
+      
+      if (error) throw error;
+      
+      setDecryptedSSN(data.decrypted);
+      
+      // Auto-hide after 10 seconds
+      setTimeout(() => {
+        setDecryptedSSN(null);
+      }, 10000);
+      
+    } catch (err) {
+      console.error("SSN decryption error:", err);
+      toast({
+        title: "Error",
+        description: "Failed to decrypt SSN. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsDecryptingSSN(false);
+    }
+  };
+
+  const formatSSN = (ssn: string): string => {
+    if (ssn.length === 9) {
+      return `${ssn.slice(0, 3)}-${ssn.slice(3, 5)}-${ssn.slice(5)}`;
+    }
+    return ssn;
   };
 
   const handleStatusUpdate = () => {
@@ -483,7 +525,7 @@ export default function Applications() {
       </div>
 
       {/* Application Detail Dialog */}
-      <Dialog open={detailDialogOpen} onOpenChange={setDetailDialogOpen}>
+      <Dialog open={detailDialogOpen} onOpenChange={(open) => { setDetailDialogOpen(open); if (!open) setDecryptedSSN(null); }}>
         <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Application Details</DialogTitle>
@@ -562,6 +604,51 @@ export default function Applications() {
                   </div>
                 )}
               </div>
+
+              {/* SSN Section - Secure Display */}
+              {selectedApplication.ssn && (
+                <div className="border-t pt-4">
+                  <h4 className="text-sm font-semibold mb-3 flex items-center gap-2">
+                    <Lock className="h-4 w-4" />
+                    Social Security Number (Encrypted)
+                  </h4>
+                  <div className="flex items-center gap-3 p-3 rounded-md bg-muted/50">
+                    {decryptedSSN ? (
+                      <>
+                        <span className="font-mono text-lg tracking-wider">{formatSSN(decryptedSSN)}</span>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setDecryptedSSN(null)}
+                          className="ml-auto"
+                        >
+                          <EyeOff className="h-4 w-4 mr-1" />
+                          Hide
+                        </Button>
+                        <span className="text-xs text-muted-foreground">Auto-hides in 10s</span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="font-mono text-lg tracking-wider text-muted-foreground">XXX-XX-XXXX</span>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={handleDecryptSSN}
+                          disabled={isDecryptingSSN}
+                          className="ml-auto"
+                        >
+                          {isDecryptingSSN ? (
+                            <LucideLoader2 className="h-4 w-4 mr-1 animate-spin" />
+                          ) : (
+                            <Eye className="h-4 w-4 mr-1" />
+                          )}
+                          View SSN
+                        </Button>
+                      </>
+                    )}
+                  </div>
+                </div>
+              )}
 
               {/* Documents Section */}
               <div className="border-t pt-4">
