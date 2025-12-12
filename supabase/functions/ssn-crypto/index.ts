@@ -190,8 +190,121 @@ serve(async (req) => {
       );
     }
     
+    if (action === "migrate") {
+      // Migrate all plaintext SSNs to encrypted format - admin only
+      const authHeader = req.headers.get("Authorization");
+      if (!authHeader) {
+        return new Response(
+          JSON.stringify({ error: "Authorization required for migration" }),
+          { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      
+      const supabaseClient = createClient(
+        Deno.env.get("SUPABASE_URL")!,
+        Deno.env.get("SUPABASE_ANON_KEY")!,
+        { global: { headers: { Authorization: authHeader } } }
+      );
+      
+      // Verify user and check admin role
+      const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
+      if (userError || !user) {
+        return new Response(
+          JSON.stringify({ error: "Invalid authentication" }),
+          { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      
+      // Check admin role
+      const adminClient = createClient(
+        Deno.env.get("SUPABASE_URL")!,
+        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+      );
+      
+      const { data: roleData, error: roleError } = await adminClient
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", user.id)
+        .eq("role", "admin")
+        .maybeSingle();
+      
+      if (roleError || !roleData) {
+        console.log("[ssn-crypto] Unauthorized migration attempt by user:", user.id);
+        return new Response(
+          JSON.stringify({ error: "Admin role required for SSN migration" }),
+          { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      
+      // Fetch all customer applications with SSN
+      const { data: applications, error: fetchError } = await adminClient
+        .from("customer_applications")
+        .select("id, ssn")
+        .not("ssn", "is", null);
+      
+      if (fetchError) {
+        console.error("[ssn-crypto] Error fetching applications:", fetchError);
+        return new Response(
+          JSON.stringify({ error: "Failed to fetch applications" }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      
+      let migrated = 0;
+      let skipped = 0;
+      let errors = 0;
+      
+      for (const app of applications || []) {
+        // Skip if already encrypted (contains colon) or null/empty
+        if (!app.ssn || app.ssn.includes(':')) {
+          skipped++;
+          continue;
+        }
+        
+        // Skip if not a valid 9-digit SSN
+        const cleanSSN = app.ssn.replace(/\D/g, '');
+        if (cleanSSN.length !== 9) {
+          console.log(`[ssn-crypto] Skipping invalid SSN format for app ${app.id}`);
+          skipped++;
+          continue;
+        }
+        
+        try {
+          const encrypted = await encryptSSN(cleanSSN);
+          
+          const { error: updateError } = await adminClient
+            .from("customer_applications")
+            .update({ ssn: encrypted })
+            .eq("id", app.id);
+          
+          if (updateError) {
+            console.error(`[ssn-crypto] Error updating app ${app.id}:`, updateError);
+            errors++;
+          } else {
+            migrated++;
+          }
+        } catch (encryptError) {
+          console.error(`[ssn-crypto] Error encrypting SSN for app ${app.id}:`, encryptError);
+          errors++;
+        }
+      }
+      
+      console.log(`[ssn-crypto] Migration complete by admin ${user.id}: ${migrated} migrated, ${skipped} skipped, ${errors} errors`);
+      
+      return new Response(
+        JSON.stringify({ 
+          success: true,
+          migrated,
+          skipped,
+          errors,
+          total: applications?.length || 0
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    
     return new Response(
-      JSON.stringify({ error: "Invalid action - must be 'encrypt' or 'decrypt'" }),
+      JSON.stringify({ error: "Invalid action - must be 'encrypt', 'decrypt', or 'migrate'" }),
       { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
     
