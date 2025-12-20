@@ -40,8 +40,8 @@ export const teamMembers: TeamMember[] = [
   {
     slug: "eric",
     name: "Eric",
-    role: "CEO",
-    title: "Chief Executive Officer",
+    role: "CEO / Principal",
+    title: "Chief Executive Officer & Principal",
     icon: Users,
     bio: [
       "As CEO of CRUMS Leasing, Eric leads the company with the same values instilled by Mama CRUMS — integrity, hard work, and a genuine commitment to helping carriers succeed.",
@@ -58,8 +58,8 @@ export const teamMembers: TeamMember[] = [
   {
     slug: "hector",
     name: "Hector",
-    role: "Fleet Management",
-    title: "Fleet Management Director",
+    role: "COO",
+    title: "Chief Operating Officer",
     icon: Truck,
     bio: [
       "Hector oversees all fleet operations at CRUMS Leasing, ensuring every trailer meets our high standards of quality and reliability before it hits the road.",
@@ -76,8 +76,8 @@ export const teamMembers: TeamMember[] = [
   {
     slug: "ambrosia",
     name: "Ambrosia",
-    role: "Customer Relations",
-    title: "Customer Relations Manager",
+    role: "BOM",
+    title: "Business Operations Manager",
     icon: Heart,
     bio: [
       "Ambrosia is the friendly voice of CRUMS Leasing, dedicated to making every customer interaction positive and productive.",
@@ -94,8 +94,8 @@ export const teamMembers: TeamMember[] = [
   {
     slug: "jr",
     name: "Jr",
-    role: "Accounting",
-    title: "Accounting Manager",
+    role: "AC",
+    title: "Accounts Coordinator",
     icon: Calculator,
     bio: [
       "Jr manages all financial operations at CRUMS Leasing with precision and integrity, ensuring smooth billing, payments, and financial processes.",
