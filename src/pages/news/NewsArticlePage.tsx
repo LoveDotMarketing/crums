@@ -94,18 +94,6 @@ const NewsArticlePage = () => {
               Back to News
             </Link>
 
-            {/* Featured Image */}
-            <div className="aspect-video bg-gradient-to-br from-primary/20 via-secondary/20 to-primary/10 rounded-xl flex items-center justify-center mb-8 overflow-hidden">
-              {article.image ? (
-                <img 
-                  src={article.image} 
-                  alt={article.title}
-                  className="w-full h-full object-cover rounded-xl"
-                />
-              ) : (
-                <span className="text-5xl font-bold text-primary/30">CRUMS</span>
-              )}
-            </div>
 
             {/* Article Body */}
             <div className="prose prose-lg max-w-none mb-12">
