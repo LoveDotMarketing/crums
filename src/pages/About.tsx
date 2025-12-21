@@ -7,7 +7,6 @@ import { Link } from "react-router-dom";
 import { Users, TrendingUp, MapPin, Award, ArrowRight } from "lucide-react";
 const teamImage = "/images/team-leaders.png";
 const fleetImage = "/images/fleet-overview.jpg";
-import ericDraftDayImage from "@/assets/eric-draft-day.png";
 import { SEO } from "@/components/SEO";
 import { organizationSchema, generateBreadcrumbSchema } from "@/lib/structuredData";
 
@@ -72,8 +71,8 @@ const About = () => {
             </div>
             <div>
               <img
-                src={ericDraftDayImage}
-                alt="Eric with Mother celebrating the day he got drafted"
+                src="/images/our-story-image.png"
+                alt="CRUMS Leasing founders - a family-rooted legacy"
                 className="rounded-lg shadow-2xl"
                 loading="lazy"
                 width="800"
