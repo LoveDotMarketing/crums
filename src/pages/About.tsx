@@ -100,7 +100,6 @@ const About = () => {
               { name: "Hector", role: "COO", slug: "hector" },
               { name: "Ambrosia", role: "BOM", slug: "ambrosia" },
               { name: "Jr", role: "AC", slug: "jr" },
-              { name: "John", role: "Marketing", slug: "john" },
             ].map((member) => (
               <Link key={member.name} to={`/about/${member.slug}`} className="text-center group">
                 <div className="w-24 h-24 md:w-28 md:h-28 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4 border-2 border-primary/20 group-hover:border-primary group-hover:bg-primary/20 transition-all">
