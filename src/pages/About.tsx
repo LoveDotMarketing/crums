@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { Users, TrendingUp, MapPin, Award, ArrowRight } from "lucide-react";
 const teamImage = "/images/team-leaders.png";
-const fleetImage = "/images/fleet-overview.jpg";
 import { SEO } from "@/components/SEO";
 import { organizationSchema, generateBreadcrumbSchema } from "@/lib/structuredData";
 
@@ -171,38 +170,26 @@ const About = () => {
       {/* Growth Through Acquisitions */}
       <section className="py-20 bg-background">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            <div className="order-2 lg:order-1">
-              <img
-                src={fleetImage}
-                alt="CRUMS Leasing fleet operations"
-                className="rounded-lg shadow-2xl"
-                loading="lazy"
-                width="800"
-                height="600"
-              />
-            </div>
-            <div className="order-1 lg:order-2">
-              <h2 className="text-3xl md:text-4xl font-bold mb-6 text-foreground">
-                Strategic Growth
-              </h2>
-              <div className="space-y-4 text-lg text-muted-foreground leading-relaxed">
-                <p>
-                  As we've grown, we've carefully selected acquisition partners that share our
-                  values and commitment to customer service. Each company we bring into the CRUMS
-                  family adds unique strengths while maintaining the integrity and quality our
-                  customers expect.
-                </p>
-                <p>
-                  Our multi-company structure allows us to serve diverse markets while providing
-                  unified backend support, advanced technology, and the personal touch that defines
-                  the CRUMS experience.
-                </p>
-                <p>
-                  Whether you're working with an acquired company or our flagship operation, you can
-                  expect the same family values, transparency, and dedication to your success.
-                </p>
-              </div>
+          <div className="max-w-4xl mx-auto">
+            <h2 className="text-3xl md:text-4xl font-bold mb-6 text-foreground text-center">
+              Strategic Growth
+            </h2>
+            <div className="space-y-4 text-lg text-muted-foreground leading-relaxed">
+              <p>
+                As we've grown, we've carefully selected acquisition partners that share our
+                values and commitment to customer service. Each company we bring into the CRUMS
+                family adds unique strengths while maintaining the integrity and quality our
+                customers expect.
+              </p>
+              <p>
+                Our multi-company structure allows us to serve diverse markets while providing
+                unified backend support, advanced technology, and the personal touch that defines
+                the CRUMS experience.
+              </p>
+              <p>
+                Whether you're working with an acquired company or our flagship operation, you can
+                expect the same family values, transparency, and dedication to your success.
+              </p>
             </div>
           </div>
         </div>
