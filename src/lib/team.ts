@@ -1,4 +1,4 @@
-import { LucideIcon, Users, Crown, Truck, Heart, Calculator, Megaphone } from "lucide-react";
+import { LucideIcon, Users, Crown, Truck, Heart, Calculator } from "lucide-react";
 
 export interface TeamMember {
   slug: string;
@@ -107,24 +107,6 @@ export const teamMembers: TeamMember[] = [
       "Passionate about clear, transparent billing",
       "Always happy to explain invoices in detail",
       "Believes in making finances stress-free for carriers"
-    ]
-  },
-  {
-    slug: "john",
-    name: "John",
-    role: "Marketing",
-    title: "Marketing Director",
-    icon: Megaphone,
-    bio: [
-      "John leads marketing efforts at CRUMS Leasing, spreading the word about our people-first approach to trailer leasing.",
-      "He's passionate about telling the CRUMS story — not just what we do, but why we do it. From our website to our industry guides, John ensures our message reaches carriers who can benefit from partnering with us.",
-      "His focus is on authentic communication that reflects CRUMS' true values, helping carriers understand that we're not just a leasing company — we're a partner on the road to success."
-    ],
-    specialties: ["Brand Strategy", "Content Marketing", "Digital Presence", "Industry Outreach"],
-    funFacts: [
-      "Created the CRUMS Industry Guides series",
-      "Loves hearing success stories from carriers",
-      "Believes the best marketing is happy customers"
     ]
   }
 ];
