@@ -319,7 +319,7 @@ const Index = () => {
               <p className="text-lg text-muted-foreground mb-6 leading-relaxed">
                 CRUMS Leasing was founded by former NBA player Eric Bledsoe with a simple mission: 
                 to empower independent truckers and small carriers with the equipment they need to succeed. 
-                Named after Eric's grandmother, CRUMS represents the family values and hard work ethic 
+                Named after Eric's mother, CRUMS represents the family values and hard work ethic 
                 that drive everything we do.
               </p>
               <p className="text-lg text-muted-foreground mb-8 leading-relaxed">
