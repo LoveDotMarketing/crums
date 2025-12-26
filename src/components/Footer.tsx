@@ -7,7 +7,7 @@ export const Footer = () => {
   return (
     <footer className="bg-primary text-primary-foreground" role="contentinfo">
       <div className="container mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 mb-8">
           {/* Company Info */}
           <div>
             <Link to="/">
@@ -154,18 +154,47 @@ export const Footer = () => {
                 </Link>
               </li>
               <li>
-                <Link to="/referral-program" className="hover:text-secondary transition-colors">
-                  Referral Program
-                </Link>
-              </li>
-              <li>
-                <Link to="/resources" className="hover:text-secondary transition-colors">
-                  Resources
-                </Link>
-              </li>
-              <li>
                 <Link to="/contact" className="hover:text-secondary transition-colors">
                   Contact
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          {/* Locations */}
+          <div>
+            <Link to="/locations" className="hover:text-secondary transition-colors">
+              <h3 className="font-semibold text-lg mb-4">Top Locations</h3>
+            </Link>
+            <ul className="space-y-2 text-sm">
+              <li>
+                <Link to="/locations/houston-tx" className="hover:text-secondary transition-colors">
+                  Houston, TX
+                </Link>
+              </li>
+              <li>
+                <Link to="/locations/dallas-tx" className="hover:text-secondary transition-colors">
+                  Dallas, TX
+                </Link>
+              </li>
+              <li>
+                <Link to="/locations/san-antonio-tx" className="hover:text-secondary transition-colors">
+                  San Antonio, TX
+                </Link>
+              </li>
+              <li>
+                <Link to="/locations/los-angeles-ca" className="hover:text-secondary transition-colors">
+                  Los Angeles, CA
+                </Link>
+              </li>
+              <li>
+                <Link to="/locations/chicago-il" className="hover:text-secondary transition-colors">
+                  Chicago, IL
+                </Link>
+              </li>
+              <li>
+                <Link to="/locations/atlanta-ga" className="hover:text-secondary transition-colors">
+                  Atlanta, GA
                 </Link>
               </li>
             </ul>

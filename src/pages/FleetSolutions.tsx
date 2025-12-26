@@ -289,7 +289,26 @@ const FleetSolutions = () => {
                 flatbed trailers
               </Link>. Need help choosing? Read our{" "}
               <Link to="/resources/guides/choosing-trailer" className="text-secondary hover:underline font-medium">
-                guide to selecting the right trailer
+              guide to selecting the right trailer
+              </Link>.
+            </p>
+            <p className="text-muted-foreground mb-6">
+              We deliver trailers nationwide — see our{" "}
+              <Link to="/locations" className="text-primary hover:underline font-semibold">
+                service locations
+              </Link>{" "}
+              including{" "}
+              <Link to="/locations/houston-tx" className="text-primary hover:underline font-medium">
+                Houston
+              </Link>,{" "}
+              <Link to="/locations/dallas-tx" className="text-primary hover:underline font-medium">
+                Dallas
+              </Link>,{" "}
+              <Link to="/locations/atlanta-ga" className="text-primary hover:underline font-medium">
+                Atlanta
+              </Link>, and{" "}
+              <Link to="/locations/chicago-il" className="text-primary hover:underline font-medium">
+                Chicago
               </Link>.
             </p>
             <p className="text-muted-foreground">

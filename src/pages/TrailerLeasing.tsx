@@ -262,6 +262,25 @@ const TrailerLeasing = () => {
               </Link>{" "}
               for businesses managing multiple trailers.
             </p>
+            <p className="text-muted-foreground mb-6">
+              We serve trucking professionals across the nation — view our{" "}
+              <Link to="/locations" className="text-primary hover:underline font-semibold">
+                trailer leasing locations
+              </Link>{" "}
+              including{" "}
+              <Link to="/locations/houston-tx" className="text-primary hover:underline font-medium">
+                Houston
+              </Link>,{" "}
+              <Link to="/locations/dallas-tx" className="text-primary hover:underline font-medium">
+                Dallas
+              </Link>,{" "}
+              <Link to="/locations/los-angeles-ca" className="text-primary hover:underline font-medium">
+                Los Angeles
+              </Link>, and{" "}
+              <Link to="/locations/chicago-il" className="text-primary hover:underline font-medium">
+                Chicago
+              </Link>.
+            </p>
             <p className="text-muted-foreground">
               Not sure which option is right for you? Use our{" "}
               <Link to="/resources/tools/lease-vs-buy" className="text-primary hover:underline font-medium">
