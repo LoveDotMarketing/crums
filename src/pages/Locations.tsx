@@ -34,8 +34,8 @@ const Locations = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <SEO
-        title="Trailer Rental Locations | Pickup in Texas, Delivery Nationwide | CRUMS Leasing"
-        description="CRUMS Leasing delivers trailers nationwide. Pick up at our Bulverde, TX yard or get delivery to Houston, Dallas, Los Angeles, Chicago, Atlanta & more. Call 1-888-570-4564."
+        title="Trailer Rental Locations | Nationwide Delivery | CRUMS"
+        description="CRUMS Leasing delivers trailers nationwide. Pick up at our Bulverde, TX yard or get delivery to Houston, Dallas, LA, Chicago & more. Call 1-888-570-4564."
         canonical="https://crumsleasing.com/locations"
         structuredData={combinedSchema}
       />
