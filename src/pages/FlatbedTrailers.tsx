@@ -47,6 +47,22 @@ const FlatbedTrailers = () => {
       },
       {
         "@type": "Question",
+        "name": "How much weight can a 48 ft flatbed carry?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "A 48-foot flatbed trailer can carry approximately 48,000 lbs of cargo. This assumes a standard tractor weight, keeping the gross vehicle weight under the 80,000 lb federal limit. Actual capacity varies based on trailer weight and axle configuration."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "What is the deck height of a flatbed trailer?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "A standard flatbed trailer has a deck height of approximately 60 inches (5 feet) from the ground. Step deck trailers have a lower rear section at about 42 inches, providing an extra 12-18 inches of height clearance for taller cargo."
+        }
+      },
+      {
+        "@type": "Question",
         "name": "What is the difference between a flatbed and step deck trailer?",
         "acceptedAnswer": {
           "@type": "Answer",
@@ -59,14 +75,6 @@ const FlatbedTrailers = () => {
         "acceptedAnswer": {
           "@type": "Answer",
           "text": "Flatbed trailers are ideal for construction materials (steel, lumber, pipes), heavy machinery and equipment, vehicles, oversized items, and any cargo that won't fit in enclosed trailers or requires crane loading."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "How much weight can a flatbed trailer carry?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "Standard flatbed trailers can carry approximately 48,000 lbs of cargo when combined with typical tractor weights, staying within the 80,000 lb gross vehicle weight limit. Actual capacity depends on trailer specifications and axle configuration."
         }
       },
       {
@@ -88,8 +96,8 @@ const FlatbedTrailers = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <SEO
-        title="Flatbed Trailer Leasing | Standard & Step Deck Trailers"
-        description="Lease flatbed and step deck trailers from CRUMS. Heavy-duty construction, multiple tie-down points, and flexible terms starting at 12 months. Get a quote today!"
+        title="Flatbed Trailer Leasing | 48' & 53' Deck Height & Weight Capacity"
+        description="Lease flatbed and step deck trailers from CRUMS. 48,000 lb capacity, 60 inch deck height, multiple tie-down points. Flexible terms starting at 12 months."
         canonical="https://crumsleasing.com/flatbed-trailers"
         structuredData={combinedSchema}
       />
@@ -349,6 +357,26 @@ const FlatbedTrailers = () => {
             </Card>
             <Card className="border-2">
               <CardContent className="p-6">
+                <h3 className="text-lg font-bold mb-2">How much weight can a 48 ft flatbed carry?</h3>
+                <p className="text-muted-foreground">
+                  A 48-foot flatbed trailer can carry approximately 48,000 lbs of cargo. This assumes a standard 
+                  tractor weight, keeping the gross vehicle weight under the 80,000 lb federal limit. Actual 
+                  capacity varies based on trailer weight and axle configuration.
+                </p>
+              </CardContent>
+            </Card>
+            <Card className="border-2">
+              <CardContent className="p-6">
+                <h3 className="text-lg font-bold mb-2">What is the deck height of a flatbed trailer?</h3>
+                <p className="text-muted-foreground">
+                  A standard flatbed trailer has a deck height of approximately 60 inches (5 feet) from the ground. 
+                  Step deck trailers have a lower rear section at about 42 inches, providing an extra 12-18 inches 
+                  of height clearance for taller cargo.
+                </p>
+              </CardContent>
+            </Card>
+            <Card className="border-2">
+              <CardContent className="p-6">
                 <h3 className="text-lg font-bold mb-2">What is the difference between a flatbed and step deck trailer?</h3>
                 <p className="text-muted-foreground">
                   A standard flatbed has a uniform deck height, while a step deck (or drop deck) has a lower rear 
@@ -364,16 +392,6 @@ const FlatbedTrailers = () => {
                   Flatbed trailers are ideal for construction materials (steel, lumber, pipes), heavy machinery 
                   and equipment, vehicles, oversized items, and any cargo that won't fit in enclosed trailers 
                   or requires crane loading.
-                </p>
-              </CardContent>
-            </Card>
-            <Card className="border-2">
-              <CardContent className="p-6">
-                <h3 className="text-lg font-bold mb-2">How much weight can a flatbed trailer carry?</h3>
-                <p className="text-muted-foreground">
-                  Standard flatbed trailers can carry approximately 48,000 lbs of cargo when combined with 
-                  typical tractor weights, staying within the 80,000 lb gross vehicle weight limit. Actual 
-                  capacity depends on trailer specifications and axle configuration.
                 </p>
               </CardContent>
             </Card>

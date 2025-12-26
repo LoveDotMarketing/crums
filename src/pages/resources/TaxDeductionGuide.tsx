@@ -49,8 +49,8 @@ const TaxDeductionGuide = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <SEO
-        title="Tax Deduction Guide for Truckers - Common Deductions & Record-Keeping"
-        description="Tax deduction guide for carriers. Learn about deductible expenses, per diem allowances, depreciation rules, and record-keeping tips."
+        title="Owner-Operator Tax Deduction Guide | Trucker Per Diem & Deductions"
+        description="Complete owner-operator tax deduction guide. Learn about trucker per diem rates, deductible expenses, depreciation rules, and record-keeping best practices."
         canonical="https://crumsleasing.com/resources/tools/tax-deductions"
       />
       <Navigation />
@@ -61,9 +61,9 @@ const TaxDeductionGuide = () => {
           <div className="w-16 h-16 bg-primary-foreground/10 rounded-full flex items-center justify-center mx-auto mb-6">
             <Receipt className="h-8 w-8" />
           </div>
-          <h1 className="text-4xl md:text-6xl font-bold mb-6">Tax Deduction Guide</h1>
+          <h1 className="text-4xl md:text-6xl font-bold mb-6">Owner-Operator Tax Deduction Guide</h1>
           <p className="text-xl md:text-2xl max-w-4xl mx-auto text-primary-foreground/90">
-            Essential tax deductions and record-keeping tips for carriers and owner-operators.
+            Essential tax deductions, per diem rates, and record-keeping tips for carriers and owner-operators.
           </p>
         </div>
       </section>

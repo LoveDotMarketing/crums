@@ -16,8 +16,8 @@ import { trackCalculatorUse } from "@/lib/analytics";
 const toolSchema = {
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
-  "name": "Profit Per Load Calculator",
-  "description": "Calculate your profit per load with our free trucking calculator. Input rate, miles, fuel costs, and expenses to see your true profit margin.",
+  "name": "Trucking Profit Calculator",
+  "description": "Free owner-operator profit calculator. Calculate your profit per load with rate, miles, fuel costs, deadhead mileage, and expenses to see your true profit margin.",
   "url": "https://crumsleasing.com/resources/tools/profit-calculator",
   "applicationCategory": "BusinessApplication",
   "operatingSystem": "Web Browser",
@@ -131,8 +131,8 @@ const ProfitPerLoadCalculator = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <SEO
-        title="Profit Per Load Calculator - Trucking Load Profitability Tool"
-        description="Calculate your profit per load with our free trucking calculator. Input rate, miles, fuel costs, and expenses to see your true profit margin and per-mile earnings."
+        title="Trucking Profit Calculator | Free Owner-Operator Load Calculator"
+        description="Free trucking profit calculator for owner-operators. Calculate profit per load with rate, miles, fuel costs, deadhead mileage, and expenses to see your true profit margin."
         canonical="https://crumsleasing.com/resources/tools/profit-calculator"
         structuredData={[toolSchema, howToSchema]}
       />
@@ -144,9 +144,9 @@ const ProfitPerLoadCalculator = () => {
           <div className="flex justify-center mb-4">
             <Calculator className="h-12 w-12" />
           </div>
-          <h1 className="text-3xl md:text-5xl font-bold mb-4">Profit Per Load Calculator</h1>
+          <h1 className="text-3xl md:text-5xl font-bold mb-4">Trucking Profit Calculator</h1>
           <p className="text-lg md:text-xl max-w-3xl mx-auto text-primary-foreground/90">
-            Calculate the true profitability of each load by factoring in all expenses including deadhead miles.
+            Free owner-operator profit calculator. Calculate the true profitability of each load by factoring in all expenses including deadhead miles.
           </p>
         </div>
       </section>
