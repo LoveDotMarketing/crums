@@ -308,6 +308,55 @@ const Index = () => {
         </div>
       </section>
 
+      {/* About Section */}
+      <section className="py-20 bg-background">
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            <div>
+              <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
+                About CRUMS Leasing
+              </h2>
+              <p className="text-lg text-muted-foreground mb-6 leading-relaxed">
+                CRUMS Leasing was founded by former NBA player Eric Bledsoe with a simple mission: 
+                to empower independent truckers and small carriers with the equipment they need to succeed. 
+                Named after Eric's grandmother, CRUMS represents the family values and hard work ethic 
+                that drive everything we do.
+              </p>
+              <p className="text-lg text-muted-foreground mb-8 leading-relaxed">
+                Based in Bulverde, Texas, we're more than just a trailer leasing company — we're partners 
+                in your success. Our team understands the challenges of the trucking industry because we've 
+                built relationships with drivers and carriers across the country.
+              </p>
+              <Link to="/about">
+                <Button 
+                  size="lg" 
+                  variant="outline"
+                  className="border-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground"
+                  onClick={() => trackCtaClick('Learn More About Us', 'home', '/about')}
+                >
+                  Learn More About Us
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </Button>
+              </Link>
+            </div>
+            <div className="relative">
+              <img 
+                src="/images/our-story-image.png" 
+                alt="CRUMS Leasing team and trailer fleet" 
+                className="rounded-lg shadow-xl w-full"
+                loading="lazy"
+                width={600}
+                height={400}
+              />
+              <div className="absolute -bottom-6 -left-6 bg-secondary text-secondary-foreground p-6 rounded-lg shadow-lg hidden md:block">
+                <p className="text-3xl font-bold">Family-Owned</p>
+                <p className="text-sm">& Operated Since 2024</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Core Values Section */}
       <section className="py-20 bg-gradient-to-b from-muted to-background content-deferred">
         <div className="container mx-auto px-4">
