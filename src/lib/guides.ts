@@ -11,6 +11,7 @@ import {
   Fuel, 
   GraduationCap, 
   Brain,
+  Ruler,
   LucideIcon
 } from "lucide-react";
 
@@ -44,6 +45,16 @@ export const guides: Guide[] = [
     available: true,
     lastModified: "2025-12-10",
     priority: 0.8,
+    changefreq: "monthly"
+  },
+  {
+    slug: "trailer-specifications",
+    title: "Complete Trailer Specifications & Dimensions Guide",
+    description: "Comprehensive guide to trailer dimensions, weight capacities, and cubic feet for 53' dry vans, 48' flatbeds, reefers, and more.",
+    icon: Ruler,
+    available: true,
+    lastModified: "2025-12-26",
+    priority: 0.9,
     changefreq: "monthly"
   },
   {
