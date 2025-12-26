@@ -93,7 +93,7 @@ export const newsArticles: NewsArticle[] = [
   {
     slug: "official-industry-entry-announcement",
     title: "CRUMS Leasing Makes Official Industry Entry Announcement",
-    description: "News article announces Eric Bledsoe's leap into trailer leasing with CRUMS, offering no-credit-check GPS-equipped 53' dry vans, inspired by family and aimed at empowering drivers.",
+    description: "News article announces Eric Bledsoe's leap into trailer leasing with CRUMS, offering GPS-equipped 53' dry vans, inspired by family and aimed at empowering drivers.",
     date: "February 13, 2025",
     sortDate: "2025-02-13",
     externalLinks: ["https://www.truckpartsandservice.com/trucks-trailers/trailers/article/15737375/nba-star-leaps-into-trailer-leasing-business"],
