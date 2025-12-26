@@ -47,6 +47,30 @@ const DryVanTrailers = () => {
       },
       {
         "@type": "Question",
+        "name": "How many cubic feet is a 53 foot trailer?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "A standard 53-foot dry van trailer has approximately 3,489 cubic feet of cargo space. Interior dimensions are typically 53' long x 102\" wide x 110\" tall (8.5' x 9.17'), providing maximum capacity for palletized freight."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "What are 48 dry van dimensions?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "A 48-foot dry van trailer typically has interior dimensions of 48' length x 102\" width x 110\" height. This provides approximately 3,165 cubic feet of cargo space, with 24 pallet positions for standard 48x40 pallets loaded side by side."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "What is the difference between a vented van trailer and dry van?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "A vented van trailer has small vents or openings that allow air circulation, typically used for produce, onions, or cargo that generates heat. A standard dry van is fully sealed with no ventilation, ideal for general freight that needs complete protection from weather and moisture."
+        }
+      },
+      {
+        "@type": "Question",
         "name": "What sizes of dry van trailers does CRUMS offer?",
         "acceptedAnswer": {
           "@type": "Answer",
@@ -88,8 +112,8 @@ const DryVanTrailers = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <SEO
-        title="Dry Van Trailer Leasing | 53' & 48' Enclosed Trailers"
-        description="Lease dry van trailers from CRUMS. 53-foot and 48-foot options with swing or roll-up doors, logistic posts, and flexible terms starting at 12 months. Get a quote today!"
+        title="Dry Van Trailer Leasing | 53' & 48' Trailers - Dimensions & Specs"
+        description="Lease 53-foot and 48-foot dry van trailers from CRUMS. 3,489 cubic feet capacity, swing or roll-up doors, logistic posts. Flexible terms starting at 12 months."
         canonical="https://crumsleasing.com/dry-van-trailers"
         structuredData={combinedSchema}
       />
@@ -366,6 +390,36 @@ const DryVanTrailers = () => {
                   A dry van trailer is an enclosed, non-temperature-controlled trailer used for transporting dry goods 
                   and general freight. It's the most common type of semi-trailer in the trucking industry, protecting 
                   cargo from weather and theft.
+                </p>
+              </CardContent>
+            </Card>
+            <Card className="border-2">
+              <CardContent className="p-6">
+                <h3 className="text-lg font-bold mb-2">How many cubic feet is a 53 foot trailer?</h3>
+                <p className="text-muted-foreground">
+                  A standard 53-foot dry van trailer has approximately 3,489 cubic feet of cargo space. Interior 
+                  dimensions are typically 53' long x 102" wide x 110" tall (8.5' x 9.17'), providing maximum 
+                  capacity for palletized freight with 26 standard pallet positions.
+                </p>
+              </CardContent>
+            </Card>
+            <Card className="border-2">
+              <CardContent className="p-6">
+                <h3 className="text-lg font-bold mb-2">What are 48 dry van dimensions?</h3>
+                <p className="text-muted-foreground">
+                  A 48-foot dry van trailer typically has interior dimensions of 48' length x 102" width x 110" height. 
+                  This provides approximately 3,165 cubic feet of cargo space, with 24 pallet positions for standard 
+                  48x40 pallets loaded side by side.
+                </p>
+              </CardContent>
+            </Card>
+            <Card className="border-2">
+              <CardContent className="p-6">
+                <h3 className="text-lg font-bold mb-2">What is the difference between a vented van trailer and dry van?</h3>
+                <p className="text-muted-foreground">
+                  A vented van trailer has small vents or openings that allow air circulation, typically used for 
+                  produce, onions, or cargo that generates heat. A standard dry van is fully sealed with no ventilation, 
+                  ideal for general freight that needs complete protection from weather and moisture.
                 </p>
               </CardContent>
             </Card>

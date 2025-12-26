@@ -50,6 +50,7 @@ const Tools = lazy(() => import("./pages/resources/Tools"));
 const Guides = lazy(() => import("./pages/resources/Guides"));
 const ChoosingTrailer = lazy(() => import("./pages/resources/guides/ChoosingTrailer"));
 const WhyLeasingDryVan = lazy(() => import("./pages/resources/guides/WhyLeasingDryVan"));
+const TrailerSpecifications = lazy(() => import("./pages/resources/guides/TrailerSpecifications"));
 const WhyChooseCrums = lazy(() => import("./pages/WhyChooseCrums"));
 
 // News pages
@@ -329,6 +330,7 @@ const App = () => (
             <Route path="/resources/guides" element={<Guides />} />
             <Route path="/resources/guides/choosing-trailer" element={<ChoosingTrailer />} />
             <Route path="/resources/guides/why-leasing-a-dry-van-trailer-is-a-smart-business-decision" element={<WhyLeasingDryVan />} />
+            <Route path="/resources/guides/trailer-specifications" element={<TrailerSpecifications />} />
             {/* Redirects for old guide URLs */}
             <Route path="/insights/f/why-leasing-a-dry-van-trailer-is-a-smart-business-decision" element={<Navigate to="/resources/guides/why-leasing-a-dry-van-trailer-is-a-smart-business-decision" replace />} />
             <Route path="/guides" element={<Navigate to="/resources/guides" replace />} />

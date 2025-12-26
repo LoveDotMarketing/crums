@@ -22,11 +22,11 @@ export interface Tool {
 export const tools: Tool[] = [
   {
     slug: "cost-per-mile",
-    title: "Cost Per Mile Calculator",
-    description: "Calculate your true operating cost per mile including fuel, maintenance, insurance, and more.",
+    title: "Trucking Cost Per Mile Calculator",
+    description: "Free trucking CPM calculator for owner-operators. Calculate your true operating cost per mile including fuel, maintenance, insurance, and more.",
     icon: Calculator,
     available: true,
-    lastModified: "2025-12-04",
+    lastModified: "2025-12-26",
     priority: 0.8,
     changefreq: "monthly"
   },
@@ -42,11 +42,11 @@ export const tools: Tool[] = [
   },
   {
     slug: "profit-calculator",
-    title: "Profit Per Load Calculator",
-    description: "Estimate your profit margin on each load after all expenses.",
+    title: "Trucking Profit Calculator",
+    description: "Free owner-operator profit calculator. Estimate your profit margin on each load after all expenses including deadhead miles.",
     icon: TrendingUp,
     available: true,
-    lastModified: "2025-12-04",
+    lastModified: "2025-12-26",
     priority: 0.8,
     changefreq: "monthly"
   },
@@ -72,11 +72,11 @@ export const tools: Tool[] = [
   },
   {
     slug: "tax-deductions",
-    title: "Tax Deduction Guide",
-    description: "Comprehensive guide to tax deductions available for owner-operators.",
+    title: "Owner-Operator Tax Deduction Guide",
+    description: "Comprehensive guide to tax deductions for owner-operators and truckers including per diem rates and depreciation.",
     icon: Receipt,
     available: true,
-    lastModified: "2025-12-04",
+    lastModified: "2025-12-26",
     priority: 0.7,
     changefreq: "monthly"
   }

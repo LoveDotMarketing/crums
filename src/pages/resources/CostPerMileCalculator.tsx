@@ -16,8 +16,8 @@ import { trackCalculatorUse } from "@/lib/analytics";
 const toolSchema = {
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
-  "name": "Cost Per Mile Calculator",
-  "description": "Calculate your true cost per mile with our free trucking calculator. Input fuel, insurance, maintenance, lease payments, and more to understand your operating costs.",
+  "name": "Trucking Cost Per Mile Calculator",
+  "description": "Free trucking CPM calculator for owner-operators. Calculate your true cost per mile with fuel, insurance, maintenance, lease payments, and more to understand your operating costs.",
   "url": "https://crumsleasing.com/resources/tools/cost-per-mile",
   "applicationCategory": "BusinessApplication",
   "operatingSystem": "Web Browser",
@@ -143,8 +143,8 @@ const CostPerMileCalculator = () => {
   return (
     <>
       <SEO
-        title="Cost Per Mile Calculator - Trucking Operating Cost Tool"
-        description="Calculate your true cost per mile with our free trucking calculator. Input fuel, insurance, maintenance, lease payments, and more to understand your operating costs."
+        title="Trucking Cost Per Mile Calculator | Free CPM Tool for Owner-Operators"
+        description="Free trucking CPM calculator for owner-operators. Calculate your true cost per mile including fuel, insurance, maintenance, lease payments, tolls, and permits."
         canonical="https://crumsleasing.com/resources/tools/cost-per-mile"
         structuredData={[toolSchema, howToSchema]}
       />
@@ -160,7 +160,7 @@ const CostPerMileCalculator = () => {
                 <Calculator className="h-8 w-8 text-primary-foreground" />
               </div>
               <h1 className="text-3xl md:text-4xl font-bold text-primary-foreground">
-                Cost Per Mile Calculator
+                Trucking Cost Per Mile Calculator
               </h1>
             </div>
             <p className="text-primary-foreground/80 text-lg max-w-2xl">
