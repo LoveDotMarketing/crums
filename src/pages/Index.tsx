@@ -20,6 +20,7 @@ import {
   Award,
   Star,
   Newspaper,
+  MapPin,
 } from "lucide-react";
 // Marketing images served from public folder for stable sitemap URLs
 const fleetImage = "/images/crums-trailer.png";
@@ -31,6 +32,7 @@ const trailer56171Img = "/images/trailers/trailer-56171.webp";
 import whyChooseCrumsThumbnail from "@/assets/why-choose-crums-thumbnail.png";
 import { SEO } from "@/components/SEO";
 import { organizationSchema, generateBreadcrumbSchema, customerReviews, generateReviewSchema } from "@/lib/structuredData";
+import { locations, HEADQUARTERS } from "@/lib/locations";
 
 // Lazy load ChatBot for better initial page load
 const ChatBot = lazy(() => import("@/components/ChatBot").then(m => ({ default: m.ChatBot })));
@@ -353,6 +355,92 @@ const Index = () => {
                 <p className="text-sm">& Operated Since 2024</p>
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Locations Section */}
+      <section className="py-16 bg-muted">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+              Serving Truckers Nationwide
+            </h2>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              Pick up at our Bulverde, TX yard or get delivery to major markets across the country
+            </p>
+          </div>
+
+          {/* Headquarters Highlight */}
+          <div className="max-w-4xl mx-auto mb-12">
+            <Card className="border-2 border-primary/20 bg-background">
+              <CardContent className="p-6">
+                <div className="flex flex-col md:flex-row items-center gap-6">
+                  <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                    <Truck className="h-8 w-8 text-primary" />
+                  </div>
+                  <div className="text-center md:text-left flex-grow">
+                    <h3 className="text-xl font-bold text-foreground mb-1">CRUMS Leasing Headquarters</h3>
+                    <p className="text-muted-foreground">
+                      {HEADQUARTERS.address}, {HEADQUARTERS.city}, {HEADQUARTERS.stateAbbr} {HEADQUARTERS.zip}
+                    </p>
+                    <p className="text-sm text-muted-foreground mt-2">
+                      <strong className="text-foreground">Local or passing through?</strong> Pick up at our yard. Otherwise, we deliver nationwide.
+                    </p>
+                  </div>
+                  <Link to="/locations" className="flex-shrink-0">
+                    <Button 
+                      variant="outline" 
+                      className="border-primary text-primary hover:bg-primary hover:text-primary-foreground"
+                      onClick={() => trackCtaClick('View All Locations', 'home', '/locations')}
+                    >
+                      View All Locations
+                      <ArrowRight className="ml-2 h-4 w-4" />
+                    </Button>
+                  </Link>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Featured Cities Grid */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            {locations.slice(0, 12).map((location) => (
+              <Link
+                key={location.slug}
+                to={`/locations/${location.slug}`}
+                className="group"
+                onClick={() => trackCtaClick(`Location: ${location.city}`, 'home', `/locations/${location.slug}`)}
+              >
+                <Card className="border hover:border-primary/50 hover:shadow-md transition-all h-full">
+                  <CardContent className="p-4 text-center">
+                    <MapPin className="h-5 w-5 text-primary mx-auto mb-2 group-hover:scale-110 transition-transform" />
+                    <h4 className="font-semibold text-foreground text-sm group-hover:text-primary transition-colors">
+                      {location.city}
+                    </h4>
+                    <p className="text-xs text-muted-foreground">{location.stateAbbr}</p>
+                    {location.isPickupFriendly && (
+                      <span className="inline-block mt-2 px-2 py-0.5 bg-secondary/10 text-secondary text-xs rounded-full">
+                        Pickup
+                      </span>
+                    )}
+                  </CardContent>
+                </Card>
+              </Link>
+            ))}
+          </div>
+
+          <div className="text-center mt-8">
+            <Link to="/locations">
+              <Button 
+                size="lg"
+                className="bg-primary hover:bg-primary/90"
+                onClick={() => trackCtaClick('See All Locations', 'home', '/locations')}
+              >
+                See All {locations.length} Locations
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </Button>
+            </Link>
           </div>
         </div>
       </section>
