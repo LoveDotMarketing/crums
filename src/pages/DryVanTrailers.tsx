@@ -428,6 +428,25 @@ const DryVanTrailers = () => {
               </Link>{" "}
               solutions.
             </p>
+            <p className="text-muted-foreground mb-6">
+              We deliver dry van trailers nationwide — see our{" "}
+              <Link to="/locations" className="text-secondary hover:underline font-semibold">
+                service locations
+              </Link>{" "}
+              including{" "}
+              <Link to="/locations/houston-tx" className="text-secondary hover:underline font-medium">
+                Houston
+              </Link>,{" "}
+              <Link to="/locations/san-antonio-tx" className="text-secondary hover:underline font-medium">
+                San Antonio
+              </Link>,{" "}
+              <Link to="/locations/dallas-tx" className="text-secondary hover:underline font-medium">
+                Dallas
+              </Link>, and{" "}
+              <Link to="/locations/los-angeles-ca" className="text-secondary hover:underline font-medium">
+                Los Angeles
+              </Link>.
+            </p>
             <p className="text-muted-foreground">
               Not sure which trailer is right for your operation? Read our{" "}
               <Link to="/resources/guides/choosing-trailer" className="text-primary hover:underline font-medium">
