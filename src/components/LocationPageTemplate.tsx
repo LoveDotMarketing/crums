@@ -104,18 +104,6 @@ export const LocationPageTemplate = ({ location }: LocationPageTemplateProps) =>
     }
   };
 
-  const combinedSchema = {
-    "@context": "https://schema.org",
-    "@graph": [cityLocalBusinessSchema, cityServiceSchema, breadcrumbSchema]
-  };
-
-  // Trailer types offered
-  const trailerTypes = [
-    { name: "53' Dry Van Trailers", desc: "Our most popular option for general freight", link: "/dry-van-trailers" },
-    { name: "Flatbed Trailers", desc: "For oversized and construction materials", link: "/flatbed-trailers" },
-    { name: "Refrigerated Trailers", desc: "Temperature-controlled for perishables", link: "/refrigerated-trailers" }
-  ];
-
   // FAQ items specific to this city
   const faqItems = [
     {
@@ -136,6 +124,32 @@ export const LocationPageTemplate = ({ location }: LocationPageTemplateProps) =>
       question: `Why choose CRUMS Leasing for ${location.city} trailer rental?`,
       answer: `CRUMS Leasing is a family-owned company founded by former NBA player Eric Bledsoe. We offer competitive rates, flexible terms, GPS-equipped trailers, and a people-first approach. We understand the ${location.keyIndustries.slice(0, 2).join(" and ")} industries that drive ${location.city}'s economy.`
     }
+  ];
+
+  // FAQPage schema for rich results
+  const faqSchema = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": faqItems.map(faq => ({
+      "@type": "Question",
+      "name": faq.question,
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": faq.answer
+      }
+    }))
+  };
+
+  const combinedSchema = {
+    "@context": "https://schema.org",
+    "@graph": [cityLocalBusinessSchema, cityServiceSchema, breadcrumbSchema, faqSchema]
+  };
+
+  // Trailer types offered
+  const trailerTypes = [
+    { name: "53' Dry Van Trailers", desc: "Our most popular option for general freight", link: "/dry-van-trailers" },
+    { name: "Flatbed Trailers", desc: "For oversized and construction materials", link: "/flatbed-trailers" },
+    { name: "Refrigerated Trailers", desc: "Temperature-controlled for perishables", link: "/refrigerated-trailers" }
   ];
 
   return (
