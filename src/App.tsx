@@ -26,6 +26,7 @@ const RefrigeratedTrailers = lazy(() => import("./pages/RefrigeratedTrailers"));
 const FlatbedTrailers = lazy(() => import("./pages/FlatbedTrailers"));
 const TrailerProfile56171 = lazy(() => import("./pages/TrailerProfile56171"));
 const Locations = lazy(() => import("./pages/Locations"));
+const CityLocationPage = lazy(() => import("./pages/locations/CityLocationPage"));
 const Contact = lazy(() => import("./pages/Contact"));
 const Careers = lazy(() => import("./pages/Careers"));
 const GetStarted = lazy(() => import("./pages/GetStarted"));
@@ -148,6 +149,7 @@ const App = () => (
             <Route path="/industries/manufacturing" element={<Manufacturing />} />
             <Route path="/industries/seasonal-demand" element={<SeasonalDemand />} />
             <Route path="/locations" element={<Locations />} />
+            <Route path="/locations/:citySlug" element={<CityLocationPage />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/careers" element={<Careers />} />
             <Route path="/login" element={<Login />} />

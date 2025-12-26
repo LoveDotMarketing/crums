@@ -2,11 +2,13 @@ import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { Card, CardContent } from "@/components/ui/card";
-import { MapPin, Navigation as NavigationIcon } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { MapPin, Navigation as NavigationIcon, Phone, Truck, ArrowRight, Building2 } from "lucide-react";
 import { Link } from "react-router-dom";
 const crumsTruckHighway = "/images/crums-truck-highway.png";
 import { SEO } from "@/components/SEO";
 import { localBusinessSchema, generateBreadcrumbSchema } from "@/lib/structuredData";
+import { locations, getLocationsByRegion, HEADQUARTERS } from "@/lib/locations";
 
 const Locations = () => {
   const breadcrumbSchema = generateBreadcrumbSchema([
@@ -19,22 +21,21 @@ const Locations = () => {
     "@graph": [localBusinessSchema, breadcrumbSchema]
   };
 
-  const serviceAreas = [
-    {
-      state: "Texas",
-      cities: [
-        "San Antonio, TX",
-        "Austin, TX",
-        "Houston, TX"
-      ]
-    }
+  const { texas, southwest, midwest, southeast, mountain } = getLocationsByRegion();
+
+  const regions = [
+    { name: "Texas", locations: texas, description: "Our home state — pickup available at our Bulverde yard" },
+    { name: "Southwest", locations: southwest, description: "Serving California and Arizona markets" },
+    { name: "Midwest", locations: midwest, description: "America's freight crossroads" },
+    { name: "Southeast", locations: southeast, description: "Major East Coast distribution hubs" },
+    { name: "Mountain West", locations: mountain, description: "Gateway to the Rocky Mountain region" }
   ];
 
   return (
     <div className="min-h-screen flex flex-col">
       <SEO
-        title="Locations & Service Areas - Trailer Leasing Across North America"
-        description="CRUMS Leasing is based in Bulverde, TX with service areas in San Antonio, Austin, and Houston. We ship trailers anywhere in North America including the USA, Canada, and Mexico."
+        title="Trailer Rental Locations | Pickup in Texas, Delivery Nationwide | CRUMS Leasing"
+        description="CRUMS Leasing delivers trailers nationwide. Pick up at our Bulverde, TX yard or get delivery to Houston, Dallas, Los Angeles, Chicago, Atlanta & more. Call 1-888-570-4564."
         canonical="https://crumsleasing.com/locations"
         structuredData={combinedSchema}
       />
@@ -43,19 +44,166 @@ const Locations = () => {
       {/* Hero */}
       <section className="bg-gradient-to-r from-primary to-brand-teal-dark text-primary-foreground py-20">
         <div className="container mx-auto px-4 text-center">
-          <h1 className="text-4xl md:text-6xl font-bold mb-6">Our Locations</h1>
-          <p className="text-xl md:text-2xl max-w-4xl mx-auto text-primary-foreground/90">
-            Headquartered in Texas, serving all of North America. We ship trailers anywhere in the USA, Canada, and Mexico.
+          <h1 className="text-4xl md:text-6xl font-bold mb-6">Trailer Rental Locations</h1>
+          <p className="text-xl md:text-2xl max-w-4xl mx-auto text-primary-foreground/90 mb-8">
+            Pick up at our Bulverde, Texas yard or get delivery anywhere in the nation. 
+            We serve {locations.length}+ major markets across the United States.
           </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button asChild size="lg" variant="secondary">
+              <Link to="/get-started">
+                Get a Quote <ArrowRight className="ml-2 h-5 w-5" />
+              </Link>
+            </Button>
+            <Button asChild size="lg" variant="outline" className="bg-transparent border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10">
+              <a href={`tel:${HEADQUARTERS.phone}`}>
+                <Phone className="mr-2 h-5 w-5" />
+                {HEADQUARTERS.phone}
+              </a>
+            </Button>
+          </div>
         </div>
       </section>
 
       <Breadcrumbs />
 
-      <section className="py-20 bg-background">
+      {/* Headquarters Card */}
+      <section className="py-12 bg-muted">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
-            {/* Image - Left Side */}
+          <div className="max-w-4xl mx-auto">
+            <Card className="border-2 border-primary/20 bg-background">
+              <CardContent className="p-8">
+                <div className="flex flex-col md:flex-row gap-8 items-center">
+                  <div className="flex-shrink-0">
+                    <div className="h-20 w-20 rounded-full bg-primary/10 flex items-center justify-center">
+                      <Building2 className="h-10 w-10 text-primary" />
+                    </div>
+                  </div>
+                  <div className="flex-grow text-center md:text-left">
+                    <h2 className="text-2xl font-bold text-foreground mb-2">CRUMS Leasing Headquarters</h2>
+                    <p className="text-muted-foreground mb-4">
+                      {HEADQUARTERS.address}, {HEADQUARTERS.city}, {HEADQUARTERS.stateAbbr} {HEADQUARTERS.zip}
+                    </p>
+                    <p className="text-muted-foreground">
+                      <strong className="text-foreground">Local or passing through?</strong> Pick up your trailer directly at our shipping yard in Bulverde. 
+                      For all other locations, we deliver for a competitive fee.
+                    </p>
+                  </div>
+                  <div className="flex-shrink-0">
+                    <a 
+                      href={`tel:${HEADQUARTERS.phone}`}
+                      className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-medium"
+                    >
+                      <Phone className="h-5 w-5" />
+                      Call Us
+                    </a>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </section>
+
+      {/* Pickup vs Delivery Explainer */}
+      <section className="py-16 bg-background">
+        <div className="container mx-auto px-4">
+          <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+            <Card className="border-2">
+              <CardContent className="p-6">
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="h-12 w-12 rounded-full bg-secondary/10 flex items-center justify-center">
+                    <Truck className="h-6 w-6 text-secondary" />
+                  </div>
+                  <h3 className="text-xl font-bold text-foreground">Pickup at Our Yard</h3>
+                </div>
+                <p className="text-muted-foreground mb-4">
+                  If you're local to Central Texas or passing through, you can pick up your trailer directly at our Bulverde shipping yard. 
+                  Inspect your equipment, complete paperwork, and hit the road.
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  <strong>Best for:</strong> San Antonio, Austin, New Braunfels, and surrounding areas
+                </p>
+              </CardContent>
+            </Card>
+            <Card className="border-2">
+              <CardContent className="p-6">
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
+                    <MapPin className="h-6 w-6 text-primary" />
+                  </div>
+                  <h3 className="text-xl font-bold text-foreground">Nationwide Delivery</h3>
+                </div>
+                <p className="text-muted-foreground mb-4">
+                  We deliver trailers anywhere in the United States for a competitive fee. 
+                  Our team handles transportation so you can focus on your business.
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  <strong>Best for:</strong> Houston, Dallas, Los Angeles, Chicago, Atlanta, and beyond
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </section>
+
+      {/* Location Grid by Region */}
+      <section className="py-16 bg-muted">
+        <div className="container mx-auto px-4">
+          <h2 className="text-3xl font-bold text-center mb-4 text-foreground">
+            Cities We Serve
+          </h2>
+          <p className="text-center text-muted-foreground mb-12 max-w-2xl mx-auto">
+            Click any city below to learn about trailer rental options, local industries, and delivery information.
+          </p>
+          
+          <div className="space-y-12">
+            {regions.map((region) => (
+              region.locations.length > 0 && (
+                <div key={region.name}>
+                  <div className="flex items-center gap-3 mb-6">
+                    <NavigationIcon className="h-6 w-6 text-primary" />
+                    <h3 className="text-2xl font-bold text-foreground">{region.name}</h3>
+                    <span className="text-muted-foreground">— {region.description}</span>
+                  </div>
+                  <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                    {region.locations.map((location) => (
+                      <Link
+                        key={location.slug}
+                        to={`/locations/${location.slug}`}
+                        className="group"
+                      >
+                        <Card className="border hover:border-primary/50 hover:shadow-md transition-all h-full">
+                          <CardContent className="p-4">
+                            <div className="flex items-start gap-3">
+                              <MapPin className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
+                              <div>
+                                <h4 className="font-semibold text-foreground group-hover:text-primary transition-colors">
+                                  {location.city}, {location.stateAbbr}
+                                </h4>
+                                {location.isPickupFriendly && (
+                                  <span className="inline-block mt-1 px-2 py-0.5 bg-secondary/10 text-secondary text-xs rounded-full">
+                                    Pickup Available
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              )
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Hero Image Section */}
+      <section className="py-16 bg-background">
+        <div className="container mx-auto px-4">
+          <div className="grid lg:grid-cols-2 gap-8 items-center">
             <div>
               <img 
                 src={crumsTruckHighway} 
@@ -66,109 +214,86 @@ const Locations = () => {
                 height="533"
               />
             </div>
-
-            {/* Location and Service Areas - Right Side */}
-            <div className="space-y-6">
-
-              {/* Service Areas */}
-              <Card className="border-2">
-                <CardContent className="p-6">
-                  <div className="flex items-center mb-6">
-                    <div className="h-10 w-10 rounded-full bg-secondary/10 flex items-center justify-center mr-3">
-                      <NavigationIcon className="h-5 w-5 text-secondary" />
+            <div>
+              <h2 className="text-3xl font-bold mb-6 text-foreground">
+                Quality Trailers, Delivered Anywhere
+              </h2>
+              <p className="text-lg text-muted-foreground mb-6">
+                From our headquarters in Bulverde, Texas, we serve trucking professionals across the nation. 
+                Whether you're an owner-operator in Houston, a fleet manager in Chicago, or a logistics company in Los Angeles, 
+                we have the trailers you need.
+              </p>
+              <ul className="space-y-3 mb-8">
+                {[
+                  "53' Dry Van, Flatbed & Refrigerated Trailers",
+                  "GPS-equipped for peace of mind",
+                  "Flexible lease terms starting at 12 months",
+                  "Short-term rentals available",
+                  "Family-owned with a people-first approach"
+                ].map((item) => (
+                  <li key={item} className="flex items-start gap-3 text-muted-foreground">
+                    <div className="h-6 w-6 rounded-full bg-secondary/10 flex items-center justify-center flex-shrink-0">
+                      <ArrowRight className="h-4 w-4 text-secondary" />
                     </div>
-                    <h3 className="text-2xl font-bold text-foreground">Service Areas</h3>
-                  </div>
-                  
-                  {serviceAreas.map((area, index) => (
-                    <div key={index} className="space-y-4">
-                      <div>
-                        <h4 className="text-lg font-semibold text-foreground mb-3">{area.state}</h4>
-                        <ul className="space-y-2">
-                          {area.cities.map((city, cityIndex) => (
-                            <li key={cityIndex} className="flex items-start text-muted-foreground">
-                              <MapPin className="h-4 w-4 mr-2 mt-0.5 text-primary flex-shrink-0" />
-                              <span>{city}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    </div>
-                  ))}
-
-                  <div className="mt-6 pt-6 border-t border-border">
-                    <p className="font-semibold text-foreground mb-2">
-                      Serving All of North America
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      We proudly serve the USA, Canada, and Mexico with reliable trailer solutions. No matter where your routes take you, we've got you covered.
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
+                    {item}
+                  </li>
+                ))}
+              </ul>
+              <Button asChild size="lg">
+                <Link to="/get-started">
+                  Get Started Today <ArrowRight className="ml-2 h-5 w-5" />
+                </Link>
+              </Button>
             </div>
           </div>
+        </div>
+      </section>
 
-          <div className="mt-16 text-center">
-            <p className="text-xl text-muted-foreground mb-4">
-              Don't see a location near you?
-            </p>
-            <p className="text-lg text-muted-foreground">
-              Contact us — we have partnerships and service agreements nationwide to serve you
-              wherever you operate.
-            </p>
+      {/* Don't See Your City */}
+      <section className="py-16 bg-muted">
+        <div className="container mx-auto px-4 text-center">
+          <h2 className="text-3xl font-bold mb-4 text-foreground">
+            Don't See Your City Listed?
+          </h2>
+          <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
+            We deliver trailers anywhere in the United States. Contact us and we'll provide a custom quote for delivery to your location.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button asChild size="lg">
+              <Link to="/contact">
+                Contact Us <ArrowRight className="ml-2 h-5 w-5" />
+              </Link>
+            </Button>
+            <Button asChild size="lg" variant="outline">
+              <a href={`tel:${HEADQUARTERS.phone}`}>
+                <Phone className="mr-2 h-5 w-5" />
+                {HEADQUARTERS.phone}
+              </a>
+            </Button>
           </div>
         </div>
       </section>
 
-      {/* Coverage Map Info */}
-      <section className="py-20 bg-muted">
-        <div className="container mx-auto px-4 text-center">
-          <h2 className="text-3xl md:text-4xl font-bold mb-8 text-foreground">
-            North America-Wide Coverage
-          </h2>
-          <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            From coast to coast and beyond, we provide fast access to quality equipment and exceptional support across the United States, Canada, and Mexico — no matter where your business takes you.
-          </p>
-        </div>
-      </section>
-
-      {/* Get Started CTA */}
-      <section className="py-16 bg-background">
+      {/* Related Pages CTA */}
+      <section className="py-12 bg-background">
         <div className="container mx-auto px-4">
-          <h2 className="text-2xl md:text-3xl font-bold text-center mb-8 text-foreground">
-            Get Started Today
-          </h2>
           <div className="max-w-3xl mx-auto text-center">
-            <p className="text-lg text-muted-foreground mb-6">
+            <p className="text-muted-foreground">
               Explore our{" "}
               <Link to="/services/trailer-leasing" className="text-primary hover:underline font-semibold">
-                trailer leasing in Texas
+                trailer leasing options
               </Link>{" "}
-              and nationwide, or check out{" "}
+              or check out{" "}
               <Link to="/services/trailer-rentals" className="text-secondary hover:underline font-semibold">
-                trailer rentals shipped anywhere in the US
+                short-term trailer rentals
               </Link>{" "}
-              for flexible short-term needs.
-            </p>
-            <p className="text-muted-foreground mb-6">
-              Ready to join the CRUMS family?{" "}
-              <Link to="/get-started" className="text-primary hover:underline font-semibold">
-                Start your leasing application
-              </Link>{" "}
-              today or{" "}
-              <Link to="/contact" className="text-primary hover:underline font-medium">
-                contact us to discuss your needs
-              </Link>.
-            </p>
-            <p className="text-muted-foreground">
-              Learn more{" "}
-              <Link to="/about" className="text-secondary hover:underline font-medium">
+              for flexible capacity. Learn more{" "}
+              <Link to="/about" className="text-primary hover:underline font-medium">
                 about our company
               </Link>{" "}
               and the{" "}
-              <Link to="/mission" className="text-secondary hover:underline font-medium">
-                values that guide us
+              <Link to="/why-choose-crums" className="text-secondary hover:underline font-medium">
+                reasons to choose CRUMS
               </Link>.
             </p>
           </div>
