@@ -74,6 +74,7 @@ const About = () => {
                 alt="CRUMS Leasing founders - a family-rooted legacy"
                 className="rounded-lg shadow-2xl"
                 loading="lazy"
+                decoding="async"
                 width="800"
                 height="600"
               />
