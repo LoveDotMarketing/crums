@@ -131,7 +131,10 @@ const FlatbedTrailers = () => {
             <p className="text-lg text-muted-foreground">
               Flatbed trailers are the go-to choice for hauling construction materials, heavy equipment, and 
               oversized cargo. With no walls or roof to limit access, you can load from any direction using 
-              forklifts, cranes, or overhead equipment.
+              forklifts, cranes, or overhead equipment. For complete deck heights and weight capacities, see our{" "}
+              <Link to="/resources/guides/trailer-specifications" className="text-primary hover:underline font-medium">
+                trailer specifications guide
+              </Link>.
             </p>
           </div>
           
