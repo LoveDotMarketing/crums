@@ -147,7 +147,10 @@ const DryVanTrailers = () => {
             <p className="text-lg text-muted-foreground">
               Dry van trailers are the backbone of the American trucking industry, hauling everything from consumer goods 
               to industrial equipment. Our fleet of well-maintained dry vans provides the protection and reliability 
-              your freight deserves.
+              your freight deserves. For complete dimensions and cubic footage specifications, see our{" "}
+              <Link to="/resources/guides/trailer-specifications" className="text-primary hover:underline font-medium">
+                trailer specifications guide
+              </Link>.
             </p>
           </div>
           

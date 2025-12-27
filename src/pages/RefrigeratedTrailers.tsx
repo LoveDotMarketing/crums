@@ -346,7 +346,11 @@ const RefrigeratedTrailers = () => {
               <Link to="/resources/guides/choosing-trailer" className="text-primary hover:underline font-medium">
                 comprehensive guide to choosing the right trailer for your haul
               </Link>{" "}
-              or{" "}
+              or check our{" "}
+              <Link to="/resources/guides/trailer-specifications" className="text-primary hover:underline font-medium">
+                complete trailer specifications guide
+              </Link>{" "}
+              for detailed dimensions and capacities. You can also{" "}
               <Link to="/contact" className="text-primary hover:underline font-medium">
                 contact our team
               </Link>{" "}
