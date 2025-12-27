@@ -34,11 +34,13 @@ import whyChooseCrumsThumbnail from "@/assets/why-choose-crums-thumbnail.png";
 import { SEO } from "@/components/SEO";
 import { organizationSchema, generateBreadcrumbSchema, customerReviews, generateReviewSchema } from "@/lib/structuredData";
 import { locations, HEADQUARTERS } from "@/lib/locations";
+import { useTimeOnPageTracking } from "@/hooks/useTimeOnPageTracking";
 
 // Lazy load ChatBot for better initial page load
 const ChatBot = lazy(() => import("@/components/ChatBot").then(m => ({ default: m.ChatBot })));
 
 const Index = () => {
+  useTimeOnPageTracking('home');
   const breadcrumbSchema = generateBreadcrumbSchema([
     { name: "Home", url: "https://crumsleasing.com/" }
   ]);
