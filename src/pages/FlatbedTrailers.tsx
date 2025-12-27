@@ -8,8 +8,10 @@ import { CheckCircle, Construction, Ruler, ArrowRight, Weight, Anchor, Truck, Wr
 import { SEO } from "@/components/SEO";
 import { generateBreadcrumbSchema } from "@/lib/structuredData";
 import { trackCtaClick } from "@/lib/analytics";
+import { useTimeOnPageTracking } from "@/hooks/useTimeOnPageTracking";
 
 const FlatbedTrailers = () => {
+  useTimeOnPageTracking('flatbed-trailers');
   const breadcrumbSchema = generateBreadcrumbSchema([
     { name: "Home", url: "https://crumsleasing.com/" },
     { name: "Services", url: "https://crumsleasing.com/services/trailer-leasing" },
