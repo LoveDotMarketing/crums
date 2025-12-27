@@ -344,6 +344,7 @@ const App = () => (
 <Route path="/resources/tools/fuel-calculator" element={<FuelCostCalculator />} />
 <Route path="/resources/tools/tax-deductions" element={<TaxDeductionGuide />} />
 <Route path="/resources/tools/per-diem-calculator" element={<PerDiemCalculator />} />
+            <Route path="/referral-program" element={<ReferralProgram />} />
             <Route path="/news" element={<News />} />
             <Route path="/news/:slug" element={<NewsArticlePage />} />
             <Route path="/reviews" element={<Reviews />} />

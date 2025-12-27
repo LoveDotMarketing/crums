@@ -178,12 +178,12 @@ export const Footer = () => {
                 </Link>
               </li>
               <li>
-                <Link to="/resources/tools/cost-per-mile-calculator" className="hover:text-secondary transition-colors">
+                <Link to="/resources/tools/cost-per-mile" className="hover:text-secondary transition-colors">
                   Cost Per Mile Calculator
                 </Link>
               </li>
               <li>
-                <Link to="/resources/tools/fuel-cost-calculator" className="hover:text-secondary transition-colors">
+                <Link to="/resources/tools/fuel-calculator" className="hover:text-secondary transition-colors">
                   Fuel Cost Calculator
                 </Link>
               </li>
