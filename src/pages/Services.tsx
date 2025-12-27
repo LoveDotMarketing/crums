@@ -6,7 +6,7 @@ import { Link } from "react-router-dom";
 import { ArrowRight, Truck, Calendar, Users, Box, Snowflake, Layers, Play } from "lucide-react";
 import { generateBreadcrumbSchema } from "@/lib/structuredData";
 import whyChooseThumb from "@/assets/why-choose-crums-video-thumb.png";
-import { trackCtaClick } from "@/lib/analytics";
+import { trackCtaClick, trackEvent } from "@/lib/analytics";
 
 const services = [
   {
@@ -88,6 +88,11 @@ const Services = () => {
                 <Link
                   key={service.href}
                   to={service.href}
+                  onClick={() => trackEvent('service_link_click', { 
+                    service_name: service.title, 
+                    destination: service.href,
+                    section: 'services'
+                  })}
                   className="group flex items-center justify-between p-6 bg-card border border-border rounded-lg hover:border-primary/50 hover:shadow-md transition-all"
                 >
                   <div className="flex items-center gap-4">
@@ -117,6 +122,11 @@ const Services = () => {
                 <Link
                   key={equipment.href}
                   to={equipment.href}
+                  onClick={() => trackEvent('equipment_link_click', { 
+                    equipment_type: equipment.title, 
+                    destination: equipment.href,
+                    section: 'equipment_types'
+                  })}
                   className="group flex items-center justify-between p-6 bg-card border border-border rounded-lg hover:border-primary/50 hover:shadow-md transition-all"
                 >
                   <div className="flex items-center gap-4">
@@ -143,6 +153,11 @@ const Services = () => {
             </h2>
             <Link 
               to="/why-choose-crums" 
+              onClick={() => trackEvent('video_link_click', { 
+                video_title: 'Why CDL Drivers Choose CRUMS Leasing', 
+                destination: '/why-choose-crums',
+                section: 'featured_video'
+              })}
               className="group block bg-card border border-border rounded-lg overflow-hidden hover:border-primary/50 hover:shadow-lg transition-all"
             >
               <div className="flex flex-col md:flex-row">
