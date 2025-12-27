@@ -6,6 +6,7 @@ import { Link } from "react-router-dom";
 import { ArrowRight, Truck, Calendar, Users, Box, Snowflake, Layers, Play } from "lucide-react";
 import { generateBreadcrumbSchema } from "@/lib/structuredData";
 import whyChooseThumb from "@/assets/why-choose-crums-video-thumb.png";
+import { trackCtaClick } from "@/lib/analytics";
 
 const services = [
   {
@@ -185,6 +186,7 @@ const Services = () => {
             </p>
             <Link
               to="/get-started"
+              onClick={() => trackCtaClick('Request a Quote', 'services', '/get-started')}
               className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 rounded-lg font-semibold hover:bg-primary/90 transition-colors"
             >
               Request a Quote

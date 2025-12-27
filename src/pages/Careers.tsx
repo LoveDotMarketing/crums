@@ -8,6 +8,7 @@ import { Heart, TrendingUp, Users, Award, ArrowRight } from "lucide-react";
 const teamImage = "/images/team-handshake.jpg";
 import { SEO } from "@/components/SEO";
 import { generateBreadcrumbSchema } from "@/lib/structuredData";
+import { trackCtaClick } from "@/lib/analytics";
 
 const Careers = () => {
   const jobPostings = [
@@ -84,7 +85,7 @@ const Careers = () => {
             Build your career with a company that values integrity, hard work, and putting people
             first.
           </p>
-          <Link to="/contact">
+          <Link to="/contact" onClick={() => trackCtaClick('View Open Positions', 'careers-hero', '/contact')}>
             <Button size="lg" className="bg-secondary hover:bg-secondary/90">
               View Open Positions
               <ArrowRight className="ml-2 h-5 w-5" />
@@ -296,7 +297,7 @@ const Careers = () => {
             We're always looking for talented individuals who share our values. Send us your resume
             and let's talk about how you can contribute to the CRUMS family.
           </p>
-          <Link to="/contact">
+          <Link to="/contact" onClick={() => trackCtaClick('Submit Your Resume', 'careers-cta', '/contact')}>
             <Button size="lg" className="bg-secondary hover:bg-secondary/90">
               Submit Your Resume
               <ArrowRight className="ml-2 h-5 w-5" />

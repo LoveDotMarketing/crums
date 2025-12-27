@@ -11,6 +11,7 @@ import {
   customerReviews, 
   generateReviewSchema 
 } from "@/lib/structuredData";
+import { trackCtaClick, trackOutboundLink } from "@/lib/analytics";
 
 const Reviews = () => {
   const breadcrumbSchema = generateBreadcrumbSchema([
@@ -130,6 +131,7 @@ const Reviews = () => {
               href="https://search.google.com/local/writereview?placeid=ChIJv4g00VWHXIYRXgCdneji-DI"
               target="_blank"
               rel="noopener noreferrer"
+              onClick={() => trackOutboundLink('https://search.google.com/local/writereview')}
             >
               <Button size="lg" className="bg-primary hover:bg-primary/90">
                 Write a Google Review
@@ -167,6 +169,7 @@ const Reviews = () => {
                     href={platform.url}
                     target="_blank"
                     rel="noopener noreferrer"
+                    onClick={() => trackOutboundLink(platform.url)}
                   >
                     <Button variant="outline" className="w-full">
                       {platform.buttonText}
@@ -213,7 +216,7 @@ const Reviews = () => {
           <p className="text-xl mb-8 max-w-2xl mx-auto text-primary-foreground/90">
             Join our growing family of satisfied customers and see why carriers across Texas choose CRUMS Leasing.
           </p>
-          <Link to="/get-started">
+          <Link to="/get-started" onClick={() => trackCtaClick('Get Started Today', 'reviews-cta', '/get-started')}>
             <Button size="lg" className="bg-secondary hover:bg-secondary/90 text-secondary-foreground">
               Get Started Today
             </Button>

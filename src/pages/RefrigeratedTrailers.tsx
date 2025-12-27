@@ -7,6 +7,7 @@ import { Link } from "react-router-dom";
 import { CheckCircle, Thermometer, Snowflake, Shield, ArrowRight, Gauge, Timer, Truck } from "lucide-react";
 import { SEO } from "@/components/SEO";
 import { generateBreadcrumbSchema } from "@/lib/structuredData";
+import { trackCtaClick } from "@/lib/analytics";
 
 const RefrigeratedTrailers = () => {
   const breadcrumbSchema = generateBreadcrumbSchema([
@@ -102,7 +103,7 @@ const RefrigeratedTrailers = () => {
           <p className="text-xl md:text-2xl max-w-4xl mx-auto text-primary-foreground/90 mb-8">
             Temperature-controlled transport for your perishable cargo. Keep it cold, keep it fresh, keep it moving.
           </p>
-          <Link to="/contact">
+          <Link to="/contact" onClick={() => trackCtaClick('Request A Quote', 'refrigerated-trailers-hero', '/contact')}>
             <Button size="lg" className="bg-secondary hover:bg-secondary/90">
               Request A Quote
               <ArrowRight className="ml-2 h-5 w-5" />

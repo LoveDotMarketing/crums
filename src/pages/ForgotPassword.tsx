@@ -10,6 +10,7 @@ import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Mail, ArrowLeft, CheckCircle } from "lucide-react";
+import { trackFormSubmission } from "@/lib/analytics";
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState("");
@@ -33,9 +34,11 @@ const ForgotPassword = () => {
 
       if (error) {
         toast.error(error.message);
+        trackFormSubmission('forgot_password', false);
       } else {
         setEmailSent(true);
         toast.success("Password reset link sent to your email");
+        trackFormSubmission('forgot_password', true);
       }
     } catch (err) {
       toast.error("An unexpected error occurred");

@@ -10,6 +10,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Lock, CheckCircle, AlertCircle } from "lucide-react";
+import { trackFormSubmission } from "@/lib/analytics";
 
 const ResetPassword = () => {
   const [password, setPassword] = useState("");
@@ -48,9 +49,11 @@ const ResetPassword = () => {
 
       if (error) {
         toast.error(error.message);
+        trackFormSubmission('reset_password', false);
       } else {
         setIsSuccess(true);
         toast.success("Password updated successfully!");
+        trackFormSubmission('reset_password', true);
         
         // Update outreach status to mark password as set
         const { data: { user } } = await supabase.auth.getUser();

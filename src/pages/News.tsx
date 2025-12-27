@@ -6,6 +6,7 @@ import { SEO } from "@/components/SEO";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { newsArticles, generateNewsListSchema } from "@/lib/news";
 import { generateBreadcrumbSchema } from "@/lib/structuredData";
+import { trackOutboundLink } from "@/lib/analytics";
 
 const News = () => {
   const breadcrumbItems = [
@@ -137,6 +138,7 @@ const News = () => {
               href="https://www.instagram.com/crumsleasingllc/" 
               target="_blank" 
               rel="noopener noreferrer"
+              onClick={() => trackOutboundLink('https://www.instagram.com/crumsleasingllc/')}
               className="bg-primary-foreground/10 hover:bg-primary-foreground/20 px-6 py-3 rounded-lg font-semibold transition-colors"
             >
               Instagram
@@ -145,6 +147,7 @@ const News = () => {
               href="https://www.linkedin.com/company/crums-leasing/" 
               target="_blank" 
               rel="noopener noreferrer"
+              onClick={() => trackOutboundLink('https://www.linkedin.com/company/crums-leasing/')}
               className="bg-primary-foreground/10 hover:bg-primary-foreground/20 px-6 py-3 rounded-lg font-semibold transition-colors"
             >
               LinkedIn
@@ -153,6 +156,7 @@ const News = () => {
               href="https://www.facebook.com/people/CRUMS-Leasing/100090574399864/" 
               target="_blank" 
               rel="noopener noreferrer"
+              onClick={() => trackOutboundLink('https://www.facebook.com/people/CRUMS-Leasing/100090574399864/')}
               className="bg-primary-foreground/10 hover:bg-primary-foreground/20 px-6 py-3 rounded-lg font-semibold transition-colors"
             >
               Facebook

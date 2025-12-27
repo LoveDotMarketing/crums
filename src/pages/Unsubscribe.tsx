@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Loader2, MailX, CheckCircle, AlertCircle } from "lucide-react";
+import { trackEvent } from "@/lib/analytics";
 
 export default function Unsubscribe() {
   const [searchParams] = useSearchParams();
@@ -33,6 +34,7 @@ export default function Unsubscribe() {
 
       setStatus("success");
       toast.success("You have been unsubscribed from marketing emails");
+      trackEvent('email_unsubscribe', { action: 'unsubscribe' });
     } catch (error) {
       console.error("Unsubscribe error:", error);
       setStatus("error");
@@ -56,6 +58,7 @@ export default function Unsubscribe() {
 
       setStatus("confirm");
       toast.success("You have been resubscribed to marketing emails");
+      trackEvent('email_unsubscribe', { action: 'resubscribe' });
     } catch (error) {
       console.error("Resubscribe error:", error);
       toast.error("Failed to resubscribe. Please contact support.");
