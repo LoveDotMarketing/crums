@@ -141,5 +141,14 @@ export const trackChatbotMessage = () => {
   trackEvent('chatbot_message_sent', { event_category: 'engagement' });
 };
 
+// Scroll depth tracking
+export const trackScrollDepth = (pageName: string, depth: number) => {
+  trackEvent('scroll_depth', {
+    page_name: pageName,
+    percent_scrolled: depth,
+    event_category: 'engagement',
+  });
+};
+
 // GA4 Dashboard URL for admin reference
 export const GA4_DASHBOARD_URL = 'https://analytics.google.com/analytics/web/#/a377323275p515941987/reports/intelligenthome?params=_u..nav%3Dmaui';

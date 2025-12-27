@@ -10,8 +10,11 @@ const teamImage = "/images/team-leaders.png";
 import { SEO } from "@/components/SEO";
 import { organizationSchema, generateBreadcrumbSchema } from "@/lib/structuredData";
 import { trackCtaClick } from "@/lib/analytics";
+import { useScrollDepthTracking } from "@/hooks/useScrollDepthTracking";
 
 const About = () => {
+  useScrollDepthTracking('about');
+  
   const breadcrumbSchema = generateBreadcrumbSchema([
     { name: "Home", url: "https://crumsleasing.com/" },
     { name: "About", url: "https://crumsleasing.com/about" }

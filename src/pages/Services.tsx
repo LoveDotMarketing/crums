@@ -7,6 +7,7 @@ import { ArrowRight, Truck, Calendar, Users, Box, Snowflake, Layers, Play } from
 import { generateBreadcrumbSchema } from "@/lib/structuredData";
 import whyChooseThumb from "@/assets/why-choose-crums-video-thumb.png";
 import { trackCtaClick, trackEvent } from "@/lib/analytics";
+import { useScrollDepthTracking } from "@/hooks/useScrollDepthTracking";
 
 const services = [
   {
@@ -51,6 +52,8 @@ const equipmentTypes = [
 ];
 
 const Services = () => {
+  useScrollDepthTracking('services');
+  
   const breadcrumbSchema = generateBreadcrumbSchema([
     { name: "Home", url: "https://crumsleasing.com" },
     { name: "Services", url: "https://crumsleasing.com/services" },
