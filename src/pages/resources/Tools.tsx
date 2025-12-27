@@ -6,7 +6,7 @@ import { SEO } from "@/components/SEO";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Calculator, ArrowRight, Fuel, Scale, TrendingUp, Receipt, FileText, ArrowLeft, AlertTriangle } from "lucide-react";
+import { Calculator, ArrowRight, Fuel, Scale, TrendingUp, Receipt, FileText, ArrowLeft, AlertTriangle, Calendar } from "lucide-react";
 
 const tools = [
   {
@@ -29,6 +29,13 @@ const tools = [
     description: "Calculate the true profitability of each load by factoring in all expenses including deadhead miles.",
     href: "/resources/tools/profit-calculator",
     features: ["Load profitability analysis", "Deadhead mile tracking", "Expense breakdown"]
+  },
+  {
+    icon: Calendar,
+    title: "Per Diem Calculator",
+    description: "Calculate your annual per diem tax deduction based on the 2024 IRS rate of $69/day for truck drivers.",
+    href: "/resources/tools/per-diem-calculator",
+    features: ["2024 IRS rates", "Full & partial day rates", "Tax savings estimate"]
   },
   {
     icon: Receipt,
