@@ -6,7 +6,9 @@ import { PrintButton } from "@/components/PrintButton";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Receipt, CheckCircle2, AlertTriangle, Calendar, FileText, DollarSign, Truck, Building2, Phone, Fuel, Shield, Wrench, Scale } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
+import { Receipt, CheckCircle2, AlertTriangle, Calendar, FileText, DollarSign, Truck, Building2, Phone, Fuel, Shield, Wrench, Scale, Calculator, ArrowRight } from "lucide-react";
 
 const TaxDeductionGuide = () => {
   const commonDeductions = [
@@ -194,6 +196,22 @@ const TaxDeductionGuide = () => {
                     </li>
                   ))}
                 </ul>
+
+                <div className="mt-6 p-4 bg-primary/5 border border-primary/20 rounded-lg">
+                  <div className="flex items-center gap-3 mb-3">
+                    <Calculator className="h-5 w-5 text-primary" />
+                    <h4 className="font-medium">Calculate Your Per Diem Deduction</h4>
+                  </div>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Use our free per diem calculator to estimate your annual deduction based on days away from home.
+                  </p>
+                  <Link to="/resources/tools/per-diem-calculator">
+                    <Button variant="outline" className="w-full sm:w-auto">
+                      Open Per Diem Calculator
+                      <ArrowRight className="ml-2 h-4 w-4" />
+                    </Button>
+                  </Link>
+                </div>
               </div>
             </CardContent>
           </Card>
