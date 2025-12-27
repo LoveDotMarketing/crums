@@ -7,7 +7,7 @@ export const Footer = () => {
   return (
     <footer className="bg-primary text-primary-foreground" role="contentinfo">
       <div className="container mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-8 mb-8">
           {/* Company Info */}
           <div>
             <Link to="/">
@@ -156,6 +156,40 @@ export const Footer = () => {
               <li>
                 <Link to="/contact" className="hover:text-secondary transition-colors">
                   Contact
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          {/* Resources */}
+          <div>
+            <Link to="/resources" className="hover:text-secondary transition-colors">
+              <h3 className="font-semibold text-lg mb-4">Resources</h3>
+            </Link>
+            <ul className="space-y-2 text-sm">
+              <li>
+                <Link to="/resources/tools" className="hover:text-secondary transition-colors">
+                  Trucking Calculators
+                </Link>
+              </li>
+              <li>
+                <Link to="/resources/guides" className="hover:text-secondary transition-colors">
+                  Industry Guides
+                </Link>
+              </li>
+              <li>
+                <Link to="/resources/tools/cost-per-mile-calculator" className="hover:text-secondary transition-colors">
+                  Cost Per Mile Calculator
+                </Link>
+              </li>
+              <li>
+                <Link to="/resources/tools/fuel-cost-calculator" className="hover:text-secondary transition-colors">
+                  Fuel Cost Calculator
+                </Link>
+              </li>
+              <li>
+                <Link to="/resources/tools/per-diem-calculator" className="hover:text-secondary transition-colors">
+                  Per Diem Calculator
                 </Link>
               </li>
             </ul>
