@@ -143,6 +143,7 @@ const Index = () => {
                 alt="Why CDL Drivers Choose CRUMS Leasing - trailer with basketballs video thumbnail"
                 className="w-full h-auto group-hover:scale-105 transition-transform duration-300"
                 loading="lazy"
+                decoding="async"
                 width={889}
                 height={500}
               />
@@ -240,6 +241,7 @@ const Index = () => {
                       alt="2020 Dry Van Trailer 56171 available for lease"
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                       loading="lazy"
+                      decoding="async"
                       width={600}
                       height={400}
                     />
@@ -347,6 +349,7 @@ const Index = () => {
                 alt="CRUMS Leasing team and trailer fleet" 
                 className="rounded-lg shadow-xl w-full"
                 loading="lazy"
+                decoding="async"
                 width={600}
                 height={400}
               />
@@ -844,6 +847,7 @@ const Index = () => {
                 alt="Professional fleet management"
                 className="rounded-lg shadow-2xl"
                 loading="lazy"
+                decoding="async"
                 width="800"
                 height="600"
               />
