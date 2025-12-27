@@ -9,6 +9,7 @@ const crumsTruckHighway = "/images/crums-truck-highway.png";
 import { SEO } from "@/components/SEO";
 import { localBusinessSchema, generateBreadcrumbSchema } from "@/lib/structuredData";
 import { locations, getLocationsByRegion, HEADQUARTERS } from "@/lib/locations";
+import { trackCtaClick, trackPhoneClick } from "@/lib/analytics";
 
 const Locations = () => {
   const breadcrumbSchema = generateBreadcrumbSchema([
@@ -51,12 +52,12 @@ const Locations = () => {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button asChild size="lg" variant="secondary">
-              <Link to="/get-started">
+              <Link to="/get-started" onClick={() => trackCtaClick('Get a Quote', 'locations-hero', '/get-started')}>
                 Get a Quote <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
             </Button>
             <Button asChild size="lg" variant="outline" className="bg-transparent border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10">
-              <a href={`tel:${HEADQUARTERS.phone}`}>
+              <a href={`tel:${HEADQUARTERS.phone}`} onClick={() => trackPhoneClick('locations-hero')}>
                 <Phone className="mr-2 h-5 w-5" />
                 {HEADQUARTERS.phone}
               </a>
@@ -92,6 +93,7 @@ const Locations = () => {
                   <div className="flex-shrink-0">
                     <a 
                       href={`tel:${HEADQUARTERS.phone}`}
+                      onClick={() => trackPhoneClick('locations-headquarters')}
                       className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-medium"
                     >
                       <Phone className="h-5 w-5" />
@@ -260,12 +262,12 @@ const Locations = () => {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button asChild size="lg">
-              <Link to="/contact">
+              <Link to="/contact" onClick={() => trackCtaClick('Contact Us', 'locations-cta', '/contact')}>
                 Contact Us <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
             </Button>
             <Button asChild size="lg" variant="outline">
-              <a href={`tel:${HEADQUARTERS.phone}`}>
+              <a href={`tel:${HEADQUARTERS.phone}`} onClick={() => trackPhoneClick('locations-cta')}>
                 <Phone className="mr-2 h-5 w-5" />
                 {HEADQUARTERS.phone}
               </a>

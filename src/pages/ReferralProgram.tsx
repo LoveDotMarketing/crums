@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Link } from "react-router-dom";
 import { Gift, Users, DollarSign, ArrowRight, CheckCircle } from "lucide-react";
+import { trackCtaClick } from "@/lib/analytics";
 
 const faqSchema = {
   "@context": "https://schema.org",
@@ -106,13 +107,13 @@ const ReferralProgram = () => {
               For every referral who signs a lease, you'll receive $250 off your next payment.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link to="/login">
+              <Link to="/login" onClick={() => trackCtaClick('Get Your Referral Code', 'referral-hero', '/login')}>
                 <Button size="lg" className="bg-secondary hover:bg-secondary/90 text-secondary-foreground">
                   Get Your Referral Code
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
               </Link>
-              <Link to="/get-started">
+              <Link to="/get-started" onClick={() => trackCtaClick('New to CRUMS? Sign Up', 'referral-hero', '/get-started')}>
                 <Button size="lg" variant="ghost" className="border border-primary-foreground/50 text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground">
                   New to CRUMS? Sign Up
                 </Button>
@@ -180,7 +181,7 @@ const ReferralProgram = () => {
                   <p className="text-sm text-primary-foreground/80 mb-4">
                     Credit is applied once your referral signs a trailer lease agreement with CRUMS Leasing.
                   </p>
-                  <Link to="/login">
+                  <Link to="/login" onClick={() => trackCtaClick('Start Earning Today', 'referral-benefits', '/login')}>
                     <Button className="bg-secondary hover:bg-secondary/90 text-secondary-foreground w-full">
                       Start Earning Today
                     </Button>
@@ -260,7 +261,7 @@ const ReferralProgram = () => {
             Join thousands of satisfied CRUMS customers who are earning rewards 
             by sharing the trailer leasing solution they trust.
           </p>
-          <Link to="/login">
+          <Link to="/login" onClick={() => trackCtaClick('Get Your Referral Code Now', 'referral-cta', '/login')}>
             <Button size="lg" className="bg-primary hover:bg-primary/90">
               Get Your Referral Code Now
               <ArrowRight className="ml-2 h-5 w-5" />

@@ -6,6 +6,7 @@ import { Heart, Award, CheckCircle, Shield, Users, TrendingUp } from "lucide-rea
 import { SEO } from "@/components/SEO";
 import { generateBreadcrumbSchema } from "@/lib/structuredData";
 import { Link } from "react-router-dom";
+import { trackCtaClick } from "@/lib/analytics";
 
 const Mission = () => {
   const breadcrumbSchema = generateBreadcrumbSchema([
@@ -274,25 +275,25 @@ const Mission = () => {
           <div className="max-w-3xl mx-auto text-center">
             <p className="text-lg text-muted-foreground mb-6">
               Learn more about the{" "}
-              <Link to="/about" className="text-primary hover:underline font-semibold">
+              <Link to="/about" onClick={() => trackCtaClick('CRUMS Leasing story', 'mission', '/about')} className="text-primary hover:underline font-semibold">
                 CRUMS Leasing story and history
               </Link>{" "}
               and meet the team behind our commitment to carriers nationwide.
             </p>
             <p className="text-muted-foreground mb-6">
               Ready to experience these values firsthand? Explore our{" "}
-              <Link to="/services/trailer-leasing" className="text-secondary hover:underline font-semibold">
+              <Link to="/services/trailer-leasing" onClick={() => trackCtaClick('trailer leasing services', 'mission', '/services/trailer-leasing')} className="text-secondary hover:underline font-semibold">
                 trailer leasing services
               </Link>{" "}
               or browse{" "}
-              <Link to="/careers" className="text-secondary hover:underline font-semibold">
+              <Link to="/careers" onClick={() => trackCtaClick('career opportunities', 'mission', '/careers')} className="text-secondary hover:underline font-semibold">
                 career opportunities at CRUMS
               </Link>{" "}
               if you share our passion for excellence.
             </p>
             <p className="text-muted-foreground">
               Have questions?{" "}
-              <Link to="/contact" className="text-primary hover:underline font-medium">
+              <Link to="/contact" onClick={() => trackCtaClick('Contact our team', 'mission', '/contact')} className="text-primary hover:underline font-medium">
                 Contact our team
               </Link>{" "}
               — we'd love to hear from you.

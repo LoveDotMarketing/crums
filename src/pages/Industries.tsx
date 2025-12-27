@@ -6,6 +6,7 @@ import { Link } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Truck, User, Building2, UtensilsCrossed, ShoppingCart, Factory, Calendar, ArrowRight } from "lucide-react";
 import { generateBreadcrumbSchema } from "@/lib/structuredData";
+import { trackCtaClick } from "@/lib/analytics";
 
 const industries = [
   {
@@ -142,6 +143,7 @@ const Industries = () => {
             </p>
             <Link
               to="/contact"
+              onClick={() => trackCtaClick('Contact Us', 'industries-cta', '/contact')}
               className="inline-flex items-center justify-center gap-2 px-8 py-3 bg-secondary text-secondary-foreground font-semibold rounded-lg hover:bg-secondary/90 transition-colors"
             >
               Contact Us

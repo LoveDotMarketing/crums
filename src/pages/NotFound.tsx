@@ -6,7 +6,7 @@ import { Footer } from "@/components/Footer";
 import { SEO } from "@/components/SEO";
 import { Button } from "@/components/ui/button";
 import { Home, Phone, MapPin, FileText, ArrowLeft, Search } from "lucide-react";
-import { trackPhoneClick } from "@/lib/analytics"; // GA4 tracking
+import { trackPhoneClick, trackCtaClick } from "@/lib/analytics";
 
 const NotFound = () => {
   const location = useLocation();
@@ -141,7 +141,7 @@ const NotFound = () => {
               
               {/* Primary CTA */}
               <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
-                <Link to="/">
+                <Link to="/" onClick={() => trackCtaClick('Go to Homepage', '404', '/')}>
                   <Button size="lg" className="gap-2">
                     <Home className="h-4 w-4" />
                     Go to Homepage
@@ -151,7 +151,10 @@ const NotFound = () => {
                   variant="outline" 
                   size="lg" 
                   className="gap-2"
-                  onClick={() => window.history.back()}
+                  onClick={() => {
+                    trackCtaClick('Go Back', '404');
+                    window.history.back();
+                  }}
                 >
                   <ArrowLeft className="h-4 w-4" />
                   Go Back

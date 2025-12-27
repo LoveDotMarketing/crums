@@ -7,6 +7,7 @@ import { Link } from "react-router-dom";
 import { CheckCircle, Construction, Ruler, ArrowRight, Weight, Anchor, Truck, Wrench } from "lucide-react";
 import { SEO } from "@/components/SEO";
 import { generateBreadcrumbSchema } from "@/lib/structuredData";
+import { trackCtaClick } from "@/lib/analytics";
 
 const FlatbedTrailers = () => {
   const breadcrumbSchema = generateBreadcrumbSchema([
@@ -110,7 +111,7 @@ const FlatbedTrailers = () => {
           <p className="text-xl md:text-2xl max-w-4xl mx-auto text-primary-foreground/90 mb-8">
             Heavy-duty hauling for oversized and open cargo. Load from any angle with our versatile flatbed fleet.
           </p>
-          <Link to="/contact">
+          <Link to="/contact" onClick={() => trackCtaClick('Request A Quote', 'flatbed-trailers-hero', '/contact')}>
             <Button size="lg" className="bg-secondary hover:bg-secondary/90">
               Request A Quote
               <ArrowRight className="ml-2 h-5 w-5" />
