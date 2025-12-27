@@ -5,6 +5,7 @@ import {
   MapPin, 
   Fuel,
   Receipt,
+  Calendar,
   LucideIcon
 } from "lucide-react";
 
@@ -78,6 +79,16 @@ export const tools: Tool[] = [
     available: true,
     lastModified: "2025-12-26",
     priority: 0.7,
+    changefreq: "monthly"
+  },
+  {
+    slug: "per-diem-calculator",
+    title: "Truck Driver Per Diem Calculator",
+    description: "Free per diem calculator for truck drivers. Calculate your annual per diem tax deduction at $69/day based on days away from home.",
+    icon: Calendar,
+    available: true,
+    lastModified: "2025-12-27",
+    priority: 0.9,
     changefreq: "monthly"
   }
 ];

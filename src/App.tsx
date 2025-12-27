@@ -46,6 +46,7 @@ const ProfitPerLoadCalculator = lazy(() => import("./pages/resources/ProfitPerLo
 const IFTACalculator = lazy(() => import("./pages/resources/IFTACalculator"));
 const FuelCostCalculator = lazy(() => import("./pages/resources/FuelCostCalculator"));
 const TaxDeductionGuide = lazy(() => import("./pages/resources/TaxDeductionGuide"));
+const PerDiemCalculator = lazy(() => import("./pages/resources/PerDiemCalculator"));
 const Tools = lazy(() => import("./pages/resources/Tools"));
 const Guides = lazy(() => import("./pages/resources/Guides"));
 const ChoosingTrailer = lazy(() => import("./pages/resources/guides/ChoosingTrailer"));
@@ -342,7 +343,7 @@ const App = () => (
 <Route path="/resources/tools/ifta-calculator" element={<IFTACalculator />} />
 <Route path="/resources/tools/fuel-calculator" element={<FuelCostCalculator />} />
 <Route path="/resources/tools/tax-deductions" element={<TaxDeductionGuide />} />
-            <Route path="/referral-program" element={<ReferralProgram />} />
+<Route path="/resources/tools/per-diem-calculator" element={<PerDiemCalculator />} />
             <Route path="/news" element={<News />} />
             <Route path="/news/:slug" element={<NewsArticlePage />} />
             <Route path="/reviews" element={<Reviews />} />
