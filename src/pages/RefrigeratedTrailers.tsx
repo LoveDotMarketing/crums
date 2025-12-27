@@ -8,8 +8,10 @@ import { CheckCircle, Thermometer, Snowflake, Shield, ArrowRight, Gauge, Timer, 
 import { SEO } from "@/components/SEO";
 import { generateBreadcrumbSchema } from "@/lib/structuredData";
 import { trackCtaClick } from "@/lib/analytics";
+import { useTimeOnPageTracking } from "@/hooks/useTimeOnPageTracking";
 
 const RefrigeratedTrailers = () => {
+  useTimeOnPageTracking('refrigerated-trailers');
   const breadcrumbSchema = generateBreadcrumbSchema([
     { name: "Home", url: "https://crumsleasing.com/" },
     { name: "Services", url: "https://crumsleasing.com/services/trailer-leasing" },
