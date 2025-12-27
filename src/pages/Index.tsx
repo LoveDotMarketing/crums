@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { trackCtaClick } from "@/lib/analytics";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
+import { ProgressiveImage } from "@/components/ProgressiveImage";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -344,12 +345,10 @@ const Index = () => {
               </Link>
             </div>
             <div className="relative">
-              <img 
+              <ProgressiveImage 
                 src="/images/our-story-image.png" 
                 alt="CRUMS Leasing team and trailer fleet" 
                 className="rounded-lg shadow-xl w-full"
-                loading="lazy"
-                decoding="async"
                 width={600}
                 height={400}
               />
@@ -572,14 +571,12 @@ const Index = () => {
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
             <div className="mb-8">
-              <img 
+              <ProgressiveImage 
                 src={trailerFleetImage} 
                 alt="CRUM'S Leasing trailer fleet" 
                 className="w-full max-w-5xl mx-auto rounded-lg shadow-lg"
-                loading="lazy"
-                decoding="async"
-                width="1280"
-                height="720"
+                width={1280}
+                height={720}
               />
             </div>
             <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
@@ -646,14 +643,12 @@ const Index = () => {
             <Card className="border-2 hover:shadow-lg transition-shadow">
               <CardContent className="p-6">
                 <Link to="/dry-van-trailers" className="block hover:opacity-80 transition-opacity">
-                  <img 
+                  <ProgressiveImage 
                     src={dryVanTrailerImg} 
                     alt="CRUMS Leasing 53-foot dry van trailer - enclosed cargo protection for general freight" 
                     className="w-full h-40 object-contain mb-4"
-                    loading="lazy"
-                    decoding="async"
-                    width="300"
-                    height="160"
+                    width={300}
+                    height={160}
                   />
                 </Link>
                 <h3 className="text-xl font-bold mb-4">Dry Van Trailers</h3>
@@ -680,14 +675,12 @@ const Index = () => {
             <Card className="border-2 hover:shadow-lg transition-shadow">
               <CardContent className="p-6">
                 <Link to="/flatbed-trailers" className="block hover:opacity-80 transition-opacity">
-                  <img 
+                  <ProgressiveImage 
                     src={flatbedTrailerImg} 
                     alt="CRUMS Leasing flatbed trailer - open-deck design for oversized and heavy cargo hauling" 
                     className="w-full h-40 object-contain mb-4"
-                    loading="lazy"
-                    decoding="async"
-                    width="300"
-                    height="160"
+                    width={300}
+                    height={160}
                   />
                 </Link>
                 <h3 className="text-xl font-bold mb-4">Flatbed Trailers</h3>
@@ -714,14 +707,12 @@ const Index = () => {
             <Card className="border-2 hover:shadow-lg transition-shadow">
               <CardContent className="p-6">
                 <Link to="/refrigerated-trailers" className="block hover:opacity-80 transition-opacity">
-                  <img 
+                  <ProgressiveImage 
                     src={refrigeratedTrailerImg} 
                     alt="CRUMS Leasing refrigerated reefer trailer - temperature-controlled transport for perishable goods" 
                     className="w-full h-40 object-contain mb-4"
-                    loading="lazy"
-                    decoding="async"
-                    width="300"
-                    height="160"
+                    width={300}
+                    height={160}
                   />
                 </Link>
                 <h3 className="text-xl font-bold mb-4">Refrigerated Trailers</h3>
@@ -842,14 +833,12 @@ const Index = () => {
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div>
-              <img
+              <ProgressiveImage
                 src={fleetImage}
                 alt="Professional fleet management"
                 className="rounded-lg shadow-2xl"
-                loading="lazy"
-                decoding="async"
-                width="800"
-                height="600"
+                width={800}
+                height={600}
               />
             </div>
             <div>

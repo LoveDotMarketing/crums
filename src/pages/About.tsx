@@ -1,6 +1,7 @@
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
+import { ProgressiveImage } from "@/components/ProgressiveImage";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
@@ -69,14 +70,12 @@ const About = () => {
               </div>
             </div>
             <div>
-              <img
+              <ProgressiveImage
                 src="/images/our-story-image.png"
                 alt="CRUMS Leasing founders - a family-rooted legacy"
                 className="rounded-lg shadow-2xl"
-                loading="lazy"
-                decoding="async"
-                width="800"
-                height="600"
+                width={800}
+                height={600}
               />
             </div>
           </div>
