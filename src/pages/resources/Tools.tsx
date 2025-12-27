@@ -6,59 +6,29 @@ import { SEO } from "@/components/SEO";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Calculator, ArrowRight, Fuel, Scale, TrendingUp, Receipt, FileText, ArrowLeft, AlertTriangle, Calendar } from "lucide-react";
+import { ArrowRight, ArrowLeft, AlertTriangle, Calculator } from "lucide-react";
+import { tools as sharedTools, getToolHref } from "@/lib/tools";
 
-const tools = [
-  {
-    icon: Calculator,
-    title: "Cost Per Mile Calculator",
-    description: "Calculate your true operating costs per mile including fuel, insurance, maintenance, lease payments, and more.",
-    href: "/resources/tools/cost-per-mile",
-    features: ["Comprehensive expense tracking", "Visual cost breakdown", "Per-mile analysis"]
-  },
-  {
-    icon: Scale,
-    title: "Lease vs Buy Calculator",
-    description: "Compare the total cost of leasing versus buying a trailer with multi-year projections.",
-    href: "/resources/tools/lease-vs-buy",
-    features: ["Side-by-side comparison", "Resale value analysis", "Monthly payment breakdown"]
-  },
-  {
-    icon: TrendingUp,
-    title: "Profit Per Load Calculator",
-    description: "Calculate the true profitability of each load by factoring in all expenses including deadhead miles.",
-    href: "/resources/tools/profit-calculator",
-    features: ["Load profitability analysis", "Deadhead mile tracking", "Expense breakdown"]
-  },
-  {
-    icon: Calendar,
-    title: "Per Diem Calculator",
-    description: "Calculate your annual per diem tax deduction based on the 2024 IRS rate of $69/day for truck drivers.",
-    href: "/resources/tools/per-diem-calculator",
-    features: ["2024 IRS rates", "Full & partial day rates", "Tax savings estimate"]
-  },
-  {
-    icon: Receipt,
-    title: "IFTA Tax Estimator",
-    description: "Estimate your fuel tax liability or credits by state for IFTA reporting.",
-    href: "/resources/tools/ifta-calculator",
-    features: ["State-by-state tracking", "Tax rate database", "Credit/liability calculation"]
-  },
-  {
-    icon: Fuel,
-    title: "Fuel Cost Calculator",
-    description: "Quickly estimate fuel costs for your next trip based on distance and fuel efficiency.",
-    href: "/resources/tools/fuel-calculator",
-    features: ["Trip planning", "Cost estimation", "MPG-based calculations"]
-  },
-  {
-    icon: FileText,
-    title: "Tax Deduction Guide",
-    description: "Comprehensive guide to tax deductions for carriers including per diem rates and depreciation rules.",
-    href: "/resources/tools/tax-deductions",
-    features: ["Common deductions list", "Per diem rates", "Record-keeping tips"]
-  }
-];
+// Map shared tools to the format needed for this page with features
+const toolFeatures: Record<string, string[]> = {
+  "cost-per-mile": ["Comprehensive expense tracking", "Visual cost breakdown", "Per-mile analysis"],
+  "lease-vs-buy": ["Side-by-side comparison", "Resale value analysis", "Monthly payment breakdown"],
+  "profit-calculator": ["Load profitability analysis", "Deadhead mile tracking", "Expense breakdown"],
+  "per-diem-calculator": ["2024 IRS rates", "Full & partial day rates", "Tax savings estimate"],
+  "ifta-calculator": ["State-by-state tracking", "Tax rate database", "Credit/liability calculation"],
+  "fuel-calculator": ["Trip planning", "Cost estimation", "MPG-based calculations"],
+  "tax-deductions": ["Common deductions list", "Per diem rates", "Record-keeping tips"]
+};
+
+const tools = sharedTools
+  .filter(t => t.available)
+  .map(tool => ({
+    icon: tool.icon,
+    title: tool.title,
+    description: tool.description,
+    href: getToolHref(tool.slug),
+    features: toolFeatures[tool.slug] || []
+  }));
 
 const toolsCollectionSchema = {
   "@context": "https://schema.org",
