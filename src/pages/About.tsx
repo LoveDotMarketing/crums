@@ -11,9 +11,11 @@ import { SEO } from "@/components/SEO";
 import { organizationSchema, generateBreadcrumbSchema } from "@/lib/structuredData";
 import { trackCtaClick } from "@/lib/analytics";
 import { useScrollDepthTracking } from "@/hooks/useScrollDepthTracking";
+import { useTimeOnPageTracking } from "@/hooks/useTimeOnPageTracking";
 
 const About = () => {
   useScrollDepthTracking('about');
+  useTimeOnPageTracking('about');
   
   const breadcrumbSchema = generateBreadcrumbSchema([
     { name: "Home", url: "https://crumsleasing.com/" },

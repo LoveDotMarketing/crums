@@ -8,6 +8,7 @@ import { generateBreadcrumbSchema } from "@/lib/structuredData";
 import whyChooseThumb from "@/assets/why-choose-crums-video-thumb.png";
 import { trackCtaClick, trackEvent } from "@/lib/analytics";
 import { useScrollDepthTracking } from "@/hooks/useScrollDepthTracking";
+import { useTimeOnPageTracking } from "@/hooks/useTimeOnPageTracking";
 
 const services = [
   {
@@ -53,7 +54,8 @@ const equipmentTypes = [
 
 const Services = () => {
   useScrollDepthTracking('services');
-  
+  useTimeOnPageTracking('services');
+
   const breadcrumbSchema = generateBreadcrumbSchema([
     { name: "Home", url: "https://crumsleasing.com" },
     { name: "Services", url: "https://crumsleasing.com/services" },
