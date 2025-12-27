@@ -4,15 +4,27 @@ import { cn } from "@/lib/utils";
 interface ProgressiveImageProps extends Omit<ImgHTMLAttributes<HTMLImageElement>, 'placeholder'> {
   src: string;
   alt: string;
+  webpSrc?: string;
   placeholderColor?: string;
   blurAmount?: number;
   threshold?: number;
   rootMargin?: string;
 }
 
+// Helper to generate WebP path from original image path
+const getWebPPath = (src: string): string | null => {
+  const supportedExtensions = ['.jpg', '.jpeg', '.png'];
+  const extension = supportedExtensions.find(ext => src.toLowerCase().endsWith(ext));
+  if (extension) {
+    return src.slice(0, -extension.length) + '.webp';
+  }
+  return null;
+};
+
 export const ProgressiveImage = ({
   src,
   alt,
+  webpSrc,
   className,
   placeholderColor = "hsl(var(--muted))",
   blurAmount = 20,
@@ -26,6 +38,9 @@ export const ProgressiveImage = ({
   const [isLoaded, setIsLoaded] = useState(false);
   const [hasError, setHasError] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // Determine WebP source - use provided or auto-generate
+  const webpSource = webpSrc || getWebPPath(src);
 
   useEffect(() => {
     const element = containerRef.current;
@@ -89,24 +104,31 @@ export const ProgressiveImage = ({
         />
       </div>
 
-      {/* Actual image - only load when in view */}
+      {/* Actual image with WebP support - only load when in view */}
       {isInView && (
-        <img
-          src={src}
-          alt={alt}
-          width={width}
-          height={height}
-          onLoad={handleLoad}
-          onError={handleError}
-          className={cn(
-            "w-full h-full object-cover transition-all duration-700 ease-out",
-            isLoaded ? "opacity-100 blur-0 scale-100" : `opacity-0 blur-sm scale-105`
+        <picture>
+          {/* WebP source for browsers that support it */}
+          {webpSource && (
+            <source srcSet={webpSource} type="image/webp" />
           )}
-          style={{
-            filter: isLoaded ? "blur(0px)" : `blur(${blurAmount}px)`,
-          }}
-          {...props}
-        />
+          {/* Fallback to original format */}
+          <img
+            src={src}
+            alt={alt}
+            width={width}
+            height={height}
+            onLoad={handleLoad}
+            onError={handleError}
+            className={cn(
+              "w-full h-full object-cover transition-all duration-700 ease-out",
+              isLoaded ? "opacity-100 blur-0 scale-100" : `opacity-0 blur-sm scale-105`
+            )}
+            style={{
+              filter: isLoaded ? "blur(0px)" : `blur(${blurAmount}px)`,
+            }}
+            {...props}
+          />
+        </picture>
       )}
 
       {/* Error state */}
