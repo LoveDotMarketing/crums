@@ -11,6 +11,7 @@ import { trailerLeasingServiceSchema, generateBreadcrumbSchema } from "@/lib/str
 const dryVanTrailerImg = "/images/dry-van-trailer.png";
 const flatbedTrailerImg = "/images/flatbed-trailer.png";
 const refrigeratedTrailerImg = "/images/refrigerated-trailer.png";
+const trailerPickupImg = "/images/crums-leasing-trailer-pickup.webp";
 
 const TrailerLeasing = () => {
   const breadcrumbSchema = generateBreadcrumbSchema([
@@ -55,53 +56,76 @@ const TrailerLeasing = () => {
 
       <Breadcrumbs />
 
-      {/* Benefits */}
+      {/* Why Choose Leasing - Image Section */}
       <section className="py-20 bg-background">
         <div className="container mx-auto px-4">
-          <h2 className="text-3xl md:text-4xl font-bold text-center mb-16 text-foreground">
-            Why Choose Leasing?
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            <Card className="text-center border-2 hover:shadow-lg transition-shadow">
-              <CardContent className="p-6">
-                <div className="h-14 w-14 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                  <DollarSign className="h-7 w-7 text-primary" />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            <div>
+              <img 
+                src={trailerPickupImg} 
+                alt="Customer picking up a CRUMS Leasing trailer at our yard with team assistance" 
+                className="rounded-lg shadow-2xl"
+                loading="lazy"
+                width="800"
+                height="533"
+              />
+            </div>
+            <div>
+              <h2 className="text-3xl md:text-4xl font-bold mb-6 text-foreground">
+                Why Choose Leasing?
+              </h2>
+              <p className="text-lg text-muted-foreground mb-8 leading-relaxed">
+                Leasing gives you the equipment you need without the burden of ownership. 
+                Keep your capital working for you while we handle the maintenance, compliance, 
+                and equipment lifecycle management.
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div className="flex items-start">
+                  <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mr-4 flex-shrink-0">
+                    <DollarSign className="h-6 w-6 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-foreground mb-1">Lower Upfront Costs</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Preserve capital for other business needs
+                    </p>
+                  </div>
                 </div>
-                <h3 className="text-lg font-bold mb-2">Lower Upfront Costs</h3>
-                <p className="text-sm text-muted-foreground">
-                  Preserve capital for other business needs
-                </p>
-              </CardContent>
-            </Card>
-            <Card className="text-center border-2 hover:shadow-lg transition-shadow">
-              <CardContent className="p-6">
-                <div className="h-14 w-14 rounded-full bg-secondary/10 flex items-center justify-center mx-auto mb-4">
-                  <TrendingUp className="h-7 w-7 text-secondary" />
+                <div className="flex items-start">
+                  <div className="h-12 w-12 rounded-full bg-secondary/10 flex items-center justify-center mr-4 flex-shrink-0">
+                    <TrendingUp className="h-6 w-6 text-secondary" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-foreground mb-1">Predictable Payments</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Fixed monthly costs for better budgeting
+                    </p>
+                  </div>
                 </div>
-                <h3 className="text-lg font-bold mb-2">Predictable Payments</h3>
-                <p className="text-sm text-muted-foreground">Fixed monthly costs for better budgeting</p>
-              </CardContent>
-            </Card>
-            <Card className="text-center border-2 hover:shadow-lg transition-shadow">
-              <CardContent className="p-6">
-                <div className="h-14 w-14 rounded-full bg-accent/10 flex items-center justify-center mx-auto mb-4">
-                  <Shield className="h-7 w-7 text-accent" />
+                <div className="flex items-start">
+                  <div className="h-12 w-12 rounded-full bg-accent/10 flex items-center justify-center mr-4 flex-shrink-0">
+                    <Shield className="h-6 w-6 text-accent" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-foreground mb-1">Flexible Terms</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Lease lengths tailored to your needs
+                    </p>
+                  </div>
                 </div>
-                <h3 className="text-lg font-bold mb-2">Flexible Terms</h3>
-                <p className="text-sm text-muted-foreground">
-                  Lease lengths tailored to your needs
-                </p>
-              </CardContent>
-            </Card>
-            <Card className="text-center border-2 hover:shadow-lg transition-shadow">
-              <CardContent className="p-6">
-                <div className="h-14 w-14 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                  <CheckCircle className="h-7 w-7 text-primary" />
+                <div className="flex items-start">
+                  <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mr-4 flex-shrink-0">
+                    <CheckCircle className="h-6 w-6 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-foreground mb-1">Modern Equipment</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Access to latest trailer technology
+                    </p>
+                  </div>
                 </div>
-                <h3 className="text-lg font-bold mb-2">Modern Equipment</h3>
-                <p className="text-sm text-muted-foreground">Access to latest trailer technology</p>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           </div>
         </div>
       </section>
