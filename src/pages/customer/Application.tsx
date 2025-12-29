@@ -242,7 +242,7 @@ export default function Application() {
       if (profileError) throw profileError;
 
       // Prepare application data
-      const applicationData = {
+      const applicationData: Record<string, any> = {
         user_id: user?.id,
         phone_number: sanitizeInput(profile.phone),
         company_address: sanitizeInput(application.company_address),
@@ -264,9 +264,30 @@ export default function Application() {
         status: calculateProgress() === 100 ? "pending" : "incomplete",
       };
 
-      // Only update SSN if it's not masked
+      // Only update SSN if it's not masked - encrypt before saving
       if (application.ssn && !application.ssn.includes("*")) {
-        (applicationData as any).ssn = sanitizeInput(application.ssn.replace(/-/g, ""));
+        const cleanSSN = application.ssn.replace(/-/g, "");
+        
+        // Validate SSN format (9 digits)
+        if (!/^\d{9}$/.test(cleanSSN)) {
+          toast.error("SSN must be exactly 9 digits");
+          setSaving(false);
+          return;
+        }
+        
+        // Encrypt SSN using the ssn-crypto edge function
+        const { data: encryptData, error: encryptError } = await supabase.functions.invoke('ssn-crypto', {
+          body: { action: 'encrypt', ssn: cleanSSN }
+        });
+        
+        if (encryptError || !encryptData?.encrypted) {
+          console.error("SSN encryption error:", encryptError);
+          toast.error("Failed to secure SSN data. Please try again.");
+          setSaving(false);
+          return;
+        }
+        
+        applicationData.ssn = encryptData.encrypted;
       }
 
       if (application.id) {
@@ -278,7 +299,7 @@ export default function Application() {
       } else {
         const { error } = await supabase
           .from("customer_applications")
-          .insert(applicationData);
+          .insert(applicationData as any);
         if (error) throw error;
       }
 
