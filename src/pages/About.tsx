@@ -176,10 +176,21 @@ const About = () => {
       {/* Growth Through Acquisitions */}
       <section className="py-20 bg-background">
         <div className="container mx-auto px-4">
-          <div className="max-w-4xl mx-auto">
-            <h2 className="text-3xl md:text-4xl font-bold mb-6 text-foreground text-center">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold mb-6 text-foreground">
               Strategic Growth
             </h2>
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center max-w-6xl mx-auto">
+            <div>
+              <ProgressiveImage
+                src="/images/crums-leasing-trailers.webp"
+                alt="CRUMS Leasing fleet of branded 53-foot dry van trailers"
+                className="rounded-lg shadow-2xl"
+                width={800}
+                height={500}
+              />
+            </div>
             <div className="space-y-4 text-lg text-muted-foreground leading-relaxed">
               <p>
                 As we've grown, we've carefully selected acquisition partners that share our
