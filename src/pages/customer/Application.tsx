@@ -212,7 +212,6 @@ export default function Application() {
       profile.first_name,
       profile.last_name,
       profile.phone,
-      application.truck_vin,
       application.trailer_type,
       application.drivers_license_url,
       application.drivers_license_back_url,
@@ -459,11 +458,12 @@ export default function Application() {
                   </Select>
                 </div>
                 <div>
-                  <Label htmlFor="truckVin">Truck/Cab VIN</Label>
+                  <Label htmlFor="truckVin">Cab VIN# (Optional)</Label>
                   <Input
                     id="truckVin"
                     value={application.truck_vin}
                     onChange={(e) => setApplication({ ...application, truck_vin: e.target.value.toUpperCase() })}
+                    placeholder="17-character Vehicle Identification Number"
                     maxLength={17}
                   />
                 </div>

@@ -43,7 +43,6 @@ export default function CustomerDashboard() {
         
         const requiredFields = [
           data.phone_number,
-          data.truck_vin,
           data.trailer_type,
           data.drivers_license_url,
           data.drivers_license_back_url,
