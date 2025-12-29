@@ -17,7 +17,8 @@ import {
   Wrench,
   Eye,
   Trash2,
-  Loader2
+  Loader2,
+  LayoutGrid
 } from "lucide-react";
 import {
   Table,
@@ -293,6 +294,12 @@ export default function Fleet() {
   const totalRentalIncome = trailers.reduce((sum, t) => sum + (t.rental_income || 0), 0);
   const availableCount = trailers.filter(t => t.status === "available").length;
 
+  // Group trailers by type
+  const trailersByType = trailers.reduce((acc, trailer) => {
+    acc[trailer.type] = (acc[trailer.type] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background">
@@ -513,6 +520,31 @@ export default function Fleet() {
                 </CardContent>
               </Card>
             </div>
+
+            {/* Trailer Types Summary */}
+            <Card className="mb-8">
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium">Trailer Types</CardTitle>
+                <LayoutGrid className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-wrap gap-3">
+                  {Object.entries(trailersByType).sort((a, b) => b[1] - a[1]).map(([type, count]) => (
+                    <div 
+                      key={type} 
+                      className="flex items-center gap-2 px-3 py-2 bg-muted rounded-lg"
+                    >
+                      <Truck className="h-4 w-4 text-muted-foreground" />
+                      <span className="font-medium">{type}</span>
+                      <Badge variant="secondary">{count}</Badge>
+                    </div>
+                  ))}
+                  {Object.keys(trailersByType).length === 0 && (
+                    <p className="text-sm text-muted-foreground">No trailers in fleet</p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
 
             {/* Search */}
             <div className="mb-6">
