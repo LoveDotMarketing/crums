@@ -325,7 +325,7 @@ const Index = () => {
               </h2>
               <p className="text-lg text-muted-foreground mb-6 leading-relaxed">
                 CRUMS Leasing was founded by former NBA player Eric Bledsoe with a simple mission: 
-                to empower independent truckers and small carriers with the equipment they need to succeed. 
+                to empower independent carriers with the equipment they need to succeed. 
                 Named after Eric's mother, CRUMS represents the family values and hard work ethic 
                 that drive everything we do.
               </p>
@@ -368,7 +368,7 @@ const Index = () => {
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-              Serving Truckers Nationwide
+              Serving Carriers Nationwide
             </h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
               Pick up at our Bulverde, TX yard or get delivery to major markets across the country
