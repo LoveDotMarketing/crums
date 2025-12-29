@@ -25,7 +25,7 @@ import {
 } from "lucide-react";
 // Marketing images served from public folder for stable sitemap URLs
 const fleetImage = "/images/crums-trailer.png";
-const trailerFleetImage = "/images/trailer-fleet.png";
+const trailerFleetImage = "/images/crums-leasing-trailers.webp";
 const dryVanTrailerImg = "/images/dry-van-trailer.png";
 const flatbedTrailerImg = "/images/flatbed-trailer.png";
 const refrigeratedTrailerImg = "/images/refrigerated-trailer.png";
