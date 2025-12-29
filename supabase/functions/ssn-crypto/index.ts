@@ -73,9 +73,11 @@ async function encryptSSN(ssn: string): Promise<string> {
 }
 
 async function decryptSSN(encryptedSSN: string): Promise<string> {
-  // Check if it's plaintext SSN (for backward compatibility with existing data)
-  if (!encryptedSSN.includes(':') && /^\d{9}$/.test(encryptedSSN)) {
-    return encryptedSSN; // Return as-is for unencrypted SSNs
+  // SECURITY: Reject plaintext SSNs - all SSNs must be encrypted
+  // The encrypted format is: base64(iv):base64(ciphertext)
+  if (!encryptedSSN.includes(':')) {
+    console.error("[ssn-crypto] SECURITY: Attempted to decrypt plaintext SSN - this should not happen. Run migration to encrypt all SSNs.");
+    throw new Error("Invalid encrypted SSN format - plaintext SSNs are not accepted. Please run SSN migration.");
   }
   
   const key = await getEncryptionKey();
