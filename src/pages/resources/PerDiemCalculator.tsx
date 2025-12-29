@@ -374,7 +374,7 @@ const PerDiemCalculator = () => {
               <Card className="border-2 hover:border-primary hover:shadow-lg transition-all h-full">
                 <CardContent className="p-6">
                   <h3 className="font-bold group-hover:text-primary transition-colors mb-2">Tax Deduction Guide</h3>
-                  <p className="text-sm text-muted-foreground">Complete guide to trucker tax deductions.</p>
+                  <p className="text-sm text-muted-foreground">Complete guide to carrier tax deductions.</p>
                 </CardContent>
               </Card>
             </Link>

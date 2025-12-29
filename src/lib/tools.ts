@@ -74,7 +74,7 @@ export const tools: Tool[] = [
   {
     slug: "tax-deductions",
     title: "Owner-Operator Tax Deduction Guide",
-    description: "Comprehensive guide to tax deductions for owner-operators and truckers including per diem rates and depreciation.",
+    description: "Comprehensive guide to tax deductions for owner-operators and carriers including per diem rates and depreciation.",
     icon: Receipt,
     available: true,
     lastModified: "2025-12-26",
