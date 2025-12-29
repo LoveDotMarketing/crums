@@ -187,7 +187,6 @@ export default function GetStarted() {
     if (!businessType) errors.push("Business type is required");
     if (!numberOfTrailers) errors.push("Number of trailers is required");
     if (!dateNeeded) errors.push("Date needed is required");
-    if (!truckVin) errors.push("Cab VIN# is required");
     
     // Step 4 required
     if (!acceptedTerms) errors.push("You must accept the terms and conditions");
@@ -197,7 +196,7 @@ export default function GetStarted() {
 
   const getStepStatus = (step: number): 'complete' | 'warning' | 'default' => {
     if (step === 1) {
-      const hasAll = email && password && confirmPassword && firstName && lastName && dateOfBirth && phoneNumber && companyAddress && businessType && numberOfTrailers && dateNeeded && truckVin && ssn;
+      const hasAll = email && password && confirmPassword && firstName && lastName && dateOfBirth && phoneNumber && companyAddress && businessType && numberOfTrailers && dateNeeded && ssn;
       if (hasAll && password === confirmPassword && validateAge(dateOfBirth)) return 'complete';
       if (email || password || firstName || lastName) return 'warning';
       return 'default';
@@ -605,7 +604,7 @@ export default function GetStarted() {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="truckVin">Cab VIN# *</Label>
+                    <Label htmlFor="truckVin">Cab VIN#</Label>
                     <Input 
                       id="truckVin" 
                       value={truckVin} 
@@ -616,7 +615,7 @@ export default function GetStarted() {
                     <p className="text-xs text-muted-foreground mt-1">17-character Vehicle Identification Number</p>
                   </div>
                   <div>
-                    <Label htmlFor="ssn">Social Security Number *</Label>
+                    <Label htmlFor="ssn">Social Security Number or EIN *</Label>
                     <Input 
                       id="ssn" 
                       type="text"
