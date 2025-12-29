@@ -140,7 +140,7 @@ const Careers = () => {
                   </div>
                   <div>
                     <h3 className="text-lg font-semibold text-foreground mb-2">
-                      Competitive Benefits
+                      Work Life Balance
                     </h3>
                     <p className="text-muted-foreground">
                       Health insurance, 401(k) matching, paid time off, and more
@@ -180,7 +180,7 @@ const Careers = () => {
                 <h3 className="text-xl font-bold mb-2 text-foreground">
                   Account Executive
                 </h3>
-                <p className="text-muted-foreground mb-4">Atlanta, GA • Full Time</p>
+                <p className="text-muted-foreground mb-4">San Antonio, TX • Full Time</p>
                 <Link to="/contact">
                   <Button variant="outline" className="w-full">
                     Apply Now
@@ -199,7 +199,7 @@ const Careers = () => {
                 <h3 className="text-xl font-bold mb-2 text-foreground">
                   Fleet Manager
                 </h3>
-                <p className="text-muted-foreground mb-4">Dallas, TX • Full Time</p>
+                <p className="text-muted-foreground mb-4">San Antonio, TX • Full Time</p>
                 <Link to="/contact">
                   <Button variant="outline" className="w-full">
                     Apply Now
@@ -218,7 +218,7 @@ const Careers = () => {
                 <h3 className="text-xl font-bold mb-2 text-foreground">
                   Customer Success Manager
                 </h3>
-                <p className="text-muted-foreground mb-4">Remote • Full Time</p>
+                <p className="text-muted-foreground mb-4">San Antonio, TX • Full Time</p>
                 <Link to="/contact">
                   <Button variant="outline" className="w-full">
                     Apply Now
@@ -237,26 +237,7 @@ const Careers = () => {
                 <h3 className="text-xl font-bold mb-2 text-foreground">
                   Financial Analyst
                 </h3>
-                <p className="text-muted-foreground mb-4">Chicago, IL • Full Time</p>
-                <Link to="/contact">
-                  <Button variant="outline" className="w-full">
-                    Apply Now
-                  </Button>
-                </Link>
-              </CardContent>
-            </Card>
-
-            <Card className="border-2 hover:shadow-lg transition-shadow">
-              <CardContent className="p-6">
-                <div className="mb-4">
-                  <span className="text-sm font-semibold text-primary bg-primary/10 px-3 py-1 rounded-full">
-                    Technology
-                  </span>
-                </div>
-                <h3 className="text-xl font-bold mb-2 text-foreground">
-                  Software Engineer
-                </h3>
-                <p className="text-muted-foreground mb-4">Remote • Full Time</p>
+                <p className="text-muted-foreground mb-4">San Antonio, TX • Full Time</p>
                 <Link to="/contact">
                   <Button variant="outline" className="w-full">
                     Apply Now
@@ -275,7 +256,7 @@ const Careers = () => {
                 <h3 className="text-xl font-bold mb-2 text-foreground">
                   Maintenance Supervisor
                 </h3>
-                <p className="text-muted-foreground mb-4">Los Angeles, CA • Full Time</p>
+                <p className="text-muted-foreground mb-4">San Antonio, TX • Full Time</p>
                 <Link to="/contact">
                   <Button variant="outline" className="w-full">
                     Apply Now
