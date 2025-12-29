@@ -57,6 +57,7 @@ export default function GetStarted() {
   const [driversLicenseFront, setDriversLicenseFront] = useState<File | null>(null);
   const [driversLicenseBack, setDriversLicenseBack] = useState<File | null>(null);
   const [ssn, setSsn] = useState("");
+  const [ssnType, setSsnType] = useState<"ssn" | "ein">("ssn");
   const [insuranceDocs, setInsuranceDocs] = useState<File | null>(null);
   const [insuranceCompany, setInsuranceCompany] = useState("");
   const [insuranceCompanyPhone, setInsuranceCompanyPhone] = useState("");
@@ -615,21 +616,57 @@ export default function GetStarted() {
                     <p className="text-xs text-muted-foreground mt-1">17-character Vehicle Identification Number</p>
                   </div>
                   <div>
-                    <Label htmlFor="ssn">Social Security Number or EIN *</Label>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <Label htmlFor="ssn">
+                        {ssnType === "ssn" ? "Social Security Number" : "Employer Identification Number"} *
+                      </Label>
+                      <div className="flex items-center gap-2 text-xs">
+                        <button
+                          type="button"
+                          onClick={() => { setSsnType("ssn"); setSsn(""); }}
+                          className={`px-2 py-1 rounded transition-colors ${
+                            ssnType === "ssn" 
+                              ? "bg-primary text-primary-foreground" 
+                              : "bg-muted text-muted-foreground hover:bg-muted/80"
+                          }`}
+                        >
+                          SSN
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => { setSsnType("ein"); setSsn(""); }}
+                          className={`px-2 py-1 rounded transition-colors ${
+                            ssnType === "ein" 
+                              ? "bg-primary text-primary-foreground" 
+                              : "bg-muted text-muted-foreground hover:bg-muted/80"
+                          }`}
+                        >
+                          EIN
+                        </button>
+                      </div>
+                    </div>
                     <Input 
                       id="ssn" 
                       type="text"
-                      value={ssn.replace(/(\d{3})(\d{2})(\d{0,4})/, (_, p1, p2, p3) => 
-                        p3 ? `${p1}-${p2}-${p3}` : p2 ? `${p1}-${p2}` : p1
-                      )}
+                      value={ssnType === "ein" 
+                        ? ssn.replace(/(\d{2})(\d{0,7})/, (_, p1, p2) => p2 ? `${p1}-${p2}` : p1)
+                        : ssn.replace(/(\d{3})(\d{2})(\d{0,4})/, (_, p1, p2, p3) => 
+                            p3 ? `${p1}-${p2}-${p3}` : p2 ? `${p1}-${p2}` : p1
+                          )
+                      }
                       onChange={(e) => {
                         const digits = e.target.value.replace(/\D/g, '').slice(0, 9);
                         setSsn(digits);
                       }}
-                      placeholder="XXX-XX-XXXX"
-                      maxLength={11}
+                      placeholder={ssnType === "ein" ? "XX-XXXXXXX" : "XXX-XX-XXXX"}
+                      maxLength={ssnType === "ein" ? 10 : 11}
                     />
-                    <p className="text-xs text-muted-foreground mt-1">Required for credit check authorization.</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {ssnType === "ein" 
+                        ? "9-digit Employer Identification Number for business entities."
+                        : "9-digit Social Security Number for individual owner-operators."
+                      }
+                    </p>
                   </div>
                   <div>
                     <Label htmlFor="message">Message (Optional)</Label>
