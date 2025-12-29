@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Link } from "react-router-dom";
 import { Heart, TrendingUp, Users, Award, ArrowRight } from "lucide-react";
-const teamImage = "/images/team-handshake.jpg";
+const teamImage = "/images/crums-leasing-careers.webp";
 import { SEO } from "@/components/SEO";
 import { generateBreadcrumbSchema } from "@/lib/structuredData";
 import { trackCtaClick } from "@/lib/analytics";
@@ -152,11 +152,11 @@ const Careers = () => {
             <div>
               <img
                 src={teamImage}
-                alt="CRUMS Leasing team members shaking hands in partnership"
+                alt="CRUMS Leasing team meeting in the office"
                 className="rounded-lg shadow-2xl"
                 loading="lazy"
                 width="800"
-                height="600"
+                height="533"
               />
             </div>
           </div>
