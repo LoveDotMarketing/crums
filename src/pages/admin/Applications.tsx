@@ -560,7 +560,7 @@ export default function Applications() {
                   <p>{selectedApplication.trailer_type || "—"}</p>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-muted-foreground">Truck VIN</label>
+                  <label className="text-sm font-medium text-muted-foreground">Cab VIN# (Optional)</label>
                   <p>{selectedApplication.truck_vin || "—"}</p>
                 </div>
                 <div>
@@ -610,7 +610,7 @@ export default function Applications() {
                 <div className="border-t pt-4">
                   <h4 className="text-sm font-semibold mb-3 flex items-center gap-2">
                     <Lock className="h-4 w-4" />
-                    Social Security Number (Encrypted)
+                    Social Security Number or EIN (Encrypted)
                   </h4>
                   <div className="flex items-center gap-3 p-3 rounded-md bg-muted/50">
                     {decryptedSSN ? (
