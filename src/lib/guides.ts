@@ -109,7 +109,7 @@ export const guides: Guide[] = [
   },
   {
     slug: "work-life-balance",
-    title: "How to Balance Work and Family Time as a Trucker",
+    title: "How to Balance Work and Family Time as a Carrier",
     description: "Staying connected with loved ones while on the road — reinforcing CRUMS' family first values.",
     icon: Heart,
     available: false,

@@ -51,8 +51,8 @@ const TaxDeductionGuide = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <SEO
-        title="Owner-Operator Tax Deduction Guide | Trucker Per Diem & Deductions"
-        description="Complete owner-operator tax deduction guide. Learn about trucker per diem rates, deductible expenses, depreciation rules, and record-keeping best practices."
+        title="Owner-Operator Tax Deduction Guide | Carrier Per Diem & Deductions"
+        description="Complete owner-operator tax deduction guide. Learn about carrier per diem rates, deductible expenses, depreciation rules, and record-keeping best practices."
         canonical="https://crumsleasing.com/resources/tools/tax-deductions"
       />
       <Navigation />

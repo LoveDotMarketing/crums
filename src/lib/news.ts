@@ -117,7 +117,7 @@ export const newsArticles: NewsArticle[] = [
   {
     slug: "new-year-launch-tease-texas-focus",
     title: "New Year Launch Tease and Texas Focus",
-    description: "Instagram reel celebrates the new year from the San Antonio/Bulverde headquarters, teasing promotions and reliable rentals for Texas truckers as part of initial market entry.",
+    description: "Instagram reel celebrates the new year from the San Antonio/Bulverde headquarters, teasing promotions and reliable rentals for Texas carriers as part of initial market entry.",
     date: "January 1, 2025",
     sortDate: "2025-01-01",
     externalLinks: ["https://www.instagram.com/reel/DETJQYoSg92/"],
@@ -189,7 +189,7 @@ export const newsArticles: NewsArticle[] = [
   {
     slug: "conception-early-planning",
     title: "CRUMS Leasing: Conception and Early Planning",
-    description: "Eric Bledsoe begins developing the idea for CRUMS Leasing as his first major entrepreneurial venture post-NBA, naming it after his mother \"CRUMS\" to honor family values and support for truckers.",
+    description: "Eric Bledsoe begins developing the idea for CRUMS Leasing as his first major entrepreneurial venture post-NBA, naming it after his mother \"CRUMS\" to honor family values and support for carriers.",
     date: "Mid-2024",
     sortDate: "2024-06-01",
     externalLinks: [],
