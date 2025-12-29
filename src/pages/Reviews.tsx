@@ -38,7 +38,7 @@ const Reviews = () => {
     {
       name: "Facebook",
       description: "Leave a recommendation on our Facebook page and connect with the CRUMS community.",
-      url: "https://www.facebook.com/people/Crums-Leasing/100090574399864/reviews",
+      url: "https://www.facebook.com/CRUMSLeasing/",
       buttonText: "Review on Facebook",
       bgColor: "from-indigo-500/10 to-background",
       iconColor: "text-indigo-500"
