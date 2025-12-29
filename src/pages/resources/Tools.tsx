@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { ArrowRight, ArrowLeft, AlertTriangle, Calculator } from "lucide-react";
 import { tools as sharedTools, getToolHref } from "@/lib/tools";
+import { generateBreadcrumbSchema } from "@/lib/structuredData";
 
 // Map shared tools to the format needed for this page with features
 const toolFeatures: Record<string, string[]> = {
@@ -58,6 +59,12 @@ const toolsCollectionSchema = {
   }
 };
 
+const breadcrumbSchema = generateBreadcrumbSchema([
+  { name: "Home", url: "https://crumsleasing.com" },
+  { name: "Resources", url: "https://crumsleasing.com/resources" },
+  { name: "Tools", url: "https://crumsleasing.com/resources/tools" },
+]);
+
 const Tools = () => {
   return (
     <div className="min-h-screen flex flex-col">
@@ -65,7 +72,7 @@ const Tools = () => {
         title="Free Trucking Calculators & Financial Tools"
         description="Free calculators and tools for carriers and owner-operators. Cost per mile, lease vs buy, profit per load, IFTA tax estimator, and more. Plan your trucking business finances."
         canonical="https://crumsleasing.com/resources/tools"
-        structuredData={toolsCollectionSchema}
+        structuredData={[toolsCollectionSchema, breadcrumbSchema]}
       />
       <Navigation />
 

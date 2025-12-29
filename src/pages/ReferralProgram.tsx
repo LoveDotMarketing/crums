@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Link } from "react-router-dom";
 import { Gift, Users, DollarSign, ArrowRight, CheckCircle } from "lucide-react";
 import { trackCtaClick } from "@/lib/analytics";
+import { generateBreadcrumbSchema } from "@/lib/structuredData";
 
 const faqSchema = {
   "@context": "https://schema.org",
@@ -55,6 +56,11 @@ const faqSchema = {
 };
 
 const ReferralProgram = () => {
+  const breadcrumbSchema = generateBreadcrumbSchema([
+    { name: "Home", url: "https://crumsleasing.com" },
+    { name: "Referral Program", url: "https://crumsleasing.com/referral-program" },
+  ]);
+
   const steps = [
     {
       icon: Users,
@@ -87,7 +93,7 @@ const ReferralProgram = () => {
         title="Referral Program - Earn $250 Per Referral"
         description="Join the CRUMS Leasing referral program. Earn $250 off your trailer lease for every referral who signs a lease. Unlimited rewards, no expiration."
         canonical="https://crumsleasing.com/referral-program"
-        structuredData={faqSchema}
+        structuredData={[faqSchema, breadcrumbSchema]}
       />
       <Navigation />
 

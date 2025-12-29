@@ -8,6 +8,7 @@ const Review = () => {
         title="Write a Google Review"
         description="Share your experience with CRUMS Leasing. Scan the QR code to leave us a Google review and help other carriers find quality trailer leasing services."
         canonical="https://crumsleasing.com/review"
+        noindex={true}
       />
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <div className="text-center space-y-8">

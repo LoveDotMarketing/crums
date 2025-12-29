@@ -61,13 +61,60 @@ const Services = () => {
     { name: "Services", url: "https://crumsleasing.com/services" },
   ]);
 
+  const servicesHubSchema = {
+    "@context": "https://schema.org",
+    "@type": "Service",
+    "serviceType": "Trailer Leasing & Rental Services",
+    "provider": {
+      "@type": "Organization",
+      "name": "CRUMS Leasing",
+      "url": "https://crumsleasing.com"
+    },
+    "name": "CRUMS Leasing Services",
+    "description": "Comprehensive trailer leasing, rental, and fleet management services for carriers nationwide. Long-term leasing, short-term rentals, and fleet solutions.",
+    "areaServed": {
+      "@type": "Country",
+      "name": "United States"
+    },
+    "hasOfferCatalog": {
+      "@type": "OfferCatalog",
+      "name": "Trailer Services",
+      "itemListElement": [
+        {
+          "@type": "Offer",
+          "itemOffered": {
+            "@type": "Service",
+            "name": "Trailer Leasing",
+            "description": "Long-term equipment leasing solutions"
+          }
+        },
+        {
+          "@type": "Offer",
+          "itemOffered": {
+            "@type": "Service",
+            "name": "Trailer Rentals",
+            "description": "Flexible short-term rental options"
+          }
+        },
+        {
+          "@type": "Offer",
+          "itemOffered": {
+            "@type": "Service",
+            "name": "Fleet Solutions",
+            "description": "Comprehensive fleet management"
+          }
+        }
+      ]
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <SEO
         title="Services | CRUMS Leasing - Trailer Leasing, Rentals & Fleet Solutions"
         description="Explore CRUMS Leasing services including long-term trailer leasing, flexible short-term rentals, and comprehensive fleet management solutions for carriers nationwide."
         canonical="https://crumsleasing.com/services"
-        structuredData={breadcrumbSchema}
+        structuredData={[breadcrumbSchema, servicesHubSchema]}
       />
       <Navigation />
 
