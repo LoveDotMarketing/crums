@@ -97,7 +97,7 @@ const About = () => {
               The dedicated people behind CRUMS Leasing who work every day to serve our carriers.
             </p>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6 max-w-5xl mx-auto">
+          <div className="flex flex-wrap justify-center gap-6 max-w-5xl mx-auto">
             {[
               { name: "Mama CRUMS", role: "Founder", slug: "mama-crums" },
               { name: "Eric", role: "CEO / Principal", slug: "eric" },
