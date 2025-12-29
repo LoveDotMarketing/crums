@@ -39,8 +39,8 @@ export const ProgressiveImage = ({
   const [hasError, setHasError] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Determine WebP source - use provided or auto-generate
-  const webpSource = webpSrc || getWebPPath(src);
+  // Only use WebP when explicitly provided - don't auto-generate paths
+  const webpSource = webpSrc;
 
   useEffect(() => {
     const element = containerRef.current;
