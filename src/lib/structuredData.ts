@@ -24,7 +24,7 @@ export const organizationSchema = {
     "availableLanguage": "English"
   },
   "sameAs": [
-    "https://www.facebook.com/people/Crums-Leasing/100090574399864/",
+    "https://www.facebook.com/CRUMSLeasing/",
     "https://www.instagram.com/crumsleasingllc/",
     "https://www.linkedin.com/company/crums-leasing/",
     "https://www.youtube.com/@CRUMSLeasing"

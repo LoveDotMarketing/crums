@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight, Calculator, BookOpen, Play } from "lucide-react";
 import { guides, getGuideHref } from "@/lib/guides";
 import whyChooseThumb from "@/assets/why-choose-crums-video-thumb.png";
+import { generateBreadcrumbSchema } from "@/lib/structuredData";
 
 const guidesCollectionSchema = {
   "@context": "https://schema.org",
@@ -22,6 +23,12 @@ const guidesCollectionSchema = {
   }
 };
 
+const breadcrumbSchema = generateBreadcrumbSchema([
+  { name: "Home", url: "https://crumsleasing.com" },
+  { name: "Resources", url: "https://crumsleasing.com/resources" },
+  { name: "Guides", url: "https://crumsleasing.com/resources/guides" },
+]);
+
 const Guides = () => {
   return (
     <div className="min-h-screen flex flex-col">
@@ -29,7 +36,7 @@ const Guides = () => {
         title="Industry Guides for Carriers"
         description="Free educational guides for carriers and owner-operators. Learn about trailer selection, safety, budgeting, and building a successful trucking career with CRUMS Leasing."
         canonical="https://crumsleasing.com/resources/guides"
-        structuredData={guidesCollectionSchema}
+        structuredData={[guidesCollectionSchema, breadcrumbSchema]}
       />
       <Navigation />
 
