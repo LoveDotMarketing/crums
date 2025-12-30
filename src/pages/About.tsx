@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { Users, TrendingUp, MapPin, Award, ArrowRight } from "lucide-react";
-const teamImage = "/images/team-leaders.png";
+const teamImage = "/images/team-leaders.webp";
 import { SEO } from "@/components/SEO";
 import { organizationSchema, generateBreadcrumbSchema } from "@/lib/structuredData";
 import { trackCtaClick } from "@/lib/analytics";
@@ -77,7 +77,7 @@ const About = () => {
             </div>
             <div>
               <ProgressiveImage
-                src="/images/our-story-image.png"
+                src="/images/our-story-image.webp"
                 alt="CRUMS Leasing founders - a family-rooted legacy"
                 className="rounded-lg shadow-2xl"
                 width={800}
