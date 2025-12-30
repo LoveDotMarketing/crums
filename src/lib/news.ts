@@ -234,7 +234,7 @@ export const generateNewsArticleSchema = (article: NewsArticle) => {
       "url": "https://crumsleasing.com",
       "logo": {
         "@type": "ImageObject",
-        "url": "https://crumsleasing.com/images/pub-logo-112.jpg",
+        "url": "https://crumsleasing.com/images/pub-logo-112.webp",
         "width": 112,
         "height": 112
       },
@@ -307,7 +307,7 @@ export const generateMats2026EventSchema = () => ({
     "url": "https://crumsleasing.com",
     "logo": {
       "@type": "ImageObject",
-      "url": "https://crumsleasing.com/images/pub-logo-112.jpg",
+      "url": "https://crumsleasing.com/images/pub-logo-112.webp",
       "width": 112,
       "height": 112
     },
