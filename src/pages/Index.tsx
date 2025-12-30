@@ -26,7 +26,7 @@ import {
 // Marketing images served from public folder for stable sitemap URLs
 const fleetImage = "/images/crums-trailer.png";
 const nationwideMapImage = "/images/crums-leasing-pickup-delivery-map.webp";
-const servicesOverviewImage = "/images/crums-leasing-trailers.webp";
+const servicesOverviewImage = "/images/crums-trailer-fleet.webp";
 const dryVanTrailerImg = "/images/dry-van-trailer.png";
 const flatbedTrailerImg = "/images/flatbed-trailer.png";
 const refrigeratedTrailerImg = "/images/refrigerated-trailer.png";
