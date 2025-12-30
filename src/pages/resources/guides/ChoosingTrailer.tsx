@@ -370,6 +370,7 @@ const ChoosingTrailer = () => {
                         alt={trailer.imageAlt}
                         className="w-full h-48 object-contain"
                         loading="lazy"
+                        decoding="async"
                         width="400"
                         height="192"
                       />

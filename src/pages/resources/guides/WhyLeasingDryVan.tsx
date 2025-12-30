@@ -221,6 +221,8 @@ const WhyLeasingDryVan = () => {
                   className="w-full h-64 md:h-80 object-contain bg-muted/30 rounded-xl border"
                   width="800"
                   height="320"
+                  loading="lazy"
+                  decoding="async"
                 />
               </Link>
               <p className="text-sm text-muted-foreground text-center mt-2">

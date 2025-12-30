@@ -305,6 +305,7 @@ export const TrailerProfileTemplate = ({ data }: TrailerProfileTemplateProps) =>
                       alt={image.alt}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                       loading="lazy"
+                      decoding="async"
                       width={300}
                       height={300}
                     />

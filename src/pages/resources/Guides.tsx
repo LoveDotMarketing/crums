@@ -65,6 +65,7 @@ const Guides = () => {
                 alt="Why CDL Drivers Choose CRUMS Leasing" 
                 className="w-full h-full object-cover"
                 loading="lazy"
+                decoding="async"
               />
               <div className="absolute inset-0 bg-black/30 flex items-center justify-center group-hover:bg-black/40 transition-colors">
                 <div className="w-14 h-14 bg-primary rounded-full flex items-center justify-center shadow-lg">

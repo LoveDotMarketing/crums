@@ -56,6 +56,8 @@ const News = () => {
                       src={featuredArticle.image} 
                       alt={featuredArticle.title}
                       className="w-full h-full object-cover"
+                      loading="lazy"
+                      decoding="async"
                     />
                   ) : (
                     <span className="text-4xl font-bold text-primary/30">CRUMS</span>
@@ -102,6 +104,8 @@ const News = () => {
                         src={article.image} 
                         alt={article.title}
                         className="w-full h-full object-cover"
+                        loading="lazy"
+                        decoding="async"
                       />
                     ) : (
                       <span className="text-lg font-bold text-primary/20">CRUMS</span>
