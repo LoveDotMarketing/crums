@@ -56,8 +56,8 @@ const Index = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <SEO
-        title="53-Foot Dry Van Trailer Leasing & Rentals in Texas"
-        description="CRUMS Leasing offers quality 53-foot dry van trailers and flatbed leasing & rental solutions. Family-owned, nationwide service from Bulverde, TX. Get a quote today!"
+        title="Dry Van, Flatbed & Reefer Trailer Leasing in Texas"
+        description="CRUMS Leasing offers dry van, flatbed, and refrigerated reefer trailer leasing & rental solutions. Family-owned, nationwide service from Bulverde, TX. Get a quote today!"
         canonical="https://crumsleasing.com/"
         structuredData={combinedSchema}
       />
@@ -83,8 +83,7 @@ const Index = () => {
             <span className="text-secondary">To Build the Life They're Proud Of</span>
           </h1>
           <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto text-primary-foreground">
-            Guided by family values, integrity, and commitment to your success — creating lasting
-            partnerships that move people forward and bring them safely home.
+            Quality dry van, flatbed, and reefer trailers guided by family values, integrity, and commitment to your success — creating lasting partnerships that move people forward.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link to="/get-started">
@@ -595,10 +594,10 @@ const Index = () => {
               />
             </div>
             <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
-              53-Foot Dry Van Trailers & Flatbeds
+              Dry Van, Flatbed & Refrigerated Trailers
             </h2>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-              Specialized capacity solutions for companies looking to expand their supply chain capabilities with reliable, well-maintained 53-foot dry van trailers and flatbeds.
+              Specialized capacity solutions for carriers looking to expand their supply chain capabilities with reliable dry van trailers, flatbeds, and temperature-controlled reefer trailers.
             </p>
           </div>
 
@@ -610,7 +609,7 @@ const Index = () => {
                 </div>
                 <h3 className="text-2xl font-bold mb-4 text-foreground">Quality Equipment</h3>
                 <p className="text-muted-foreground mb-6 leading-relaxed">
-                  All 53-foot dry van trailers are thoroughly inspected, well-maintained, and ready to handle your freight capacity needs efficiently.
+                  All dry van, flatbed, and refrigerated trailers are thoroughly inspected, well-maintained, and ready to handle your freight capacity needs.
                 </p>
               </CardContent>
             </Card>
