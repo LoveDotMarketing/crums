@@ -9,10 +9,10 @@ import { newsArticles, getArticleBySlug, generateNewsArticleSchema, generateMats
 import { generateBreadcrumbSchema } from "@/lib/structuredData";
 
 // MATS 2026 assets - served from public folder for stable sitemap URLs
-const matsFloorPlan = "/images/news/mats-2026-floor-plan.png";
-const matsBoothArea = "/images/news/mats-2026-booth-area.png";
-const matsBoothDetail = "/images/news/mats-2026-booth-detail.png";
-const matsLogo = "/images/news/mats-logo.png";
+const matsFloorPlan = "/images/news/mats-2026-floor-plan.webp";
+const matsBoothArea = "/images/news/mats-2026-booth-area.webp";
+const matsBoothDetail = "/images/news/mats-2026-booth-detail.webp";
+const matsLogo = "/images/news/mats-logo.webp";
 
 const NewsArticlePage = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -46,7 +46,7 @@ const NewsArticlePage = () => {
 
   // Determine OG image - use article image if available
   const ogImage = article.image 
-    ? `/images/news/${slug?.includes('mats-2026') ? 'mats-2026-booth.png' : 'placeholder.png'}`
+    ? `/images/news/${slug?.includes('mats-2026') ? 'crums-mats-booth.webp' : 'placeholder.png'}`
     : "/og-image.jpg";
 
   return (
