@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { MapPin, Navigation as NavigationIcon, Phone, Truck, ArrowRight, Building2 } from "lucide-react";
 import { Link } from "react-router-dom";
 const crumsTruckHighway = "/images/crums-truck-highway.png";
+const nationwideMapImage = "/images/crums-leasing-pickup-delivery-map-2.webp";
 import { SEO } from "@/components/SEO";
 import { localBusinessSchema, generateBreadcrumbSchema } from "@/lib/structuredData";
 import { locations, getLocationsByRegion, HEADQUARTERS } from "@/lib/locations";
@@ -202,8 +203,32 @@ const Locations = () => {
         </div>
       </section>
 
-      {/* Hero Image Section */}
+      {/* Nationwide Map Section */}
       <section className="py-16 bg-background">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-10">
+            <h2 className="text-3xl font-bold mb-4 text-foreground">
+              Nationwide Pickup & Shipping
+            </h2>
+            <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
+              Based in Bulverde, Texas, we deliver dry van, flatbed, and refrigerated trailers across all 50 states.
+            </p>
+          </div>
+          <div className="max-w-5xl mx-auto">
+            <img 
+              src={nationwideMapImage} 
+              alt="CRUMS Leasing - Nationwide Pickup & Shipping. Flatbed, Dry Van, Reefer trailers delivered across all 50 states from Texas"
+              className="w-full h-auto"
+              loading="lazy"
+              width="1400"
+              height="900"
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* Hero Image Section */}
+      <section className="py-16 bg-muted">
         <div className="container mx-auto px-4">
           <div className="grid lg:grid-cols-2 gap-8 items-center">
             <div>
