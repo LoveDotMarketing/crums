@@ -97,6 +97,20 @@ const About = () => {
               The dedicated people behind CRUMS Leasing who work every day to serve our carriers.
             </p>
           </div>
+          
+          {/* Team Photo */}
+          <div className="max-w-4xl mx-auto mb-12">
+            <img 
+              src="/images/crums-team-photo.webp"
+              alt="CRUMS Leasing leadership team - Hector (COO), Ambrosia (BOM), Jr (AC), and Eric (CEO)"
+              className="w-full h-auto rounded-xl shadow-lg"
+              loading="lazy"
+              decoding="async"
+              width={1200}
+              height={600}
+            />
+          </div>
+
           <div className="flex flex-wrap justify-center gap-6 max-w-5xl mx-auto">
             {[
               { name: "Mama CRUMS", role: "Founder", slug: "mama-crums" },
