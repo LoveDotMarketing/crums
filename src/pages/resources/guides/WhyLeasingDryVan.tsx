@@ -24,7 +24,7 @@ import {
   Phone
 } from "lucide-react";
 
-const dryVanTrailerImg = "/images/dry-van-trailer.png";
+const dryVanTrailerImg = "/images/dry-van-trailer.webp";
 
 // Article metadata
 const articleData = {

@@ -8,9 +8,9 @@ import { CheckCircle, TrendingUp, Shield, DollarSign, ArrowRight } from "lucide-
 import { trackCtaClick } from "@/lib/analytics";
 import { SEO } from "@/components/SEO";
 import { trailerLeasingServiceSchema, generateBreadcrumbSchema } from "@/lib/structuredData";
-const dryVanTrailerImg = "/images/dry-van-trailer.png";
-const flatbedTrailerImg = "/images/flatbed-trailer.png";
-const refrigeratedTrailerImg = "/images/refrigerated-trailer.png";
+const dryVanTrailerImg = "/images/dry-van-trailer.webp";
+const flatbedTrailerImg = "/images/flatbed-trailer.webp";
+const refrigeratedTrailerImg = "/images/refrigerated-trailer.webp";
 const trailerPickupImg = "/images/crums-leasing-trailer-pickup.webp";
 
 const TrailerLeasing = () => {

@@ -30,12 +30,12 @@ import {
   MapPin,
 } from "lucide-react";
 // Marketing images served from public folder for stable sitemap URLs
-const fleetImage = "/images/crums-trailer.png";
+const fleetImage = "/images/crums-trailer.webp";
 const nationwideMapImage = "/images/crums-leasing-pickup-delivery-map.webp";
 const servicesOverviewImage = "/images/crums-trailer-fleet.webp";
-const dryVanTrailerImg = "/images/dry-van-trailer.png";
-const flatbedTrailerImg = "/images/flatbed-trailer.png";
-const refrigeratedTrailerImg = "/images/refrigerated-trailer.png";
+const dryVanTrailerImg = "/images/dry-van-trailer.webp";
+const flatbedTrailerImg = "/images/flatbed-trailer.webp";
+const refrigeratedTrailerImg = "/images/refrigerated-trailer.webp";
 const trailer56171Img = "/images/trailers/trailer-56171.webp";
 import whyChooseCrumsThumbnail from "@/assets/why-choose-crums-thumbnail.png";
 import { SEO } from "@/components/SEO";
@@ -395,7 +395,7 @@ const Index = () => {
             </div>
             <div className="relative">
               <ProgressiveImage 
-                src="/images/our-story-image.png" 
+                src="/images/our-story-image.webp" 
                 alt="CRUMS Leasing team and trailer fleet" 
                 className="rounded-lg shadow-xl w-full"
                 width={600}
