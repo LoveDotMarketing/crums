@@ -25,7 +25,7 @@ import {
 } from "lucide-react";
 // Marketing images served from public folder for stable sitemap URLs
 const fleetImage = "/images/crums-trailer.png";
-const trailerFleetImage = "/images/crums-leasing-trailers.webp";
+const nationwideMapImage = "/images/crums-leasing-pickup-delivery-map.webp";
 const dryVanTrailerImg = "/images/dry-van-trailer.png";
 const flatbedTrailerImg = "/images/flatbed-trailer.png";
 const refrigeratedTrailerImg = "/images/refrigerated-trailer.png";
@@ -378,8 +378,8 @@ const Index = () => {
           {/* Trailer Fleet Image */}
           <div className="max-w-4xl mx-auto mb-12">
             <img 
-              src={trailerFleetImage}
-              alt="CRUMS Leasing trailer fleet - flatbed, dry van, and refrigerated trailers"
+              src={nationwideMapImage}
+              alt="CRUMS Leasing nationwide pickup and delivery map - serving all 50 states from Texas"
               className="w-full h-auto rounded-xl shadow-lg"
               loading="lazy"
               decoding="async"
@@ -586,8 +586,8 @@ const Index = () => {
           <div className="text-center mb-16">
             <div className="mb-8">
               <ProgressiveImage 
-                src={trailerFleetImage} 
-                alt="CRUM'S Leasing trailer fleet" 
+                src={nationwideMapImage} 
+                alt="CRUMS Leasing nationwide service coverage map"
                 className="w-full max-w-5xl mx-auto rounded-lg shadow-lg"
                 width={1280}
                 height={720}
