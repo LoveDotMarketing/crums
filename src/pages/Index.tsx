@@ -114,7 +114,7 @@ const Index = () => {
       {/* Hero Section */}
       <section className="relative h-[600px] lg:h-[700px] flex items-center justify-center overflow-hidden">
         <img 
-          src="/images/hero-truck.jpg" 
+          src="/images/hero-truck.webp" 
           alt="CRUMS Leasing semi-truck on highway" 
           className="absolute inset-0 w-full h-full object-cover"
           fetchPriority="high"
