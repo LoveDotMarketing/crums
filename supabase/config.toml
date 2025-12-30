@@ -1,14 +1,18 @@
 project_id = "deeeqatnqqfcxsccigyc"
 
+# Public contact form - requires no auth (public-facing)
 [functions.send-contact-email]
 verify_jwt = false
 
+# Email sending - requires admin authentication
 [functions.send-application-status-email]
-verify_jwt = false
+verify_jwt = true
 
+# Chat proxy - handles auth internally with rate limiting
 [functions.chat-proxy]
 verify_jwt = false
 
+# Agent endpoints - use shared secret (N8N_AGENT_SECRET) for server-to-server auth
 [functions.agent-trailers-list]
 verify_jwt = false
 
@@ -36,17 +40,23 @@ verify_jwt = false
 [functions.agent-customers-tolls]
 verify_jwt = false
 
+# Outreach email - requires admin authentication
 [functions.send-outreach-email]
-verify_jwt = false
+verify_jwt = true
 
+# Outreach automation - requires admin authentication
 [functions.process-outreach-automation]
-verify_jwt = false
+verify_jwt = true
 
+# Outreach status updates - mixed auth (handled internally)
+# Public: unsubscribe/resubscribe; Authenticated: password_set/profile_completed
 [functions.update-outreach-status]
 verify_jwt = false
 
+# Staff invitation - requires admin authentication
 [functions.invite-staff]
-verify_jwt = false
+verify_jwt = true
 
-[functions.get-analytics]
-verify_jwt = false
+# SSN encryption/decryption - requires admin authentication
+[functions.ssn-crypto]
+verify_jwt = true
