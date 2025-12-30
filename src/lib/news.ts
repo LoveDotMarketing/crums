@@ -1,4 +1,4 @@
-const mats2026Image = "/images/news/mats-2026-booth.png";
+const mats2026Image = "/images/news/crums-mats-booth.webp";
 
 export interface NewsArticle {
   slug: string;
@@ -250,7 +250,7 @@ export const generateNewsArticleSchema = (article: NewsArticle) => {
   if (article.image) {
     baseSchema.image = {
       "@type": "ImageObject",
-      "url": `https://crumsleasing.com/images/news/${article.slug.includes('mats-2026') ? 'mats-2026-booth.png' : 'placeholder.png'}`,
+      "url": `https://crumsleasing.com/images/news/${article.slug.includes('mats-2026') ? 'crums-mats-booth.webp' : 'placeholder.png'}`,
       "width": 1200,
       "height": 630
     };
@@ -291,7 +291,7 @@ export const generateMats2026EventSchema = () => ({
       "longitude": -85.7419
     }
   },
-  "image": "https://crumsleasing.com/images/news/mats-2026-booth.png",
+  "image": "https://crumsleasing.com/images/news/crums-mats-booth.webp",
   "organizer": {
     "@type": "Organization",
     "name": "Mid-America Trucking Show",
