@@ -6,6 +6,12 @@ import { Footer } from "@/components/Footer";
 import { ProgressiveImage } from "@/components/ProgressiveImage";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
 import {
   Truck,
@@ -48,9 +54,50 @@ const Index = () => {
 
   const reviewSchema = generateReviewSchema(customerReviews);
 
+  // FAQ data for structured data and UI
+  const faqs = [
+    {
+      question: "What types of trailers does CRUMS Leasing offer?",
+      answer: "CRUMS Leasing offers 53-foot dry van trailers, flatbed trailers, and refrigerated (reefer) trailers. Our dry vans are ideal for general freight, flatbeds for oversized or heavy loads, and reefers for temperature-sensitive cargo requiring climate control."
+    },
+    {
+      question: "What is the minimum lease term for trailer leasing?",
+      answer: "Our minimum lease term is 12 months. We offer flexible leasing options that can scale with your business needs, with competitive rates for longer-term commitments."
+    },
+    {
+      question: "Do you offer short-term trailer rentals?",
+      answer: "Yes, we offer short-term trailer rentals for seasonal demand, special projects, or temporary capacity needs. Contact us for availability and rental rates for dry van, flatbed, or refrigerated trailers."
+    },
+    {
+      question: "What areas do you serve for trailer leasing?",
+      answer: "While headquartered in Bulverde, Texas, CRUMS Leasing provides nationwide trailer leasing and rental services. We offer local pickup in the Texas Triangle (San Antonio, Austin, Houston, Dallas) and delivery options throughout the United States."
+    },
+    {
+      question: "What are the benefits of leasing vs. buying a trailer?",
+      answer: "Leasing offers lower upfront costs, predictable monthly payments, access to well-maintained equipment, and flexibility to scale your fleet without the capital investment of purchasing. It also eliminates maintenance headaches and depreciation concerns."
+    },
+    {
+      question: "Are your refrigerated trailers suitable for food transport?",
+      answer: "Yes, our refrigerated reefer trailers are designed for food distribution and temperature-controlled cargo. They maintain consistent temperatures for perishable goods, produce, frozen foods, and pharmaceuticals requiring cold chain logistics."
+    }
+  ];
+
+  const faqSchema = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": faqs.map(faq => ({
+      "@type": "Question",
+      "name": faq.question,
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": faq.answer
+      }
+    }))
+  };
+
   const combinedSchema = {
     "@context": "https://schema.org",
-    "@graph": [organizationSchema, breadcrumbSchema, reviewSchema]
+    "@graph": [organizationSchema, breadcrumbSchema, reviewSchema, faqSchema]
   };
 
   return (
@@ -913,6 +960,57 @@ const Index = () => {
                 >
                   Learn More About Us
                   <ArrowRight className="ml-2 h-5 w-5" />
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ Section */}
+      <section className="py-20 bg-muted/30">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <Badge variant="outline" className="mb-4 text-primary border-primary">
+              Common Questions
+            </Badge>
+            <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
+              Trailer Leasing FAQ
+            </h2>
+            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+              Find answers to common questions about our dry van, flatbed, and refrigerated trailer leasing services.
+            </p>
+          </div>
+          
+          <div className="max-w-3xl mx-auto">
+            <Accordion type="single" collapsible className="w-full space-y-4">
+              {faqs.map((faq, index) => (
+                <AccordionItem 
+                  key={index} 
+                  value={`faq-${index}`}
+                  className="bg-background border rounded-lg px-6"
+                >
+                  <AccordionTrigger className="text-left text-lg font-semibold hover:no-underline">
+                    {faq.question}
+                  </AccordionTrigger>
+                  <AccordionContent className="text-muted-foreground leading-relaxed">
+                    {faq.answer}
+                  </AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
+            
+            <div className="text-center mt-8">
+              <p className="text-muted-foreground mb-4">
+                Have more questions about trailer leasing or rentals?
+              </p>
+              <Link to="/contact">
+                <Button 
+                  variant="outline"
+                  onClick={() => trackCtaClick('Contact Us FAQ', 'home', '/contact')}
+                >
+                  Contact Our Team
+                  <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </Link>
             </div>
