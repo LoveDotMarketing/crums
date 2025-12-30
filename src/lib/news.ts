@@ -298,7 +298,7 @@ export const generateMats2026EventSchema = () => ({
     "url": "https://truckingshow.com/",
     "logo": {
       "@type": "ImageObject",
-      "url": "https://crumsleasing.com/images/news/mats-logo.png"
+      "url": "https://crumsleasing.com/images/news/mats-logo.webp"
     }
   },
   "performer": {
