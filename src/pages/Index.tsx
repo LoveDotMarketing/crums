@@ -375,6 +375,18 @@ const Index = () => {
             </p>
           </div>
 
+          {/* Trailer Fleet Image */}
+          <div className="max-w-4xl mx-auto mb-12">
+            <img 
+              src={trailerFleetImage}
+              alt="CRUMS Leasing trailer fleet - flatbed, dry van, and refrigerated trailers"
+              className="w-full h-auto rounded-xl shadow-lg"
+              loading="lazy"
+              decoding="async"
+              width={1200}
+              height={600}
+            />
+          </div>
           {/* Headquarters Highlight */}
           <div className="max-w-4xl mx-auto mb-12">
             <Card className="border-2 border-primary/20 bg-background">
