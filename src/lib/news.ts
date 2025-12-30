@@ -56,6 +56,7 @@ export const newsArticles: NewsArticle[] = [
     lastModified: "2025-12-10",
     priority: 0.8,
     changefreq: "yearly",
+    image: "/images/news/crums-mats-booth.webp",
     articleSection: "Events"
   },
   {
