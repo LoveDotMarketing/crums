@@ -26,6 +26,7 @@ import {
 // Marketing images served from public folder for stable sitemap URLs
 const fleetImage = "/images/crums-trailer.png";
 const nationwideMapImage = "/images/crums-leasing-pickup-delivery-map.webp";
+const servicesOverviewImage = "/images/crums-leasing-trailers.webp";
 const dryVanTrailerImg = "/images/dry-van-trailer.png";
 const flatbedTrailerImg = "/images/flatbed-trailer.png";
 const refrigeratedTrailerImg = "/images/refrigerated-trailer.png";
@@ -586,8 +587,8 @@ const Index = () => {
           <div className="text-center mb-16">
             <div className="mb-8">
               <ProgressiveImage 
-                src={nationwideMapImage} 
-                alt="CRUMS Leasing nationwide service coverage map"
+                src={servicesOverviewImage} 
+                alt="CRUMS Leasing trailer fleet - 53-foot dry van, flatbed, and refrigerated trailers"
                 className="w-full max-w-5xl mx-auto rounded-lg shadow-lg"
                 width={1280}
                 height={720}
