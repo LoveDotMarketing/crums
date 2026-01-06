@@ -246,6 +246,14 @@ export const Navigation = () => {
 
           {/* CTA Buttons */}
           <div className="hidden lg:flex items-center space-x-4">
+            <a 
+              href="tel:+18885704564"
+              onClick={() => trackPhoneClick('desktop-nav')}
+              className="flex items-center text-sm font-medium text-primary hover:text-primary/80 transition-colors"
+            >
+              <Phone className="mr-1.5 h-4 w-4" />
+              1-888-570-4564
+            </a>
             <Link to="/login">
               <Button variant="ghost">Customer Login</Button>
             </Link>
