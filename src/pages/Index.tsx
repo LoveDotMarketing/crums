@@ -29,6 +29,8 @@ import {
   Newspaper,
   MapPin,
   Phone,
+  Briefcase,
+  DollarSign,
 } from "lucide-react";
 // Marketing images served from public folder for stable sitemap URLs
 const fleetImage = "/images/crums-trailer.webp";
@@ -359,6 +361,62 @@ const Index = () => {
                 Join the Referral Program
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* We're Hiring Section */}
+      <section className="py-16 bg-muted">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-10">
+            <Badge className="mb-4 bg-secondary text-secondary-foreground">
+              <Briefcase className="h-3 w-3 mr-1" />
+              We're Hiring
+            </Badge>
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+              Join Our Growing Team
+            </h2>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              Be part of a family-owned company that values relationships, integrity, and your success.
+            </p>
+          </div>
+
+          <div className="max-w-2xl mx-auto">
+            <Link to="/careers/trailer-leasing-sales-rep" className="block group">
+              <Card className="border-2 hover:border-primary hover:shadow-xl transition-all duration-300 overflow-hidden">
+                <CardContent className="p-6 md:p-8">
+                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
+                    <div>
+                      <h3 className="text-xl md:text-2xl font-bold text-foreground group-hover:text-primary transition-colors">
+                        Trailer Leasing Sales Representative
+                      </h3>
+                      <div className="flex items-center gap-2 mt-2 text-muted-foreground">
+                        <MapPin className="h-4 w-4" />
+                        <span>San Antonio, TX</span>
+                      </div>
+                    </div>
+                    <Badge variant="outline" className="self-start md:self-center border-green-600 text-green-600 font-semibold">
+                      <DollarSign className="h-3 w-3 mr-1" />
+                      $30K + Commission
+                    </Badge>
+                  </div>
+                  <p className="text-muted-foreground mb-6">
+                    Join our team as a relationship-driven sales rep. Lease trailers, manage customer accounts, and grow with a company that prioritizes long-term partnerships.
+                  </p>
+                  <Button 
+                    className="w-full md:w-auto bg-primary hover:bg-primary/90 group-hover:bg-secondary group-hover:text-secondary-foreground transition-colors"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      trackCtaClick('View Job Details', 'home', '/careers/trailer-leasing-sales-rep');
+                      window.location.href = '/careers/trailer-leasing-sales-rep';
+                    }}
+                  >
+                    View Job Details
+                    <ArrowRight className="ml-2 h-5 w-5" />
+                  </Button>
+                </CardContent>
+              </Card>
             </Link>
           </div>
         </div>
