@@ -15,6 +15,37 @@ const breadcrumbSchema = generateBreadcrumbSchema([
   { name: "Seasonal Demand", url: "https://crumsleasing.com/industries/seasonal-demand" }
 ]);
 
+const howToSchema = {
+  "@context": "https://schema.org",
+  "@type": "HowTo",
+  "name": "How to Rent Trailers for Seasonal Demand",
+  "description": "A step-by-step guide to renting trailers for peak season capacity with CRUMS Leasing.",
+  "totalTime": "P1D",
+  "step": [
+    {
+      "@type": "HowToStep",
+      "position": 1,
+      "name": "Plan Ahead",
+      "text": "Contact us in advance of your peak season to discuss capacity needs and reserve trailers.",
+      "url": "https://crumsleasing.com/industries/seasonal-demand#step-1"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 2,
+      "name": "Quick Deployment",
+      "text": "We prepare trailers and deliver them when you need them, ready to roll.",
+      "url": "https://crumsleasing.com/industries/seasonal-demand#step-2"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 3,
+      "name": "Flexible Returns",
+      "text": "Return trailers when your peak season ends - no long-term commitment required.",
+      "url": "https://crumsleasing.com/industries/seasonal-demand#step-3"
+    }
+  ]
+};
+
 const SeasonalDemand = () => {
   const benefits = [
     { icon: TrendingUp, title: "Peak Capacity", description: "Scale up quickly for holiday and seasonal rushes." },
@@ -29,7 +60,7 @@ const SeasonalDemand = () => {
         title="Seasonal Trailer Rentals | CRUMS Leasing"
         description="Short-term trailer rentals for seasonal demand spikes. CRUMS Leasing offers flexible capacity solutions for holiday seasons, harvest, and peak shipping periods."
         canonical="https://crumsleasing.com/industries/seasonal-demand"
-        structuredData={[seasonalDemandServiceSchema, breadcrumbSchema]}
+        structuredData={[seasonalDemandServiceSchema, breadcrumbSchema, howToSchema]}
       />
       <Navigation />
       
@@ -103,21 +134,21 @@ const SeasonalDemand = () => {
             <div className="max-w-3xl mx-auto">
               <h2 className="text-3xl font-bold mb-8">How Seasonal Rentals Work</h2>
               <div className="space-y-6">
-                <div className="flex gap-4">
+                <div id="step-1" className="flex gap-4">
                   <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold flex-shrink-0">1</div>
                   <div>
                     <h3 className="font-semibold text-lg">Plan Ahead</h3>
                     <p className="text-muted-foreground">Contact us in advance of your peak season to discuss capacity needs and reserve trailers.</p>
                   </div>
                 </div>
-                <div className="flex gap-4">
+                <div id="step-2" className="flex gap-4">
                   <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold flex-shrink-0">2</div>
                   <div>
                     <h3 className="font-semibold text-lg">Quick Deployment</h3>
                     <p className="text-muted-foreground">We prepare trailers and deliver them when you need them, ready to roll.</p>
                   </div>
                 </div>
-                <div className="flex gap-4">
+                <div id="step-3" className="flex gap-4">
                   <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold flex-shrink-0">3</div>
                   <div>
                     <h3 className="font-semibold text-lg">Flexible Returns</h3>
