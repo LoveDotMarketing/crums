@@ -5,7 +5,7 @@ import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Building2, CheckCircle, Network, Clock, BarChart3, Handshake, ArrowRight } from "lucide-react";
+import { CheckCircle, Network, Clock, BarChart3, Handshake, ArrowRight, Calculator, BookOpen, Truck } from "lucide-react";
 import { trackCtaClick } from "@/lib/analytics";
 import { logisticsServiceSchema, generateBreadcrumbSchema } from "@/lib/structuredData";
 
@@ -94,6 +94,51 @@ const LogisticsCompanies = () => {
                   </li>
                 ))}
               </ul>
+            </div>
+          </div>
+        </section>
+
+        {/* Resources for Logistics Companies */}
+        <section className="py-16">
+          <div className="container mx-auto px-4">
+            <h2 className="text-3xl font-bold text-center mb-8">Resources for Logistics Providers</h2>
+            <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+              <Card className="border-2 hover:border-primary/50 transition-colors">
+                <CardContent className="p-6 text-center">
+                  <Truck className="h-8 w-8 text-primary mx-auto mb-3" />
+                  <h3 className="font-bold text-foreground mb-2">Dry Van & Flatbed Trailers</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Multiple trailer types for diverse customer needs.
+                  </p>
+                  <Link to="/dry-van-trailers" className="text-primary hover:underline font-medium text-sm">
+                    View Trailers →
+                  </Link>
+                </CardContent>
+              </Card>
+              <Card className="border-2 hover:border-secondary/50 transition-colors">
+                <CardContent className="p-6 text-center">
+                  <Calculator className="h-8 w-8 text-secondary mx-auto mb-3" />
+                  <h3 className="font-bold text-foreground mb-2">Profit Per Load Calculator</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Analyze profitability for your customers' freight.
+                  </p>
+                  <Link to="/resources/tools/profit-per-load" className="text-secondary hover:underline font-medium text-sm">
+                    Calculate Now →
+                  </Link>
+                </CardContent>
+              </Card>
+              <Card className="border-2 hover:border-primary/50 transition-colors">
+                <CardContent className="p-6 text-center">
+                  <BookOpen className="h-8 w-8 text-primary mx-auto mb-3" />
+                  <h3 className="font-bold text-foreground mb-2">Trailer Specifications</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Detailed dimensions and capacity specs.
+                  </p>
+                  <Link to="/resources/guides/trailer-specifications" className="text-primary hover:underline font-medium text-sm">
+                    View Specs →
+                  </Link>
+                </CardContent>
+              </Card>
             </div>
           </div>
         </section>

@@ -292,36 +292,56 @@ const FleetSolutions = () => {
               guide to selecting the right trailer
               </Link>.
             </p>
-            <p className="text-muted-foreground mb-6">
-              We deliver trailers nationwide — see our{" "}
-              <Link to="/locations" className="text-primary hover:underline font-semibold">
-                service locations
-              </Link>{" "}
-              including{" "}
-              <Link to="/locations/houston-tx" className="text-primary hover:underline font-medium">
-                Houston
-              </Link>,{" "}
-              <Link to="/locations/dallas-tx" className="text-primary hover:underline font-medium">
-                Dallas
-              </Link>,{" "}
-              <Link to="/locations/atlanta-ga" className="text-primary hover:underline font-medium">
-                Atlanta
-              </Link>, and{" "}
-              <Link to="/locations/chicago-il" className="text-primary hover:underline font-medium">
-                Chicago
-              </Link>.
-            </p>
-            <p className="text-muted-foreground">
-              Learn more{" "}
-              <Link to="/about" className="text-primary hover:underline font-medium">
-                about CRUMS Leasing
-              </Link>{" "}
-              and our{" "}
-              <Link to="/mission" className="text-primary hover:underline font-medium">
-                mission and values
-              </Link>{" "}
-              that drive everything we do.
-            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Decision Support */}
+      <section className="py-16 bg-muted">
+        <div className="container mx-auto px-4">
+          <h2 className="text-2xl md:text-3xl font-bold text-center mb-4 text-foreground">
+            Resources for Fleet Decision-Making
+          </h2>
+          <p className="text-center text-muted-foreground mb-8 max-w-2xl mx-auto">
+            Use our tools and learn why carriers across the nation trust CRUMS.
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+            <Card className="border-2 hover:border-primary/50 transition-colors">
+              <CardContent className="p-6 text-center">
+                <BarChart className="h-8 w-8 text-primary mx-auto mb-3" />
+                <h3 className="font-bold text-foreground mb-2">Cost Per Mile Calculator</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Calculate your true operating costs to optimize profitability.
+                </p>
+                <Link to="/resources/tools/cost-per-mile" className="text-primary hover:underline font-medium text-sm">
+                  Calculate Now →
+                </Link>
+              </CardContent>
+            </Card>
+            <Card className="border-2 hover:border-secondary/50 transition-colors">
+              <CardContent className="p-6 text-center">
+                <CheckCircle className="h-8 w-8 text-secondary mx-auto mb-3" />
+                <h3 className="font-bold text-foreground mb-2">Choosing the Right Trailer</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Learn how to select the perfect trailer for your freight.
+                </p>
+                <Link to="/resources/guides/choosing-trailer" className="text-secondary hover:underline font-medium text-sm">
+                  Read Guide →
+                </Link>
+              </CardContent>
+            </Card>
+            <Card className="border-2 hover:border-primary/50 transition-colors">
+              <CardContent className="p-6 text-center">
+                <Users className="h-8 w-8 text-primary mx-auto mb-3" />
+                <h3 className="font-bold text-foreground mb-2">Why Choose CRUMS</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Discover why fleets trust CRUMS for their equipment needs.
+                </p>
+                <Link to="/why-choose-crums" className="text-primary hover:underline font-medium text-sm">
+                  Learn More →
+                </Link>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </section>

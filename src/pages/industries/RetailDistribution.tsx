@@ -5,7 +5,7 @@ import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { ShoppingCart, CheckCircle, Package, Zap, TrendingUp, Store, ArrowRight } from "lucide-react";
+import { CheckCircle, Package, Zap, TrendingUp, Store, ArrowRight, Calculator, BookOpen, Truck } from "lucide-react";
 import { trackCtaClick } from "@/lib/analytics";
 import { retailDistributionServiceSchema, generateBreadcrumbSchema } from "@/lib/structuredData";
 
@@ -94,6 +94,51 @@ const RetailDistribution = () => {
                   </li>
                 ))}
               </ul>
+            </div>
+          </div>
+        </section>
+
+        {/* Resources for Retail Distribution */}
+        <section className="py-16">
+          <div className="container mx-auto px-4">
+            <h2 className="text-3xl font-bold text-center mb-8">Resources for Retail Distributors</h2>
+            <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+              <Card className="border-2 hover:border-primary/50 transition-colors">
+                <CardContent className="p-6 text-center">
+                  <Truck className="h-8 w-8 text-primary mx-auto mb-3" />
+                  <h3 className="font-bold text-foreground mb-2">Dry Van Trailers</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    High-capacity 53' trailers for retail freight.
+                  </p>
+                  <Link to="/dry-van-trailers" className="text-primary hover:underline font-medium text-sm">
+                    View Dry Vans →
+                  </Link>
+                </CardContent>
+              </Card>
+              <Card className="border-2 hover:border-secondary/50 transition-colors">
+                <CardContent className="p-6 text-center">
+                  <Calculator className="h-8 w-8 text-secondary mx-auto mb-3" />
+                  <h3 className="font-bold text-foreground mb-2">Cost Per Mile Calculator</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Optimize your retail distribution costs.
+                  </p>
+                  <Link to="/resources/tools/cost-per-mile" className="text-secondary hover:underline font-medium text-sm">
+                    Calculate Now →
+                  </Link>
+                </CardContent>
+              </Card>
+              <Card className="border-2 hover:border-primary/50 transition-colors">
+                <CardContent className="p-6 text-center">
+                  <BookOpen className="h-8 w-8 text-primary mx-auto mb-3" />
+                  <h3 className="font-bold text-foreground mb-2">Choosing the Right Trailer</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Match trailer types to your retail freight.
+                  </p>
+                  <Link to="/resources/guides/choosing-trailer" className="text-primary hover:underline font-medium text-sm">
+                    Read Guide →
+                  </Link>
+                </CardContent>
+              </Card>
             </div>
           </div>
         </section>

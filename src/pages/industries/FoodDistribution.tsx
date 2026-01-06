@@ -5,7 +5,7 @@ import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { UtensilsCrossed, CheckCircle, Thermometer, Shield, Clock, Leaf, ArrowRight } from "lucide-react";
+import { CheckCircle, Thermometer, Shield, Clock, Leaf, ArrowRight, Calculator, BookOpen, Snowflake } from "lucide-react";
 import { trackCtaClick } from "@/lib/analytics";
 import { foodDistributionServiceSchema, generateBreadcrumbSchema } from "@/lib/structuredData";
 
@@ -94,6 +94,51 @@ const FoodDistribution = () => {
                   </li>
                 ))}
               </ul>
+            </div>
+          </div>
+        </section>
+
+        {/* Resources for Food Distribution */}
+        <section className="py-16">
+          <div className="container mx-auto px-4">
+            <h2 className="text-3xl font-bold text-center mb-8">Resources for Food Distributors</h2>
+            <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+              <Card className="border-2 hover:border-primary/50 transition-colors">
+                <CardContent className="p-6 text-center">
+                  <Snowflake className="h-8 w-8 text-primary mx-auto mb-3" />
+                  <h3 className="font-bold text-foreground mb-2">Refrigerated Trailers</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Temperature-controlled transport for perishable goods.
+                  </p>
+                  <Link to="/refrigerated-trailers" className="text-primary hover:underline font-medium text-sm">
+                    View Reefers →
+                  </Link>
+                </CardContent>
+              </Card>
+              <Card className="border-2 hover:border-secondary/50 transition-colors">
+                <CardContent className="p-6 text-center">
+                  <BookOpen className="h-8 w-8 text-secondary mx-auto mb-3" />
+                  <h3 className="font-bold text-foreground mb-2">Trailer Specifications</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Complete dimensions and temperature capabilities.
+                  </p>
+                  <Link to="/resources/guides/trailer-specifications" className="text-secondary hover:underline font-medium text-sm">
+                    View Specs →
+                  </Link>
+                </CardContent>
+              </Card>
+              <Card className="border-2 hover:border-primary/50 transition-colors">
+                <CardContent className="p-6 text-center">
+                  <Calculator className="h-8 w-8 text-primary mx-auto mb-3" />
+                  <h3 className="font-bold text-foreground mb-2">Lease vs Buy Calculator</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Compare costs for your distribution fleet.
+                  </p>
+                  <Link to="/resources/tools/lease-vs-buy" className="text-primary hover:underline font-medium text-sm">
+                    Calculate Now →
+                  </Link>
+                </CardContent>
+              </Card>
             </div>
           </div>
         </section>

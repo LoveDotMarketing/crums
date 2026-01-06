@@ -5,7 +5,7 @@ import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Calendar, CheckCircle, TrendingUp, Clock, DollarSign, Repeat, ArrowRight } from "lucide-react";
+import { CheckCircle, TrendingUp, Clock, DollarSign, Repeat, ArrowRight, Calculator, BookOpen, Truck } from "lucide-react";
 import { trackCtaClick } from "@/lib/analytics";
 import { seasonalDemandServiceSchema, generateBreadcrumbSchema } from "@/lib/structuredData";
 
@@ -125,6 +125,51 @@ const SeasonalDemand = () => {
                   </div>
                 </div>
               </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Resources for Seasonal Planning */}
+        <section className="py-16 bg-muted/30">
+          <div className="container mx-auto px-4">
+            <h2 className="text-3xl font-bold text-center mb-8">Resources for Seasonal Planning</h2>
+            <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+              <Card className="border-2 hover:border-primary/50 transition-colors">
+                <CardContent className="p-6 text-center">
+                  <Truck className="h-8 w-8 text-primary mx-auto mb-3" />
+                  <h3 className="font-bold text-foreground mb-2">Dry Van Trailers</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Most popular for seasonal shipping needs.
+                  </p>
+                  <Link to="/dry-van-trailers" className="text-primary hover:underline font-medium text-sm">
+                    View Dry Vans →
+                  </Link>
+                </CardContent>
+              </Card>
+              <Card className="border-2 hover:border-secondary/50 transition-colors">
+                <CardContent className="p-6 text-center">
+                  <Calculator className="h-8 w-8 text-secondary mx-auto mb-3" />
+                  <h3 className="font-bold text-foreground mb-2">Cost Per Mile Calculator</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Plan seasonal operating costs.
+                  </p>
+                  <Link to="/resources/tools/cost-per-mile" className="text-secondary hover:underline font-medium text-sm">
+                    Calculate Now →
+                  </Link>
+                </CardContent>
+              </Card>
+              <Card className="border-2 hover:border-primary/50 transition-colors">
+                <CardContent className="p-6 text-center">
+                  <BookOpen className="h-8 w-8 text-primary mx-auto mb-3" />
+                  <h3 className="font-bold text-foreground mb-2">Choosing the Right Trailer</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Match trailer types to seasonal freight.
+                  </p>
+                  <Link to="/resources/guides/choosing-trailer" className="text-primary hover:underline font-medium text-sm">
+                    Read Guide →
+                  </Link>
+                </CardContent>
+              </Card>
             </div>
           </div>
         </section>

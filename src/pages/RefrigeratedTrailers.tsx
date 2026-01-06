@@ -326,14 +326,64 @@ const RefrigeratedTrailers = () => {
         </div>
       </section>
 
-      {/* Related Services */}
-      <section className="py-16 bg-muted">
+      {/* Decision Support */}
+      <section className="py-16 bg-background">
         <div className="container mx-auto px-4">
-          <h2 className="text-2xl md:text-3xl font-bold text-center mb-8 text-foreground">
+          <h2 className="text-2xl md:text-3xl font-bold text-center mb-4 text-foreground">
+            Make an Informed Decision
+          </h2>
+          <p className="text-center text-muted-foreground mb-8 max-w-2xl mx-auto">
+            Use our free resources to determine if a reefer is right for your operation.
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+            <Card className="border-2 hover:border-primary/50 transition-colors">
+              <CardContent className="p-6 text-center">
+                <Thermometer className="h-8 w-8 text-primary mx-auto mb-3" />
+                <h3 className="font-bold text-foreground mb-2">Trailer Specifications Guide</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Complete dimensions and temperature specs for reefer trailers.
+                </p>
+                <Link to="/resources/guides/trailer-specifications" className="text-primary hover:underline font-medium text-sm">
+                  View Specs →
+                </Link>
+              </CardContent>
+            </Card>
+            <Card className="border-2 hover:border-secondary/50 transition-colors">
+              <CardContent className="p-6 text-center">
+                <Snowflake className="h-8 w-8 text-secondary mx-auto mb-3" />
+                <h3 className="font-bold text-foreground mb-2">Lease vs Buy Calculator</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Compare costs of leasing versus purchasing a reefer trailer.
+                </p>
+                <Link to="/resources/tools/lease-vs-buy" className="text-secondary hover:underline font-medium text-sm">
+                  Calculate Now →
+                </Link>
+              </CardContent>
+            </Card>
+            <Card className="border-2 hover:border-primary/50 transition-colors">
+              <CardContent className="p-6 text-center">
+                <Shield className="h-8 w-8 text-primary mx-auto mb-3" />
+                <h3 className="font-bold text-foreground mb-2">Why Choose CRUMS</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  See why carriers trust CRUMS for refrigerated trailer leasing.
+                </p>
+                <Link to="/why-choose-crums" className="text-primary hover:underline font-medium text-sm">
+                  Learn More →
+                </Link>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </section>
+
+      {/* Related Services */}
+      <section className="py-12 bg-muted">
+        <div className="container mx-auto px-4">
+          <h2 className="text-xl font-bold text-center mb-6 text-foreground">
             Explore Other Trailer Types
           </h2>
           <div className="max-w-3xl mx-auto text-center">
-            <p className="text-lg text-muted-foreground mb-6">
+            <p className="text-muted-foreground mb-4">
               Need non-temperature-controlled transport? Check out our{" "}
               <Link to="/dry-van-trailers" className="text-secondary hover:underline font-semibold">
                 dry van trailer leasing
@@ -344,16 +394,12 @@ const RefrigeratedTrailers = () => {
               </Link>{" "}
               solutions.
             </p>
-            <p className="text-muted-foreground">
+            <p className="text-sm text-muted-foreground">
               Not sure which trailer is right for your operation? Read our{" "}
               <Link to="/resources/guides/choosing-trailer" className="text-primary hover:underline font-medium">
-                comprehensive guide to choosing the right trailer for your haul
+                comprehensive guide to choosing the right trailer
               </Link>{" "}
-              or check our{" "}
-              <Link to="/resources/guides/trailer-specifications" className="text-primary hover:underline font-medium">
-                complete trailer specifications guide
-              </Link>{" "}
-              for detailed dimensions and capacities. You can also{" "}
+              or{" "}
               <Link to="/contact" className="text-primary hover:underline font-medium">
                 contact our team
               </Link>{" "}

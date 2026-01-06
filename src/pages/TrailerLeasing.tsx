@@ -268,14 +268,70 @@ const TrailerLeasing = () => {
         </div>
       </section>
 
-      {/* Related Services */}
+      {/* Decision Support */}
       <section className="py-16 bg-muted">
         <div className="container mx-auto px-4">
-          <h2 className="text-2xl md:text-3xl font-bold text-center mb-8 text-foreground">
+          <h2 className="text-2xl md:text-3xl font-bold text-center mb-4 text-foreground">
+            Make an Informed Decision
+          </h2>
+          <p className="text-center text-muted-foreground mb-8 max-w-2xl mx-auto">
+            Use our free tools and guides to determine if leasing is right for your operation.
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+            <Card className="border-2 hover:border-primary/50 transition-colors">
+              <CardContent className="p-6 text-center">
+                <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                  <TrendingUp className="h-6 w-6 text-primary" />
+                </div>
+                <h3 className="font-bold text-foreground mb-2">Lease vs Buy Calculator</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Compare the true costs of leasing versus buying a trailer.
+                </p>
+                <Link to="/resources/tools/lease-vs-buy" className="text-primary hover:underline font-medium text-sm">
+                  Calculate Now →
+                </Link>
+              </CardContent>
+            </Card>
+            <Card className="border-2 hover:border-secondary/50 transition-colors">
+              <CardContent className="p-6 text-center">
+                <div className="h-12 w-12 rounded-full bg-secondary/10 flex items-center justify-center mx-auto mb-4">
+                  <CheckCircle className="h-6 w-6 text-secondary" />
+                </div>
+                <h3 className="font-bold text-foreground mb-2">Choosing the Right Trailer</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Learn how to select the perfect trailer for your freight needs.
+                </p>
+                <Link to="/resources/guides/choosing-trailer" className="text-secondary hover:underline font-medium text-sm">
+                  Read Guide →
+                </Link>
+              </CardContent>
+            </Card>
+            <Card className="border-2 hover:border-primary/50 transition-colors">
+              <CardContent className="p-6 text-center">
+                <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                  <Shield className="h-6 w-6 text-primary" />
+                </div>
+                <h3 className="font-bold text-foreground mb-2">Why Choose CRUMS</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  See why carriers trust CRUMS for their trailer leasing needs.
+                </p>
+                <Link to="/why-choose-crums" className="text-primary hover:underline font-medium text-sm">
+                  Learn More →
+                </Link>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </section>
+
+      {/* Related Services */}
+      <section className="py-12 bg-background">
+        <div className="container mx-auto px-4">
+          <h2 className="text-xl font-bold text-center mb-6 text-foreground">
             Explore More Services
           </h2>
           <div className="max-w-3xl mx-auto text-center">
-            <p className="text-lg text-muted-foreground mb-6">
+            <p className="text-muted-foreground mb-4">
               Need something different? Check out our{" "}
               <Link to="/services/trailer-rentals" className="text-secondary hover:underline font-semibold">
                 short-term trailer rentals
@@ -286,35 +342,16 @@ const TrailerLeasing = () => {
               </Link>{" "}
               for businesses managing multiple trailers.
             </p>
-            <p className="text-muted-foreground mb-6">
+            <p className="text-sm text-muted-foreground">
               We serve trucking professionals across the nation — view our{" "}
-              <Link to="/locations" className="text-primary hover:underline font-semibold">
+              <Link to="/locations" className="text-primary hover:underline font-medium">
                 trailer leasing locations
               </Link>{" "}
               including{" "}
-              <Link to="/locations/houston-tx" className="text-primary hover:underline font-medium">
-                Houston
-              </Link>,{" "}
-              <Link to="/locations/dallas-tx" className="text-primary hover:underline font-medium">
-                Dallas
-              </Link>,{" "}
-              <Link to="/locations/los-angeles-ca" className="text-primary hover:underline font-medium">
-                Los Angeles
-              </Link>, and{" "}
-              <Link to="/locations/chicago-il" className="text-primary hover:underline font-medium">
-                Chicago
-              </Link>.
-            </p>
-            <p className="text-muted-foreground">
-              Not sure which option is right for you? Use our{" "}
-              <Link to="/resources/tools/lease-vs-buy" className="text-primary hover:underline font-medium">
-                lease vs buy calculator
-              </Link>{" "}
-              to compare costs, or{" "}
-              <Link to="/contact" className="text-primary hover:underline font-medium">
-                contact our team
-              </Link>{" "}
-              for personalized guidance.
+              <Link to="/locations/houston-tx" className="text-primary hover:underline">Houston</Link>,{" "}
+              <Link to="/locations/dallas-tx" className="text-primary hover:underline">Dallas</Link>,{" "}
+              <Link to="/locations/los-angeles-ca" className="text-primary hover:underline">Los Angeles</Link>, and{" "}
+              <Link to="/locations/chicago-il" className="text-primary hover:underline">Chicago</Link>.
             </p>
           </div>
         </div>
