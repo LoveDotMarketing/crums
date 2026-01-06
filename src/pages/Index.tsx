@@ -134,11 +134,11 @@ const Index = () => {
             Quality dry van, flatbed, and reefer trailers guided by family values, integrity, and commitment to your success — creating lasting partnerships that move people forward.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link to="/get-started">
+            <Link to="/contact">
               <Button 
                 size="lg" 
                 className="bg-secondary hover:bg-secondary/90 text-secondary-foreground text-lg px-8 py-6"
-                onClick={() => trackCtaClick('Get Started', 'home', '/get-started')}
+                onClick={() => trackCtaClick('Get Started', 'home', '/contact')}
               >
                 Get Started
                 <ArrowRight className="ml-2 h-5 w-5" />
