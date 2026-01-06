@@ -163,11 +163,53 @@ const Careers = () => {
         </div>
       </section>
 
+      {/* Featured Position */}
+      <section className="py-16 bg-secondary/5">
+        <div className="container mx-auto px-4">
+          <h2 className="text-3xl md:text-4xl font-bold text-center mb-4 text-foreground">
+            Featured Position
+          </h2>
+          <p className="text-center text-muted-foreground mb-12 max-w-2xl mx-auto">
+            We're actively hiring for this role — apply today!
+          </p>
+          <div className="max-w-3xl mx-auto">
+            <Card className="border-2 border-secondary hover:shadow-xl transition-shadow bg-background">
+              <CardContent className="p-8">
+                <div className="flex flex-wrap gap-3 mb-4">
+                  <span className="text-sm font-semibold text-secondary bg-secondary/10 px-3 py-1 rounded-full">
+                    Sales
+                  </span>
+                  <span className="text-sm font-semibold text-primary bg-primary/10 px-3 py-1 rounded-full">
+                    Now Hiring
+                  </span>
+                </div>
+                <h3 className="text-2xl font-bold mb-2 text-foreground">
+                  Trailer Leasing Sales Representative
+                </h3>
+                <p className="text-muted-foreground mb-4">
+                  San Antonio, TX • Full Time • $30,000/year + Commission
+                </p>
+                <p className="text-foreground mb-6">
+                  Join our growing team as a Sales Representative. Lease trailers, manage customer accounts, 
+                  and grow with a family-owned company that values long-term relationships.
+                </p>
+                <Link to="/careers/trailer-leasing-sales-rep" onClick={() => trackCtaClick('View Sales Rep Position', 'careers', '/careers/trailer-leasing-sales-rep')}>
+                  <Button className="w-full sm:w-auto bg-secondary hover:bg-secondary/90">
+                    View Position Details
+                    <ArrowRight className="ml-2 h-5 w-5" />
+                  </Button>
+                </Link>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </section>
+
       {/* Open Positions */}
       <section className="py-20 bg-muted">
         <div className="container mx-auto px-4">
           <h2 className="text-3xl md:text-4xl font-bold text-center mb-16 text-foreground">
-            Open Positions
+            Other Open Positions
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
             <Card className="border-2 hover:shadow-lg transition-shadow">
