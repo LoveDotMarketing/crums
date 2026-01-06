@@ -142,7 +142,7 @@ const Index = () => {
                 className="bg-secondary hover:bg-secondary/90 text-secondary-foreground text-lg px-8 py-6"
                 onClick={() => trackCtaClick('Get Started', 'home', '/contact')}
               >
-                Contact Us
+                Free Quote
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
             </Link>
