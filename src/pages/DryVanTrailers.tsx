@@ -470,14 +470,64 @@ const DryVanTrailers = () => {
         </div>
       </section>
 
-      {/* Related Services */}
+      {/* Decision Support */}
       <section className="py-16 bg-background">
         <div className="container mx-auto px-4">
-          <h2 className="text-2xl md:text-3xl font-bold text-center mb-8 text-foreground">
+          <h2 className="text-2xl md:text-3xl font-bold text-center mb-4 text-foreground">
+            Make an Informed Decision
+          </h2>
+          <p className="text-center text-muted-foreground mb-8 max-w-2xl mx-auto">
+            Use our free resources to determine if a dry van is right for your operation.
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+            <Card className="border-2 hover:border-primary/50 transition-colors">
+              <CardContent className="p-6 text-center">
+                <Ruler className="h-8 w-8 text-primary mx-auto mb-3" />
+                <h3 className="font-bold text-foreground mb-2">Trailer Specifications Guide</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Complete dimensions, cubic feet, and weight capacities for all trailer types.
+                </p>
+                <Link to="/resources/guides/trailer-specifications" className="text-primary hover:underline font-medium text-sm">
+                  View Specs →
+                </Link>
+              </CardContent>
+            </Card>
+            <Card className="border-2 hover:border-secondary/50 transition-colors">
+              <CardContent className="p-6 text-center">
+                <Box className="h-8 w-8 text-secondary mx-auto mb-3" />
+                <h3 className="font-bold text-foreground mb-2">Lease vs Buy Calculator</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Compare costs of leasing versus purchasing a dry van trailer.
+                </p>
+                <Link to="/resources/tools/lease-vs-buy" className="text-secondary hover:underline font-medium text-sm">
+                  Calculate Now →
+                </Link>
+              </CardContent>
+            </Card>
+            <Card className="border-2 hover:border-primary/50 transition-colors">
+              <CardContent className="p-6 text-center">
+                <Shield className="h-8 w-8 text-primary mx-auto mb-3" />
+                <h3 className="font-bold text-foreground mb-2">Why Choose CRUMS</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  See why carriers trust CRUMS for their dry van leasing needs.
+                </p>
+                <Link to="/why-choose-crums" className="text-primary hover:underline font-medium text-sm">
+                  Learn More →
+                </Link>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </section>
+
+      {/* Related Services */}
+      <section className="py-12 bg-muted">
+        <div className="container mx-auto px-4">
+          <h2 className="text-xl font-bold text-center mb-6 text-foreground">
             Explore Other Trailer Types
           </h2>
           <div className="max-w-3xl mx-auto text-center">
-            <p className="text-lg text-muted-foreground mb-6">
+            <p className="text-muted-foreground mb-4">
               Need temperature-controlled transport? Check out our{" "}
               <Link to="/refrigerated-trailers" className="text-secondary hover:underline font-semibold">
                 refrigerated trailer leasing
@@ -488,29 +538,10 @@ const DryVanTrailers = () => {
               </Link>{" "}
               solutions.
             </p>
-            <p className="text-muted-foreground mb-6">
-              We deliver dry van trailers nationwide — see our{" "}
-              <Link to="/locations" className="text-secondary hover:underline font-semibold">
-                service locations
-              </Link>{" "}
-              including{" "}
-              <Link to="/locations/houston-tx" className="text-secondary hover:underline font-medium">
-                Houston
-              </Link>,{" "}
-              <Link to="/locations/san-antonio-tx" className="text-secondary hover:underline font-medium">
-                San Antonio
-              </Link>,{" "}
-              <Link to="/locations/dallas-tx" className="text-secondary hover:underline font-medium">
-                Dallas
-              </Link>, and{" "}
-              <Link to="/locations/los-angeles-ca" className="text-secondary hover:underline font-medium">
-                Los Angeles
-              </Link>.
-            </p>
-            <p className="text-muted-foreground">
+            <p className="text-sm text-muted-foreground">
               Not sure which trailer is right for your operation? Read our{" "}
               <Link to="/resources/guides/choosing-trailer" className="text-primary hover:underline font-medium">
-                comprehensive guide to choosing the right trailer for your haul
+                comprehensive guide to choosing the right trailer
               </Link>{" "}
               or{" "}
               <Link to="/contact" className="text-primary hover:underline font-medium">

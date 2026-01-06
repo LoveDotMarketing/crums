@@ -400,6 +400,73 @@ export const LocationPageTemplate = ({ location }: LocationPageTemplateProps) =>
         </div>
       </section>
 
+      {/* Decision Support Resources */}
+      <section className="py-16 bg-background">
+        <div className="container mx-auto px-4">
+          <h2 className="text-2xl font-bold mb-8 text-center text-foreground">
+            Resources for {location.city} Carriers
+          </h2>
+          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+            <Card className="border-2 hover:border-primary/50 transition-colors">
+              <CardContent className="p-6">
+                <h3 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2">
+                  <Route className="h-5 w-5 text-primary" />
+                  Financial Tools
+                </h3>
+                <ul className="space-y-3">
+                  <li>
+                    <Link to="/resources/tools/cost-per-mile" className="text-primary hover:underline font-medium">
+                      Cost Per Mile Calculator
+                    </Link>
+                    <p className="text-sm text-muted-foreground">Calculate your true operating costs</p>
+                  </li>
+                  <li>
+                    <Link to="/resources/tools/lease-vs-buy" className="text-primary hover:underline font-medium">
+                      Lease vs Buy Calculator
+                    </Link>
+                    <p className="text-sm text-muted-foreground">Compare costs of leasing vs purchasing</p>
+                  </li>
+                  <li>
+                    <Link to="/resources/tools/profit-per-load" className="text-primary hover:underline font-medium">
+                      Profit Per Load Calculator
+                    </Link>
+                    <p className="text-sm text-muted-foreground">Analyze profitability by haul</p>
+                  </li>
+                </ul>
+              </CardContent>
+            </Card>
+            <Card className="border-2 hover:border-secondary/50 transition-colors">
+              <CardContent className="p-6">
+                <h3 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2">
+                  <Factory className="h-5 w-5 text-secondary" />
+                  Helpful Guides
+                </h3>
+                <ul className="space-y-3">
+                  <li>
+                    <Link to="/resources/guides/choosing-trailer" className="text-secondary hover:underline font-medium">
+                      How to Choose the Right Trailer
+                    </Link>
+                    <p className="text-sm text-muted-foreground">Dry van, flatbed, or reefer?</p>
+                  </li>
+                  <li>
+                    <Link to="/resources/guides/trailer-specifications" className="text-secondary hover:underline font-medium">
+                      Trailer Specifications Guide
+                    </Link>
+                    <p className="text-sm text-muted-foreground">Dimensions, cubic feet, and capacities</p>
+                  </li>
+                  <li>
+                    <Link to="/why-choose-crums" className="text-secondary hover:underline font-medium">
+                      Why Choose CRUMS Leasing
+                    </Link>
+                    <p className="text-sm text-muted-foreground">Our family-owned difference</p>
+                  </li>
+                </ul>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </section>
+
       {/* FAQ Section */}
       <section className="py-16 bg-background">
         <div className="container mx-auto px-4">

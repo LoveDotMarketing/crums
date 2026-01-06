@@ -213,6 +213,124 @@ const Index = () => {
         </div>
       </section>
 
+      {/* Semantic Router - Quick Navigation Clusters */}
+      <section className="py-12 bg-background border-b">
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {/* Services Cluster */}
+            <div>
+              <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4">
+                Services
+              </h3>
+              <ul className="space-y-2">
+                <li>
+                  <Link to="/services/trailer-leasing" className="text-foreground hover:text-primary font-medium flex items-center gap-2">
+                    <Truck className="h-4 w-4 text-primary" />
+                    Trailer Leasing
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/services/trailer-rentals" className="text-foreground hover:text-primary font-medium flex items-center gap-2">
+                    <Truck className="h-4 w-4 text-secondary" />
+                    Trailer Rentals
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/services/fleet-solutions" className="text-foreground hover:text-primary font-medium flex items-center gap-2">
+                    <Users className="h-4 w-4 text-accent" />
+                    Fleet Solutions
+                  </Link>
+                </li>
+              </ul>
+            </div>
+
+            {/* Trailer Types Cluster */}
+            <div>
+              <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4">
+                Trailer Types
+              </h3>
+              <ul className="space-y-2">
+                <li>
+                  <Link to="/dry-van-trailers" className="text-foreground hover:text-primary font-medium">
+                    Dry Van Trailers
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/refrigerated-trailers" className="text-foreground hover:text-primary font-medium">
+                    Refrigerated Trailers
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/flatbed-trailers" className="text-foreground hover:text-primary font-medium">
+                    Flatbed Trailers
+                  </Link>
+                </li>
+              </ul>
+            </div>
+
+            {/* Decision Support Cluster */}
+            <div>
+              <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4">
+                Decision Support
+              </h3>
+              <ul className="space-y-2">
+                <li>
+                  <Link to="/resources/guides/choosing-trailer" className="text-foreground hover:text-primary font-medium flex items-center gap-2">
+                    <BookOpen className="h-4 w-4 text-primary" />
+                    Choosing the Right Trailer
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/resources/guides/why-leasing-dry-van" className="text-foreground hover:text-primary font-medium flex items-center gap-2">
+                    <BookOpen className="h-4 w-4 text-primary" />
+                    Why Leasing is Smart
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/resources/tools/lease-vs-buy" className="text-foreground hover:text-primary font-medium flex items-center gap-2">
+                    <Calculator className="h-4 w-4 text-secondary" />
+                    Lease vs Buy Calculator
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/resources/tools/cost-per-mile" className="text-foreground hover:text-primary font-medium flex items-center gap-2">
+                    <Calculator className="h-4 w-4 text-secondary" />
+                    Cost Per Mile Calculator
+                  </Link>
+                </li>
+              </ul>
+            </div>
+
+            {/* Trust Cluster */}
+            <div>
+              <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4">
+                Why CRUMS
+              </h3>
+              <ul className="space-y-2">
+                <li>
+                  <Link to="/why-choose-crums" className="text-foreground hover:text-primary font-medium flex items-center gap-2">
+                    <Award className="h-4 w-4 text-secondary" />
+                    Why Choose CRUMS
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/reviews" className="text-foreground hover:text-primary font-medium flex items-center gap-2">
+                    <Star className="h-4 w-4 text-secondary" />
+                    Customer Reviews
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/get-started" className="text-foreground hover:text-primary font-medium flex items-center gap-2">
+                    <ArrowRight className="h-4 w-4 text-primary" />
+                    Get Started
+                  </Link>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Customer Reviews Section */}
       <section className="py-16 bg-gradient-to-b from-secondary/5 to-background">
         <div className="container mx-auto px-4">
