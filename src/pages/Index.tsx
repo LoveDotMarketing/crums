@@ -1,6 +1,6 @@
 import { lazy, Suspense } from "react";
 import { Link } from "react-router-dom";
-import { trackCtaClick } from "@/lib/analytics";
+import { trackCtaClick, trackPhoneClick } from "@/lib/analytics";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
 import { ProgressiveImage } from "@/components/ProgressiveImage";
@@ -28,6 +28,7 @@ import {
   Star,
   Newspaper,
   MapPin,
+  Phone,
 } from "lucide-react";
 // Marketing images served from public folder for stable sitemap URLs
 const fleetImage = "/images/crums-trailer.webp";
@@ -143,16 +144,17 @@ const Index = () => {
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
             </Link>
-            <Link to="/mission">
+            <a href="tel:+18885704564">
               <Button
                 size="lg"
                 variant="outline"
                 className="bg-transparent border-2 border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary text-lg px-8 py-6"
-                onClick={() => trackCtaClick('Our Mission & Values', 'home', '/mission')}
+                onClick={() => trackPhoneClick('hero')}
               >
-                Our Mission & Values
+                <Phone className="mr-2 h-5 w-5" />
+                1-888-570-4564
               </Button>
-            </Link>
+            </a>
           </div>
         </div>
       </section>

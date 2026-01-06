@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, X, ChevronDown } from "lucide-react";
+import { Menu, X, ChevronDown, Phone } from "lucide-react";
+import { trackPhoneClick } from "@/lib/analytics";
 import crumsLogo from "@/assets/crums-logo.png";
 import {
   NavigationMenu,
@@ -381,7 +382,19 @@ export const Navigation = () => {
               >
                 Contact
               </Link>
-              <div className="pt-4 border-t border-border space-y-2">
+              <div className="pt-4 border-t border-border space-y-3">
+                <a 
+                  href="tel:+18885704564" 
+                  onClick={() => {
+                    trackPhoneClick('mobile-nav');
+                    setMobileMenuOpen(false);
+                  }}
+                >
+                  <Button className="w-full bg-primary hover:bg-primary/90 text-lg">
+                    <Phone className="mr-2 h-5 w-5" />
+                    1-888-570-4564
+                  </Button>
+                </a>
                 <Link to="/login" onClick={() => setMobileMenuOpen(false)}>
                   <Button variant="outline" className="w-full">Customer Login</Button>
                 </Link>
