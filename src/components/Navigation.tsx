@@ -333,6 +333,13 @@ export const Navigation = () => {
                 Mission & Values
               </Link>
               <Link
+                to="/careers"
+                className="text-sm font-medium text-foreground hover:text-primary"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Careers
+              </Link>
+              <Link
                 to="/reviews"
                 className="text-sm font-medium text-foreground hover:text-primary"
                 onClick={() => setMobileMenuOpen(false)}
