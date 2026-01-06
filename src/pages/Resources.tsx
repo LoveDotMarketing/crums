@@ -113,6 +113,23 @@ const Resources = () => {
 
       <Breadcrumbs />
 
+      {/* Definition Blocks */}
+      <section className="py-12 bg-muted/30 border-b">
+        <div className="container mx-auto px-4">
+          <div className="max-w-4xl mx-auto space-y-6 text-muted-foreground">
+            <p>
+              Running a successful trucking operation requires more than just a truck and trailer—it demands smart financial management, industry knowledge, and the right equipment decisions. At CRUMS Leasing, we've built this resource library to help carriers and owner-operators navigate the complexities of the transportation industry with confidence.
+            </p>
+            <p>
+              From calculating your true cost per mile to understanding the long-term economics of leasing versus buying, our financial tools help you make data-driven decisions that protect your bottom line. Profitability in trucking hinges on controlling expenses, maximizing load efficiency, and taking advantage of tax deductions specific to the industry.
+            </p>
+            <p>
+              Our industry guides cover everything from selecting the right trailer type for your freight to maintaining FMCSA compliance and safety standards. Whether you're an experienced fleet operator or a new owner-operator, these resources provide practical, actionable knowledge to help you build operational efficiency and long-term success.
+            </p>
+          </div>
+        </div>
+      </section>
+
       {/* Resources Grid */}
       <section className="py-20 bg-background">
         <div className="container mx-auto px-4">

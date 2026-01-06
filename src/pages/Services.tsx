@@ -130,6 +130,23 @@ const Services = () => {
 
       <Breadcrumbs />
 
+      {/* Definition Blocks */}
+      <section className="py-12 bg-muted/30 border-b">
+        <div className="container mx-auto px-4">
+          <div className="max-w-4xl mx-auto space-y-6 text-muted-foreground">
+            <p>
+              <strong className="text-foreground">Leasing economics</strong> offer carriers a path to reliable equipment without the capital burden of ownership. Instead of tying up cash in a depreciating asset, leasing preserves working capital for fuel, insurance, and growth opportunities. Monthly lease payments are predictable, often lower than loan payments, and typically include maintenance—removing unexpected repair costs from your budget.
+            </p>
+            <p>
+              <strong className="text-foreground">Rental flexibility</strong> addresses the reality that freight demand fluctuates. Peak seasons, contract surges, and unexpected equipment breakdowns require solutions that don't lock you into long-term commitments. Short-term trailer rentals let you scale capacity up or down based on actual business needs, turning fixed costs into variable costs you control.
+            </p>
+            <p>
+              <strong className="text-foreground">Fleet management value</strong> extends beyond simply providing trailers. Comprehensive fleet solutions include maintenance coordination, GPS tracking, compliance support, and dedicated account management. For growing operations, this partnership approach lets you focus on moving freight while equipment logistics are handled by specialists.
+            </p>
+          </div>
+        </div>
+      </section>
+
       <main className="flex-1 py-16">
         <div className="container mx-auto px-4">
           {/* Services Section */}

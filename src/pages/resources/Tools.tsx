@@ -107,6 +107,26 @@ const Tools = () => {
         </div>
       </section>
 
+      {/* Definition Blocks */}
+      <section className="py-12 bg-muted/30 border-b">
+        <div className="container mx-auto px-4">
+          <div className="max-w-4xl mx-auto space-y-6 text-muted-foreground">
+            <p>
+              <strong className="text-foreground">Profitability</strong> in trucking comes down to understanding your numbers. Every mile you drive, every load you haul, and every expense you incur affects your bottom line. Our calculators help you analyze real operating costs so you can set rates that ensure sustainable profit margins rather than just covering expenses.
+            </p>
+            <p>
+              <strong className="text-foreground">Cost efficiency</strong> separates successful owner-operators from those who struggle. Knowing your exact cost per mile—including fuel, maintenance, insurance, and depreciation—allows you to identify which loads are profitable and which routes maximize your earnings. These tools turn guesswork into strategic planning.
+            </p>
+            <p>
+              <strong className="text-foreground">Tax optimization</strong> is often overlooked by carriers. Per diem deductions, IFTA credits, and equipment depreciation can significantly reduce your tax burden when properly tracked. Our calculators help you estimate these benefits and maintain the records needed for tax season.
+            </p>
+            <p>
+              <strong className="text-foreground">Leasing economics</strong> play a crucial role in fleet decisions. Whether to lease or buy a trailer involves analyzing monthly cash flow, maintenance responsibilities, resale value, and tax implications. Understanding these trade-offs helps you make equipment decisions that align with your business goals.
+            </p>
+          </div>
+        </div>
+      </section>
+
       {/* Tools Grid */}
       <section className="py-16 bg-background">
         <div className="container mx-auto px-4">

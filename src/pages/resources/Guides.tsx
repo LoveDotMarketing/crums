@@ -107,6 +107,26 @@ const Guides = () => {
         </div>
       </section>
 
+      {/* Definition Blocks */}
+      <section className="py-12 bg-muted/30 border-b">
+        <div className="container mx-auto px-4">
+          <div className="max-w-4xl mx-auto space-y-6 text-muted-foreground">
+            <p>
+              <strong className="text-foreground">Trailer selection expertise</strong> is fundamental to efficient hauling. Choosing between a dry van, refrigerated trailer, or flatbed isn't just about what you're hauling—it's about understanding capacity, weight distribution, loading requirements, and the specific demands of your freight customers. Our guides break down these decisions in practical terms.
+            </p>
+            <p>
+              <strong className="text-foreground">Operational best practices</strong> separate professional carriers from those who struggle with inefficiency. From pre-trip inspections to route planning to load securement, mastering these fundamentals reduces downtime, prevents violations, and protects your CSA score. These guides cover the knowledge that keeps you compliant and moving.
+            </p>
+            <p>
+              <strong className="text-foreground">Career development</strong> in trucking requires continuous learning. Whether you're transitioning from company driver to owner-operator or scaling from one truck to a small fleet, understanding the business side—budgeting, contracts, customer relationships—is as important as driving skills.
+            </p>
+            <p>
+              <strong className="text-foreground">Safety and compliance</strong> protect your livelihood. FMCSA regulations, DOT inspections, and Hours of Service rules aren't just boxes to check—they're the framework that keeps you legal and insured. Our guides help you stay current and avoid costly violations.
+            </p>
+          </div>
+        </div>
+      </section>
+
       {/* Guides Grid */}
       <section className="py-20 bg-background">
         <div className="container mx-auto px-4">
