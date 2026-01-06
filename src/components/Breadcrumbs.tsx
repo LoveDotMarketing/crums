@@ -37,6 +37,7 @@ const routeLabels: Record<string, string> = {
   "/locations": "Locations",
   "/contact": "Contact",
   "/careers": "Careers",
+  "/careers/trailer-leasing-sales-rep": "Trailer Leasing Sales Representative",
   "/get-started": "Get Started",
   "/login": "Login",
   "/privacy": "Privacy Policy",
@@ -144,6 +145,9 @@ const parentRoutes: Record<string, { label: string; href: string }[]> = {
   ],
   "/industries/seasonal-demand": [
     { label: "Industries", href: "/industries" }
+  ],
+  "/careers/trailer-leasing-sales-rep": [
+    { label: "Careers", href: "/careers" }
   ],
 };
 

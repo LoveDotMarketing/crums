@@ -29,6 +29,7 @@ const Locations = lazy(() => import("./pages/Locations"));
 const CityLocationPage = lazy(() => import("./pages/locations/CityLocationPage"));
 const Contact = lazy(() => import("./pages/Contact"));
 const Careers = lazy(() => import("./pages/Careers"));
+const TrailerLeasingSalesRep = lazy(() => import("./pages/careers/TrailerLeasingSalesRep"));
 const GetStarted = lazy(() => import("./pages/GetStarted"));
 const Review = lazy(() => import("./pages/Review"));
 const Reviews = lazy(() => import("./pages/Reviews"));
@@ -154,6 +155,7 @@ const App = () => (
             <Route path="/locations/:citySlug" element={<CityLocationPage />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/careers" element={<Careers />} />
+            <Route path="/careers/trailer-leasing-sales-rep" element={<TrailerLeasingSalesRep />} />
             <Route path="/login" element={<Login />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
