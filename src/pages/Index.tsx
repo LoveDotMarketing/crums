@@ -33,7 +33,7 @@ import {
   DollarSign,
 } from "lucide-react";
 // Marketing images served from public folder for stable sitemap URLs
-const fleetImage = "/images/crums-trailer.webp";
+const fleetImage = "/images/crums-trailer-for-lease.webp";
 const nationwideMapImage = "/images/crums-leasing-pickup-delivery-map.webp";
 const servicesOverviewImage = "/images/crums-trailer-fleet.webp";
 const dryVanTrailerImg = "/images/dry-van-trailer.webp";
@@ -1074,10 +1074,10 @@ const Index = () => {
             <div>
               <ProgressiveImage
                 src={fleetImage}
-                alt="Professional fleet management"
-                className="rounded-lg shadow-2xl"
-                width={800}
-                height={600}
+                alt="CRUMS Leasing dry van trailer"
+                className="w-full h-auto"
+                width={1400}
+                height={644}
               />
             </div>
             <div>
