@@ -1078,6 +1078,7 @@ const Index = () => {
                 className="w-full h-auto"
                 width={1400}
                 height={644}
+                placeholderColor="transparent"
               />
             </div>
             <div>
