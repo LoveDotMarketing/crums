@@ -120,7 +120,7 @@ export const ProgressiveImage = ({
             onLoad={handleLoad}
             onError={handleError}
             className={cn(
-              "w-full h-full object-cover transition-all duration-700 ease-out",
+              "w-full h-full object-contain transition-all duration-700 ease-out",
               isLoaded ? "opacity-100 blur-0 scale-100" : `opacity-0 blur-sm scale-105`
             )}
             style={{
