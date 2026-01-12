@@ -475,7 +475,6 @@ export default function Customers() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Account</TableHead>
                       <TableHead>Name</TableHead>
                       <TableHead>Trailers</TableHead>
                       <TableHead>Contact</TableHead>
@@ -489,7 +488,7 @@ export default function Customers() {
                   <TableBody>
                     {filteredCustomers.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
+                        <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                           No customers found
                         </TableCell>
                       </TableRow>
@@ -500,17 +499,13 @@ export default function Customers() {
                           className="cursor-pointer hover:bg-muted/50"
                           onClick={() => { setSelectedCustomer(customer); setDialogOpen(true); }}
                         >
-                          <TableCell className="font-mono text-sm">{customer.account_number}</TableCell>
                           <TableCell className="font-medium">{customer.full_name}</TableCell>
                           <TableCell className="text-sm max-w-[200px]">
                             {customer.trailers && customer.trailers.length > 0 ? (
                               <div className="space-y-1">
                                 {customer.trailers.map((trailer, idx) => (
-                                  <div key={idx} className="font-mono text-xs">
-                                    {trailer.trailer_number && (
-                                      <span className="font-medium">#{trailer.trailer_number}: </span>
-                                    )}
-                                    <span className="text-muted-foreground">{trailer.vin}</span>
+                                  <div key={idx} className="font-mono text-xs text-muted-foreground">
+                                    {trailer.vin}
                                   </div>
                                 ))}
                               </div>
