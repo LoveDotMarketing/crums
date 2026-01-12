@@ -28,6 +28,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { getTollAuthorityOptions } from "@/lib/tollAuthorities";
 
 const COMPANY_ID = "fac613bd-c65f-42a5-b241-75afe75d53c5";
 
@@ -256,9 +257,21 @@ export function TollFormDialog({ open, onOpenChange, onSuccess }: TollFormDialog
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Toll Authority</FormLabel>
-                  <FormControl>
-                    <Input placeholder="e.g., NTTA" {...field} />
-                  </FormControl>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select toll authority" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {getTollAuthorityOptions().map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                      <SelectItem value="Other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Receipt, Truck, AlertCircle, CheckCircle, Loader2, Bell } from "lucide-react";
+import { Truck, AlertCircle, CheckCircle, Loader2, Bell, Phone, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
@@ -14,6 +14,7 @@ import { ReferralCard } from "@/components/customer/ReferralCard";
 import { ApplicationStatusTracker } from "@/components/customer/ApplicationStatusTracker";
 import { format } from "date-fns";
 import { toast } from "sonner";
+import { findTollAuthority, TollAuthority } from "@/lib/tollAuthorities";
 
 interface Toll {
   id: string;
@@ -313,32 +314,64 @@ export default function CustomerDashboard() {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {pendingTolls.map((toll) => (
-                    <div key={toll.id} className="flex items-center justify-between py-4 px-4 border rounded-lg bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800">
-                      <div className="flex-1">
-                        <p className="font-medium text-foreground">{toll.toll_location || "Toll Location"}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {toll.toll_authority && <span>{toll.toll_authority} • </span>}
-                          {format(new Date(toll.toll_date), "MMM d, yyyy")}
-                        </p>
+                  {pendingTolls.map((toll) => {
+                    const authorityInfo = findTollAuthority(toll.toll_authority);
+                    return (
+                      <div key={toll.id} className="py-4 px-4 border rounded-lg bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800">
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex-1">
+                            <p className="font-medium text-foreground">{toll.toll_location || "Toll Location"}</p>
+                            <p className="text-sm text-muted-foreground">
+                              {toll.toll_authority && <span>{toll.toll_authority} • </span>}
+                              {format(new Date(toll.toll_date), "MMM d, yyyy")}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-4">
+                            <span className="font-bold text-lg text-foreground">${Number(toll.amount).toFixed(2)}</span>
+                            <Button 
+                              onClick={() => markTollAsPaid(toll.id)}
+                              disabled={markingPaid === toll.id}
+                              className="bg-green-600 hover:bg-green-700 text-white"
+                            >
+                              {markingPaid === toll.id ? (
+                                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                              ) : (
+                                <CheckCircle className="h-4 w-4 mr-2" />
+                              )}
+                              I've Paid This
+                            </Button>
+                          </div>
+                        </div>
+                        {/* Toll Authority Contact Info */}
+                        {authorityInfo && (
+                          <div className="mt-3 pt-3 border-t border-yellow-300 dark:border-yellow-700 flex flex-wrap items-center gap-4 text-sm">
+                            <span className="font-medium text-foreground">Pay here:</span>
+                            <a 
+                              href={`tel:${authorityInfo.phone}`}
+                              className="inline-flex items-center gap-1.5 text-primary hover:underline"
+                            >
+                              <Phone className="h-3.5 w-3.5" />
+                              {authorityInfo.phone}
+                            </a>
+                            <a 
+                              href={authorityInfo.paymentUrl || authorityInfo.website}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1.5 text-primary hover:underline"
+                            >
+                              <ExternalLink className="h-3.5 w-3.5" />
+                              {authorityInfo.paymentUrl ? "Pay Online" : "Website"}
+                            </a>
+                          </div>
+                        )}
+                        {!authorityInfo && toll.toll_authority && (
+                          <div className="mt-3 pt-3 border-t border-yellow-300 dark:border-yellow-700 text-sm text-muted-foreground">
+                            Contact <span className="font-medium">{toll.toll_authority}</span> directly to pay this toll.
+                          </div>
+                        )}
                       </div>
-                      <div className="flex items-center gap-4">
-                        <span className="font-bold text-lg text-foreground">${Number(toll.amount).toFixed(2)}</span>
-                        <Button 
-                          onClick={() => markTollAsPaid(toll.id)}
-                          disabled={markingPaid === toll.id}
-                          className="bg-green-600 hover:bg-green-700 text-white"
-                        >
-                          {markingPaid === toll.id ? (
-                            <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                          ) : (
-                            <CheckCircle className="h-4 w-4 mr-2" />
-                          )}
-                          I've Paid This
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </CardContent>
