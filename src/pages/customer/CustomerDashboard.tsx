@@ -62,28 +62,22 @@ export default function CustomerDashboard() {
   const stats = [
     {
       title: "Outstanding Tolls",
-      value: "$845.50",
+      value: "$0.00",
       icon: Receipt,
-      color: "text-yellow-600"
+      color: "text-muted-foreground"
     },
     {
       title: "Assigned Trailers",
-      value: "3",
+      value: "0",
       icon: Truck,
-      color: "text-blue-600"
+      color: "text-muted-foreground"
     },
     {
       title: "Paid This Month",
-      value: "$1,245.00",
+      value: "$0.00",
       icon: CheckCircle,
       color: "text-green-600"
     },
-  ];
-
-  const recentTolls = [
-    { id: 1, location: "I-95 North", amount: "$12.50", date: "2024-11-15", status: "pending" },
-    { id: 2, location: "Turnpike Plaza", amount: "$45.00", date: "2024-11-14", status: "pending" },
-    { id: 3, location: "I-90 West", amount: "$8.75", date: "2024-11-12", status: "paid" },
   ];
 
   return (
@@ -140,46 +134,31 @@ export default function CustomerDashboard() {
             ))}
           </div>
 
-          {/* Recent Tolls */}
+          {/* No Tolls Message */}
           <Card className="mb-8">
             <CardHeader>
               <CardTitle className="text-foreground">Recent Tolls</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {recentTolls.map((toll) => (
-                  <div key={toll.id} className="flex items-center justify-between py-3 border-b last:border-0 border-border">
-                    <div className="flex-1">
-                      <p className="font-medium text-foreground">{toll.location}</p>
-                      <p className="text-sm text-muted-foreground">{toll.date}</p>
-                    </div>
-                    <div className="flex items-center gap-4">
-                      <span className="font-semibold text-foreground">{toll.amount}</span>
-                      <span className={`text-xs px-3 py-1 rounded-full ${
-                        toll.status === "paid" 
-                          ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
-                          : "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400"
-                      }`}>
-                        {toll.status}
-                      </span>
-                    </div>
-                  </div>
-                ))}
+              <div className="text-center py-8 text-muted-foreground">
+                <Receipt className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                <p className="font-medium">No tolls on your account</p>
+                <p className="text-sm">Any toll charges will appear here</p>
               </div>
             </CardContent>
           </Card>
 
-          {/* Alert */}
-          <Card className="border-yellow-500/50 bg-yellow-50 dark:bg-yellow-900/20 mb-8">
+          {/* Welcome Message */}
+          <Card className="border-primary/30 bg-primary/5 mb-8">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-yellow-700 dark:text-yellow-400">
-                <AlertCircle className="h-5 w-5" />
-                Action Required
+              <CardTitle className="flex items-center gap-2 text-primary">
+                <CheckCircle className="h-5 w-5" />
+                Welcome to CRUMS Leasing
               </CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-sm text-foreground">
-                You have 2 pending tolls totaling $57.50 that require payment.
+                Complete your application to get started with trailer leasing. We'll be in touch soon!
               </p>
             </CardContent>
           </Card>
