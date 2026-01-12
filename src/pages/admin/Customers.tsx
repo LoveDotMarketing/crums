@@ -105,16 +105,40 @@ export default function Customers() {
   const queryClient = useQueryClient();
   const [customerToDelete, setCustomerToDelete] = useState<Customer | null>(null);
 
-  // Fetch customers from database
+  // Fetch customers from database (excluding admins and mechanics)
   const { data: customers = [], isLoading } = useQuery({
     queryKey: ['customers'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // First, get emails of admins and mechanics to exclude
+      const { data: adminMechanicProfiles } = await supabase
+        .from('user_roles')
+        .select('user_id')
+        .in('role', ['admin', 'mechanic']);
+      
+      let excludeEmails: string[] = [];
+      if (adminMechanicProfiles && adminMechanicProfiles.length > 0) {
+        const userIds = adminMechanicProfiles.map(r => r.user_id);
+        const { data: profiles } = await supabase
+          .from('profiles')
+          .select('email')
+          .in('id', userIds);
+        excludeEmails = (profiles || []).map(p => p.email).filter(Boolean) as string[];
+      }
+
+      // Fetch customers, excluding admin/mechanic emails
+      let query = supabase
         .from('customers')
         .select('*')
         .order('full_name');
       
+      const { data, error } = await query;
+      
       if (error) throw error;
+      
+      // Filter out admin/mechanic customers by email
+      const filteredData = (data || []).filter(
+        (c: Customer) => !c.email || !excludeEmails.includes(c.email)
+      );
       
       // Fetch trailers with VINs for each customer
       const { data: trailers } = await supabase
@@ -139,7 +163,7 @@ export default function Customers() {
         .select('id, referrer_code_id, referred_customer_id, status, credit_amount');
       
       // Map data to customers
-      return (data || []).map((customer: Customer) => {
+      return filteredData.map((customer: Customer) => {
         const customerTrailers = trailers?.filter(t => t.customer_id === customer.id) || [];
         const trailerCount = customerTrailers.length;
         const customerTolls = tolls?.filter(t => t.customer_id === customer.id) || [];
@@ -170,7 +194,7 @@ export default function Customers() {
           if (referral) {
             const referrerCode = referralCodes?.find(rc => rc.id === referral.referrer_code_id);
             if (referrerCode) {
-              const referrer = data?.find((c: Customer) => c.id === referrerCode.customer_id);
+              const referrer = filteredData?.find((c: Customer) => c.id === referrerCode.customer_id);
               referredByName = referrer?.full_name;
             }
           }
