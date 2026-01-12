@@ -10,9 +10,12 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
-import { UserPlus, Shield, Wrench, Mail, Loader2, Users } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { UserPlus, Shield, Wrench, Mail, Loader2, Users, MoreHorizontal, Trash2, RefreshCw } from "lucide-react";
 
 interface StaffMember {
   id: string;
@@ -25,12 +28,14 @@ interface StaffMember {
 
 export default function Staff() {
   const { toast } = useToast();
+  const { user } = useAuth();
   const queryClient = useQueryClient();
   const [isInviteOpen, setIsInviteOpen] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState<"admin" | "mechanic">("admin");
   const [inviteFirstName, setInviteFirstName] = useState("");
   const [inviteLastName, setInviteLastName] = useState("");
+  const [memberToRemove, setMemberToRemove] = useState<StaffMember | null>(null);
 
   // Fetch staff members (admins and mechanics)
   const { data: staffMembers, isLoading } = useQuery({
@@ -103,6 +108,67 @@ export default function Staff() {
     },
   });
 
+  // Remove staff mutation
+  const removeMutation = useMutation({
+    mutationFn: async (userId: string) => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Not authenticated");
+
+      const response = await supabase.functions.invoke("remove-staff", {
+        body: { userId },
+      });
+
+      if (response.error) throw response.error;
+      if (response.data?.error) throw new Error(response.data.error);
+      return response.data;
+    },
+    onSuccess: () => {
+      toast({
+        title: "Staff Removed",
+        description: "The staff member has been removed from the system.",
+      });
+      setMemberToRemove(null);
+      queryClient.invalidateQueries({ queryKey: ["staff-members"] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Remove Failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Change role mutation
+  const changeRoleMutation = useMutation({
+    mutationFn: async ({ userId, role }: { userId: string; role: "admin" | "mechanic" }) => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Not authenticated");
+
+      const response = await supabase.functions.invoke("update-staff-role", {
+        body: { userId, role },
+      });
+
+      if (response.error) throw response.error;
+      if (response.data?.error) throw new Error(response.data.error);
+      return response.data;
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Role Updated",
+        description: data.message || "Staff member role has been updated.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["staff-members"] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Update Failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   // Resend password reset mutation
   const resendResetMutation = useMutation({
     mutationFn: async (email: string) => {
@@ -150,8 +216,21 @@ export default function Staff() {
     });
   };
 
+  const handleRemoveStaff = () => {
+    if (memberToRemove) {
+      removeMutation.mutate(memberToRemove.id);
+    }
+  };
+
+  const handleChangeRole = (member: StaffMember, newRole: "admin" | "mechanic") => {
+    if (member.role === newRole) return;
+    changeRoleMutation.mutate({ userId: member.id, role: newRole });
+  };
+
   const adminCount = staffMembers?.filter(s => s.role === "admin").length || 0;
   const mechanicCount = staffMembers?.filter(s => s.role === "mechanic").length || 0;
+
+  const isCurrentUser = (memberId: string) => user?.id === memberId;
 
   return (
     <SidebarProvider>
@@ -314,9 +393,14 @@ export default function Staff() {
                     {staffMembers.map((member) => (
                       <TableRow key={member.id}>
                         <TableCell className="font-medium">
-                          {member.first_name || member.last_name
-                            ? `${member.first_name || ""} ${member.last_name || ""}`.trim()
-                            : "—"}
+                          <div className="flex items-center gap-2">
+                            {member.first_name || member.last_name
+                              ? `${member.first_name || ""} ${member.last_name || ""}`.trim()
+                              : "—"}
+                            {isCurrentUser(member.id) && (
+                              <Badge variant="outline" className="text-xs">You</Badge>
+                            )}
+                          </div>
                         </TableCell>
                         <TableCell>{member.email}</TableCell>
                         <TableCell>
@@ -335,15 +419,43 @@ export default function Staff() {
                             : "—"}
                         </TableCell>
                         <TableCell className="text-right">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => resendResetMutation.mutate(member.email)}
-                            disabled={resendResetMutation.isPending}
-                          >
-                            <Mail className="h-4 w-4 mr-1" />
-                            Reset Password
-                          </Button>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon">
+                                <MoreHorizontal className="h-4 w-4" />
+                                <span className="sr-only">Actions</span>
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem
+                                onClick={() => resendResetMutation.mutate(member.email)}
+                                disabled={resendResetMutation.isPending}
+                              >
+                                <Mail className="h-4 w-4 mr-2" />
+                                Reset Password
+                              </DropdownMenuItem>
+                              {!isCurrentUser(member.id) && (
+                                <>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem
+                                    onClick={() => handleChangeRole(member, member.role === "admin" ? "mechanic" : "admin")}
+                                    disabled={changeRoleMutation.isPending}
+                                  >
+                                    <RefreshCw className="h-4 w-4 mr-2" />
+                                    {member.role === "admin" ? "Change to Mechanic" : "Change to Admin"}
+                                  </DropdownMenuItem>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem
+                                    onClick={() => setMemberToRemove(member)}
+                                    className="text-destructive focus:text-destructive"
+                                  >
+                                    <Trash2 className="h-4 w-4 mr-2" />
+                                    Remove Staff
+                                  </DropdownMenuItem>
+                                </>
+                              )}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -352,6 +464,35 @@ export default function Staff() {
               )}
             </CardContent>
           </Card>
+
+          {/* Remove Confirmation Dialog */}
+          <AlertDialog open={!!memberToRemove} onOpenChange={(open) => !open && setMemberToRemove(null)}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Remove Staff Member</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Are you sure you want to remove{" "}
+                  <strong>
+                    {memberToRemove?.first_name || memberToRemove?.last_name
+                      ? `${memberToRemove.first_name || ""} ${memberToRemove.last_name || ""}`.trim()
+                      : memberToRemove?.email}
+                  </strong>
+                  ? This will revoke their access to the admin portal and delete their account.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={handleRemoveStaff}
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  disabled={removeMutation.isPending}
+                >
+                  {removeMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                  Remove
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </main>
       </div>
     </SidebarProvider>
