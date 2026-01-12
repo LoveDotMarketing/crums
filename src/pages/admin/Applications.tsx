@@ -371,7 +371,10 @@ export default function Applications() {
           <main className="flex-1 p-6 overflow-auto">
             {/* Stats */}
             <div className="grid gap-4 md:grid-cols-5 mb-8">
-              <Card>
+              <Card 
+                className={`cursor-pointer transition-all hover:shadow-md ${statusFilter === 'all' ? 'ring-2 ring-primary' : ''}`}
+                onClick={() => setStatusFilter('all')}
+              >
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm font-medium text-muted-foreground">Total</CardTitle>
                 </CardHeader>
@@ -379,7 +382,10 @@ export default function Applications() {
                   <div className="text-2xl font-bold">{stats.total}</div>
                 </CardContent>
               </Card>
-              <Card>
+              <Card 
+                className={`cursor-pointer transition-all hover:shadow-md ${statusFilter === 'new' ? 'ring-2 ring-blue-500' : ''}`}
+                onClick={() => setStatusFilter('new')}
+              >
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm font-medium text-muted-foreground">New</CardTitle>
                 </CardHeader>
@@ -387,7 +393,10 @@ export default function Applications() {
                   <div className="text-2xl font-bold text-blue-600">{stats.new}</div>
                 </CardContent>
               </Card>
-              <Card>
+              <Card 
+                className={`cursor-pointer transition-all hover:shadow-md ${statusFilter === 'pending_review' ? 'ring-2 ring-yellow-500' : ''}`}
+                onClick={() => setStatusFilter('pending_review')}
+              >
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm font-medium text-muted-foreground">Under Review</CardTitle>
                 </CardHeader>
@@ -395,7 +404,10 @@ export default function Applications() {
                   <div className="text-2xl font-bold text-yellow-600">{stats.pending}</div>
                 </CardContent>
               </Card>
-              <Card>
+              <Card 
+                className={`cursor-pointer transition-all hover:shadow-md ${statusFilter === 'approved' ? 'ring-2 ring-green-500' : ''}`}
+                onClick={() => setStatusFilter('approved')}
+              >
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm font-medium text-muted-foreground">Approved</CardTitle>
                 </CardHeader>
@@ -403,7 +415,10 @@ export default function Applications() {
                   <div className="text-2xl font-bold text-green-600">{stats.approved}</div>
                 </CardContent>
               </Card>
-              <Card>
+              <Card 
+                className={`cursor-pointer transition-all hover:shadow-md ${statusFilter === 'rejected' ? 'ring-2 ring-red-500' : ''}`}
+                onClick={() => setStatusFilter('rejected')}
+              >
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm font-medium text-muted-foreground">Rejected</CardTitle>
                 </CardHeader>
