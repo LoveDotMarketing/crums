@@ -160,7 +160,10 @@ export default function Tolls() {
           <main className="flex-1 p-6 overflow-auto">
             {/* Toll Stats */}
             <div className="grid gap-6 md:grid-cols-3 mb-8">
-              <Card>
+              <Card 
+                className={`cursor-pointer transition-all hover:shadow-md ${statusFilter === 'pending' ? 'ring-2 ring-yellow-500' : ''}`}
+                onClick={() => setStatusFilter('pending')}
+              >
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
                   <CardTitle className="text-sm font-medium text-muted-foreground">
                     Pending Tolls
@@ -175,7 +178,10 @@ export default function Tolls() {
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card 
+                className={`cursor-pointer transition-all hover:shadow-md ${statusFilter === 'overdue' ? 'ring-2 ring-red-500' : ''}`}
+                onClick={() => setStatusFilter('overdue')}
+              >
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
                   <CardTitle className="text-sm font-medium text-muted-foreground">
                     Overdue Tolls
@@ -190,7 +196,10 @@ export default function Tolls() {
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card 
+                className={`cursor-pointer transition-all hover:shadow-md ${statusFilter === 'paid' ? 'ring-2 ring-green-500' : ''}`}
+                onClick={() => setStatusFilter('paid')}
+              >
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
                   <CardTitle className="text-sm font-medium text-muted-foreground">
                     Paid This Month

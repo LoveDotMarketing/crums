@@ -57,6 +57,7 @@ export default function Fleet() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
   const [trailers, setTrailers] = useState<Trailer[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -217,13 +218,20 @@ export default function Fleet() {
   };
 
   const filteredTrailers = trailers
-    .filter(
-      (trailer) =>
+    .filter((trailer) => {
+      const matchesSearch = 
         trailer.trailer_number.toLowerCase().includes(searchQuery.toLowerCase()) ||
         trailer.type.toLowerCase().includes(searchQuery.toLowerCase()) ||
         trailer.make?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        trailer.vin?.toLowerCase().includes(searchQuery.toLowerCase())
-    )
+        trailer.vin?.toLowerCase().includes(searchQuery.toLowerCase());
+      
+      const matchesStatus = statusFilter === "all" || 
+        (statusFilter === "rented" && trailer.is_rented) ||
+        (statusFilter === "available" && !trailer.is_rented && trailer.status === "available") ||
+        (statusFilter === "maintenance" && trailer.status === "maintenance");
+      
+      return matchesSearch && matchesStatus;
+    })
     .sort((a, b) => {
       if (!sortColumn) return 0;
       
@@ -445,7 +453,10 @@ export default function Fleet() {
           <main className="flex-1 p-6 overflow-auto">
             {/* Fleet Stats */}
             <div className="grid gap-6 md:grid-cols-5 mb-8">
-              <Card>
+              <Card 
+                className={`cursor-pointer transition-all hover:shadow-md ${statusFilter === 'all' ? 'ring-2 ring-primary' : ''}`}
+                onClick={() => setStatusFilter('all')}
+              >
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
                   <CardTitle className="text-sm font-medium text-muted-foreground">
                     Total Fleet
@@ -460,7 +471,10 @@ export default function Fleet() {
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card 
+                className={`cursor-pointer transition-all hover:shadow-md ${statusFilter === 'rented' ? 'ring-2 ring-blue-500' : ''}`}
+                onClick={() => setStatusFilter('rented')}
+              >
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
                   <CardTitle className="text-sm font-medium text-muted-foreground">
                     Out (Rented)
@@ -475,7 +489,10 @@ export default function Fleet() {
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card 
+                className={`cursor-pointer transition-all hover:shadow-md ${statusFilter === 'available' ? 'ring-2 ring-green-500' : ''}`}
+                onClick={() => setStatusFilter('available')}
+              >
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
                   <CardTitle className="text-sm font-medium text-muted-foreground">
                     In (Yard)
@@ -505,7 +522,10 @@ export default function Fleet() {
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card 
+                className={`cursor-pointer transition-all hover:shadow-md ${statusFilter === 'maintenance' ? 'ring-2 ring-yellow-500' : ''}`}
+                onClick={() => setStatusFilter('maintenance')}
+              >
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
                   <CardTitle className="text-sm font-medium text-muted-foreground">
                     Total Maintenance

@@ -173,7 +173,10 @@ export default function Logs() {
           <main className="flex-1 p-6 overflow-auto">
             {/* Stats */}
             <div className="grid gap-6 md:grid-cols-4 mb-8">
-              <Card>
+              <Card 
+                className={`cursor-pointer transition-all hover:shadow-md ${eventFilter === 'login' && roleFilter === 'all' ? 'ring-2 ring-primary' : ''}`}
+                onClick={() => { setEventFilter('login'); setRoleFilter('all'); }}
+              >
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
                   <CardTitle className="text-sm font-medium text-muted-foreground">
                     Today's Logins
@@ -188,7 +191,10 @@ export default function Logs() {
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card 
+                className={`cursor-pointer transition-all hover:shadow-md ${eventFilter === 'all' && roleFilter === 'all' ? 'ring-2 ring-primary' : ''}`}
+                onClick={() => { setEventFilter('all'); setRoleFilter('all'); }}
+              >
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
                   <CardTitle className="text-sm font-medium text-muted-foreground">
                     Unique Users
@@ -203,7 +209,10 @@ export default function Logs() {
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card 
+                className={`cursor-pointer transition-all hover:shadow-md ${roleFilter === 'admin' ? 'ring-2 ring-blue-500' : ''}`}
+                onClick={() => { setEventFilter('login'); setRoleFilter('admin'); }}
+              >
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
                   <CardTitle className="text-sm font-medium text-muted-foreground">
                     Admin Logins
@@ -218,7 +227,10 @@ export default function Logs() {
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card 
+                className={`cursor-pointer transition-all hover:shadow-md ${roleFilter === 'customer' ? 'ring-2 ring-green-500' : ''}`}
+                onClick={() => { setEventFilter('login'); setRoleFilter('customer'); }}
+              >
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
                   <CardTitle className="text-sm font-medium text-muted-foreground">
                     Customer Logins

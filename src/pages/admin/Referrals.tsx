@@ -257,7 +257,10 @@ export default function Referrals() {
 
           {/* Stats Cards */}
           <div className="grid gap-4 md:grid-cols-4 mb-6">
-            <Card>
+            <Card 
+              className={`cursor-pointer transition-all hover:shadow-md ${statusFilter === 'all' ? 'ring-2 ring-primary' : ''}`}
+              onClick={() => setStatusFilter('all')}
+            >
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">Total Codes</CardTitle>
                 <Gift className="h-4 w-4 text-muted-foreground" />
@@ -267,7 +270,10 @@ export default function Referrals() {
                 <p className="text-xs text-muted-foreground">{stats.activeCodes} active</p>
               </CardContent>
             </Card>
-            <Card>
+            <Card 
+              className={`cursor-pointer transition-all hover:shadow-md ${statusFilter === 'pending' ? 'ring-2 ring-yellow-500' : ''}`}
+              onClick={() => setStatusFilter('pending')}
+            >
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">Total Referrals</CardTitle>
                 <Users className="h-4 w-4 text-muted-foreground" />
@@ -277,7 +283,10 @@ export default function Referrals() {
                 <p className="text-xs text-muted-foreground">{stats.pendingReferrals} pending review</p>
               </CardContent>
             </Card>
-            <Card>
+            <Card 
+              className={`cursor-pointer transition-all hover:shadow-md ${statusFilter === 'approved' ? 'ring-2 ring-blue-500' : ''}`}
+              onClick={() => setStatusFilter('approved')}
+            >
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">Approved</CardTitle>
                 <CheckCircle className="h-4 w-4 text-green-500" />
@@ -287,7 +296,10 @@ export default function Referrals() {
                 <p className="text-xs text-muted-foreground">successful referrals</p>
               </CardContent>
             </Card>
-            <Card>
+            <Card 
+              className={`cursor-pointer transition-all hover:shadow-md ${statusFilter === 'credited' ? 'ring-2 ring-green-500' : ''}`}
+              onClick={() => setStatusFilter('credited')}
+            >
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">Credits Issued</CardTitle>
                 <DollarSign className="h-4 w-4 text-green-500" />
