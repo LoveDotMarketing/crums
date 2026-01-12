@@ -70,9 +70,9 @@ export default function Reports() {
 
   const startDate = subDays(new Date(), parseInt(dateRange));
 
-  // Fetch unpaid tolls (pending or overdue)
+  // Fetch unpaid tolls (pending or overdue) within date range
   const { data: unpaidTolls = [], isLoading: loadingTolls } = useQuery({
-    queryKey: ["reports-unpaid-tolls"],
+    queryKey: ["reports-unpaid-tolls", dateRange],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("tolls")
@@ -89,6 +89,7 @@ export default function Reports() {
           )
         `)
         .in("status", ["pending", "overdue"])
+        .gte("toll_date", startDate.toISOString().split("T")[0])
         .order("toll_date", { ascending: true });
 
       if (error) throw error;
@@ -147,13 +148,14 @@ export default function Reports() {
     },
   });
 
-  // Fetch billing summary from tolls
+  // Fetch billing summary from tolls within date range
   const { data: billingSummary, isLoading: loadingBilling } = useQuery({
-    queryKey: ["reports-billing"],
+    queryKey: ["reports-billing", dateRange],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("tolls")
-        .select("id, amount, status, toll_date, customer_id, profiles:customer_id (first_name, last_name, email)");
+        .select("id, amount, status, toll_date, customer_id, profiles:customer_id (first_name, last_name, email)")
+        .gte("toll_date", startDate.toISOString().split("T")[0]);
 
       if (error) throw error;
 
