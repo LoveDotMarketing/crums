@@ -341,14 +341,28 @@ export default function Outreach() {
     },
   });
 
+  // Replace template variables with sample/test values
+  const replaceTemplateVariables = (text: string, customerName = "Test Customer") => {
+    const baseUrl = "https://crumsleasing.com";
+    return text
+      .replace(/\{\{customer_name\}\}/g, customerName)
+      .replace(/\{\{login_url\}\}/g, `${baseUrl}/login`)
+      .replace(/\{\{profile_url\}\}/g, `${baseUrl}/dashboard/customer/profile`)
+      .replace(/\{\{unsubscribe_url\}\}/g, `${baseUrl}/unsubscribe?email=test@example.com`);
+  };
+
   // Send test email
   const sendTestEmailMutation = useMutation({
     mutationFn: async () => {
       if (!testEmail) throw new Error("Please enter a test email address");
       if (!subject || !body) throw new Error("Please fill in subject and body");
       
+      // Replace template variables with test values
+      const processedSubject = replaceTemplateVariables(subject, "Test Customer");
+      const processedBody = replaceTemplateVariables(body, "Test Customer");
+      
       const { data, error } = await supabase.functions.invoke("send-outreach-email", {
-        body: { to: testEmail, subject, body, email_type: "test" },
+        body: { to: testEmail, subject: processedSubject, body: processedBody, email_type: "test" },
       });
       if (error) throw error;
       return data;
