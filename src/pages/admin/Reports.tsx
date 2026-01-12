@@ -283,7 +283,7 @@ export default function Reports() {
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
                   <CardTitle className="text-sm font-medium text-muted-foreground">
-                    Total Outstanding
+                    Pending Notices
                   </CardTitle>
                   <DollarSign className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
@@ -292,11 +292,11 @@ export default function Reports() {
                     <Loader2 className="h-6 w-6 animate-spin" />
                   ) : (
                     <>
-                      <div className={`text-2xl font-bold ${totalUnpaid > 0 ? "text-red-600" : "text-foreground"}`}>
+                      <div className={`text-2xl font-bold ${totalUnpaid > 0 ? "text-yellow-600" : "text-foreground"}`}>
                         ${totalUnpaid.toFixed(2)}
                       </div>
-                      <p className={`text-xs mt-1 ${totalUnpaid > 0 ? "text-red-600" : "text-muted-foreground"}`}>
-                        {unpaidTolls.length} unpaid toll{unpaidTolls.length !== 1 ? "s" : ""}
+                      <p className={`text-xs mt-1 ${totalUnpaid > 0 ? "text-yellow-600" : "text-muted-foreground"}`}>
+                        {unpaidTolls.length} awaiting driver payment
                       </p>
                     </>
                   )}
@@ -327,7 +327,7 @@ export default function Reports() {
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
                   <CardTitle className="text-sm font-medium text-muted-foreground">
-                    Collection Rate
+                    Cleared Rate
                   </CardTitle>
                   <TrendingUp className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
@@ -340,7 +340,7 @@ export default function Reports() {
                         {collectionRate}%
                       </div>
                       <p className="text-xs text-muted-foreground mt-1">
-                        ${(billingSummary?.total_collected || 0).toLocaleString()} collected
+                        ${(billingSummary?.total_collected || 0).toLocaleString()} marked paid
                       </p>
                     </>
                   )}
@@ -372,9 +372,9 @@ export default function Reports() {
             {/* Reports Tabs */}
             <Tabs defaultValue="unpaid-tolls" className="space-y-6">
               <TabsList>
-                <TabsTrigger value="unpaid-tolls">Unpaid Tolls</TabsTrigger>
+                <TabsTrigger value="unpaid-tolls">Pending Notices</TabsTrigger>
                 <TabsTrigger value="new-users">New Users</TabsTrigger>
-                <TabsTrigger value="billing">Billing Summary</TabsTrigger>
+                <TabsTrigger value="billing">Toll Summary</TabsTrigger>
                 <TabsTrigger value="support">Support Tickets</TabsTrigger>
               </TabsList>
 
@@ -382,9 +382,9 @@ export default function Reports() {
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between">
                     <div>
-                      <CardTitle>Unpaid Tolls Report</CardTitle>
+                      <CardTitle>Pending Toll Notices</CardTitle>
                       <CardDescription>
-                        All pending and overdue toll charges
+                        Tolls awaiting driver payment confirmation
                       </CardDescription>
                     </div>
                     <Button variant="outline" size="sm">
@@ -400,8 +400,8 @@ export default function Reports() {
                     ) : unpaidTolls.length === 0 ? (
                       <div className="text-center py-8 text-muted-foreground">
                         <Receipt className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                        <p className="font-medium">No unpaid tolls</p>
-                        <p className="text-sm">All tolls have been collected</p>
+                        <p className="font-medium">No pending toll notices</p>
+                        <p className="text-sm">All drivers have confirmed payment</p>
                       </div>
                     ) : (
                       <Table>
@@ -410,8 +410,8 @@ export default function Reports() {
                             <TableHead>Customer</TableHead>
                             <TableHead>Amount</TableHead>
                             <TableHead>Toll Date</TableHead>
-                            <TableHead>Days Overdue</TableHead>
-                            <TableHead>Actions</TableHead>
+                            <TableHead>Days Pending</TableHead>
+                            <TableHead>Status</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -423,12 +423,12 @@ export default function Reports() {
                               </TableCell>
                               <TableCell>{format(new Date(toll.toll_date), "MMM d, yyyy")}</TableCell>
                               <TableCell>
-                                <Badge variant={toll.days_overdue > 7 ? "destructive" : "secondary"}>
+                                <Badge variant={toll.days_overdue > 14 ? "destructive" : toll.days_overdue > 7 ? "secondary" : "outline"}>
                                   {toll.days_overdue} day{toll.days_overdue !== 1 ? "s" : ""}
                                 </Badge>
                               </TableCell>
                               <TableCell>
-                                <Button variant="outline" size="sm">Send Reminder</Button>
+                                <Badge variant="secondary">Awaiting Payment</Badge>
                               </TableCell>
                             </TableRow>
                           ))}
@@ -503,9 +503,9 @@ export default function Reports() {
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between">
                     <div>
-                      <CardTitle>Billing Summary Report</CardTitle>
+                      <CardTitle>Toll Summary Report</CardTitle>
                       <CardDescription>
-                        Toll collection overview
+                        Overview of toll notices sent to drivers
                       </CardDescription>
                     </div>
                     <Button variant="outline" size="sm">
@@ -522,20 +522,20 @@ export default function Reports() {
                       <>
                         <div className="grid gap-4 md:grid-cols-3 mb-6">
                           <div className="p-4 border rounded-lg">
-                            <p className="text-sm text-muted-foreground">Total Invoiced</p>
+                            <p className="text-sm text-muted-foreground">Total Notices Sent</p>
                             <p className="text-2xl font-bold">
                               ${(billingSummary?.total_invoiced || 0).toLocaleString()}
                             </p>
                           </div>
                           <div className="p-4 border rounded-lg">
-                            <p className="text-sm text-muted-foreground">Total Collected</p>
+                            <p className="text-sm text-muted-foreground">Confirmed Paid</p>
                             <p className="text-2xl font-bold text-green-600">
                               ${(billingSummary?.total_collected || 0).toLocaleString()}
                             </p>
                           </div>
                           <div className="p-4 border rounded-lg">
-                            <p className="text-sm text-muted-foreground">Outstanding</p>
-                            <p className={`text-2xl font-bold ${(billingSummary?.total_outstanding || 0) > 0 ? "text-red-600" : "text-foreground"}`}>
+                            <p className="text-sm text-muted-foreground">Awaiting Confirmation</p>
+                            <p className={`text-2xl font-bold ${(billingSummary?.total_outstanding || 0) > 0 ? "text-yellow-600" : "text-foreground"}`}>
                               ${(billingSummary?.total_outstanding || 0).toLocaleString()}
                             </p>
                           </div>
@@ -544,8 +544,8 @@ export default function Reports() {
                         {(billingSummary?.invoices?.length || 0) === 0 ? (
                           <div className="text-center py-8 text-muted-foreground">
                             <DollarSign className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                            <p className="font-medium">No billing data</p>
-                            <p className="text-sm">Toll charges will appear here</p>
+                            <p className="font-medium">No toll data</p>
+                            <p className="text-sm">Toll notices will appear here</p>
                           </div>
                         ) : (
                           <Table>

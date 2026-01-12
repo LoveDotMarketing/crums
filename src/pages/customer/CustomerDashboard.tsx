@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Receipt, Truck, AlertCircle, CheckCircle, Loader2 } from "lucide-react";
+import { Receipt, Truck, AlertCircle, CheckCircle, Loader2, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
@@ -13,17 +13,19 @@ import { SEO } from "@/components/SEO";
 import { ReferralCard } from "@/components/customer/ReferralCard";
 import { ApplicationStatusTracker } from "@/components/customer/ApplicationStatusTracker";
 import { format } from "date-fns";
+import { toast } from "sonner";
 
 interface Toll {
   id: string;
   toll_location: string | null;
+  toll_authority: string | null;
   amount: number;
   toll_date: string;
   status: string;
 }
 
 interface TollStats {
-  outstanding: number;
+  pendingAmount: number;
   paidThisMonth: number;
   pendingCount: number;
 }
@@ -33,9 +35,10 @@ export default function CustomerDashboard() {
   const [applicationProgress, setApplicationProgress] = useState(0);
   const [applicationStatus, setApplicationStatus] = useState<string | null>(null);
   const [tolls, setTolls] = useState<Toll[]>([]);
-  const [tollStats, setTollStats] = useState<TollStats>({ outstanding: 0, paidThisMonth: 0, pendingCount: 0 });
+  const [tollStats, setTollStats] = useState<TollStats>({ pendingAmount: 0, paidThisMonth: 0, pendingCount: 0 });
   const [trailerCount, setTrailerCount] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [markingPaid, setMarkingPaid] = useState<string | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -122,10 +125,10 @@ export default function CustomerDashboard() {
     try {
       const { data, error } = await supabase
         .from("tolls")
-        .select("id, toll_location, amount, toll_date, status")
+        .select("id, toll_location, toll_authority, amount, toll_date, status")
         .eq("customer_id", user.id)
         .order("toll_date", { ascending: false })
-        .limit(10);
+        .limit(20);
 
       if (error) throw error;
 
@@ -135,7 +138,7 @@ export default function CustomerDashboard() {
       const now = new Date();
       const firstOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
       
-      const outstanding = (data || [])
+      const pendingAmount = (data || [])
         .filter(t => t.status === "pending" || t.status === "overdue")
         .reduce((sum, t) => sum + Number(t.amount), 0);
       
@@ -143,9 +146,9 @@ export default function CustomerDashboard() {
         .filter(t => t.status === "paid" && new Date(t.toll_date) >= firstOfMonth)
         .reduce((sum, t) => sum + Number(t.amount), 0);
 
-      const pendingCount = (data || []).filter(t => t.status === "pending").length;
+      const pendingCount = (data || []).filter(t => t.status === "pending" || t.status === "overdue").length;
 
-      setTollStats({ outstanding, paidThisMonth, pendingCount });
+      setTollStats({ pendingAmount, paidThisMonth, pendingCount });
     } catch (error) {
       console.error("Error fetching tolls:", error);
     } finally {
@@ -170,32 +173,66 @@ export default function CustomerDashboard() {
     }
   };
 
+  const markTollAsPaid = async (tollId: string) => {
+    setMarkingPaid(tollId);
+    try {
+      const { error } = await supabase
+        .from("tolls")
+        .update({ 
+          status: "paid", 
+          payment_date: new Date().toISOString() 
+        })
+        .eq("id", tollId)
+        .eq("customer_id", user?.id);
+
+      if (error) throw error;
+
+      toast.success("Toll marked as paid", {
+        description: "Thank you! Notifications for this toll have been stopped."
+      });
+      
+      // Refresh tolls list
+      fetchTolls();
+    } catch (error) {
+      console.error("Error marking toll as paid:", error);
+      toast.error("Failed to update toll status");
+    } finally {
+      setMarkingPaid(null);
+    }
+  };
+
   const stats = [
     {
-      title: "Outstanding Tolls",
-      value: `$${tollStats.outstanding.toFixed(2)}`,
-      icon: Receipt,
-      color: tollStats.outstanding > 0 ? "text-yellow-600" : "text-muted-foreground"
+      title: "Pending Toll Notices",
+      value: tollStats.pendingCount.toString(),
+      subtext: `$${tollStats.pendingAmount.toFixed(2)} total`,
+      icon: Bell,
+      color: tollStats.pendingCount > 0 ? "text-yellow-600" : "text-muted-foreground"
     },
     {
       title: "Assigned Trailers",
       value: trailerCount.toString(),
+      subtext: "Active assignments",
       icon: Truck,
       color: trailerCount > 0 ? "text-blue-600" : "text-muted-foreground"
     },
     {
-      title: "Paid This Month",
+      title: "Cleared This Month",
       value: `$${tollStats.paidThisMonth.toFixed(2)}`,
+      subtext: "Marked as paid",
       icon: CheckCircle,
       color: "text-green-600"
     },
   ];
 
+  const pendingTolls = tolls.filter(t => t.status === "pending" || t.status === "overdue");
+  const paidTolls = tolls.filter(t => t.status === "paid");
+
   return (
     <div className="min-h-screen flex flex-col">
       <SEO
         title="Customer Dashboard"
-        description="Manage your CRUMS Leasing account, view tolls, and access your trailer information."
+        description="Manage your CRUMS Leasing account, view toll notices, and access your trailer information."
         noindex
       />
       <Navigation />
@@ -242,50 +279,63 @@ export default function CustomerDashboard() {
                   {loading ? (
                     <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
                   ) : (
-                    <div className="text-2xl font-bold text-foreground">{stat.value}</div>
+                    <>
+                      <div className="text-2xl font-bold text-foreground">{stat.value}</div>
+                      <p className="text-xs text-muted-foreground mt-1">{stat.subtext}</p>
+                    </>
                   )}
                 </CardContent>
               </Card>
             ))}
           </div>
 
-          {/* Recent Tolls */}
+          {/* Pending Toll Notices */}
           <Card className="mb-8">
             <CardHeader>
-              <CardTitle className="text-foreground">Recent Tolls</CardTitle>
+              <CardTitle className="text-foreground flex items-center gap-2">
+                <Bell className="h-5 w-5" />
+                Toll Notices Requiring Payment
+              </CardTitle>
+              <p className="text-sm text-muted-foreground">
+                These tolls were billed to our trailers. Please pay directly to the toll authority, then click "I've Paid This" to stop reminders.
+              </p>
             </CardHeader>
             <CardContent>
               {loading ? (
                 <div className="flex justify-center py-8">
                   <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
                 </div>
-              ) : tolls.length === 0 ? (
+              ) : pendingTolls.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
-                  <Receipt className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                  <p className="font-medium">No tolls on your account</p>
-                  <p className="text-sm">Any toll charges will appear here</p>
+                  <CheckCircle className="h-12 w-12 mx-auto mb-3 text-green-500 opacity-70" />
+                  <p className="font-medium text-green-600">All caught up!</p>
+                  <p className="text-sm">No pending toll notices</p>
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {tolls.map((toll) => (
-                    <div key={toll.id} className="flex items-center justify-between py-3 border-b last:border-0 border-border">
+                  {pendingTolls.map((toll) => (
+                    <div key={toll.id} className="flex items-center justify-between py-4 px-4 border rounded-lg bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800">
                       <div className="flex-1">
-                        <p className="font-medium text-foreground">{toll.toll_location || "Unknown Location"}</p>
+                        <p className="font-medium text-foreground">{toll.toll_location || "Toll Location"}</p>
                         <p className="text-sm text-muted-foreground">
+                          {toll.toll_authority && <span>{toll.toll_authority} • </span>}
                           {format(new Date(toll.toll_date), "MMM d, yyyy")}
                         </p>
                       </div>
                       <div className="flex items-center gap-4">
-                        <span className="font-semibold text-foreground">${Number(toll.amount).toFixed(2)}</span>
-                        <span className={`text-xs px-3 py-1 rounded-full ${
-                          toll.status === "paid" 
-                            ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
-                            : toll.status === "overdue"
-                            ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
-                            : "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400"
-                        }`}>
-                          {toll.status}
-                        </span>
+                        <span className="font-bold text-lg text-foreground">${Number(toll.amount).toFixed(2)}</span>
+                        <Button 
+                          onClick={() => markTollAsPaid(toll.id)}
+                          disabled={markingPaid === toll.id}
+                          className="bg-green-600 hover:bg-green-700 text-white"
+                        >
+                          {markingPaid === toll.id ? (
+                            <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                          ) : (
+                            <CheckCircle className="h-4 w-4 mr-2" />
+                          )}
+                          I've Paid This
+                        </Button>
                       </div>
                     </div>
                   ))}
@@ -305,8 +355,38 @@ export default function CustomerDashboard() {
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-foreground">
-                  You have {tollStats.pendingCount} pending toll{tollStats.pendingCount > 1 ? 's' : ''} totaling ${tollStats.outstanding.toFixed(2)} that require{tollStats.pendingCount === 1 ? 's' : ''} payment.
+                  You have {tollStats.pendingCount} toll notice{tollStats.pendingCount > 1 ? 's' : ''} totaling ${tollStats.pendingAmount.toFixed(2)}. 
+                  Please pay these directly to the toll authority, then mark them as paid above to stop reminders.
                 </p>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Recently Paid Tolls */}
+          {paidTolls.length > 0 && (
+            <Card className="mb-8">
+              <CardHeader>
+                <CardTitle className="text-foreground text-lg">Recently Cleared</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  {paidTolls.slice(0, 5).map((toll) => (
+                    <div key={toll.id} className="flex items-center justify-between py-2 border-b last:border-0 border-border">
+                      <div className="flex-1">
+                        <p className="text-sm text-foreground">{toll.toll_location || "Toll Location"}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {format(new Date(toll.toll_date), "MMM d, yyyy")}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span className="text-sm text-muted-foreground">${Number(toll.amount).toFixed(2)}</span>
+                        <span className="text-xs px-2 py-1 rounded-full bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                          Paid
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </CardContent>
             </Card>
           )}
@@ -322,7 +402,7 @@ export default function CustomerDashboard() {
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-foreground">
-                  Complete your application to get started with trailer leasing. We'll be in touch soon!
+                  Complete your application to get started with trailer leasing. Any toll notices for your assigned trailers will appear here.
                 </p>
               </CardContent>
             </Card>
