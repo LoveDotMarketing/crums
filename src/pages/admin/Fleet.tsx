@@ -604,7 +604,6 @@ export default function Fleet() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <SortableHeader column="trailer_number">Trailer #</SortableHeader>
                         <SortableHeader column="vin">VIN</SortableHeader>
                         <SortableHeader column="type">Type</SortableHeader>
                         <SortableHeader column="year">Year</SortableHeader>
@@ -623,11 +622,8 @@ export default function Fleet() {
                           className="cursor-pointer hover:bg-muted/50"
                           onClick={() => navigate(`/dashboard/admin/fleet/${trailer.id}`)}
                         >
-                          <TableCell className="font-medium">
-                            {trailer.trailer_number}
-                          </TableCell>
-                          <TableCell className="font-mono text-xs text-muted-foreground">
-                            {trailer.vin ? `...${trailer.vin.slice(-6)}` : "-"}
+                          <TableCell className="font-mono text-sm">
+                            {trailer.vin || "-"}
                           </TableCell>
                           <TableCell>{trailer.type}</TableCell>
                           <TableCell>{trailer.year}</TableCell>
