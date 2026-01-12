@@ -11,7 +11,8 @@ import {
   Send,
   UserCog,
   FileCode,
-  FileText
+  FileText,
+  ScrollText
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/hooks/useAuth";
@@ -43,6 +44,7 @@ const menuItems = [
   { title: "Outreach", url: "/dashboard/admin/outreach", icon: Send },
   { title: "Reports", url: "/dashboard/admin/reports", icon: Receipt },
   { title: "Analytics", url: "/dashboard/admin/analytics", icon: BarChart3 },
+  { title: "Logs", url: "/dashboard/admin/logs", icon: ScrollText },
   { title: "Sitemap", url: "/dashboard/admin/sitemap-generator", icon: FileCode },
 ];
 

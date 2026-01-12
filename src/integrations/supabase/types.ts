@@ -1103,6 +1103,42 @@ export type Database = {
           },
         ]
       }
+      user_activity_logs: {
+        Row: {
+          created_at: string
+          email: string
+          event_type: string
+          id: string
+          ip_address: string | null
+          role: string | null
+          session_duration_seconds: number | null
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          event_type: string
+          id?: string
+          ip_address?: string | null
+          role?: string | null
+          session_duration_seconds?: number | null
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          event_type?: string
+          id?: string
+          ip_address?: string | null
+          role?: string | null
+          session_duration_seconds?: number | null
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string
