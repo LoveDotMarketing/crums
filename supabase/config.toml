@@ -60,3 +60,11 @@ verify_jwt = true
 # SSN encryption/decryption - requires admin authentication
 [functions.ssn-crypto]
 verify_jwt = true
+
+# Staff removal - requires admin authentication
+[functions.remove-staff]
+verify_jwt = false
+
+# Staff role update - requires admin authentication
+[functions.update-staff-role]
+verify_jwt = false
