@@ -414,6 +414,7 @@ export default function Customers() {
                       <TableHead>Name</TableHead>
                       <TableHead>Type</TableHead>
                       <TableHead>Contact</TableHead>
+                      <TableHead>Tolls</TableHead>
                       <TableHead>Created</TableHead>
                       <TableHead>Referrals</TableHead>
                       <TableHead>Status</TableHead>
@@ -423,7 +424,7 @@ export default function Customers() {
                   <TableBody>
                     {filteredCustomers.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                        <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
                           No customers found
                         </TableCell>
                       </TableRow>
@@ -450,6 +451,15 @@ export default function Customers() {
                                 </div>
                               )}
                             </div>
+                          </TableCell>
+                          <TableCell>
+                            {(customer.outstanding_tolls || 0) > 0 ? (
+                              <span className="font-medium text-red-600">
+                                ${customer.outstanding_tolls?.toLocaleString()}
+                              </span>
+                            ) : (
+                              <span className="text-muted-foreground">$0</span>
+                            )}
                           </TableCell>
                           <TableCell className="text-sm text-muted-foreground">
                             {customer.created_at
