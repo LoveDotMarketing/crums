@@ -188,9 +188,40 @@ export default function Customers() {
     }
   });
 
-  // Delete customer mutation
+  // Delete customer mutation with cascading cleanup
   const deleteMutation = useMutation({
     mutationFn: async (customerId: string) => {
+      // 1. Delete outreach logs first (references customer_id)
+      await supabase.from('outreach_logs').delete().eq('customer_id', customerId);
+      
+      // 2. Delete customer outreach status
+      await supabase.from('customer_outreach_status').delete().eq('customer_id', customerId);
+      
+      // 3. Get referral code for this customer first
+      const { data: referralCode } = await supabase
+        .from('referral_codes')
+        .select('id')
+        .eq('customer_id', customerId)
+        .maybeSingle();
+      
+      // 4. Delete referrals that use this customer's referral code
+      if (referralCode) {
+        await supabase.from('referrals').delete().eq('referrer_code_id', referralCode.id);
+      }
+      
+      // 5. Delete referrals where this customer was referred
+      await supabase.from('referrals').delete().eq('referred_customer_id', customerId);
+      
+      // 6. Delete referral codes
+      await supabase.from('referral_codes').delete().eq('customer_id', customerId);
+      
+      // 7. Delete tolls for this customer
+      await supabase.from('tolls').delete().eq('customer_id', customerId);
+      
+      // 8. Unassign trailers (set customer_id to null, don't delete trailers)
+      await supabase.from('trailers').update({ customer_id: null }).eq('customer_id', customerId);
+      
+      // 9. Finally, delete the customer
       const { error } = await supabase
         .from('customers')
         .delete()
