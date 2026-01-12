@@ -348,6 +348,7 @@ export default function Customers() {
                       <TableHead>Name</TableHead>
                       <TableHead>Type</TableHead>
                       <TableHead>Contact</TableHead>
+                      <TableHead>Created</TableHead>
                       <TableHead>Referrals</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead className="w-[80px]">Actions</TableHead>
@@ -356,7 +357,7 @@ export default function Customers() {
                   <TableBody>
                     {filteredCustomers.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                        <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                           No customers found
                         </TableCell>
                       </TableRow>
@@ -383,6 +384,11 @@ export default function Customers() {
                                 </div>
                               )}
                             </div>
+                          </TableCell>
+                          <TableCell className="text-sm text-muted-foreground">
+                            {customer.created_at
+                              ? new Date(customer.created_at).toLocaleDateString()
+                              : "—"}
                           </TableCell>
                           <TableCell>{getReferralBadge(customer)}</TableCell>
                           <TableCell>{getStatusBadge(customer.status)}</TableCell>
