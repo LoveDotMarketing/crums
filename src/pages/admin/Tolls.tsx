@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -41,11 +42,19 @@ interface Toll {
 }
 
 export default function Tolls() {
+  const [searchParams] = useSearchParams();
+  const customerIdFromUrl = searchParams.get("customer");
+  
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [customerFilter, setCustomerFilter] = useState<string | null>(customerIdFromUrl);
   const [tolls, setTolls] = useState<Toll[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+  useEffect(() => {
+    setCustomerFilter(customerIdFromUrl);
+  }, [customerIdFromUrl]);
 
   useEffect(() => {
     fetchTolls();
@@ -115,9 +124,16 @@ export default function Tolls() {
       location.includes(searchQuery.toLowerCase());
     
     const matchesStatus = statusFilter === "all" || toll.status === statusFilter;
+    const matchesCustomer = !customerFilter || toll.customer_id === customerFilter;
     
-    return matchesSearch && matchesStatus;
+    return matchesSearch && matchesStatus && matchesCustomer;
   });
+
+  const getFilteredCustomerName = () => {
+    if (!customerFilter) return null;
+    const toll = tolls.find(t => t.customer_id === customerFilter);
+    return toll ? getCustomerName(toll) : null;
+  };
 
   const getStatusBadge = (status: string) => {
     const config: Record<string, { variant: "default" | "secondary" | "destructive"; icon: any }> = {
@@ -216,6 +232,21 @@ export default function Tolls() {
             </div>
 
             {/* Search and Filters */}
+            {customerFilter && (
+              <div className="mb-4 flex items-center gap-2">
+                <Badge variant="secondary" className="text-sm py-1">
+                  Filtered by: {getFilteredCustomerName() || "Customer"}
+                </Badge>
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={() => setCustomerFilter(null)}
+                >
+                  Clear filter
+                </Button>
+              </div>
+            )}
+
             <div className="flex gap-4 mb-6 flex-wrap">
               <div className="relative flex-1 max-w-md">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
