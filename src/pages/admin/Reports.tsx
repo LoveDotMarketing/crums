@@ -40,46 +40,28 @@ import {
 export default function Reports() {
   const [dateRange, setDateRange] = useState("30");
 
-  // Mock unpaid tolls data
-  const unpaidTolls = [
-    { customer: "ABC Transport", amount: 145.50, days_overdue: 5, toll_date: "2024-01-15" },
-    { customer: "FastTrack Inc", amount: 67.25, days_overdue: 3, toll_date: "2024-01-13" },
-    { customer: "Heavy Haul Co", amount: 234.75, days_overdue: 8, toll_date: "2024-01-12" },
-    { customer: "Heavy Haul Co", amount: 289.25, days_overdue: 12, toll_date: "2024-01-08" },
-  ];
+  // Empty data - no mock data for production
+  const unpaidTolls: { customer: string; amount: number; days_overdue: number; toll_date: string }[] = [];
 
-  // Mock new users data
-  const newUsers = [
-    { name: "John Smith", email: "john@example.com", role: "customer", joined: "2024-01-18" },
-    { name: "Mary Johnson", email: "mary@example.com", role: "customer", joined: "2024-01-17" },
-    { name: "Bob Wilson", email: "bob@example.com", role: "mechanic", joined: "2024-01-15" },
-    { name: "Alice Brown", email: "alice@example.com", role: "customer", joined: "2024-01-14" },
-  ];
+  // Empty data - will be populated from real database
+  const newUsers: { name: string; email: string; role: string; joined: string }[] = [];
 
-  // Mock billing summary
+  // Empty billing summary
   const billingSummary = {
-    total_invoiced: 48500,
-    total_collected: 32340,
-    total_outstanding: 16160,
-    invoices: [
-      { id: "INV-001", customer: "ABC Transport", amount: 4800, status: "paid" },
-      { id: "INV-002", customer: "XYZ Logistics", amount: 3200, status: "pending" },
-      { id: "INV-003", customer: "Heavy Haul Co", amount: 8500, status: "pending" },
-    ]
+    total_invoiced: 0,
+    total_collected: 0,
+    total_outstanding: 0,
+    invoices: [] as { id: string; customer: string; amount: number; status: string }[]
   };
 
-  // Mock support tickets summary
+  // Empty support tickets summary
   const supportTicketsSummary = {
-    total: 15,
-    open: 5,
-    in_progress: 3,
-    resolved: 7,
-    avg_resolution_time: "4.2 hours",
-    tickets: [
-      { id: "TICK-001", customer: "ABC Transport", priority: "high", status: "open", created: "2024-01-15" },
-      { id: "TICK-004", customer: "Heavy Haul Co", priority: "high", status: "open", created: "2024-01-12" },
-      { id: "TICK-005", customer: "Cold Chain LLC", priority: "high", status: "in-progress", created: "2024-01-11" },
-    ]
+    total: 0,
+    open: 0,
+    in_progress: 0,
+    resolved: 0,
+    avg_resolution_time: "N/A",
+    tickets: [] as { id: string; customer: string; priority: string; status: string; created: string }[]
   };
 
   const totalUnpaid = unpaidTolls.reduce((sum, t) => sum + t.amount, 0);
