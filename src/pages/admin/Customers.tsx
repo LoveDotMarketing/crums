@@ -19,7 +19,10 @@ import {
   Pencil,
   Gift,
   MoreHorizontal,
-  Trash2
+  Trash2,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown
 } from "lucide-react";
 import {
   Table,
@@ -100,6 +103,8 @@ export default function Customers() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+  const [sortColumn, setSortColumn] = useState<string>("full_name");
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -284,6 +289,24 @@ export default function Customers() {
     }
   };
 
+  const handleSort = (column: string) => {
+    if (sortColumn === column) {
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+    } else {
+      setSortColumn(column);
+      setSortDirection("asc");
+    }
+  };
+
+  const getSortIcon = (column: string) => {
+    if (sortColumn !== column) {
+      return <ArrowUpDown className="h-4 w-4 ml-1 opacity-50" />;
+    }
+    return sortDirection === "asc" 
+      ? <ArrowUp className="h-4 w-4 ml-1" />
+      : <ArrowDown className="h-4 w-4 ml-1" />;
+  };
+
   const filteredCustomers = customers.filter((customer) => {
     const matchesSearch = 
       customer.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -294,6 +317,52 @@ export default function Customers() {
     const matchesStatus = statusFilter === "all" || customer.status === statusFilter;
     
     return matchesSearch && matchesStatus;
+  });
+
+  const sortedCustomers = [...filteredCustomers].sort((a, b) => {
+    let aValue: string | number | null = null;
+    let bValue: string | number | null = null;
+
+    switch (sortColumn) {
+      case "full_name":
+        aValue = a.full_name.toLowerCase();
+        bValue = b.full_name.toLowerCase();
+        break;
+      case "trailers":
+        aValue = a.trailers_count || 0;
+        bValue = b.trailers_count || 0;
+        break;
+      case "contact":
+        aValue = a.email?.toLowerCase() || "";
+        bValue = b.email?.toLowerCase() || "";
+        break;
+      case "tolls":
+        aValue = a.outstanding_tolls || 0;
+        bValue = b.outstanding_tolls || 0;
+        break;
+      case "created":
+        aValue = a.created_at ? new Date(a.created_at).getTime() : 0;
+        bValue = b.created_at ? new Date(b.created_at).getTime() : 0;
+        break;
+      case "referrals":
+        aValue = a.referrals_sent || 0;
+        bValue = b.referrals_sent || 0;
+        break;
+      case "status":
+        aValue = a.status.toLowerCase();
+        bValue = b.status.toLowerCase();
+        break;
+      default:
+        return 0;
+    }
+
+    if (aValue === null && bValue === null) return 0;
+    if (aValue === null) return sortDirection === "asc" ? 1 : -1;
+    if (bValue === null) return sortDirection === "asc" ? -1 : 1;
+
+    if (aValue < bValue) return sortDirection === "asc" ? -1 : 1;
+    if (aValue > bValue) return sortDirection === "asc" ? 1 : -1;
+    return 0;
   });
 
   const getStatusBadge = (status: string) => {
@@ -469,31 +538,87 @@ export default function Customers() {
             {/* Customers Table */}
             <Card>
               <CardHeader>
-                <CardTitle>All Customers ({filteredCustomers.length})</CardTitle>
+                <CardTitle>All Customers ({sortedCustomers.length})</CardTitle>
               </CardHeader>
               <CardContent>
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Trailers</TableHead>
-                      <TableHead>Contact</TableHead>
-                      <TableHead>Tolls</TableHead>
-                      <TableHead>Created</TableHead>
-                      <TableHead>Referrals</TableHead>
-                      <TableHead>Status</TableHead>
+                      <TableHead 
+                        className="cursor-pointer hover:bg-muted/50 select-none"
+                        onClick={() => handleSort("full_name")}
+                      >
+                        <div className="flex items-center">
+                          Name
+                          {getSortIcon("full_name")}
+                        </div>
+                      </TableHead>
+                      <TableHead 
+                        className="cursor-pointer hover:bg-muted/50 select-none"
+                        onClick={() => handleSort("trailers")}
+                      >
+                        <div className="flex items-center">
+                          Trailers
+                          {getSortIcon("trailers")}
+                        </div>
+                      </TableHead>
+                      <TableHead 
+                        className="cursor-pointer hover:bg-muted/50 select-none"
+                        onClick={() => handleSort("contact")}
+                      >
+                        <div className="flex items-center">
+                          Contact
+                          {getSortIcon("contact")}
+                        </div>
+                      </TableHead>
+                      <TableHead 
+                        className="cursor-pointer hover:bg-muted/50 select-none"
+                        onClick={() => handleSort("tolls")}
+                      >
+                        <div className="flex items-center">
+                          Tolls
+                          {getSortIcon("tolls")}
+                        </div>
+                      </TableHead>
+                      <TableHead 
+                        className="cursor-pointer hover:bg-muted/50 select-none"
+                        onClick={() => handleSort("created")}
+                      >
+                        <div className="flex items-center">
+                          Created
+                          {getSortIcon("created")}
+                        </div>
+                      </TableHead>
+                      <TableHead 
+                        className="cursor-pointer hover:bg-muted/50 select-none"
+                        onClick={() => handleSort("referrals")}
+                      >
+                        <div className="flex items-center">
+                          Referrals
+                          {getSortIcon("referrals")}
+                        </div>
+                      </TableHead>
+                      <TableHead 
+                        className="cursor-pointer hover:bg-muted/50 select-none"
+                        onClick={() => handleSort("status")}
+                      >
+                        <div className="flex items-center">
+                          Status
+                          {getSortIcon("status")}
+                        </div>
+                      </TableHead>
                       <TableHead className="w-[80px]">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredCustomers.length === 0 ? (
+                    {sortedCustomers.length === 0 ? (
                       <TableRow>
                         <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                           No customers found
                         </TableCell>
                       </TableRow>
                     ) : (
-                      filteredCustomers.map((customer) => (
+                      sortedCustomers.map((customer) => (
                         <TableRow 
                           key={customer.id} 
                           className="cursor-pointer hover:bg-muted/50"
