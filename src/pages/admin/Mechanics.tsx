@@ -27,14 +27,14 @@ import {
 export default function Mechanics() {
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Mechanics data
+  // Preferred fleet service provider - contact info pending verification
   const mechanics = [
     {
       id: "1",
       name: "Oscar Tejas Fleet Services",
-      email: "contact@oscartejasfleet.com",
-      phone: "(210) 555-0100",
-      specialty: "General Maintenance",
+      email: "Contact admin for details",
+      phone: "Contact admin for details",
+      specialty: "General Maintenance & Repairs",
       status: "active",
       active_jobs: 0,
       completed_jobs: 0,
