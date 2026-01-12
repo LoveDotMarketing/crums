@@ -307,7 +307,10 @@ export default function Customers() {
           <main className="flex-1 p-6 overflow-auto">
             {/* Customer Stats */}
             <div className="grid gap-6 md:grid-cols-4 mb-8">
-              <Card>
+              <Card 
+                className={`cursor-pointer transition-all hover:shadow-md ${statusFilter === 'active' ? 'ring-2 ring-primary' : ''}`}
+                onClick={() => setStatusFilter('active')}
+              >
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
                   <CardTitle className="text-sm font-medium text-muted-foreground">
                     Active Customers
@@ -322,7 +325,10 @@ export default function Customers() {
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card 
+                className={`cursor-pointer transition-all hover:shadow-md ${statusFilter === 'all' ? 'ring-2 ring-primary' : ''}`}
+                onClick={() => setStatusFilter('all')}
+              >
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
                   <CardTitle className="text-sm font-medium text-muted-foreground">
                     Total Customers
@@ -352,7 +358,10 @@ export default function Customers() {
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card 
+                className={`cursor-pointer transition-all hover:shadow-md ${statusFilter === 'archived' ? 'ring-2 ring-red-500' : ''}`}
+                onClick={() => setStatusFilter('archived')}
+              >
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
                   <CardTitle className="text-sm font-medium text-muted-foreground">
                     Referral Activity
