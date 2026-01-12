@@ -367,7 +367,7 @@ export default function AdminDashboard() {
                     )}
                     {(pendingApplications || 0) > 0 && (
                       <button 
-                        onClick={() => navigate("/dashboard/admin/customers")}
+                        onClick={() => navigate("/dashboard/admin/applications")}
                         className="block text-sm text-foreground hover:text-primary hover:underline transition-colors text-left"
                       >
                         • {pendingApplications} new customer applications need review
