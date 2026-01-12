@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Truck, AlertCircle, CheckCircle, Loader2, Bell, Phone, ExternalLink } from "lucide-react";
+import { Truck, AlertCircle, CheckCircle, Loader2, Bell, Phone, ExternalLink, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
@@ -23,6 +23,8 @@ interface Toll {
   amount: number;
   toll_date: string;
   status: string;
+  last_reminder_sent_at: string | null;
+  reminder_count: number | null;
 }
 
 interface TollStats {
@@ -126,7 +128,7 @@ export default function CustomerDashboard() {
     try {
       const { data, error } = await supabase
         .from("tolls")
-        .select("id, toll_location, toll_authority, amount, toll_date, status")
+        .select("id, toll_location, toll_authority, amount, toll_date, status, last_reminder_sent_at, reminder_count")
         .eq("customer_id", user.id)
         .order("toll_date", { ascending: false })
         .limit(20);
@@ -367,6 +369,18 @@ export default function CustomerDashboard() {
                         {!authorityInfo && toll.toll_authority && (
                           <div className="mt-3 pt-3 border-t border-yellow-300 dark:border-yellow-700 text-sm text-muted-foreground">
                             Contact <span className="font-medium">{toll.toll_authority}</span> directly to pay this toll.
+                          </div>
+                        )}
+                        {/* Reminder History */}
+                        {(toll.reminder_count && toll.reminder_count > 0) && (
+                          <div className="mt-3 pt-3 border-t border-yellow-300 dark:border-yellow-700 flex items-center gap-2 text-sm text-muted-foreground">
+                            <Mail className="h-3.5 w-3.5" />
+                            <span>
+                              {toll.reminder_count} reminder{toll.reminder_count > 1 ? 's' : ''} sent
+                              {toll.last_reminder_sent_at && (
+                                <> • Last sent {format(new Date(toll.last_reminder_sent_at), "MMM d, yyyy 'at' h:mm a")}</>
+                              )}
+                            </span>
                           </div>
                         )}
                       </div>
