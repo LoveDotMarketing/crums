@@ -25,50 +25,56 @@ serve(async (req) => {
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
   const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+  const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
   const supabaseClient = createClient(supabaseUrl, supabaseServiceKey);
 
-  // Verify admin authentication
+  // Check for authorization - support both user JWT and internal service calls
   const authHeader = req.headers.get("authorization");
-  if (!authHeader) {
-    console.log("[SendOutreachEmail] No authorization header");
-    return new Response(
-      JSON.stringify({ error: "Missing authorization header" }),
-      { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+  let callerEmail = "internal-service";
+  let isAuthorized = false;
+
+  if (authHeader) {
+    const token = authHeader.replace("Bearer ", "");
+    
+    // Check if it's the service role key (internal call from another edge function)
+    if (token === supabaseServiceKey) {
+      isAuthorized = true;
+      callerEmail = "internal-automation";
+      console.log("[SendOutreachEmail] Internal service call authorized");
+    } else {
+      // Try to validate as user JWT
+      const { data: { user }, error: authError } = await supabaseClient.auth.getUser(token);
+      
+      if (!authError && user) {
+        // Check if user has admin role
+        const { data: roleData } = await supabaseClient
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", user.id)
+          .eq("role", "admin")
+          .single();
+
+        if (roleData) {
+          isAuthorized = true;
+          callerEmail = user.email || "admin";
+          console.log(`[SendOutreachEmail] Admin ${callerEmail} authorized`);
+        }
+      }
+    }
   }
 
-  // Get user from JWT
-  const token = authHeader.replace("Bearer ", "");
-  const { data: { user }, error: authError } = await supabaseClient.auth.getUser(token);
-  
-  if (authError || !user) {
-    console.log("[SendOutreachEmail] Invalid token:", authError?.message);
+  if (!isAuthorized) {
+    console.log("[SendOutreachEmail] Unauthorized request");
     return new Response(
-      JSON.stringify({ error: "Invalid authorization token" }),
+      JSON.stringify({ error: "Unauthorized - admin access or internal service call required" }),
       { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
-  }
-
-  // Check if user has admin role
-  const { data: roleData } = await supabaseClient
-    .from("user_roles")
-    .select("role")
-    .eq("user_id", user.id)
-    .eq("role", "admin")
-    .single();
-
-  if (!roleData) {
-    console.log("[SendOutreachEmail] User is not admin:", user.id);
-    return new Response(
-      JSON.stringify({ error: "Admin access required" }),
-      { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
 
   try {
     const { to, subject, body, campaign_id, template_id, customer_ids, email_type = "manual" }: EmailRequest = await req.json();
 
-    console.log(`[SendOutreachEmail] Admin ${user.email} sending email to ${Array.isArray(to) ? to.length : 1} recipients`);
+    console.log(`[SendOutreachEmail] ${callerEmail} sending email to ${Array.isArray(to) ? to.length : 1} recipients`);
 
     const recipients = Array.isArray(to) ? to : [to];
     const results: { email: string; success: boolean; error?: string }[] = [];

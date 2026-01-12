@@ -40,9 +40,9 @@ verify_jwt = false
 [functions.agent-customers-tolls]
 verify_jwt = false
 
-# Outreach email - requires admin authentication
+# Outreach email - handles auth internally (supports both admin JWT and internal service calls)
 [functions.send-outreach-email]
-verify_jwt = true
+verify_jwt = false
 
 # Outreach automation - requires admin authentication
 [functions.process-outreach-automation]
