@@ -39,6 +39,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
 
+  const sessionStartTime = useState<Date | null>(null);
+
+  // Track login event
+  const trackLoginEvent = async (userId: string, email: string, role: string | null) => {
+    try {
+      await supabase.from('user_activity_logs').insert({
+        user_id: userId,
+        email: email,
+        role: role,
+        event_type: 'login',
+        user_agent: navigator.userAgent,
+      });
+    } catch (err) {
+      console.error("Error tracking login:", err);
+    }
+  };
+
+  // Track logout event
+  const trackLogoutEvent = async (userId: string, email: string, role: string | null) => {
+    try {
+      await supabase.from('user_activity_logs').insert({
+        user_id: userId,
+        email: email,
+        role: role,
+        event_type: 'logout',
+        user_agent: navigator.userAgent,
+      });
+    } catch (err) {
+      console.error("Error tracking logout:", err);
+    }
+  };
+
   useEffect(() => {
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -147,11 +179,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return { error };
     }
 
-    // Successful login - reset attempts
+    // Successful login - reset attempts and track login
     try {
       await supabase.rpc('reset_login_attempts', { p_email: email });
     } catch (err) {
       console.error("Error resetting login attempts:", err);
+    }
+
+    // Track login event after successful auth (will be tracked when we know the role)
+    const { data: { user: loggedInUser } } = await supabase.auth.getUser();
+    if (loggedInUser) {
+      // Get user role for logging
+      const { data: roleData } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", loggedInUser.id)
+        .single();
+      
+      trackLoginEvent(loggedInUser.id, email, roleData?.role || null);
     }
 
     toast.success("Welcome back!");
@@ -187,6 +232,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signOut = async () => {
+    // Track logout before signing out
+    if (user && user.email) {
+      await trackLogoutEvent(user.id, user.email, userRole);
+    }
+    
     const { error } = await supabase.auth.signOut();
     if (!error) {
       setUserRole(null);
