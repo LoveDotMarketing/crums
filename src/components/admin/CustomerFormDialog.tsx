@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { CalendarIcon, Loader2, Copy, Gift, UserCheck, Check, X } from "lucide-react";
+import { CalendarIcon, Loader2, Copy, Gift, UserCheck, Truck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -95,6 +95,15 @@ interface Customer {
   referred_by_name?: string;
 }
 
+interface TrailerInfo {
+  id: string;
+  vin: string;
+  trailer_number: string;
+  type: string;
+  rental_rate: number | null;
+  rental_frequency: string | null;
+}
+
 interface CustomerFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -126,6 +135,24 @@ export function CustomerFormDialog({ open, onOpenChange, customer }: CustomerFor
       payment_type: "",
       notes: "",
     },
+  });
+
+  // Fetch trailers assigned to this customer
+  const { data: customerTrailers = [] } = useQuery({
+    queryKey: ['customer-trailers', customer?.id],
+    queryFn: async () => {
+      if (!customer?.id) return [];
+      
+      const { data, error } = await supabase
+        .from('trailers')
+        .select('id, vin, trailer_number, type, rental_rate, rental_frequency')
+        .eq('customer_id', customer.id)
+        .order('trailer_number');
+      
+      if (error) throw error;
+      return (data || []) as TrailerInfo[];
+    },
+    enabled: !!customer?.id && open,
   });
 
   // Fetch referral history for this customer
@@ -524,6 +551,72 @@ export function CustomerFormDialog({ open, onOpenChange, customer }: CustomerFor
                 </FormItem>
               )}
             />
+
+            {/* Trailers Section - Only show when editing */}
+            {isEditing && (
+              <>
+                <Separator className="my-6" />
+                
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <Truck className="h-5 w-5" />
+                      Assigned Trailers ({customerTrailers.length})
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {customerTrailers.length > 0 ? (
+                      <div className="space-y-2">
+                        {customerTrailers.map((trailer) => (
+                          <div
+                            key={trailer.id}
+                            className="flex items-center justify-between p-3 bg-muted/50 rounded-lg"
+                          >
+                            <div className="flex flex-col">
+                              <div className="flex items-center gap-2">
+                                <span className="font-medium">#{trailer.trailer_number}</span>
+                                <Badge variant="outline">{trailer.type}</Badge>
+                              </div>
+                              <span className="text-sm text-muted-foreground font-mono">
+                                {trailer.vin}
+                              </span>
+                            </div>
+                            {trailer.rental_rate && (
+                              <div className="text-right">
+                                <span className="font-semibold text-green-600">
+                                  ${trailer.rental_rate.toLocaleString()}
+                                </span>
+                                <span className="text-sm text-muted-foreground ml-1">
+                                  /{trailer.rental_frequency || 'monthly'}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                        <div className="pt-2 border-t mt-3">
+                          <div className="flex justify-between text-sm">
+                            <span className="text-muted-foreground">Total Monthly Revenue:</span>
+                            <span className="font-semibold">
+                              ${customerTrailers.reduce((sum, t) => {
+                                if (!t.rental_rate) return sum;
+                                if (t.rental_frequency === 'weekly') {
+                                  return sum + (t.rental_rate * 4.33);
+                                }
+                                return sum + t.rental_rate;
+                              }, 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">
+                        No trailers assigned to this customer.
+                      </p>
+                    )}
+                  </CardContent>
+                </Card>
+              </>
+            )}
 
             {/* Referral Information Section - Only show when editing */}
             {isEditing && (

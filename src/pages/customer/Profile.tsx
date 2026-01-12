@@ -1,15 +1,26 @@
 import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import { CustomerNav } from "@/components/customer/CustomerNav";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import { Loader2, Truck } from "lucide-react";
+
+interface TrailerInfo {
+  id: string;
+  vin: string;
+  trailer_number: string;
+  type: string;
+  rental_rate: number | null;
+  rental_frequency: string | null;
+}
 
 export default function Profile() {
   const { user } = useAuth();
@@ -26,6 +37,34 @@ export default function Profile() {
     confirmPassword: "",
   });
   const [changingPassword, setChangingPassword] = useState(false);
+
+  // Fetch customer's trailers
+  const { data: trailers = [] } = useQuery({
+    queryKey: ['my-trailers', user?.email],
+    queryFn: async () => {
+      if (!user?.email) return [];
+      
+      // First get the customer record by email
+      const { data: customer, error: customerError } = await supabase
+        .from('customers')
+        .select('id')
+        .eq('email', user.email)
+        .maybeSingle();
+      
+      if (customerError || !customer) return [];
+      
+      // Then get trailers for this customer
+      const { data, error } = await supabase
+        .from('trailers')
+        .select('id, vin, trailer_number, type, rental_rate, rental_frequency')
+        .eq('customer_id', customer.id)
+        .order('trailer_number');
+      
+      if (error) throw error;
+      return (data || []) as TrailerInfo[];
+    },
+    enabled: !!user?.email,
+  });
 
   useEffect(() => {
     fetchProfile();
@@ -145,6 +184,49 @@ export default function Profile() {
             </Card>
           ) : (
             <div className="space-y-6">
+              {/* My Trailers Section */}
+              {trailers.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Truck className="h-5 w-5" />
+                      My Trailers ({trailers.length})
+                    </CardTitle>
+                    <CardDescription>Trailers currently leased to you</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      {trailers.map((trailer) => (
+                        <div
+                          key={trailer.id}
+                          className="flex items-center justify-between p-4 bg-muted/50 rounded-lg border"
+                        >
+                          <div className="flex flex-col">
+                            <div className="flex items-center gap-2">
+                              <span className="font-semibold text-lg">#{trailer.trailer_number}</span>
+                              <Badge variant="outline">{trailer.type}</Badge>
+                            </div>
+                            <span className="text-sm text-muted-foreground font-mono">
+                              VIN: {trailer.vin}
+                            </span>
+                          </div>
+                          {trailer.rental_rate && (
+                            <div className="text-right">
+                              <span className="font-bold text-lg text-primary">
+                                ${trailer.rental_rate.toLocaleString()}
+                              </span>
+                              <span className="text-sm text-muted-foreground ml-1">
+                                /{trailer.rental_frequency || 'month'}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
               <Card>
                 <CardHeader>
                   <CardTitle>Personal Information</CardTitle>
