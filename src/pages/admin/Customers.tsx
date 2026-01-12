@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
@@ -88,6 +89,7 @@ interface Customer {
 }
 
 export default function Customers() {
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -453,13 +455,17 @@ export default function Customers() {
                             </div>
                           </TableCell>
                           <TableCell>
-                            {(customer.outstanding_tolls || 0) > 0 ? (
-                              <span className="font-medium text-red-600">
-                                ${customer.outstanding_tolls?.toLocaleString()}
-                              </span>
-                            ) : (
-                              <span className="text-muted-foreground">$0</span>
-                            )}
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className={`px-2 py-1 h-auto ${(customer.outstanding_tolls || 0) > 0 ? 'text-red-600 hover:text-red-700 hover:bg-red-50' : 'text-muted-foreground hover:text-foreground'}`}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                navigate(`/dashboard/admin/tolls?customer=${customer.id}`);
+                              }}
+                            >
+                              ${(customer.outstanding_tolls || 0).toLocaleString()}
+                            </Button>
                           </TableCell>
                           <TableCell className="text-sm text-muted-foreground">
                             {customer.created_at
