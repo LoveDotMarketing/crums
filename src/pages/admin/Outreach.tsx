@@ -1280,6 +1280,40 @@ export default function Outreach() {
 
                 <Card>
                   <CardHeader>
+                    <CardTitle>Toll Payment Reminders</CardTitle>
+                    <CardDescription>Automatic reminders for unpaid toll notices</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="toll-enabled">Enable Toll Reminders</Label>
+                      <Switch
+                        id="toll-enabled"
+                        checked={getSetting("toll_reminder_enabled") === "true"}
+                        onCheckedChange={(checked) =>
+                          updateSettingMutation.mutate({ key: "toll_reminder_enabled", value: String(checked) })
+                        }
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="toll-days">Days Between Reminders</Label>
+                      <Input
+                        id="toll-days"
+                        type="number"
+                        value={getSetting("toll_reminder_interval_days") || "3"}
+                        onChange={(e) =>
+                          updateSettingMutation.mutate({ key: "toll_reminder_interval_days", value: e.target.value })
+                        }
+                        disabled={getSetting("toll_reminder_enabled") !== "true"}
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Reminders are sent daily at 9 AM for pending tolls older than this interval
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
                     <CardTitle>General Settings</CardTitle>
                     <CardDescription>Default email configuration</CardDescription>
                   </CardHeader>

@@ -68,3 +68,7 @@ verify_jwt = false
 # Staff role update - requires admin authentication
 [functions.update-staff-role]
 verify_jwt = false
+
+# Toll reminders - called by cron job, no JWT needed
+[functions.send-toll-reminders]
+verify_jwt = false

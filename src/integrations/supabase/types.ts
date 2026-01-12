@@ -929,9 +929,11 @@ export type Database = {
           created_by: string | null
           customer_id: string
           id: string
+          last_reminder_sent_at: string | null
           notes: string | null
           payment_date: string | null
           receipt_url: string | null
+          reminder_count: number | null
           status: string
           toll_authority: string | null
           toll_date: string
@@ -946,9 +948,11 @@ export type Database = {
           created_by?: string | null
           customer_id: string
           id?: string
+          last_reminder_sent_at?: string | null
           notes?: string | null
           payment_date?: string | null
           receipt_url?: string | null
+          reminder_count?: number | null
           status?: string
           toll_authority?: string | null
           toll_date: string
@@ -963,9 +967,11 @@ export type Database = {
           created_by?: string | null
           customer_id?: string
           id?: string
+          last_reminder_sent_at?: string | null
           notes?: string | null
           payment_date?: string | null
           receipt_url?: string | null
+          reminder_count?: number | null
           status?: string
           toll_authority?: string | null
           toll_date?: string
