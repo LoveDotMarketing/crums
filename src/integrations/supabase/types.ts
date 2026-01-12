@@ -1019,7 +1019,9 @@ export type Database = {
           model: string | null
           notes: string | null
           purchase_price: number | null
+          rental_frequency: string | null
           rental_income: number | null
+          rental_rate: number | null
           status: string
           total_maintenance_cost: number | null
           trailer_number: string
@@ -1044,7 +1046,9 @@ export type Database = {
           model?: string | null
           notes?: string | null
           purchase_price?: number | null
+          rental_frequency?: string | null
           rental_income?: number | null
+          rental_rate?: number | null
           status?: string
           total_maintenance_cost?: number | null
           trailer_number: string
@@ -1069,7 +1073,9 @@ export type Database = {
           model?: string | null
           notes?: string | null
           purchase_price?: number | null
+          rental_frequency?: string | null
           rental_income?: number | null
+          rental_rate?: number | null
           status?: string
           total_maintenance_cost?: number | null
           trailer_number?: string
