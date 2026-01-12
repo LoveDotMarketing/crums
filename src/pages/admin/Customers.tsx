@@ -56,6 +56,11 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 
+interface TrailerInfo {
+  vin: string;
+  trailer_number: string | null;
+}
+
 interface Customer {
   id: string;
   account_number: string;
@@ -74,6 +79,7 @@ interface Customer {
   created_at: string;
   birthday?: string | null;
   trailers_count?: number;
+  trailers?: TrailerInfo[];
   outstanding_tolls?: number;
   // Referral data
   referral_code?: string;
@@ -110,10 +116,10 @@ export default function Customers() {
       
       if (error) throw error;
       
-      // Fetch trailer counts for each customer
+      // Fetch trailers with VINs for each customer
       const { data: trailers } = await supabase
         .from('trailers')
-        .select('customer_id')
+        .select('customer_id, vin, trailer_number')
         .not('customer_id', 'is', null);
       
       // Fetch pending tolls
@@ -134,7 +140,8 @@ export default function Customers() {
       
       // Map data to customers
       return (data || []).map((customer: Customer) => {
-        const trailerCount = trailers?.filter(t => t.customer_id === customer.id).length || 0;
+        const customerTrailers = trailers?.filter(t => t.customer_id === customer.id) || [];
+        const trailerCount = customerTrailers.length;
         const customerTolls = tolls?.filter(t => t.customer_id === customer.id) || [];
         const totalOutstanding = customerTolls.reduce((sum, t) => sum + Number(t.amount), 0);
         
@@ -172,6 +179,7 @@ export default function Customers() {
         return {
           ...customer,
           trailers_count: trailerCount,
+          trailers: customerTrailers.map(t => ({ vin: t.vin, trailer_number: t.trailer_number })),
           outstanding_tolls: totalOutstanding,
           referral_code: customerReferralCode?.code,
           referral_code_id: customerReferralCode?.id,
@@ -445,7 +453,7 @@ export default function Customers() {
                     <TableRow>
                       <TableHead>Account</TableHead>
                       <TableHead>Name</TableHead>
-                      <TableHead>Type</TableHead>
+                      <TableHead>Trailers</TableHead>
                       <TableHead>Contact</TableHead>
                       <TableHead>Tolls</TableHead>
                       <TableHead>Created</TableHead>
@@ -470,8 +478,21 @@ export default function Customers() {
                         >
                           <TableCell className="font-mono text-sm">{customer.account_number}</TableCell>
                           <TableCell className="font-medium">{customer.full_name}</TableCell>
-                          <TableCell className="text-sm max-w-[300px]">
-                            {customer.payment_type || <span className="text-muted-foreground">—</span>}
+                          <TableCell className="text-sm max-w-[200px]">
+                            {customer.trailers && customer.trailers.length > 0 ? (
+                              <div className="space-y-1">
+                                {customer.trailers.map((trailer, idx) => (
+                                  <div key={idx} className="font-mono text-xs">
+                                    {trailer.trailer_number && (
+                                      <span className="font-medium">#{trailer.trailer_number}: </span>
+                                    )}
+                                    <span className="text-muted-foreground">{trailer.vin}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <span className="text-muted-foreground">—</span>
+                            )}
                           </TableCell>
                           <TableCell>
                             <div className="space-y-1">
