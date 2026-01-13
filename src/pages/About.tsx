@@ -101,8 +101,8 @@ const About = () => {
           {/* Team Photo */}
           <div className="max-w-4xl mx-auto mb-12">
             <img 
-              src="/images/crums-team-photo.webp"
-              alt="CRUMS Leasing leadership team - Eric (CEO) and Ambrosia (BOM)"
+              src="/images/crums-team-photo-2.webp"
+              alt="CRUMS Leasing leadership team - Ambrosia (BOM), Eric (CEO), and Mama CRUMS (Founder)"
               className="w-full h-auto rounded-xl shadow-lg"
               loading="lazy"
               decoding="async"
