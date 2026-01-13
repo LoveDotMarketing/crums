@@ -72,6 +72,26 @@ const Reviews = () => {
       />
       <Navigation />
 
+      {/* Featured Video Section */}
+      <section className="py-12 bg-gradient-to-b from-secondary/10 to-background">
+        <div className="container mx-auto px-4">
+          <div className="max-w-md mx-auto">
+            <div className="relative w-full aspect-[9/16] rounded-2xl overflow-hidden shadow-2xl border-4 border-secondary/30">
+              <iframe
+                src="https://www.youtube.com/embed/Xj7UTGezYfY"
+                title="CRUMS Leasing Customer Review"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                className="absolute inset-0 w-full h-full"
+              />
+            </div>
+            <p className="text-center text-muted-foreground mt-4 text-sm">
+              Hear what our customers have to say
+            </p>
+          </div>
+        </div>
+      </section>
+
       {/* Hero Section */}
       <section className="py-16 bg-gradient-to-b from-primary/10 to-background">
         <div className="container mx-auto px-4 text-center">
