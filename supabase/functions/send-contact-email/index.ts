@@ -263,9 +263,8 @@ serve(async (req) => {
 
         // Recipients
         const recipients = [
-          'bledsoe@crumstrailers.com',
-          'ambrosia@crumstrailers.com',
-          'hector@crumstrailers.com',
+          'eric@crumsleasing.com',
+          'ambrosia@crumsleasing.com',
           'sales@crumsleasing.com',
           'lovedotmarketing@gmail.com'
         ];
