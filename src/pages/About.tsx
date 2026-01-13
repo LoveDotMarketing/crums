@@ -102,7 +102,7 @@ const About = () => {
           <div className="max-w-4xl mx-auto mb-12">
             <img 
               src="/images/crums-team-photo.webp"
-              alt="CRUMS Leasing leadership team - Hector (COO), Ambrosia (BOM), Jr (AC), and Eric (CEO)"
+              alt="CRUMS Leasing leadership team - Eric (CEO), Ambrosia (BOM), and Jr (AC)"
               className="w-full h-auto rounded-xl shadow-lg"
               loading="lazy"
               decoding="async"
@@ -115,7 +115,6 @@ const About = () => {
             {[
               { name: "Mama CRUMS", role: "Founder", slug: "mama-crums" },
               { name: "Eric", role: "CEO / Principal", slug: "eric" },
-              { name: "Hector", role: "COO", slug: "hector" },
               { name: "Ambrosia", role: "BOM", slug: "ambrosia" },
               { name: "Jr", role: "AC", slug: "jr" },
             ].map((member) => (

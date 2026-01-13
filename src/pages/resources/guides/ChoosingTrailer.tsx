@@ -37,8 +37,8 @@ const articleData = {
   publishedDate: "2025-12-04",
   updatedDate: "2025-12-04",
   readTime: "8 min read",
-  author: "Hector",
-  authorSlug: "hector"
+  author: "Eric",
+  authorSlug: "eric"
 };
 
 // Structured data for SEO
@@ -51,9 +51,9 @@ const articleSchema = {
   "dateModified": articleData.updatedDate,
   "author": {
     "@type": "Person",
-    "name": "Hector",
-    "url": "https://crumsleasing.com/about/hector",
-    "jobTitle": "Fleet Management Director"
+    "name": "Eric",
+    "url": "https://crumsleasing.com/about/eric",
+    "jobTitle": "CEO / Principal"
   },
   "publisher": {
     "@type": "Organization",
