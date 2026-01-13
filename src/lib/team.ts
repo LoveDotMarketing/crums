@@ -1,4 +1,4 @@
-import { LucideIcon, Users, Crown, Truck, Heart, Calculator } from "lucide-react";
+import { LucideIcon, Users, Crown, Heart, Calculator } from "lucide-react";
 
 export interface TeamMember {
   slug: string;
@@ -53,24 +53,6 @@ export const teamMembers: TeamMember[] = [
       "Started in the trucking industry from the ground up",
       "Knows most long-time customers by name",
       "Always available to talk with carriers directly"
-    ]
-  },
-  {
-    slug: "hector",
-    name: "Hector",
-    role: "COO",
-    title: "Chief Operating Officer",
-    icon: Truck,
-    bio: [
-      "Hector oversees all fleet operations at CRUMS Leasing, ensuring every trailer meets our high standards of quality and reliability before it hits the road.",
-      "With years of hands-on experience in equipment maintenance and fleet logistics, Hector knows trailers inside and out. His expertise keeps our fleet running smoothly and our customers moving forward.",
-      "He takes pride in the CRUMS commitment to well-maintained equipment — because he knows that for carriers, downtime means lost income."
-    ],
-    specialties: ["Fleet Operations", "Equipment Maintenance", "Quality Assurance", "Logistics"],
-    funFacts: [
-      "Can diagnose most trailer issues by sound alone",
-      "Personally inspects every trailer before lease",
-      "Passionate about keeping carriers safe on the road"
     ]
   },
   {

@@ -22,7 +22,6 @@ const routeLabels: Record<string, string> = {
   "/about": "About",
   "/about/mama-crums": "Mama CRUMS",
   "/about/eric": "Eric",
-  "/about/hector": "Hector",
   "/about/ambrosia": "Ambrosia",
   "/about/jr": "Jr",
   "/mission": "Mission",
@@ -114,9 +113,6 @@ const parentRoutes: Record<string, { label: string; href: string }[]> = {
     { label: "About", href: "/about" }
   ],
   "/about/eric": [
-    { label: "About", href: "/about" }
-  ],
-  "/about/hector": [
     { label: "About", href: "/about" }
   ],
   "/about/ambrosia": [
