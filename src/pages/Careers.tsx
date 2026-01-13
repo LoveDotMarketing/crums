@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Link } from "react-router-dom";
 import { Heart, TrendingUp, Users, Award, ArrowRight } from "lucide-react";
-const teamImage = "/images/crums-leasing-careers.webp";
+const teamImage = "/images/crums-leasing-careers-2.webp";
 import { SEO } from "@/components/SEO";
 import { generateBreadcrumbSchema } from "@/lib/structuredData";
 import { trackCtaClick } from "@/lib/analytics";
