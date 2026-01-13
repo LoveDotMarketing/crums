@@ -75,6 +75,9 @@ const Reviews = () => {
       {/* Featured Video Section */}
       <section className="py-12 bg-gradient-to-b from-secondary/10 to-background">
         <div className="container mx-auto px-4">
+          <h2 className="text-2xl md:text-3xl font-bold text-foreground text-center mb-8">
+            Customer Testimonial on CRUMS Trailer Leasing Services
+          </h2>
           <div className="max-w-md mx-auto">
             <div className="relative w-full aspect-[9/16] rounded-2xl overflow-hidden shadow-2xl border-4 border-secondary/30">
               <iframe
