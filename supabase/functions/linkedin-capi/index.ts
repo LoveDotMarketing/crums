@@ -88,7 +88,7 @@ serve(async (req: Request) => {
 
     console.log('[LinkedIn CAPI] Sending conversion payload:', JSON.stringify(conversionPayload, null, 2));
 
-    // Send to LinkedIn Conversions API
+    // Send to LinkedIn Conversions API - payload at root level, NOT in elements array
     const response = await fetch(
       'https://api.linkedin.com/rest/conversionEvents',
       {
@@ -99,7 +99,7 @@ serve(async (req: Request) => {
           'LinkedIn-Version': '202511',
           'X-Restli-Protocol-Version': '2.0.0',
         },
-        body: JSON.stringify({ elements: [conversionPayload] }),
+        body: JSON.stringify(conversionPayload),
       }
     );
 
@@ -117,8 +117,9 @@ serve(async (req: Request) => {
       });
     }
 
-    const responseData = await response.json();
-    console.log('[LinkedIn CAPI] Success:', JSON.stringify(responseData));
+    // LinkedIn may return empty body on success (201/204)
+    const responseText = await response.text();
+    console.log('[LinkedIn CAPI] Success:', response.status, responseText || '(empty body)');
 
     return new Response(JSON.stringify({ success: true }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
