@@ -72,3 +72,7 @@ verify_jwt = false
 # Toll reminders - called by cron job, no JWT needed
 [functions.send-toll-reminders]
 verify_jwt = false
+
+# LinkedIn CAPI - called from frontend after conversions
+[functions.linkedin-capi]
+verify_jwt = false
