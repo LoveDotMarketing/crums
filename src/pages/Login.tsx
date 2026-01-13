@@ -15,6 +15,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Gift, Lock, Check, AlertCircle, Clipboard } from "lucide-react";
 import { trackLogin, trackSignup, trackSignupStarted, trackSignupFailed } from "@/lib/analytics";
 import { processReferralCode, validateReferralCode } from "@/lib/referral";
+import { trackLinkedInSignup } from "@/lib/linkedinAnalytics";
 
 const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -118,6 +119,16 @@ const Login = () => {
 
           // Track successful signup
           trackSignup('email');
+          trackLinkedInSignup();
+          
+          // LinkedIn CAPI (server-side) - fire in background
+          supabase.functions.invoke('linkedin-capi', {
+            body: {
+              conversionType: 'signup',
+              email,
+            }
+          }).catch(err => console.warn('[LinkedIn CAPI] Background call failed:', err));
+          
           navigate("/dashboard/customer");
         }
       } else {

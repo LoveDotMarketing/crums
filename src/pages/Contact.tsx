@@ -14,6 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { SEO } from "@/components/SEO";
 import { localBusinessSchema, generateBreadcrumbSchema } from "@/lib/structuredData";
 import { trackFormSubmission, trackConversion, trackPhoneClick, trackFormStart } from "@/lib/analytics";
+import { trackLinkedInQuoteRequest } from "@/lib/linkedinAnalytics";
 
 // Spam detection utilities
 const isGibberish = (text: string): boolean => {
@@ -220,6 +221,20 @@ const Contact = () => {
       // Track successful form submission
       trackFormSubmission('contact_quote');
       trackConversion('quote_request');
+      
+      // LinkedIn tracking (Insight Tag)
+      trackLinkedInQuoteRequest();
+      
+      // LinkedIn CAPI (server-side) - fire in background
+      supabase.functions.invoke('linkedin-capi', {
+        body: {
+          conversionType: 'quote_request',
+          email: formData.email,
+          firstName: formData.name.split(' ')[0],
+          lastName: formData.name.split(' ').slice(1).join(' '),
+          company: formData.company,
+        }
+      }).catch(err => console.warn('[LinkedIn CAPI] Background call failed:', err));
 
       toast({
         title: "Success!",

@@ -20,6 +20,7 @@ import { SEO } from "@/components/SEO";
 import { generateBreadcrumbSchema } from "@/lib/structuredData";
 import { trackSignup, trackConversion, trackSignupStarted, trackSignupFailed, trackFormStart } from "@/lib/analytics";
 import { processReferralCode, validateReferralCode } from "@/lib/referral";
+import { trackLinkedInSignup, trackLinkedInApplicationSubmit } from "@/lib/linkedinAnalytics";
 
 export default function GetStarted() {
   const breadcrumbSchema = generateBreadcrumbSchema([
@@ -351,6 +352,29 @@ export default function GetStarted() {
       // Track successful signup
       trackSignup('email');
       trackConversion('signup');
+      trackLinkedInSignup();
+      trackLinkedInApplicationSubmit();
+      
+      // LinkedIn CAPI (server-side) - fire in background
+      supabase.functions.invoke('linkedin-capi', {
+        body: {
+          conversionType: 'signup',
+          email,
+          firstName,
+          lastName,
+          company: companyName,
+        }
+      }).catch(err => console.warn('[LinkedIn CAPI] Background call failed:', err));
+      
+      supabase.functions.invoke('linkedin-capi', {
+        body: {
+          conversionType: 'application_submit',
+          email,
+          firstName,
+          lastName,
+          company: companyName,
+        }
+      }).catch(err => console.warn('[LinkedIn CAPI] Background call failed:', err));
 
       toast({ 
         title: "Success!", 
