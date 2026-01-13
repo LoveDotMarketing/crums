@@ -9,9 +9,9 @@ declare global {
 // Conversion IDs from LinkedIn Campaign Manager
 // These will be populated when user provides them
 export const LINKEDIN_CONVERSIONS = {
-  QUOTE_REQUEST: 0,      // Replace with actual ID from LinkedIn
-  SIGNUP: 0,             // Replace with actual ID from LinkedIn  
-  APPLICATION_SUBMIT: 0, // Replace with actual ID from LinkedIn
+  QUOTE_REQUEST: 23575820,
+  SIGNUP: 23575828,
+  APPLICATION_SUBMIT: 23575836,
 } as const;
 
 /**
