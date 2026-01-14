@@ -1,3 +1,10 @@
+# HTML pages - no cache to ensure fresh content
+/*
+  Cache-Control: public, max-age=0, must-revalidate
+
+/index.html
+  Cache-Control: public, max-age=0, must-revalidate
+
 # XML Sitemap headers
 /sitemap.xml
   Content-Type: application/xml; charset=utf-8
