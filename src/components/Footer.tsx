@@ -192,6 +192,16 @@ export const Footer = () => {
                   Per Diem Calculator
                 </Link>
               </li>
+              <li>
+                <a 
+                  href="https://www.facebook.com/groups/commercialtrailerleasinghelpdesk/" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="hover:text-secondary transition-colors"
+                >
+                  Commercial Trailer Leasing Help Desk
+                </a>
+              </li>
             </ul>
           </div>
 
