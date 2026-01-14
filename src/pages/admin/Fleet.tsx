@@ -104,7 +104,7 @@ export default function Fleet() {
 
   const fetchCompanyAndTrailers = async () => {
     try {
-      // Get user's company
+      // Get user's company (for adding new trailers)
       const { data: profileData, error: profileError } = await supabase
         .from("profiles")
         .select("company_id")
@@ -113,19 +113,15 @@ export default function Fleet() {
 
       if (profileError) throw profileError;
 
-      if (!profileData?.company_id) {
-        toast.error("No company associated with your account");
-        setLoading(false);
-        return;
+      // Store company_id for adding new trailers (use default if not set)
+      if (profileData?.company_id) {
+        setCompanyId(profileData.company_id);
       }
 
-      setCompanyId(profileData.company_id);
-
-      // Fetch trailers
+      // Admins can view ALL trailers - RLS already enforces access control
       const { data, error } = await supabase
         .from("trailers")
         .select("*")
-        .eq("company_id", profileData.company_id)
         .order("trailer_number");
 
       if (error) throw error;
