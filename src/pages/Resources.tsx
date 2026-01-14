@@ -76,6 +76,7 @@ const Resources = () => {
       items: [
         { name: "FMCSA", href: "https://www.fmcsa.dot.gov/", available: true, external: true },
         { name: "The Motor Carrier Safety Planner", href: "https://csa.fmcsa.dot.gov/safetyplanner/", available: true, external: true },
+        { name: "Commercial Trailer Leasing Help Desk", href: "https://www.facebook.com/groups/commercialtrailerleasinghelpdesk/", available: true, external: true },
         "Pre-Trip Inspection Guide",
         "Weather Driving Tips",
         "Cargo Securement"
