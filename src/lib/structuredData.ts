@@ -25,6 +25,7 @@ export const organizationSchema = {
   },
   "sameAs": [
     "https://www.facebook.com/CRUMSLeasing/",
+    "https://www.facebook.com/groups/commercialtrailerleasinghelpdesk/",
     "https://www.instagram.com/crumsleasingllc/",
     "https://www.linkedin.com/company/crums-leasing/",
     "https://www.youtube.com/@CRUMSLeasing"
