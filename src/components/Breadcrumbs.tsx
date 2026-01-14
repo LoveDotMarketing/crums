@@ -54,6 +54,9 @@ const routeLabels: Record<string, string> = {
   "/resources/guides": "Industry Guides",
   "/resources/guides/choosing-trailer": "Choosing the Right Trailer",
   "/resources/guides/why-leasing-a-dry-van-trailer-is-a-smart-business-decision": "Why Leasing a Dry Van is Smart",
+  "/resources/guides/trailer-specifications": "Trailer Specifications",
+  
+  "/resources/tools/per-diem-calculator": "Per Diem Calculator",
   
   "/industries": "Industries",
   "/industries/fleet-leasing": "Fleet Leasing",
@@ -108,6 +111,14 @@ const parentRoutes: Record<string, { label: string; href: string }[]> = {
   "/resources/guides/why-leasing-a-dry-van-trailer-is-a-smart-business-decision": [
     { label: "Resources", href: "/resources" },
     { label: "Industry Guides", href: "/resources/guides" }
+  ],
+  "/resources/guides/trailer-specifications": [
+    { label: "Resources", href: "/resources" },
+    { label: "Industry Guides", href: "/resources/guides" }
+  ],
+  "/resources/tools/per-diem-calculator": [
+    { label: "Resources", href: "/resources" },
+    { label: "Financial Tools", href: "/resources/tools" }
   ],
   "/about/mama-crums": [
     { label: "About", href: "/about" }

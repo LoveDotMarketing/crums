@@ -91,8 +91,14 @@
   <url><loc>https://crumsleasing.com/locations/kansas-city-mo</loc><lastmod>2025-12-26</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url>
     <loc>https://crumsleasing.com/careers</loc>
-    <lastmod>2025-12-04</lastmod>
+    <lastmod>2026-01-14</lastmod>
     <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://crumsleasing.com/careers/trailer-leasing-sales-rep</loc>
+    <lastmod>2026-01-14</lastmod>
+    <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
@@ -298,31 +304,25 @@
   <!-- Team Members -->
   <url>
     <loc>https://crumsleasing.com/about/mama-crums</loc>
-    <lastmod>2025-12-04</lastmod>
+    <lastmod>2026-01-14</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://crumsleasing.com/about/eric</loc>
-    <lastmod>2025-12-04</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://crumsleasing.com/about/hector</loc>
-    <lastmod>2025-12-04</lastmod>
+    <lastmod>2026-01-14</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://crumsleasing.com/about/ambrosia</loc>
-    <lastmod>2025-12-04</lastmod>
+    <lastmod>2026-01-14</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://crumsleasing.com/about/jr</loc>
-    <lastmod>2025-12-04</lastmod>
+    <lastmod>2026-01-14</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
