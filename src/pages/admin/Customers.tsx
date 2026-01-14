@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Progress } from "@/components/ui/progress";
 import { CustomerFormDialog } from "@/components/admin/CustomerFormDialog";
 import { 
   Users, 
@@ -95,6 +96,7 @@ interface Customer {
   credits_earned?: number;
   was_referred?: boolean;
   referred_by_name?: string;
+  profile_completion?: number;
 }
 
 export default function Customers() {
@@ -166,6 +168,16 @@ export default function Customers() {
       const { data: referrals } = await supabase
         .from('referrals')
         .select('id, referrer_code_id, referred_customer_id, status, credit_amount');
+
+      // Fetch profiles for profile completion calculation
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('id, email, first_name, last_name, phone, home_address');
+
+      // Fetch applications for profile completion calculation
+      const { data: applications } = await supabase
+        .from('customer_applications')
+        .select('user_id, trailer_type, drivers_license_url, drivers_license_back_url, insurance_docs_url, dot_number_url');
       
       // Map data to customers
       return filteredData.map((customer: Customer) => {
@@ -204,6 +216,24 @@ export default function Customers() {
             }
           }
         }
+
+        // Calculate profile completion
+        const customerProfile = profiles?.find(p => p.email === customer.email);
+        const customerApplication = customerProfile 
+          ? applications?.find(a => a.user_id === customerProfile.id)
+          : null;
+        
+        const requiredFields = [
+          customerProfile?.first_name,
+          customerProfile?.last_name,
+          customerProfile?.phone,
+          customerApplication?.trailer_type,
+          customerApplication?.drivers_license_url,
+          customerApplication?.drivers_license_back_url,
+        ];
+        
+        const completedFields = requiredFields.filter(field => field && field.toString().length > 0).length;
+        const profileCompletion = Math.round((completedFields / requiredFields.length) * 100);
         
         return {
           ...customer,
@@ -220,6 +250,7 @@ export default function Customers() {
           credits_earned: creditsEarned,
           was_referred: wasReferred,
           referred_by_name: referredByName,
+          profile_completion: profileCompletion,
         };
       });
     }
@@ -327,6 +358,10 @@ export default function Customers() {
       case "full_name":
         aValue = a.full_name.toLowerCase();
         bValue = b.full_name.toLowerCase();
+        break;
+      case "profile":
+        aValue = a.profile_completion || 0;
+        bValue = b.profile_completion || 0;
         break;
       case "trailers":
         aValue = a.trailers_count || 0;
@@ -555,6 +590,15 @@ export default function Customers() {
                       </TableHead>
                       <TableHead 
                         className="cursor-pointer hover:bg-muted/50 select-none"
+                        onClick={() => handleSort("profile")}
+                      >
+                        <div className="flex items-center">
+                          Profile %
+                          {getSortIcon("profile")}
+                        </div>
+                      </TableHead>
+                      <TableHead 
+                        className="cursor-pointer hover:bg-muted/50 select-none"
                         onClick={() => handleSort("trailers")}
                       >
                         <div className="flex items-center">
@@ -613,7 +657,7 @@ export default function Customers() {
                   <TableBody>
                     {sortedCustomers.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                        <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
                           No customers found
                         </TableCell>
                       </TableRow>
@@ -625,6 +669,17 @@ export default function Customers() {
                           onClick={() => { setSelectedCustomer(customer); setDialogOpen(true); }}
                         >
                           <TableCell className="font-medium">{customer.full_name}</TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <Progress 
+                                value={customer.profile_completion || 0} 
+                                className="w-16 h-2" 
+                              />
+                              <span className="text-xs text-muted-foreground w-8">
+                                {customer.profile_completion || 0}%
+                              </span>
+                            </div>
+                          </TableCell>
                           <TableCell className="text-sm max-w-[200px]">
                             {customer.trailers && customer.trailers.length > 0 ? (
                               <div className="space-y-1">
