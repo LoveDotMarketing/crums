@@ -9,6 +9,7 @@ const corsHeaders = {
 const SENDGRID_API_KEY = Deno.env.get("SENDGRID_API_KEY");
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const CRON_SECRET = Deno.env.get("CRON_SECRET");
 
 interface TollWithProfile {
   id: string;
@@ -26,9 +27,36 @@ interface TollWithProfile {
   };
 }
 
+// Validate cron job authentication
+const validateCronAuth = (req: Request): boolean => {
+  const authHeader = req.headers.get("authorization");
+  
+  // Check for Bearer token (cron job secret)
+  if (authHeader?.startsWith("Bearer ")) {
+    const token = authHeader.replace("Bearer ", "");
+    if (CRON_SECRET && token === CRON_SECRET) {
+      return true;
+    }
+  }
+  
+  return false;
+};
+
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
+  }
+
+  // Authenticate the request - only allow authorized cron jobs
+  if (!validateCronAuth(req)) {
+    console.error("Unauthorized access attempt to send-toll-reminders");
+    return new Response(
+      JSON.stringify({ error: "Unauthorized. This endpoint requires cron job authentication." }),
+      {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      }
+    );
   }
 
   try {
