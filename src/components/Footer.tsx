@@ -45,7 +45,7 @@ export const Footer = () => {
             
             <div className="flex space-x-4">
               <a 
-                href="https://www.facebook.com/people/CRUMS-Leasing/100090574399864/" 
+                href="https://www.facebook.com/CRUMSLeasing/" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="hover:text-secondary transition-colors"
