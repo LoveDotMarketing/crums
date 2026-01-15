@@ -24,7 +24,9 @@ import {
   FileImage,
   FileCheck,
   Lock,
-  Loader2 as LucideLoader2
+  Loader2 as LucideLoader2,
+  CreditCard,
+  Send
 } from "lucide-react";
 import {
   Table,
@@ -79,6 +81,9 @@ interface Application {
   updated_at: string;
   reviewed_at: string | null;
   admin_notes: string | null;
+  payment_setup_status: string | null;
+  payment_setup_sent_at: string | null;
+  stripe_payment_method_id: string | null;
   profiles: {
     email: string;
     first_name: string | null;
@@ -153,6 +158,7 @@ export default function Applications() {
   const [sendEmail, setSendEmail] = useState(true);
   const [decryptedSSN, setDecryptedSSN] = useState<string | null>(null);
   const [isDecryptingSSN, setIsDecryptingSSN] = useState(false);
+  const [sendingACHSetup, setSendingACHSetup] = useState<string | null>(null);
   
   const queryClient = useQueryClient();
 
@@ -508,7 +514,7 @@ export default function Applications() {
                           </TableCell>
                           <TableCell>{getStatusBadge(app.status)}</TableCell>
                           <TableCell>
-                            <div className="flex gap-2">
+                            <div className="flex gap-1">
                               <Button
                                 variant="ghost"
                                 size="sm"
@@ -526,6 +532,38 @@ export default function Applications() {
                               >
                                 Update
                               </Button>
+                              {app.status === "approved" && app.payment_setup_status !== "completed" && (
+                                <Button
+                                  variant="secondary"
+                                  size="sm"
+                                  disabled={sendingACHSetup === app.id}
+                                  onClick={async () => {
+                                    setSendingACHSetup(app.id);
+                                    try {
+                                      const { error } = await supabase.functions.invoke("send-ach-setup-email", {
+                                        body: { applicationId: app.id }
+                                      });
+                                      if (error) throw error;
+                                      toast({ title: "Success", description: "ACH setup email sent!" });
+                                      queryClient.invalidateQueries({ queryKey: ['applications'] });
+                                    } catch (err) {
+                                      toast({ title: "Error", description: "Failed to send ACH setup email", variant: "destructive" });
+                                    } finally {
+                                      setSendingACHSetup(null);
+                                    }
+                                  }}
+                                  title={app.payment_setup_status === "sent" ? "Resend ACH Setup" : "Send ACH Setup"}
+                                >
+                                  {sendingACHSetup === app.id ? (
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                  ) : (
+                                    <CreditCard className="h-4 w-4" />
+                                  )}
+                                </Button>
+                              )}
+                              {app.payment_setup_status === "completed" && (
+                                <Badge variant="outline" className="ml-1 bg-green-100 text-green-700 text-xs">ACH ✓</Badge>
+                              )}
                             </div>
                           </TableCell>
                         </TableRow>

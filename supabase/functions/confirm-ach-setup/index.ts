@@ -1,0 +1,119 @@
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import Stripe from "https://esm.sh/stripe@18.5.0";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
+
+const logStep = (step: string, details?: Record<string, unknown>) => {
+  const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
+  console.log(`[CONFIRM-ACH-SETUP] ${step}${detailsStr}`);
+};
+
+serve(async (req) => {
+  if (req.method === "OPTIONS") {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    logStep("Function started");
+
+    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
+    if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
+
+    const supabaseClient = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+      { auth: { persistSession: false } }
+    );
+
+    // Get auth token
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) throw new Error("No authorization header provided");
+
+    const token = authHeader.replace("Bearer ", "");
+    const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
+    if (userError) throw new Error(`Authentication error: ${userError.message}`);
+    
+    const user = userData.user;
+    if (!user?.email) throw new Error("User not authenticated or email not available");
+    logStep("User authenticated", { userId: user.id, email: user.email });
+
+    // Get request body
+    const { setupIntentId, paymentMethodId } = await req.json();
+    if (!setupIntentId) throw new Error("setupIntentId is required");
+
+    const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
+
+    // Retrieve the SetupIntent to verify it succeeded
+    const setupIntent = await stripe.setupIntents.retrieve(setupIntentId);
+    logStep("Retrieved SetupIntent", { 
+      status: setupIntent.status, 
+      paymentMethod: setupIntent.payment_method 
+    });
+
+    if (setupIntent.status !== "succeeded") {
+      throw new Error(`SetupIntent status is ${setupIntent.status}, expected succeeded`);
+    }
+
+    // Get the payment method ID from the SetupIntent if not provided
+    const pmId = paymentMethodId || setupIntent.payment_method;
+    if (!pmId) {
+      throw new Error("No payment method found on SetupIntent");
+    }
+
+    // Get the user's application
+    const { data: application, error: appError } = await supabaseClient
+      .from("customer_applications")
+      .select("id")
+      .eq("user_id", user.id)
+      .single();
+
+    if (appError || !application) {
+      throw new Error("Application not found");
+    }
+
+    // Update the application with the payment method
+    const { error: updateError } = await supabaseClient
+      .from("customer_applications")
+      .update({
+        stripe_payment_method_id: pmId as string,
+        payment_setup_status: "completed",
+      })
+      .eq("id", application.id);
+
+    if (updateError) {
+      logStep("Error updating application", { error: updateError.message });
+      throw new Error("Failed to update application with payment method");
+    }
+
+    logStep("Application updated with payment method", { 
+      applicationId: application.id, 
+      paymentMethodId: pmId 
+    });
+
+    return new Response(
+      JSON.stringify({
+        success: true,
+        message: "Payment method successfully linked",
+        paymentMethodId: pmId,
+      }),
+      {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      }
+    );
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    logStep("ERROR", { message: errorMessage });
+    return new Response(
+      JSON.stringify({ error: errorMessage }),
+      {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 500,
+      }
+    );
+  }
+});
