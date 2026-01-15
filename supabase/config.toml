@@ -76,3 +76,19 @@ verify_jwt = false
 # LinkedIn CAPI - called from frontend after conversions
 [functions.linkedin-capi]
 verify_jwt = false
+
+# ACH Payment Setup - requires customer authentication
+[functions.create-ach-setup]
+verify_jwt = true
+
+# Check payment status - requires customer authentication
+[functions.check-payment-status]
+verify_jwt = true
+
+# Confirm ACH setup - requires customer authentication
+[functions.confirm-ach-setup]
+verify_jwt = true
+
+# Send ACH setup email - requires admin authentication
+[functions.send-ach-setup-email]
+verify_jwt = true

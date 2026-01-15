@@ -120,6 +120,8 @@ export type Database = {
           insurance_docs_url: string | null
           message: string | null
           number_of_trailers: number | null
+          payment_setup_sent_at: string | null
+          payment_setup_status: string | null
           phone_number: string
           reviewed_at: string | null
           reviewed_by: string | null
@@ -129,6 +131,7 @@ export type Database = {
           ssn: string | null
           status: string
           stripe_customer_id: string | null
+          stripe_payment_method_id: string | null
           trailer_type: string | null
           truck_vin: string | null
           updated_at: string
@@ -149,6 +152,8 @@ export type Database = {
           insurance_docs_url?: string | null
           message?: string | null
           number_of_trailers?: number | null
+          payment_setup_sent_at?: string | null
+          payment_setup_status?: string | null
           phone_number: string
           reviewed_at?: string | null
           reviewed_by?: string | null
@@ -158,6 +163,7 @@ export type Database = {
           ssn?: string | null
           status?: string
           stripe_customer_id?: string | null
+          stripe_payment_method_id?: string | null
           trailer_type?: string | null
           truck_vin?: string | null
           updated_at?: string
@@ -178,6 +184,8 @@ export type Database = {
           insurance_docs_url?: string | null
           message?: string | null
           number_of_trailers?: number | null
+          payment_setup_sent_at?: string | null
+          payment_setup_status?: string | null
           phone_number?: string
           reviewed_at?: string | null
           reviewed_by?: string | null
@@ -187,6 +195,7 @@ export type Database = {
           ssn?: string | null
           status?: string
           stripe_customer_id?: string | null
+          stripe_payment_method_id?: string | null
           trailer_type?: string | null
           truck_vin?: string | null
           updated_at?: string
