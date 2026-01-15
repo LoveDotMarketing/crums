@@ -37,7 +37,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { format, subDays, startOfDay, endOfDay } from "date-fns";
+import { format, subDays, startOfDay, endOfDay, eachDayOfInterval, eachWeekOfInterval, startOfWeek, endOfWeek, isWithinInterval } from "date-fns";
 import { cn } from "@/lib/utils";
 import {
   BarChart,
@@ -50,6 +50,10 @@ import {
   PieChart,
   Pie,
   Cell,
+  LineChart,
+  Line,
+  Area,
+  AreaChart,
 } from "recharts";
 
 interface ContactSubmission {
@@ -89,11 +93,13 @@ const CHART_COLORS = [
 ];
 
 type DateRangePreset = "7" | "30" | "90" | "365" | "custom";
+type TrendGranularity = "daily" | "weekly";
 
 export default function LeadSources() {
   const [dateRangePreset, setDateRangePreset] = useState<DateRangePreset>("30");
   const [customStartDate, setCustomStartDate] = useState<Date | undefined>(subDays(new Date(), 30));
   const [customEndDate, setCustomEndDate] = useState<Date | undefined>(new Date());
+  const [trendGranularity, setTrendGranularity] = useState<TrendGranularity>("daily");
 
   // Calculate effective date range
   const getDateRange = () => {
@@ -167,6 +173,44 @@ export default function LeadSources() {
   const totalLeads = submissions.length;
   const paidLeads = submissions.filter(s => s.utm_medium === "cpc" || s.utm_medium === "ppc" || s.utm_medium === "paid").length;
   const organicLeads = submissions.filter(s => s.utm_medium === "organic" || (!s.utm_medium && s.referrer?.includes("google"))).length;
+
+  // Calculate trend data based on granularity
+  const trendData = (() => {
+    if (submissions.length === 0) return [];
+    
+    if (trendGranularity === "daily") {
+      const days = eachDayOfInterval({ start: startDate, end: endDate });
+      return days.map(day => {
+        const dayStart = startOfDay(day);
+        const dayEnd = endOfDay(day);
+        const count = submissions.filter(s => {
+          if (!s.created_at) return false;
+          const createdAt = new Date(s.created_at);
+          return isWithinInterval(createdAt, { start: dayStart, end: dayEnd });
+        }).length;
+        return {
+          date: format(day, "MMM d"),
+          fullDate: format(day, "MMM d, yyyy"),
+          leads: count,
+        };
+      });
+    } else {
+      const weeks = eachWeekOfInterval({ start: startDate, end: endDate }, { weekStartsOn: 0 });
+      return weeks.map(weekStart => {
+        const weekEnd = endOfWeek(weekStart, { weekStartsOn: 0 });
+        const count = submissions.filter(s => {
+          if (!s.created_at) return false;
+          const createdAt = new Date(s.created_at);
+          return isWithinInterval(createdAt, { start: weekStart, end: weekEnd > endDate ? endDate : weekEnd });
+        }).length;
+        return {
+          date: format(weekStart, "MMM d"),
+          fullDate: `${format(weekStart, "MMM d")} - ${format(weekEnd > endDate ? endDate : weekEnd, "MMM d, yyyy")}`,
+          leads: count,
+        };
+      });
+    }
+  })();
 
   return (
     <SidebarProvider>
@@ -347,6 +391,84 @@ export default function LeadSources() {
                 </CardContent>
               </Card>
             </div>
+
+            {/* Trend Chart */}
+            <Card className="mb-8">
+              <CardHeader className="flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle>Lead Trend</CardTitle>
+                  <CardDescription>Leads over time</CardDescription>
+                </div>
+                <Select 
+                  value={trendGranularity} 
+                  onValueChange={(value: TrendGranularity) => setTrendGranularity(value)}
+                >
+                  <SelectTrigger className="w-28">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="daily">Daily</SelectItem>
+                    <SelectItem value="weekly">Weekly</SelectItem>
+                  </SelectContent>
+                </Select>
+              </CardHeader>
+              <CardContent>
+                {isLoading ? (
+                  <div className="flex justify-center py-8">
+                    <Loader2 className="h-8 w-8 animate-spin" />
+                  </div>
+                ) : trendData.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <TrendingUp className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                    <p>No trend data available</p>
+                  </div>
+                ) : (
+                  <ResponsiveContainer width="100%" height={300}>
+                    <AreaChart data={trendData}>
+                      <defs>
+                        <linearGradient id="leadGradient" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
+                          <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                      <XAxis 
+                        dataKey="date" 
+                        tick={{ fontSize: 12 }} 
+                        tickLine={false}
+                        axisLine={false}
+                      />
+                      <YAxis 
+                        tick={{ fontSize: 12 }} 
+                        tickLine={false}
+                        axisLine={false}
+                        allowDecimals={false}
+                      />
+                      <Tooltip 
+                        content={({ active, payload }) => {
+                          if (active && payload && payload.length) {
+                            return (
+                              <div className="bg-popover border border-border rounded-lg p-3 shadow-lg">
+                                <p className="text-sm font-medium">{payload[0].payload.fullDate}</p>
+                                <p className="text-sm text-primary font-bold">{payload[0].value} leads</p>
+                              </div>
+                            );
+                          }
+                          return null;
+                        }}
+                      />
+                      <Area 
+                        type="monotone" 
+                        dataKey="leads" 
+                        stroke="hsl(var(--primary))" 
+                        strokeWidth={2}
+                        fill="url(#leadGradient)" 
+                      />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                )}
+              </CardContent>
+            </Card>
 
             {/* Charts Section */}
             <div className="grid gap-6 md:grid-cols-2 mb-8">
