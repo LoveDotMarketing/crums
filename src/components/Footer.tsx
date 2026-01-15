@@ -20,13 +20,13 @@ export const Footer = () => {
             <div className="text-sm text-primary-foreground/90 mb-4 space-y-1">
               <p className="font-semibold">CRUMS Leasing</p>
               <a 
-                href="https://maps.app.goo.gl/Ua1WNSa48j2ujnYg9" 
+                href="https://maps.app.goo.gl/7iD2hqJYyKSPMzxu8" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="hover:text-secondary transition-colors block"
               >
-                4070 FM1863<br />
-                Bulverde, TX 78163
+                7450 Prue Rd #2<br />
+                San Antonio, TX 78249
               </a>
               <a 
                 href="tel:+18885704564"

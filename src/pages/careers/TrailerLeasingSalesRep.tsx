@@ -45,10 +45,10 @@ const TrailerLeasingSalesRep = () => {
       "@type": "Place",
       "address": {
         "@type": "PostalAddress",
-        "streetAddress": "4070 FM1863",
-        "addressLocality": "Bulverde",
+        "streetAddress": "7450 Prue Rd #2",
+        "addressLocality": "San Antonio",
         "addressRegion": "TX",
-        "postalCode": "78163",
+        "postalCode": "78249",
         "addressCountry": "US"
       }
     },

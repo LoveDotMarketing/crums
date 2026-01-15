@@ -26,7 +26,7 @@ const Locations = () => {
   const { texas, southwest, midwest, southeast, mountain } = getLocationsByRegion();
 
   const regions = [
-    { name: "Texas", locations: texas, description: "Our home state — pickup available at our Bulverde yard" },
+    { name: "Texas", locations: texas, description: "Our home state — pickup available at our San Antonio yard" },
     { name: "Southwest", locations: southwest, description: "Serving California and Arizona markets" },
     { name: "Midwest", locations: midwest, description: "America's freight crossroads" },
     { name: "Southeast", locations: southeast, description: "Major East Coast distribution hubs" },
@@ -37,7 +37,7 @@ const Locations = () => {
     <div className="min-h-screen flex flex-col">
       <SEO
         title="Trailer Rental Locations | Nationwide Delivery | CRUMS"
-        description="CRUMS Leasing delivers trailers nationwide. Pick up at our Bulverde, TX yard or get delivery to Houston, Dallas, LA, Chicago & more. Call 1-888-570-4564."
+        description="CRUMS Leasing delivers trailers nationwide. Pick up at our San Antonio, TX yard or get delivery to Houston, Dallas, LA, Chicago & more. Call 1-888-570-4564."
         canonical="https://crumsleasing.com/locations"
         structuredData={combinedSchema}
       />
@@ -48,7 +48,7 @@ const Locations = () => {
         <div className="container mx-auto px-4 text-center">
           <h1 className="text-4xl md:text-6xl font-bold mb-6">Trailer Rental Locations</h1>
           <p className="text-xl md:text-2xl max-w-4xl mx-auto text-primary-foreground/90 mb-8">
-            Pick up at our Bulverde, Texas yard or get delivery anywhere in the nation. 
+            Pick up at our San Antonio, Texas yard or get delivery anywhere in the nation. 
             We serve {locations.length}+ major markets across the United States.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -77,7 +77,7 @@ const Locations = () => {
               Nationwide Pickup & Shipping
             </h2>
             <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
-              Based in Bulverde, Texas, we deliver dry van, flatbed, and refrigerated trailers across all 50 states.
+              Based in San Antonio, Texas, we deliver dry van, flatbed, and refrigerated trailers across all 50 states.
             </p>
           </div>
           <div className="max-w-5xl mx-auto">
@@ -111,7 +111,7 @@ const Locations = () => {
                       {HEADQUARTERS.address}, {HEADQUARTERS.city}, {HEADQUARTERS.stateAbbr} {HEADQUARTERS.zip}
                     </p>
                     <p className="text-muted-foreground">
-                      <strong className="text-foreground">Local or passing through?</strong> Pick up your trailer directly at our shipping yard in Bulverde. 
+                      <strong className="text-foreground">Local or passing through?</strong> Pick up your trailer directly at our shipping yard in San Antonio. 
                       For all other locations, we deliver for a competitive fee.
                     </p>
                   </div>
@@ -145,7 +145,7 @@ const Locations = () => {
                   <h3 className="text-xl font-bold text-foreground">Pickup at Our Yard</h3>
                 </div>
                 <p className="text-muted-foreground mb-4">
-                  If you're local to Central Texas or passing through, you can pick up your trailer directly at our Bulverde shipping yard. 
+                  If you're local to Central Texas or passing through, you can pick up your trailer directly at our San Antonio shipping yard. 
                   Inspect your equipment, complete paperwork, and hit the road.
                 </p>
                 <p className="text-sm text-muted-foreground">

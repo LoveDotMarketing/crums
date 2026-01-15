@@ -107,7 +107,7 @@ const Index = () => {
     <div className="min-h-screen flex flex-col">
       <SEO
         title="Dry Van, Flatbed & Reefer Trailer Leasing in Texas"
-        description="CRUMS Leasing offers dry van, flatbed, and refrigerated reefer trailer leasing & rental solutions. Family-owned, nationwide service from Bulverde, TX. Get a quote today!"
+        description="CRUMS Leasing offers dry van, flatbed, and refrigerated reefer trailer leasing & rental solutions. Family-owned, nationwide service from San Antonio, TX. Get a quote today!"
         canonical="https://crumsleasing.com/"
         structuredData={combinedSchema}
       />

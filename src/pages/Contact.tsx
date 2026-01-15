@@ -272,7 +272,7 @@ const Contact = () => {
     <div className="min-h-screen flex flex-col">
         <SEO
         title="Contact Us - Get A Quote"
-        description="Contact CRUMS Leasing for trailer leasing and rental quotes. Located in Bulverde, TX. Call (888) 570-4564. 24/7 emergency support available."
+        description="Contact CRUMS Leasing for trailer leasing and rental quotes. Located in San Antonio, TX. Call (888) 570-4564. 24/7 emergency support available."
         canonical="https://crumsleasing.com/contact"
         structuredData={combinedSchema}
       />
@@ -468,9 +468,9 @@ const Contact = () => {
                       <div>
                         <h3 className="font-semibold text-foreground mb-1">Location</h3>
                         <p className="text-muted-foreground">
-                          4070 FM1863
+                          7450 Prue Rd #2
                           <br />
-                          Bulverde, TX 78163
+                          San Antonio, TX 78249
                         </p>
                       </div>
                     </div>

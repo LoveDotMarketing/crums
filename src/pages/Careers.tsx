@@ -14,19 +14,19 @@ const Careers = () => {
   const jobPostings = [
     {
       title: "Fleet Manager",
-      location: "Bulverde, TX",
+      location: "San Antonio, TX",
       type: "Full-Time",
       description: "Lead our growing fleet operations and help shape the future of our company."
     },
     {
       title: "Customer Service Representative",
-      location: "Bulverde, TX",
+      location: "San Antonio, TX",
       type: "Full-Time",
       description: "Be the friendly voice that helps our customers succeed every day."
     },
     {
       title: "Trailer Mechanic",
-      location: "Bulverde, TX",
+      location: "San Antonio, TX",
       type: "Full-Time",
       description: "Keep our fleet in top condition with your expert maintenance skills."
     }
@@ -47,10 +47,10 @@ const Careers = () => {
       "@type": "Place",
       "address": {
         "@type": "PostalAddress",
-        "streetAddress": "4070 FM1863",
-        "addressLocality": "Bulverde",
+        "streetAddress": "7450 Prue Rd #2",
+        "addressLocality": "San Antonio",
         "addressRegion": "TX",
-        "postalCode": "78163",
+        "postalCode": "78249",
         "addressCountry": "US"
       }
     },
