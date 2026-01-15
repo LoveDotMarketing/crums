@@ -12,7 +12,8 @@ import {
   UserCog,
   FileCode,
   FileText,
-  ScrollText
+  ScrollText,
+  Target
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/hooks/useAuth";
@@ -42,6 +43,7 @@ const menuItems = [
   { title: "Referrals", url: "/dashboard/admin/referrals", icon: Users },
   { title: "Support", url: "/dashboard/admin/support", icon: HelpCircle },
   { title: "Outreach", url: "/dashboard/admin/outreach", icon: Send },
+  { title: "Lead Sources", url: "/dashboard/admin/lead-sources", icon: Target },
   { title: "Reports", url: "/dashboard/admin/reports", icon: Receipt },
   { title: "Analytics", url: "/dashboard/admin/analytics", icon: BarChart3 },
   { title: "Logs", url: "/dashboard/admin/logs", icon: ScrollText },
