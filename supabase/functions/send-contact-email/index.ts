@@ -23,6 +23,15 @@ interface ContactFormData {
   message: string;
   website?: string; // Honeypot field
   _timestamp?: number;
+  // Lead source tracking fields
+  utm_source?: string;
+  utm_medium?: string;
+  utm_campaign?: string;
+  utm_term?: string;
+  utm_content?: string;
+  referrer?: string;
+  landing_page?: string;
+  current_page?: string;
 }
 
 // HTML entity encoding to prevent injection attacks
@@ -128,7 +137,10 @@ serve(async (req) => {
     console.log('Received contact form submission:', { 
       name: formData.name, 
       email: formData.email,
-      ip: clientIP 
+      ip: clientIP,
+      utm_source: formData.utm_source,
+      utm_medium: formData.utm_medium,
+      referrer: formData.referrer
     });
 
     // Initialize Supabase client for rate limiting
@@ -192,14 +204,23 @@ serve(async (req) => {
       }
     }
 
-    // Log the submission for tracking
+    // Log the submission for tracking with lead source data
     const { error: logError } = await supabase
       .from('contact_submissions')
       .insert({
         ip_address: clientIP,
         email: formData.email,
         is_spam: spamReason !== null,
-        spam_reason: spamReason
+        spam_reason: spamReason,
+        // Lead source tracking
+        utm_source: formData.utm_source || null,
+        utm_medium: formData.utm_medium || null,
+        utm_campaign: formData.utm_campaign || null,
+        utm_term: formData.utm_term || null,
+        utm_content: formData.utm_content || null,
+        referrer: formData.referrer || null,
+        landing_page: formData.landing_page || null,
+        current_page: formData.current_page || null,
       });
 
     if (logError) {
@@ -253,6 +274,19 @@ serve(async (req) => {
                 </p>
               </div>
             ` : ''}
+            
+            <div style="background-color: #e8f4f8; padding: 15px; border-radius: 5px; margin: 20px 0;">
+              <h3 style="color: #0369a1; margin: 0 0 10px 0; font-size: 14px;">📊 Lead Source Information</h3>
+              <table style="font-size: 13px; color: #555;">
+                <tr><td style="padding: 2px 10px 2px 0;"><strong>Source:</strong></td><td>${escapeHtml(formData.utm_source || 'Direct')}</td></tr>
+                <tr><td style="padding: 2px 10px 2px 0;"><strong>Medium:</strong></td><td>${escapeHtml(formData.utm_medium || '-')}</td></tr>
+                ${formData.utm_campaign ? `<tr><td style="padding: 2px 10px 2px 0;"><strong>Campaign:</strong></td><td>${escapeHtml(formData.utm_campaign)}</td></tr>` : ''}
+                ${formData.utm_term ? `<tr><td style="padding: 2px 10px 2px 0;"><strong>Keyword:</strong></td><td>${escapeHtml(formData.utm_term)}</td></tr>` : ''}
+                ${formData.referrer ? `<tr><td style="padding: 2px 10px 2px 0;"><strong>Referrer:</strong></td><td>${escapeHtml(formData.referrer)}</td></tr>` : ''}
+                <tr><td style="padding: 2px 10px 2px 0;"><strong>Landing Page:</strong></td><td>${escapeHtml(formData.landing_page || '/')}</td></tr>
+                <tr><td style="padding: 2px 10px 2px 0;"><strong>Form Page:</strong></td><td>${escapeHtml(formData.current_page || '/contact')}</td></tr>
+              </table>
+            </div>
             
             <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd; color: #888; font-size: 12px;">
               <p>This email was sent from the CRUMS Leasing contact form on ${new Date().toLocaleString()}</p>
