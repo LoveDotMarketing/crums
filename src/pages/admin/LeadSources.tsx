@@ -12,9 +12,8 @@ import {
   Users,
   Loader2,
   Mail,
-  Phone,
-  Building2,
-  ExternalLink
+  ExternalLink,
+  CalendarIcon
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -32,7 +31,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { format, subDays } from "date-fns";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { format, subDays, startOfDay, endOfDay } from "date-fns";
+import { cn } from "@/lib/utils";
 import {
   BarChart,
   Bar,
@@ -44,7 +50,6 @@ import {
   PieChart,
   Pie,
   Cell,
-  Legend,
 } from "recharts";
 
 interface ContactSubmission {
@@ -83,19 +88,38 @@ const CHART_COLORS = [
   "#a855f7",
 ];
 
-export default function LeadSources() {
-  const [dateRange, setDateRange] = useState("30");
+type DateRangePreset = "7" | "30" | "90" | "365" | "custom";
 
-  const startDate = subDays(new Date(), parseInt(dateRange));
+export default function LeadSources() {
+  const [dateRangePreset, setDateRangePreset] = useState<DateRangePreset>("30");
+  const [customStartDate, setCustomStartDate] = useState<Date | undefined>(subDays(new Date(), 30));
+  const [customEndDate, setCustomEndDate] = useState<Date | undefined>(new Date());
+
+  // Calculate effective date range
+  const getDateRange = () => {
+    if (dateRangePreset === "custom") {
+      return {
+        start: customStartDate ? startOfDay(customStartDate) : subDays(new Date(), 30),
+        end: customEndDate ? endOfDay(customEndDate) : new Date(),
+      };
+    }
+    return {
+      start: subDays(new Date(), parseInt(dateRangePreset)),
+      end: new Date(),
+    };
+  };
+
+  const { start: startDate, end: endDate } = getDateRange();
 
   // Fetch contact submissions
   const { data: submissions = [], isLoading } = useQuery({
-    queryKey: ["lead-sources", dateRange],
+    queryKey: ["lead-sources", dateRangePreset, customStartDate?.toISOString(), customEndDate?.toISOString()],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("contact_submissions")
         .select("*")
         .gte("created_at", startDate.toISOString())
+        .lte("created_at", endDate.toISOString())
         .eq("is_spam", false)
         .order("created_at", { ascending: false });
 
@@ -154,8 +178,11 @@ export default function LeadSources() {
             <SidebarTrigger />
             <div className="flex-1 flex items-center justify-between ml-4">
               <h1 className="text-2xl font-bold text-foreground">Lead Sources</h1>
-              <div className="flex gap-3">
-                <Select value={dateRange} onValueChange={setDateRange}>
+              <div className="flex gap-3 flex-wrap items-center">
+                <Select 
+                  value={dateRangePreset} 
+                  onValueChange={(value: DateRangePreset) => setDateRangePreset(value)}
+                >
                   <SelectTrigger className="w-40">
                     <SelectValue />
                   </SelectTrigger>
@@ -164,8 +191,64 @@ export default function LeadSources() {
                     <SelectItem value="30">Last 30 days</SelectItem>
                     <SelectItem value="90">Last 90 days</SelectItem>
                     <SelectItem value="365">Last year</SelectItem>
+                    <SelectItem value="custom">Custom range</SelectItem>
                   </SelectContent>
                 </Select>
+
+                {dateRangePreset === "custom" && (
+                  <div className="flex gap-2 items-center">
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-[140px] justify-start text-left font-normal",
+                            !customStartDate && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {customStartDate ? format(customStartDate, "MMM d, yyyy") : "Start date"}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={customStartDate}
+                          onSelect={setCustomStartDate}
+                          disabled={(date) => date > new Date() || (customEndDate ? date > customEndDate : false)}
+                          initialFocus
+                          className="pointer-events-auto"
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    <span className="text-muted-foreground">to</span>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-[140px] justify-start text-left font-normal",
+                            !customEndDate && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {customEndDate ? format(customEndDate, "MMM d, yyyy") : "End date"}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={customEndDate}
+                          onSelect={setCustomEndDate}
+                          disabled={(date) => date > new Date() || (customStartDate ? date < customStartDate : false)}
+                          initialFocus
+                          className="pointer-events-auto"
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                )}
+
                 <Button variant="outline">
                   <Download className="h-4 w-4 mr-2" />
                   Export CSV
@@ -191,7 +274,10 @@ export default function LeadSources() {
                     <>
                       <div className="text-2xl font-bold">{totalLeads}</div>
                       <p className="text-xs text-muted-foreground mt-1">
-                        Last {dateRange} days
+                        {dateRangePreset === "custom" 
+                          ? `${format(startDate, "MMM d")} - ${format(endDate, "MMM d, yyyy")}`
+                          : `Last ${dateRangePreset} days`
+                        }
                       </p>
                     </>
                   )}
@@ -374,7 +460,10 @@ export default function LeadSources() {
                 <div>
                   <CardTitle>Contact Form Submissions</CardTitle>
                   <CardDescription>
-                    All leads from the last {dateRange} days with source data
+                    {dateRangePreset === "custom" 
+                      ? `All leads from ${format(startDate, "MMM d, yyyy")} to ${format(endDate, "MMM d, yyyy")}`
+                      : `All leads from the last ${dateRangePreset} days with source data`
+                    }
                   </CardDescription>
                 </div>
               </CardHeader>
