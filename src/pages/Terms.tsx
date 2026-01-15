@@ -97,8 +97,8 @@ const Terms = () => {
               </p>
               <p>
                 <strong>CRUMS Leasing</strong><br />
-                4070 FM1863<br />
-                Bulverde, TX 78163<br />
+                7450 Prue Rd #2<br />
+                San Antonio, TX 78249<br />
                 Phone: (888) 570-4564
               </p>
               <p className="pt-4">

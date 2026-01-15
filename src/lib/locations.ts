@@ -18,15 +18,15 @@ export interface LocationData {
   nearbyCities: string[]; // slugs of nearby cities for cross-linking
 }
 
-// Bulverde, TX coordinates for reference
+// San Antonio, TX headquarters coordinates
 export const HEADQUARTERS = {
-  city: "Bulverde",
+  city: "San Antonio",
   state: "Texas",
   stateAbbr: "TX",
-  address: "4070 FM1863",
-  zip: "78163",
+  address: "7450 Prue Rd #2",
+  zip: "78249",
   phone: "1-888-570-4564",
-  coordinates: { lat: 29.7476761, lng: -98.41197869999999 }
+  coordinates: { lat: 29.5527, lng: -98.6180 }
 };
 
 export const locations: LocationData[] = [
