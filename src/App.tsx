@@ -8,7 +8,7 @@ import { AuthProvider } from "@/hooks/useAuth";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { ScrollToTop } from "@/components/ScrollToTop";
 import { trackPageView } from "@/lib/analytics";
-
+import { captureLeadSource } from "@/lib/leadSourceTracking";
 // Eager load critical pages
 import Index from "./pages/Index";
 import Login from "./pages/Login";
@@ -110,6 +110,11 @@ const PageLoader = () => (
 // Analytics tracker component for SPA navigation
 const AnalyticsTracker = () => {
   const location = useLocation();
+  
+  useEffect(() => {
+    // Capture lead source on first page load (before any navigation)
+    captureLeadSource();
+  }, []);
   
   useEffect(() => {
     trackPageView(location.pathname + location.search);

@@ -15,6 +15,7 @@ import { SEO } from "@/components/SEO";
 import { localBusinessSchema, generateBreadcrumbSchema } from "@/lib/structuredData";
 import { trackFormSubmission, trackConversion, trackPhoneClick, trackFormStart } from "@/lib/analytics";
 import { trackLinkedInQuoteRequest } from "@/lib/linkedinAnalytics";
+import { getLeadSourceData } from "@/lib/leadSourceTracking";
 
 // Spam detection utilities
 const isGibberish = (text: string): boolean => {
@@ -198,10 +199,14 @@ const Contact = () => {
     setIsSubmitting(true);
 
     try {
+      // Get lead source tracking data
+      const leadSourceData = getLeadSourceData();
+      
       // Send form data including honeypot for server-side validation
       const { data, error } = await supabase.functions.invoke('send-contact-email', {
         body: {
           ...formData,
+          ...leadSourceData, // Include UTM, referrer, and page data
           _timestamp: formLoadTime, // Send load time for server-side validation
         },
       });

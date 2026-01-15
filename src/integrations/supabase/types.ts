@@ -56,27 +56,51 @@ export type Database = {
       contact_submissions: {
         Row: {
           created_at: string | null
+          current_page: string | null
           email: string | null
           id: string
           ip_address: string | null
           is_spam: boolean | null
+          landing_page: string | null
+          referrer: string | null
           spam_reason: string | null
+          utm_campaign: string | null
+          utm_content: string | null
+          utm_medium: string | null
+          utm_source: string | null
+          utm_term: string | null
         }
         Insert: {
           created_at?: string | null
+          current_page?: string | null
           email?: string | null
           id?: string
           ip_address?: string | null
           is_spam?: boolean | null
+          landing_page?: string | null
+          referrer?: string | null
           spam_reason?: string | null
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          utm_term?: string | null
         }
         Update: {
           created_at?: string | null
+          current_page?: string | null
           email?: string | null
           id?: string
           ip_address?: string | null
           is_spam?: boolean | null
+          landing_page?: string | null
+          referrer?: string | null
           spam_reason?: string | null
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          utm_term?: string | null
         }
         Relationships: []
       }
