@@ -1,8 +1,13 @@
 // LinkedIn Insight Tag Tracking Utilities
 
+interface LinkTrkFunction {
+  (action: string, data?: { conversion_id: number }): void;
+  q?: [string, { conversion_id: number } | undefined][];
+}
+
 declare global {
   interface Window {
-    lintrk: (action: string, data: { conversion_id: number }) => void;
+    lintrk: LinkTrkFunction;
   }
 }
 
