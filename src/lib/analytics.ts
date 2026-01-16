@@ -1,11 +1,14 @@
 // Google Analytics 4 Tracking Utilities
 // Measurement ID: G-FHB5E7Q0PK
-// Last updated: December 2024
+// Last updated: January 2025
 
 declare global {
   interface Window {
-    gtag: (...args: any[]) => void;
-    dataLayer: any[];
+    gtag: (...args: unknown[]) => void;
+    dataLayer: unknown[];
+    __analyticsLoaded?: boolean;
+    _linkedin_partner_id?: string;
+    _linkedin_data_partner_ids?: string[];
   }
 }
 
