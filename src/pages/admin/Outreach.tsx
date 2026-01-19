@@ -618,6 +618,44 @@ export default function Outreach() {
 
             {/* Compose Tab */}
             <TabsContent value="compose">
+              {/* Saved Drafts Section */}
+              {campaigns.filter(c => c.status === "draft").length > 0 && (
+                <Card className="mb-6">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <FileText className="h-5 w-5" />
+                      Saved Drafts ({campaigns.filter(c => c.status === "draft").length})
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      {campaigns.filter(c => c.status === "draft").map((draft) => (
+                        <div key={draft.id} className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                          <div className="min-w-0 flex-1">
+                            <p className="font-medium truncate">{draft.name}</p>
+                            <p className="text-sm text-muted-foreground truncate">
+                              {draft.subject || "No subject"} • Saved {format(new Date(draft.created_at), "MMM d, yyyy")}
+                            </p>
+                          </div>
+                          <div className="flex gap-2 ml-4">
+                            <Button variant="outline" size="sm" onClick={() => loadDraft(draft)}>
+                              Load
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              onClick={() => deleteDraftMutation.mutate(draft.id)}
+                              disabled={deleteDraftMutation.isPending}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div className="lg:col-span-2 space-y-6">
                   <Card>
