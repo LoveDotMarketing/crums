@@ -124,9 +124,8 @@ serve(async (req) => {
       logStep("Stripe customer ready", { customerId });
     }
 
-    // Generate the payment setup URL
-    const origin = req.headers.get("origin") || "https://crums.lovable.app";
-    const setupUrl = `${origin}/dashboard/customer/payment-setup`;
+    // Generate the payment setup URL - always use production domain
+    const setupUrl = "https://crums.lovable.app/dashboard/customer/payment-setup";
 
     // Send email via SendGrid
     const emailResponse = await fetch("https://api.sendgrid.com/v3/mail/send", {
