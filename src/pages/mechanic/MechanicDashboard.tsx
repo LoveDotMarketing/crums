@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Wrench, LogOut, Truck, Search, MapPin, DollarSign, ClipboardList } from "lucide-react";
+import { Wrench, LogOut, Truck, Search, MapPin, DollarSign, ClipboardList, ClipboardCheck, Eye } from "lucide-react";
 import { toast } from "sonner";
 import { ChatBot } from "@/components/ChatBot";
 import { SEO } from "@/components/SEO";
@@ -35,6 +36,7 @@ interface Trailer {
 }
 
 export default function MechanicDashboard() {
+  const navigate = useNavigate();
   const { user, signOut } = useAuth();
   const [trailers, setTrailers] = useState<Trailer[]>([]);
   const [loading, setLoading] = useState(true);
@@ -45,29 +47,36 @@ export default function MechanicDashboard() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isCheckOutDialogOpen, setIsCheckOutDialogOpen] = useState(false);
   const [checkOutType, setCheckOutType] = useState<"service" | "use">("service");
+  const [pendingInspections, setPendingInspections] = useState<Record<string, string>>({});
+
+  const fetchPendingInspections = async () => {
+    try {
+      const { data } = await supabase
+        .from("dot_inspections")
+        .select("id, trailer_id")
+        .eq("inspector_id", user?.id)
+        .eq("status", "in_progress");
+      
+      if (data) {
+        const map: Record<string, string> = {};
+        data.forEach(i => { map[i.trailer_id] = i.id; });
+        setPendingInspections(map);
+      }
+    } catch (error) {
+      console.error("Error fetching inspections:", error);
+    }
+  };
 
   useEffect(() => {
     fetchTrailers();
+    fetchPendingInspections();
     
-    // Set up real-time subscription for trailer changes
     const channel = supabase
       .channel('trailer-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'trailers'
-        },
-        () => {
-          fetchTrailers();
-        }
-      )
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'trailers' }, () => { fetchTrailers(); })
       .subscribe();
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    return () => { supabase.removeChannel(channel); };
   }, []);
 
   const fetchTrailers = async () => {
@@ -96,6 +105,10 @@ export default function MechanicDashboard() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleStartDOTInspection = (trailer: Trailer) => {
+    navigate(`/dashboard/mechanic/inspection?trailerId=${trailer.id}`);
   };
 
   const handleCheckInForService = (trailer: Trailer) => {
@@ -462,15 +475,27 @@ export default function MechanicDashboard() {
                                 Complete Service
                               </Button>
                             ) : (
-                              <Button 
-                                size="sm"
-                                variant="default"
-                                onClick={() => handleCheckInForService(trailer)}
-                                disabled={trailer.is_rented}
-                              >
-                                <ClipboardList className="mr-2 h-4 w-4" />
-                                Check In for Service
-                              </Button>
+                              <div className="flex gap-2">
+                                <Button 
+                                  size="sm"
+                                  variant="default"
+                                  onClick={() => handleStartDOTInspection(trailer)}
+                                  disabled={trailer.is_rented}
+                                >
+                                  <ClipboardCheck className="mr-2 h-4 w-4" />
+                                  DOT Inspection
+                                </Button>
+                                {pendingInspections[trailer.id] && (
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => navigate(`/dashboard/mechanic/inspection?trailerId=${trailer.id}`)}
+                                  >
+                                    <Eye className="mr-2 h-4 w-4" />
+                                    Resume
+                                  </Button>
+                                )}
+                              </div>
                             )}
                           </div>
                         </TableCell>

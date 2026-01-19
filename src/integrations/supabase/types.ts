@@ -331,6 +331,221 @@ export type Database = {
         }
         Relationships: []
       }
+      dot_inspection_photos: {
+        Row: {
+          category: string
+          id: string
+          inspection_id: string
+          photo_url: string
+          uploaded_at: string | null
+        }
+        Insert: {
+          category: string
+          id?: string
+          inspection_id: string
+          photo_url: string
+          uploaded_at?: string | null
+        }
+        Update: {
+          category?: string
+          id?: string
+          inspection_id?: string
+          photo_url?: string
+          uploaded_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dot_inspection_photos_inspection_id_fkey"
+            columns: ["inspection_id"]
+            isOneToOne: false
+            referencedRelation: "dot_inspections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dot_inspections: {
+        Row: {
+          air_hoses_secure: boolean | null
+          apron_intact: boolean | null
+          brake_adjustment_confirmed: boolean | null
+          brake_chambers_secure: boolean | null
+          brake_lights_operational: boolean | null
+          brakes_comments: string | null
+          brakes_operational: boolean | null
+          conspicuity_markings_intact: boolean | null
+          coupling_comments: string | null
+          crank_handle_secure: boolean | null
+          created_at: string | null
+          customer_acknowledged: boolean | null
+          customer_acknowledged_at: string | null
+          customer_name: string | null
+          customer_signature: string | null
+          doors_comments: string | null
+          dot_reflective_tape_present: boolean | null
+          dot_release_confirmed: boolean | null
+          floor_intact: boolean | null
+          frame_comments: string | null
+          frame_no_cracks: boolean | null
+          hinges_locks_seals_intact: boolean | null
+          id: string
+          inspection_date: string
+          inspector_id: string
+          inspector_signature: string | null
+          kingpin_secure: boolean | null
+          landing_gear_operational: boolean | null
+          license_plate: string | null
+          lights_comments: string | null
+          lug_nuts_secure: boolean | null
+          marker_lights_operational: boolean | null
+          mud_flaps_present: boolean | null
+          no_air_leaks: boolean | null
+          no_broken_lenses: boolean | null
+          no_coupling_damage: boolean | null
+          no_sharp_edges: boolean | null
+          rear_doors_operational: boolean | null
+          reflective_comments: string | null
+          rims_no_damage: boolean | null
+          sidewalls_roof_intact: boolean | null
+          status: string | null
+          tires_comments: string | null
+          tires_inflation: boolean | null
+          tires_no_damage: boolean | null
+          tires_tread_depth: boolean | null
+          trailer_id: string
+          trailer_number: string
+          trailer_type: string | null
+          turn_signals_operational: boolean | null
+          undercarriage_secure: boolean | null
+          updated_at: string | null
+          vin: string | null
+        }
+        Insert: {
+          air_hoses_secure?: boolean | null
+          apron_intact?: boolean | null
+          brake_adjustment_confirmed?: boolean | null
+          brake_chambers_secure?: boolean | null
+          brake_lights_operational?: boolean | null
+          brakes_comments?: string | null
+          brakes_operational?: boolean | null
+          conspicuity_markings_intact?: boolean | null
+          coupling_comments?: string | null
+          crank_handle_secure?: boolean | null
+          created_at?: string | null
+          customer_acknowledged?: boolean | null
+          customer_acknowledged_at?: string | null
+          customer_name?: string | null
+          customer_signature?: string | null
+          doors_comments?: string | null
+          dot_reflective_tape_present?: boolean | null
+          dot_release_confirmed?: boolean | null
+          floor_intact?: boolean | null
+          frame_comments?: string | null
+          frame_no_cracks?: boolean | null
+          hinges_locks_seals_intact?: boolean | null
+          id?: string
+          inspection_date?: string
+          inspector_id: string
+          inspector_signature?: string | null
+          kingpin_secure?: boolean | null
+          landing_gear_operational?: boolean | null
+          license_plate?: string | null
+          lights_comments?: string | null
+          lug_nuts_secure?: boolean | null
+          marker_lights_operational?: boolean | null
+          mud_flaps_present?: boolean | null
+          no_air_leaks?: boolean | null
+          no_broken_lenses?: boolean | null
+          no_coupling_damage?: boolean | null
+          no_sharp_edges?: boolean | null
+          rear_doors_operational?: boolean | null
+          reflective_comments?: string | null
+          rims_no_damage?: boolean | null
+          sidewalls_roof_intact?: boolean | null
+          status?: string | null
+          tires_comments?: string | null
+          tires_inflation?: boolean | null
+          tires_no_damage?: boolean | null
+          tires_tread_depth?: boolean | null
+          trailer_id: string
+          trailer_number: string
+          trailer_type?: string | null
+          turn_signals_operational?: boolean | null
+          undercarriage_secure?: boolean | null
+          updated_at?: string | null
+          vin?: string | null
+        }
+        Update: {
+          air_hoses_secure?: boolean | null
+          apron_intact?: boolean | null
+          brake_adjustment_confirmed?: boolean | null
+          brake_chambers_secure?: boolean | null
+          brake_lights_operational?: boolean | null
+          brakes_comments?: string | null
+          brakes_operational?: boolean | null
+          conspicuity_markings_intact?: boolean | null
+          coupling_comments?: string | null
+          crank_handle_secure?: boolean | null
+          created_at?: string | null
+          customer_acknowledged?: boolean | null
+          customer_acknowledged_at?: string | null
+          customer_name?: string | null
+          customer_signature?: string | null
+          doors_comments?: string | null
+          dot_reflective_tape_present?: boolean | null
+          dot_release_confirmed?: boolean | null
+          floor_intact?: boolean | null
+          frame_comments?: string | null
+          frame_no_cracks?: boolean | null
+          hinges_locks_seals_intact?: boolean | null
+          id?: string
+          inspection_date?: string
+          inspector_id?: string
+          inspector_signature?: string | null
+          kingpin_secure?: boolean | null
+          landing_gear_operational?: boolean | null
+          license_plate?: string | null
+          lights_comments?: string | null
+          lug_nuts_secure?: boolean | null
+          marker_lights_operational?: boolean | null
+          mud_flaps_present?: boolean | null
+          no_air_leaks?: boolean | null
+          no_broken_lenses?: boolean | null
+          no_coupling_damage?: boolean | null
+          no_sharp_edges?: boolean | null
+          rear_doors_operational?: boolean | null
+          reflective_comments?: string | null
+          rims_no_damage?: boolean | null
+          sidewalls_roof_intact?: boolean | null
+          status?: string | null
+          tires_comments?: string | null
+          tires_inflation?: boolean | null
+          tires_no_damage?: boolean | null
+          tires_tread_depth?: boolean | null
+          trailer_id?: string
+          trailer_number?: string
+          trailer_type?: string | null
+          turn_signals_operational?: boolean | null
+          undercarriage_secure?: boolean | null
+          updated_at?: string | null
+          vin?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dot_inspections_inspector_id_fkey"
+            columns: ["inspector_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dot_inspections_trailer_id_fkey"
+            columns: ["trailer_id"]
+            isOneToOne: false
+            referencedRelation: "trailers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       email_campaigns: {
         Row: {
           body: string | null
