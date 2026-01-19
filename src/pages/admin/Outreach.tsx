@@ -432,20 +432,23 @@ export default function Outreach() {
 
       if (campaignError) throw campaignError;
 
-      // Get recipients
-      const recipients = filteredCustomers.filter(c => c.email);
-      const emails = recipients.map(r => r.email);
-      const customerIds = recipients.map(r => r.id);
+      // Get recipients with customer data for personalization
+      const recipientsWithData = filteredCustomers
+        .filter(c => c.email)
+        .map(c => ({
+          email: c.email,
+          customer_id: c.id,
+          customer_name: c.full_name || "Valued Customer",
+        }));
 
-      // Send emails
+      // Send emails with new format that includes customer data
       const { data, error } = await supabase.functions.invoke("send-outreach-email", {
         body: {
-          to: emails,
+          recipients: recipientsWithData,
           subject,
           body,
           campaign_id: campaign.id,
           template_id: selectedTemplate || null,
-          customer_ids: customerIds,
           email_type: "campaign",
         },
       });

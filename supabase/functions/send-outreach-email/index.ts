@@ -6,17 +6,38 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// Support both legacy format (string[]) and new format (object[])
+interface RecipientObject {
+  email: string;
+  customer_id?: string;
+  customer_name?: string;
+}
+
 interface EmailRequest {
-  to: string | string[];
+  to?: string | string[];  // Legacy format
+  recipients?: RecipientObject[];  // New format with customer data
   subject: string;
   body: string;
   campaign_id?: string;
   template_id?: string;
-  customer_ids?: string[];
+  customer_ids?: string[];  // Legacy format
   email_type?: string;
 }
 
 const SENDGRID_API_KEY = Deno.env.get("SENDGRID_API_KEY");
+const BASE_URL = "https://crums.lovable.app";
+
+// Replace template variables with actual customer data
+const replaceTemplateVariables = (
+  text: string, 
+  customer: { email: string; name?: string }
+): string => {
+  return text
+    .replace(/\{\{customer_name\}\}/g, customer.name || "Valued Customer")
+    .replace(/\{\{login_url\}\}/g, `${BASE_URL}/login`)
+    .replace(/\{\{profile_url\}\}/g, `${BASE_URL}/dashboard/customer/profile`)
+    .replace(/\{\{unsubscribe_url\}\}/g, `${BASE_URL}/unsubscribe?email=${encodeURIComponent(customer.email)}`);
+};
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -72,11 +93,31 @@ serve(async (req) => {
   }
 
   try {
-    const { to, subject, body, campaign_id, template_id, customer_ids, email_type = "manual" }: EmailRequest = await req.json();
+    const requestBody: EmailRequest = await req.json();
+    const { to, recipients, subject, body, campaign_id, template_id, customer_ids, email_type = "manual" } = requestBody;
 
-    console.log(`[SendOutreachEmail] ${callerEmail} sending email to ${Array.isArray(to) ? to.length : 1} recipients`);
+    // Normalize recipients - support both legacy (to + customer_ids) and new (recipients) format
+    let normalizedRecipients: RecipientObject[];
+    
+    if (recipients && Array.isArray(recipients) && recipients.length > 0) {
+      // New format: array of recipient objects
+      normalizedRecipients = recipients;
+      console.log(`[SendOutreachEmail] Using new recipient format with ${recipients.length} recipients`);
+    } else if (to) {
+      // Legacy format: convert to recipient objects
+      const emailArray = Array.isArray(to) ? to : [to];
+      normalizedRecipients = emailArray.map((email, i) => ({
+        email,
+        customer_id: customer_ids?.[i],
+        customer_name: undefined, // Legacy format doesn't include names
+      }));
+      console.log(`[SendOutreachEmail] Using legacy format with ${emailArray.length} recipients`);
+    } else {
+      throw new Error("No recipients specified");
+    }
 
-    const recipients = Array.isArray(to) ? to : [to];
+    console.log(`[SendOutreachEmail] ${callerEmail} sending email to ${normalizedRecipients.length} recipients`);
+
     const results: { email: string; success: boolean; error?: string }[] = [];
 
     // Get from settings
@@ -88,9 +129,12 @@ serve(async (req) => {
     const fromName = settings?.find(s => s.setting_key === "from_name")?.setting_value || "CRUMS Leasing";
     const replyTo = settings?.find(s => s.setting_key === "reply_to")?.setting_value || "sales@crumsleasing.com";
 
-    for (let i = 0; i < recipients.length; i++) {
-      const email = recipients[i];
-      const customerId = customer_ids?.[i];
+    for (const recipient of normalizedRecipients) {
+      const { email, customer_id: customerId, customer_name } = recipient;
+
+      // Personalize subject and body for this recipient
+      const personalizedSubject = replaceTemplateVariables(subject, { email, name: customer_name });
+      const personalizedBody = replaceTemplateVariables(body, { email, name: customer_name });
 
       try {
         const response = await fetch("https://api.sendgrid.com/v3/mail/send", {
@@ -103,8 +147,8 @@ serve(async (req) => {
             personalizations: [{ to: [{ email }] }],
             from: { email: "sales@crumsleasing.com", name: fromName },
             reply_to: { email: replyTo },
-            subject,
-            content: [{ type: "text/html", value: body }],
+            subject: personalizedSubject,
+            content: [{ type: "text/html", value: personalizedBody }],
           }),
         });
 
