@@ -81,7 +81,7 @@ const Partners = () => {
                     <div className="flex flex-col md:flex-row">
                       {/* Logo Section */}
                       {partner.logo ? (
-                        <div className="bg-[#d4a044] p-6 flex items-center justify-center md:w-1/3">
+                        <div className="bg-primary p-6 flex items-center justify-center md:w-1/3">
                           <img
                             src={partner.logo}
                             alt={`${partner.name} logo`}
