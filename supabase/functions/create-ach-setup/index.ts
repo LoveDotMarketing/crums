@@ -109,6 +109,8 @@ serve(async (req) => {
           verification_method: "automatic",
         },
       },
+      attach_to_self: true,
+      flow_directions: ["inbound"],
       metadata: {
         supabase_user_id: user.id,
         application_id: application.id,
