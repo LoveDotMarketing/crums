@@ -60,8 +60,11 @@ interface EmailCampaign {
   id: string;
   name: string;
   subject: string;
+  body: string | null;
   status: string;
   target_audience: string;
+  custom_recipients: string[] | null;
+  template_id: string | null;
   recipient_count: number;
   sent_count: number;
   failed_count: number;
@@ -535,6 +538,37 @@ export default function Outreach() {
     setSelectedTemplate("");
   };
 
+  // Load draft into compose form
+  const loadDraft = (campaign: EmailCampaign) => {
+    setCampaignName(campaign.name);
+    setSubject(campaign.subject || "");
+    setBody(campaign.body || "");
+    setTargetAudience(campaign.target_audience);
+    if (campaign.target_audience === "custom" && campaign.custom_recipients) {
+      setSelectedCustomers(campaign.custom_recipients);
+    }
+    if (campaign.template_id) {
+      setSelectedTemplate(campaign.template_id);
+    }
+    setActiveTab("compose");
+    toast.success("Draft loaded into compose form");
+  };
+
+  // Delete draft
+  const deleteDraftMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("email_campaigns").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Draft deleted");
+      queryClient.invalidateQueries({ queryKey: ["email-campaigns"] });
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
+    },
+  });
+
   const getStatusBadge = (status: string) => {
     const variants: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
       draft: "secondary",
@@ -855,6 +889,7 @@ export default function Outreach() {
                           <TableHead>Failed</TableHead>
                           <TableHead>Status</TableHead>
                           <TableHead>Date</TableHead>
+                          <TableHead className="text-right">Actions</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -870,6 +905,27 @@ export default function Outreach() {
                             <TableCell className="text-destructive">{campaign.failed_count}</TableCell>
                             <TableCell>{getStatusBadge(campaign.status)}</TableCell>
                             <TableCell>{format(new Date(campaign.created_at), "MMM d, yyyy")}</TableCell>
+                            <TableCell className="text-right">
+                              {campaign.status === "draft" && (
+                                <div className="flex justify-end gap-1">
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => loadDraft(campaign)}
+                                  >
+                                    <Edit className="h-4 w-4" />
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => deleteDraftMutation.mutate(campaign.id)}
+                                    disabled={deleteDraftMutation.isPending}
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              )}
+                            </TableCell>
                           </TableRow>
                         ))}
                       </TableBody>
