@@ -82,12 +82,14 @@ const Partners = () => {
                       {/* Logo Section */}
                       {partner.logo ? (
                         <div className="bg-primary p-6 flex items-center justify-center md:w-1/3">
-                          <img
-                            src={partner.logo}
-                            alt={`${partner.name} logo`}
-                            className="max-w-[200px] w-full h-auto"
-                            loading="lazy"
-                          />
+                          <div className="bg-white rounded-lg p-4">
+                            <img
+                              src={partner.logo}
+                              alt={`${partner.name} logo`}
+                              className="max-w-[180px] w-full h-auto"
+                              loading="lazy"
+                            />
+                          </div>
                         </div>
                       ) : (
                         <div className="bg-primary p-6 flex items-center justify-center md:w-1/3">
