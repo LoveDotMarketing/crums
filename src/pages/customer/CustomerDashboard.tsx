@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Truck, AlertCircle, CheckCircle, Loader2, Bell, Phone, ExternalLink, Mail } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Truck, AlertCircle, CheckCircle, Loader2, Bell, Phone, ExternalLink, Mail, ClipboardCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
@@ -15,6 +15,7 @@ import { ApplicationStatusTracker } from "@/components/customer/ApplicationStatu
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { findTollAuthority, TollAuthority } from "@/lib/tollAuthorities";
+import { Link } from "react-router-dom";
 
 interface Toll {
   id: string;
@@ -33,6 +34,13 @@ interface TollStats {
   pendingCount: number;
 }
 
+interface PendingCheckout {
+  id: string;
+  trailer_number: string;
+  trailer_type: string | null;
+  inspection_date: string;
+}
+
 export default function CustomerDashboard() {
   const { user, signOut } = useAuth();
   const [applicationProgress, setApplicationProgress] = useState(0);
@@ -40,6 +48,7 @@ export default function CustomerDashboard() {
   const [tolls, setTolls] = useState<Toll[]>([]);
   const [tollStats, setTollStats] = useState<TollStats>({ pendingAmount: 0, paidThisMonth: 0, pendingCount: 0 });
   const [trailerCount, setTrailerCount] = useState(0);
+  const [pendingCheckouts, setPendingCheckouts] = useState<PendingCheckout[]>([]);
   const [loading, setLoading] = useState(true);
   const [markingPaid, setMarkingPaid] = useState<string | null>(null);
 
@@ -48,6 +57,7 @@ export default function CustomerDashboard() {
       checkApplicationStatus();
       fetchTolls();
       fetchTrailers();
+      fetchPendingCheckouts();
 
       // Set up real-time subscription for tolls
       const tollChannel = supabase
@@ -176,6 +186,16 @@ export default function CustomerDashboard() {
     }
   };
 
+  const fetchPendingCheckouts = async () => {
+    if (!user) return;
+    try {
+      const { data: trailers } = await supabase.from("trailers").select("id").or(`customer_id.eq.${user.id},assigned_to.eq.${user.id}`);
+      if (!trailers?.length) { setPendingCheckouts([]); return; }
+      const { data } = await supabase.from("dot_inspections").select("id, trailer_number, trailer_type, inspection_date").in("trailer_id", trailers.map(t => t.id)).eq("status", "completed").eq("customer_acknowledged", false);
+      setPendingCheckouts(data || []);
+    } catch (error) { console.error("Error fetching pending checkouts:", error); }
+  };
+
   const markTollAsPaid = async (tollId: string) => {
     setMarkingPaid(tollId);
     try {
@@ -291,6 +311,34 @@ export default function CustomerDashboard() {
               </Card>
             ))}
           </div>
+
+          {/* Pending Trailer Checkouts */}
+          {pendingCheckouts.length > 0 && (
+            <Card className="mb-8 border-blue-200 bg-blue-50 dark:bg-blue-900/20">
+              <CardHeader>
+                <CardTitle className="text-foreground flex items-center gap-2">
+                  <ClipboardCheck className="h-5 w-5 text-blue-600" />
+                  Pending Trailer Checkouts
+                </CardTitle>
+                <CardDescription>Complete the checkout process for these trailers</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {pendingCheckouts.map((checkout) => (
+                    <div key={checkout.id} className="flex items-center justify-between p-3 bg-white dark:bg-background rounded-lg border">
+                      <div>
+                        <p className="font-medium">Trailer #{checkout.trailer_number}</p>
+                        <p className="text-sm text-muted-foreground">{checkout.trailer_type} • Inspected {format(new Date(checkout.inspection_date), "MMM d, yyyy")}</p>
+                      </div>
+                      <Link to={`/dashboard/customer/checkout/${checkout.id}`}>
+                        <Button size="sm" className="bg-blue-600 hover:bg-blue-700">Complete Checkout</Button>
+                      </Link>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Pending Toll Notices */}
           <Card className="mb-8">

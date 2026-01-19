@@ -378,8 +378,14 @@ export type Database = {
           created_at: string | null
           customer_acknowledged: boolean | null
           customer_acknowledged_at: string | null
+          customer_certification_accepted: boolean | null
+          customer_company_name: string | null
+          customer_condition_accepted: boolean | null
           customer_name: string | null
+          customer_responsibility_understood: boolean | null
+          customer_review_confirmed: boolean | null
           customer_signature: string | null
+          customer_signer_name: string | null
           doors_comments: string | null
           dot_reflective_tape_present: boolean | null
           dot_release_confirmed: boolean | null
@@ -433,8 +439,14 @@ export type Database = {
           created_at?: string | null
           customer_acknowledged?: boolean | null
           customer_acknowledged_at?: string | null
+          customer_certification_accepted?: boolean | null
+          customer_company_name?: string | null
+          customer_condition_accepted?: boolean | null
           customer_name?: string | null
+          customer_responsibility_understood?: boolean | null
+          customer_review_confirmed?: boolean | null
           customer_signature?: string | null
+          customer_signer_name?: string | null
           doors_comments?: string | null
           dot_reflective_tape_present?: boolean | null
           dot_release_confirmed?: boolean | null
@@ -488,8 +500,14 @@ export type Database = {
           created_at?: string | null
           customer_acknowledged?: boolean | null
           customer_acknowledged_at?: string | null
+          customer_certification_accepted?: boolean | null
+          customer_company_name?: string | null
+          customer_condition_accepted?: boolean | null
           customer_name?: string | null
+          customer_responsibility_understood?: boolean | null
+          customer_review_confirmed?: boolean | null
           customer_signature?: string | null
+          customer_signer_name?: string | null
           doors_comments?: string | null
           dot_reflective_tape_present?: boolean | null
           dot_release_confirmed?: boolean | null
