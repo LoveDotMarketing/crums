@@ -98,6 +98,8 @@ const Rentals = lazy(() => import("./pages/customer/Rentals"));
 const RentalRequest = lazy(() => import("./pages/customer/RentalRequest"));
 const Application = lazy(() => import("./pages/customer/Application"));
 const PaymentSetup = lazy(() => import("./pages/customer/PaymentSetup"));
+const TrailerCheckout = lazy(() => import("./pages/customer/TrailerCheckout"));
+const CheckoutComplete = lazy(() => import("./pages/customer/CheckoutComplete"));
 
 // Mechanic pages
 const MechanicDashboard = lazy(() => import("./pages/mechanic/MechanicDashboard"));
@@ -349,6 +351,22 @@ const App = () => (
               element={
                 <ProtectedRoute requiredRole="customer">
                   <RentalRequest />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/dashboard/customer/checkout/:inspectionId" 
+              element={
+                <ProtectedRoute requiredRole="customer">
+                  <TrailerCheckout />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/dashboard/customer/checkout/:inspectionId/complete" 
+              element={
+                <ProtectedRoute requiredRole="customer">
+                  <CheckoutComplete />
                 </ProtectedRoute>
               } 
             />
