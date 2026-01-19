@@ -142,7 +142,7 @@ serve(async (req) => {
           email: "support@crumsleasing.com",
           name: "CRUMS Leasing",
         },
-        subject: "Complete Your Payment Setup - CRUMS Leasing",
+        subject: "Action Required: Complete Your CRUMS Payment Setup",
         content: [{
           type: "text/html",
           value: `
