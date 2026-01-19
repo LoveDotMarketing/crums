@@ -90,6 +90,7 @@ const LeadSources = lazy(() => import("./pages/admin/LeadSources"));
 
 // Public pages
 const ReferralProgram = lazy(() => import("./pages/ReferralProgram"));
+const Partners = lazy(() => import("./pages/Partners"));
 
 // Customer pages
 const CustomerDashboard = lazy(() => import("./pages/customer/CustomerDashboard"));
@@ -405,6 +406,7 @@ const App = () => (
 <Route path="/resources/tools/tax-deductions" element={<TaxDeductionGuide />} />
 <Route path="/resources/tools/per-diem-calculator" element={<PerDiemCalculator />} />
             <Route path="/referral-program" element={<ReferralProgram />} />
+            <Route path="/partners" element={<Partners />} />
             <Route path="/news" element={<News />} />
             <Route path="/news/:slug" element={<NewsArticlePage />} />
             <Route path="/reviews" element={<Reviews />} />

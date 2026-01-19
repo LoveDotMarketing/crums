@@ -35,6 +35,7 @@ const routeLabels: Record<string, string> = {
   "/commercial-dry-van-trailer-for-lease-56171": "2020 Dry Van Trailer 56171",
   "/locations": "Locations",
   "/contact": "Contact",
+  "/partners": "Partners",
   "/careers": "Careers",
   "/careers/trailer-leasing-sales-rep": "Trailer Leasing Sales Representative",
   "/get-started": "Get Started",
