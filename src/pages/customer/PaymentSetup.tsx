@@ -67,10 +67,8 @@ export default function PaymentSetup() {
       }
 
       // Load Stripe.js dynamically
-      const stripePublishableKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
-      if (!stripePublishableKey) {
-        throw new Error("Stripe is not configured. Please contact support.");
-      }
+      // Publishable key is safe to include in frontend code
+      const stripePublishableKey = "pk_test_51Sa3rWPtmYCiZhW22r6qr9yOYgo6tLZPWtlebm2BRdoX08weKgT6zFrr2sCIZIbwZY6OyCuKspBzOSnUYNktjkkg00GkEw1CPJ";
 
       // Redirect to Stripe-hosted page for bank account setup
       // For Financial Connections, we'll use the Stripe.js integration
