@@ -38,7 +38,7 @@ const partners: Partner[] = [
   {
     name: "S6 Tax & Bookkeeping",
     description: "Professional tax preparation and bookkeeping services for trucking businesses and owner-operators.",
-    logo: undefined,
+    logo: "/images/partners/s6-tax-bookkeeping-logo.png",
     email: undefined,
     website: "https://s6taxandbook.com/",
     address: "9035 Spiral Woods, Universal City, TX 78148",
