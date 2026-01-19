@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
   Truck, 
@@ -18,7 +19,8 @@ import {
   Eye,
   Trash2,
   Loader2,
-  LayoutGrid
+  LayoutGrid,
+  UserX
 } from "lucide-react";
 import {
   Table,
@@ -46,11 +48,18 @@ interface Trailer {
   rental_income: number | null;
   status: string;
   assigned_to: string | null;
+  customer_id: string | null;
   gps_latitude: number | null;
   gps_longitude: number | null;
   vin: string | null;
   license_plate: string | null;
   company_id: string;
+}
+
+interface Customer {
+  id: string;
+  full_name: string;
+  company_name: string | null;
 }
 
 export default function Fleet() {
@@ -59,12 +68,14 @@ export default function Fleet() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [trailers, setTrailers] = useState<Trailer[]>([]);
+  const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [companyId, setCompanyId] = useState<string>("");
   const [sortColumn, setSortColumn] = useState<keyof Trailer | null>(null);
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
+  const [unassignTrailerId, setUnassignTrailerId] = useState<string | null>(null);
   
   const [newTrailer, setNewTrailer] = useState({
     trailer_number: "",
@@ -80,6 +91,7 @@ export default function Fleet() {
 
   useEffect(() => {
     fetchCompanyAndTrailers();
+    fetchCustomers();
 
     // Set up real-time subscription
     const channel = supabase
@@ -101,6 +113,21 @@ export default function Fleet() {
       supabase.removeChannel(channel);
     };
   }, [user]);
+
+  const fetchCustomers = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("customers")
+        .select("id, full_name, company_name")
+        .eq("status", "active")
+        .order("full_name");
+
+      if (error) throw error;
+      setCustomers(data || []);
+    } catch (error) {
+      console.error("Error fetching customers:", error);
+    }
+  };
 
   const fetchCompanyAndTrailers = async () => {
     try {
@@ -131,6 +158,27 @@ export default function Fleet() {
       toast.error("Failed to load fleet data");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleUnassignTrailer = async (trailerId: string) => {
+    try {
+      const { error } = await supabase
+        .from("trailers")
+        .update({
+          customer_id: null,
+          is_rented: false,
+          status: "available"
+        })
+        .eq("id", trailerId);
+
+      if (error) throw error;
+      toast.success("Trailer unassigned successfully");
+      setUnassignTrailerId(null);
+      fetchCompanyAndTrailers();
+    } catch (error) {
+      console.error("Error unassigning trailer:", error);
+      toast.error("Failed to unassign trailer");
     }
   };
 
@@ -603,6 +651,7 @@ export default function Fleet() {
                         <SortableHeader column="vin">VIN</SortableHeader>
                         <SortableHeader column="type">Type</SortableHeader>
                         <SortableHeader column="year">Year</SortableHeader>
+                        <TableHead>Lessee</TableHead>
                         <SortableHeader column="status">Status</SortableHeader>
                         <SortableHeader column="purchase_price">Purchase Price</SortableHeader>
                         <SortableHeader column="total_maintenance_cost">Maintenance</SortableHeader>
@@ -612,57 +661,99 @@ export default function Fleet() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {filteredTrailers.map((trailer) => (
-                        <TableRow 
-                          key={trailer.id} 
-                          className="cursor-pointer hover:bg-muted/50"
-                          onClick={() => navigate(`/dashboard/admin/fleet/${trailer.id}`)}
-                        >
-                          <TableCell className="font-mono text-sm">
-                            {trailer.vin || "-"}
-                          </TableCell>
-                          <TableCell>{trailer.type}</TableCell>
-                          <TableCell>{trailer.year}</TableCell>
-                          <TableCell>{getStatusBadge(trailer.status)}</TableCell>
-                          <TableCell>
-                            ${(trailer.purchase_price || 0).toLocaleString()}
-                          </TableCell>
-                          <TableCell className="text-destructive">
-                            ${(trailer.total_maintenance_cost || 0).toLocaleString()}
-                          </TableCell>
-                          <TableCell className="text-green-600">
-                            ${(trailer.rental_income || 0).toLocaleString()}
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant={parseFloat(calculateROI(trailer)) > 0 ? "default" : "destructive"}>
-                              {calculateROI(trailer)}%
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
-                              <Button 
-                                size="sm" 
-                                variant="ghost"
-                                onClick={() => navigate(`/dashboard/admin/fleet/${trailer.id}`)}
-                              >
-                                <Eye className="h-4 w-4" />
-                              </Button>
-                              <Button 
-                                size="sm" 
-                                variant="ghost"
-                                onClick={() => handleDeleteTrailer(trailer.id, trailer.trailer_number)}
-                              >
-                                <Trash2 className="h-4 w-4 text-destructive" />
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))}
+                      {filteredTrailers.map((trailer) => {
+                        const assignedCustomer = customers.find(c => c.id === trailer.customer_id);
+                        return (
+                          <TableRow 
+                            key={trailer.id} 
+                            className="cursor-pointer hover:bg-muted/50"
+                            onClick={() => navigate(`/dashboard/admin/fleet/${trailer.id}`)}
+                          >
+                            <TableCell className="font-mono text-sm">
+                              {trailer.vin || "-"}
+                            </TableCell>
+                            <TableCell>{trailer.type}</TableCell>
+                            <TableCell>{trailer.year}</TableCell>
+                            <TableCell onClick={(e) => e.stopPropagation()}>
+                              {assignedCustomer ? (
+                                <div className="flex items-center gap-2">
+                                  <span className="text-sm font-medium truncate max-w-[150px]" title={assignedCustomer.full_name}>
+                                    {assignedCustomer.full_name}
+                                  </span>
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    className="h-6 w-6 p-0"
+                                    onClick={() => setUnassignTrailerId(trailer.id)}
+                                    title="Unassign customer"
+                                  >
+                                    <UserX className="h-3 w-3 text-destructive" />
+                                  </Button>
+                                </div>
+                              ) : (
+                                <span className="text-muted-foreground text-sm">—</span>
+                              )}
+                            </TableCell>
+                            <TableCell>{getStatusBadge(trailer.status)}</TableCell>
+                            <TableCell>
+                              ${(trailer.purchase_price || 0).toLocaleString()}
+                            </TableCell>
+                            <TableCell className="text-destructive">
+                              ${(trailer.total_maintenance_cost || 0).toLocaleString()}
+                            </TableCell>
+                            <TableCell className="text-green-600">
+                              ${(trailer.rental_income || 0).toLocaleString()}
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant={parseFloat(calculateROI(trailer)) > 0 ? "default" : "destructive"}>
+                                {calculateROI(trailer)}%
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
+                                <Button 
+                                  size="sm" 
+                                  variant="ghost"
+                                  onClick={() => navigate(`/dashboard/admin/fleet/${trailer.id}`)}
+                                >
+                                  <Eye className="h-4 w-4" />
+                                </Button>
+                                <Button 
+                                  size="sm" 
+                                  variant="ghost"
+                                  onClick={() => handleDeleteTrailer(trailer.id, trailer.trailer_number)}
+                                >
+                                  <Trash2 className="h-4 w-4 text-destructive" />
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
                     </TableBody>
                   </Table>
                 )}
               </CardContent>
             </Card>
+
+            {/* Unassign Confirmation Dialog */}
+            <AlertDialog open={!!unassignTrailerId} onOpenChange={(open) => !open && setUnassignTrailerId(null)}>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Unassign Trailer</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Are you sure you want to unassign this trailer from the customer? 
+                    The trailer will be marked as available.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={() => unassignTrailerId && handleUnassignTrailer(unassignTrailerId)}>
+                    Unassign
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </main>
         </div>
       </div>

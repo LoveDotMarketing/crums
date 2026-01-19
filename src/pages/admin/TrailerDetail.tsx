@@ -18,7 +18,8 @@ import {
   Calendar,
   DollarSign,
   Wrench,
-  MapPin
+  MapPin,
+  User
 } from "lucide-react";
 import {
   Table,
@@ -56,6 +57,7 @@ interface Trailer {
   rental_income: number | null;
   status: string;
   assigned_to: string | null;
+  customer_id: string | null;
   vin: string | null;
   license_plate: string | null;
   notes: string | null;
@@ -64,6 +66,15 @@ interface Trailer {
   company_id: string;
   created_at: string;
   updated_at: string;
+  rental_rate: number | null;
+  rental_frequency: string | null;
+}
+
+interface Customer {
+  id: string;
+  full_name: string;
+  company_name: string | null;
+  email: string | null;
 }
 
 interface MaintenanceRecord {
@@ -80,6 +91,7 @@ export default function TrailerDetail() {
   const navigate = useNavigate();
   const [trailer, setTrailer] = useState<Trailer | null>(null);
   const [maintenanceRecords, setMaintenanceRecords] = useState<MaintenanceRecord[]>([]);
+  const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -88,8 +100,24 @@ export default function TrailerDetail() {
   useEffect(() => {
     if (trailerId) {
       fetchTrailerData();
+      fetchCustomers();
     }
   }, [trailerId]);
+
+  const fetchCustomers = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("customers")
+        .select("id, full_name, company_name, email")
+        .eq("status", "active")
+        .order("full_name");
+
+      if (error) throw error;
+      setCustomers(data || []);
+    } catch (error) {
+      console.error("Error fetching customers:", error);
+    }
+  };
 
   const fetchTrailerData = async () => {
     try {
@@ -133,6 +161,10 @@ export default function TrailerDetail() {
     setSaving(true);
 
     try {
+      // Determine status based on customer assignment
+      const hasCustomer = !!formData.customer_id;
+      const newStatus = hasCustomer ? "rented" : (formData.status === "rented" ? "available" : formData.status);
+
       const { error } = await supabase
         .from("trailers")
         .update({
@@ -145,8 +177,11 @@ export default function TrailerDetail() {
           purchase_price: formData.purchase_price,
           vin: formData.vin,
           license_plate: formData.license_plate,
-          status: formData.status,
-          is_rented: formData.status === "rented",
+          status: newStatus,
+          is_rented: hasCustomer,
+          customer_id: formData.customer_id || null,
+          rental_rate: formData.rental_rate,
+          rental_frequency: formData.rental_frequency,
           notes: formData.notes,
         })
         .eq("id", trailer.id);
@@ -154,7 +189,7 @@ export default function TrailerDetail() {
       if (error) throw error;
 
       toast.success("Trailer updated successfully");
-      setTrailer({ ...trailer, ...formData } as Trailer);
+      setTrailer({ ...trailer, ...formData, status: newStatus, is_rented: hasCustomer } as Trailer);
       setIsEditing(false);
     } catch (error) {
       console.error("Error updating trailer:", error);
@@ -411,6 +446,89 @@ export default function TrailerDetail() {
                         />
                       ) : (
                         <p className="text-muted-foreground">{trailer.notes || "No notes"}</p>
+                      )}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Lessee Assignment Card */}
+              <Card className="lg:col-span-2">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <User className="h-5 w-5" />
+                    Lessee Assignment
+                  </CardTitle>
+                  <CardDescription>Assign this trailer to a customer</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Assigned Customer</Label>
+                      {isEditing ? (
+                        <Select
+                          value={formData.customer_id || "unassigned"}
+                          onValueChange={(value) => setFormData({ 
+                            ...formData, 
+                            customer_id: value === "unassigned" ? null : value 
+                          })}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select customer..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="unassigned">
+                              <span className="text-muted-foreground">— Unassigned —</span>
+                            </SelectItem>
+                            {customers.map((customer) => (
+                              <SelectItem key={customer.id} value={customer.id}>
+                                {customer.full_name}
+                                {customer.company_name && ` (${customer.company_name})`}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        <p className="text-lg">
+                          {trailer.customer_id 
+                            ? customers.find(c => c.id === trailer.customer_id)?.full_name || "Loading..."
+                            : <span className="text-muted-foreground">Not assigned</span>
+                          }
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Rental Rate</Label>
+                      {isEditing ? (
+                        <div className="flex gap-2">
+                          <Input
+                            type="number"
+                            placeholder="0.00"
+                            value={formData.rental_rate || ""}
+                            onChange={(e) => setFormData({ ...formData, rental_rate: parseFloat(e.target.value) || null })}
+                            className="flex-1"
+                          />
+                          <Select
+                            value={formData.rental_frequency || "monthly"}
+                            onValueChange={(value) => setFormData({ ...formData, rental_frequency: value })}
+                          >
+                            <SelectTrigger className="w-32">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="weekly">Weekly</SelectItem>
+                              <SelectItem value="monthly">Monthly</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      ) : (
+                        <p className="text-lg">
+                          {trailer.rental_rate 
+                            ? `$${trailer.rental_rate.toLocaleString()} / ${trailer.rental_frequency || 'month'}`
+                            : <span className="text-muted-foreground">Not set</span>
+                          }
+                        </p>
                       )}
                     </div>
                   </div>

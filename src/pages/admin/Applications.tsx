@@ -26,7 +26,8 @@ import {
   Lock,
   Loader2 as LucideLoader2,
   CreditCard,
-  Send
+  Send,
+  Truck
 } from "lucide-react";
 import {
   Table,
@@ -147,12 +148,25 @@ const DocumentLink = ({ label, url }: { label: string; url: string | null }) => 
   );
 };
 
+interface AvailableTrailer {
+  id: string;
+  trailer_number: string;
+  type: string;
+  vin: string | null;
+  make: string | null;
+  year: number | null;
+}
+
 export default function Applications() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [selectedApplication, setSelectedApplication] = useState<Application | null>(null);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [statusDialogOpen, setStatusDialogOpen] = useState(false);
+  const [assignTrailerDialogOpen, setAssignTrailerDialogOpen] = useState(false);
+  const [selectedTrailerId, setSelectedTrailerId] = useState<string>("");
+  const [availableTrailers, setAvailableTrailers] = useState<AvailableTrailer[]>([]);
+  const [assigningTrailer, setAssigningTrailer] = useState(false);
   const [newStatus, setNewStatus] = useState("");
   const [adminNotes, setAdminNotes] = useState("");
   const [sendEmail, setSendEmail] = useState(true);
@@ -338,6 +352,84 @@ export default function Applications() {
       notes: adminNotes,
       sendNotification: sendEmail && ['pending_review', 'approved', 'rejected'].includes(newStatus)
     });
+  };
+
+  const fetchAvailableTrailers = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("trailers")
+        .select("id, trailer_number, type, vin, make, year")
+        .eq("status", "available")
+        .is("customer_id", null)
+        .order("trailer_number");
+
+      if (error) throw error;
+      setAvailableTrailers(data || []);
+    } catch (error) {
+      console.error("Error fetching available trailers:", error);
+    }
+  };
+
+  const openAssignTrailerDialog = async (app: Application) => {
+    setSelectedApplication(app);
+    setSelectedTrailerId("");
+    await fetchAvailableTrailers();
+    setAssignTrailerDialogOpen(true);
+  };
+
+  const handleAssignTrailer = async () => {
+    if (!selectedApplication || !selectedTrailerId) return;
+    
+    setAssigningTrailer(true);
+    try {
+      // Get the customer record linked to this application's user
+      const { data: customerData, error: customerError } = await supabase
+        .from("customers")
+        .select("id")
+        .eq("email", selectedApplication.profiles?.email)
+        .maybeSingle();
+
+      if (customerError) throw customerError;
+
+      if (!customerData) {
+        toast({
+          title: "Error",
+          description: "No customer record found for this applicant. Please create a customer first.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Update the trailer with customer assignment
+      const { error } = await supabase
+        .from("trailers")
+        .update({
+          customer_id: customerData.id,
+          is_rented: true,
+          status: "rented"
+        })
+        .eq("id", selectedTrailerId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Trailer Assigned",
+        description: "Trailer has been assigned to the customer successfully."
+      });
+      
+      setAssignTrailerDialogOpen(false);
+      setSelectedApplication(null);
+      setSelectedTrailerId("");
+    } catch (error) {
+      console.error("Error assigning trailer:", error);
+      toast({
+        title: "Assignment Failed",
+        description: "Failed to assign trailer. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setAssigningTrailer(false);
+    }
   };
 
   const stats = {
@@ -532,6 +624,16 @@ export default function Applications() {
                               >
                                 Update
                               </Button>
+                              {app.status === "approved" && (
+                                <Button
+                                  variant="default"
+                                  size="sm"
+                                  onClick={() => openAssignTrailerDialog(app)}
+                                  title="Assign a trailer to this customer"
+                                >
+                                  <Truck className="h-4 w-4" />
+                                </Button>
+                              )}
                               {app.status === "approved" && app.payment_setup_status !== "completed" && (
                                 <Button
                                   variant="secondary"
@@ -562,7 +664,7 @@ export default function Applications() {
                                 </Button>
                               )}
                               {app.payment_setup_status === "completed" && (
-                                <Badge variant="outline" className="ml-1 bg-green-100 text-green-700 text-xs">ACH ✓</Badge>
+                                <Badge variant="outline" className="ml-1 text-xs">ACH ✓</Badge>
                               )}
                             </div>
                           </TableCell>
@@ -808,6 +910,82 @@ export default function Applications() {
                 </>
               ) : (
                 "Update Status"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Assign Trailer Dialog */}
+      <Dialog open={assignTrailerDialogOpen} onOpenChange={setAssignTrailerDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Assign Trailer</DialogTitle>
+            <DialogDescription>
+              Select an available trailer to assign to {selectedApplication?.profiles?.first_name} {selectedApplication?.profiles?.last_name}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4 space-y-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Available Trailers</label>
+              <Select value={selectedTrailerId} onValueChange={setSelectedTrailerId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a trailer..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {availableTrailers.length === 0 ? (
+                    <SelectItem value="none" disabled>No trailers available</SelectItem>
+                  ) : (
+                    availableTrailers.map((trailer) => (
+                      <SelectItem key={trailer.id} value={trailer.id}>
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium">{trailer.trailer_number}</span>
+                          <span className="text-muted-foreground">
+                            - {trailer.type} {trailer.year && `(${trailer.year})`}
+                          </span>
+                        </div>
+                      </SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+            {selectedTrailerId && (
+              <div className="p-3 rounded-lg bg-muted/50 text-sm">
+                <p className="font-medium">Selected Trailer</p>
+                {(() => {
+                  const trailer = availableTrailers.find(t => t.id === selectedTrailerId);
+                  if (!trailer) return null;
+                  return (
+                    <div className="mt-1 space-y-1 text-muted-foreground">
+                      <p>Number: {trailer.trailer_number}</p>
+                      <p>Type: {trailer.type}</p>
+                      {trailer.vin && <p className="font-mono text-xs">VIN: {trailer.vin}</p>}
+                      {trailer.make && <p>Make: {trailer.make}</p>}
+                    </div>
+                  );
+                })()}
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAssignTrailerDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleAssignTrailer} 
+              disabled={!selectedTrailerId || assigningTrailer}
+            >
+              {assigningTrailer ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Assigning...
+                </>
+              ) : (
+                <>
+                  <Truck className="mr-2 h-4 w-4" />
+                  Assign Trailer
+                </>
               )}
             </Button>
           </DialogFooter>
