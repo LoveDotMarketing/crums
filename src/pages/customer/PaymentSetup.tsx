@@ -70,8 +70,7 @@ export default function PaymentSetup() {
       // Publishable key is safe to include in frontend code
       const stripePublishableKey = "pk_test_51Sa3rWPtmYCiZhW22r6qr9yOYgo6tLZPWtlebm2BRdoX08weKgT6zFrr2sCIZIbwZY6OyCuKspBzOSnUYNktjkkg00GkEw1CPJ";
 
-      // Redirect to Stripe-hosted page for bank account setup
-      // For Financial Connections, we'll use the Stripe.js integration
+      // Load Stripe.js
       const { loadStripe } = await import("@stripe/stripe-js");
       const stripe = await loadStripe(stripePublishableKey);
       
@@ -81,11 +80,14 @@ export default function PaymentSetup() {
 
       // Confirm the SetupIntent with Financial Connections
       // The Financial Connections modal will open automatically
+      // For Financial Connections, we pass an empty object - the modal collects bank details
+      // @ts-ignore - Stripe types don't match runtime behavior for Financial Connections
       const result = await stripe.confirmUsBankAccountSetup(data.clientSecret);
       
       const { error: confirmError, setupIntent } = result;
 
       if (confirmError) {
+        console.error("Stripe confirmError:", confirmError);
         if (confirmError.type === "validation_error") {
           toast.error(confirmError.message || "Validation error");
         } else {
