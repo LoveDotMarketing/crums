@@ -3,7 +3,7 @@ import { Footer } from "@/components/Footer";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { SEO } from "@/components/SEO";
 import { Card, CardContent } from "@/components/ui/card";
-import { Mail, Phone, User } from "lucide-react";
+import { Mail, Phone, User, Globe, MapPin, Building2 } from "lucide-react";
 
 interface PartnerContact {
   name: string;
@@ -14,8 +14,10 @@ interface PartnerContact {
 interface Partner {
   name: string;
   description: string;
-  logo: string;
-  email: string;
+  logo?: string;
+  email?: string;
+  website?: string;
+  address?: string;
   contacts: PartnerContact[];
 }
 
@@ -25,10 +27,23 @@ const partners: Partner[] = [
     description: "Diesel Truck and Trailer Repair - Your trusted partner for roadside assistance and emergency repairs.",
     logo: "/images/partners/pr-roadside-service-logo.png",
     email: "Prroadside@gmail.com",
+    website: undefined,
+    address: undefined,
     contacts: [
       { name: "Jorge", role: "Owner", phone: "(210) 840-9131" },
       { name: "Holly", role: "Co-owner", phone: "(210) 843-9404" },
       { name: "Jennifer", role: "Office Assistant", phone: "(210) 306-0228" },
+    ],
+  },
+  {
+    name: "S6 Tax & Bookkeeping",
+    description: "Professional tax preparation and bookkeeping services for trucking businesses and owner-operators.",
+    logo: undefined,
+    email: undefined,
+    website: "https://s6taxandbook.com/",
+    address: "9035 Spiral Woods, Universal City, TX 78148",
+    contacts: [
+      { name: "S6 Tax & Bookkeeping", role: "Main Office", phone: "(210) 919-7677" },
     ],
   },
 ];
@@ -65,14 +80,20 @@ const Partners = () => {
                   <CardContent className="p-0">
                     <div className="flex flex-col md:flex-row">
                       {/* Logo Section */}
-                      <div className="bg-[#d4a044] p-6 flex items-center justify-center md:w-1/3">
-                        <img
-                          src={partner.logo}
-                          alt={`${partner.name} logo`}
-                          className="max-w-[200px] w-full h-auto"
-                          loading="lazy"
-                        />
-                      </div>
+                      {partner.logo ? (
+                        <div className="bg-[#d4a044] p-6 flex items-center justify-center md:w-1/3">
+                          <img
+                            src={partner.logo}
+                            alt={`${partner.name} logo`}
+                            className="max-w-[200px] w-full h-auto"
+                            loading="lazy"
+                          />
+                        </div>
+                      ) : (
+                        <div className="bg-primary p-6 flex items-center justify-center md:w-1/3">
+                          <Building2 className="h-20 w-20 text-primary-foreground" />
+                        </div>
+                      )}
 
                       {/* Info Section */}
                       <div className="p-6 flex-1">
@@ -83,14 +104,37 @@ const Partners = () => {
                           {partner.description}
                         </p>
 
+                        {/* Address */}
+                        {partner.address && (
+                          <div className="flex items-start gap-2 text-muted-foreground mb-2">
+                            <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                            <span>{partner.address}</span>
+                          </div>
+                        )}
+
+                        {/* Website */}
+                        {partner.website && (
+                          <a
+                            href={partner.website}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-2 text-primary hover:underline mb-2"
+                          >
+                            <Globe className="h-4 w-4" />
+                            {partner.website.replace(/^https?:\/\//, '').replace(/\/$/, '')}
+                          </a>
+                        )}
+
                         {/* Email */}
-                        <a
-                          href={`mailto:${partner.email}`}
-                          className="inline-flex items-center gap-2 text-primary hover:underline mb-4"
-                        >
-                          <Mail className="h-4 w-4" />
-                          {partner.email}
-                        </a>
+                        {partner.email && (
+                          <a
+                            href={`mailto:${partner.email}`}
+                            className="inline-flex items-center gap-2 text-primary hover:underline mb-4 block"
+                          >
+                            <Mail className="h-4 w-4" />
+                            {partner.email}
+                          </a>
+                        )}
 
                         {/* Contacts */}
                         <div className="space-y-3 mt-4">
