@@ -156,12 +156,12 @@ serve(async (req) => {
                 
                 <p style="color: #333; line-height: 1.6;">
                   Great news! Your lease application has been approved. To finalize your account and enable billing, 
-                  please complete your payment setup by linking your bank account.
+                  please complete your payment setup by securely linking your bank account.
                 </p>
                 
                 <p style="color: #333; line-height: 1.6;">
-                  We use secure bank account verification through our payment partner to ensure your financial 
-                  information is protected. This process takes just a few minutes.
+                  Log in to your CRUMS account and follow the simple steps to connect your bank. Your financial 
+                  information is fully protected through our secure verification process. This only takes a few minutes.
                 </p>
                 
                 <div style="text-align: center; margin: 30px 0;">
@@ -169,7 +169,7 @@ serve(async (req) => {
                      style="background-color: #4f46e5; color: #ffffff; padding: 14px 28px; 
                             text-decoration: none; border-radius: 6px; font-weight: bold;
                             display: inline-block;">
-                    Complete Payment Setup
+                    Log In to Complete Setup
                   </a>
                 </div>
                 
