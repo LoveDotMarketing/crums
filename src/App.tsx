@@ -101,7 +101,7 @@ const PaymentSetup = lazy(() => import("./pages/customer/PaymentSetup"));
 
 // Mechanic pages
 const MechanicDashboard = lazy(() => import("./pages/mechanic/MechanicDashboard"));
-
+const DOTInspectionForm = lazy(() => import("./pages/mechanic/DOTInspectionForm"));
 // Loading fallback component
 const PageLoader = () => (
   <div className="flex items-center justify-center min-h-screen">
@@ -357,6 +357,14 @@ const App = () => (
               element={
                 <ProtectedRoute requiredRole="mechanic">
                   <MechanicDashboard />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/dashboard/mechanic/inspection"
+              element={
+                <ProtectedRoute requiredRole="mechanic">
+                  <DOTInspectionForm />
                 </ProtectedRoute>
               } 
             />
