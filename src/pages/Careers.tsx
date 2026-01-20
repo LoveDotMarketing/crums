@@ -54,7 +54,8 @@ const Careers = () => {
         "addressCountry": "US"
       }
     },
-    "datePosted": "2025-11-26"
+    "datePosted": "2025-11-26",
+    "validThrough": "2026-04-20"
   }));
 
   const breadcrumbSchema = generateBreadcrumbSchema([

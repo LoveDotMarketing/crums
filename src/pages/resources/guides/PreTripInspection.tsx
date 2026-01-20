@@ -119,6 +119,64 @@ const faqSchema = {
   ]
 };
 
+// HowTo Schema for rich snippets
+const howToSchema = {
+  "@context": "https://schema.org",
+  "@type": "HowTo",
+  "name": "How to Perform a Commercial Trailer Pre-Trip Inspection",
+  "description": "Complete step-by-step guide to inspecting your semi-trailer before every trip to ensure FMCSA compliance and roadside safety.",
+  "totalTime": "PT30M",
+  "estimatedCost": {
+    "@type": "MonetaryAmount",
+    "currency": "USD",
+    "value": "0"
+  },
+  "step": [
+    {
+      "@type": "HowToStep",
+      "position": 1,
+      "name": "Inspect Tires & Wheels",
+      "text": "Check tire pressure (95-110 PSI typical), tread depth (minimum 4/32\" steer, 2/32\" drive/trailer), sidewall condition, valve stems, lug nuts, rims, and hub seals."
+    },
+    {
+      "@type": "HowToStep",
+      "position": 2,
+      "name": "Check Brakes & Air System",
+      "text": "Verify air pressure builds to 120-140 PSI, no air leaks, glad hands sealed, air lines intact, brake chambers secure, slack adjusters properly adjusted, and spring brakes release properly."
+    },
+    {
+      "@type": "HowToStep",
+      "position": 3,
+      "name": "Test Lights & Reflectors",
+      "text": "Test all marker lights, brake lights, turn signals, clearance lights. Check for broken lenses, intact reflective tape (DOT-C2), and functioning ABS indicator."
+    },
+    {
+      "@type": "HowToStep",
+      "position": 4,
+      "name": "Verify Coupling Equipment",
+      "text": "Confirm fifth wheel locked around kingpin with no gap, kingpin condition, apron plate intact, landing gear raised and secure, and release handle in locked position."
+    },
+    {
+      "@type": "HowToStep",
+      "position": 5,
+      "name": "Examine Doors & Seals",
+      "text": "Test rear doors open/close freely, check hinges, latch mechanisms, weather seals, door handles, and security seals if required."
+    },
+    {
+      "@type": "HowToStep",
+      "position": 6,
+      "name": "Inspect Body & Frame",
+      "text": "Examine floor for holes or soft spots, sidewalls and roof condition, frame for cracks, mud flaps presence, and undercarriage components."
+    },
+    {
+      "@type": "HowToStep",
+      "position": 7,
+      "name": "Verify Documentation & Equipment",
+      "text": "Confirm current registration, valid annual inspection sticker, available load securement equipment, emergency triangles, and charged fire extinguisher."
+    }
+  ]
+};
+
 // Breadcrumb Schema
 const breadcrumbSchema = generateBreadcrumbSchema([
   { name: "Home", url: "https://crumsleasing.com/" },
@@ -324,7 +382,7 @@ const PreTripInspection = () => {
         title={articleData.title}
         description={articleData.description}
         canonical="https://crumsleasing.com/resources/guides/pre-trip-inspection"
-        structuredData={[articleSchema, faqSchema, breadcrumbSchema]}
+        structuredData={[articleSchema, faqSchema, howToSchema, breadcrumbSchema]}
         article={{
           publishedTime: articleData.publishedDate,
           modifiedTime: articleData.updatedDate,

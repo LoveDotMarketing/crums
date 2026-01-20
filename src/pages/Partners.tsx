@@ -49,12 +49,43 @@ const partners: Partner[] = [
 ];
 
 const Partners = () => {
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://crumsleasing.com/" },
+      { "@type": "ListItem", "position": 2, "name": "Partners", "item": "https://crumsleasing.com/partners" }
+    ]
+  };
+
+  const partnerSchemas = partners.map((partner) => ({
+    "@context": "https://schema.org",
+    "@type": "LocalBusiness",
+    "name": partner.name,
+    "description": partner.description,
+    ...(partner.email && { "email": partner.email }),
+    ...(partner.website && { "url": partner.website }),
+    ...(partner.address && { 
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": partner.address
+      }
+    }),
+    "telephone": partner.contacts[0]?.phone
+  }));
+
+  const combinedSchema = {
+    "@context": "https://schema.org",
+    "@graph": [breadcrumbSchema, ...partnerSchemas]
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <SEO
         title="Partners | CRUMS Leasing"
         description="Meet our trusted partners who help keep your trailers on the road. CRUMS Leasing works with the best in diesel truck and trailer repair services."
         canonical="https://crumsleasing.com/partners"
+        structuredData={combinedSchema}
       />
       <Navigation />
       <Breadcrumbs />
