@@ -21,9 +21,29 @@ const Reviews = () => {
 
   const reviewSchema = generateReviewSchema(customerReviews);
 
+  const videoSchema = {
+    "@context": "https://schema.org",
+    "@type": "VideoObject",
+    "name": "CRUMS Leasing Customer Review",
+    "description": "A customer testimonial about their experience with CRUMS Leasing trailer services.",
+    "thumbnailUrl": "https://img.youtube.com/vi/Xj7UTGezYfY/maxresdefault.jpg",
+    "uploadDate": "2024-12-01",
+    "contentUrl": "https://youtu.be/Xj7UTGezYfY",
+    "embedUrl": "https://www.youtube.com/embed/Xj7UTGezYfY",
+    "duration": "PT1M",
+    "publisher": {
+      "@type": "Organization",
+      "name": "CRUMS Leasing",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://crumsleasing.com/logo.png"
+      }
+    }
+  };
+
   const combinedSchema = {
     "@context": "https://schema.org",
-    "@graph": [breadcrumbSchema, reviewSchema]
+    "@graph": [breadcrumbSchema, reviewSchema, videoSchema]
   };
 
   const reviewPlatforms = [

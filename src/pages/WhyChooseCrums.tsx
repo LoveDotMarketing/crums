@@ -25,6 +25,7 @@ const WhyChooseCrums = () => {
     "contentUrl": "https://youtu.be/ttqu5Ef2SZU",
     "embedUrl": "https://www.youtube.com/embed/ttqu5Ef2SZU",
     "duration": "PT1M",
+    "transcript": "On the road, reliability is everything. At CRUMS Leasing, we give CDL drivers access to the trailers they need to keep moving and keep earning. Whether you run dry vans, flatbeds, or refrigerated units, our fleet is built for performance, durability, and your everyday workload. We make leasing straightforward with flexible terms, fast approvals, and equipment you can trust. From independent owner-operators to growing fleets, CRUMS Leasing delivers the support and capacity your business depends on. CRUMS Leasing. Built for drivers who keep America moving.",
     "publisher": {
       "@type": "Organization",
       "name": "CRUMS Leasing",

@@ -157,10 +157,10 @@ const News = () => {
               LinkedIn
             </a>
             <a 
-              href="https://www.facebook.com/people/CRUMS-Leasing/100090574399864/" 
+              href="https://www.facebook.com/CRUMSLeasing/" 
               target="_blank" 
               rel="noopener noreferrer"
-              onClick={() => trackOutboundLink('https://www.facebook.com/people/CRUMS-Leasing/100090574399864/')}
+              onClick={() => trackOutboundLink('https://www.facebook.com/CRUMSLeasing/')}
               className="bg-primary-foreground/10 hover:bg-primary-foreground/20 px-6 py-3 rounded-lg font-semibold transition-colors"
             >
               Facebook
