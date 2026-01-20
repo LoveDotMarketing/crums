@@ -100,7 +100,7 @@ const FlatbedTrailers = () => {
     <div className="min-h-screen flex flex-col">
       <SEO
         title="Flatbed Trailer Leasing | 48' & 53' Deck Height & Weight Capacity"
-        description="Lease flatbed and step deck trailers from CRUMS. 48,000 lb capacity, 60 inch deck height, multiple tie-down points. Flexible terms starting at 12 months."
+        description="Lease flatbed trailers from CRUMS. 48,000 lb capacity, 60 inch deck height, multiple tie-down points. Flexible terms starting at 12 months."
         canonical="https://crumsleasing.com/flatbed-trailers"
         structuredData={combinedSchema}
       />
@@ -230,39 +230,6 @@ const FlatbedTrailers = () => {
                 </ul>
               </CardContent>
             </Card>
-            <Card className="border-2">
-              <CardContent className="p-8">
-                <div className="flex items-center gap-3 mb-6">
-                  <Ruler className="h-8 w-8 text-secondary" />
-                  <h3 className="text-2xl font-bold">Step Deck (Drop Deck)</h3>
-                </div>
-                <p className="text-muted-foreground mb-6">
-                  Lower deck section allows for taller cargo while staying within height limits.
-                </p>
-                <ul className="space-y-3 text-muted-foreground">
-                  <li className="flex items-start">
-                    <CheckCircle className="h-5 w-5 text-secondary mr-3 mt-0.5 flex-shrink-0" />
-                    <span>Upper Deck: ~11 feet</span>
-                  </li>
-                  <li className="flex items-start">
-                    <CheckCircle className="h-5 w-5 text-secondary mr-3 mt-0.5 flex-shrink-0" />
-                    <span>Lower Deck: ~37 feet</span>
-                  </li>
-                  <li className="flex items-start">
-                    <CheckCircle className="h-5 w-5 text-secondary mr-3 mt-0.5 flex-shrink-0" />
-                    <span>Lower Deck Height: ~42 inches</span>
-                  </li>
-                  <li className="flex items-start">
-                    <CheckCircle className="h-5 w-5 text-secondary mr-3 mt-0.5 flex-shrink-0" />
-                    <span>Extra height clearance: ~12 inches</span>
-                  </li>
-                  <li className="flex items-start">
-                    <CheckCircle className="h-5 w-5 text-secondary mr-3 mt-0.5 flex-shrink-0" />
-                    <span>Ideal for: Tall equipment, vehicles, machinery</span>
-                  </li>
-                </ul>
-              </CardContent>
-            </Card>
           </div>
         </div>
       </section>
@@ -378,16 +345,6 @@ const FlatbedTrailers = () => {
                   A standard flatbed trailer has a deck height of approximately 60 inches (5 feet) from the ground. 
                   Step deck trailers have a lower rear section at about 42 inches, providing an extra 12-18 inches 
                   of height clearance for taller cargo.
-                </p>
-              </CardContent>
-            </Card>
-            <Card className="border-2">
-              <CardContent className="p-6">
-                <h3 className="text-lg font-bold mb-2">What is the difference between a flatbed and step deck trailer?</h3>
-                <p className="text-muted-foreground">
-                  A standard flatbed has a uniform deck height, while a step deck (or drop deck) has a lower rear 
-                  section. Step decks can haul taller cargo while staying within height limits, making them ideal 
-                  for equipment that exceeds standard flatbed height restrictions.
                 </p>
               </CardContent>
             </Card>

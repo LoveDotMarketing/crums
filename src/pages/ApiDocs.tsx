@@ -127,7 +127,7 @@ const trailerEndpoints: EndpointProps[] = [
     description: "Retrieve a list of all trailers with optional filtering by type, status, or trailer number.",
     isProtected: false,
     parameters: [
-      { name: "type", type: "string", required: false, description: "Filter by trailer type (e.g., 'Dry Van', 'Flat Bed')" },
+      { name: "type", type: "string", required: false, description: "Filter by trailer type (e.g., 'Dry Van', 'Flatbed')" },
       { name: "status", type: "string", required: false, description: "Filter by status ('available', 'rented', 'maintenance')" },
       { name: "trailer_number", type: "string", required: false, description: "Search by trailer number (partial match)" },
     ],
@@ -148,10 +148,10 @@ const trailerEndpoints: EndpointProps[] = [
     parameters: [
       { name: "type", type: "string", required: false, description: "Filter by trailer type" },
     ],
-    exampleRequest: { type: "Flat Bed" },
+    exampleRequest: { type: "Flatbed" },
     exampleResponse: {
       available_trailers: [
-        { id: "uuid", trailer_number: "CRUMS-015", type: "Flat Bed", year: 2021, make: "Great Dane", status: "available" }
+        { id: "uuid", trailer_number: "CRUMS-015", type: "Flatbed", year: 2021, make: "Great Dane", status: "available" }
       ],
       count: 1
     }
@@ -169,7 +169,7 @@ const trailerEndpoints: EndpointProps[] = [
       available: 18,
       rented: 31,
       maintenance: 0,
-      by_type: { "Dry Van": 35, "Flat Bed": 14 },
+      by_type: { "Dry Van": 35, "Flatbed": 14 },
       by_status: { available: 18, rented: 31, maintenance: 0 }
     }
   },
