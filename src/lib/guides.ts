@@ -30,7 +30,7 @@ export const guides: Guide[] = [
   {
     slug: "choosing-trailer",
     title: "How to Choose the Right Trailer for Your Haul",
-    description: "Break down the difference between flatbeds, reefers, dry vans, and more — with examples of what jobs fit each type.",
+    description: "Break down the difference between flatbeds, dry vans, and more — with examples of what jobs fit each type.",
     icon: Truck,
     available: true,
     lastModified: "2025-12-04",
@@ -50,7 +50,7 @@ export const guides: Guide[] = [
   {
     slug: "trailer-specifications",
     title: "Complete Trailer Specifications & Dimensions Guide",
-    description: "Comprehensive guide to trailer dimensions, weight capacities, and cubic feet for 53' dry vans, 48' flatbeds, reefers, and more.",
+    description: "Comprehensive guide to trailer dimensions, weight capacities, and cubic feet for 53' dry vans, 48' flatbeds, and more.",
     icon: Ruler,
     available: true,
     lastModified: "2025-12-26",

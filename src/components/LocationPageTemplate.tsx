@@ -97,7 +97,7 @@ export const LocationPageTemplate = ({ location }: LocationPageTemplateProps) =>
         "name": location.state
       }
     },
-    "description": `Commercial trailer rental and leasing services in ${location.city}, ${location.state}. 53-foot dry van, flatbed, and refrigerated trailers available.`,
+    "description": `Commercial trailer rental and leasing services in ${location.city}, ${location.state}. 53-foot dry van and flatbed trailers available.`,
     "offers": {
       "@type": "Offer",
       "availability": "https://schema.org/InStock"
@@ -445,7 +445,7 @@ export const LocationPageTemplate = ({ location }: LocationPageTemplateProps) =>
                     <Link to="/resources/guides/choosing-trailer" className="text-secondary hover:underline font-medium">
                       How to Choose the Right Trailer
                     </Link>
-                    <p className="text-sm text-muted-foreground">Dry van, flatbed, or reefer?</p>
+                    <p className="text-sm text-muted-foreground">Dry van or flatbed?</p>
                   </li>
                   <li>
                     <Link to="/resources/guides/trailer-specifications" className="text-secondary hover:underline font-medium">

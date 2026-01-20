@@ -982,7 +982,7 @@ const Index = () => {
                     How to Choose the Right Trailer
                   </h3>
                   <p className="text-muted-foreground mb-4 leading-relaxed">
-                    Learn the key differences between dry vans, flatbeds, and reefers. Find the perfect match for your cargo.
+                    Learn the key differences between dry vans and flatbeds. Find the perfect match for your cargo.
                   </p>
                   <span className="inline-flex items-center text-primary font-semibold group-hover:gap-2 transition-all">
                     Read the Guide <ArrowRight className="ml-1 h-4 w-4" />
@@ -1116,7 +1116,7 @@ const Index = () => {
               Trailer Leasing FAQ
             </h2>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-              Find answers to common questions about our dry van, flatbed, and refrigerated trailer leasing services.
+              Find answers to common questions about our dry van and flatbed trailer leasing services.
             </p>
           </div>
           

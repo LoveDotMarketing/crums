@@ -476,11 +476,7 @@ const FlatbedTrailers = () => {
               <Link to="/dry-van-trailers" className="text-secondary hover:underline font-semibold">
                 dry van trailer leasing
               </Link>{" "}
-              for general freight. For temperature-controlled cargo, explore our{" "}
-              <Link to="/refrigerated-trailers" className="text-secondary hover:underline font-semibold">
-                refrigerated trailer leasing
-              </Link>{" "}
-              options.
+              for general freight.
             </p>
             <p className="text-sm text-muted-foreground">
               Not sure which trailer is right for your operation? Read our{" "}

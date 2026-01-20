@@ -27,7 +27,7 @@ const FoodDistribution = () => {
     <div className="min-h-screen flex flex-col bg-background">
       <SEO
         title="Food Distribution Trailer Leasing | CRUMS Leasing"
-        description="Trailer leasing for food distribution companies. CRUMS Leasing offers refrigerated and dry van trailers for safe, reliable food transport."
+        description="Trailer leasing for food distribution companies. CRUMS Leasing offers dry van trailers for safe, reliable food transport."
         canonical="https://crumsleasing.com/industries/food-distribution"
         structuredData={[foodDistributionServiceSchema, breadcrumbSchema]}
       />
@@ -120,7 +120,7 @@ const FoodDistribution = () => {
                   <BookOpen className="h-8 w-8 text-secondary mx-auto mb-3" />
                   <h3 className="font-bold text-foreground mb-2">Trailer Specifications</h3>
                   <p className="text-sm text-muted-foreground mb-4">
-                    Complete dimensions and temperature capabilities.
+                    Complete trailer dimensions and capacities.
                   </p>
                   <Link to="/resources/guides/trailer-specifications" className="text-secondary hover:underline font-medium text-sm">
                     View Specs →

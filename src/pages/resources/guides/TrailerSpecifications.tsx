@@ -428,7 +428,7 @@ const TrailerSpecifications = () => {
           <section className="text-center py-12 px-6 bg-gradient-to-r from-primary to-brand-teal-dark rounded-xl text-primary-foreground">
             <h2 className="text-2xl md:text-3xl font-bold mb-4">Need a Trailer for Your Next Haul?</h2>
             <p className="text-lg mb-6 text-primary-foreground/90 max-w-2xl mx-auto">
-              CRUMS Leasing offers dry van, flatbed, and refrigerated trailers with flexible lease terms starting at 12 months.
+              CRUMS Leasing offers dry van and flatbed trailers with flexible lease terms starting at 12 months.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button asChild size="lg" className="bg-secondary hover:bg-secondary/90">
