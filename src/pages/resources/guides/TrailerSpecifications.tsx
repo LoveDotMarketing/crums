@@ -67,7 +67,7 @@ const TrailerSpecifications = () => {
     "@context": "https://schema.org",
     "@type": "Article",
     "headline": "Complete Trailer Specifications Guide: Dimensions, Weight Capacity & Cubic Feet",
-    "description": "Comprehensive trailer specifications including 53-foot and 48-foot dry van dimensions, flatbed deck heights, weight capacities, and reefer specifications.",
+    "description": "Comprehensive trailer specifications including 53-foot and 48-foot dry van dimensions, flatbed deck heights, and weight capacities.",
     "author": {
       "@type": "Organization",
       "name": "CRUMS Leasing"
@@ -104,7 +104,7 @@ const TrailerSpecifications = () => {
           </div>
           <h1 className="text-4xl md:text-6xl font-bold mb-6">Trailer Specifications Guide</h1>
           <p className="text-xl md:text-2xl max-w-4xl mx-auto text-primary-foreground/90">
-            Complete dimensions, weight capacities, and cubic feet for dry van, flatbed, and refrigerated trailers.
+            Complete dimensions, weight capacities, and cubic feet for dry van and flatbed trailers.
           </p>
         </div>
       </section>
@@ -317,73 +317,6 @@ const TrailerSpecifications = () => {
                 <div className="mt-6 pt-6 border-t">
                   <Link to="/flatbed-trailers" className="inline-flex items-center text-primary hover:underline font-medium">
                     View our flatbed trailer leasing options
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </Link>
-                </div>
-              </CardContent>
-            </Card>
-          </section>
-
-          {/* Refrigerated Trailer Specifications */}
-          <section className="mb-12">
-            <Card className="border-2">
-              <CardHeader className="bg-blue-50 dark:bg-blue-950/20">
-                <div className="flex items-center gap-3">
-                  <Weight className="h-8 w-8 text-blue-600" />
-                  <div>
-                    <CardTitle className="text-2xl">Refrigerated (Reefer) Trailer Specifications</CardTitle>
-                    <CardDescription>Temperature-controlled transport solutions</CardDescription>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className="pt-6">
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div>
-                    <h3 className="font-semibold text-lg mb-4">Interior Dimensions (53')</h3>
-                    <ul className="space-y-3">
-                      <li className="flex justify-between items-center py-2 border-b">
-                        <span className="text-muted-foreground">Length</span>
-                        <span className="font-semibold">52.5 feet (reduced for insulation)</span>
-                      </li>
-                      <li className="flex justify-between items-center py-2 border-b">
-                        <span className="text-muted-foreground">Width</span>
-                        <span className="font-semibold">98-100 inches</span>
-                      </li>
-                      <li className="flex justify-between items-center py-2 border-b">
-                        <span className="text-muted-foreground">Height</span>
-                        <span className="font-semibold">106-108 inches</span>
-                      </li>
-                      <li className="flex justify-between items-center py-2">
-                        <span className="text-muted-foreground">Cubic Feet</span>
-                        <span className="font-semibold text-blue-600">~3,100 cu ft</span>
-                      </li>
-                    </ul>
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-lg mb-4">Temperature & Capacity</h3>
-                    <ul className="space-y-3">
-                      <li className="flex justify-between items-center py-2 border-b">
-                        <span className="text-muted-foreground">Temperature Range</span>
-                        <span className="font-semibold">-20°F to +70°F</span>
-                      </li>
-                      <li className="flex justify-between items-center py-2 border-b">
-                        <span className="text-muted-foreground">Pallet Capacity</span>
-                        <span className="font-semibold">22-24 pallets</span>
-                      </li>
-                      <li className="flex justify-between items-center py-2 border-b">
-                        <span className="text-muted-foreground">Payload Capacity</span>
-                        <span className="font-semibold">Up to 42,000 lbs</span>
-                      </li>
-                      <li className="flex justify-between items-center py-2">
-                        <span className="text-muted-foreground">Trailer Weight (Empty)</span>
-                        <span className="font-semibold">15,000-18,000 lbs</span>
-                      </li>
-                    </ul>
-                  </div>
-                </div>
-                <div className="mt-6 pt-6 border-t">
-                  <Link to="/refrigerated-trailers" className="inline-flex items-center text-primary hover:underline font-medium">
-                    View our refrigerated trailer leasing options
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Link>
                 </div>
