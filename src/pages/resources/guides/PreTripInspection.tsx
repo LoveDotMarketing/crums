@@ -62,7 +62,7 @@ const articleSchema = {
     "url": "https://crumsleasing.com",
     "logo": {
       "@type": "ImageObject",
-      "url": "https://crumsleasing.com/og-image.jpg"
+      "url": "https://crumsleasing.com/logo.png"
     }
   },
   "mainEntityOfPage": {
@@ -325,6 +325,12 @@ const PreTripInspection = () => {
         description={articleData.description}
         canonical="https://crumsleasing.com/resources/guides/pre-trip-inspection"
         structuredData={[articleSchema, faqSchema, breadcrumbSchema]}
+        article={{
+          publishedTime: articleData.publishedDate,
+          modifiedTime: articleData.updatedDate,
+          section: "Industry Guides",
+          author: articleData.author
+        }}
       />
       <Navigation />
 
