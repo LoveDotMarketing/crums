@@ -33,7 +33,7 @@ const flatbedTrailerImg = "/images/flatbed-trailer.webp";
 // Article metadata
 const articleData = {
   title: "How to Choose the Right Trailer for Your Haul",
-  description: "Learn the key differences between dry vans, flatbeds, reefers, and specialty trailers. Find the perfect match for your cargo with this comprehensive guide from CRUMS Leasing.",
+  description: "Learn the key differences between dry vans, flatbeds, and specialty trailers. Find the perfect match for your cargo with this comprehensive guide from CRUMS Leasing.",
   publishedDate: "2025-12-04",
   updatedDate: "2025-12-04",
   readTime: "8 min read",
@@ -161,9 +161,9 @@ const trailerTypes = [
       "Furniture and household goods"
     ],
     notIdealFor: [
-      "Temperature-sensitive cargo",
       "Oversized equipment",
-      "Heavy construction materials"
+      "Heavy construction materials",
+      "Irregularly shaped loads"
     ],
     specs: {
       length: "53 feet (standard)",
@@ -612,7 +612,7 @@ const ChoosingTrailer = () => {
                     How long is a standard semi-trailer?
                   </h3>
                   <p className="text-muted-foreground">
-                    The standard length for a semi-trailer in the United States is 53 feet. This applies to dry vans, reefers, and most flatbeds. The maximum gross vehicle weight allowed is 80,000 pounds, which includes the truck, trailer, and cargo combined.
+                    The standard length for a semi-trailer in the United States is 53 feet. This applies to dry vans and most flatbeds. The maximum gross vehicle weight allowed is 80,000 pounds, which includes the truck, trailer, and cargo combined.
                   </p>
                 </Card>
                 
