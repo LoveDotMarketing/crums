@@ -194,29 +194,6 @@ export default function Profile() {
         <div className="container mx-auto px-4 max-w-3xl">
           <h1 className="text-3xl font-bold text-foreground mb-8">My Profile</h1>
 
-          {/* ACH Payment Setup Alert */}
-          {applicationStatus === "approved" && paymentSetupStatus !== "completed" && (
-            <Card className="mb-6 border-amber-500/50 bg-amber-50 dark:bg-amber-900/20">
-              <CardHeader className="pb-3">
-                <CardTitle className="flex items-center gap-2 text-amber-700 dark:text-amber-400">
-                  <CreditCard className="h-5 w-5" />
-                  Action Required: Complete Payment Setup
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-amber-700 dark:text-amber-300 mb-4">
-                  Complete your ACH payment setup to finalize your account and start leasing trailers.
-                </p>
-                <Link to="/dashboard/customer/payment-setup">
-                  <Button className="bg-amber-600 hover:bg-amber-700 text-white">
-                    <CreditCard className="h-4 w-4 mr-2" />
-                    Complete Payment Setup
-                  </Button>
-                </Link>
-              </CardContent>
-            </Card>
-          )}
-
           {loading ? (
             <Card>
               <CardContent className="py-12 flex justify-center">

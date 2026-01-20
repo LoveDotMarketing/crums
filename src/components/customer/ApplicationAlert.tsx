@@ -68,38 +68,6 @@ export function ApplicationAlert({ userId }: ApplicationAlertProps) {
     );
   }
 
-  // If application is approved but payment not set up
-  if (applicationStatus === 'approved' && paymentSetupStatus !== 'completed') {
-    return (
-      <Alert className="border-primary bg-primary/10">
-        <CreditCard className="h-4 w-4 text-primary" />
-        <AlertTitle>Complete Payment Setup</AlertTitle>
-        <AlertDescription className="space-y-2">
-          <p>Your application has been approved! Complete your ACH payment setup to finalize your account.</p>
-          <Button 
-            onClick={() => navigate('/dashboard/customer/payment-setup')}
-            size="sm"
-            className="mt-2"
-          >
-            Complete Payment Setup
-          </Button>
-        </AlertDescription>
-      </Alert>
-    );
-  }
-
-  // If application is approved and payment is complete
-  if (applicationStatus === 'approved' && paymentSetupStatus === 'completed') {
-    return (
-      <Alert className="border-primary bg-primary/10">
-        <CheckCircle className="h-4 w-4 text-primary" />
-        <AlertTitle>Application Approved</AlertTitle>
-        <AlertDescription>
-          Congratulations! Your application and payment setup are complete. You can now request trailers.
-        </AlertDescription>
-      </Alert>
-    );
-  }
-
+  // Approved states are handled by ApplicationStatusTracker - no duplicate alerts needed
   return null;
 }
