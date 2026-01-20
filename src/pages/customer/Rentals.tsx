@@ -3,11 +3,13 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { CustomerNav } from "@/components/customer/CustomerNav";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
 import { toast } from "sonner";
-import { Loader2, Truck, MapPin, Calendar } from "lucide-react";
+import { Loader2, Truck, MapPin, Calendar, CreditCard } from "lucide-react";
+import { Link } from "react-router-dom";
 
 interface Trailer {
   id: string;
@@ -23,10 +25,27 @@ export default function Rentals() {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [trailers, setTrailers] = useState<Trailer[]>([]);
+  const [paymentSetupStatus, setPaymentSetupStatus] = useState<string | null>(null);
+  const [applicationStatus, setApplicationStatus] = useState<string | null>(null);
 
   useEffect(() => {
     fetchRentals();
+    fetchApplicationStatus();
   }, [user]);
+
+  const fetchApplicationStatus = async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from("customer_applications")
+      .select("status, payment_setup_status")
+      .eq("user_id", user.id)
+      .maybeSingle();
+    
+    if (data) {
+      setApplicationStatus(data.status);
+      setPaymentSetupStatus(data.payment_setup_status);
+    }
+  };
 
   const fetchRentals = async () => {
     if (!user) return;
@@ -56,6 +75,29 @@ export default function Rentals() {
       <main className="flex-1 bg-gradient-to-b from-muted to-background py-8">
         <div className="container mx-auto px-4">
           <h1 className="text-3xl font-bold text-foreground mb-8">My Rentals</h1>
+
+          {/* ACH Payment Setup Alert */}
+          {applicationStatus === "approved" && paymentSetupStatus !== "completed" && (
+            <Card className="mb-6 border-amber-500/50 bg-amber-50 dark:bg-amber-900/20">
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center gap-2 text-amber-700 dark:text-amber-400">
+                  <CreditCard className="h-5 w-5" />
+                  Action Required: Complete Payment Setup
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-amber-700 dark:text-amber-300 mb-4">
+                  Complete your ACH payment setup to finalize your account and start leasing trailers.
+                </p>
+                <Link to="/dashboard/customer/payment-setup">
+                  <Button className="bg-amber-600 hover:bg-amber-700 text-white">
+                    <CreditCard className="h-4 w-4 mr-2" />
+                    Complete Payment Setup
+                  </Button>
+                </Link>
+              </CardContent>
+            </Card>
+          )}
 
           {loading ? (
             <Card>

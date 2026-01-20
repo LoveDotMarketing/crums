@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { AlertCircle, Clock, CheckCircle } from "lucide-react";
+import { AlertCircle, Clock, CheckCircle, CreditCard } from "lucide-react";
 
 interface ApplicationAlertProps {
   userId: string;
@@ -11,21 +11,23 @@ interface ApplicationAlertProps {
 
 export function ApplicationAlert({ userId }: ApplicationAlertProps) {
   const [applicationStatus, setApplicationStatus] = useState<string | null>(null);
+  const [paymentSetupStatus, setPaymentSetupStatus] = useState<string | null>(null);
   const [hasDocuments, setHasDocuments] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
     const fetchApplicationStatus = async () => {
       const { data, error } = await supabase
-        .from('customer_application_safe')
-        .select('status, has_drivers_license, has_drivers_license_back, has_insurance_docs')
+        .from('customer_applications')
+        .select('status, payment_setup_status, drivers_license_url, drivers_license_back_url, insurance_docs_url')
         .eq('user_id', userId)
         .single();
 
       if (error || !data) return;
 
       setApplicationStatus(data.status);
-      setHasDocuments(!!(data.has_drivers_license && data.has_drivers_license_back && data.has_insurance_docs));
+      setPaymentSetupStatus(data.payment_setup_status);
+      setHasDocuments(!!(data.drivers_license_url && data.drivers_license_back_url && data.insurance_docs_url));
     };
 
     fetchApplicationStatus();
@@ -54,7 +56,7 @@ export function ApplicationAlert({ userId }: ApplicationAlertProps) {
   }
 
   // If application is pending review
-  if (applicationStatus === 'pending' || applicationStatus === 'new') {
+  if (applicationStatus === 'pending' || applicationStatus === 'new' || applicationStatus === 'pending_review') {
     return (
       <Alert>
         <Clock className="h-4 w-4" />
@@ -66,14 +68,34 @@ export function ApplicationAlert({ userId }: ApplicationAlertProps) {
     );
   }
 
-  // If application is approved
-  if (applicationStatus === 'approved') {
+  // If application is approved but payment not set up
+  if (applicationStatus === 'approved' && paymentSetupStatus !== 'completed') {
+    return (
+      <Alert className="border-primary bg-primary/10">
+        <CreditCard className="h-4 w-4 text-primary" />
+        <AlertTitle>Complete Payment Setup</AlertTitle>
+        <AlertDescription className="space-y-2">
+          <p>Your application has been approved! Complete your ACH payment setup to finalize your account.</p>
+          <Button 
+            onClick={() => navigate('/dashboard/customer/payment-setup')}
+            size="sm"
+            className="mt-2"
+          >
+            Complete Payment Setup
+          </Button>
+        </AlertDescription>
+      </Alert>
+    );
+  }
+
+  // If application is approved and payment is complete
+  if (applicationStatus === 'approved' && paymentSetupStatus === 'completed') {
     return (
       <Alert className="border-primary bg-primary/10">
         <CheckCircle className="h-4 w-4 text-primary" />
         <AlertTitle>Application Approved</AlertTitle>
         <AlertDescription>
-          Congratulations! Your application has been approved. You can now request trailers.
+          Congratulations! Your application and payment setup are complete. You can now request trailers.
         </AlertDescription>
       </Alert>
     );
