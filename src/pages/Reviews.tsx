@@ -185,6 +185,42 @@ const Reviews = () => {
         </div>
       </section>
 
+      {/* Review Prompt Suggestions */}
+      <section className="py-12 bg-muted/50">
+        <div className="container mx-auto px-4">
+          <div className="max-w-2xl mx-auto text-center">
+            <h2 className="text-2xl font-bold text-foreground mb-4">
+              Not Sure What to Write?
+            </h2>
+            <p className="text-muted-foreground mb-6">
+              Here are some ideas to help you write a review that helps other carriers:
+            </p>
+            <Card className="border-2 bg-background">
+              <CardContent className="p-6 text-left">
+                <ul className="space-y-3 text-muted-foreground">
+                  <li className="flex items-start gap-2">
+                    <Star className="h-5 w-5 text-secondary flex-shrink-0 mt-0.5" />
+                    <span>What type of trailer did you lease? (53-foot dry van, flatbed)</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Star className="h-5 w-5 text-secondary flex-shrink-0 mt-0.5" />
+                    <span>How long have you been with CRUMS Leasing?</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Star className="h-5 w-5 text-secondary flex-shrink-0 mt-0.5" />
+                    <span>What did you like most about working with us?</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Star className="h-5 w-5 text-secondary flex-shrink-0 mt-0.5" />
+                    <span>How was the trailer condition when you received it?</span>
+                  </li>
+                </ul>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </section>
+
       {/* Other Review Platforms */}
       <section className="py-16 bg-muted">
         <div className="container mx-auto px-4">
