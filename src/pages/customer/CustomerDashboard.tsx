@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Truck, AlertCircle, CheckCircle, Loader2, Bell, Phone, ExternalLink, Mail, ClipboardCheck } from "lucide-react";
+import { Truck, AlertCircle, CheckCircle, Loader2, Bell, Phone, ExternalLink, Mail, ClipboardCheck, CreditCard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
@@ -45,6 +45,7 @@ export default function CustomerDashboard() {
   const { user, signOut } = useAuth();
   const [applicationProgress, setApplicationProgress] = useState(0);
   const [applicationStatus, setApplicationStatus] = useState<string | null>(null);
+  const [paymentSetupStatus, setPaymentSetupStatus] = useState<string | null>(null);
   const [tolls, setTolls] = useState<Toll[]>([]);
   const [tollStats, setTollStats] = useState<TollStats>({ pendingAmount: 0, paidThisMonth: 0, pendingCount: 0 });
   const [trailerCount, setTrailerCount] = useState(0);
@@ -113,6 +114,7 @@ export default function CustomerDashboard() {
 
       if (data) {
         setApplicationStatus(data.status);
+        setPaymentSetupStatus(data.payment_setup_status);
         
         const requiredFields = [
           data.phone_number,
@@ -126,6 +128,7 @@ export default function CustomerDashboard() {
         setApplicationProgress(Math.round((completed / requiredFields.length) * 100));
       } else {
         setApplicationProgress(0);
+        setPaymentSetupStatus(null);
       }
     } catch (error) {
       console.error("Error checking application:", error);
@@ -286,6 +289,29 @@ export default function CustomerDashboard() {
             <div className="mb-8">
               <ApplicationAlert userId={user.id} />
             </div>
+          )}
+
+          {/* ACH Payment Setup Alert */}
+          {applicationStatus === "approved" && paymentSetupStatus !== "completed" && (
+            <Card className="mb-8 border-amber-500/50 bg-amber-50 dark:bg-amber-900/20">
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center gap-2 text-amber-700 dark:text-amber-400">
+                  <CreditCard className="h-5 w-5" />
+                  Action Required: Complete Payment Setup
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-amber-700 dark:text-amber-300 mb-4">
+                  Your application has been approved! Please complete your ACH payment setup to finalize your account and start leasing trailers.
+                </p>
+                <Link to="/dashboard/customer/payment-setup">
+                  <Button className="bg-amber-600 hover:bg-amber-700 text-white">
+                    <CreditCard className="h-4 w-4 mr-2" />
+                    Complete Payment Setup
+                  </Button>
+                </Link>
+              </CardContent>
+            </Card>
           )}
 
           {/* Stats */}
