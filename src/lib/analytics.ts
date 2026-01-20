@@ -19,6 +19,9 @@ export const trackPageView = (path: string, title?: string) => {
       page_path: path,
       page_title: title || document.title,
     });
+    console.log('[Analytics] Page view tracked:', path);
+  } else {
+    console.warn('[Analytics] gtag not available - page view not tracked:', path);
   }
 };
 

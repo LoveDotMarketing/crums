@@ -15,20 +15,29 @@ export function loadDeferredAnalytics(): void {
   if (window.__analyticsLoaded) return;
   window.__analyticsLoaded = true;
 
+  // Initialize dataLayer and gtag IMMEDIATELY (before script loads)
+  // This ensures tracking calls are queued even if script hasn't loaded yet
+  window.dataLayer = window.dataLayer || [];
+  window.gtag = function(...args: unknown[]) { 
+    window.dataLayer.push(args); 
+  };
+
   // Load Google Analytics 4
   const gaScript = document.createElement('script');
   gaScript.async = true;
   gaScript.src = 'https://www.googletagmanager.com/gtag/js?id=G-FHB5E7Q0PK';
-  document.head.appendChild(gaScript);
-
+  
   gaScript.onload = () => {
-    window.dataLayer = window.dataLayer || [];
-    window.gtag = function(...args: unknown[]) { 
-      window.dataLayer.push(args); 
-    };
     window.gtag('js', new Date());
     window.gtag('config', 'G-FHB5E7Q0PK');
+    console.log('[Analytics] GA4 loaded successfully');
   };
+  
+  gaScript.onerror = () => {
+    console.warn('[Analytics] GA4 script failed to load - likely blocked by ad blocker');
+  };
+  
+  document.head.appendChild(gaScript);
 
   // Load LinkedIn Insight Tag
   window._linkedin_partner_id = "8556244";
