@@ -398,10 +398,6 @@ export default function Fleet() {
                         <SelectContent>
                           <SelectItem value="Dry Van">Dry Van</SelectItem>
                           <SelectItem value="Flatbed">Flatbed</SelectItem>
-                          <SelectItem value="Flatbed">Flatbed</SelectItem>
-                          <SelectItem value="Lowboy">Lowboy</SelectItem>
-                          <SelectItem value="Step Deck">Step Deck</SelectItem>
-                          <SelectItem value="Container">Container</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
