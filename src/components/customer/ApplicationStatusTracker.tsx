@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CheckCircle2, Clock, FileText, AlertCircle, Loader2 } from "lucide-react";
+import { CheckCircle2, Clock, FileText, AlertCircle, Loader2, CreditCard } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -21,6 +21,7 @@ const statusSteps: StatusStep[] = [
   { id: "new", label: "Application Started", description: "Begin your application", icon: FileText },
   { id: "pending_review", label: "Under Review", description: "Our team is reviewing", icon: Clock },
   { id: "approved", label: "Approved", description: "Application approved", icon: CheckCircle2 },
+  { id: "payment_setup", label: "Payment Setup", description: "Complete ACH setup", icon: CreditCard },
 ];
 
 export function ApplicationStatusTracker({ userId }: ApplicationStatusTrackerProps) {
@@ -29,6 +30,7 @@ export function ApplicationStatusTracker({ userId }: ApplicationStatusTrackerPro
   const [loading, setLoading] = useState(true);
   const [createdAt, setCreatedAt] = useState<string | null>(null);
   const [reviewedAt, setReviewedAt] = useState<string | null>(null);
+  const [paymentSetupStatus, setPaymentSetupStatus] = useState<string | null>(null);
 
   useEffect(() => {
     fetchApplicationStatus();
@@ -38,7 +40,7 @@ export function ApplicationStatusTracker({ userId }: ApplicationStatusTrackerPro
     try {
       const { data, error } = await supabase
         .from("customer_applications")
-        .select("status, created_at, reviewed_at")
+        .select("status, created_at, reviewed_at, payment_setup_status")
         .eq("user_id", userId)
         .maybeSingle();
 
@@ -49,6 +51,7 @@ export function ApplicationStatusTracker({ userId }: ApplicationStatusTrackerPro
         setStatus(data.status);
         setCreatedAt(data.created_at);
         setReviewedAt(data.reviewed_at);
+        setPaymentSetupStatus(data.payment_setup_status);
       } else {
         setHasApplication(false);
       }
@@ -61,17 +64,47 @@ export function ApplicationStatusTracker({ userId }: ApplicationStatusTrackerPro
 
   const getCurrentStepIndex = () => {
     if (!status) return -1;
-    if (status === "rejected") return 2; // Show at review step but with rejection styling
+    if (status === "rejected") return 2; // Show at approved step but with rejection styling
+    
+    // If approved, check payment setup status
+    if (status === "approved") {
+      if (paymentSetupStatus === "completed") {
+        return 3; // Payment setup complete - at final step
+      }
+      return 2; // Approved but payment not complete - at approved step
+    }
+    
     const index = statusSteps.findIndex(step => step.id === status);
     return index >= 0 ? index : 0;
   };
 
   const isStepComplete = (stepIndex: number) => {
     const currentIndex = getCurrentStepIndex();
-    return stepIndex < currentIndex || (stepIndex === currentIndex && status === "approved");
+    
+    // Special handling for payment_setup step
+    if (stepIndex === 3) {
+      return paymentSetupStatus === "completed";
+    }
+    
+    // For approved step, it's complete if status is approved
+    if (stepIndex === 2 && status === "approved") {
+      return true;
+    }
+    
+    return stepIndex < currentIndex;
   };
 
   const isCurrentStep = (stepIndex: number) => {
+    // Payment setup is current step when approved but not yet completed payment
+    if (stepIndex === 3 && status === "approved" && paymentSetupStatus !== "completed") {
+      return true;
+    }
+    
+    // Don't show approved as current if we're past it
+    if (stepIndex === 2 && status === "approved") {
+      return false;
+    }
+    
     return stepIndex === getCurrentStepIndex() && status !== "approved";
   };
 
@@ -116,6 +149,7 @@ export function ApplicationStatusTracker({ userId }: ApplicationStatusTrackerPro
   }
 
   const isRejected = status === "rejected";
+  const isFullyComplete = status === "approved" && paymentSetupStatus === "completed";
 
   return (
     <Card>
@@ -136,7 +170,7 @@ export function ApplicationStatusTracker({ userId }: ApplicationStatusTrackerPro
                 isRejected ? "bg-destructive" : "bg-primary"
               )}
               style={{ 
-                width: `${Math.min(100, ((getCurrentStepIndex() + (status === "approved" ? 1 : 0.5)) / (statusSteps.length - 1)) * 100)}%` 
+                width: `${Math.min(100, ((getCurrentStepIndex() + (isFullyComplete ? 1 : 0.5)) / (statusSteps.length - 1)) * 100)}%` 
               }}
             />
           </div>
@@ -215,9 +249,19 @@ export function ApplicationStatusTracker({ userId }: ApplicationStatusTrackerPro
               Our team is reviewing your application. This typically takes 1-2 business days.
             </p>
           )}
-          {status === "approved" && (
+          {status === "approved" && paymentSetupStatus !== "completed" && (
+            <div className="mt-3">
+              <p className="text-sm text-amber-600 dark:text-amber-400">
+                Your application has been approved! Complete your payment setup to finish onboarding.
+              </p>
+              <Button asChild size="sm" className="mt-2">
+                <Link to="/dashboard/customer/payment-setup">Complete Payment Setup</Link>
+              </Button>
+            </div>
+          )}
+          {status === "approved" && paymentSetupStatus === "completed" && (
             <p className="mt-3 text-sm text-green-600 dark:text-green-400">
-              Congratulations! Your application has been approved. Welcome to CRUMS Leasing!
+              Congratulations! Your application and payment setup are complete. Welcome to CRUMS Leasing!
             </p>
           )}
           {status === "rejected" && (
