@@ -56,6 +56,7 @@ const routeLabels: Record<string, string> = {
   "/resources/guides/choosing-trailer": "Choosing the Right Trailer",
   "/resources/guides/why-leasing-a-dry-van-trailer-is-a-smart-business-decision": "Why Leasing a Dry Van is Smart",
   "/resources/guides/trailer-specifications": "Trailer Specifications",
+  "/resources/guides/pre-trip-inspection": "Pre-Trip Inspection Checklist",
   
   "/resources/tools/per-diem-calculator": "Per Diem Calculator",
   
@@ -114,6 +115,10 @@ const parentRoutes: Record<string, { label: string; href: string }[]> = {
     { label: "Industry Guides", href: "/resources/guides" }
   ],
   "/resources/guides/trailer-specifications": [
+    { label: "Resources", href: "/resources" },
+    { label: "Industry Guides", href: "/resources/guides" }
+  ],
+  "/resources/guides/pre-trip-inspection": [
     { label: "Resources", href: "/resources" },
     { label: "Industry Guides", href: "/resources/guides" }
   ],
