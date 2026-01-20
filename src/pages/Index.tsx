@@ -917,7 +917,7 @@ const Index = () => {
                 <ul className="space-y-2 text-muted-foreground mb-6">
                   <li className="flex items-start">
                     <CheckCircle className="h-5 w-5 text-secondary mr-2 mt-0.5 flex-shrink-0" />
-                    <span>Standard and step deck</span>
+                    <span>48-foot lengths available</span>
                   </li>
                   <li className="flex items-start">
                     <CheckCircle className="h-5 w-5 text-secondary mr-2 mt-0.5 flex-shrink-0" />

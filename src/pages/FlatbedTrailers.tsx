@@ -23,7 +23,7 @@ const FlatbedTrailers = () => {
     "@context": "https://schema.org",
     "@type": "Service",
     "name": "Flatbed Trailer Leasing",
-    "description": "Flatbed and step deck trailer leasing with heavy-duty construction and multiple tie-down points. Flexible lease terms starting at 12 months.",
+    "description": "Flatbed trailer leasing with heavy-duty construction and multiple tie-down points. Flexible lease terms starting at 12 months.",
     "provider": {
       "@type": "Organization",
       "name": "CRUMS Leasing",
@@ -61,15 +61,7 @@ const FlatbedTrailers = () => {
         "name": "What is the deck height of a flatbed trailer?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "A standard flatbed trailer has a deck height of approximately 60 inches (5 feet) from the ground. Step deck trailers have a lower rear section at about 42 inches, providing an extra 12-18 inches of height clearance for taller cargo."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "What is the difference between a flatbed and step deck trailer?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "A standard flatbed has a uniform deck height, while a step deck (or drop deck) has a lower rear section. Step decks can haul taller cargo while staying within height limits, making them ideal for equipment that exceeds standard flatbed height restrictions."
+          "text": "A standard flatbed trailer has a deck height of approximately 60 inches (5 feet) from the ground, ideal for heavy equipment and oversized cargo transport."
         }
       },
       {
@@ -343,8 +335,8 @@ const FlatbedTrailers = () => {
                 <h3 className="text-lg font-bold mb-2">What is the deck height of a flatbed trailer?</h3>
                 <p className="text-muted-foreground">
                   A standard flatbed trailer has a deck height of approximately 60 inches (5 feet) from the ground. 
-                  Step deck trailers have a lower rear section at about 42 inches, providing an extra 12-18 inches 
-                  of height clearance for taller cargo.
+                  This height provides optimal stability for heavy equipment and oversized loads while remaining 
+                  within standard DOT height regulations.
                 </p>
               </CardContent>
             </Card>
@@ -455,7 +447,7 @@ const FlatbedTrailers = () => {
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-3xl md:text-4xl font-bold mb-6">Ready to Lease a Flatbed Trailer?</h2>
           <p className="text-xl mb-8 max-w-2xl mx-auto text-primary-foreground/90">
-            Get started with flexible lease terms on our heavy-duty flatbed and step deck fleet.
+            Get started with flexible lease terms on our heavy-duty flatbed fleet.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link to="/contact">
