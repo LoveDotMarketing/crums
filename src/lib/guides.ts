@@ -62,8 +62,8 @@ export const guides: Guide[] = [
     title: "How to Check Your Trailer Before Every Trip",
     description: "Quick, visual pre-trip inspection checklist to avoid breakdowns and DOT violations.",
     icon: ClipboardCheck,
-    available: false,
-    lastModified: "2025-12-04",
+    available: true,
+    lastModified: "2026-01-20",
     priority: 0.8,
     changefreq: "monthly"
   },
