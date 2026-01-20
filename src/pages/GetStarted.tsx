@@ -615,7 +615,6 @@ export default function GetStarted() {
                       <SelectContent>
                         <SelectItem value="53' Dry Van">53' Dry Van</SelectItem>
                         <SelectItem value="48' Flatbed">48' Flatbed</SelectItem>
-                        <SelectItem value="Refrigerated">Refrigerated</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>

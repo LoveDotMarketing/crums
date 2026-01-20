@@ -528,11 +528,7 @@ const DryVanTrailers = () => {
           </h2>
           <div className="max-w-3xl mx-auto text-center">
             <p className="text-muted-foreground mb-4">
-              Need temperature-controlled transport? Check out our{" "}
-              <Link to="/refrigerated-trailers" className="text-secondary hover:underline font-semibold">
-                refrigerated trailer leasing
-              </Link>{" "}
-              options. For oversized or open cargo, explore our{" "}
+              For oversized or open cargo, explore our{" "}
               <Link to="/flatbed-trailers" className="text-secondary hover:underline font-semibold">
                 flatbed trailer leasing
               </Link>{" "}

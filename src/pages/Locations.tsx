@@ -77,13 +77,13 @@ const Locations = () => {
               Nationwide Pickup & Shipping
             </h2>
             <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
-              Based in San Antonio, Texas, we deliver dry van, flatbed, and refrigerated trailers across all 50 states.
+              Based in San Antonio, Texas, we deliver dry van and flatbed trailers across all 50 states.
             </p>
           </div>
           <div className="max-w-5xl mx-auto">
             <img 
               src={nationwideMapImage} 
-              alt="CRUMS Leasing - Nationwide Pickup & Shipping. Flatbed, Dry Van, Reefer trailers delivered across all 50 states from Texas"
+              alt="CRUMS Leasing - Nationwide Pickup & Shipping. Flatbed and Dry Van trailers delivered across all 50 states from Texas"
               className="w-full h-auto"
               loading="eager"
               width="1400"
@@ -253,7 +253,7 @@ const Locations = () => {
               </p>
               <ul className="space-y-3 mb-8">
                 {[
-                  "53' Dry Van, Flatbed & Refrigerated Trailers",
+                  "53' Dry Van & Flatbed Trailers",
                   "GPS-equipped for peace of mind",
                   "Flexible lease terms starting at 12 months",
                   "Short-term rentals available",

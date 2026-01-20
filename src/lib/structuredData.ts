@@ -6,7 +6,7 @@ export const organizationSchema = {
   "legalName": "CRUMS Leasing LLC",
   "url": "https://crumsleasing.com",
   "logo": "https://crumsleasing.com/logo.png",
-  "description": "Family-owned trailer leasing company offering dry van, flatbed, and refrigerated reefer trailer leasing & rental solutions with nationwide service.",
+  "description": "Family-owned trailer leasing company offering dry van and flatbed trailer leasing & rental solutions with nationwide service.",
   "foundingDate": "2020",
   "address": {
     "@type": "PostalAddress",
@@ -84,7 +84,7 @@ export const trailerLeasingServiceSchema = {
     "@type": "Organization",
     "name": "CRUMS Leasing"
   },
-  "description": "Dry van, flatbed, and refrigerated reefer trailer leasing with flexible terms starting at 12 months. Quality equipment, nationwide coverage, and 24/7 support.",
+  "description": "Dry van and flatbed trailer leasing with flexible terms starting at 12 months. Quality equipment, nationwide coverage, and 24/7 support.",
   "areaServed": {
     "@type": "Country",
     "name": "United States"
@@ -104,7 +104,7 @@ export const trailerRentalServiceSchema = {
     "@type": "Organization",
     "name": "CRUMS Leasing"
   },
-  "description": "Short-term dry van, flatbed, and refrigerated reefer trailer rentals with fast availability and flexible rental periods.",
+  "description": "Short-term dry van and flatbed trailer rentals with fast availability and flexible rental periods.",
   "areaServed": {
     "@type": "Country",
     "name": "United States"
@@ -185,7 +185,7 @@ export const ownerOperatorsServiceSchema = {
   "serviceType": "Owner Operator Trailer Leasing",
   "provider": { "@type": "Organization", "name": "CRUMS Leasing" },
   "name": "Owner Operator Trailer Leasing",
-  "description": "Flexible dry van, flatbed, and reefer trailer leasing for independent owner operators. Affordable rates, simple contracts, and a people-first approach.",
+  "description": "Flexible dry van and flatbed trailer leasing for independent owner operators. Affordable rates, simple contracts, and a people-first approach.",
   "areaServed": { "@type": "Country", "name": "United States" },
   "audience": { "@type": "Audience", "audienceType": "Owner Operators" }
 };
@@ -196,7 +196,7 @@ export const fleetLeasingServiceSchema = {
   "serviceType": "Fleet Trailer Leasing",
   "provider": { "@type": "Organization", "name": "CRUMS Leasing" },
   "name": "Fleet Leasing Solutions",
-  "description": "Scalable dry van, flatbed, and refrigerated trailer leasing solutions for growing fleets. Flexible terms and well-maintained equipment.",
+  "description": "Scalable dry van and flatbed trailer leasing solutions for growing fleets. Flexible terms and well-maintained equipment.",
   "areaServed": { "@type": "Country", "name": "United States" },
   "audience": { "@type": "Audience", "audienceType": "Fleet Operators" }
 };
@@ -240,7 +240,7 @@ export const manufacturingServiceSchema = {
   "serviceType": "Manufacturing Logistics Trailer Leasing",
   "provider": { "@type": "Organization", "name": "CRUMS Leasing" },
   "name": "Manufacturing Logistics Trailer Leasing",
-  "description": "Trailer leasing for manufacturing companies. Dry van, flatbed, and refrigerated trailers to support manufacturing logistics and supply chains.",
+  "description": "Trailer leasing for manufacturing companies. Dry van and flatbed trailers to support manufacturing logistics and supply chains.",
   "areaServed": { "@type": "Country", "name": "United States" },
   "audience": { "@type": "Audience", "audienceType": "Manufacturers" }
 };
@@ -251,7 +251,7 @@ export const seasonalDemandServiceSchema = {
   "serviceType": "Seasonal Trailer Rentals",
   "provider": { "@type": "Organization", "name": "CRUMS Leasing" },
   "name": "Seasonal Trailer Rentals",
-  "description": "Short-term dry van, flatbed, and reefer trailer rentals for seasonal demand spikes. Flexible capacity for holidays, harvest, and peak shipping.",
+  "description": "Short-term dry van and flatbed trailer rentals for seasonal demand spikes. Flexible capacity for holidays, harvest, and peak shipping.",
   "areaServed": { "@type": "Country", "name": "United States" },
   "audience": { "@type": "Audience", "audienceType": "Seasonal Shippers" }
 };

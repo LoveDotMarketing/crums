@@ -463,7 +463,7 @@ const ChoosingTrailer = () => {
                     What's the cargo?
                   </h4>
                   <p className="text-muted-foreground">
-                    Consider size, weight, temperature sensitivity, and security requirements. Perishables need reefers; oversized loads need flatbeds.
+                    Consider size, weight, and security requirements. Oversized loads need flatbeds; enclosed goods need dry vans.
                   </p>
                 </Card>
                 
@@ -473,7 +473,7 @@ const ChoosingTrailer = () => {
                     What's the route?
                   </h4>
                   <p className="text-muted-foreground">
-                    Weather exposure, road conditions, and state regulations may limit your options. Flatbeds face weather risks; reefers have fuel costs.
+                    Weather exposure, road conditions, and state regulations may limit your options. Flatbeds face weather risks; dry vans offer protection.
                   </p>
                 </Card>
                 
@@ -493,7 +493,7 @@ const ChoosingTrailer = () => {
                     What's your budget?
                   </h4>
                   <p className="text-muted-foreground">
-                    Reefers cost more to operate due to fuel for refrigeration. Flatbeds require more securement time and equipment. Dry vans are most economical.
+                    Flatbeds require more securement time and equipment. Dry vans are most economical and versatile for general freight.
                   </p>
                 </Card>
               </div>
@@ -543,16 +543,6 @@ const ChoosingTrailer = () => {
                       <td className="border p-4">Steel beams, lumber, machinery</td>
                       <td className="border p-4 font-medium">Flatbed</td>
                       <td className="border p-4 text-muted-foreground">Easy loading from all sides</td>
-                    </tr>
-                    <tr>
-                      <td className="border p-4">Fresh produce, frozen foods</td>
-                      <td className="border p-4 font-medium">Reefer</td>
-                      <td className="border p-4 text-muted-foreground">Temperature control critical</td>
-                    </tr>
-                    <tr className="bg-muted/30">
-                      <td className="border p-4">Pharmaceuticals, vaccines</td>
-                      <td className="border p-4 font-medium">Reefer</td>
-                      <td className="border p-4 text-muted-foreground">Precise temp monitoring required</td>
                     </tr>
                     <tr>
                       <td className="border p-4">Vehicles, heavy equipment</td>
@@ -614,15 +604,6 @@ const ChoosingTrailer = () => {
                   </h3>
                   <p className="text-muted-foreground">
                     A <Link to="/dry-van-trailers" className="text-primary hover:underline font-medium">dry van</Link> is an enclosed trailer with walls and a roof, perfect for protecting cargo from weather and theft. A <Link to="/flatbed-trailers" className="text-primary hover:underline font-medium">flatbed</Link> is an open-deck trailer with no sides or roof, designed for oversized, heavy, or irregularly shaped cargo like construction materials, machinery, and vehicles. Dry vans handle about 70% of freight while flatbeds cover roughly 15% of the market.
-                  </p>
-                </Card>
-                
-                <Card className="p-6">
-                  <h3 className="font-bold text-lg text-foreground mb-2">
-                    What trailer do I need to haul refrigerated goods?
-                  </h3>
-                  <p className="text-muted-foreground">
-                    You need a <Link to="/refrigerated-trailers" className="text-primary hover:underline font-medium">refrigerated trailer</Link>, also called a "reefer," to haul temperature-sensitive cargo. Reefers have built-in refrigeration units that maintain temperatures from -20°F to 70°F, making them essential for fresh produce, frozen foods, dairy products, pharmaceuticals, and floral shipments.
                   </p>
                 </Card>
                 
