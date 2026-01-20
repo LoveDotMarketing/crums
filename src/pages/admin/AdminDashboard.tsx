@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Receipt, Users, Truck, DollarSign, TrendingUp, AlertCircle, Loader2 } from "lucide-react";
+import { Receipt, Users, Truck, DollarSign, TrendingUp, AlertCircle, Loader2, Mail } from "lucide-react";
+import { toast } from "sonner";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { ChatBot } from "@/components/ChatBot";
@@ -20,6 +21,22 @@ export default function AdminDashboard() {
   
   const [tollDialogOpen, setTollDialogOpen] = useState(false);
   const [customerDialogOpen, setCustomerDialogOpen] = useState(false);
+  const [sendingTestEmail, setSendingTestEmail] = useState(false);
+
+  const handleSendTestACHEmail = async () => {
+    setSendingTestEmail(true);
+    try {
+      const { error } = await supabase.functions.invoke("send-ach-setup-email", {
+        body: { testMode: true }
+      });
+      if (error) throw error;
+      toast.success("Test ACH setup email sent to your inbox!");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to send test email");
+    } finally {
+      setSendingTestEmail(false);
+    }
+  };
 
   // Fetch fleet stats
   const { data: fleetStats } = useQuery({
@@ -338,6 +355,23 @@ export default function AdminDashboard() {
                         <div>
                           <p className="font-medium text-foreground">Add Trailer</p>
                           <p className="text-sm text-muted-foreground">Add to fleet inventory</p>
+                        </div>
+                      </div>
+                    </button>
+                    <button 
+                      onClick={handleSendTestACHEmail}
+                      disabled={sendingTestEmail}
+                      className="w-full p-4 text-left border border-border rounded-lg hover:bg-accent transition-colors disabled:opacity-50"
+                    >
+                      <div className="flex items-center gap-3">
+                        {sendingTestEmail ? (
+                          <Loader2 className="h-5 w-5 text-primary animate-spin" />
+                        ) : (
+                          <Mail className="h-5 w-5 text-primary" />
+                        )}
+                        <div>
+                          <p className="font-medium text-foreground">Test ACH Email</p>
+                          <p className="text-sm text-muted-foreground">Send test payment setup email</p>
                         </div>
                       </div>
                     </button>

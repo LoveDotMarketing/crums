@@ -55,7 +55,116 @@ serve(async (req) => {
     logStep("Admin authenticated", { adminId: adminUser.id });
 
     // Get request body
-    const { applicationId } = await req.json();
+    const { applicationId, testMode } = await req.json();
+
+    // Test mode: send email to admin's own email
+    if (testMode) {
+      logStep("Test mode enabled, sending to admin email");
+      
+      // Get admin's email from their profile
+      const { data: adminProfile, error: adminProfileError } = await supabaseClient
+        .from("profiles")
+        .select("email, first_name")
+        .eq("id", adminUser.id)
+        .single();
+
+      if (adminProfileError || !adminProfile?.email) {
+        throw new Error("Could not find admin profile");
+      }
+
+      const setupUrl = "https://crums.lovable.app/dashboard/customer/payment-setup";
+
+      // Send test email via SendGrid
+      const emailResponse = await fetch("https://api.sendgrid.com/v3/mail/send", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${sendgridKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          personalizations: [{
+            to: [{ email: adminProfile.email }],
+          }],
+          from: {
+            email: "support@crumsleasing.com",
+            name: "CRUMS Leasing",
+          },
+          subject: "[TEST] Action Required: Complete Your CRUMS Payment Setup",
+          content: [{
+            type: "text/html",
+            value: `
+              <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                <div style="background-color: #f59e0b; padding: 10px; text-align: center;">
+                  <p style="color: #000; margin: 0; font-weight: bold;">⚠️ TEST EMAIL - This is a preview of the ACH setup email</p>
+                </div>
+                
+                <div style="background-color: #1a1a2e; padding: 20px; text-align: center;">
+                  <h1 style="color: #ffffff; margin: 0;">CRUMS Leasing</h1>
+                </div>
+                
+                <div style="padding: 30px; background-color: #ffffff;">
+                  <h2 style="color: #1a1a2e;">Hi ${adminProfile.first_name || 'Valued Customer'},</h2>
+                  
+                  <p style="color: #333; line-height: 1.6;">
+                    Great news! Your lease application has been approved. To finalize your account and enable billing, 
+                    please complete your payment setup by securely linking your bank account.
+                  </p>
+                  
+                  <p style="color: #333; line-height: 1.6;">
+                    Log in to your CRUMS account and follow the simple steps to connect your bank. Your financial 
+                    information is fully protected through our secure verification process. This only takes a few minutes.
+                  </p>
+                  
+                  <div style="text-align: center; margin: 30px 0;">
+                    <a href="${setupUrl}" 
+                       style="background-color: #4f46e5; color: #ffffff; padding: 14px 28px; 
+                              text-decoration: none; border-radius: 6px; font-weight: bold;
+                              display: inline-block;">
+                      Log In to Complete Setup
+                    </a>
+                  </div>
+                  
+                  <p style="color: #666; font-size: 14px; line-height: 1.6;">
+                    If you have any questions about the payment setup process, please don't hesitate to contact us.
+                  </p>
+                  
+                  <p style="color: #333; margin-top: 30px;">
+                    Thank you for choosing CRUMS Leasing!<br>
+                    <strong>The CRUMS Team</strong>
+                  </p>
+                </div>
+                
+                <div style="background-color: #f5f5f5; padding: 20px; text-align: center; font-size: 12px; color: #666;">
+                  <p>CRUMS Leasing | Trailer Leasing Solutions</p>
+                  <p>This email was sent because your application was approved.</p>
+                </div>
+              </div>
+            `,
+          }],
+        }),
+      });
+
+      if (!emailResponse.ok) {
+        const errorText = await emailResponse.text();
+        logStep("SendGrid error", { status: emailResponse.status, error: errorText });
+        throw new Error("Failed to send test email");
+      }
+
+      logStep("Test email sent successfully", { to: adminProfile.email });
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          message: `Test ACH setup email sent to ${adminProfile.email}`,
+        }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 200,
+        }
+      );
+    }
+
+    // Normal mode: require applicationId
     if (!applicationId) throw new Error("applicationId is required");
 
     // Get the application details
