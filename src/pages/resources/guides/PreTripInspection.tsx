@@ -498,15 +498,15 @@ const PreTripInspection = () => {
                           <Checkbox
                             id={item.id}
                             checked={item.checked}
-                            onCheckedChange={() => handleItemChange(category.id, item.id)}
-                            className="mt-0.5"
+                            onCheckedChange={() => {}}
+                            onClick={(e) => e.stopPropagation()}
+                            className="mt-0.5 pointer-events-none"
                           />
-                          <label 
-                            htmlFor={item.id} 
-                            className={`text-sm cursor-pointer flex-1 ${item.checked ? "text-muted-foreground line-through" : ""}`}
+                          <span 
+                            className={`text-sm flex-1 ${item.checked ? "text-muted-foreground line-through" : ""}`}
                           >
                             {item.label}
-                          </label>
+                          </span>
                         </div>
                       ))}
                     </div>
