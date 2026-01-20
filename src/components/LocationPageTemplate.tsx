@@ -114,7 +114,7 @@ export const LocationPageTemplate = ({ location }: LocationPageTemplateProps) =>
     },
     {
       question: "What types of trailers do you have available?",
-      answer: "We offer 53-foot dry van trailers, flatbed trailers, and refrigerated (reefer) trailers. All our trailers are GPS-equipped and well-maintained."
+      answer: "We offer 53-foot dry van trailers and flatbed trailers. All our trailers are GPS-equipped and well-maintained."
     },
     {
       question: "What are your lease terms?",
@@ -148,8 +148,7 @@ export const LocationPageTemplate = ({ location }: LocationPageTemplateProps) =>
   // Trailer types offered
   const trailerTypes = [
     { name: "53' Dry Van Trailers", desc: "Our most popular option for general freight", link: "/dry-van-trailers" },
-    { name: "Flatbed Trailers", desc: "For oversized and construction materials", link: "/flatbed-trailers" },
-    { name: "Refrigerated Trailers", desc: "Temperature-controlled for perishables", link: "/refrigerated-trailers" }
+    { name: "Flatbed Trailers", desc: "For oversized and construction materials", link: "/flatbed-trailers" }
   ];
 
   return (
@@ -176,7 +175,7 @@ export const LocationPageTemplate = ({ location }: LocationPageTemplateProps) =>
             <p className="text-xl md:text-2xl text-primary-foreground/90 mb-8">
               {location.isPickupFriendly 
                 ? `Pick up at our Bulverde, TX yard (${location.distanceFromBulverde} miles away) or get convenient delivery to your ${location.city} location.`
-                : `We deliver commercial trailers directly to ${location.city}. Quality 53' dry van, flatbed, and reefer trailers with flexible terms.`
+                : `We deliver commercial trailers directly to ${location.city}. Quality 53' dry van and flatbed trailers with flexible terms.`
               }
             </p>
             <div className="flex flex-col sm:flex-row gap-4">

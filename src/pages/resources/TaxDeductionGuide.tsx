@@ -12,7 +12,7 @@ import { Receipt, CheckCircle2, AlertTriangle, Calendar, FileText, DollarSign, T
 
 const TaxDeductionGuide = () => {
   const commonDeductions = [
-    { icon: Fuel, name: "Fuel Expenses", description: "All fuel costs for business operations, including diesel, DEF, and reefer fuel." },
+    { icon: Fuel, name: "Fuel Expenses", description: "All fuel costs for business operations, including diesel and DEF." },
     { icon: Wrench, name: "Maintenance & Repairs", description: "Routine maintenance, repairs, tires, oil changes, and roadside assistance." },
     { icon: Shield, name: "Insurance Premiums", description: "Liability, cargo, physical damage, and occupational accident insurance." },
     { icon: Building2, name: "Lease/Rental Payments", description: "Truck and trailer lease payments, equipment rentals." },

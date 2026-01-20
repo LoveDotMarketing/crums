@@ -344,7 +344,6 @@ export default function TrailerDetail() {
                           <SelectContent>
                             <SelectItem value="Dry Van">Dry Van</SelectItem>
                             <SelectItem value="Flat Bed">Flat Bed</SelectItem>
-                            <SelectItem value="Refrigerated">Refrigerated</SelectItem>
                             <SelectItem value="Lowboy">Lowboy</SelectItem>
                             <SelectItem value="Step Deck">Step Deck</SelectItem>
                           </SelectContent>

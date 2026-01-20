@@ -28,7 +28,7 @@ import {
 } from "lucide-react";
 const dryVanTrailerImg = "/images/dry-van-trailer.webp";
 const flatbedTrailerImg = "/images/flatbed-trailer.webp";
-const refrigeratedTrailerImg = "/images/refrigerated-trailer.webp";
+
 
 // Article metadata
 const articleData = {
@@ -93,18 +93,10 @@ const faqSchema = {
     },
     {
       "@type": "Question",
-      "name": "What trailer do I need to haul refrigerated goods?",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "You need a refrigerated trailer, also called a reefer, to haul temperature-sensitive cargo. Reefers have built-in refrigeration units that maintain temperatures from -20°F to 70°F, making them essential for fresh produce, frozen foods, dairy products, pharmaceuticals, and floral shipments."
-      }
-    },
-    {
-      "@type": "Question",
       "name": "How long is a standard semi-trailer?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "The standard length for a semi-trailer in the United States is 53 feet. This applies to dry vans, reefers, and most flatbeds. The maximum gross vehicle weight allowed is 80,000 pounds."
+        "text": "The standard length for a semi-trailer in the United States is 53 feet. This applies to dry vans and most flatbeds. The maximum gross vehicle weight allowed is 80,000 pounds."
       }
     },
     {
@@ -210,34 +202,6 @@ const trailerTypes = [
     colorClass: "text-secondary",
     learnMoreLink: "/flatbed-trailers",
     learnMoreText: "Learn more about flatbed trailers"
-  },
-  {
-    name: "Refrigerated (Reefer)",
-    icon: Snowflake,
-    image: refrigeratedTrailerImg,
-    imageAlt: "CRUMS Leasing refrigerated reefer trailer - temperature-controlled transport for perishable goods",
-    description: "Temperature-controlled trailers equipped with refrigeration units for perishable and temperature-sensitive cargo.",
-    bestFor: [
-      "Fresh produce and fruits",
-      "Frozen foods and dairy",
-      "Pharmaceuticals and vaccines",
-      "Floral products",
-      "Chemicals requiring temp control"
-    ],
-    notIdealFor: [
-      "Non-temperature sensitive goods",
-      "Heavy industrial equipment",
-      "Low-value commodities"
-    ],
-    specs: {
-      length: "53 feet (standard)",
-      tempRange: "-20°F to 70°F",
-      capacity: "Up to 44,000 lbs"
-    },
-    marketShare: "~10% of freight market",
-    colorClass: "text-accent",
-    learnMoreLink: "/refrigerated-trailers",
-    learnMoreText: "Learn more about refrigerated trailers"
   }
 ];
 

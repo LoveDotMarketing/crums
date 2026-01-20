@@ -10,7 +10,6 @@ import { SEO } from "@/components/SEO";
 import { trailerLeasingServiceSchema, generateBreadcrumbSchema } from "@/lib/structuredData";
 const dryVanTrailerImg = "/images/dry-van-trailer.webp";
 const flatbedTrailerImg = "/images/flatbed-trailer.webp";
-const refrigeratedTrailerImg = "/images/refrigerated-trailer.webp";
 const trailerPickupImg = "/images/crums-leasing-trailer-pickup.webp";
 
 const TrailerLeasing = () => {
@@ -136,7 +135,7 @@ const TrailerLeasing = () => {
           <h2 className="text-3xl md:text-4xl font-bold text-center mb-16 text-foreground">
             Available Equipment
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
             <Card className="border-2 hover:shadow-lg transition-shadow">
               <CardContent className="p-6">
                 <Link to="/dry-van-trailers" className="block hover:opacity-80 transition-opacity">
@@ -199,39 +198,6 @@ const TrailerLeasing = () => {
                 </ul>
                 <Link to="/flatbed-trailers" className="text-secondary hover:underline font-medium inline-flex items-center">
                   Learn more about flatbed trailers
-                  <ArrowRight className="h-4 w-4 ml-1" />
-                </Link>
-              </CardContent>
-            </Card>
-            <Card className="border-2 hover:shadow-lg transition-shadow">
-              <CardContent className="p-6">
-                <Link to="/refrigerated-trailers" className="block hover:opacity-80 transition-opacity">
-                  <img 
-                    src={refrigeratedTrailerImg} 
-                    alt="CRUMS Leasing refrigerated reefer trailer - temperature-controlled transport for perishable goods" 
-                    className="w-full h-40 object-contain mb-4"
-                    loading="lazy"
-                    width="300"
-                    height="160"
-                  />
-                </Link>
-                <h3 className="text-xl font-bold mb-4">Refrigerated Trailers</h3>
-                <ul className="space-y-2 text-muted-foreground mb-6">
-                  <li className="flex items-start">
-                    <CheckCircle className="h-5 w-5 text-secondary mr-2 mt-0.5 flex-shrink-0" />
-                    <span>Multi-temperature zones</span>
-                  </li>
-                  <li className="flex items-start">
-                    <CheckCircle className="h-5 w-5 text-secondary mr-2 mt-0.5 flex-shrink-0" />
-                    <span>Premium insulation</span>
-                  </li>
-                  <li className="flex items-start">
-                    <CheckCircle className="h-5 w-5 text-secondary mr-2 mt-0.5 flex-shrink-0" />
-                    <span>Latest refrigeration units</span>
-                  </li>
-                </ul>
-                <Link to="/refrigerated-trailers" className="text-secondary hover:underline font-medium inline-flex items-center">
-                  Learn more about reefer trailers
                   <ArrowRight className="h-4 w-4 ml-1" />
                 </Link>
               </CardContent>

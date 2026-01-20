@@ -3,7 +3,7 @@ import { Footer } from "@/components/Footer";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { SEO } from "@/components/SEO";
 import { Link } from "react-router-dom";
-import { ArrowRight, Truck, Calendar, Users, Box, Snowflake, Layers, Play } from "lucide-react";
+import { ArrowRight, Truck, Calendar, Users, Box, Layers, Play } from "lucide-react";
 import { generateBreadcrumbSchema } from "@/lib/structuredData";
 import whyChooseThumb from "@/assets/why-choose-crums-video-thumb.png";
 import { trackCtaClick, trackEvent } from "@/lib/analytics";
@@ -43,12 +43,6 @@ const equipmentTypes = [
     description: "Open deck for oversized loads",
     href: "/flatbed-trailers",
     icon: Layers,
-  },
-  {
-    title: "Refrigerated Trailers",
-    description: "Temperature-controlled reefers",
-    href: "/refrigerated-trailers",
-    icon: Snowflake,
   },
 ];
 

@@ -38,7 +38,7 @@ const nationwideMapImage = "/images/crums-leasing-pickup-delivery-map.webp";
 const servicesOverviewImage = "/images/crums-trailer-fleet.webp";
 const dryVanTrailerImg = "/images/dry-van-trailer.webp";
 const flatbedTrailerImg = "/images/flatbed-trailer.webp";
-const refrigeratedTrailerImg = "/images/refrigerated-trailer.webp";
+
 const trailer56171Img = "/images/trailers/trailer-56171.webp";
 import whyChooseCrumsThumbnail from "@/assets/why-choose-crums-thumbnail.png";
 import { SEO } from "@/components/SEO";
@@ -61,7 +61,7 @@ const Index = () => {
   const faqs = [
     {
       question: "What types of trailers does CRUMS Leasing offer?",
-      answer: "CRUMS Leasing offers 53-foot dry van trailers, flatbed trailers, and refrigerated (reefer) trailers. Our dry vans are ideal for general freight, flatbeds for oversized or heavy loads, and reefers for temperature-sensitive cargo requiring climate control."
+      answer: "CRUMS Leasing offers 53-foot dry van trailers and flatbed trailers. Our dry vans are ideal for general freight and enclosed cargo, while flatbeds are perfect for oversized or heavy loads."
     },
     {
       question: "What is the minimum lease term for trailer leasing?",
@@ -69,7 +69,7 @@ const Index = () => {
     },
     {
       question: "Do you offer short-term trailer rentals?",
-      answer: "Yes, we offer short-term trailer rentals for seasonal demand, special projects, or temporary capacity needs. Contact us for availability and rental rates for dry van, flatbed, or refrigerated trailers."
+      answer: "Yes, we offer short-term trailer rentals for seasonal demand, special projects, or temporary capacity needs. Contact us for availability and rental rates for dry van and flatbed trailers."
     },
     {
       question: "What areas do you serve for trailer leasing?",
@@ -78,10 +78,6 @@ const Index = () => {
     {
       question: "What are the benefits of leasing vs. buying a trailer?",
       answer: "Leasing offers lower upfront costs, predictable monthly payments, access to well-maintained equipment, and flexibility to scale your fleet without the capital investment of purchasing. It also eliminates maintenance headaches and depreciation concerns."
-    },
-    {
-      question: "Are your refrigerated trailers suitable for food transport?",
-      answer: "Yes, our refrigerated reefer trailers are designed for food distribution and temperature-controlled cargo. They maintain consistent temperatures for perishable goods, produce, frozen foods, and pharmaceuticals requiring cold chain logistics."
     }
   ];
 
@@ -105,9 +101,9 @@ const Index = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <SEO
-        title="Dry Van, Flatbed & Reefer Trailer Leasing in Texas"
-        description="CRUMS Leasing offers dry van, flatbed, and refrigerated reefer trailer leasing & rental solutions. Family-owned, nationwide service from San Antonio, TX. Get a quote today!"
+        <SEO
+        title="Dry Van & Flatbed Trailer Leasing in Texas"
+        description="CRUMS Leasing offers dry van and flatbed trailer leasing & rental solutions. Family-owned, nationwide service from San Antonio, TX. Get a quote today!"
         canonical="https://crumsleasing.com/"
         structuredData={combinedSchema}
       />
@@ -133,7 +129,7 @@ const Index = () => {
             <span className="text-secondary">To Build the Life They're Proud Of</span>
           </h1>
           <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto text-primary-foreground">
-            Quality dry van, flatbed, and reefer trailers guided by family values, integrity, and commitment to your success — creating lasting partnerships that move people forward.
+            Quality dry van and flatbed trailers guided by family values, integrity, and commitment to your success — creating lasting partnerships that move people forward.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link to="/contact">
@@ -253,11 +249,6 @@ const Index = () => {
                 <li>
                   <Link to="/dry-van-trailers" className="text-foreground hover:text-primary font-medium">
                     Dry Van Trailers
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/refrigerated-trailers" className="text-foreground hover:text-primary font-medium">
-                    Refrigerated Trailers
                   </Link>
                 </li>
                 <li>
@@ -812,17 +803,17 @@ const Index = () => {
             <div className="mb-8">
               <ProgressiveImage 
                 src={servicesOverviewImage} 
-                alt="CRUMS Leasing trailer fleet - 53-foot dry van, flatbed, and refrigerated trailers"
+                alt="CRUMS Leasing trailer fleet - 53-foot dry van and flatbed trailers"
                 className="w-full max-w-5xl mx-auto rounded-lg shadow-lg"
                 width={1280}
                 height={720}
               />
             </div>
             <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
-              Dry Van, Flatbed & Refrigerated Trailers
+              Dry Van & Flatbed Trailers
             </h2>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-              Specialized capacity solutions for carriers looking to expand their supply chain capabilities with reliable dry van trailers, flatbeds, and temperature-controlled reefer trailers.
+              Specialized capacity solutions for carriers looking to expand their supply chain capabilities with reliable dry van trailers and flatbeds.
             </p>
           </div>
 
@@ -834,7 +825,7 @@ const Index = () => {
                 </div>
                 <h3 className="text-2xl font-bold mb-4 text-foreground">Quality Equipment</h3>
                 <p className="text-muted-foreground mb-6 leading-relaxed">
-                  All dry van, flatbed, and refrigerated trailers are thoroughly inspected, well-maintained, and ready to handle your freight capacity needs.
+                  All dry van and flatbed trailers are thoroughly inspected, well-maintained, and ready to handle your freight capacity needs.
                 </p>
               </CardContent>
             </Card>
@@ -878,7 +869,7 @@ const Index = () => {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
             <Card className="border-2 hover:shadow-lg transition-shadow">
               <CardContent className="p-6">
                 <Link to="/dry-van-trailers" className="block hover:opacity-80 transition-opacity">
@@ -939,38 +930,6 @@ const Index = () => {
                 </ul>
                 <Link to="/flatbed-trailers" className="text-secondary hover:underline font-medium inline-flex items-center">
                   Learn more about flatbed trailers
-                  <ArrowRight className="h-4 w-4 ml-1" />
-                </Link>
-              </CardContent>
-            </Card>
-            <Card className="border-2 hover:shadow-lg transition-shadow">
-              <CardContent className="p-6">
-                <Link to="/refrigerated-trailers" className="block hover:opacity-80 transition-opacity">
-                  <ProgressiveImage 
-                    src={refrigeratedTrailerImg} 
-                    alt="CRUMS Leasing refrigerated reefer trailer - temperature-controlled transport for perishable goods" 
-                    className="w-full h-40 object-contain mb-4"
-                    width={300}
-                    height={160}
-                  />
-                </Link>
-                <h3 className="text-xl font-bold mb-4">Refrigerated Trailers</h3>
-                <ul className="space-y-2 text-muted-foreground mb-6">
-                  <li className="flex items-start">
-                    <CheckCircle className="h-5 w-5 text-secondary mr-2 mt-0.5 flex-shrink-0" />
-                    <span>Multi-temperature zones</span>
-                  </li>
-                  <li className="flex items-start">
-                    <CheckCircle className="h-5 w-5 text-secondary mr-2 mt-0.5 flex-shrink-0" />
-                    <span>Premium insulation</span>
-                  </li>
-                  <li className="flex items-start">
-                    <CheckCircle className="h-5 w-5 text-secondary mr-2 mt-0.5 flex-shrink-0" />
-                    <span>Latest refrigeration units</span>
-                  </li>
-                </ul>
-                <Link to="/refrigerated-trailers" className="text-secondary hover:underline font-medium inline-flex items-center">
-                  Learn more about reefer trailers
                   <ArrowRight className="h-4 w-4 ml-1" />
                 </Link>
               </CardContent>
