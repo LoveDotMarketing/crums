@@ -7,7 +7,11 @@
     <link rel="apple-touch-icon" href="/logo.png">
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     
-    <!-- Analytics loaded via deferred script in main.tsx -->
+    <!-- Initialize gtag stub synchronously so tracking calls queue before script loads -->
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      window.gtag = function(){ window.dataLayer.push(arguments); };
+    </script>
     
     <!-- Resource Hints -->
     <link rel="preconnect" href="https://deeeqatnqqfcxsccigyc.supabase.co" crossorigin>
