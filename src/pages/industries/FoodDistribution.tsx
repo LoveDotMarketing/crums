@@ -5,7 +5,7 @@ import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { CheckCircle, Thermometer, Shield, Clock, Leaf, ArrowRight, Calculator, BookOpen, Snowflake } from "lucide-react";
+import { CheckCircle, Shield, Clock, Leaf, ArrowRight, Calculator, BookOpen, Box } from "lucide-react";
 import { trackCtaClick } from "@/lib/analytics";
 import { foodDistributionServiceSchema, generateBreadcrumbSchema } from "@/lib/structuredData";
 
@@ -17,10 +17,10 @@ const breadcrumbSchema = generateBreadcrumbSchema([
 
 const FoodDistribution = () => {
   const benefits = [
-    { icon: Thermometer, title: "Temperature Control", description: "Refrigerated trailers for temperature-sensitive goods." },
+    { icon: Box, title: "Dry Van Transport", description: "Enclosed trailers for packaged and shelf-stable food products." },
     { icon: Shield, title: "Food Safety", description: "Clean, well-maintained trailers meeting food transport standards." },
     { icon: Clock, title: "Reliable Equipment", description: "Dependable trailers to keep your deliveries on schedule." },
-    { icon: Leaf, title: "Fresh Delivery", description: "Ensure product freshness from farm to table." }
+    { icon: Leaf, title: "Fresh Delivery", description: "Ensure product quality from warehouse to destination." }
   ];
 
   return (
@@ -39,16 +39,16 @@ const FoodDistribution = () => {
             <h1 className="text-4xl md:text-6xl font-bold text-primary-foreground mb-6">
               Food Distribution Solutions
             </h1>
-            <p className="text-lg text-primary-foreground/90 mb-8 max-w-2xl mx-auto">
-              From farm-fresh produce to packaged goods, CRUMS Leasing provides the trailer 
-              solutions food distributors need to keep America fed safely and efficiently.
+          <p className="text-lg text-primary-foreground/90 mb-8 max-w-2xl mx-auto">
+            From packaged goods to shelf-stable products, CRUMS Leasing provides the trailer 
+            solutions food distributors need to keep America fed safely and efficiently.
             </p>
             <div className="flex flex-wrap gap-4 justify-center">
               <Button asChild size="lg" className="bg-secondary hover:bg-secondary/90 text-secondary-foreground">
                 <Link to="/get-started" onClick={() => trackCtaClick('Get a Quote', 'industry_food_distribution', '/get-started')}>Get a Quote <ArrowRight className="ml-2 h-4 w-4" /></Link>
               </Button>
               <Button asChild variant="outline" size="lg" className="border-primary-foreground text-primary-foreground bg-transparent hover:bg-primary-foreground/10">
-                <Link to="/refrigerated-trailers">View Reefer Options</Link>
+                <Link to="/dry-van-trailers">View Dry Van Options</Link>
               </Button>
             </div>
           </div>
@@ -81,8 +81,8 @@ const FoodDistribution = () => {
               <h2 className="text-3xl font-bold mb-8">Trailer Options for Food Distribution</h2>
               <ul className="space-y-4">
                 {[
-                  "Refrigerated trailers for temperature-controlled transport",
                   "Dry van trailers for packaged and shelf-stable goods",
+                  "Flatbed trailers for palletized shipments",
                   "Clean, sanitized trailers ready for food transport",
                   "Flexible lease terms to match distribution contracts",
                   "Quick turnaround for seasonal demand spikes",
@@ -105,13 +105,13 @@ const FoodDistribution = () => {
             <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
               <Card className="border-2 hover:border-primary/50 transition-colors">
                 <CardContent className="p-6 text-center">
-                  <Snowflake className="h-8 w-8 text-primary mx-auto mb-3" />
-                  <h3 className="font-bold text-foreground mb-2">Refrigerated Trailers</h3>
+                  <Box className="h-8 w-8 text-primary mx-auto mb-3" />
+                  <h3 className="font-bold text-foreground mb-2">Dry Van Trailers</h3>
                   <p className="text-sm text-muted-foreground mb-4">
-                    Temperature-controlled transport for perishable goods.
+                    Enclosed transport for packaged food products.
                   </p>
-                  <Link to="/refrigerated-trailers" className="text-primary hover:underline font-medium text-sm">
-                    View Reefers →
+                  <Link to="/dry-van-trailers" className="text-primary hover:underline font-medium text-sm">
+                    View Dry Vans →
                   </Link>
                 </CardContent>
               </Card>

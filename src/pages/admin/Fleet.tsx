@@ -397,7 +397,7 @@ export default function Fleet() {
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="Dry Van">Dry Van</SelectItem>
-                          <SelectItem value="Refrigerated">Refrigerated</SelectItem>
+                          <SelectItem value="Flatbed">Flatbed</SelectItem>
                           <SelectItem value="Flatbed">Flatbed</SelectItem>
                           <SelectItem value="Lowboy">Lowboy</SelectItem>
                           <SelectItem value="Step Deck">Step Deck</SelectItem>

@@ -127,7 +127,7 @@ export default function RentalRequest() {
                     required
                     value={formData.trailer_type}
                     onChange={(e) => setFormData({ ...formData, trailer_type: e.target.value })}
-                    placeholder="e.g., Dry Van, Flatbed, Refrigerated"
+                    placeholder="e.g., Dry Van, Flatbed"
                   />
                 </div>
 

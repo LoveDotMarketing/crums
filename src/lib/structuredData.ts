@@ -218,7 +218,7 @@ export const foodDistributionServiceSchema = {
   "serviceType": "Food Distribution Trailer Leasing",
   "provider": { "@type": "Organization", "name": "CRUMS Leasing" },
   "name": "Food Distribution Trailer Leasing",
-  "description": "Trailer leasing for food distribution companies. Refrigerated reefer trailers and dry vans for safe, temperature-controlled food transport.",
+  "description": "Trailer leasing for food distribution companies. Dry van trailers for safe, reliable food product transport.",
   "areaServed": { "@type": "Country", "name": "United States" },
   "audience": { "@type": "Audience", "audienceType": "Food Distributors" }
 };

@@ -108,7 +108,7 @@ const FleetLeasing = () => {
                   <Box className="h-8 w-8 text-primary mx-auto mb-3" />
                   <h3 className="font-bold text-foreground mb-2">All Trailer Types</h3>
                   <p className="text-sm text-muted-foreground mb-4">
-                    Dry vans, flatbeds, and reefers for your fleet.
+                    Dry vans and flatbeds for your fleet.
                   </p>
                   <Link to="/services/trailer-leasing" className="text-primary hover:underline font-medium text-sm">
                     View Options →

@@ -105,19 +105,6 @@ export const Navigation = () => {
                           </Link>
                         </NavigationMenuLink>
                       </li>
-                      <li>
-                        <NavigationMenuLink asChild>
-                          <Link
-                            to="/refrigerated-trailers"
-                            className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
-                          >
-                            <div className="text-sm font-medium leading-none">Refrigerated Trailers</div>
-                            <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
-                              Temperature-controlled reefers
-                            </p>
-                          </Link>
-                        </NavigationMenuLink>
-                      </li>
                     </ul>
                   </NavigationMenuContent>
                 </NavigationMenuItem>
@@ -312,13 +299,6 @@ export const Navigation = () => {
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Flatbed Trailers
-              </Link>
-              <Link
-                to="/refrigerated-trailers"
-                className="text-sm font-medium text-foreground hover:text-primary pl-2"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Refrigerated Trailers
               </Link>
               <Link
                 to="/about"

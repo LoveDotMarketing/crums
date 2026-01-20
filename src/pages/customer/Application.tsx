@@ -58,7 +58,6 @@ interface ApplicationData {
 const TRAILER_TYPES = [
   { value: "53' Dry Van", label: "53' Dry Van" },
   { value: "48' Flatbed", label: "48' Flatbed" },
-  { value: "Refrigerated", label: "Refrigerated" },
 ];
 
 export default function Application() {

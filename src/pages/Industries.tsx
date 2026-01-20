@@ -32,7 +32,7 @@ const industries = [
   },
   {
     title: "Food Distribution",
-    description: "Temperature-controlled and dry van trailers for safe, compliant food transport operations.",
+    description: "Dry van trailers for safe, compliant food transport operations.",
     icon: UtensilsCrossed,
     href: "/industries/food-distribution",
     linkText: "Food distribution trailers"
