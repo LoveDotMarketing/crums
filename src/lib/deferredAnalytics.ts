@@ -35,20 +35,8 @@ export function loadDeferredAnalytics(): void {
   
   document.head.appendChild(gaScript);
 
-  // Load LinkedIn Insight Tag
-  window._linkedin_partner_id = "8556244";
-  window._linkedin_data_partner_ids = window._linkedin_data_partner_ids || [];
-  window._linkedin_data_partner_ids.push(window._linkedin_partner_id);
-
-  // Initialize lintrk queue before script loads
-  if (!window.lintrk) {
-    window.lintrk = function(a: string, b?: { conversion_id: number }) {
-      window.lintrk.q = window.lintrk.q || [];
-      window.lintrk.q.push([a, b]);
-    };
-    window.lintrk.q = [];
-  }
-
+  // LinkedIn Insight Tag - stub already initialized in index.html synchronously
+  // Just load the actual script here
   const liScript = document.createElement('script');
   liScript.async = true;
   liScript.src = 'https://snap.licdn.com/li.lms-analytics/insight.min.js';

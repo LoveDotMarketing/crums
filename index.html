@@ -13,6 +13,18 @@
       window.gtag = function(){ window.dataLayer.push(arguments); };
     </script>
     
+    <!-- Initialize lintrk stub synchronously for LinkedIn Insight Tag -->
+    <script>
+      window._linkedin_partner_id = "8556244";
+      window._linkedin_data_partner_ids = window._linkedin_data_partner_ids || [];
+      window._linkedin_data_partner_ids.push(window._linkedin_partner_id);
+      window.lintrk = function(a, b) {
+        window.lintrk.q = window.lintrk.q || [];
+        window.lintrk.q.push([a, b]);
+      };
+      window.lintrk.q = [];
+    </script>
+    
     <!-- Resource Hints -->
     <link rel="preconnect" href="https://deeeqatnqqfcxsccigyc.supabase.co" crossorigin>
     <link rel="dns-prefetch" href="https://deeeqatnqqfcxsccigyc.supabase.co">
