@@ -123,6 +123,9 @@ const Index = () => {
         <div className="absolute inset-0 bg-gradient-to-r from-primary/95 to-primary/70"></div>
 
         <div className="relative z-10 container mx-auto px-4 text-center text-primary-foreground">
+          <Badge className="bg-secondary/90 text-secondary-foreground mb-4 text-sm px-4 py-1">
+            Need a trailer fast? We deliver nationwide.
+          </Badge>
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
             Empowering Every Carrier
             <br />
@@ -172,6 +175,42 @@ const Index = () => {
               </Link>
               . Booth 38024. Meet Eric Bledsoe and explore our fleet.
             </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Trust & Transparency Section */}
+      <section className="py-10 bg-background border-b">
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+            <div className="flex flex-col items-center">
+              <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mb-3">
+                <FileText className="h-6 w-6 text-primary" />
+              </div>
+              <h3 className="font-semibold text-foreground text-sm">No Hidden Fees</h3>
+              <p className="text-xs text-muted-foreground mt-1">Simple, transparent contracts</p>
+            </div>
+            <div className="flex flex-col items-center">
+              <div className="h-12 w-12 rounded-full bg-secondary/10 flex items-center justify-center mb-3">
+                <MapPin className="h-6 w-6 text-secondary" />
+              </div>
+              <h3 className="font-semibold text-foreground text-sm">GPS-Equipped Fleet</h3>
+              <p className="text-xs text-muted-foreground mt-1">Peace of mind tracking</p>
+            </div>
+            <div className="flex flex-col items-center">
+              <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mb-3">
+                <Shield className="h-6 w-6 text-primary" />
+              </div>
+              <h3 className="font-semibold text-foreground text-sm">Well-Maintained</h3>
+              <p className="text-xs text-muted-foreground mt-1">Inspected before every lease</p>
+            </div>
+            <div className="flex flex-col items-center">
+              <div className="h-12 w-12 rounded-full bg-secondary/10 flex items-center justify-center mb-3">
+                <TrendingUp className="h-6 w-6 text-secondary" />
+              </div>
+              <h3 className="font-semibold text-foreground text-sm">Flexible Terms</h3>
+              <p className="text-xs text-muted-foreground mt-1">Starting at 12 months</p>
+            </div>
           </div>
         </div>
       </section>
