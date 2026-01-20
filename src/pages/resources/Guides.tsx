@@ -112,7 +112,7 @@ const Guides = () => {
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto space-y-6 text-muted-foreground">
             <p>
-              <strong className="text-foreground">Trailer selection expertise</strong> is fundamental to efficient hauling. Choosing between a dry van, refrigerated trailer, or flatbed isn't just about what you're hauling—it's about understanding capacity, weight distribution, loading requirements, and the specific demands of your freight customers. Our guides break down these decisions in practical terms.
+              <strong className="text-foreground">Trailer selection expertise</strong> is fundamental to efficient hauling. Choosing between a dry van or flatbed isn't just about what you're hauling—it's about understanding capacity, weight distribution, loading requirements, and the specific demands of your freight customers. Our guides break down these decisions in practical terms.
             </p>
             <p>
               <strong className="text-foreground">Operational best practices</strong> separate professional carriers from those who struggle with inefficiency. From pre-trip inspections to route planning to load securement, mastering these fundamentals reduces downtime, prevents violations, and protects your CSA score. These guides cover the knowledge that keeps you compliant and moving.
