@@ -15,13 +15,9 @@ export function loadDeferredAnalytics(): void {
   if (window.__analyticsLoaded) return;
   window.__analyticsLoaded = true;
 
-  // Initialize dataLayer and gtag IMMEDIATELY (before script loads)
-  // This ensures tracking calls are queued even if script hasn't loaded yet
-  window.dataLayer = window.dataLayer || [];
-  window.gtag = function(...args: unknown[]) { 
-    window.dataLayer.push(args); 
-  };
-
+  // gtag stub is already initialized in index.html synchronously
+  // This ensures tracking calls are queued even before this deferred script runs
+  
   // Load Google Analytics 4
   const gaScript = document.createElement('script');
   gaScript.async = true;
