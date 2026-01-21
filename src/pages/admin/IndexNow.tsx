@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Send, Globe, FileText, CheckCircle, XCircle, Loader2, ExternalLink, Newspaper, Sparkles, MapPin, BookOpen, Calculator, Users } from "lucide-react";
+import { Send, Globe, FileText, CheckCircle, XCircle, Loader2, ExternalLink, Newspaper, Sparkles, MapPin, BookOpen, Calculator, Users, Factory, Briefcase } from "lucide-react";
 import { newsArticles } from "@/lib/news";
 import { locations } from "@/lib/locations";
 import { guides, getAvailableGuides } from "@/lib/guides";
@@ -30,6 +30,24 @@ const TOOL_URLS = getAvailableTools().map(tool => `https://crumsleasing.com/reso
 
 // Generate team member URLs from the registry
 const TEAM_URLS = teamMembers.map(member => `https://crumsleasing.com/about/${member.slug}`);
+
+// Industry page URLs
+const INDUSTRY_URLS = [
+  "https://crumsleasing.com/industries",
+  "https://crumsleasing.com/industries/owner-operators",
+  "https://crumsleasing.com/industries/logistics-companies",
+  "https://crumsleasing.com/industries/manufacturing",
+  "https://crumsleasing.com/industries/food-distribution",
+  "https://crumsleasing.com/industries/retail-distribution",
+  "https://crumsleasing.com/industries/fleet-leasing",
+  "https://crumsleasing.com/industries/seasonal-demand",
+];
+
+// Career page URLs
+const CAREER_URLS = [
+  "https://crumsleasing.com/careers",
+  "https://crumsleasing.com/careers/trailer-leasing-sales-rep",
+];
 
 // Static sitemap URLs for the site (main pages)
 const SITEMAP_URLS = [
@@ -65,8 +83,8 @@ const SITEMAP_URLS = [
   "https://crumsleasing.com/referral-program",
 ];
 
-// Combined: all sitemap + all news articles + all locations + guides + tools + team
-const ALL_URLS = [...SITEMAP_URLS, ...NEWS_URLS, ...LOCATION_URLS, ...GUIDE_URLS, ...TOOL_URLS, ...TEAM_URLS];
+// Combined: all sitemap + all news articles + all locations + guides + tools + team + industries + careers
+const ALL_URLS = [...SITEMAP_URLS, ...NEWS_URLS, ...LOCATION_URLS, ...GUIDE_URLS, ...TOOL_URLS, ...TEAM_URLS, ...INDUSTRY_URLS, ...CAREER_URLS].filter((url, index, self) => self.indexOf(url) === index);
 
 interface SubmissionResult {
   success: boolean;
@@ -126,6 +144,14 @@ const IndexNow = () => {
 
   const handleSubmitTeam = () => {
     submitMutation.mutate([...TEAM_URLS, "https://crumsleasing.com/about"]);
+  };
+
+  const handleSubmitIndustries = () => {
+    submitMutation.mutate(INDUSTRY_URLS);
+  };
+
+  const handleSubmitCareers = () => {
+    submitMutation.mutate(CAREER_URLS);
   };
 
   const handleSubmitLatest = () => {
@@ -491,6 +517,84 @@ const IndexNow = () => {
                       <>
                         <Send className="mr-2 h-4 w-4" />
                         Submit All Team Pages
+                      </>
+                    )}
+                  </Button>
+                </CardContent>
+              </Card>
+
+              {/* Industry Pages */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Factory className="h-5 w-5" />
+                    Industry Pages ({INDUSTRY_URLS.length})
+                  </CardTitle>
+                  <CardDescription>
+                    Submit all industry-specific landing pages
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="bg-muted p-4 rounded-lg max-h-48 overflow-y-auto">
+                    <ul className="text-sm space-y-1 font-mono">
+                      {INDUSTRY_URLS.map((url, i) => (
+                        <li key={i} className="text-muted-foreground">{url}</li>
+                      ))}
+                    </ul>
+                  </div>
+                  <Button 
+                    onClick={handleSubmitIndustries}
+                    disabled={submitMutation.isPending}
+                    className="w-full"
+                  >
+                    {submitMutation.isPending ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Submitting...
+                      </>
+                    ) : (
+                      <>
+                        <Send className="mr-2 h-4 w-4" />
+                        Submit All Industry Pages
+                      </>
+                    )}
+                  </Button>
+                </CardContent>
+              </Card>
+
+              {/* Career Pages */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Briefcase className="h-5 w-5" />
+                    Career Pages ({CAREER_URLS.length})
+                  </CardTitle>
+                  <CardDescription>
+                    Submit careers hub and job posting pages
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="bg-muted p-4 rounded-lg max-h-48 overflow-y-auto">
+                    <ul className="text-sm space-y-1 font-mono">
+                      {CAREER_URLS.map((url, i) => (
+                        <li key={i} className="text-muted-foreground">{url}</li>
+                      ))}
+                    </ul>
+                  </div>
+                  <Button 
+                    onClick={handleSubmitCareers}
+                    disabled={submitMutation.isPending}
+                    className="w-full"
+                  >
+                    {submitMutation.isPending ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Submitting...
+                      </>
+                    ) : (
+                      <>
+                        <Send className="mr-2 h-4 w-4" />
+                        Submit All Career Pages
                       </>
                     )}
                   </Button>
