@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Send, Globe, FileText, CheckCircle, XCircle, Loader2, ExternalLink, Newspaper, Sparkles, MapPin, BookOpen, Calculator, Users, Factory, Briefcase, Truck } from "lucide-react";
+import { Send, Globe, FileText, CheckCircle, XCircle, Loader2, ExternalLink, Newspaper, Sparkles, MapPin, BookOpen, Calculator, Users, Factory, Briefcase, Truck, Info } from "lucide-react";
 import { newsArticles } from "@/lib/news";
 import { locations } from "@/lib/locations";
 import { guides, getAvailableGuides } from "@/lib/guides";
@@ -60,6 +60,13 @@ const SERVICE_URLS = [
   "https://crumsleasing.com/services/flatbed-trailers",
 ];
 
+// About section page URLs (excluding team member profiles which have their own section)
+const ABOUT_URLS = [
+  "https://crumsleasing.com/about",
+  "https://crumsleasing.com/about/mission",
+  "https://crumsleasing.com/about/why-choose-crums",
+];
+
 // Static sitemap URLs for the site (main pages)
 const SITEMAP_URLS = [
   "https://crumsleasing.com/",
@@ -94,8 +101,8 @@ const SITEMAP_URLS = [
   "https://crumsleasing.com/referral-program",
 ];
 
-// Combined: all sitemap + all news articles + all locations + guides + tools + team + industries + careers + services
-const ALL_URLS = [...SITEMAP_URLS, ...NEWS_URLS, ...LOCATION_URLS, ...GUIDE_URLS, ...TOOL_URLS, ...TEAM_URLS, ...INDUSTRY_URLS, ...CAREER_URLS, ...SERVICE_URLS].filter((url, index, self) => self.indexOf(url) === index);
+// Combined: all sitemap + all news articles + all locations + guides + tools + team + industries + careers + services + about
+const ALL_URLS = [...SITEMAP_URLS, ...NEWS_URLS, ...LOCATION_URLS, ...GUIDE_URLS, ...TOOL_URLS, ...TEAM_URLS, ...INDUSTRY_URLS, ...CAREER_URLS, ...SERVICE_URLS, ...ABOUT_URLS].filter((url, index, self) => self.indexOf(url) === index);
 
 interface SubmissionResult {
   success: boolean;
@@ -167,6 +174,10 @@ const IndexNow = () => {
 
   const handleSubmitServices = () => {
     submitMutation.mutate(SERVICE_URLS);
+  };
+
+  const handleSubmitAbout = () => {
+    submitMutation.mutate(ABOUT_URLS);
   };
 
   const handleSubmitLatest = () => {
@@ -532,6 +543,45 @@ const IndexNow = () => {
                       <>
                         <Send className="mr-2 h-4 w-4" />
                         Submit All Team Pages
+                      </>
+                    )}
+                  </Button>
+                </CardContent>
+              </Card>
+
+              {/* About Section Pages */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Info className="h-5 w-5" />
+                    About Section Pages ({ABOUT_URLS.length})
+                  </CardTitle>
+                  <CardDescription>
+                    Submit about hub, mission, and why choose pages
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="bg-muted p-4 rounded-lg max-h-48 overflow-y-auto">
+                    <ul className="text-sm space-y-1 font-mono">
+                      {ABOUT_URLS.map((url, i) => (
+                        <li key={i} className="text-muted-foreground">{url}</li>
+                      ))}
+                    </ul>
+                  </div>
+                  <Button 
+                    onClick={handleSubmitAbout}
+                    disabled={submitMutation.isPending}
+                    className="w-full"
+                  >
+                    {submitMutation.isPending ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Submitting...
+                      </>
+                    ) : (
+                      <>
+                        <Send className="mr-2 h-4 w-4" />
+                        Submit All About Pages
                       </>
                     )}
                   </Button>
