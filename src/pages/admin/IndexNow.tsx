@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Send, Globe, FileText, CheckCircle, XCircle, Loader2, ExternalLink, Newspaper, Sparkles, MapPin, BookOpen, Calculator, Users, Factory, Briefcase } from "lucide-react";
+import { Send, Globe, FileText, CheckCircle, XCircle, Loader2, ExternalLink, Newspaper, Sparkles, MapPin, BookOpen, Calculator, Users, Factory, Briefcase, Truck } from "lucide-react";
 import { newsArticles } from "@/lib/news";
 import { locations } from "@/lib/locations";
 import { guides, getAvailableGuides } from "@/lib/guides";
@@ -49,6 +49,17 @@ const CAREER_URLS = [
   "https://crumsleasing.com/careers/trailer-leasing-sales-rep",
 ];
 
+// Service page URLs
+const SERVICE_URLS = [
+  "https://crumsleasing.com/services",
+  "https://crumsleasing.com/services/trailer-leasing",
+  "https://crumsleasing.com/services/trailer-rentals",
+  "https://crumsleasing.com/services/fleet-solutions",
+  "https://crumsleasing.com/services/emergency-trailer-rental",
+  "https://crumsleasing.com/services/dry-van-trailers",
+  "https://crumsleasing.com/services/flatbed-trailers",
+];
+
 // Static sitemap URLs for the site (main pages)
 const SITEMAP_URLS = [
   "https://crumsleasing.com/",
@@ -83,8 +94,8 @@ const SITEMAP_URLS = [
   "https://crumsleasing.com/referral-program",
 ];
 
-// Combined: all sitemap + all news articles + all locations + guides + tools + team + industries + careers
-const ALL_URLS = [...SITEMAP_URLS, ...NEWS_URLS, ...LOCATION_URLS, ...GUIDE_URLS, ...TOOL_URLS, ...TEAM_URLS, ...INDUSTRY_URLS, ...CAREER_URLS].filter((url, index, self) => self.indexOf(url) === index);
+// Combined: all sitemap + all news articles + all locations + guides + tools + team + industries + careers + services
+const ALL_URLS = [...SITEMAP_URLS, ...NEWS_URLS, ...LOCATION_URLS, ...GUIDE_URLS, ...TOOL_URLS, ...TEAM_URLS, ...INDUSTRY_URLS, ...CAREER_URLS, ...SERVICE_URLS].filter((url, index, self) => self.indexOf(url) === index);
 
 interface SubmissionResult {
   success: boolean;
@@ -152,6 +163,10 @@ const IndexNow = () => {
 
   const handleSubmitCareers = () => {
     submitMutation.mutate(CAREER_URLS);
+  };
+
+  const handleSubmitServices = () => {
+    submitMutation.mutate(SERVICE_URLS);
   };
 
   const handleSubmitLatest = () => {
@@ -595,6 +610,45 @@ const IndexNow = () => {
                       <>
                         <Send className="mr-2 h-4 w-4" />
                         Submit All Career Pages
+                      </>
+                    )}
+                  </Button>
+                </CardContent>
+              </Card>
+
+              {/* Service Pages */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Truck className="h-5 w-5" />
+                    Service Pages ({SERVICE_URLS.length})
+                  </CardTitle>
+                  <CardDescription>
+                    Submit all service offering pages including trailer types
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="bg-muted p-4 rounded-lg max-h-48 overflow-y-auto">
+                    <ul className="text-sm space-y-1 font-mono">
+                      {SERVICE_URLS.map((url, i) => (
+                        <li key={i} className="text-muted-foreground">{url}</li>
+                      ))}
+                    </ul>
+                  </div>
+                  <Button 
+                    onClick={handleSubmitServices}
+                    disabled={submitMutation.isPending}
+                    className="w-full"
+                  >
+                    {submitMutation.isPending ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Submitting...
+                      </>
+                    ) : (
+                      <>
+                        <Send className="mr-2 h-4 w-4" />
+                        Submit All Service Pages
                       </>
                     )}
                   </Button>
