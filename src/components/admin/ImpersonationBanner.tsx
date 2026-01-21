@@ -23,7 +23,7 @@ export function ImpersonationBanner() {
   };
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-50 bg-warning text-warning-foreground py-2 px-4 shadow-lg" style={{ backgroundColor: 'hsl(45, 93%, 47%)', color: 'hsl(20, 14%, 4%)' }}>
+    <div className="fixed top-0 left-0 right-0 z-50 py-2 px-4 shadow-md backdrop-blur-sm" style={{ backgroundColor: 'hsla(45, 93%, 47%, 0.85)', color: 'hsl(20, 14%, 4%)' }}>
       <div className="container mx-auto flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Eye className="h-5 w-5" />
