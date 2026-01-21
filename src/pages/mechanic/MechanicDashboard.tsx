@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Wrench, LogOut, Truck, Search, MapPin, DollarSign, ClipboardList, ClipboardCheck, Eye, ArrowDownToLine, ArrowUpFromLine } from "lucide-react";
+import { Wrench, LogOut, Truck, Search, MapPin, DollarSign, ClipboardList, ClipboardCheck, Eye, ArrowDownToLine, ArrowUpFromLine, History, Calendar, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { ChatBot } from "@/components/ChatBot";
 import { SEO } from "@/components/SEO";
@@ -47,6 +47,15 @@ interface ActiveJob {
   job_type: "maintenance" | "checked_out";
 }
 
+interface MaintenanceRecord {
+  id: string;
+  description: string;
+  cost: number;
+  maintenance_date: string;
+  completed: boolean;
+  maintenance_type: string | null;
+}
+
 export default function MechanicDashboard() {
   const navigate = useNavigate();
   const { user, signOut, effectiveUserId, isImpersonating, impersonatedUser } = useAuth();
@@ -62,9 +71,39 @@ export default function MechanicDashboard() {
   const [pendingInspections, setPendingInspections] = useState<Record<string, string>>({});
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
   const [activeJobs, setActiveJobs] = useState<ActiveJob[]>([]);
+  const [isHistoryDialogOpen, setIsHistoryDialogOpen] = useState(false);
+  const [historyTrailer, setHistoryTrailer] = useState<Trailer | null>(null);
+  const [maintenanceHistory, setMaintenanceHistory] = useState<MaintenanceRecord[]>([]);
+  const [loadingHistory, setLoadingHistory] = useState(false);
 
   // Use effectiveUserId for queries when impersonating
   const currentUserId = effectiveUserId;
+
+  const fetchMaintenanceHistory = async (trailerId: string) => {
+    setLoadingHistory(true);
+    try {
+      const { data, error } = await supabase
+        .from("maintenance_records")
+        .select("id, description, cost, maintenance_date, completed, maintenance_type")
+        .eq("trailer_id", trailerId)
+        .order("maintenance_date", { ascending: false })
+        .limit(50);
+
+      if (error) throw error;
+      setMaintenanceHistory(data || []);
+    } catch (error) {
+      console.error("Error fetching maintenance history:", error);
+      toast.error("Failed to load maintenance history");
+    } finally {
+      setLoadingHistory(false);
+    }
+  };
+
+  const handleViewHistory = (trailer: Trailer) => {
+    setHistoryTrailer(trailer);
+    setIsHistoryDialogOpen(true);
+    fetchMaintenanceHistory(trailer.id);
+  };
 
   const fetchPendingInspections = async () => {
     if (!currentUserId) return;
@@ -765,6 +804,16 @@ export default function MechanicDashboard() {
                                 Resume Inspection
                               </Button>
                             )}
+
+                            {/* View History - always available */}
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleViewHistory(trailer)}
+                            >
+                              <History className="mr-2 h-4 w-4" />
+                              History
+                            </Button>
                           </div>
                         </TableCell>
                       </TableRow>
@@ -816,6 +865,73 @@ export default function MechanicDashboard() {
             <Button onClick={handleSubmitMaintenance}>
               <ClipboardList className="mr-2 h-4 w-4" />
               Check In for Service
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Maintenance History Dialog */}
+      <Dialog open={isHistoryDialogOpen} onOpenChange={setIsHistoryDialogOpen}>
+        <DialogContent className="sm:max-w-[600px] max-h-[80vh]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <History className="h-5 w-5" />
+              Maintenance History
+            </DialogTitle>
+            <DialogDescription>
+              Service records for {historyTrailer?.trailer_number} ({historyTrailer?.type})
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            {loadingHistory ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                <span className="ml-2 text-muted-foreground">Loading history...</span>
+              </div>
+            ) : maintenanceHistory.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <History className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                <p>No maintenance records found for this trailer.</p>
+              </div>
+            ) : (
+              <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2">
+                {maintenanceHistory.map((record) => (
+                  <Card key={record.id} className={cn(
+                    "transition-colors",
+                    record.completed ? "bg-muted/30" : "border-amber-500/50 bg-amber-500/5"
+                  )}>
+                    <CardContent className="p-4">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <Badge variant={record.completed ? "secondary" : "destructive"}>
+                              {record.completed ? "Completed" : "In Progress"}
+                            </Badge>
+                            {record.maintenance_type && (
+                              <Badge variant="outline">{record.maintenance_type}</Badge>
+                            )}
+                          </div>
+                          <p className="text-sm mt-2">{record.description}</p>
+                        </div>
+                        <div className="text-right shrink-0">
+                          <div className="flex items-center gap-1 text-xs text-muted-foreground mb-1">
+                            <Calendar className="h-3 w-3" />
+                            {new Date(record.maintenance_date).toLocaleDateString()}
+                          </div>
+                          <p className="text-sm font-medium text-destructive">
+                            ${record.cost.toLocaleString()}
+                          </p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsHistoryDialogOpen(false)}>
+              Close
             </Button>
           </DialogFooter>
         </DialogContent>
