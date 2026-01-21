@@ -15,7 +15,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
-import { UserPlus, Shield, Wrench, Mail, Loader2, Users, MoreHorizontal, Trash2, RefreshCw } from "lucide-react";
+import { UserPlus, Shield, Wrench, Mail, Loader2, Users, MoreHorizontal, Trash2, RefreshCw, Eye } from "lucide-react";
 
 interface StaffMember {
   id: string;
@@ -28,7 +28,7 @@ interface StaffMember {
 
 export default function Staff() {
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, startImpersonation } = useAuth();
   const queryClient = useQueryClient();
   const [isInviteOpen, setIsInviteOpen] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
@@ -225,6 +225,19 @@ export default function Staff() {
   const handleChangeRole = (member: StaffMember, newRole: "admin" | "mechanic") => {
     if (member.role === newRole) return;
     changeRoleMutation.mutate({ userId: member.id, role: newRole });
+  };
+
+  const handleViewAs = (member: StaffMember) => {
+    const displayName = member.first_name || member.last_name
+      ? `${member.first_name || ""} ${member.last_name || ""}`.trim()
+      : undefined;
+    
+    startImpersonation({
+      id: member.id,
+      email: member.email,
+      role: member.role,
+      displayName,
+    });
   };
 
   const adminCount = staffMembers?.filter(s => s.role === "admin").length || 0;
@@ -436,6 +449,13 @@ export default function Staff() {
                               </DropdownMenuItem>
                               {!isCurrentUser(member.id) && (
                                 <>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem
+                                    onClick={() => handleViewAs(member)}
+                                  >
+                                    <Eye className="h-4 w-4 mr-2" />
+                                    View As {member.role === "admin" ? "Admin" : "Mechanic"}
+                                  </DropdownMenuItem>
                                   <DropdownMenuSeparator />
                                   <DropdownMenuItem
                                     onClick={() => handleChangeRole(member, member.role === "admin" ? "mechanic" : "admin")}

@@ -19,6 +19,13 @@ interface FailedLoginResult {
   minutes_remaining?: number;
 }
 
+export interface ImpersonatedUser {
+  id: string;
+  email: string;
+  role: "admin" | "customer" | "mechanic";
+  displayName?: string;
+}
+
 interface AuthContextType {
   user: User | null;
   session: Session | null;
@@ -28,6 +35,13 @@ interface AuthContextType {
   signUp: (email: string, password: string, role: "admin" | "customer" | "mechanic") => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   checkLoginAllowed: (email: string) => Promise<LoginAttemptResult>;
+  // Impersonation
+  impersonatedUser: ImpersonatedUser | null;
+  isImpersonating: boolean;
+  startImpersonation: (user: ImpersonatedUser) => Promise<void>;
+  stopImpersonation: () => void;
+  effectiveUserId: string | null;
+  effectiveRole: "admin" | "customer" | "mechanic" | null;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -37,9 +51,71 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [userRole, setUserRole] = useState<"admin" | "customer" | "mechanic" | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [impersonatedUser, setImpersonatedUser] = useState<ImpersonatedUser | null>(null);
   const navigate = useNavigate();
 
   const sessionStartTime = useState<Date | null>(null);
+
+  // Impersonation helpers
+  const isImpersonating = impersonatedUser !== null;
+  const effectiveUserId = impersonatedUser ? impersonatedUser.id : user?.id ?? null;
+  const effectiveRole = impersonatedUser ? impersonatedUser.role : userRole;
+
+  // Start impersonation
+  const startImpersonation = async (targetUser: ImpersonatedUser) => {
+    // Log impersonation start event
+    if (user && user.email) {
+      try {
+        await supabase.from('user_activity_logs').insert({
+          user_id: user.id,
+          email: user.email,
+          role: 'admin',
+          event_type: 'impersonation_start',
+          user_agent: navigator.userAgent,
+        });
+      } catch (err) {
+        console.error("Error logging impersonation start:", err);
+      }
+    }
+
+    setImpersonatedUser(targetUser);
+    toast.info(`Now viewing as ${targetUser.displayName || targetUser.email}`);
+
+    // Navigate to the appropriate dashboard
+    switch (targetUser.role) {
+      case "admin":
+        navigate("/dashboard/admin");
+        break;
+      case "customer":
+        navigate("/dashboard/customer");
+        break;
+      case "mechanic":
+        navigate("/dashboard/mechanic");
+        break;
+    }
+  };
+
+  // Stop impersonation
+  const stopImpersonation = async () => {
+    // Log impersonation end event
+    if (user && user.email && impersonatedUser) {
+      try {
+        await supabase.from('user_activity_logs').insert({
+          user_id: user.id,
+          email: user.email,
+          role: 'admin',
+          event_type: 'impersonation_end',
+          user_agent: navigator.userAgent,
+        });
+      } catch (err) {
+        console.error("Error logging impersonation end:", err);
+      }
+    }
+
+    setImpersonatedUser(null);
+    toast.success("Returned to admin view");
+    navigate("/dashboard/admin");
+  };
 
   // Track login event
   const trackLoginEvent = async (userId: string, email: string, role: string | null) => {
@@ -85,6 +161,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }, 0);
         } else {
           setUserRole(null);
+          // Clear impersonation on logout
+          setImpersonatedUser(null);
         }
       }
     );
@@ -232,6 +310,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signOut = async () => {
+    // Clear impersonation first
+    setImpersonatedUser(null);
+    
     // Track logout before signing out
     if (user && user.email) {
       await trackLogoutEvent(user.id, user.email, userRole);
@@ -246,7 +327,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, userRole, isLoading, signIn, signUp, signOut, checkLoginAllowed }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      session, 
+      userRole, 
+      isLoading, 
+      signIn, 
+      signUp, 
+      signOut, 
+      checkLoginAllowed,
+      impersonatedUser,
+      isImpersonating,
+      startImpersonation,
+      stopImpersonation,
+      effectiveUserId,
+      effectiveRole,
+    }}>
       {children}
     </AuthContext.Provider>
   );

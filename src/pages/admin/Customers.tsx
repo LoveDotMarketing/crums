@@ -23,7 +23,8 @@ import {
   Trash2,
   ArrowUpDown,
   ArrowUp,
-  ArrowDown
+  ArrowDown,
+  Eye
 } from "lucide-react";
 import {
   Table,
@@ -59,6 +60,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 
 interface TrailerInfo {
   vin: string;
@@ -101,6 +103,7 @@ interface Customer {
 
 export default function Customers() {
   const navigate = useNavigate();
+  const { startImpersonation } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -318,6 +321,44 @@ export default function Customers() {
     if (customerToDelete) {
       deleteMutation.mutate(customerToDelete.id);
     }
+  };
+
+  const handleViewAsCustomer = async (customer: Customer) => {
+    if (!customer.email) {
+      toast({
+        title: "Cannot View As Customer",
+        description: "This customer doesn't have an email address on file.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Look up the user profile by email to get their auth user ID
+    const { data: profile, error } = await supabase
+      .from("profiles")
+      .select("id, first_name, last_name")
+      .eq("email", customer.email)
+      .maybeSingle();
+
+    if (error || !profile) {
+      toast({
+        title: "Cannot View As Customer",
+        description: "This customer hasn't set up their account yet.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const displayName = profile.first_name || profile.last_name
+      ? `${profile.first_name || ""} ${profile.last_name || ""}`.trim()
+      : customer.full_name;
+
+    startImpersonation({
+      id: profile.id,
+      email: customer.email,
+      role: "customer",
+      displayName,
+    });
   };
 
   const handleSort = (column: string) => {
@@ -748,6 +789,20 @@ export default function Customers() {
                                   <Pencil className="h-4 w-4 mr-2" />
                                   Edit Customer
                                 </DropdownMenuItem>
+                                {customer.email && (
+                                  <>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleViewAsCustomer(customer);
+                                      }}
+                                    >
+                                      <Eye className="h-4 w-4 mr-2" />
+                                      View As Customer
+                                    </DropdownMenuItem>
+                                  </>
+                                )}
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem
                                   onClick={(e) => {
