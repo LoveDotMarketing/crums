@@ -42,7 +42,7 @@ interface PendingCheckout {
 }
 
 export default function CustomerDashboard() {
-  const { user, signOut } = useAuth();
+  const { user, signOut, effectiveUserId, isImpersonating, impersonatedUser } = useAuth();
   const [applicationProgress, setApplicationProgress] = useState(0);
   const [applicationStatus, setApplicationStatus] = useState<string | null>(null);
   const [paymentSetupStatus, setPaymentSetupStatus] = useState<string | null>(null);
@@ -53,8 +53,11 @@ export default function CustomerDashboard() {
   const [loading, setLoading] = useState(true);
   const [markingPaid, setMarkingPaid] = useState<string | null>(null);
 
+  // Use effectiveUserId for queries when impersonating
+  const currentUserId = effectiveUserId;
+
   useEffect(() => {
-    if (user) {
+    if (currentUserId) {
       checkApplicationStatus();
       fetchTolls();
       fetchTrailers();
@@ -69,7 +72,7 @@ export default function CustomerDashboard() {
             event: '*',
             schema: 'public',
             table: 'tolls',
-            filter: `customer_id=eq.${user.id}`
+            filter: `customer_id=eq.${currentUserId}`
           },
           () => {
             fetchTolls();
@@ -98,16 +101,16 @@ export default function CustomerDashboard() {
         supabase.removeChannel(trailerChannel);
       };
     }
-  }, [user]);
+  }, [currentUserId]);
 
   const checkApplicationStatus = async () => {
-    if (!user) return;
+    if (!currentUserId) return;
 
     try {
       const { data, error } = await supabase
         .from("customer_applications")
         .select("*")
-        .eq("user_id", user.id)
+        .eq("user_id", currentUserId)
         .maybeSingle();
 
       if (error) throw error;
@@ -136,13 +139,13 @@ export default function CustomerDashboard() {
   };
 
   const fetchTolls = async () => {
-    if (!user) return;
+    if (!currentUserId) return;
 
     try {
       const { data, error } = await supabase
         .from("tolls")
         .select("id, toll_location, toll_authority, amount, toll_date, status, last_reminder_sent_at, reminder_count")
-        .eq("customer_id", user.id)
+        .eq("customer_id", currentUserId)
         .order("toll_date", { ascending: false })
         .limit(20);
 
@@ -173,13 +176,13 @@ export default function CustomerDashboard() {
   };
 
   const fetchTrailers = async () => {
-    if (!user) return;
+    if (!currentUserId) return;
 
     try {
       const { count, error } = await supabase
         .from("trailers")
         .select("id", { count: "exact", head: true })
-        .or(`customer_id.eq.${user.id},assigned_to.eq.${user.id}`);
+        .or(`customer_id.eq.${currentUserId},assigned_to.eq.${currentUserId}`);
 
       if (error) throw error;
 
@@ -190,9 +193,9 @@ export default function CustomerDashboard() {
   };
 
   const fetchPendingCheckouts = async () => {
-    if (!user) return;
+    if (!currentUserId) return;
     try {
-      const { data: trailers } = await supabase.from("trailers").select("id").or(`customer_id.eq.${user.id},assigned_to.eq.${user.id}`);
+      const { data: trailers } = await supabase.from("trailers").select("id").or(`customer_id.eq.${currentUserId},assigned_to.eq.${currentUserId}`);
       if (!trailers?.length) { setPendingCheckouts([]); return; }
       const { data } = await supabase.from("dot_inspections").select("id, trailer_number, trailer_type, inspection_date").in("trailer_id", trailers.map(t => t.id)).eq("status", "completed").eq("customer_acknowledged", false);
       setPendingCheckouts(data || []);
@@ -209,7 +212,7 @@ export default function CustomerDashboard() {
           payment_date: new Date().toISOString() 
         })
         .eq("id", tollId)
-        .eq("customer_id", user?.id);
+        .eq("customer_id", currentUserId);
 
       if (error) throw error;
 

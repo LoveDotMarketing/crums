@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import { 
   Wrench, 
   Plus, 
@@ -15,7 +16,9 @@ import {
   Phone,
   Calendar,
   CheckCircle,
-  Loader2
+  Loader2,
+  MoreHorizontal,
+  Eye
 } from "lucide-react";
 import {
   Table,
@@ -25,6 +28,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface Mechanic {
   id: string;
@@ -38,9 +47,21 @@ interface Mechanic {
 }
 
 export default function Mechanics() {
+  const { user, startImpersonation } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [mechanics, setMechanics] = useState<Mechanic[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const handleViewAsMechanic = (mechanic: Mechanic) => {
+    startImpersonation({
+      id: mechanic.id,
+      email: mechanic.email,
+      role: "mechanic",
+      displayName: mechanic.name !== mechanic.email ? mechanic.name : undefined,
+    });
+  };
+
+  const isCurrentUser = (mechanicId: string) => user?.id === mechanicId;
 
   useEffect(() => {
     fetchMechanics();
@@ -264,9 +285,23 @@ export default function Mechanics() {
                             {new Date(mechanic.joined).toLocaleDateString()}
                           </TableCell>
                           <TableCell>
-                            <Button variant="ghost" size="sm">
-                              View Details
-                            </Button>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon">
+                                  <MoreHorizontal className="h-4 w-4" />
+                                  <span className="sr-only">Actions</span>
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem
+                                  onClick={() => handleViewAsMechanic(mechanic)}
+                                  disabled={isCurrentUser(mechanic.id)}
+                                >
+                                  <Eye className="h-4 w-4 mr-2" />
+                                  View As Mechanic
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
                           </TableCell>
                         </TableRow>
                       ))}

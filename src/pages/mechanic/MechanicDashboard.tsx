@@ -37,7 +37,7 @@ interface Trailer {
 
 export default function MechanicDashboard() {
   const navigate = useNavigate();
-  const { user, signOut } = useAuth();
+  const { user, signOut, effectiveUserId, isImpersonating, impersonatedUser } = useAuth();
   const [trailers, setTrailers] = useState<Trailer[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -49,12 +49,16 @@ export default function MechanicDashboard() {
   const [checkOutType, setCheckOutType] = useState<"service" | "use">("service");
   const [pendingInspections, setPendingInspections] = useState<Record<string, string>>({});
 
+  // Use effectiveUserId for queries when impersonating
+  const currentUserId = effectiveUserId;
+
   const fetchPendingInspections = async () => {
+    if (!currentUserId) return;
     try {
       const { data } = await supabase
         .from("dot_inspections")
         .select("id, trailer_id")
-        .eq("inspector_id", user?.id)
+        .eq("inspector_id", currentUserId)
         .eq("status", "in_progress");
       
       if (data) {
@@ -69,7 +73,9 @@ export default function MechanicDashboard() {
 
   useEffect(() => {
     fetchTrailers();
-    fetchPendingInspections();
+    if (currentUserId) {
+      fetchPendingInspections();
+    }
     
     const channel = supabase
       .channel('trailer-changes')
@@ -77,7 +83,7 @@ export default function MechanicDashboard() {
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
-  }, []);
+  }, [currentUserId]);
 
   const fetchTrailers = async () => {
     try {
@@ -158,7 +164,7 @@ export default function MechanicDashboard() {
         .from("maintenance_records")
         .insert({
           trailer_id: selectedTrailer.id,
-          mechanic_id: user?.id,
+          mechanic_id: currentUserId,
           description: maintenanceDescription,
           cost: parseFloat(maintenanceCost) || 0,
           maintenance_date: new Date().toISOString().split('T')[0],
@@ -315,11 +321,15 @@ export default function MechanicDashboard() {
                 </DialogFooter>
               </DialogContent>
             </Dialog>
-            <span className="text-sm text-muted-foreground">{user?.email}</span>
-            <Button onClick={signOut} variant="outline" size="sm">
-              <LogOut className="h-4 w-4 mr-2" />
-              Sign Out
-            </Button>
+            <span className="text-sm text-muted-foreground">
+              {isImpersonating ? impersonatedUser?.email : user?.email}
+            </span>
+            {!isImpersonating && (
+              <Button onClick={signOut} variant="outline" size="sm">
+                <LogOut className="h-4 w-4 mr-2" />
+                Sign Out
+              </Button>
+            )}
           </div>
         </div>
       </header>
