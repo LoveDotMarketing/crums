@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Send, Globe, FileText, CheckCircle, XCircle, Loader2, ExternalLink, Newspaper, Sparkles, MapPin, BookOpen, Calculator, Users, Factory, Briefcase, Truck, Info } from "lucide-react";
+import { Send, Globe, FileText, CheckCircle, XCircle, Loader2, ExternalLink, Newspaper, Sparkles, MapPin, BookOpen, Calculator, Users, Factory, Briefcase, Truck, Info, BarChart3 } from "lucide-react";
 import { newsArticles } from "@/lib/news";
 import { locations } from "@/lib/locations";
 import { guides, getAvailableGuides } from "@/lib/guides";
@@ -263,6 +263,93 @@ const IndexNow = () => {
                       </p>
                     </div>
                   )}
+                </CardContent>
+              </Card>
+
+              {/* URL Summary Card */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <BarChart3 className="h-5 w-5" />
+                    URL Summary by Category
+                  </CardTitle>
+                  <CardDescription>
+                    Total indexed URLs: {ALL_URLS.length}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                    <div className="flex items-center gap-3 p-3 bg-muted rounded-lg">
+                      <FileText className="h-5 w-5 text-muted-foreground" />
+                      <div>
+                        <p className="text-sm font-medium">Main Pages</p>
+                        <p className="text-2xl font-bold">{SITEMAP_URLS.length}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3 p-3 bg-muted rounded-lg">
+                      <Newspaper className="h-5 w-5 text-muted-foreground" />
+                      <div>
+                        <p className="text-sm font-medium">News Articles</p>
+                        <p className="text-2xl font-bold">{NEWS_URLS.length}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3 p-3 bg-muted rounded-lg">
+                      <MapPin className="h-5 w-5 text-muted-foreground" />
+                      <div>
+                        <p className="text-sm font-medium">Locations</p>
+                        <p className="text-2xl font-bold">{LOCATION_URLS.length}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3 p-3 bg-muted rounded-lg">
+                      <BookOpen className="h-5 w-5 text-muted-foreground" />
+                      <div>
+                        <p className="text-sm font-medium">Guides</p>
+                        <p className="text-2xl font-bold">{GUIDE_URLS.length}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3 p-3 bg-muted rounded-lg">
+                      <Calculator className="h-5 w-5 text-muted-foreground" />
+                      <div>
+                        <p className="text-sm font-medium">Tools</p>
+                        <p className="text-2xl font-bold">{TOOL_URLS.length}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3 p-3 bg-muted rounded-lg">
+                      <Users className="h-5 w-5 text-muted-foreground" />
+                      <div>
+                        <p className="text-sm font-medium">Team</p>
+                        <p className="text-2xl font-bold">{TEAM_URLS.length}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3 p-3 bg-muted rounded-lg">
+                      <Factory className="h-5 w-5 text-muted-foreground" />
+                      <div>
+                        <p className="text-sm font-medium">Industries</p>
+                        <p className="text-2xl font-bold">{INDUSTRY_URLS.length}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3 p-3 bg-muted rounded-lg">
+                      <Briefcase className="h-5 w-5 text-muted-foreground" />
+                      <div>
+                        <p className="text-sm font-medium">Careers</p>
+                        <p className="text-2xl font-bold">{CAREER_URLS.length}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3 p-3 bg-muted rounded-lg">
+                      <Truck className="h-5 w-5 text-muted-foreground" />
+                      <div>
+                        <p className="text-sm font-medium">Services</p>
+                        <p className="text-2xl font-bold">{SERVICE_URLS.length}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3 p-3 bg-muted rounded-lg">
+                      <Info className="h-5 w-5 text-muted-foreground" />
+                      <div>
+                        <p className="text-sm font-medium">About</p>
+                        <p className="text-2xl font-bold">{ABOUT_URLS.length}</p>
+                      </div>
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
 
