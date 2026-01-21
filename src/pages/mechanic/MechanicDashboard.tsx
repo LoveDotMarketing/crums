@@ -34,6 +34,7 @@ interface Trailer {
   total_maintenance_cost: number;
   is_rented: boolean;
   assigned_to: string | null;
+  vin: string | null;
 }
 
 interface ActiveJob {
@@ -218,7 +219,8 @@ export default function MechanicDashboard() {
           year,
           total_maintenance_cost,
           is_rented,
-          assigned_to
+          assigned_to,
+          vin
         `)
         .order("trailer_number");
 
@@ -404,74 +406,6 @@ export default function MechanicDashboard() {
             </div>
           </div>
           <div className="flex items-center gap-4">
-            <Dialog open={isCheckOutDialogOpen} onOpenChange={setIsCheckOutDialogOpen}>
-              <DialogTrigger asChild>
-                <Button size="sm" variant="default">
-                  <Truck className="h-4 w-4 mr-2" />
-                  Check Out Trailer
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Check Out Trailer</DialogTitle>
-                  <DialogDescription>
-                    Select a trailer from the fleet to check out
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4 py-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="trailer-select">Select Trailer</Label>
-                    <select
-                      id="trailer-select"
-                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                      onChange={(e) => {
-                        const trailer = trailers.find(t => t.id === e.target.value);
-                        setSelectedTrailer(trailer || null);
-                      }}
-                    >
-                      <option value="">Choose a trailer...</option>
-                      {trailers.filter(t => t.status === "available").map((trailer) => (
-                        <option key={trailer.id} value={trailer.id}>
-                          {trailer.trailer_number} - {trailer.type} ({trailer.make} {trailer.model})
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Check Out Type</Label>
-                    <div className="flex gap-4">
-                      <label className="flex items-center gap-2 cursor-pointer">
-                        <input
-                          type="radio"
-                          name="checkout-type"
-                          value="service"
-                          checked={checkOutType === "service"}
-                          onChange={(e) => setCheckOutType(e.target.value as "service" | "use")}
-                          className="h-4 w-4"
-                        />
-                        <span className="text-sm">For Service</span>
-                      </label>
-                      <label className="flex items-center gap-2 cursor-pointer">
-                        <input
-                          type="radio"
-                          name="checkout-type"
-                          value="use"
-                          checked={checkOutType === "use"}
-                          onChange={(e) => setCheckOutType(e.target.value as "service" | "use")}
-                          className="h-4 w-4"
-                        />
-                        <span className="text-sm">For Use</span>
-                      </label>
-                    </div>
-                  </div>
-                </div>
-                <DialogFooter>
-                  <Button onClick={handleSubmitCheckOut} disabled={!selectedTrailer}>
-                    Check Out
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
             <span className="text-sm text-muted-foreground">
               {isImpersonating ? impersonatedUser?.email : user?.email}
             </span>
@@ -698,6 +632,7 @@ export default function MechanicDashboard() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Trailer #</TableHead>
+                    <TableHead>VIN</TableHead>
                     <TableHead>Type</TableHead>
                     <TableHead>Make/Model</TableHead>
                     <TableHead>Year</TableHead>
@@ -710,7 +645,7 @@ export default function MechanicDashboard() {
                 <TableBody>
                   {filteredTrailers.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                      <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
                         No trailers found
                       </TableCell>
                     </TableRow>
@@ -718,6 +653,7 @@ export default function MechanicDashboard() {
                     filteredTrailers.map((trailer) => (
                       <TableRow key={trailer.id}>
                         <TableCell className="font-medium">{trailer.trailer_number}</TableCell>
+                        <TableCell className="font-mono text-xs">{trailer.vin || "-"}</TableCell>
                         <TableCell>{trailer.type}</TableCell>
                         <TableCell>
                           {trailer.make && trailer.model 
@@ -865,6 +801,84 @@ export default function MechanicDashboard() {
             <Button onClick={handleSubmitMaintenance}>
               <ClipboardList className="mr-2 h-4 w-4" />
               Check In for Service
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Check Out Dialog */}
+      <Dialog open={isCheckOutDialogOpen} onOpenChange={(open) => {
+        setIsCheckOutDialogOpen(open);
+        if (!open) setSelectedTrailer(null);
+      }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Check Out Trailer</DialogTitle>
+            <DialogDescription>
+              {selectedTrailer 
+                ? `Check out ${selectedTrailer.trailer_number}`
+                : "Select a trailer from the fleet to check out"
+              }
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            {selectedTrailer && (
+              <div className="p-4 bg-muted/50 rounded-lg space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-muted-foreground">Trailer #</span>
+                  <span className="font-semibold">{selectedTrailer.trailer_number}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-muted-foreground">VIN</span>
+                  <span className="font-mono text-sm">{selectedTrailer.vin || "N/A"}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-muted-foreground">Type</span>
+                  <span>{selectedTrailer.type}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-muted-foreground">Make/Model</span>
+                  <span>{selectedTrailer.make} {selectedTrailer.model}</span>
+                </div>
+              </div>
+            )}
+            <div className="space-y-2">
+              <Label>Check Out Type</Label>
+              <div className="flex gap-4">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="checkout-type"
+                    value="service"
+                    checked={checkOutType === "service"}
+                    onChange={(e) => setCheckOutType(e.target.value as "service" | "use")}
+                    className="h-4 w-4"
+                  />
+                  <span className="text-sm">For Service</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="checkout-type"
+                    value="use"
+                    checked={checkOutType === "use"}
+                    onChange={(e) => setCheckOutType(e.target.value as "service" | "use")}
+                    className="h-4 w-4"
+                  />
+                  <span className="text-sm">For Use (Yard/Transport)</span>
+                </label>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => {
+              setIsCheckOutDialogOpen(false);
+              setSelectedTrailer(null);
+            }}>
+              Cancel
+            </Button>
+            <Button onClick={handleSubmitCheckOut} disabled={!selectedTrailer}>
+              Check Out
             </Button>
           </DialogFooter>
         </DialogContent>
