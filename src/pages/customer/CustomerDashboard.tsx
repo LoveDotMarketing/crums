@@ -273,24 +273,28 @@ export default function CustomerDashboard() {
           <div className="flex items-center justify-between mb-8">
             <div>
               <h1 className="text-3xl font-bold text-foreground">Customer Dashboard</h1>
-              <p className="text-muted-foreground mt-1">Welcome back, {user?.email}</p>
+              <p className="text-muted-foreground mt-1">
+                Welcome back, {isImpersonating && impersonatedUser ? impersonatedUser.displayName || impersonatedUser.email : user?.email}
+              </p>
             </div>
-            <Button variant="outline" onClick={signOut}>
-              Sign Out
-            </Button>
+            {!isImpersonating && (
+              <Button variant="outline" onClick={signOut}>
+                Sign Out
+              </Button>
+            )}
           </div>
 
           {/* Application Status Tracker */}
-          {user && (
+          {currentUserId && (
             <div className="mb-8">
-              <ApplicationStatusTracker userId={user.id} />
+              <ApplicationStatusTracker userId={currentUserId} />
             </div>
           )}
 
           {/* Application Status Alert - only for incomplete/pending states */}
-          {user && (
+          {currentUserId && (
             <div className="mb-8">
-              <ApplicationAlert userId={user.id} />
+              <ApplicationAlert userId={currentUserId} />
             </div>
           )}
 
