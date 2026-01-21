@@ -24,7 +24,7 @@ interface TrailerInfo {
 }
 
 export default function Profile() {
-  const { user } = useAuth();
+  const { user, effectiveUserId, isImpersonating, impersonatedUser } = useAuth();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [paymentSetupStatus, setPaymentSetupStatus] = useState<string | null>(null);
@@ -33,7 +33,7 @@ export default function Profile() {
     first_name: "",
     last_name: "",
     phone: "",
-    email: user?.email || "",
+    email: "",
   });
   const [passwordData, setPasswordData] = useState({
     newPassword: "",
@@ -41,17 +41,21 @@ export default function Profile() {
   });
   const [changingPassword, setChangingPassword] = useState(false);
 
+  // Use effectiveUserId for queries when impersonating
+  const currentUserId = effectiveUserId;
+  const currentEmail = isImpersonating && impersonatedUser ? impersonatedUser.email : user?.email;
+
   // Fetch customer's trailers
   const { data: trailers = [] } = useQuery({
-    queryKey: ['my-trailers', user?.email],
+    queryKey: ['my-trailers', currentEmail],
     queryFn: async () => {
-      if (!user?.email) return [];
+      if (!currentEmail) return [];
       
       // First get the customer record by email
       const { data: customer, error: customerError } = await supabase
         .from('customers')
         .select('id')
-        .eq('email', user.email)
+        .eq('email', currentEmail)
         .maybeSingle();
       
       if (customerError || !customer) return [];
@@ -66,20 +70,20 @@ export default function Profile() {
       if (error) throw error;
       return (data || []) as TrailerInfo[];
     },
-    enabled: !!user?.email,
+    enabled: !!currentEmail,
   });
 
   useEffect(() => {
     fetchProfile();
     fetchApplicationStatus();
-  }, [user]);
+  }, [currentUserId]);
 
   const fetchApplicationStatus = async () => {
-    if (!user) return;
+    if (!currentUserId) return;
     const { data } = await supabase
       .from("customer_applications")
       .select("status, payment_setup_status")
-      .eq("user_id", user.id)
+      .eq("user_id", currentUserId)
       .maybeSingle();
     
     if (data) {
@@ -89,13 +93,13 @@ export default function Profile() {
   };
 
   const fetchProfile = async () => {
-    if (!user) return;
+    if (!currentUserId) return;
 
     try {
       const { data, error } = await supabase
         .from("profiles")
         .select("*")
-        .eq("id", user.id)
+        .eq("id", currentUserId)
         .single();
 
       if (error) throw error;
@@ -118,6 +122,13 @@ export default function Profile() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Don't allow saving when impersonating
+    if (isImpersonating) {
+      toast.error("Cannot modify profile while viewing as customer");
+      return;
+    }
+    
     setSaving(true);
 
     try {
@@ -128,14 +139,14 @@ export default function Profile() {
           last_name: profile.last_name,
           phone: profile.phone,
         })
-        .eq("id", user?.id);
+        .eq("id", currentUserId);
 
       if (error) throw error;
 
       // Track profile completion in outreach status
       if (profile.first_name && profile.last_name && profile.phone) {
         supabase.functions.invoke("update-outreach-status", {
-          body: { action: "profile_completed", email: user?.email },
+          body: { action: "profile_completed", email: currentEmail },
         }).catch(err => console.error("Failed to update outreach status:", err));
       }
 
@@ -150,6 +161,12 @@ export default function Profile() {
 
   const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Don't allow password changes when impersonating
+    if (isImpersonating) {
+      toast.error("Cannot change password while viewing as customer");
+      return;
+    }
     
     if (passwordData.newPassword !== passwordData.confirmPassword) {
       toast.error("Passwords do not match");
@@ -172,7 +189,7 @@ export default function Profile() {
 
       // Track password set in outreach status
       supabase.functions.invoke("update-outreach-status", {
-        body: { action: "password_set", email: user?.email },
+        body: { action: "password_set", email: currentEmail },
       }).catch(err => console.error("Failed to update outreach status:", err));
 
       toast.success("Password updated successfully");
@@ -248,7 +265,9 @@ export default function Profile() {
               <Card>
                 <CardHeader>
                   <CardTitle>Personal Information</CardTitle>
-                  <CardDescription>Update your profile information</CardDescription>
+                  <CardDescription>
+                    {isImpersonating ? "Viewing customer profile (read-only)" : "Update your profile information"}
+                  </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <form onSubmit={handleSubmit} className="space-y-4">
@@ -260,6 +279,8 @@ export default function Profile() {
                           value={profile.first_name}
                           onChange={(e) => setProfile({ ...profile, first_name: e.target.value })}
                           placeholder="John"
+                          disabled={isImpersonating}
+                          className={isImpersonating ? "bg-muted" : ""}
                         />
                       </div>
                       <div className="space-y-2">
@@ -269,6 +290,8 @@ export default function Profile() {
                           value={profile.last_name}
                           onChange={(e) => setProfile({ ...profile, last_name: e.target.value })}
                           placeholder="Doe"
+                          disabled={isImpersonating}
+                          className={isImpersonating ? "bg-muted" : ""}
                         />
                       </div>
                     </div>
@@ -289,71 +312,77 @@ export default function Profile() {
 
                     <div className="space-y-2">
                       <Label htmlFor="phone">Phone Number</Label>
-                      <Input
-                        id="phone"
-                        type="tel"
-                        value={profile.phone}
-                        onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
-                        placeholder="(555) 123-4567"
-                      />
-                    </div>
+                        <Input
+                          id="phone"
+                          type="tel"
+                          value={profile.phone}
+                          onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
+                          placeholder="(555) 123-4567"
+                          disabled={isImpersonating}
+                          className={isImpersonating ? "bg-muted" : ""}
+                        />
+                      </div>
 
-                    <Button type="submit" disabled={saving} className="w-full md:w-auto">
-                      {saving ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Saving...
-                        </>
-                      ) : (
-                        "Save Changes"
-                      )}
-                    </Button>
+                    {!isImpersonating && (
+                      <Button type="submit" disabled={saving} className="w-full md:w-auto">
+                        {saving ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Saving...
+                          </>
+                        ) : (
+                          "Save Changes"
+                        )}
+                      </Button>
+                    )}
                   </form>
                 </CardContent>
               </Card>
 
-              <Card>
-                <CardHeader>
-                  <CardTitle>Change Password</CardTitle>
-                  <CardDescription>Update your account password</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <form onSubmit={handlePasswordChange} className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="newPassword">New Password</Label>
-                      <Input
-                        id="newPassword"
-                        type="password"
-                        value={passwordData.newPassword}
-                        onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
-                        placeholder="Enter new password"
-                      />
-                    </div>
+              {!isImpersonating && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Change Password</CardTitle>
+                    <CardDescription>Update your account password</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <form onSubmit={handlePasswordChange} className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="newPassword">New Password</Label>
+                        <Input
+                          id="newPassword"
+                          type="password"
+                          value={passwordData.newPassword}
+                          onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
+                          placeholder="Enter new password"
+                        />
+                      </div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="confirmPassword">Confirm New Password</Label>
-                      <Input
-                        id="confirmPassword"
-                        type="password"
-                        value={passwordData.confirmPassword}
-                        onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
-                        placeholder="Confirm new password"
-                      />
-                    </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="confirmPassword">Confirm New Password</Label>
+                        <Input
+                          id="confirmPassword"
+                          type="password"
+                          value={passwordData.confirmPassword}
+                          onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
+                          placeholder="Confirm new password"
+                        />
+                      </div>
 
-                    <Button type="submit" disabled={changingPassword} className="w-full md:w-auto">
-                      {changingPassword ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Updating Password...
-                        </>
-                      ) : (
-                        "Update Password"
-                      )}
-                    </Button>
-                  </form>
-                </CardContent>
-              </Card>
+                      <Button type="submit" disabled={changingPassword} className="w-full md:w-auto">
+                        {changingPassword ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Updating Password...
+                          </>
+                        ) : (
+                          "Update Password"
+                        )}
+                      </Button>
+                    </form>
+                  </CardContent>
+                </Card>
+              )}
             </div>
           )}
         </div>
