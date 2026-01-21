@@ -138,7 +138,9 @@ export const locations: LocationData[] = [
     keyIndustries: ["Aerospace", "Defense", "Manufacturing", "Logistics", "Railroads"],
     nearbyAirports: ["DFW - Dallas/Fort Worth International", "AFW - Fort Worth Alliance"],
     regionalContext: "Fort Worth is a major logistics center with Alliance Texas, one of the largest inland ports in the nation. The city's strategic location makes it ideal for distribution operations.",
-    nearbyCities: ["dallas-tx", "austin-tx", "houston-tx"]
+    nearbyCities: ["dallas-tx", "austin-tx", "houston-tx"],
+    landmarks: "Serving Fort Worth from the Stockyards to Alliance Airport. Easy I-35 access from our Central Texas yard for delivery across Tarrant County.",
+    testimonialSnippet: { text: "Solid trailers, fair prices, and they understand owner-operators.", author: "B.H., Fort Worth" }
   },
   // Major National Logistics Hubs
   {
@@ -156,7 +158,9 @@ export const locations: LocationData[] = [
     nearbyAirports: ["LAX - Los Angeles International", "ONT - Ontario International"],
     portAccess: "Port of Los Angeles & Port of Long Beach - busiest container port complex in the Western Hemisphere",
     regionalContext: "Los Angeles is the largest trucking market in the United States. The ports of LA and Long Beach handle nearly half of all containers entering the U.S., creating enormous demand for trailer capacity.",
-    nearbyCities: ["phoenix-az", "denver-co"]
+    nearbyCities: ["phoenix-az", "denver-co"],
+    landmarks: "We deliver across LA County from the Port of Long Beach to the Inland Empire. Serving carriers on I-10 from San Bernardino to Santa Monica.",
+    testimonialSnippet: { text: "Needed a trailer for port work in Long Beach. CRUMS delivered on time and the equipment was solid.", author: "A.R., Los Angeles" }
   },
   {
     city: "Chicago",
@@ -172,7 +176,9 @@ export const locations: LocationData[] = [
     keyIndustries: ["Intermodal", "Manufacturing", "Food processing", "Retail distribution", "Financial services"],
     nearbyAirports: ["ORD - O'Hare International", "MDW - Midway International"],
     regionalContext: "Chicago is the freight capital of North America, where six of the seven major Class I railroads converge. The city handles more intermodal freight than any other location in the Western Hemisphere.",
-    nearbyCities: ["indianapolis-in", "kansas-city-mo"]
+    nearbyCities: ["indianapolis-in", "kansas-city-mo"],
+    landmarks: "Serving Chicagoland from Joliet intermodal yards to O'Hare freight operations. We deliver to carriers across Cook, DuPage, and Will counties.",
+    testimonialSnippet: { text: "Running freight out of Chicago is tough. CRUMS makes the equipment part easy.", author: "P.W., Chicago" }
   },
   {
     city: "Atlanta",
@@ -188,7 +194,9 @@ export const locations: LocationData[] = [
     keyIndustries: ["E-commerce", "Retail distribution", "Beverage", "Automotive", "Film production"],
     nearbyAirports: ["ATL - Hartsfield-Jackson Atlanta International"],
     regionalContext: "Atlanta is the logistics hub of the Southeast, where I-85, I-75, and I-20 converge. Hartsfield-Jackson is the world's busiest airport, and the region is home to major corporate headquarters.",
-    nearbyCities: ["charlotte-nc", "nashville-tn", "memphis-tn"]
+    nearbyCities: ["charlotte-nc", "nashville-tn", "memphis-tn"],
+    landmarks: "Delivering across metro Atlanta from Marietta to McDonough. Convenient for carriers working the I-75 and I-85 corridors through Georgia.",
+    testimonialSnippet: { text: "Southeast runs are my bread and butter. CRUMS keeps me rolling with reliable equipment.", author: "D.J., Atlanta" }
   },
   {
     city: "Memphis",
@@ -205,7 +213,9 @@ export const locations: LocationData[] = [
     nearbyAirports: ["MEM - Memphis International (FedEx SuperHub)"],
     portAccess: "Port of Memphis - 4th largest inland port in the United States",
     regionalContext: "Memphis is America's Distribution Center, home to the FedEx SuperHub and one of the nation's largest inland ports. The city's central location makes it ideal for reaching 50% of the U.S. population within a day's drive.",
-    nearbyCities: ["nashville-tn", "atlanta-ga", "dallas-tx"]
+    nearbyCities: ["nashville-tn", "atlanta-ga", "dallas-tx"],
+    landmarks: "Serving carriers near the FedEx SuperHub, Lamar Ave industrial corridor, and the Port of Memphis. I-40 and I-55 access throughout Shelby County.",
+    testimonialSnippet: { text: "Memphis freight is non-stop. CRUMS understands that and keeps my trailer in top shape.", author: "L.T., Memphis" }
   },
   {
     city: "Phoenix",
@@ -221,7 +231,9 @@ export const locations: LocationData[] = [
     keyIndustries: ["Semiconductor manufacturing", "Aerospace", "E-commerce", "Construction", "Agriculture"],
     nearbyAirports: ["PHX - Phoenix Sky Harbor International"],
     regionalContext: "Phoenix is one of the fastest-growing metros in the nation with booming semiconductor and manufacturing sectors. The I-10 corridor connects Phoenix to Los Angeles and Texas markets.",
-    nearbyCities: ["los-angeles-ca", "denver-co"]
+    nearbyCities: ["los-angeles-ca", "denver-co"],
+    landmarks: "Serving the Valley from Mesa to Goodyear. We deliver to carriers along the I-10 corridor and the Loop 101/202 distribution zones.",
+    testimonialSnippet: { text: "Texas to Phoenix runs are my specialty. CRUMS trailers handle the desert heat no problem.", author: "S.G., Phoenix" }
   },
   // Additional High-Volume Markets
   {
@@ -238,7 +250,9 @@ export const locations: LocationData[] = [
     keyIndustries: ["Automotive", "Pharmaceutical", "Logistics", "Manufacturing", "Agriculture"],
     nearbyAirports: ["IND - Indianapolis International"],
     regionalContext: "Indianapolis is known as the Crossroads of America, where more interstate highways converge than any other U.S. city. The central location provides access to 75% of the U.S. population within a day's drive.",
-    nearbyCities: ["chicago-il", "nashville-tn", "kansas-city-mo"]
+    nearbyCities: ["chicago-il", "nashville-tn", "kansas-city-mo"],
+    landmarks: "Serving carriers from the Indianapolis Motor Speedway area to the Plainfield logistics parks. Central access via I-70 and I-65 interchange.",
+    testimonialSnippet: { text: "Crossroads means I'm going everywhere. CRUMS has the right trailer for every haul.", author: "K.M., Indianapolis" }
   },
   {
     city: "Nashville",
@@ -254,7 +268,9 @@ export const locations: LocationData[] = [
     keyIndustries: ["Healthcare", "Automotive", "Music industry", "Logistics", "E-commerce"],
     nearbyAirports: ["BNA - Nashville International"],
     regionalContext: "Nashville is one of the fastest-growing cities in America with a booming logistics sector. The convergence of I-40, I-65, and I-24 makes it a strategic distribution point for the Southeast.",
-    nearbyCities: ["memphis-tn", "atlanta-ga", "indianapolis-in"]
+    nearbyCities: ["memphis-tn", "atlanta-ga", "indianapolis-in"],
+    landmarks: "Delivering across Middle Tennessee from Murfreesboro to Franklin. Serving carriers near the La Vergne and Smyrna distribution hubs.",
+    testimonialSnippet: { text: "Nashville's booming and so is my business. CRUMS scales with me.", author: "N.B., Nashville" }
   },
   {
     city: "Charlotte",
@@ -270,7 +286,9 @@ export const locations: LocationData[] = [
     keyIndustries: ["Banking", "Automotive", "E-commerce", "Food processing", "Energy"],
     nearbyAirports: ["CLT - Charlotte Douglas International"],
     regionalContext: "Charlotte is a major East Coast distribution hub on the I-85 corridor. The city's central East Coast location and strong infrastructure make it ideal for serving markets from Atlanta to Washington D.C.",
-    nearbyCities: ["atlanta-ga", "nashville-tn"]
+    nearbyCities: ["atlanta-ga", "nashville-tn"],
+    landmarks: "Serving the Charlotte metro from Uptown to the I-485 outer belt. Delivering to carriers near Charlotte Douglas Airport and the Concord distribution zone.",
+    testimonialSnippet: { text: "I-85 corridor is my life. CRUMS equipment handles the miles like a champ.", author: "E.C., Charlotte" }
   },
   {
     city: "Denver",
@@ -286,7 +304,9 @@ export const locations: LocationData[] = [
     keyIndustries: ["Aerospace", "Technology", "Energy", "Outdoor recreation", "Food & beverage"],
     nearbyAirports: ["DEN - Denver International"],
     regionalContext: "Denver is the gateway to the Mountain West, serving as the primary distribution hub for the Rocky Mountain region. The I-70 and I-25 corridors connect Denver to major markets in all directions.",
-    nearbyCities: ["phoenix-az", "kansas-city-mo"]
+    nearbyCities: ["phoenix-az", "kansas-city-mo"],
+    landmarks: "Delivering across the Front Range from Fort Collins to Colorado Springs. Easy access to I-70 mountain corridor and I-25 north-south routes.",
+    testimonialSnippet: { text: "Mountain runs require tough trailers. CRUMS delivers every time.", author: "J.P., Denver" }
   },
   {
     city: "Kansas City",
@@ -302,7 +322,9 @@ export const locations: LocationData[] = [
     keyIndustries: ["Intermodal", "Automotive", "Agriculture", "Manufacturing", "E-commerce"],
     nearbyAirports: ["MCI - Kansas City International"],
     regionalContext: "Kansas City is a major freight hub where I-70 and I-35 intersect, connecting major markets from coast to coast and border to border. The city is a growing intermodal and e-commerce fulfillment center.",
-    nearbyCities: ["denver-co", "chicago-il", "dallas-tx", "indianapolis-in"]
+    nearbyCities: ["denver-co", "chicago-il", "dallas-tx", "indianapolis-in"],
+    landmarks: "Serving the KC metro from the Fairfax industrial district to the Logistics Park Kansas City. I-35 corridor access for carriers on both sides of the state line.",
+    testimonialSnippet: { text: "KC is where America's freight meets. CRUMS keeps my business moving.", author: "W.R., Kansas City" }
   }
 ];
 
