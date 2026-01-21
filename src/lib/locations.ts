@@ -16,6 +16,8 @@ export interface LocationData {
   portAccess?: string;
   regionalContext: string;
   nearbyCities: string[]; // slugs of nearby cities for cross-linking
+  landmarks?: string; // Local landmarks or street references for hyper-local SEO
+  testimonialSnippet?: { text: string; author: string }; // City-specific testimonial
 }
 
 // San Antonio, TX headquarters coordinates
@@ -45,7 +47,9 @@ export const locations: LocationData[] = [
     keyIndustries: ["Military logistics", "Healthcare distribution", "Aerospace", "Manufacturing"],
     nearbyAirports: ["SAT - San Antonio International"],
     regionalContext: "San Antonio is Texas's second-largest city and a major hub for military logistics with multiple bases including Joint Base San Antonio. The I-10 and I-35 corridors connect to major ports and distribution centers.",
-    nearbyCities: ["austin-tx", "houston-tx"]
+    nearbyCities: ["austin-tx", "houston-tx"],
+    landmarks: "Our Bulverde yard is easily accessible via Highway 281, just north of Loop 1604. We're 30 minutes from downtown San Antonio and the Riverwalk area.",
+    testimonialSnippet: { text: "CRUMS got me rolling in 48 hours. No runaround, just a handshake and keys.", author: "R.M., San Antonio carrier" }
   },
   {
     city: "Austin",
@@ -61,7 +65,9 @@ export const locations: LocationData[] = [
     keyIndustries: ["Technology", "E-commerce fulfillment", "Food & beverage", "Construction"],
     nearbyAirports: ["AUS - Austin-Bergstrom International"],
     regionalContext: "Austin's booming tech sector and population growth have created high demand for freight and distribution services. The I-35 corridor connects Austin to major markets in Dallas and San Antonio.",
-    nearbyCities: ["san-antonio-tx", "houston-tx", "dallas-tx"]
+    nearbyCities: ["san-antonio-tx", "houston-tx", "dallas-tx"],
+    landmarks: "We serve carriers across the Austin metro, from Round Rock and Cedar Park to Kyle and Buda. Just an hour south on I-35 from downtown Austin.",
+    testimonialSnippet: { text: "As a new owner-operator, CRUMS took a chance on me. Best decision I made.", author: "T.L., Austin" }
   },
   {
     city: "New Braunfels",
@@ -76,7 +82,9 @@ export const locations: LocationData[] = [
     keyHighways: ["I-35", "TX-46", "TX-337"],
     keyIndustries: ["Manufacturing", "Tourism", "Retail distribution", "Agriculture"],
     regionalContext: "New Braunfels is one of the fastest-growing cities in America, located perfectly between San Antonio and Austin on the I-35 corridor. Our Bulverde location is just 20 minutes away.",
-    nearbyCities: ["san-antonio-tx", "austin-tx"]
+    nearbyCities: ["san-antonio-tx", "austin-tx"],
+    landmarks: "Just off I-35 between San Antonio and Austin. Our Bulverde yard is a quick 20-minute drive via TX-46.",
+    testimonialSnippet: { text: "Picked up my trailer the same day I called. That's service.", author: "J.K., New Braunfels" }
   },
   // Texas - Major Markets (Delivery)
   {
@@ -94,7 +102,9 @@ export const locations: LocationData[] = [
     nearbyAirports: ["IAH - George Bush Intercontinental", "HOU - William P. Hobby"],
     portAccess: "Port of Houston - largest port in Texas and one of the busiest in the nation",
     regionalContext: "Houston is the largest trucking market in Texas and one of the largest in the nation. The Port of Houston handles over 250 million tons of cargo annually, creating massive demand for trailer capacity.",
-    nearbyCities: ["san-antonio-tx", "dallas-tx", "austin-tx"]
+    nearbyCities: ["san-antonio-tx", "dallas-tx", "austin-tx"],
+    landmarks: "We deliver across the Houston metro, from The Woodlands and Katy to Pearland and Pasadena. Convenient access via I-10 from our Central Texas base.",
+    testimonialSnippet: { text: "Delivery was on time and the trailer was spotless. Will lease again.", author: "M.S., Houston" }
   },
   {
     city: "Dallas",
@@ -110,7 +120,9 @@ export const locations: LocationData[] = [
     keyIndustries: ["Retail distribution", "E-commerce", "Technology", "Telecommunications", "Financial services"],
     nearbyAirports: ["DFW - Dallas/Fort Worth International", "DAL - Dallas Love Field"],
     regionalContext: "Dallas-Fort Worth is a major logistics hub and crossroads of America. The I-35 corridor connects to major markets in Mexico, and multiple interstates make DFW a natural distribution center.",
-    nearbyCities: ["houston-tx", "austin-tx", "fort-worth-tx"]
+    nearbyCities: ["houston-tx", "austin-tx", "fort-worth-tx"],
+    landmarks: "Serving the entire DFW metroplex from Frisco and Plano to Grand Prairie and Arlington. I-35 corridor delivery from Central Texas.",
+    testimonialSnippet: { text: "Fair rates, good equipment, and they actually answer the phone.", author: "C.D., Dallas" }
   },
   {
     city: "Fort Worth",
