@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import crumsLogo from "@/assets/crums-leasing-logo-contact.jpg";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
@@ -411,6 +412,11 @@ const Contact = () => {
             {/* Contact Information */}
             <div className="space-y-8">
               <div>
+                <img 
+                  src={crumsLogo} 
+                  alt="CRUMS Leasing" 
+                  className="h-12 w-auto mb-4"
+                />
                 <h2 className="text-2xl font-bold mb-6 text-foreground">Get In Touch</h2>
                 <p className="text-lg text-muted-foreground mb-8">
                   Have questions? Our team is ready to help. Reach out via phone, email, or fill out
