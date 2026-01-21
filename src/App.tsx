@@ -54,6 +54,7 @@ const WhyLeasingDryVan = lazy(() => import("./pages/resources/guides/WhyLeasingD
 const TrailerSpecifications = lazy(() => import("./pages/resources/guides/TrailerSpecifications"));
 const PreTripInspection = lazy(() => import("./pages/resources/guides/PreTripInspection"));
 const WhyChooseCrums = lazy(() => import("./pages/WhyChooseCrums"));
+const EmergencyTrailerRental = lazy(() => import("./pages/EmergencyTrailerRental"));
 
 // News pages
 const News = lazy(() => import("./pages/News"));
@@ -155,6 +156,7 @@ const App = () => (
             <Route path="/refrigerated-trailers" element={<Navigate to="/services/trailer-leasing" replace />} />
             <Route path="/commercial-dry-van-trailer-for-lease-56171" element={<TrailerProfile56171 />} />
             <Route path="/why-choose-crums" element={<WhyChooseCrums />} />
+            <Route path="/emergency-trailer-rental" element={<EmergencyTrailerRental />} />
             <Route path="/industries" element={<Industries />} />
             <Route path="/industries/fleet-leasing" element={<FleetLeasing />} />
             <Route path="/industries/owner-operators" element={<OwnerOperators />} />

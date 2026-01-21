@@ -185,36 +185,109 @@ const Reviews = () => {
         </div>
       </section>
 
-      {/* Review Prompt Suggestions */}
+      {/* Segmented Review Links */}
       <section className="py-12 bg-muted/50">
         <div className="container mx-auto px-4">
-          <div className="max-w-2xl mx-auto text-center">
-            <h2 className="text-2xl font-bold text-foreground mb-4">
-              Not Sure What to Write?
+          <div className="max-w-4xl mx-auto">
+            <h2 className="text-2xl font-bold text-foreground text-center mb-8">
+              Share Your CRUMS Story
             </h2>
-            <p className="text-muted-foreground mb-6">
-              Here are some ideas to help you write a review that helps other carriers:
-            </p>
+            <div className="grid md:grid-cols-3 gap-6 mb-10">
+              <Card className="border-2 hover:border-secondary/50 transition-colors">
+                <CardContent className="p-6 text-center">
+                  <div className="h-12 w-12 rounded-full bg-destructive/10 flex items-center justify-center mx-auto mb-4">
+                    <Star className="h-6 w-6 text-destructive" />
+                  </div>
+                  <h3 className="font-bold text-foreground mb-2">Emergency Jobs</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Did we help you in a pinch? Mention how fast we responded and got you back on the road.
+                  </p>
+                  <a
+                    href="https://search.google.com/local/writereview?placeid=ChIJv4g00VWHXIYRXgCdneji-DI"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => trackOutboundLink('https://search.google.com/local/writereview')}
+                  >
+                    <Button variant="outline" size="sm" className="w-full">
+                      Share Your Story
+                      <ExternalLink className="ml-2 h-4 w-4" />
+                    </Button>
+                  </a>
+                </CardContent>
+              </Card>
+              <Card className="border-2 hover:border-secondary/50 transition-colors">
+                <CardContent className="p-6 text-center">
+                  <div className="h-12 w-12 rounded-full bg-secondary/10 flex items-center justify-center mx-auto mb-4">
+                    <Star className="h-6 w-6 text-secondary" />
+                  </div>
+                  <h3 className="font-bold text-foreground mb-2">Long-Term Customers</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Leased with us for 6+ months? Share what keeps you with CRUMS and how we've supported your business.
+                  </p>
+                  <a
+                    href="https://search.google.com/local/writereview?placeid=ChIJv4g00VWHXIYRXgCdneji-DI"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => trackOutboundLink('https://search.google.com/local/writereview')}
+                  >
+                    <Button variant="outline" size="sm" className="w-full">
+                      Share Your Experience
+                      <ExternalLink className="ml-2 h-4 w-4" />
+                    </Button>
+                  </a>
+                </CardContent>
+              </Card>
+              <Card className="border-2 hover:border-secondary/50 transition-colors">
+                <CardContent className="p-6 text-center">
+                  <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                    <Star className="h-6 w-6 text-primary" />
+                  </div>
+                  <h3 className="font-bold text-foreground mb-2">New Carriers</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Was this your first trailer lease? Help other new owner-operators by sharing your first experience.
+                  </p>
+                  <a
+                    href="https://search.google.com/local/writereview?placeid=ChIJv4g00VWHXIYRXgCdneji-DI"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => trackOutboundLink('https://search.google.com/local/writereview')}
+                  >
+                    <Button variant="outline" size="sm" className="w-full">
+                      Help New Carriers
+                      <ExternalLink className="ml-2 h-4 w-4" />
+                    </Button>
+                  </a>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Keyword-Focused Review Prompts */}
             <Card className="border-2 bg-background">
-              <CardContent className="p-6 text-left">
-                <ul className="space-y-3 text-muted-foreground">
-                  <li className="flex items-start gap-2">
-                    <Star className="h-5 w-5 text-secondary flex-shrink-0 mt-0.5" />
-                    <span>What type of trailer did you lease? (53-foot dry van, flatbed)</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <Star className="h-5 w-5 text-secondary flex-shrink-0 mt-0.5" />
-                    <span>How long have you been with CRUMS Leasing?</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <Star className="h-5 w-5 text-secondary flex-shrink-0 mt-0.5" />
-                    <span>What did you like most about working with us?</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <Star className="h-5 w-5 text-secondary flex-shrink-0 mt-0.5" />
-                    <span>How was the trailer condition when you received it?</span>
-                  </li>
-                </ul>
+              <CardContent className="p-6">
+                <h3 className="font-bold text-foreground text-center mb-4">
+                  Not Sure What to Write?
+                </h3>
+                <p className="text-muted-foreground text-center mb-6 text-sm">
+                  Mentioning specific details helps other carriers find us. Here are some ideas:
+                </p>
+                <div className="grid md:grid-cols-2 gap-4 text-sm text-muted-foreground">
+                  <div className="flex items-start gap-2">
+                    <Star className="h-4 w-4 text-secondary flex-shrink-0 mt-0.5" />
+                    <span>Mention your trailer type: "I lease a <strong>53-foot dry van</strong> from CRUMS..."</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <Star className="h-4 w-4 text-secondary flex-shrink-0 mt-0.5" />
+                    <span>Include your location: "...for my <strong>Houston to Dallas</strong> routes."</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <Star className="h-4 w-4 text-secondary flex-shrink-0 mt-0.5" />
+                    <span>Share the outcome: "They helped me get rolling within <strong>48 hours</strong>."</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <Star className="h-4 w-4 text-secondary flex-shrink-0 mt-0.5" />
+                    <span>Mention what mattered: "No hidden fees and <strong>real customer support</strong>."</span>
+                  </div>
+                </div>
               </CardContent>
             </Card>
           </div>

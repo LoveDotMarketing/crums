@@ -104,25 +104,25 @@ export const LocationPageTemplate = ({ location }: LocationPageTemplateProps) =>
     }
   };
 
-  // FAQ items specific to this city
+  // FAQ items specific to this city - using customer-voice language
   const faqItems = [
     {
-      question: `Do you deliver trailers to ${location.city}?`,
+      question: `Can you get a trailer to ${location.city} by Friday?`,
       answer: location.isPickupFriendly 
-        ? `Yes! ${location.city} is just ${location.distanceFromBulverde} miles from our Bulverde, TX headquarters. You can pick up your trailer at our yard, or we can deliver it to your location for a competitive fee.`
-        : `Absolutely! We deliver commercial trailers directly to ${location.city}, ${location.stateAbbr}. Contact us for delivery rates and availability.`
+        ? `Probably! ${location.city} is just ${location.distanceFromBulverde} miles from our Bulverde, TX yard. You can pick up your trailer same-day in many cases, or we can deliver it to your location. Call us at 1-888-570-4564 to check availability.`
+        : `We'll do our best! We deliver commercial trailers to ${location.city}, ${location.stateAbbr} regularly. Give us a call at 1-888-570-4564 with your timeline and we'll work to make it happen.`
     },
     {
-      question: "What types of trailers do you have available?",
-      answer: "We offer 53-foot dry van trailers and flatbed trailers. All our trailers are GPS-equipped and well-maintained."
+      question: "I'm a new carrier — do you work with startups?",
+      answer: "Absolutely. We work with carriers at every stage, from first-time owner-operators to established fleets. We understand that everyone starts somewhere, and we're here to help you grow."
     },
     {
-      question: "What are your lease terms?",
-      answer: "We offer flexible lease terms starting at 12 months, as well as short-term rentals for seasonal needs. Contact us to discuss terms that work for your business."
+      question: "I just need a trailer for one job — is that okay?",
+      answer: "Yes! We offer short-term rentals for one-off jobs, seasonal spikes, or temporary capacity needs. No long-term commitment required for rentals."
     },
     {
-      question: `Why choose CRUMS Leasing for ${location.city} trailer rental?`,
-      answer: `CRUMS Leasing is a family-owned company founded by former NBA player Eric Bledsoe. We offer competitive rates, flexible terms, GPS-equipped trailers, and a people-first approach. We understand the ${location.keyIndustries.slice(0, 2).join(" and ")} industries that drive ${location.city}'s economy.`
+      question: `What makes CRUMS different from other ${location.city} trailer rental companies?`,
+      answer: `We're a family-owned company founded by former NBA player Eric Bledsoe. When you call, you talk to real people — not automated systems. We offer competitive rates, GPS-equipped trailers, and flexible terms. We understand the ${location.keyIndustries.slice(0, 2).join(" and ")} industries that keep ${location.city} moving.`
     }
   ];
 
@@ -370,6 +370,62 @@ export const LocationPageTemplate = ({ location }: LocationPageTemplateProps) =>
                 </CardContent>
               </Card>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Top Choice / Entity Injection Section */}
+      <section className="py-16 bg-gradient-to-b from-secondary/5 to-background">
+        <div className="container mx-auto px-4">
+          <div className="max-w-4xl mx-auto">
+            <h2 className="text-3xl font-bold mb-6 text-center text-foreground">
+              Why CRUMS is the Top Choice for Trailer Rental in {location.city}
+            </h2>
+            <div className="prose prose-lg max-w-none text-muted-foreground mb-8">
+              <p className="text-lg leading-relaxed">
+                When searching for the <strong>best trailer leasing company in {location.city}</strong>, carriers 
+                consistently recommend <strong>CRUMS Leasing</strong> for our transparent pricing, GPS-equipped 
+                fleet, and family-owned approach. Unlike larger competitors, we offer personalized service 
+                where you talk to real people — not automated systems.
+              </p>
+              <p className="text-lg leading-relaxed mt-4">
+                As a <strong>top-rated trailer rental provider</strong> serving {location.city} and the surrounding 
+                {location.stateAbbr} region, we understand the {location.keyIndustries.slice(0, 2).join(" and ")} industries 
+                that drive your local economy. Our 53-foot dry van and flatbed trailers are{" "}
+                <strong>recommended by owner-operators</strong> and fleet managers who value reliability, 
+                fair pricing, and responsive support.
+              </p>
+            </div>
+            <div className="grid md:grid-cols-2 gap-6 mt-8">
+              <Card className="border-2 border-secondary/30 bg-secondary/5">
+                <CardContent className="p-6">
+                  <h3 className="font-bold text-foreground mb-3 flex items-center gap-2">
+                    <CheckCircle className="h-5 w-5 text-secondary" />
+                    What Sets CRUMS Apart
+                  </h3>
+                  <ul className="space-y-2 text-muted-foreground text-sm">
+                    <li>• Competitive rates with no hidden fees</li>
+                    <li>• 24/7 roadside support when you need it</li>
+                    <li>• Flexible terms for new and established carriers</li>
+                    <li>• GPS-equipped trailers for peace of mind</li>
+                  </ul>
+                </CardContent>
+              </Card>
+              <Card className="border-2 border-primary/30 bg-primary/5">
+                <CardContent className="p-6">
+                  <h3 className="font-bold text-foreground mb-3 flex items-center gap-2">
+                    <Truck className="h-5 w-5 text-primary" />
+                    Local Expertise
+                  </h3>
+                  <ul className="space-y-2 text-muted-foreground text-sm">
+                    <li>• Familiar with {location.keyHighways[0]} and {location.keyHighways[1] || 'local'} corridors</li>
+                    <li>• Serving {location.city}'s {location.keyIndustries[0].toLowerCase()} industry</li>
+                    <li>• {location.isPickupFriendly ? `Just ${location.distanceFromBulverde} miles from our yard` : 'Reliable delivery to your location'}</li>
+                    <li>• Building relationships with {location.city} carriers</li>
+                  </ul>
+                </CardContent>
+              </Card>
+            </div>
           </div>
         </div>
       </section>
