@@ -9,15 +9,23 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Send, Globe, FileText, CheckCircle, XCircle, Loader2, ExternalLink, Newspaper, Sparkles, MapPin } from "lucide-react";
+import { Send, Globe, FileText, CheckCircle, XCircle, Loader2, ExternalLink, Newspaper, Sparkles, MapPin, BookOpen, Calculator } from "lucide-react";
 import { newsArticles } from "@/lib/news";
 import { locations } from "@/lib/locations";
+import { guides, getAvailableGuides } from "@/lib/guides";
+import { tools, getAvailableTools } from "@/lib/tools";
 
 // Generate news article URLs from the registry
 const NEWS_URLS = newsArticles.map(article => `https://crumsleasing.com/news/${article.slug}`);
 
 // Generate location page URLs from the registry
 const LOCATION_URLS = locations.map(location => `https://crumsleasing.com/locations/${location.slug}`);
+
+// Generate guide URLs from the registry (available guides only)
+const GUIDE_URLS = getAvailableGuides().map(guide => `https://crumsleasing.com/resources/guides/${guide.slug}`);
+
+// Generate tool URLs from the registry (available tools only)
+const TOOL_URLS = getAvailableTools().map(tool => `https://crumsleasing.com/resources/tools/${tool.slug}`);
 
 // Static sitemap URLs for the site (main pages)
 const SITEMAP_URLS = [
@@ -53,8 +61,8 @@ const SITEMAP_URLS = [
   "https://crumsleasing.com/referral-program",
 ];
 
-// Combined: all sitemap + all news articles + all locations
-const ALL_URLS = [...SITEMAP_URLS, ...NEWS_URLS, ...LOCATION_URLS];
+// Combined: all sitemap + all news articles + all locations + guides + tools
+const ALL_URLS = [...SITEMAP_URLS, ...NEWS_URLS, ...LOCATION_URLS, ...GUIDE_URLS, ...TOOL_URLS];
 
 interface SubmissionResult {
   success: boolean;
@@ -102,6 +110,14 @@ const IndexNow = () => {
 
   const handleSubmitLocations = () => {
     submitMutation.mutate([...LOCATION_URLS, "https://crumsleasing.com/locations"]);
+  };
+
+  const handleSubmitGuides = () => {
+    submitMutation.mutate([...GUIDE_URLS, "https://crumsleasing.com/resources/guides"]);
+  };
+
+  const handleSubmitTools = () => {
+    submitMutation.mutate([...TOOL_URLS, "https://crumsleasing.com/resources/tools"]);
   };
 
   const handleSubmitLatest = () => {
@@ -350,6 +366,84 @@ const IndexNow = () => {
                       <>
                         <Send className="mr-2 h-4 w-4" />
                         Submit All Location Pages
+                      </>
+                    )}
+                  </Button>
+                </CardContent>
+              </Card>
+
+              {/* Resource Guides */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <BookOpen className="h-5 w-5" />
+                    Resource Guides ({GUIDE_URLS.length})
+                  </CardTitle>
+                  <CardDescription>
+                    Submit all available guide URLs for resource indexing
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="bg-muted p-4 rounded-lg max-h-48 overflow-y-auto">
+                    <ul className="text-sm space-y-1 font-mono">
+                      {GUIDE_URLS.map((url, i) => (
+                        <li key={i} className="text-muted-foreground">{url}</li>
+                      ))}
+                    </ul>
+                  </div>
+                  <Button 
+                    onClick={handleSubmitGuides}
+                    disabled={submitMutation.isPending}
+                    className="w-full"
+                  >
+                    {submitMutation.isPending ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Submitting...
+                      </>
+                    ) : (
+                      <>
+                        <Send className="mr-2 h-4 w-4" />
+                        Submit All Guides
+                      </>
+                    )}
+                  </Button>
+                </CardContent>
+              </Card>
+
+              {/* Calculator Tools */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Calculator className="h-5 w-5" />
+                    Calculator Tools ({TOOL_URLS.length})
+                  </CardTitle>
+                  <CardDescription>
+                    Submit all available calculator and tool URLs
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="bg-muted p-4 rounded-lg max-h-48 overflow-y-auto">
+                    <ul className="text-sm space-y-1 font-mono">
+                      {TOOL_URLS.map((url, i) => (
+                        <li key={i} className="text-muted-foreground">{url}</li>
+                      ))}
+                    </ul>
+                  </div>
+                  <Button 
+                    onClick={handleSubmitTools}
+                    disabled={submitMutation.isPending}
+                    className="w-full"
+                  >
+                    {submitMutation.isPending ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Submitting...
+                      </>
+                    ) : (
+                      <>
+                        <Send className="mr-2 h-4 w-4" />
+                        Submit All Tools
                       </>
                     )}
                   </Button>
