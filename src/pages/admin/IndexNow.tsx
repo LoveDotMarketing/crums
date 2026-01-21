@@ -9,9 +9,13 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Send, Globe, FileText, CheckCircle, XCircle, Loader2, ExternalLink } from "lucide-react";
+import { Send, Globe, FileText, CheckCircle, XCircle, Loader2, ExternalLink, Newspaper, Sparkles } from "lucide-react";
+import { newsArticles } from "@/lib/news";
 
-// Static sitemap URLs for the site
+// Generate news article URLs from the registry
+const NEWS_URLS = newsArticles.map(article => `https://crumsleasing.com/news/${article.slug}`);
+
+// Static sitemap URLs for the site (main pages)
 const SITEMAP_URLS = [
   "https://crumsleasing.com/",
   "https://crumsleasing.com/about",
@@ -45,6 +49,9 @@ const SITEMAP_URLS = [
   "https://crumsleasing.com/referral-program",
 ];
 
+// Combined: all sitemap + all news articles
+const ALL_URLS = [...SITEMAP_URLS, ...NEWS_URLS];
+
 interface SubmissionResult {
   success: boolean;
   status: number;
@@ -55,6 +62,9 @@ interface SubmissionResult {
 const IndexNow = () => {
   const [customUrls, setCustomUrls] = useState("");
   const [lastResult, setLastResult] = useState<SubmissionResult | null>(null);
+
+  // Get the most recent news article for "new content" highlight
+  const latestArticle = newsArticles[0];
 
   const submitMutation = useMutation({
     mutationFn: async (urls: string[]) => {
@@ -77,6 +87,18 @@ const IndexNow = () => {
       toast.error(`Error: ${error.message}`);
     }
   });
+
+  const handleSubmitAll = () => {
+    submitMutation.mutate(ALL_URLS);
+  };
+
+  const handleSubmitNews = () => {
+    submitMutation.mutate([...NEWS_URLS, "https://crumsleasing.com/news"]);
+  };
+
+  const handleSubmitLatest = () => {
+    submitMutation.mutate([`https://crumsleasing.com/news/${latestArticle.slug}`]);
+  };
 
   const handleSubmitSitemap = () => {
     submitMutation.mutate(SITEMAP_URLS);
@@ -160,15 +182,102 @@ const IndexNow = () => {
                 </CardContent>
               </Card>
 
+              {/* Quick Actions */}
+              <Card className="border-primary/50 bg-primary/5">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Sparkles className="h-5 w-5 text-primary" />
+                    Quick Actions
+                  </CardTitle>
+                  <CardDescription>
+                    One-click submission for common use cases
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <Button 
+                      onClick={handleSubmitLatest}
+                      disabled={submitMutation.isPending}
+                      variant="default"
+                      className="w-full"
+                    >
+                      {submitMutation.isPending ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      ) : (
+                        <Newspaper className="mr-2 h-4 w-4" />
+                      )}
+                      Submit Latest Article
+                    </Button>
+                    <Button 
+                      onClick={handleSubmitAll}
+                      disabled={submitMutation.isPending}
+                      variant="secondary"
+                      className="w-full"
+                    >
+                      {submitMutation.isPending ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      ) : (
+                        <Globe className="mr-2 h-4 w-4" />
+                      )}
+                      Submit All ({ALL_URLS.length} URLs)
+                    </Button>
+                  </div>
+                  <div className="p-3 bg-muted rounded-lg">
+                    <p className="text-sm font-medium">Latest Article:</p>
+                    <p className="text-sm text-muted-foreground truncate">{latestArticle.title}</p>
+                    <p className="text-xs text-muted-foreground mt-1">Published: {latestArticle.date}</p>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* News Articles */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Newspaper className="h-5 w-5" />
+                    News Articles ({NEWS_URLS.length})
+                  </CardTitle>
+                  <CardDescription>
+                    Submit all news article URLs to IndexNow for faster indexing
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="bg-muted p-4 rounded-lg max-h-48 overflow-y-auto">
+                    <ul className="text-sm space-y-1 font-mono">
+                      {NEWS_URLS.map((url, i) => (
+                        <li key={i} className="text-muted-foreground">{url}</li>
+                      ))}
+                    </ul>
+                  </div>
+                  <Button 
+                    onClick={handleSubmitNews}
+                    disabled={submitMutation.isPending}
+                    className="w-full"
+                  >
+                    {submitMutation.isPending ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Submitting...
+                      </>
+                    ) : (
+                      <>
+                        <Send className="mr-2 h-4 w-4" />
+                        Submit All News Articles
+                      </>
+                    )}
+                  </Button>
+                </CardContent>
+              </Card>
+
               {/* Submit Sitemap */}
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <FileText className="h-5 w-5" />
-                    Submit Sitemap URLs
+                    Main Pages ({SITEMAP_URLS.length})
                   </CardTitle>
                   <CardDescription>
-                    Submit all {SITEMAP_URLS.length} main pages from your sitemap to IndexNow
+                    Submit core sitemap pages (home, services, industries, etc.)
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -182,6 +291,7 @@ const IndexNow = () => {
                   <Button 
                     onClick={handleSubmitSitemap}
                     disabled={submitMutation.isPending}
+                    variant="secondary"
                     className="w-full"
                   >
                     {submitMutation.isPending ? (
@@ -192,7 +302,7 @@ const IndexNow = () => {
                     ) : (
                       <>
                         <Send className="mr-2 h-4 w-4" />
-                        Submit All Sitemap URLs
+                        Submit Main Pages
                       </>
                     )}
                   </Button>
