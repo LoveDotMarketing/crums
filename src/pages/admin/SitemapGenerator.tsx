@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useMutation } from "@tanstack/react-query";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,11 +8,67 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { guides, BASE_URL, getGuideUrl } from "@/lib/guides";
 import { tools, getToolUrl, getAvailableTools } from "@/lib/tools";
-import { Copy, Check, FileCode, BookOpen, Calculator as CalculatorIcon, RefreshCw } from "lucide-react";
+import { Copy, Check, FileCode, BookOpen, Calculator as CalculatorIcon, RefreshCw, Send, Loader2, CheckCircle, XCircle } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+
+interface IndexNowResult {
+  success: boolean;
+  status: number;
+  message: string;
+  urlsSubmitted: number;
+}
 
 const SitemapGenerator = () => {
   const [copiedSection, setCopiedSection] = useState<string | null>(null);
+  const [lastSubmission, setLastSubmission] = useState<IndexNowResult | null>(null);
+
+  // IndexNow submission mutation
+  const submitToIndexNow = useMutation({
+    mutationFn: async (urls: string[]) => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Not authenticated");
+
+      const response = await supabase.functions.invoke("indexnow-submit", {
+        body: { urls },
+      });
+
+      if (response.error) throw new Error(response.error.message);
+      return response.data as IndexNowResult;
+    },
+    onSuccess: (data) => {
+      setLastSubmission(data);
+      if (data.success) {
+        toast.success(`Submitted ${data.urlsSubmitted} URLs to IndexNow`);
+      } else {
+        toast.error(`IndexNow error: ${data.message}`);
+      }
+    },
+    onError: (error) => {
+      toast.error(`Failed to submit: ${error.message}`);
+    },
+  });
+
+  // Get all resource URLs for IndexNow submission
+  const getAllResourceUrls = (): string[] => {
+    const availableGuides = guides.filter(g => g.available);
+    const availableToolsList = getAvailableTools();
+    
+    const urls: string[] = [
+      `${BASE_URL}/resources`,
+      `${BASE_URL}/resources/guides`,
+      `${BASE_URL}/resources/tools`,
+      ...availableGuides.map(g => getGuideUrl(g.slug)),
+      ...availableToolsList.map(t => getToolUrl(t.slug)),
+    ];
+    
+    return urls;
+  };
+
+  const handleGenerateAndSubmit = async () => {
+    const urls = getAllResourceUrls();
+    submitToIndexNow.mutate(urls);
+  };
 
   const generateGuidesXml = (): string => {
     const availableGuides = guides.filter(g => g.available);
@@ -142,6 +199,56 @@ ${generateToolsXml()}
               </CardContent>
             </Card>
           </div>
+
+          {/* IndexNow Quick Submit */}
+          <Card className="mb-6 border-primary/20 bg-primary/5">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    <Send className="h-5 w-5 text-primary" />
+                    Submit to IndexNow
+                  </CardTitle>
+                  <CardDescription>
+                    Automatically submit all resource URLs ({getAllResourceUrls().length} URLs) to search engines
+                  </CardDescription>
+                </div>
+                <Button
+                  onClick={handleGenerateAndSubmit}
+                  disabled={submitToIndexNow.isPending}
+                  className="gap-2"
+                >
+                  {submitToIndexNow.isPending ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Submitting...
+                    </>
+                  ) : (
+                    <>
+                      <Send className="h-4 w-4" />
+                      Submit All Resource URLs
+                    </>
+                  )}
+                </Button>
+              </div>
+            </CardHeader>
+            {lastSubmission && (
+              <CardContent>
+                <div className={`flex items-center gap-2 p-3 rounded-lg ${
+                  lastSubmission.success ? "bg-green-500/10 text-green-700" : "bg-red-500/10 text-red-700"
+                }`}>
+                  {lastSubmission.success ? (
+                    <CheckCircle className="h-5 w-5" />
+                  ) : (
+                    <XCircle className="h-5 w-5" />
+                  )}
+                  <span className="font-medium">
+                    {lastSubmission.message} ({lastSubmission.urlsSubmitted} URLs)
+                  </span>
+                </div>
+              </CardContent>
+            )}
+          </Card>
 
           <Tabs defaultValue="guides" className="space-y-4">
             <TabsList>
@@ -311,16 +418,16 @@ ${generateToolsXml()}
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <RefreshCw className="h-5 w-5" />
-                How to Add a New Guide
+                How to Add a New Guide or Tool
               </CardTitle>
             </CardHeader>
             <CardContent>
               <ol className="list-decimal list-inside space-y-2 text-sm text-muted-foreground">
-                <li>Create the guide page in <code className="bg-muted px-1 rounded">src/pages/resources/guides/</code></li>
-                <li>Add the entry to <code className="bg-muted px-1 rounded">src/lib/guides.ts</code> with <code className="bg-muted px-1 rounded">available: true</code></li>
+                <li>Create the page in <code className="bg-muted px-1 rounded">src/pages/resources/guides/</code> or <code className="bg-muted px-1 rounded">src/pages/resources/</code></li>
+                <li>Add the entry to <code className="bg-muted px-1 rounded">src/lib/guides.ts</code> or <code className="bg-muted px-1 rounded">src/lib/tools.ts</code> with <code className="bg-muted px-1 rounded">available: true</code></li>
                 <li>Add the route in <code className="bg-muted px-1 rounded">src/App.tsx</code></li>
-                <li>Come back here and copy the generated XML</li>
-                <li>Paste into <code className="bg-muted px-1 rounded">public/sitemap.xml</code></li>
+                <li>Copy the generated XML and paste into <code className="bg-muted px-1 rounded">public/sitemap.xml</code></li>
+                <li className="font-medium text-foreground">Click "Submit All Resource URLs" above to notify search engines immediately</li>
               </ol>
             </CardContent>
           </Card>
