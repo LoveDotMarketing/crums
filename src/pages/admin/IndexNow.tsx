@@ -1,0 +1,281 @@
+import { useState } from "react";
+import { useMutation } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { SidebarProvider } from "@/components/ui/sidebar";
+import { AdminSidebar } from "@/components/admin/AdminSidebar";
+import { SEO } from "@/components/SEO";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
+import { Send, Globe, FileText, CheckCircle, XCircle, Loader2, ExternalLink } from "lucide-react";
+
+// Static sitemap URLs for the site
+const SITEMAP_URLS = [
+  "https://crumsleasing.com/",
+  "https://crumsleasing.com/about",
+  "https://crumsleasing.com/about/mission",
+  "https://crumsleasing.com/about/why-choose-crums",
+  "https://crumsleasing.com/services",
+  "https://crumsleasing.com/services/trailer-leasing",
+  "https://crumsleasing.com/services/trailer-rentals",
+  "https://crumsleasing.com/services/fleet-solutions",
+  "https://crumsleasing.com/services/emergency-trailer-rental",
+  "https://crumsleasing.com/services/dry-van-trailers",
+  "https://crumsleasing.com/services/flatbed-trailers",
+  "https://crumsleasing.com/industries",
+  "https://crumsleasing.com/industries/owner-operators",
+  "https://crumsleasing.com/industries/logistics-companies",
+  "https://crumsleasing.com/industries/manufacturing",
+  "https://crumsleasing.com/industries/food-distribution",
+  "https://crumsleasing.com/industries/retail-distribution",
+  "https://crumsleasing.com/industries/fleet-leasing",
+  "https://crumsleasing.com/industries/seasonal-demand",
+  "https://crumsleasing.com/locations",
+  "https://crumsleasing.com/resources",
+  "https://crumsleasing.com/resources/guides",
+  "https://crumsleasing.com/resources/tools",
+  "https://crumsleasing.com/news",
+  "https://crumsleasing.com/contact",
+  "https://crumsleasing.com/get-started",
+  "https://crumsleasing.com/careers",
+  "https://crumsleasing.com/partners",
+  "https://crumsleasing.com/reviews",
+  "https://crumsleasing.com/referral-program",
+];
+
+interface SubmissionResult {
+  success: boolean;
+  status: number;
+  message: string;
+  urlsSubmitted: number;
+}
+
+const IndexNow = () => {
+  const [customUrls, setCustomUrls] = useState("");
+  const [lastResult, setLastResult] = useState<SubmissionResult | null>(null);
+
+  const submitMutation = useMutation({
+    mutationFn: async (urls: string[]) => {
+      const { data, error } = await supabase.functions.invoke('indexnow-submit', {
+        body: { urls }
+      });
+      
+      if (error) throw error;
+      return data as SubmissionResult;
+    },
+    onSuccess: (data) => {
+      setLastResult(data);
+      if (data.success) {
+        toast.success(`Successfully submitted ${data.urlsSubmitted} URLs to IndexNow`);
+      } else {
+        toast.error(`Submission failed: ${data.message}`);
+      }
+    },
+    onError: (error) => {
+      toast.error(`Error: ${error.message}`);
+    }
+  });
+
+  const handleSubmitSitemap = () => {
+    submitMutation.mutate(SITEMAP_URLS);
+  };
+
+  const handleSubmitCustom = () => {
+    const urls = customUrls
+      .split('\n')
+      .map(url => url.trim())
+      .filter(url => url.startsWith('https://crumsleasing.com'));
+    
+    if (urls.length === 0) {
+      toast.error("No valid URLs found. URLs must start with https://crumsleasing.com");
+      return;
+    }
+    
+    submitMutation.mutate(urls);
+  };
+
+  return (
+    <>
+      <SEO 
+        title="IndexNow Management | Admin"
+        description="Submit URLs to search engines via IndexNow"
+        noindex={true}
+      />
+      <SidebarProvider>
+        <div className="min-h-screen flex w-full bg-background">
+          <AdminSidebar />
+          <main className="flex-1 p-6 overflow-auto">
+            <div className="max-w-4xl mx-auto space-y-6">
+              <div>
+                <h1 className="text-3xl font-bold tracking-tight">IndexNow</h1>
+                <p className="text-muted-foreground mt-1">
+                  Submit URLs to Bing, Yandex, and other search engines for instant indexing
+                </p>
+              </div>
+
+              {/* Status Card */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Globe className="h-5 w-5" />
+                    IndexNow Status
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex items-center gap-4">
+                    <Badge variant="secondary" className="flex items-center gap-1">
+                      <CheckCircle className="h-3 w-3 text-primary" />
+                      Key Configured
+                    </Badge>
+                    <a 
+                      href="https://crumsleasing.com/26539d428c9b4617a97ed293e6eea3c0.txt"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm text-muted-foreground hover:text-primary flex items-center gap-1"
+                    >
+                      View Key File <ExternalLink className="h-3 w-3" />
+                    </a>
+                  </div>
+                  
+                  {lastResult && (
+                    <div className={`p-4 rounded-lg ${lastResult.success ? 'bg-primary/10 border border-primary/20' : 'bg-destructive/10 border border-destructive/20'}`}>
+                      <div className="flex items-center gap-2 mb-2">
+                        {lastResult.success ? (
+                          <CheckCircle className="h-5 w-5 text-primary" />
+                        ) : (
+                          <XCircle className="h-5 w-5 text-destructive" />
+                        )}
+                        <span className="font-medium">Last Submission</span>
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        Status: {lastResult.status} - {lastResult.message}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        URLs submitted: {lastResult.urlsSubmitted}
+                      </p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Submit Sitemap */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <FileText className="h-5 w-5" />
+                    Submit Sitemap URLs
+                  </CardTitle>
+                  <CardDescription>
+                    Submit all {SITEMAP_URLS.length} main pages from your sitemap to IndexNow
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="bg-muted p-4 rounded-lg max-h-48 overflow-y-auto">
+                    <ul className="text-sm space-y-1 font-mono">
+                      {SITEMAP_URLS.map((url, i) => (
+                        <li key={i} className="text-muted-foreground">{url}</li>
+                      ))}
+                    </ul>
+                  </div>
+                  <Button 
+                    onClick={handleSubmitSitemap}
+                    disabled={submitMutation.isPending}
+                    className="w-full"
+                  >
+                    {submitMutation.isPending ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Submitting...
+                      </>
+                    ) : (
+                      <>
+                        <Send className="mr-2 h-4 w-4" />
+                        Submit All Sitemap URLs
+                      </>
+                    )}
+                  </Button>
+                </CardContent>
+              </Card>
+
+              {/* Custom URLs */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Submit Custom URLs</CardTitle>
+                  <CardDescription>
+                    Enter URLs to submit (one per line). Must start with https://crumsleasing.com
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <Textarea
+                    placeholder="https://crumsleasing.com/news/new-article&#10;https://crumsleasing.com/locations/houston-tx"
+                    value={customUrls}
+                    onChange={(e) => setCustomUrls(e.target.value)}
+                    rows={6}
+                    className="font-mono text-sm"
+                  />
+                  <Button 
+                    onClick={handleSubmitCustom}
+                    disabled={submitMutation.isPending || !customUrls.trim()}
+                    variant="secondary"
+                    className="w-full"
+                  >
+                    {submitMutation.isPending ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Submitting...
+                      </>
+                    ) : (
+                      <>
+                        <Send className="mr-2 h-4 w-4" />
+                        Submit Custom URLs
+                      </>
+                    )}
+                  </Button>
+                </CardContent>
+              </Card>
+
+              {/* Help Card */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Response Codes</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid gap-2 text-sm">
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className="w-12 justify-center">200</Badge>
+                      <span>URLs submitted successfully</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className="w-12 justify-center">202</Badge>
+                      <span>URLs accepted, pending processing</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className="w-12 justify-center">400</Badge>
+                      <span>Invalid format</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className="w-12 justify-center">403</Badge>
+                      <span>Key not valid or file not found</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className="w-12 justify-center">422</Badge>
+                      <span>URLs don't belong to host</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className="w-12 justify-center">429</Badge>
+                      <span>Too many requests (rate limited)</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </main>
+        </div>
+      </SidebarProvider>
+    </>
+  );
+};
+
+export default IndexNow;
