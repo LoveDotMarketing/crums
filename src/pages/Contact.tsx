@@ -298,6 +298,11 @@ const Contact = () => {
             {/* Contact Form */}
             <Card className="border-2">
               <CardContent className="p-8">
+                <img 
+                  src={crumsLogo} 
+                  alt="CRUMS Leasing" 
+                  className="h-12 w-auto mb-4"
+                />
                 <h2 className="text-2xl font-bold mb-6 text-foreground">Get A Quote</h2>
                 <form onSubmit={handleSubmit} className="space-y-6">
                   {/* Honeypot field - hidden from humans, visible to bots */}
@@ -412,11 +417,6 @@ const Contact = () => {
             {/* Contact Information */}
             <div className="space-y-8">
               <div>
-                <img 
-                  src={crumsLogo} 
-                  alt="CRUMS Leasing" 
-                  className="h-12 w-auto mb-4"
-                />
                 <h2 className="text-2xl font-bold mb-6 text-foreground">Get In Touch</h2>
                 <p className="text-lg text-muted-foreground mb-8">
                   Have questions? Our team is ready to help. Reach out via phone, email, or fill out
