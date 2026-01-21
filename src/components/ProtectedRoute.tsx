@@ -28,7 +28,8 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
     }
   }, [user, userRole, isLoading, requiredRole, navigate]);
 
-  if (isLoading) {
+  // Show loading state while auth is initializing OR while we're waiting for the role to load
+  if (isLoading || (user && requiredRole && userRole === null)) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
