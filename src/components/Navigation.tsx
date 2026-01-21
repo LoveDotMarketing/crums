@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Menu, X, ChevronDown, Phone } from "lucide-react";
 import { trackPhoneClick } from "@/lib/analytics";
 import crumsLogo from "@/assets/crums-logo.png";
+import { useAuth } from "@/hooks/useAuth";
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -15,9 +16,10 @@ import {
 
 export const Navigation = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { isImpersonating } = useAuth();
 
   return (
-    <nav className="sticky top-0 z-50 bg-background border-b border-border shadow-sm" role="navigation" aria-label="Main navigation">
+    <nav className={`sticky z-50 bg-background border-b border-border shadow-sm ${isImpersonating ? 'top-10' : 'top-0'}`} role="navigation" aria-label="Main navigation">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-20">
           {/* Logo */}
