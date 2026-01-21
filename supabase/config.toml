@@ -92,3 +92,7 @@ verify_jwt = true
 # Send ACH setup email - requires admin authentication
 [functions.send-ach-setup-email]
 verify_jwt = true
+
+# IndexNow URL submission - requires admin authentication (handled in code)
+[functions.indexnow-submit]
+verify_jwt = false
