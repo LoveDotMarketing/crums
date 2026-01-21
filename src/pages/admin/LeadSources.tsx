@@ -13,8 +13,16 @@ import {
   Loader2,
   Mail,
   ExternalLink,
-  CalendarIcon
+  CalendarIcon,
+  Eye
 } from "lucide-react";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -100,6 +108,7 @@ export default function LeadSources() {
   const [customStartDate, setCustomStartDate] = useState<Date | undefined>(subDays(new Date(), 30));
   const [customEndDate, setCustomEndDate] = useState<Date | undefined>(new Date());
   const [trendGranularity, setTrendGranularity] = useState<TrendGranularity>("daily");
+  const [selectedSubmission, setSelectedSubmission] = useState<ContactSubmission | null>(null);
 
   // Calculate effective date range
   const getDateRange = () => {
@@ -604,6 +613,7 @@ export default function LeadSources() {
                   <Table>
                     <TableHeader>
                       <TableRow>
+                        <TableHead className="w-10"></TableHead>
                         <TableHead>Date</TableHead>
                         <TableHead>Email</TableHead>
                         <TableHead>Source</TableHead>
@@ -619,6 +629,16 @@ export default function LeadSources() {
                         
                         return (
                           <TableRow key={submission.id}>
+                            <TableCell>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => setSelectedSubmission(submission)}
+                                title="View details"
+                              >
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                            </TableCell>
                             <TableCell className="whitespace-nowrap">
                               {submission.created_at 
                                 ? format(new Date(submission.created_at), "MMM d, yyyy h:mm a")
@@ -662,6 +682,117 @@ export default function LeadSources() {
           </main>
         </div>
       </div>
+
+      {/* Contact Detail Sheet */}
+      <Sheet open={!!selectedSubmission} onOpenChange={(open) => !open && setSelectedSubmission(null)}>
+        <SheetContent className="sm:max-w-lg overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle>Contact Details</SheetTitle>
+            <SheetDescription>
+              Full information for this lead submission
+            </SheetDescription>
+          </SheetHeader>
+          
+          {selectedSubmission && (
+            <div className="mt-6 space-y-6">
+              {/* Basic Info */}
+              <div className="space-y-3">
+                <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Contact</h3>
+                <div className="grid gap-2">
+                  <div className="flex justify-between py-2 border-b border-border">
+                    <span className="text-muted-foreground">Email</span>
+                    <span className="font-medium">{selectedSubmission.email || "N/A"}</span>
+                  </div>
+                  <div className="flex justify-between py-2 border-b border-border">
+                    <span className="text-muted-foreground">Submitted</span>
+                    <span className="font-medium">
+                      {selectedSubmission.created_at 
+                        ? format(new Date(selectedSubmission.created_at), "MMM d, yyyy 'at' h:mm a")
+                        : "N/A"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* UTM Parameters */}
+              <div className="space-y-3">
+                <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Attribution (UTM)</h3>
+                <div className="grid gap-2">
+                  <div className="flex justify-between py-2 border-b border-border">
+                    <span className="text-muted-foreground">Source</span>
+                    <Badge variant={selectedSubmission.utm_source ? "default" : "secondary"}>
+                      {selectedSubmission.utm_source || getSourceFromReferrer(selectedSubmission.referrer) || "Direct"}
+                    </Badge>
+                  </div>
+                  <div className="flex justify-between py-2 border-b border-border">
+                    <span className="text-muted-foreground">Medium</span>
+                    <Badge variant="outline">
+                      {selectedSubmission.utm_medium || getMediumFromReferrer(selectedSubmission.referrer) || "direct"}
+                    </Badge>
+                  </div>
+                  <div className="flex justify-between py-2 border-b border-border">
+                    <span className="text-muted-foreground">Campaign</span>
+                    <span className="font-medium text-right max-w-[200px] truncate">
+                      {selectedSubmission.utm_campaign || "—"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between py-2 border-b border-border">
+                    <span className="text-muted-foreground">Term</span>
+                    <span className="font-medium text-right max-w-[200px] truncate">
+                      {selectedSubmission.utm_term || "—"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between py-2 border-b border-border">
+                    <span className="text-muted-foreground">Content</span>
+                    <span className="font-medium text-right max-w-[200px] truncate">
+                      {selectedSubmission.utm_content || "—"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Page Info */}
+              <div className="space-y-3">
+                <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Journey</h3>
+                <div className="grid gap-2">
+                  <div className="py-2 border-b border-border">
+                    <span className="text-muted-foreground block mb-1">Referrer</span>
+                    <span className="font-medium text-sm break-all">
+                      {selectedSubmission.referrer || "Direct visit"}
+                    </span>
+                  </div>
+                  <div className="py-2 border-b border-border">
+                    <span className="text-muted-foreground block mb-1">Landing Page</span>
+                    <span className="font-medium text-sm break-all">
+                      {selectedSubmission.landing_page || "—"}
+                    </span>
+                  </div>
+                  <div className="py-2 border-b border-border">
+                    <span className="text-muted-foreground block mb-1">Conversion Page</span>
+                    <span className="font-medium text-sm break-all">
+                      {selectedSubmission.current_page || "—"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="pt-4">
+                {selectedSubmission.email && (
+                  <Button 
+                    variant="outline" 
+                    className="w-full"
+                    onClick={() => window.location.href = `mailto:${selectedSubmission.email}`}
+                  >
+                    <Mail className="h-4 w-4 mr-2" />
+                    Email {selectedSubmission.email}
+                  </Button>
+                )}
+              </div>
+            </div>
+          )}
+        </SheetContent>
+      </Sheet>
     </SidebarProvider>
   );
 }
