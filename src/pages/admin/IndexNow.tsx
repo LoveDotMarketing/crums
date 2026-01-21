@@ -9,11 +9,15 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Send, Globe, FileText, CheckCircle, XCircle, Loader2, ExternalLink, Newspaper, Sparkles } from "lucide-react";
+import { Send, Globe, FileText, CheckCircle, XCircle, Loader2, ExternalLink, Newspaper, Sparkles, MapPin } from "lucide-react";
 import { newsArticles } from "@/lib/news";
+import { locations } from "@/lib/locations";
 
 // Generate news article URLs from the registry
 const NEWS_URLS = newsArticles.map(article => `https://crumsleasing.com/news/${article.slug}`);
+
+// Generate location page URLs from the registry
+const LOCATION_URLS = locations.map(location => `https://crumsleasing.com/locations/${location.slug}`);
 
 // Static sitemap URLs for the site (main pages)
 const SITEMAP_URLS = [
@@ -49,8 +53,8 @@ const SITEMAP_URLS = [
   "https://crumsleasing.com/referral-program",
 ];
 
-// Combined: all sitemap + all news articles
-const ALL_URLS = [...SITEMAP_URLS, ...NEWS_URLS];
+// Combined: all sitemap + all news articles + all locations
+const ALL_URLS = [...SITEMAP_URLS, ...NEWS_URLS, ...LOCATION_URLS];
 
 interface SubmissionResult {
   success: boolean;
@@ -94,6 +98,10 @@ const IndexNow = () => {
 
   const handleSubmitNews = () => {
     submitMutation.mutate([...NEWS_URLS, "https://crumsleasing.com/news"]);
+  };
+
+  const handleSubmitLocations = () => {
+    submitMutation.mutate([...LOCATION_URLS, "https://crumsleasing.com/locations"]);
   };
 
   const handleSubmitLatest = () => {
@@ -303,6 +311,45 @@ const IndexNow = () => {
                       <>
                         <Send className="mr-2 h-4 w-4" />
                         Submit Main Pages
+                      </>
+                    )}
+                  </Button>
+                </CardContent>
+              </Card>
+
+              {/* Location Pages */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <MapPin className="h-5 w-5" />
+                    Location Pages ({LOCATION_URLS.length})
+                  </CardTitle>
+                  <CardDescription>
+                    Submit all city/location landing page URLs for local SEO indexing
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="bg-muted p-4 rounded-lg max-h-48 overflow-y-auto">
+                    <ul className="text-sm space-y-1 font-mono">
+                      {LOCATION_URLS.map((url, i) => (
+                        <li key={i} className="text-muted-foreground">{url}</li>
+                      ))}
+                    </ul>
+                  </div>
+                  <Button 
+                    onClick={handleSubmitLocations}
+                    disabled={submitMutation.isPending}
+                    className="w-full"
+                  >
+                    {submitMutation.isPending ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Submitting...
+                      </>
+                    ) : (
+                      <>
+                        <Send className="mr-2 h-4 w-4" />
+                        Submit All Location Pages
                       </>
                     )}
                   </Button>
