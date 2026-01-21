@@ -13,7 +13,8 @@ import {
   FileCode,
   FileText,
   ScrollText,
-  Target
+  Target,
+  Zap
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/hooks/useAuth";
@@ -48,6 +49,7 @@ const menuItems = [
   { title: "Analytics", url: "/dashboard/admin/analytics", icon: BarChart3 },
   { title: "Logs", url: "/dashboard/admin/logs", icon: ScrollText },
   { title: "Sitemap", url: "/dashboard/admin/sitemap-generator", icon: FileCode },
+  { title: "IndexNow", url: "/dashboard/admin/indexnow", icon: Zap },
 ];
 
 export function AdminSidebar() {
