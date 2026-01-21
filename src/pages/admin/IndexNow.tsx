@@ -9,11 +9,12 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Send, Globe, FileText, CheckCircle, XCircle, Loader2, ExternalLink, Newspaper, Sparkles, MapPin, BookOpen, Calculator } from "lucide-react";
+import { Send, Globe, FileText, CheckCircle, XCircle, Loader2, ExternalLink, Newspaper, Sparkles, MapPin, BookOpen, Calculator, Users } from "lucide-react";
 import { newsArticles } from "@/lib/news";
 import { locations } from "@/lib/locations";
 import { guides, getAvailableGuides } from "@/lib/guides";
 import { tools, getAvailableTools } from "@/lib/tools";
+import { teamMembers } from "@/lib/team";
 
 // Generate news article URLs from the registry
 const NEWS_URLS = newsArticles.map(article => `https://crumsleasing.com/news/${article.slug}`);
@@ -26,6 +27,9 @@ const GUIDE_URLS = getAvailableGuides().map(guide => `https://crumsleasing.com/r
 
 // Generate tool URLs from the registry (available tools only)
 const TOOL_URLS = getAvailableTools().map(tool => `https://crumsleasing.com/resources/tools/${tool.slug}`);
+
+// Generate team member URLs from the registry
+const TEAM_URLS = teamMembers.map(member => `https://crumsleasing.com/about/${member.slug}`);
 
 // Static sitemap URLs for the site (main pages)
 const SITEMAP_URLS = [
@@ -61,8 +65,8 @@ const SITEMAP_URLS = [
   "https://crumsleasing.com/referral-program",
 ];
 
-// Combined: all sitemap + all news articles + all locations + guides + tools
-const ALL_URLS = [...SITEMAP_URLS, ...NEWS_URLS, ...LOCATION_URLS, ...GUIDE_URLS, ...TOOL_URLS];
+// Combined: all sitemap + all news articles + all locations + guides + tools + team
+const ALL_URLS = [...SITEMAP_URLS, ...NEWS_URLS, ...LOCATION_URLS, ...GUIDE_URLS, ...TOOL_URLS, ...TEAM_URLS];
 
 interface SubmissionResult {
   success: boolean;
@@ -118,6 +122,10 @@ const IndexNow = () => {
 
   const handleSubmitTools = () => {
     submitMutation.mutate([...TOOL_URLS, "https://crumsleasing.com/resources/tools"]);
+  };
+
+  const handleSubmitTeam = () => {
+    submitMutation.mutate([...TEAM_URLS, "https://crumsleasing.com/about"]);
   };
 
   const handleSubmitLatest = () => {
@@ -444,6 +452,45 @@ const IndexNow = () => {
                       <>
                         <Send className="mr-2 h-4 w-4" />
                         Submit All Tools
+                      </>
+                    )}
+                  </Button>
+                </CardContent>
+              </Card>
+
+              {/* Team Member Pages */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Users className="h-5 w-5" />
+                    Team Member Pages ({TEAM_URLS.length})
+                  </CardTitle>
+                  <CardDescription>
+                    Submit all team member profile URLs for about section coverage
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="bg-muted p-4 rounded-lg max-h-48 overflow-y-auto">
+                    <ul className="text-sm space-y-1 font-mono">
+                      {TEAM_URLS.map((url, i) => (
+                        <li key={i} className="text-muted-foreground">{url}</li>
+                      ))}
+                    </ul>
+                  </div>
+                  <Button 
+                    onClick={handleSubmitTeam}
+                    disabled={submitMutation.isPending}
+                    className="w-full"
+                  >
+                    {submitMutation.isPending ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Submitting...
+                      </>
+                    ) : (
+                      <>
+                        <Send className="mr-2 h-4 w-4" />
+                        Submit All Team Pages
                       </>
                     )}
                   </Button>
