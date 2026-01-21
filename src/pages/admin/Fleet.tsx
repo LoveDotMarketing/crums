@@ -272,7 +272,8 @@ export default function Fleet() {
       const matchesStatus = statusFilter === "all" || 
         (statusFilter === "rented" && trailer.is_rented) ||
         (statusFilter === "available" && !trailer.is_rented && trailer.status === "available") ||
-        (statusFilter === "maintenance" && trailer.status === "maintenance");
+        (statusFilter === "maintenance" && trailer.status === "maintenance") ||
+        (statusFilter === "checked_out" && trailer.status === "checked_out");
       
       return matchesSearch && matchesStatus;
     })
@@ -333,9 +334,10 @@ export default function Fleet() {
       rented: "default",
       available: "secondary",
       maintenance: "destructive",
-      in_use: "default"
+      checked_out: "default"
     };
-    return <Badge variant={variants[status] || "secondary"}>{status}</Badge>;
+    const displayStatus = status === "checked_out" ? "Checked Out" : status;
+    return <Badge variant={variants[status] || "secondary"}>{displayStatus}</Badge>;
   };
 
   const totalFleetCount = trailers.length;

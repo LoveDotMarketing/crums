@@ -9,10 +9,11 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Wrench, LogOut, Truck, Search, MapPin, DollarSign, ClipboardList, ClipboardCheck, Eye } from "lucide-react";
+import { Wrench, LogOut, Truck, Search, MapPin, DollarSign, ClipboardList, ClipboardCheck, Eye, ArrowDownToLine, ArrowUpFromLine } from "lucide-react";
 import { toast } from "sonner";
 import { ChatBot } from "@/components/ChatBot";
 import { SEO } from "@/components/SEO";
+import { cn } from "@/lib/utils";
 import {
   Table,
   TableBody,
@@ -48,6 +49,7 @@ export default function MechanicDashboard() {
   const [isCheckOutDialogOpen, setIsCheckOutDialogOpen] = useState(false);
   const [checkOutType, setCheckOutType] = useState<"service" | "use">("service");
   const [pendingInspections, setPendingInspections] = useState<Record<string, string>>({});
+  const [statusFilter, setStatusFilter] = useState<string | null>(null);
 
   // Use effectiveUserId for queries when impersonating
   const currentUserId = effectiveUserId;
@@ -133,7 +135,7 @@ export default function MechanicDashboard() {
     if (!selectedTrailer) return;
 
     try {
-      const newStatus = checkOutType === "service" ? "maintenance" : "in_use";
+      const newStatus = checkOutType === "service" ? "maintenance" : "checked_out";
       
       const { error } = await supabase
         .from("trailers")
@@ -142,13 +144,29 @@ export default function MechanicDashboard() {
 
       if (error) throw error;
 
-      toast.success(`Trailer ${selectedTrailer.trailer_number} checked out for ${checkOutType}`);
+      toast.success(`Trailer ${selectedTrailer.trailer_number} checked out for ${checkOutType === "service" ? "service" : "yard/transport"}`);
       setIsCheckOutDialogOpen(false);
       setSelectedTrailer(null);
       fetchTrailers();
     } catch (error) {
       console.error("Error checking out trailer:", error);
       toast.error("Failed to check out trailer");
+    }
+  };
+
+  const handleCheckIn = async (trailer: Trailer) => {
+    try {
+      const { error } = await supabase
+        .from("trailers")
+        .update({ status: "available" })
+        .eq("id", trailer.id);
+
+      if (error) throw error;
+      toast.success(`Trailer ${trailer.trailer_number} checked in and available`);
+      fetchTrailers();
+    } catch (error) {
+      console.error("Error checking in trailer:", error);
+      toast.error("Failed to check in trailer");
     }
   };
 
@@ -217,23 +235,39 @@ export default function MechanicDashboard() {
     const variants: Record<string, "default" | "secondary" | "destructive"> = {
       rented: "default",
       available: "secondary",
-      maintenance: "destructive"
+      maintenance: "destructive",
+      checked_out: "default"
     };
-    return <Badge variant={variants[status]}>{status}</Badge>;
+    const displayStatus = status === "checked_out" ? "Checked Out" : status;
+    return <Badge variant={variants[status] || "secondary"}>{displayStatus}</Badge>;
   };
 
-  const filteredTrailers = trailers.filter(
-    (trailer) =>
+  const filteredTrailers = trailers.filter((trailer) => {
+    const matchesSearch =
       trailer.trailer_number.toLowerCase().includes(searchQuery.toLowerCase()) ||
       trailer.type.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      trailer.make?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+      trailer.make?.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    if (!statusFilter) return matchesSearch;
+    
+    if (statusFilter === "available") return matchesSearch && trailer.status === "available";
+    if (statusFilter === "maintenance") return matchesSearch && trailer.status === "maintenance";
+    if (statusFilter === "checked_out") return matchesSearch && trailer.status === "checked_out";
+    if (statusFilter === "rented") return matchesSearch && trailer.is_rented;
+    
+    return matchesSearch;
+  });
 
   const totalFleet = trailers.length;
   const inMaintenance = trailers.filter(t => t.status === "maintenance").length;
   const available = trailers.filter(t => t.status === "available").length;
+  const checkedOut = trailers.filter(t => t.status === "checked_out").length;
   const rented = trailers.filter(t => t.is_rented).length;
   const totalMaintenanceCost = trailers.reduce((sum, t) => sum + (t.total_maintenance_cost || 0), 0);
+
+  const handleCardClick = (filter: string) => {
+    setStatusFilter(statusFilter === filter ? null : filter);
+  };
 
   return (
     <>
@@ -335,9 +369,15 @@ export default function MechanicDashboard() {
       </header>
 
       <main className="container mx-auto px-4 py-8">
-        {/* Fleet Stats */}
-        <div className="grid gap-6 md:grid-cols-5 mb-8">
-          <Card>
+        {/* Fleet Stats - Clickable for filtering */}
+        <div className="grid gap-6 md:grid-cols-6 mb-8">
+          <Card 
+            className={cn(
+              "cursor-pointer transition-all hover:shadow-md hover:border-primary/50",
+              statusFilter === null && "ring-2 ring-primary"
+            )}
+            onClick={() => setStatusFilter(null)}
+          >
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 Total Fleet
@@ -346,11 +386,19 @@ export default function MechanicDashboard() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{totalFleet}</div>
-              <p className="text-xs text-muted-foreground mt-1">All trailers</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                {statusFilter === null ? "Showing all" : "Click to show all"}
+              </p>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card 
+            className={cn(
+              "cursor-pointer transition-all hover:shadow-md hover:border-primary/50",
+              statusFilter === "maintenance" && "ring-2 ring-primary"
+            )}
+            onClick={() => handleCardClick("maintenance")}
+          >
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 In Maintenance
@@ -358,12 +406,20 @@ export default function MechanicDashboard() {
               <Wrench className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-red-600">{inMaintenance}</div>
-              <p className="text-xs text-muted-foreground mt-1">Currently servicing</p>
+              <div className="text-2xl font-bold text-destructive">{inMaintenance}</div>
+              <p className="text-xs text-muted-foreground mt-1">
+                {statusFilter === "maintenance" ? "Filtered" : "Click to filter"}
+              </p>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card 
+            className={cn(
+              "cursor-pointer transition-all hover:shadow-md hover:border-primary/50",
+              statusFilter === "available" && "ring-2 ring-primary"
+            )}
+            onClick={() => handleCardClick("available")}
+          >
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 Available
@@ -371,12 +427,41 @@ export default function MechanicDashboard() {
               <Truck className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-green-600">{available}</div>
-              <p className="text-xs text-muted-foreground mt-1">Ready to rent</p>
+              <div className="text-2xl font-bold text-emerald-600">{available}</div>
+              <p className="text-xs text-muted-foreground mt-1">
+                {statusFilter === "available" ? "Filtered" : "Click to filter"}
+              </p>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card 
+            className={cn(
+              "cursor-pointer transition-all hover:shadow-md hover:border-primary/50",
+              statusFilter === "checked_out" && "ring-2 ring-primary"
+            )}
+            onClick={() => handleCardClick("checked_out")}
+          >
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Checked Out
+              </CardTitle>
+              <ArrowUpFromLine className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-amber-600">{checkedOut}</div>
+              <p className="text-xs text-muted-foreground mt-1">
+                {statusFilter === "checked_out" ? "Filtered" : "Click to filter"}
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card 
+            className={cn(
+              "cursor-pointer transition-all hover:shadow-md hover:border-primary/50",
+              statusFilter === "rented" && "ring-2 ring-primary"
+            )}
+            onClick={() => handleCardClick("rented")}
+          >
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 Rented Out
@@ -385,7 +470,9 @@ export default function MechanicDashboard() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{rented}</div>
-              <p className="text-xs text-muted-foreground mt-1">Currently rented</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                {statusFilter === "rented" ? "Filtered" : "Click to filter"}
+              </p>
             </CardContent>
           </Card>
 
@@ -474,8 +561,9 @@ export default function MechanicDashboard() {
                           ${(trailer.total_maintenance_cost || 0).toLocaleString()}
                         </TableCell>
                         <TableCell>
-                          <div className="flex gap-2">
-                            {trailer.status === "maintenance" ? (
+                          <div className="flex gap-2 flex-wrap">
+                            {/* Maintenance status - show Complete Service */}
+                            {trailer.status === "maintenance" && (
                               <Button 
                                 size="sm" 
                                 variant="secondary"
@@ -484,28 +572,60 @@ export default function MechanicDashboard() {
                                 <Wrench className="mr-2 h-4 w-4" />
                                 Complete Service
                               </Button>
-                            ) : (
-                              <div className="flex gap-2">
+                            )}
+                            
+                            {/* Checked out status - show Check In */}
+                            {trailer.status === "checked_out" && (
+                              <Button 
+                                size="sm" 
+                                variant="secondary"
+                                onClick={() => handleCheckIn(trailer)}
+                              >
+                                <ArrowDownToLine className="mr-2 h-4 w-4" />
+                                Check In
+                              </Button>
+                            )}
+                            
+                            {/* Available status - show Check Out and DOT Inspection */}
+                            {trailer.status === "available" && !trailer.is_rented && (
+                              <>
+                                <Button 
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => {
+                                    setSelectedTrailer(trailer);
+                                    setIsCheckOutDialogOpen(true);
+                                  }}
+                                >
+                                  <ArrowUpFromLine className="mr-2 h-4 w-4" />
+                                  Check Out
+                                </Button>
                                 <Button 
                                   size="sm"
                                   variant="default"
                                   onClick={() => handleStartDOTInspection(trailer)}
-                                  disabled={trailer.is_rented}
                                 >
                                   <ClipboardCheck className="mr-2 h-4 w-4" />
                                   DOT Inspection
                                 </Button>
-                                {pendingInspections[trailer.id] && (
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={() => navigate(`/dashboard/mechanic/inspection?trailerId=${trailer.id}`)}
-                                  >
-                                    <Eye className="mr-2 h-4 w-4" />
-                                    Resume
-                                  </Button>
-                                )}
-                              </div>
+                              </>
+                            )}
+                            
+                            {/* Rented - view only, no actions */}
+                            {trailer.is_rented && (
+                              <span className="text-xs text-muted-foreground italic">Assigned to customer</span>
+                            )}
+                            
+                            {/* Resume pending inspection if exists */}
+                            {pendingInspections[trailer.id] && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => navigate(`/dashboard/mechanic/inspection?trailerId=${trailer.id}`)}
+                              >
+                                <Eye className="mr-2 h-4 w-4" />
+                                Resume Inspection
+                              </Button>
                             )}
                           </div>
                         </TableCell>
