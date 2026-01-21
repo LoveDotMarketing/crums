@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 import { 
   Wrench, 
   Plus, 
@@ -13,7 +14,8 @@ import {
   Mail,
   Phone,
   Calendar,
-  CheckCircle
+  CheckCircle,
+  Loader2
 } from "lucide-react";
 import {
   Table,
@@ -24,30 +26,94 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
+interface Mechanic {
+  id: string;
+  name: string;
+  email: string;
+  phone: string | null;
+  status: string;
+  active_jobs: number;
+  completed_jobs: number;
+  joined: string;
+}
+
 export default function Mechanics() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [mechanics, setMechanics] = useState<Mechanic[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // Preferred fleet service provider - contact info pending verification
-  const mechanics = [
-    {
-      id: "1",
-      name: "Oscar Tejas Fleet Services",
-      email: "Contact admin for details",
-      phone: "Contact admin for details",
-      specialty: "General Maintenance & Repairs",
-      status: "active",
-      active_jobs: 0,
-      completed_jobs: 0,
-      avg_rating: 5.0,
-      joined: "2024-01-01"
+  useEffect(() => {
+    fetchMechanics();
+  }, []);
+
+  const fetchMechanics = async () => {
+    try {
+      // Fetch all users with mechanic role
+      const { data: mechanicRoles, error: rolesError } = await supabase
+        .from('user_roles')
+        .select('user_id')
+        .eq('role', 'mechanic');
+
+      if (rolesError) throw rolesError;
+
+      if (!mechanicRoles || mechanicRoles.length === 0) {
+        setMechanics([]);
+        setLoading(false);
+        return;
+      }
+
+      const mechanicIds = mechanicRoles.map(r => r.user_id);
+
+      // Fetch profiles for these mechanics
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, first_name, last_name, email, phone, created_at')
+        .in('id', mechanicIds);
+
+      if (profilesError) throw profilesError;
+
+      // Fetch maintenance records counts for each mechanic
+      const { data: maintenanceRecords, error: maintenanceError } = await supabase
+        .from('maintenance_records')
+        .select('mechanic_id, completed')
+        .in('mechanic_id', mechanicIds);
+
+      if (maintenanceError) throw maintenanceError;
+
+      // Calculate job counts per mechanic
+      const jobCounts = mechanicIds.reduce((acc, id) => {
+        const records = maintenanceRecords?.filter(r => r.mechanic_id === id) || [];
+        acc[id] = {
+          active: records.filter(r => !r.completed).length,
+          completed: records.filter(r => r.completed).length
+        };
+        return acc;
+      }, {} as Record<string, { active: number; completed: number }>);
+
+      const mechanicsList: Mechanic[] = (profiles || []).map(profile => ({
+        id: profile.id,
+        name: [profile.first_name, profile.last_name].filter(Boolean).join(' ') || profile.email,
+        email: profile.email,
+        phone: profile.phone,
+        status: 'active',
+        active_jobs: jobCounts[profile.id]?.active || 0,
+        completed_jobs: jobCounts[profile.id]?.completed || 0,
+        joined: profile.created_at
+      }));
+
+      setMechanics(mechanicsList);
+    } catch (error) {
+      console.error('Error fetching mechanics:', error);
+      toast.error('Failed to load mechanics');
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
 
   const filteredMechanics = mechanics.filter(
     (mechanic) =>
       mechanic.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      mechanic.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      mechanic.specialty.toLowerCase().includes(searchQuery.toLowerCase())
+      mechanic.email.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const getStatusBadge = (status: string) => {
@@ -122,7 +188,7 @@ export default function Mechanics() {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">{totalCompleted}</div>
-                  <p className="text-xs text-green-600 mt-1">
+                  <p className="text-xs text-emerald-600 mt-1">
                     All-time total
                   </p>
                 </CardContent>
@@ -148,64 +214,65 @@ export default function Mechanics() {
                 <CardTitle>All Mechanics</CardTitle>
               </CardHeader>
               <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Contact</TableHead>
-                      <TableHead>Specialty</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Active Jobs</TableHead>
-                      <TableHead>Completed</TableHead>
-                      <TableHead>Rating</TableHead>
-                      <TableHead>Joined</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredMechanics.map((mechanic) => (
-                      <TableRow key={mechanic.id} className="cursor-pointer hover:bg-muted/50">
-                        <TableCell className="font-medium">{mechanic.name}</TableCell>
-                        <TableCell>
-                          <div className="space-y-1">
-                            <div className="flex items-center gap-2 text-sm">
-                              <Mail className="h-3 w-3 text-muted-foreground" />
-                              {mechanic.email}
-                            </div>
-                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                              <Phone className="h-3 w-3" />
-                              {mechanic.phone}
-                            </div>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="outline">{mechanic.specialty}</Badge>
-                        </TableCell>
-                        <TableCell>{getStatusBadge(mechanic.status)}</TableCell>
-                        <TableCell>
-                          <span className={mechanic.active_jobs > 0 ? "text-orange-600 font-medium" : ""}>
-                            {mechanic.active_jobs}
-                          </span>
-                        </TableCell>
-                        <TableCell className="text-green-600">{mechanic.completed_jobs}</TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-1">
-                            <span className="font-medium">{mechanic.avg_rating}</span>
-                            <span className="text-yellow-500">★</span>
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-muted-foreground text-sm">
-                          {new Date(mechanic.joined).toLocaleDateString()}
-                        </TableCell>
-                        <TableCell>
-                          <Button variant="ghost" size="sm">
-                            View Details
-                          </Button>
-                        </TableCell>
+                {loading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                  </div>
+                ) : filteredMechanics.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    {searchQuery ? "No mechanics match your search" : "No mechanics found"}
+                  </div>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Name</TableHead>
+                        <TableHead>Contact</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Active Jobs</TableHead>
+                        <TableHead>Completed</TableHead>
+                        <TableHead>Joined</TableHead>
+                        <TableHead>Actions</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredMechanics.map((mechanic) => (
+                        <TableRow key={mechanic.id} className="cursor-pointer hover:bg-muted/50">
+                          <TableCell className="font-medium">{mechanic.name}</TableCell>
+                          <TableCell>
+                            <div className="space-y-1">
+                              <div className="flex items-center gap-2 text-sm">
+                                <Mail className="h-3 w-3 text-muted-foreground" />
+                                {mechanic.email}
+                              </div>
+                              {mechanic.phone && (
+                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                  <Phone className="h-3 w-3" />
+                                  {mechanic.phone}
+                                </div>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell>{getStatusBadge(mechanic.status)}</TableCell>
+                          <TableCell>
+                            <span className={mechanic.active_jobs > 0 ? "text-amber-600 font-medium" : ""}>
+                              {mechanic.active_jobs}
+                            </span>
+                          </TableCell>
+                          <TableCell className="text-emerald-600">{mechanic.completed_jobs}</TableCell>
+                          <TableCell className="text-muted-foreground text-sm">
+                            {new Date(mechanic.joined).toLocaleDateString()}
+                          </TableCell>
+                          <TableCell>
+                            <Button variant="ghost" size="sm">
+                              View Details
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
               </CardContent>
             </Card>
           </main>
