@@ -36,6 +36,17 @@ interface Trailer {
   assigned_to: string | null;
 }
 
+interface ActiveJob {
+  id: string;
+  trailer_id: string;
+  trailer_number: string;
+  trailer_type: string;
+  description: string;
+  cost: number;
+  maintenance_date: string;
+  job_type: "maintenance" | "checked_out";
+}
+
 export default function MechanicDashboard() {
   const navigate = useNavigate();
   const { user, signOut, effectiveUserId, isImpersonating, impersonatedUser } = useAuth();
@@ -50,6 +61,7 @@ export default function MechanicDashboard() {
   const [checkOutType, setCheckOutType] = useState<"service" | "use">("service");
   const [pendingInspections, setPendingInspections] = useState<Record<string, string>>({});
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
+  const [activeJobs, setActiveJobs] = useState<ActiveJob[]>([]);
 
   // Use effectiveUserId for queries when impersonating
   const currentUserId = effectiveUserId;
@@ -73,18 +85,84 @@ export default function MechanicDashboard() {
     }
   };
 
+  const fetchActiveJobs = async () => {
+    if (!currentUserId) return;
+    try {
+      // Fetch maintenance records for this mechanic that are not completed
+      const { data: maintenanceData } = await supabase
+        .from("maintenance_records")
+        .select(`
+          id,
+          trailer_id,
+          description,
+          cost,
+          maintenance_date
+        `)
+        .eq("mechanic_id", currentUserId)
+        .eq("completed", false)
+        .order("maintenance_date", { ascending: false });
+
+      // Get trailer details for maintenance jobs
+      const jobs: ActiveJob[] = [];
+      
+      if (maintenanceData && maintenanceData.length > 0) {
+        const trailerIds = maintenanceData.map(m => m.trailer_id);
+        const { data: trailerData } = await supabase
+          .from("trailers")
+          .select("id, trailer_number, type")
+          .in("id", trailerIds);
+        
+        const trailerMap = new Map(trailerData?.map(t => [t.id, t]) || []);
+        
+        for (const record of maintenanceData) {
+          const trailer = trailerMap.get(record.trailer_id);
+          if (trailer) {
+            jobs.push({
+              id: record.id,
+              trailer_id: record.trailer_id,
+              trailer_number: trailer.trailer_number,
+              trailer_type: trailer.type,
+              description: record.description,
+              cost: record.cost || 0,
+              maintenance_date: record.maintenance_date,
+              job_type: "maintenance"
+            });
+          }
+        }
+      }
+
+      setActiveJobs(jobs);
+    } catch (error) {
+      console.error("Error fetching active jobs:", error);
+    }
+  };
+
   useEffect(() => {
     fetchTrailers();
     if (currentUserId) {
       fetchPendingInspections();
+      fetchActiveJobs();
     }
     
     const channel = supabase
       .channel('trailer-changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'trailers' }, () => { fetchTrailers(); })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'trailers' }, () => { 
+        fetchTrailers(); 
+        fetchActiveJobs();
+      })
       .subscribe();
 
-    return () => { supabase.removeChannel(channel); };
+    const maintenanceChannel = supabase
+      .channel('maintenance-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'maintenance_records' }, () => {
+        fetchActiveJobs();
+      })
+      .subscribe();
+
+    return () => { 
+      supabase.removeChannel(channel); 
+      supabase.removeChannel(maintenanceChannel);
+    };
   }, [currentUserId]);
 
   const fetchTrailers = async () => {
@@ -490,9 +568,64 @@ export default function MechanicDashboard() {
           </Card>
         </div>
 
+        {/* My Active Jobs Section */}
+        {activeJobs.length > 0 && (
+          <Card className="mb-6 border-primary/20 bg-primary/5">
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <ClipboardList className="h-5 w-5 text-primary" />
+                <CardTitle>My Active Jobs</CardTitle>
+              </div>
+              <CardDescription>
+                Trailers you're currently working on
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {activeJobs.map((job) => (
+                  <Card key={job.id} className="bg-card">
+                    <CardHeader className="pb-2">
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-base font-semibold">
+                          {job.trailer_number}
+                        </CardTitle>
+                        <Badge variant="destructive">
+                          <Wrench className="h-3 w-3 mr-1" />
+                          In Service
+                        </Badge>
+                      </div>
+                      <p className="text-xs text-muted-foreground">{job.trailer_type}</p>
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+                      <p className="text-sm line-clamp-2">{job.description}</p>
+                      <div className="flex items-center justify-between text-xs text-muted-foreground">
+                        <span>Est. Cost: ${job.cost.toLocaleString()}</span>
+                        <span>{new Date(job.maintenance_date).toLocaleDateString()}</span>
+                      </div>
+                      <Button 
+                        size="sm" 
+                        className="w-full mt-2"
+                        onClick={() => {
+                          const trailer = trailers.find(t => t.id === job.trailer_id);
+                          if (trailer) {
+                            handleCompleteService(trailer.id, trailer.trailer_number);
+                          }
+                        }}
+                      >
+                        <Wrench className="mr-2 h-4 w-4" />
+                        Complete Service
+                      </Button>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Search */}
-        <div className="mb-6">
-          <div className="relative max-w-md">
+        <div className="mb-6 flex items-center gap-4">
+          <div className="relative max-w-md flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Search by number, type, or make..."
@@ -501,6 +634,11 @@ export default function MechanicDashboard() {
               className="pl-10"
             />
           </div>
+          {statusFilter && (
+            <Button variant="ghost" size="sm" onClick={() => setStatusFilter(null)}>
+              Clear filter
+            </Button>
+          )}
         </div>
 
         {loading ? (
