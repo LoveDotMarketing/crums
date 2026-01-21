@@ -8,15 +8,16 @@ interface ProtectedRouteProps {
 }
 
 export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) {
-  const { user, userRole, isLoading } = useAuth();
+  const { user, userRole, isLoading, effectiveRole, isImpersonating } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
     if (!isLoading) {
       if (!user) {
         navigate("/login");
-      } else if (requiredRole && userRole !== requiredRole) {
-        // Redirect to appropriate dashboard based on role
+      } else if (requiredRole && !isImpersonating && userRole !== requiredRole) {
+        // Only redirect if NOT impersonating - when impersonating, we use effectiveRole
+        // Redirect to appropriate dashboard based on actual role
         if (userRole === "admin") {
           navigate("/dashboard/admin");
         } else if (userRole === "customer") {
@@ -26,7 +27,7 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
         }
       }
     }
-  }, [user, userRole, isLoading, requiredRole, navigate]);
+  }, [user, userRole, isLoading, requiredRole, navigate, isImpersonating]);
 
   // Show loading state while auth is initializing OR while we're waiting for the role to load
   if (isLoading || (user && requiredRole && userRole === null)) {
@@ -40,7 +41,15 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
     );
   }
 
-  if (!user || (requiredRole && userRole !== requiredRole)) {
+  // Allow access if:
+  // 1. No role required, or
+  // 2. User's actual role matches required role, or
+  // 3. Admin is impersonating and the effective role matches the required role
+  const hasAccess = !requiredRole || 
+    userRole === requiredRole || 
+    (isImpersonating && effectiveRole === requiredRole);
+
+  if (!user || (requiredRole && !hasAccess)) {
     return null;
   }
 

@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-route
 import { AuthProvider } from "@/hooks/useAuth";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { ScrollToTop } from "@/components/ScrollToTop";
+import { ImpersonationBanner } from "@/components/admin/ImpersonationBanner";
 import { trackPageView } from "@/lib/analytics";
 import { captureLeadSource } from "@/lib/leadSourceTracking";
 // Eager load critical pages
@@ -141,6 +142,7 @@ const App = () => (
         <ScrollToTop />
         <AnalyticsTracker />
         <AuthProvider>
+          <ImpersonationBanner />
           <Suspense fallback={<PageLoader />}>
             <Routes>
             <Route path="/" element={<Index />} />
