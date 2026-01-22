@@ -204,7 +204,7 @@ export default function Profile() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <Navigation />
+      {!isImpersonating && <Navigation />}
       <CustomerNav />
 
       <main className="flex-1 bg-gradient-to-b from-muted to-background py-8">

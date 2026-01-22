@@ -264,7 +264,7 @@ export default function CustomerDashboard() {
         description="Manage your CRUMS Leasing account, view toll notices, and access your trailer information."
         noindex
       />
-      <Navigation />
+      {!isImpersonating && <Navigation />}
       <CustomerNav />
 
       <main className="flex-1 bg-gradient-to-b from-muted to-background py-8">
