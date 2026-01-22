@@ -116,3 +116,7 @@ verify_jwt = false
 # Process payment failures - cron job for dunning management
 [functions.process-payment-failures]
 verify_jwt = false
+
+# Get cron job history - admin only
+[functions.get-cron-history]
+verify_jwt = false

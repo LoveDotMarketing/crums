@@ -51,7 +51,9 @@ import {
   MoreHorizontal,
   AlertTriangle,
   Mail,
-  Ban
+  Ban,
+  Timer,
+  Activity
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -172,6 +174,23 @@ interface PaymentFailure {
       company_name: string | null;
     };
   };
+}
+
+interface CronJob {
+  jobid: number;
+  jobname: string;
+  schedule: string;
+  active: boolean;
+}
+
+interface CronRun {
+  runid: number;
+  jobid: number;
+  jobname: string;
+  status: string;
+  start_time: string;
+  end_time: string;
+  return_message: string;
 }
 
 export default function Billing() {
@@ -413,6 +432,22 @@ export default function Billing() {
     }
   });
 
+  // Fetch cron job history
+  const { data: cronData, isLoading: loadingCron } = useQuery({
+    queryKey: ["cron-history"],
+    queryFn: async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Not authenticated");
+
+      const { data, error } = await supabase.functions.invoke("get-cron-history", {
+        headers: { Authorization: `Bearer ${session.access_token}` }
+      });
+      
+      if (error) throw error;
+      return data as { jobs: CronJob[]; history: CronRun[] };
+    }
+  });
+
   // Create discount mutation
   const createDiscountMutation = useMutation({
     mutationFn: async (discount: typeof newDiscount) => {
@@ -642,6 +677,10 @@ export default function Billing() {
                 </TabsTrigger>
                 <TabsTrigger value="discounts">Discounts</TabsTrigger>
                 <TabsTrigger value="history">Payment History</TabsTrigger>
+                <TabsTrigger value="cron">
+                  <Timer className="h-4 w-4 mr-1" />
+                  Scheduled Jobs
+                </TabsTrigger>
               </TabsList>
 
               {/* Subscriptions Tab */}
@@ -1209,6 +1248,141 @@ export default function Billing() {
                     )}
                   </CardContent>
                 </Card>
+              </TabsContent>
+
+              {/* Scheduled Jobs Tab */}
+              <TabsContent value="cron">
+                <div className="grid gap-6">
+                  {/* Active Jobs */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Timer className="h-5 w-5" />
+                        Scheduled Jobs
+                      </CardTitle>
+                      <CardDescription>
+                        Active cron jobs running on a schedule
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      {loadingCron ? (
+                        <div className="flex items-center justify-center py-8">
+                          <RefreshCw className="h-6 w-6 animate-spin text-muted-foreground" />
+                        </div>
+                      ) : cronData?.jobs && cronData.jobs.length > 0 ? (
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>Job Name</TableHead>
+                              <TableHead>Schedule (Cron)</TableHead>
+                              <TableHead>Status</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {cronData.jobs.map((job) => (
+                              <TableRow key={job.jobid}>
+                                <TableCell className="font-medium">{job.jobname}</TableCell>
+                                <TableCell>
+                                  <code className="bg-muted px-2 py-1 rounded text-sm">
+                                    {job.schedule}
+                                  </code>
+                                </TableCell>
+                                <TableCell>
+                                  <Badge variant={job.active ? "default" : "secondary"}>
+                                    {job.active ? "Active" : "Inactive"}
+                                  </Badge>
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      ) : (
+                        <div className="text-center py-8 text-muted-foreground">
+                          <Timer className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                          <p>No scheduled jobs</p>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+
+                  {/* Job Run History */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Activity className="h-5 w-5" />
+                        Execution History
+                      </CardTitle>
+                      <CardDescription>
+                        Recent cron job executions and their results
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      {loadingCron ? (
+                        <div className="flex items-center justify-center py-8">
+                          <RefreshCw className="h-6 w-6 animate-spin text-muted-foreground" />
+                        </div>
+                      ) : cronData?.history && cronData.history.length > 0 ? (
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>Job Name</TableHead>
+                              <TableHead>Start Time</TableHead>
+                              <TableHead>Duration</TableHead>
+                              <TableHead>Result</TableHead>
+                              <TableHead>Status</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {cronData.history.map((run) => {
+                              const startTime = new Date(run.start_time);
+                              const endTime = new Date(run.end_time);
+                              const durationMs = endTime.getTime() - startTime.getTime();
+                              
+                              return (
+                                <TableRow key={run.runid}>
+                                  <TableCell className="font-medium">{run.jobname}</TableCell>
+                                  <TableCell>
+                                    {format(startTime, "MMM d, yyyy h:mm:ss a")}
+                                  </TableCell>
+                                  <TableCell>
+                                    {durationMs < 1000 
+                                      ? `${durationMs}ms` 
+                                      : `${(durationMs / 1000).toFixed(2)}s`
+                                    }
+                                  </TableCell>
+                                  <TableCell>
+                                    <span className="text-sm text-muted-foreground truncate max-w-[200px] block" title={run.return_message}>
+                                      {run.return_message || "—"}
+                                    </span>
+                                  </TableCell>
+                                  <TableCell>
+                                    <Badge 
+                                      variant={run.status === "succeeded" ? "default" : "destructive"}
+                                    >
+                                      {run.status === "succeeded" && (
+                                        <CheckCircle2 className="h-3 w-3 mr-1" />
+                                      )}
+                                      {run.status === "failed" && (
+                                        <XCircle className="h-3 w-3 mr-1" />
+                                      )}
+                                      {run.status}
+                                    </Badge>
+                                  </TableCell>
+                                </TableRow>
+                              );
+                            })}
+                          </TableBody>
+                        </Table>
+                      ) : (
+                        <div className="text-center py-8 text-muted-foreground">
+                          <Activity className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                          <p>No execution history yet</p>
+                          <p className="text-sm">History will appear after jobs run</p>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </div>
               </TabsContent>
             </Tabs>
 

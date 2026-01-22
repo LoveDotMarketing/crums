@@ -1872,6 +1872,27 @@ export type Database = {
       }
       generate_account_number: { Args: never; Returns: string }
       generate_referral_code: { Args: never; Returns: string }
+      get_cron_history: {
+        Args: { limit_count?: number }
+        Returns: {
+          end_time: string
+          jobid: number
+          jobname: string
+          return_message: string
+          runid: number
+          start_time: string
+          status: string
+        }[]
+      }
+      get_cron_jobs: {
+        Args: never
+        Returns: {
+          active: boolean
+          jobid: number
+          jobname: string
+          schedule: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
