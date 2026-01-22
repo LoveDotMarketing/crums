@@ -99,6 +99,8 @@ interface Customer {
   was_referred?: boolean;
   referred_by_name?: string;
   profile_completion?: number;
+  application_completion?: number;
+  has_application?: boolean;
 }
 
 export default function Customers() {
@@ -222,6 +224,9 @@ export default function Customers() {
 
         // Calculate profile completion (only profile fields, not application)
         const customerProfile = profiles?.find(p => p.email === customer.email);
+        const customerApplication = customerProfile 
+          ? applications?.find(a => a.user_id === customerProfile.id)
+          : null;
         
         // Profile completion is based on profile fields only
         const profileFields = [
@@ -232,6 +237,19 @@ export default function Customers() {
         
         const completedProfileFields = profileFields.filter(field => field && field.toString().length > 0).length;
         const profileCompletion = Math.round((completedProfileFields / profileFields.length) * 100);
+
+        // Application completion is based on application document fields
+        const applicationFields = [
+          customerApplication?.drivers_license_url,
+          customerApplication?.drivers_license_back_url,
+          customerApplication?.insurance_docs_url,
+          customerApplication?.dot_number_url,
+        ];
+        
+        const completedApplicationFields = applicationFields.filter(field => field && field.toString().length > 0).length;
+        const applicationCompletion = customerApplication 
+          ? Math.round((completedApplicationFields / applicationFields.length) * 100)
+          : 0;
         
         return {
           ...customer,
@@ -249,6 +267,8 @@ export default function Customers() {
           was_referred: wasReferred,
           referred_by_name: referredByName,
           profile_completion: profileCompletion,
+          application_completion: applicationCompletion,
+          has_application: !!customerApplication,
         };
       });
     }
@@ -398,6 +418,10 @@ export default function Customers() {
       case "profile":
         aValue = a.profile_completion || 0;
         bValue = b.profile_completion || 0;
+        break;
+      case "application":
+        aValue = a.application_completion || 0;
+        bValue = b.application_completion || 0;
         break;
       case "trailers":
         aValue = a.trailers_count || 0;
@@ -635,6 +659,15 @@ export default function Customers() {
                       </TableHead>
                       <TableHead 
                         className="cursor-pointer hover:bg-muted/50 select-none"
+                        onClick={() => handleSort("application")}
+                      >
+                        <div className="flex items-center">
+                          App %
+                          {getSortIcon("application")}
+                        </div>
+                      </TableHead>
+                      <TableHead 
+                        className="cursor-pointer hover:bg-muted/50 select-none"
                         onClick={() => handleSort("trailers")}
                       >
                         <div className="flex items-center">
@@ -693,7 +726,7 @@ export default function Customers() {
                   <TableBody>
                     {sortedCustomers.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
+                        <TableCell colSpan={10} className="text-center py-8 text-muted-foreground">
                           No customers found
                         </TableCell>
                       </TableRow>
@@ -715,6 +748,21 @@ export default function Customers() {
                                 {customer.profile_completion || 0}%
                               </span>
                             </div>
+                          </TableCell>
+                          <TableCell>
+                            {customer.has_application ? (
+                              <div className="flex items-center gap-2">
+                                <Progress 
+                                  value={customer.application_completion || 0} 
+                                  className="w-16 h-2" 
+                                />
+                                <span className="text-xs text-muted-foreground w-8">
+                                  {customer.application_completion || 0}%
+                                </span>
+                              </div>
+                            ) : (
+                              <span className="text-xs text-muted-foreground">—</span>
+                            )}
                           </TableCell>
                           <TableCell className="text-sm max-w-[200px]">
                             {customer.trailers && customer.trailers.length > 0 ? (
