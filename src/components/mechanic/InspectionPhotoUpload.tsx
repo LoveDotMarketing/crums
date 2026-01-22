@@ -104,41 +104,49 @@ export function InspectionPhotoUpload({
 
   const hasPhotos = existingPhotos.length > 0;
 
+  const showRequiredWarning = required && !hasPhotos;
+
   return (
     <div className={cn("space-y-2", className)}>
-      <div className="flex items-center justify-between">
-        <span className="text-sm font-medium">
-          {label}
-          {required && <span className="text-red-500 ml-1">*</span>}
-        </span>
-        {hasPhotos && (
-          <span className="text-xs text-green-600">{existingPhotos.length} photo(s)</span>
-        )}
-      </div>
-
-      {/* Photo previews */}
-      {existingPhotos.length > 0 && (
-        <div className="flex flex-wrap gap-2">
-          {existingPhotos.map((photo) => (
-            <div key={photo.id} className="relative group">
-              <img
-                src={photo.photo_url}
-                alt={`${category} inspection`}
-                className="w-20 h-20 object-cover rounded-md border"
-              />
-              <button
-                type="button"
-                onClick={() => handleDelete(photo.id, photo.photo_url)}
-                className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-              >
-                <X className="h-3 w-3" />
-              </button>
-            </div>
-          ))}
+      <div className={cn(
+        "p-3 rounded-lg border-2 transition-colors",
+        showRequiredWarning ? "border-destructive bg-destructive/5" : hasPhotos ? "border-primary/50 bg-primary/5" : "border-muted"
+      )}>
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-sm font-medium">
+            {label}
+            {required && <span className="text-destructive ml-1">*</span>}
+          </span>
+          {hasPhotos ? (
+            <span className="text-xs text-primary font-medium">{existingPhotos.length} photo(s) ✓</span>
+          ) : required ? (
+            <span className="text-xs text-destructive font-medium">Required</span>
+          ) : null}
         </div>
-      )}
 
-      {/* Upload button */}
+        {/* Photo previews */}
+        {existingPhotos.length > 0 && (
+          <div className="flex flex-wrap gap-2 mb-2">
+            {existingPhotos.map((photo) => (
+              <div key={photo.id} className="relative group">
+                <img
+                  src={photo.photo_url}
+                  alt={`${category} inspection`}
+                  className="w-20 h-20 object-cover rounded-md border"
+                />
+                <button
+                  type="button"
+                  onClick={() => handleDelete(photo.id, photo.photo_url)}
+                  className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Upload button */}
       <div>
         <input
           type="file"
@@ -152,7 +160,7 @@ export function InspectionPhotoUpload({
         <label htmlFor={`photo-${category}`}>
           <Button
             type="button"
-            variant={hasPhotos ? "outline" : "secondary"}
+            variant={showRequiredWarning ? "destructive" : hasPhotos ? "outline" : "secondary"}
             size="sm"
             disabled={uploading}
             className="cursor-pointer"
@@ -164,10 +172,11 @@ export function InspectionPhotoUpload({
               ) : (
                 <Camera className="h-4 w-4 mr-2" />
               )}
-              {uploading ? "Uploading..." : hasPhotos ? "Add Another" : "Take Photo"}
+              {uploading ? "Uploading..." : showRequiredWarning ? "Take Required Photo" : hasPhotos ? "Add Another" : "Take Photo"}
             </span>
           </Button>
         </label>
+      </div>
       </div>
     </div>
   );
