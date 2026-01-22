@@ -193,22 +193,55 @@ serve(async (req) => {
       logStep("Created price for trailer", { trailerId: trailer.id, priceId: price.id, rate, isCustomRate: !!customRates?.[trailer.id] });
     }
 
-    // Create the subscription
+    // Create one-time deposit price if deposit amount is provided
+    let depositInvoiceItem: Stripe.SubscriptionCreateParams.AddInvoiceItem | null = null;
+    if (depositAmount && depositAmount > 0) {
+      // Create a one-time price for the security deposit
+      const depositPrice = await stripe.prices.create({
+        unit_amount: Math.round(depositAmount * 100),
+        currency: "usd",
+        product_data: {
+          name: "Security Deposit",
+          metadata: { 
+            type: "security_deposit",
+            internal_customer_id: customerId,
+          },
+        },
+      });
+      
+      depositInvoiceItem = { price: depositPrice.id };
+      logStep("Created deposit price", { depositAmount, priceId: depositPrice.id });
+    }
+
+    // Create the subscription with deposit as one-time charge on first invoice
     const subscriptionParams: Stripe.SubscriptionCreateParams = {
       customer: stripeCustomerId,
       items: subscriptionItems,
       payment_behavior: "default_incomplete",
       payment_settings: { save_default_payment_method: "on_subscription" },
       expand: ["latest_invoice.payment_intent"],
-      metadata: { internal_customer_id: customerId },
+      metadata: { 
+        internal_customer_id: customerId,
+        deposit_amount: depositAmount?.toString() || "0",
+      },
     };
+
+    // Add deposit as one-time invoice item on the first invoice
+    if (depositInvoiceItem) {
+      subscriptionParams.add_invoice_items = [depositInvoiceItem];
+      logStep("Adding deposit to first invoice", { depositAmount });
+    }
 
     if (coupon) {
       subscriptionParams.coupon = coupon.id;
     }
 
     const subscription = await stripe.subscriptions.create(subscriptionParams);
-    logStep("Created Stripe subscription", { subscriptionId: subscription.id });
+    logStep("Created Stripe subscription", { 
+      subscriptionId: subscription.id,
+      hasDeposit: !!depositInvoiceItem,
+      depositAmount: depositAmount || 0
+    });
 
     // Create customer_subscription record
     // Handle next_billing_date - subscription.current_period_end may be null for incomplete subscriptions
