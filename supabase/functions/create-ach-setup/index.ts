@@ -98,6 +98,8 @@ serve(async (req) => {
     }
 
     // Create SetupIntent for ACH Direct Debit with Financial Connections
+    // Note: When customer is specified, attach_to_self should NOT be set
+    // The payment method will automatically attach to the customer
     const setupIntent = await stripe.setupIntents.create({
       customer: customerId,
       payment_method_types: ["us_bank_account"],
@@ -109,8 +111,6 @@ serve(async (req) => {
           verification_method: "automatic",
         },
       },
-      attach_to_self: true,
-      flow_directions: ["inbound"],
       metadata: {
         supabase_user_id: user.id,
         application_id: application.id,
