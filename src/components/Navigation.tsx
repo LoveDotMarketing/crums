@@ -19,7 +19,7 @@ export const Navigation = () => {
   const { isImpersonating } = useAuth();
 
   return (
-    <nav className={`sticky z-50 bg-background border-b border-border shadow-sm ${isImpersonating ? 'top-10' : 'top-0'}`} role="navigation" aria-label="Main navigation">
+    <nav className={`${isImpersonating ? 'sticky top-10' : 'sticky top-0'} z-40 bg-background border-b border-border shadow-sm`} role="navigation" aria-label="Main navigation">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-20">
           {/* Logo */}
