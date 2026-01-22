@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient, SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 
 const corsHeaders = {
@@ -11,6 +11,15 @@ const logStep = (step: string, details?: Record<string, unknown>) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : "";
   console.log(`[PROCESS-PAYMENT-FAILURES] ${step}${detailsStr}`);
 };
+
+interface EmailTemplate {
+  id: string;
+  name: string;
+  subject: string;
+  body: string;
+  template_type: string;
+  is_active: boolean;
+}
 
 interface PaymentFailure {
   id: string;
@@ -101,6 +110,20 @@ serve(async (req) => {
   try {
     logStep("Starting payment failure processing");
 
+    // Fetch email templates for payment failures
+    const { data: templates } = await supabase
+      .from("email_templates")
+      .select("*")
+      .in("template_type", ["payment_failed_day_0", "payment_failed_day_3", "payment_failed_day_5", "subscription_canceled"])
+      .eq("is_active", true);
+
+    const templateMap: Record<string, EmailTemplate> = {};
+    for (const t of templates || []) {
+      templateMap[t.template_type] = t;
+    }
+
+    logStep("Loaded email templates", { count: Object.keys(templateMap).length });
+
     // Get all unresolved payment failures
     const { data: failures, error: failuresError } = await supabase
       .from("payment_failures")
@@ -141,12 +164,13 @@ serve(async (req) => {
 
       // Send Day 3 notification
       if (daysSinceFailed >= 3 && !failure.notification_sent_day_3 && customer?.email) {
-        await sendReminderEmail({
+        await sendTemplatedEmail({
           email: customer.email,
           name: customer.full_name,
           amount: failure.amount,
           gracePeriodEnd: subscription?.grace_period_end || "",
-          dayNumber: 3,
+          template: templateMap["payment_failed_day_3"],
+          fallbackSubject: "Urgent: 4 Days Left to Update Payment - CRUMS Leasing",
         });
 
         await supabase
@@ -160,12 +184,13 @@ serve(async (req) => {
 
       // Send Day 5 notification
       if (daysSinceFailed >= 5 && !failure.notification_sent_day_5 && customer?.email) {
-        await sendReminderEmail({
+        await sendTemplatedEmail({
           email: customer.email,
           name: customer.full_name,
           amount: failure.amount,
           gracePeriodEnd: subscription?.grace_period_end || "",
-          dayNumber: 5,
+          template: templateMap["payment_failed_day_5"],
+          fallbackSubject: "FINAL NOTICE: Payment Required in 2 Days - CRUMS Leasing",
         });
 
         await supabase
@@ -235,9 +260,13 @@ serve(async (req) => {
 
         // Send final cancellation email
         if (customer?.email) {
-          await sendCancellationEmail({
+          await sendTemplatedEmail({
             email: customer.email,
             name: customer.full_name,
+            amount: failure.amount,
+            gracePeriodEnd: "",
+            template: templateMap["subscription_canceled"],
+            fallbackSubject: "Subscription Canceled - Payment Not Received",
           });
         }
 
@@ -269,37 +298,60 @@ serve(async (req) => {
   }
 });
 
-async function sendReminderEmail(
-  details: { email: string; name?: string | null; amount: number; gracePeriodEnd: string; dayNumber: number }
+async function sendTemplatedEmail(
+  details: { 
+    email: string; 
+    name?: string | null; 
+    amount: number; 
+    gracePeriodEnd: string; 
+    template?: EmailTemplate;
+    fallbackSubject: string;
+  }
 ) {
-  const gracePeriodDate = new Date(details.gracePeriodEnd).toLocaleDateString("en-US", {
-    weekday: "long",
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
+  const gracePeriodDate = details.gracePeriodEnd 
+    ? new Date(details.gracePeriodEnd).toLocaleDateString("en-US", {
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      })
+    : "";
 
-  const daysRemaining = 7 - details.dayNumber;
+  const baseUrl = "https://crumsleasing.com";
   
-  const subject = `Urgent: Payment Required - ${daysRemaining} Days Remaining`;
-  const body = `
+  // Use template if available, otherwise use fallback
+  let subject = details.fallbackSubject;
+  let body = `
 Dear ${details.name || "Customer"},
 
 This is a reminder that your payment of $${details.amount.toFixed(2)} is still outstanding.
-
-You have ${daysRemaining} days remaining before your subscription will be suspended.
-
-Grace period ends: ${gracePeriodDate}
 
 Please update your payment method immediately to avoid service interruption.
 
 Log in to your customer portal to update your payment information.
 
-If you have already made a payment, please disregard this message.
-
 Best regards,
 CRUMS Leasing Team
   `.trim();
+
+  if (details.template) {
+    subject = details.template.subject;
+    body = details.template.body;
+    
+    // Replace template variables
+    const replacements: Record<string, string> = {
+      "{{customer_name}}": details.name || "Valued Customer",
+      "{{payment_amount}}": `$${details.amount.toFixed(2)}`,
+      "{{grace_period_end}}": gracePeriodDate,
+      "{{login_url}}": `${baseUrl}/login`,
+      "{{unsubscribe_url}}": `${baseUrl}/unsubscribe?email=${encodeURIComponent(details.email)}`,
+    };
+    
+    for (const [key, value] of Object.entries(replacements)) {
+      subject = subject.replace(new RegExp(key, "g"), value);
+      body = body.replace(new RegExp(key, "g"), value);
+    }
+  }
 
   try {
     const response = await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/send-outreach-email`, {
@@ -317,51 +369,9 @@ CRUMS Leasing Team
     });
 
     if (!response.ok) {
-      console.error("Failed to send reminder email:", response.status);
+      console.error("Failed to send email:", response.status);
     }
   } catch (err) {
-    console.error("Error sending reminder email:", err);
-  }
-}
-
-async function sendCancellationEmail(
-  details: { email: string; name?: string | null }
-) {
-  const subject = "Subscription Canceled - Payment Not Received";
-  const body = `
-Dear ${details.name || "Customer"},
-
-We regret to inform you that your subscription has been canceled due to non-payment after the 7-day grace period.
-
-Your assigned trailers are no longer reserved for your use.
-
-If you would like to reinstate your service, please contact our team to set up a new subscription and payment arrangement.
-
-We value your business and hope to serve you again in the future.
-
-Best regards,
-CRUMS Leasing Team
-  `.trim();
-
-  try {
-    const response = await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/send-outreach-email`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
-      },
-      body: JSON.stringify({
-        to: details.email,
-        subject,
-        body,
-        email_type: "subscription_canceled",
-      }),
-    });
-
-    if (!response.ok) {
-      console.error("Failed to send cancellation email:", response.status);
-    }
-  } catch (err) {
-    console.error("Error sending cancellation email:", err);
+    console.error("Error sending email:", err);
   }
 }
