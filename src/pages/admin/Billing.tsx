@@ -53,8 +53,11 @@ import {
   Mail,
   Ban,
   Timer,
-  Activity
+  Activity,
+  FileCheck,
+  Phone
 } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -215,6 +218,12 @@ export default function Billing() {
     customerName: string;
   } | null>(null);
   const [isManaging, setIsManaging] = useState(false);
+
+  // Manual resolution state
+  const [resolveDialogOpen, setResolveDialogOpen] = useState(false);
+  const [selectedFailure, setSelectedFailure] = useState<PaymentFailure | null>(null);
+  const [resolutionNotes, setResolutionNotes] = useState("");
+  const [resolutionType, setResolutionType] = useState<"manual_payment" | "waived" | "other">("manual_payment");
 
   // Manage subscription (pause/resume/cancel)
   const handleManageSubscription = async (subscriptionId: string, action: "pause" | "resume" | "cancel") => {
@@ -500,6 +509,41 @@ export default function Billing() {
     }
   });
 
+  // Manually resolve payment failure
+  const resolveFailureMutation = useMutation({
+    mutationFn: async ({ 
+      failureId, 
+      resolutionType, 
+      notes 
+    }: { 
+      failureId: string; 
+      resolutionType: string; 
+      notes: string;
+    }) => {
+      const { error } = await supabase
+        .from("payment_failures")
+        .update({
+          resolved_at: new Date().toISOString(),
+          resolution_type: resolutionType,
+          failure_message: notes ? `[Manual Resolution] ${notes}` : "[Manual Resolution]"
+        })
+        .eq("id", failureId);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["payment-failures"] });
+      setResolveDialogOpen(false);
+      setSelectedFailure(null);
+      setResolutionNotes("");
+      setResolutionType("manual_payment");
+      toast.success("Payment failure resolved successfully");
+    },
+    onError: (error) => {
+      toast.error("Failed to resolve: " + error.message);
+    }
+  });
+
   // Calculate stats
   const activeSubscriptions = subscriptions?.filter(s => s.status === "active").length || 0;
   const totalMonthlyRevenue = subscriptionItems?.filter(i => i.status === "active")
@@ -549,7 +593,17 @@ export default function Billing() {
 
   const getGracePeriodStatus = (failure: PaymentFailure) => {
     if (failure.resolved_at) {
-      return { label: failure.resolution_type || "Resolved", variant: "outline" as const };
+      const resolutionLabels: Record<string, string> = {
+        paid: "Paid",
+        canceled: "Canceled",
+        manual_payment: "Manual Payment",
+        waived: "Waived",
+        other: "Resolved"
+      };
+      return { 
+        label: resolutionLabels[failure.resolution_type || ""] || "Resolved", 
+        variant: "outline" as const 
+      };
     }
     
     const now = new Date();
@@ -875,6 +929,7 @@ export default function Billing() {
                             <TableHead>Grace Period</TableHead>
                             <TableHead>Notifications</TableHead>
                             <TableHead>Status</TableHead>
+                            <TableHead className="text-right">Actions</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -944,8 +999,26 @@ export default function Billing() {
                                     {failure.resolved_at && failure.resolution_type === "canceled" && (
                                       <Ban className="h-3 w-3 mr-1" />
                                     )}
+                                    {failure.resolved_at && (failure.resolution_type === "manual_payment" || failure.resolution_type === "waived" || failure.resolution_type === "other") && (
+                                      <FileCheck className="h-3 w-3 mr-1" />
+                                    )}
                                     {gracePeriodStatus.label}
                                   </Badge>
+                                </TableCell>
+                                <TableCell className="text-right">
+                                  {!failure.resolved_at && (
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => {
+                                        setSelectedFailure(failure);
+                                        setResolveDialogOpen(true);
+                                      }}
+                                    >
+                                      <Phone className="h-3 w-3 mr-1" />
+                                      Resolve
+                                    </Button>
+                                  )}
                                 </TableCell>
                               </TableRow>
                             );
@@ -1432,6 +1505,96 @@ export default function Billing() {
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
+
+            {/* Manual Resolution Dialog */}
+            <Dialog open={resolveDialogOpen} onOpenChange={setResolveDialogOpen}>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Manually Resolve Payment Failure</DialogTitle>
+                  <DialogDescription>
+                    Mark this payment failure as resolved. Use this when payment was collected offline, via phone, or waived.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                  <div className="p-3 bg-muted rounded-lg">
+                    <p className="text-sm font-medium">
+                      {selectedFailure?.customer_subscriptions?.customers?.full_name}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      Amount: ${selectedFailure?.amount?.toFixed(2)} • Failed: {selectedFailure?.failed_at ? format(new Date(selectedFailure.failed_at), "MMM d, yyyy") : ""}
+                    </p>
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="resolution_type">Resolution Type</Label>
+                    <Select
+                      value={resolutionType}
+                      onValueChange={(value: "manual_payment" | "waived" | "other") => setResolutionType(value)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="manual_payment">
+                          <div className="flex items-center gap-2">
+                            <CreditCard className="h-4 w-4" />
+                            Payment Collected (Offline/Phone)
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="waived">
+                          <div className="flex items-center gap-2">
+                            <CheckCircle2 className="h-4 w-4" />
+                            Payment Waived
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="other">
+                          <div className="flex items-center gap-2">
+                            <FileCheck className="h-4 w-4" />
+                            Other Resolution
+                          </div>
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="notes">Notes</Label>
+                    <Textarea
+                      id="notes"
+                      value={resolutionNotes}
+                      onChange={(e) => setResolutionNotes(e.target.value)}
+                      placeholder="e.g., Payment received via check #1234, Customer called to resolve on 1/22..."
+                      rows={3}
+                    />
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setResolveDialogOpen(false);
+                      setSelectedFailure(null);
+                      setResolutionNotes("");
+                      setResolutionType("manual_payment");
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      if (selectedFailure) {
+                        resolveFailureMutation.mutate({
+                          failureId: selectedFailure.id,
+                          resolutionType: resolutionType,
+                          notes: resolutionNotes
+                        });
+                      }
+                    }}
+                    disabled={resolveFailureMutation.isPending}
+                  >
+                    {resolveFailureMutation.isPending ? "Resolving..." : "Mark as Resolved"}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </main>
         </div>
       </div>
