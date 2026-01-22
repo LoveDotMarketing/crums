@@ -176,13 +176,27 @@ export default function CustomerDashboard() {
   };
 
   const fetchTrailers = async () => {
-    if (!currentUserId) return;
+    if (!user?.email) return;
 
     try {
+      // First find the customer record by email (since customers.id ≠ profiles.id)
+      const { data: customer } = await supabase
+        .from("customers")
+        .select("id")
+        .eq("email", user.email)
+        .maybeSingle();
+
+      if (!customer) {
+        setTrailerCount(0);
+        return;
+      }
+
+      // Count active subscription items for this customer
       const { count, error } = await supabase
-        .from("trailers")
-        .select("id", { count: "exact", head: true })
-        .or(`customer_id.eq.${currentUserId},assigned_to.eq.${currentUserId}`);
+        .from("subscription_items")
+        .select("id, subscription:customer_subscriptions!inner(customer_id)", { count: "exact", head: true })
+        .eq("subscription.customer_id", customer.id)
+        .in("status", ["active", "paused"]);
 
       if (error) throw error;
 
@@ -236,21 +250,24 @@ export default function CustomerDashboard() {
       value: tollStats.pendingCount.toString(),
       subtext: `$${tollStats.pendingAmount.toFixed(2)} total`,
       icon: Bell,
-      color: tollStats.pendingCount > 0 ? "text-yellow-600" : "text-muted-foreground"
+      color: tollStats.pendingCount > 0 ? "text-yellow-600" : "text-muted-foreground",
+      link: null
     },
     {
       title: "Assigned Trailers",
       value: trailerCount.toString(),
       subtext: "Active assignments",
       icon: Truck,
-      color: trailerCount > 0 ? "text-blue-600" : "text-muted-foreground"
+      color: trailerCount > 0 ? "text-primary" : "text-muted-foreground",
+      link: "/dashboard/customer/rentals"
     },
     {
       title: "Cleared This Month",
       value: `$${tollStats.paidThisMonth.toFixed(2)}`,
       subtext: "Marked as paid",
       icon: CheckCircle,
-      color: "text-green-600"
+      color: "text-green-600",
+      link: null
     },
   ];
 
@@ -300,26 +317,36 @@ export default function CustomerDashboard() {
 
           {/* Stats */}
           <div className="grid gap-6 md:grid-cols-3 mb-8">
-            {stats.map((stat) => (
-              <Card key={stat.title} className="border-border">
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">
-                    {stat.title}
-                  </CardTitle>
-                  <stat.icon className={`h-5 w-5 ${stat.color}`} />
-                </CardHeader>
-                <CardContent>
-                  {loading ? (
-                    <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-                  ) : (
-                    <>
-                      <div className="text-2xl font-bold text-foreground">{stat.value}</div>
-                      <p className="text-xs text-muted-foreground mt-1">{stat.subtext}</p>
-                    </>
-                  )}
-                </CardContent>
-              </Card>
-            ))}
+            {stats.map((stat) => {
+              const cardContent = (
+                <Card key={stat.title} className={`border-border ${stat.link ? "hover:border-primary/50 hover:shadow-md transition-all cursor-pointer" : ""}`}>
+                  <CardHeader className="flex flex-row items-center justify-between pb-2">
+                    <CardTitle className="text-sm font-medium text-muted-foreground">
+                      {stat.title}
+                    </CardTitle>
+                    <stat.icon className={`h-5 w-5 ${stat.color}`} />
+                  </CardHeader>
+                  <CardContent>
+                    {loading ? (
+                      <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                    ) : (
+                      <>
+                        <div className="text-2xl font-bold text-foreground">{stat.value}</div>
+                        <p className="text-xs text-muted-foreground mt-1">{stat.subtext}</p>
+                      </>
+                    )}
+                  </CardContent>
+                </Card>
+              );
+
+              return stat.link ? (
+                <Link key={stat.title} to={stat.link}>
+                  {cardContent}
+                </Link>
+              ) : (
+                <div key={stat.title}>{cardContent}</div>
+              );
+            })}
           </div>
 
           {/* Pending Trailer Checkouts */}
