@@ -18,6 +18,7 @@ interface SubscriptionRequest {
   billingCycle: "weekly" | "biweekly" | "monthly";
   depositAmount?: number;
   discountId?: string;
+  customRates?: Record<string, number>; // trailerId -> custom rate override
 }
 
 serve(async (req) => {
@@ -57,7 +58,7 @@ serve(async (req) => {
     logStep("Admin verified", { adminId: userData.user.id });
 
     const body: SubscriptionRequest = await req.json();
-    const { customerId, trailerIds, billingCycle, depositAmount, discountId } = body;
+    const { customerId, trailerIds, billingCycle, depositAmount, discountId, customRates } = body;
 
     if (!customerId || !trailerIds?.length || !billingCycle) {
       throw new Error("Missing required fields: customerId, trailerIds, billingCycle");
@@ -143,7 +144,8 @@ serve(async (req) => {
     const subscriptionItems: Stripe.SubscriptionCreateParams.Item[] = [];
 
     for (const trailer of trailers) {
-      const rate = trailer.rental_rate || 500; // Default $500/month
+      // Use custom rate if provided, otherwise fall back to trailer's default rate
+      const rate = customRates?.[trailer.id] ?? trailer.rental_rate ?? 500;
 
       // Create a price for this trailer
       const price = await stripe.prices.create({
@@ -157,7 +159,7 @@ serve(async (req) => {
       });
 
       subscriptionItems.push({ price: price.id });
-      logStep("Created price for trailer", { trailerId: trailer.id, priceId: price.id, rate });
+      logStep("Created price for trailer", { trailerId: trailer.id, priceId: price.id, rate, isCustomRate: !!customRates?.[trailer.id] });
     }
 
     // Create the subscription
@@ -200,13 +202,14 @@ serve(async (req) => {
     for (let i = 0; i < trailers.length; i++) {
       const trailer = trailers[i];
       const stripeItem = subscription.items.data[i];
+      const rate = customRates?.[trailer.id] ?? trailer.rental_rate ?? 500;
 
       await supabaseClient
         .from("subscription_items")
         .insert({
           subscription_id: custSub.id,
           trailer_id: trailer.id,
-          monthly_rate: trailer.rental_rate || 500,
+          monthly_rate: rate,
           stripe_subscription_item_id: stripeItem?.id || null,
           status: "active",
         });
