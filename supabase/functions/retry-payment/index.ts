@@ -223,7 +223,17 @@ serve(async (req) => {
 
       // Send success notification
       if (sendgridApiKey && customerEmail) {
-        await sendRetryNotification(sendgridApiKey, customerEmail, customerName, paymentAmount, true);
+        // Check if notifications are enabled
+        const { data: notifSetting } = await supabase
+          .from("outreach_settings")
+          .select("setting_value")
+          .eq("setting_key", "payment_retry_notification_enabled")
+          .maybeSingle();
+        
+        const notificationsEnabled = notifSetting?.setting_value !== "false";
+        if (notificationsEnabled) {
+          await sendRetryNotification(sendgridApiKey, customerEmail, customerName, paymentAmount, true);
+        }
       }
 
       return new Response(
@@ -261,9 +271,17 @@ serve(async (req) => {
         .eq("id", failureId);
 
       if (paidInvoice.status === "paid") {
-        // Payment succeeded - send success notification
+        // Payment succeeded - send success notification if enabled
         if (sendgridApiKey && customerEmail) {
-          await sendRetryNotification(sendgridApiKey, customerEmail, customerName, paymentAmount, true);
+          const { data: notifSetting } = await supabase
+            .from("outreach_settings")
+            .select("setting_value")
+            .eq("setting_key", "payment_retry_notification_enabled")
+            .maybeSingle();
+          
+          if (notifSetting?.setting_value !== "false") {
+            await sendRetryNotification(sendgridApiKey, customerEmail, customerName, paymentAmount, true);
+          }
         }
 
         return new Response(
@@ -298,9 +316,17 @@ serve(async (req) => {
 
       const errorMessage = paymentError instanceof Error ? paymentError.message : "Payment failed";
       
-      // Send failure notification
+      // Send failure notification if enabled
       if (sendgridApiKey && customerEmail) {
-        await sendRetryNotification(sendgridApiKey, customerEmail, customerName, paymentAmount, false, errorMessage);
+        const { data: notifSetting } = await supabase
+          .from("outreach_settings")
+          .select("setting_value")
+          .eq("setting_key", "payment_retry_notification_enabled")
+          .maybeSingle();
+        
+        if (notifSetting?.setting_value !== "false") {
+          await sendRetryNotification(sendgridApiKey, customerEmail, customerName, paymentAmount, false, errorMessage);
+        }
       }
 
       return new Response(

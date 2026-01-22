@@ -58,9 +58,17 @@ import {
   FileCheck,
   Phone,
   Search,
-  ArrowUpDown
+  ArrowUpDown,
+  Bell
 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -586,6 +594,44 @@ export default function Billing() {
     }
   });
 
+  // Fetch retry notification setting
+  const { data: retryNotificationSetting } = useQuery({
+    queryKey: ["retry-notification-setting"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("outreach_settings")
+        .select("setting_value")
+        .eq("setting_key", "payment_retry_notification_enabled")
+        .maybeSingle();
+      
+      if (error) throw error;
+      return data?.setting_value !== "false";
+    }
+  });
+
+  // Toggle retry notification setting
+  const toggleRetryNotificationMutation = useMutation({
+    mutationFn: async (enabled: boolean) => {
+      const { error } = await supabase
+        .from("outreach_settings")
+        .upsert({
+          setting_key: "payment_retry_notification_enabled",
+          setting_value: enabled ? "true" : "false",
+          description: "Send email notifications to customers when an admin retries their failed payment",
+          updated_at: new Date().toISOString()
+        }, { onConflict: "setting_key" });
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["retry-notification-setting"] });
+      toast.success("Notification setting updated");
+    },
+    onError: (error) => {
+      toast.error("Failed to update setting: " + error.message);
+    }
+  });
+
   // Create discount mutation
   const createDiscountMutation = useMutation({
     mutationFn: async (discount: typeof newDiscount) => {
@@ -1096,14 +1142,33 @@ export default function Billing() {
                         Track failed payments, grace periods, and automated notification status
                       </CardDescription>
                     </div>
-                    <Button
-                      variant="outline"
-                      onClick={handleRunDunning}
-                      disabled={isRunningDunning || unresolvedFailures === 0}
-                    >
-                      <Mail className={`h-4 w-4 mr-2 ${isRunningDunning ? "animate-pulse" : ""}`} />
-                      {isRunningDunning ? "Processing..." : "Run Dunning"}
-                    </Button>
+                    <div className="flex items-center gap-4">
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className="flex items-center gap-2">
+                              <Bell className="h-4 w-4 text-muted-foreground" />
+                              <Switch
+                                checked={retryNotificationSetting ?? true}
+                                onCheckedChange={(checked) => toggleRetryNotificationMutation.mutate(checked)}
+                                disabled={toggleRetryNotificationMutation.isPending}
+                              />
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Email customers when retrying payments</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                      <Button
+                        variant="outline"
+                        onClick={handleRunDunning}
+                        disabled={isRunningDunning || unresolvedFailures === 0}
+                      >
+                        <Mail className={`h-4 w-4 mr-2 ${isRunningDunning ? "animate-pulse" : ""}`} />
+                        {isRunningDunning ? "Processing..." : "Run Dunning"}
+                      </Button>
+                    </div>
                   </CardHeader>
                   <CardContent>
                     {/* Search and Filter Controls */}
