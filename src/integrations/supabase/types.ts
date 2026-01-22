@@ -14,6 +14,104 @@ export type Database = {
   }
   public: {
     Tables: {
+      applied_discounts: {
+        Row: {
+          applied_at: string
+          discount_id: string
+          id: string
+          subscription_id: string
+        }
+        Insert: {
+          applied_at?: string
+          discount_id: string
+          id?: string
+          subscription_id: string
+        }
+        Update: {
+          applied_at?: string
+          discount_id?: string
+          id?: string
+          subscription_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "applied_discounts_discount_id_fkey"
+            columns: ["discount_id"]
+            isOneToOne: false
+            referencedRelation: "discounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "applied_discounts_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "customer_subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      billing_history: {
+        Row: {
+          amount: number
+          billing_period_end: string | null
+          billing_period_start: string | null
+          created_at: string
+          discount_amount: number | null
+          failure_reason: string | null
+          id: string
+          net_amount: number
+          paid_at: string | null
+          payment_method: string | null
+          status: Database["public"]["Enums"]["payment_status"]
+          stripe_invoice_id: string | null
+          stripe_payment_intent_id: string | null
+          subscription_id: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          billing_period_end?: string | null
+          billing_period_start?: string | null
+          created_at?: string
+          discount_amount?: number | null
+          failure_reason?: string | null
+          id?: string
+          net_amount: number
+          paid_at?: string | null
+          payment_method?: string | null
+          status?: Database["public"]["Enums"]["payment_status"]
+          stripe_invoice_id?: string | null
+          stripe_payment_intent_id?: string | null
+          subscription_id: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          billing_period_end?: string | null
+          billing_period_start?: string | null
+          created_at?: string
+          discount_amount?: number | null
+          failure_reason?: string | null
+          id?: string
+          net_amount?: number
+          paid_at?: string | null
+          payment_method?: string | null
+          status?: Database["public"]["Enums"]["payment_status"]
+          stripe_invoice_id?: string | null
+          stripe_payment_intent_id?: string | null
+          subscription_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "billing_history_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "customer_subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       companies: {
         Row: {
           address: string | null
@@ -271,6 +369,59 @@ export type Database = {
           },
         ]
       }
+      customer_subscriptions: {
+        Row: {
+          billing_cycle: Database["public"]["Enums"]["billing_cycle"]
+          created_at: string
+          customer_id: string
+          deposit_amount: number | null
+          deposit_paid: boolean | null
+          deposit_paid_at: string | null
+          id: string
+          next_billing_date: string | null
+          status: string
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          billing_cycle?: Database["public"]["Enums"]["billing_cycle"]
+          created_at?: string
+          customer_id: string
+          deposit_amount?: number | null
+          deposit_paid?: boolean | null
+          deposit_paid_at?: string | null
+          id?: string
+          next_billing_date?: string | null
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          billing_cycle?: Database["public"]["Enums"]["billing_cycle"]
+          created_at?: string
+          customer_id?: string
+          deposit_amount?: number | null
+          deposit_paid?: boolean | null
+          deposit_paid_at?: string | null
+          id?: string
+          next_billing_date?: string | null
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_subscriptions_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: true
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       customers: {
         Row: {
           account_number: string
@@ -328,6 +479,54 @@ export type Database = {
           status?: string | null
           updated_at?: string | null
           zip?: string | null
+        }
+        Relationships: []
+      }
+      discounts: {
+        Row: {
+          code: string | null
+          created_at: string
+          current_uses: number | null
+          id: string
+          is_active: boolean | null
+          max_uses: number | null
+          min_trailers: number | null
+          name: string
+          type: Database["public"]["Enums"]["discount_type"]
+          updated_at: string
+          valid_from: string | null
+          valid_until: string | null
+          value: number
+        }
+        Insert: {
+          code?: string | null
+          created_at?: string
+          current_uses?: number | null
+          id?: string
+          is_active?: boolean | null
+          max_uses?: number | null
+          min_trailers?: number | null
+          name: string
+          type: Database["public"]["Enums"]["discount_type"]
+          updated_at?: string
+          valid_from?: string | null
+          valid_until?: string | null
+          value: number
+        }
+        Update: {
+          code?: string | null
+          created_at?: string
+          current_uses?: number | null
+          id?: string
+          is_active?: boolean | null
+          max_uses?: number | null
+          min_trailers?: number | null
+          name?: string
+          type?: Database["public"]["Enums"]["discount_type"]
+          updated_at?: string
+          valid_from?: string | null
+          valid_until?: string | null
+          value?: number
         }
         Relationships: []
       }
@@ -1105,6 +1304,60 @@ export type Database = {
           },
         ]
       }
+      subscription_items: {
+        Row: {
+          created_at: string
+          end_date: string | null
+          id: string
+          monthly_rate: number
+          start_date: string
+          status: string
+          stripe_subscription_item_id: string | null
+          subscription_id: string
+          trailer_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          end_date?: string | null
+          id?: string
+          monthly_rate: number
+          start_date?: string
+          status?: string
+          stripe_subscription_item_id?: string | null
+          subscription_id: string
+          trailer_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          end_date?: string | null
+          id?: string
+          monthly_rate?: number
+          start_date?: string
+          status?: string
+          stripe_subscription_item_id?: string | null
+          subscription_id?: string
+          trailer_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscription_items_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "customer_subscriptions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscription_items_trailer_id_fkey"
+            columns: ["trailer_id"]
+            isOneToOne: false
+            referencedRelation: "trailers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       support_tickets: {
         Row: {
           assigned_to: string | null
@@ -1559,6 +1812,14 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "customer" | "mechanic"
+      billing_cycle: "weekly" | "biweekly" | "monthly"
+      discount_type: "percentage" | "fixed" | "multi_trailer" | "promo_code"
+      payment_status:
+        | "pending"
+        | "processing"
+        | "succeeded"
+        | "failed"
+        | "refunded"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1687,6 +1948,15 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "customer", "mechanic"],
+      billing_cycle: ["weekly", "biweekly", "monthly"],
+      discount_type: ["percentage", "fixed", "multi_trailer", "promo_code"],
+      payment_status: [
+        "pending",
+        "processing",
+        "succeeded",
+        "failed",
+        "refunded",
+      ],
     },
   },
 } as const
