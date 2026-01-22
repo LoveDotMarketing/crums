@@ -7,8 +7,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
 import { CreditCard, Calendar, DollarSign, Truck, CheckCircle2, Clock, AlertCircle } from "lucide-react";
 import { CustomerNav } from "@/components/customer/CustomerNav";
+import { Navigation } from "@/components/Navigation";
+import { useAuth } from "@/hooks/useAuth";
 
 const CustomerBilling = () => {
+  const { isImpersonating } = useAuth();
   const { data: subscription, isLoading: subLoading } = useQuery({
     queryKey: ["customer-subscription"],
     queryFn: async () => {
@@ -101,6 +104,7 @@ const CustomerBilling = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      {!isImpersonating && <Navigation />}
       <CustomerNav />
       <div className="container mx-auto py-8 px-4 max-w-6xl">
         <div className="mb-8">
