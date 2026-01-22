@@ -187,19 +187,20 @@ serve(async (req) => {
     }
     logStep("Calculated next billing date", { periodEnd: subscription.current_period_end, nextBillingDate });
 
-    // Map Stripe status to our allowed values: pending, active, paused, cancelled
+    // Map Stripe status to our allowed values: pending, active, paused, canceled
+    // CRITICAL: Use "canceled" (single L) to match database constraint
     const statusMap: Record<string, string> = {
       incomplete: "pending",
-      incomplete_expired: "cancelled",
+      incomplete_expired: "canceled",
       trialing: "active",
       active: "active",
       past_due: "active", // Still active but needs attention
-      canceled: "cancelled",
+      canceled: "canceled",
       unpaid: "paused",
       paused: "paused",
     };
-    const mappedStatus = statusMap[subscription.status] || "pending";
-    logStep("Mapped subscription status", { stripeStatus: subscription.status, mappedStatus });
+    const mappedStatus = statusMap[subscription.status] ?? "pending";
+    logStep("Mapping subscription status", { stripeStatus: subscription.status, mappedStatus });
 
     const { data: custSub, error: subError } = await supabaseClient
       .from("customer_subscriptions")
