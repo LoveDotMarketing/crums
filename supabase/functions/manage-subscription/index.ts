@@ -101,8 +101,9 @@ serve(async (req) => {
     }
 
     // Map action to local status
+    // CRITICAL: Use "canceled" (single L) to match database constraint
     if (action === "cancel") {
-      newStatus = "cancelled";
+      newStatus = "canceled";
     } else if (action === "pause") {
       newStatus = "paused";
     } else {
@@ -123,8 +124,8 @@ serve(async (req) => {
       const trailerIds = subscription.subscription_items.map((item: { trailer_id: string }) => item.trailer_id);
       
       if (trailerIds.length > 0) {
-        // Update subscription items to ended
-        const endStatus = action === "cancel" ? "cancelled" : "paused";
+        // Update subscription items to ended - use "canceled" (single L) for consistency
+        const endStatus = action === "cancel" ? "canceled" : "paused";
         await supabaseClient
           .from("subscription_items")
           .update({ 

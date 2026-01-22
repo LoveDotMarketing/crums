@@ -88,18 +88,20 @@ serve(async (req) => {
         // Retrieve the Stripe subscription
         const stripeSub = await stripe.subscriptions.retrieve(sub.stripe_subscription_id);
         
-        // Map Stripe status to our allowed values: pending, active, paused, cancelled
+        // Map Stripe status to our allowed values: pending, active, paused, canceled
+        // CRITICAL: Use "canceled" (single L) to match database constraint
         const statusMap: Record<string, string> = {
           incomplete: "pending",
-          incomplete_expired: "cancelled",
+          incomplete_expired: "canceled",
           trialing: "active",
           active: "active",
           past_due: "active", // Still active but needs attention
-          canceled: "cancelled",
+          canceled: "canceled",
           unpaid: "paused",
           paused: "paused",
         };
-        const mappedStatus = statusMap[stripeSub.status] || "pending";
+        const mappedStatus = statusMap[stripeSub.status] ?? sub.status ?? "pending";
+        logStep("Mapping subscription status", { stripeStatus: stripeSub.status, mappedStatus, currentStatus: sub.status });
         
         // Update local status if it changed
         if (mappedStatus !== sub.status) {
