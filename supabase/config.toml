@@ -108,3 +108,11 @@ verify_jwt = false
 # Billing - Sync payments from Stripe (admin or cron, verified in code)
 [functions.sync-payments]
 verify_jwt = false
+
+# Stripe webhook handler - signature verified in code
+[functions.stripe-webhook]
+verify_jwt = false
+
+# Process payment failures - cron job for dunning management
+[functions.process-payment-failures]
+verify_jwt = false
