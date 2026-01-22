@@ -120,11 +120,13 @@ export default function DOTInspectionForm() {
   const { user } = useAuth();
   const [searchParams] = useSearchParams();
   const trailerId = searchParams.get("trailerId");
+  const releaseId = searchParams.get("releaseId");
   
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [inspectionId, setInspectionId] = useState<string | null>(null);
+  const [inspectorName, setInspectorName] = useState<string>("");
   const [trailerInfo, setTrailerInfo] = useState<{
     trailer_number: string;
     vin: string | null;
@@ -154,6 +156,18 @@ export default function DOTInspectionForm() {
 
       if (trailerError) throw trailerError;
       setTrailerInfo(trailer);
+
+      // Get inspector profile for name
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("first_name, last_name, email")
+        .eq("id", user?.id)
+        .single();
+
+      const fullName = profile?.first_name && profile?.last_name
+        ? `${profile.first_name} ${profile.last_name}`
+        : profile?.email || "Unknown";
+      setInspectorName(fullName);
 
       // Check for existing in-progress inspection
       const { data: existingInspection } = await supabase
@@ -225,17 +239,19 @@ export default function DOTInspectionForm() {
           setPhotos(groupedPhotos);
         }
       } else {
-        // Create new inspection
+        // Create new inspection with inspector name and release request link
         const { data: newInspection, error: createError } = await supabase
           .from("dot_inspections")
           .insert({
             trailer_id: trailerId,
             inspector_id: user?.id,
+            inspector_name: fullName,
             trailer_number: trailer.trailer_number,
             vin: trailer.vin,
             license_plate: trailer.license_plate,
             trailer_type: trailer.type,
-            status: "in_progress"
+            status: "in_progress",
+            release_request_id: releaseId || null
           })
           .select()
           .single();
@@ -248,6 +264,17 @@ export default function DOTInspectionForm() {
           .from("trailers")
           .update({ status: "maintenance" })
           .eq("id", trailerId);
+
+        // If there's a release request, update its status
+        if (releaseId) {
+          await supabase
+            .from("trailer_release_requests")
+            .update({
+              status: "inspection_in_progress",
+              dot_inspection_id: newInspection.id
+            })
+            .eq("id", releaseId);
+        }
       }
     } catch (error) {
       console.error("Error initializing inspection:", error);
@@ -296,6 +323,13 @@ export default function DOTInspectionForm() {
       return;
     }
 
+    // Validate required license plate photo
+    const hasLicensePlatePhoto = photos.license_plate && photos.license_plate.length > 0;
+    if (!hasLicensePlatePhoto) {
+      toast.error("Photo of rear view with license plate is required");
+      return;
+    }
+
     setSaving(true);
     try {
       // Update inspection status
@@ -314,6 +348,14 @@ export default function DOTInspectionForm() {
         .from("trailers")
         .update({ status: "available" })
         .eq("id", trailerId);
+
+      // If there's a release request, update its status to ready
+      if (releaseId) {
+        await supabase
+          .from("trailer_release_requests")
+          .update({ status: "ready" })
+          .eq("id", releaseId);
+      }
 
       toast.success("DOT Inspection completed! Trailer is now DOT-ready.");
       navigate("/dashboard/mechanic");
@@ -375,6 +417,9 @@ export default function DOTInspectionForm() {
               <div className="text-right">
                 <p className="text-sm font-medium">Step {currentStep} of {STEPS.length}</p>
                 <p className="text-xs text-muted-foreground">{STEPS[currentStep - 1].title}</p>
+                {inspectorName && (
+                  <p className="text-xs text-muted-foreground mt-1">Inspector: {inspectorName}</p>
+                )}
               </div>
             </div>
             <Progress value={progress} className="mt-3 h-2" />

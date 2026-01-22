@@ -604,6 +604,7 @@ export type Database = {
           id: string
           inspection_date: string
           inspector_id: string
+          inspector_name: string | null
           inspector_signature: string | null
           kingpin_secure: boolean | null
           landing_gear_operational: boolean | null
@@ -618,6 +619,7 @@ export type Database = {
           no_sharp_edges: boolean | null
           rear_doors_operational: boolean | null
           reflective_comments: string | null
+          release_request_id: string | null
           rims_no_damage: boolean | null
           sidewalls_roof_intact: boolean | null
           status: string | null
@@ -665,6 +667,7 @@ export type Database = {
           id?: string
           inspection_date?: string
           inspector_id: string
+          inspector_name?: string | null
           inspector_signature?: string | null
           kingpin_secure?: boolean | null
           landing_gear_operational?: boolean | null
@@ -679,6 +682,7 @@ export type Database = {
           no_sharp_edges?: boolean | null
           rear_doors_operational?: boolean | null
           reflective_comments?: string | null
+          release_request_id?: string | null
           rims_no_damage?: boolean | null
           sidewalls_roof_intact?: boolean | null
           status?: string | null
@@ -726,6 +730,7 @@ export type Database = {
           id?: string
           inspection_date?: string
           inspector_id?: string
+          inspector_name?: string | null
           inspector_signature?: string | null
           kingpin_secure?: boolean | null
           landing_gear_operational?: boolean | null
@@ -740,6 +745,7 @@ export type Database = {
           no_sharp_edges?: boolean | null
           rear_doors_operational?: boolean | null
           reflective_comments?: string | null
+          release_request_id?: string | null
           rims_no_damage?: boolean | null
           sidewalls_roof_intact?: boolean | null
           status?: string | null
@@ -761,6 +767,13 @@ export type Database = {
             columns: ["inspector_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dot_inspections_release_request_id_fkey"
+            columns: ["release_request_id"]
+            isOneToOne: false
+            referencedRelation: "trailer_release_requests"
             referencedColumns: ["id"]
           },
           {
@@ -1646,6 +1659,79 @@ export type Database = {
           },
           {
             foreignKeyName: "tolls_trailer_id_fkey"
+            columns: ["trailer_id"]
+            isOneToOne: false
+            referencedRelation: "trailers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      trailer_release_requests: {
+        Row: {
+          assigned_mechanic_id: string | null
+          created_at: string
+          customer_company: string | null
+          customer_id: string | null
+          customer_name: string | null
+          customer_phone: string | null
+          dot_inspection_id: string | null
+          id: string
+          notes: string | null
+          requested_by: string
+          scheduled_pickup_date: string
+          status: string
+          trailer_id: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_mechanic_id?: string | null
+          created_at?: string
+          customer_company?: string | null
+          customer_id?: string | null
+          customer_name?: string | null
+          customer_phone?: string | null
+          dot_inspection_id?: string | null
+          id?: string
+          notes?: string | null
+          requested_by: string
+          scheduled_pickup_date: string
+          status?: string
+          trailer_id: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_mechanic_id?: string | null
+          created_at?: string
+          customer_company?: string | null
+          customer_id?: string | null
+          customer_name?: string | null
+          customer_phone?: string | null
+          dot_inspection_id?: string | null
+          id?: string
+          notes?: string | null
+          requested_by?: string
+          scheduled_pickup_date?: string
+          status?: string
+          trailer_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trailer_release_requests_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trailer_release_requests_dot_inspection_id_fkey"
+            columns: ["dot_inspection_id"]
+            isOneToOne: false
+            referencedRelation: "dot_inspections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trailer_release_requests_trailer_id_fkey"
             columns: ["trailer_id"]
             isOneToOne: false
             referencedRelation: "trailers"
