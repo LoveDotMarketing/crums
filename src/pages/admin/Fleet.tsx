@@ -20,7 +20,8 @@ import {
   Trash2,
   Loader2,
   LayoutGrid,
-  UserX
+  UserX,
+  CalendarClock
 } from "lucide-react";
 import {
   Table,
@@ -33,6 +34,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
+import { ScheduleReleaseDialog } from "@/components/admin/ScheduleReleaseDialog";
 
 interface Trailer {
   id: string;
@@ -76,6 +78,8 @@ export default function Fleet() {
   const [sortColumn, setSortColumn] = useState<keyof Trailer | null>(null);
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
   const [unassignTrailerId, setUnassignTrailerId] = useState<string | null>(null);
+  const [scheduleReleaseTrailer, setScheduleReleaseTrailer] = useState<Trailer | null>(null);
+  const [isScheduleDialogOpen, setIsScheduleDialogOpen] = useState(false);
   
   const [newTrailer, setNewTrailer] = useState({
     trailer_number: "",
@@ -362,9 +366,14 @@ export default function Fleet() {
       rented: "default",
       available: "secondary",
       maintenance: "destructive",
-      checked_out: "default"
+      checked_out: "default",
+      pending_release: "default"
     };
-    const displayStatus = status === "checked_out" ? "Checked Out" : status;
+    const displayMap: Record<string, string> = {
+      checked_out: "Checked Out",
+      pending_release: "Pending Release"
+    };
+    const displayStatus = displayMap[status] || status;
     return <Badge variant={variants[status] || "secondary"}>{displayStatus}</Badge>;
   };
 
@@ -741,6 +750,19 @@ export default function Fleet() {
                             </TableCell>
                             <TableCell>
                               <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
+                                {trailer.status === "available" && !trailer.is_rented && (
+                                  <Button 
+                                    size="sm" 
+                                    variant="outline"
+                                    onClick={() => {
+                                      setScheduleReleaseTrailer(trailer);
+                                      setIsScheduleDialogOpen(true);
+                                    }}
+                                    title="Schedule customer pickup"
+                                  >
+                                    <CalendarClock className="h-4 w-4" />
+                                  </Button>
+                                )}
                                 <Button 
                                   size="sm" 
                                   variant="ghost"
@@ -784,6 +806,17 @@ export default function Fleet() {
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
+
+            {/* Schedule Release Dialog */}
+            <ScheduleReleaseDialog
+              open={isScheduleDialogOpen}
+              onOpenChange={setIsScheduleDialogOpen}
+              trailer={scheduleReleaseTrailer}
+              onScheduled={() => {
+                fetchCompanyAndTrailers();
+                setScheduleReleaseTrailer(null);
+              }}
+            />
           </main>
         </div>
       </div>

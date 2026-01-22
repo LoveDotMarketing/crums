@@ -31,6 +31,7 @@ interface CompletedInspection {
   inspection_date: string;
   status: string;
   inspector_signature: string | null;
+  inspector_name: string | null;
   customer_signature: string | null;
   customer_name: string | null;
   customer_company_name: string | null;
@@ -63,7 +64,7 @@ export default function CheckoutComplete() {
     try {
       const { data, error } = await supabase
         .from("dot_inspections")
-        .select("id, trailer_number, vin, license_plate, trailer_type, inspection_date, status, inspector_signature, customer_signature, customer_name, customer_company_name, customer_signer_name, customer_acknowledged_at, brakes_operational, tires_tread_depth, brake_lights_operational, frame_no_cracks, rear_doors_operational, kingpin_secure, dot_reflective_tape_present")
+        .select("id, trailer_number, vin, license_plate, trailer_type, inspection_date, status, inspector_signature, inspector_name, customer_signature, customer_name, customer_company_name, customer_signer_name, customer_acknowledged_at, brakes_operational, tires_tread_depth, brake_lights_operational, frame_no_cracks, rear_doors_operational, kingpin_secure, dot_reflective_tape_present")
         .eq("id", inspectionId)
         .eq("customer_acknowledged", true)
         .single();
@@ -72,7 +73,7 @@ export default function CheckoutComplete() {
       setInspection({
         ...data,
         lights_operational: data.brake_lights_operational
-      } as any);
+      } as CompletedInspection);
     } catch (error) {
       console.error("Error fetching inspection:", error);
       toast.error("Failed to load checkout details");
@@ -221,6 +222,9 @@ export default function CheckoutComplete() {
                   <Wrench className="h-4 w-4 text-muted-foreground print:hidden" />
                   <span className="font-medium">Inspector</span>
                 </div>
+                {inspection.inspector_name && (
+                  <p className="text-sm mb-2">{inspection.inspector_name}</p>
+                )}
                 {inspection.inspector_signature && (
                   <img 
                     src={inspection.inspector_signature} 

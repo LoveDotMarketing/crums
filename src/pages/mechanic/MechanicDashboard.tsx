@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import { ChatBot } from "@/components/ChatBot";
 import { SEO } from "@/components/SEO";
 import { cn } from "@/lib/utils";
+import { PendingReleasesQueue } from "@/components/mechanic/PendingReleasesQueue";
 import {
   Table,
   TableBody,
@@ -355,9 +356,14 @@ export default function MechanicDashboard() {
       rented: "default",
       available: "secondary",
       maintenance: "destructive",
-      checked_out: "default"
+      checked_out: "default",
+      pending_release: "default"
     };
-    const displayStatus = status === "checked_out" ? "Checked Out" : status;
+    const displayMap: Record<string, string> = {
+      checked_out: "Checked Out",
+      pending_release: "Pending Release"
+    };
+    const displayStatus = displayMap[status] || status;
     return <Badge variant={variants[status] || "secondary"}>{displayStatus}</Badge>;
   };
 
@@ -540,6 +546,9 @@ export default function MechanicDashboard() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Pending Releases Queue */}
+        <PendingReleasesQueue />
 
         {/* My Active Jobs Section */}
         {activeJobs.length > 0 && (
