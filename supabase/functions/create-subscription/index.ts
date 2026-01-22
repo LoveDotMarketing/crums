@@ -187,6 +187,20 @@ serve(async (req) => {
     }
     logStep("Calculated next billing date", { periodEnd: subscription.current_period_end, nextBillingDate });
 
+    // Map Stripe status to our allowed values: pending, active, paused, cancelled
+    const statusMap: Record<string, string> = {
+      incomplete: "pending",
+      incomplete_expired: "cancelled",
+      trialing: "active",
+      active: "active",
+      past_due: "active", // Still active but needs attention
+      canceled: "cancelled",
+      unpaid: "paused",
+      paused: "paused",
+    };
+    const mappedStatus = statusMap[subscription.status] || "pending";
+    logStep("Mapped subscription status", { stripeStatus: subscription.status, mappedStatus });
+
     const { data: custSub, error: subError } = await supabaseClient
       .from("customer_subscriptions")
       .insert({
@@ -196,7 +210,7 @@ serve(async (req) => {
         billing_cycle: billingCycle,
         deposit_amount: depositAmount || null,
         deposit_paid: false,
-        status: subscription.status,
+        status: mappedStatus,
         next_billing_date: nextBillingDate,
       })
       .select()
