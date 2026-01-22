@@ -180,6 +180,13 @@ serve(async (req) => {
     logStep("Created Stripe subscription", { subscriptionId: subscription.id });
 
     // Create customer_subscription record
+    // Handle next_billing_date - subscription.current_period_end may be null for incomplete subscriptions
+    let nextBillingDate: string | null = null;
+    if (subscription.current_period_end) {
+      nextBillingDate = new Date(subscription.current_period_end * 1000).toISOString();
+    }
+    logStep("Calculated next billing date", { periodEnd: subscription.current_period_end, nextBillingDate });
+
     const { data: custSub, error: subError } = await supabaseClient
       .from("customer_subscriptions")
       .insert({
@@ -190,7 +197,7 @@ serve(async (req) => {
         deposit_amount: depositAmount || null,
         deposit_paid: false,
         status: subscription.status,
-        next_billing_date: new Date(subscription.current_period_end * 1000).toISOString(),
+        next_billing_date: nextBillingDate,
       })
       .select()
       .single();
