@@ -1,6 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { Home, User, Truck, FileText, CreditCard } from "lucide-react";
+import { Home, User, Truck, FileText, CreditCard, Receipt } from "lucide-react";
 
 export function CustomerNav() {
   const location = useLocation();
@@ -17,9 +17,14 @@ export function CustomerNav() {
       icon: FileText 
     },
     { 
-      title: "Payment", 
+      title: "Payment Setup", 
       href: "/dashboard/customer/payment-setup", 
       icon: CreditCard 
+    },
+    { 
+      title: "Billing", 
+      href: "/dashboard/customer/billing", 
+      icon: Receipt 
     },
     { 
       title: "My Profile", 
