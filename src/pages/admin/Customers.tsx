@@ -222,20 +222,20 @@ export default function Customers() {
           }
         }
 
-        // Calculate profile completion (only profile fields, not application)
+        // Calculate profile completion based on customers table fields (what admins see in Edit dialog)
         const customerProfile = profiles?.find(p => p.email === customer.email);
         const customerApplication = customerProfile 
           ? applications?.find(a => a.user_id === customerProfile.id)
           : null;
         
-        // Profile completion is based on profile fields only
+        // Profile completion is based on customers table fields (full_name, phone, email, company_name)
         const profileFields = [
-          customerProfile?.first_name,
-          customerProfile?.last_name,
-          customerProfile?.phone,
+          customer.full_name,
+          customer.phone,
+          customer.email,
         ];
         
-        const completedProfileFields = profileFields.filter(field => field && field.toString().length > 0).length;
+        const completedProfileFields = profileFields.filter(field => field && field.toString().trim().length > 0).length;
         const profileCompletion = Math.round((completedProfileFields / profileFields.length) * 100);
 
         // Application completion is based on application document fields
