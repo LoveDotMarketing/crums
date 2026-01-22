@@ -8,7 +8,7 @@ import { CustomerNav } from "@/components/customer/CustomerNav";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
 import { toast } from "sonner";
-import { Loader2, Truck, MapPin, Calendar, CreditCard } from "lucide-react";
+import { Loader2, Truck, MapPin, Calendar, CreditCard, FileText } from "lucide-react";
 import { Link } from "react-router-dom";
 
 interface Trailer {
@@ -19,6 +19,7 @@ interface Trailer {
   model: string | null;
   status: string;
   year: number | null;
+  vin: string | null;
 }
 
 export default function Rentals() {
@@ -81,11 +82,12 @@ export default function Rentals() {
             make,
             model,
             status,
-            year
+            year,
+            vin
           )
         `)
         .eq("subscription.customer_id", customer.id)
-        .eq("status", "active");
+        .in("status", ["active", "paused"]);
 
       if (error) throw error;
 
@@ -142,12 +144,18 @@ export default function Rentals() {
                           {trailer.type}
                         </CardDescription>
                       </div>
-                      <Badge variant={trailer.status === "rented" ? "default" : "secondary"}>
-                        {trailer.status}
+                      <Badge variant="default" className="bg-primary">
+                        Leased
                       </Badge>
                     </div>
                   </CardHeader>
                   <CardContent className="space-y-3">
+                    {trailer.vin && (
+                      <div className="flex items-center gap-2 text-sm">
+                        <FileText className="h-4 w-4 text-muted-foreground" />
+                        <span className="font-mono text-xs">{trailer.vin}</span>
+                      </div>
+                    )}
                     <div className="flex items-center gap-2 text-sm">
                       <Truck className="h-4 w-4 text-muted-foreground" />
                       <span>
