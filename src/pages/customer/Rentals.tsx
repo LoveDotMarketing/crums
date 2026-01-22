@@ -48,17 +48,53 @@ export default function Rentals() {
   };
 
   const fetchRentals = async () => {
-    if (!user) return;
+    if (!user?.email) return;
 
     try {
-      const { data, error } = await supabase
-        .from("trailers")
-        .select("*")
-        .eq("assigned_to", user.id)
-        .eq("is_rented", true);
+      // First find the customer record by email (since customers.id ≠ profiles.id)
+      const { data: customer } = await supabase
+        .from("customers")
+        .select("id")
+        .eq("email", user.email)
+        .maybeSingle();
+
+      if (!customer) {
+        setTrailers([]);
+        setLoading(false);
+        return;
+      }
+
+      // Get trailers through subscription_items for this customer
+      const { data: subscriptionItems, error } = await supabase
+        .from("subscription_items")
+        .select(`
+          trailer_id,
+          status,
+          subscription:customer_subscriptions!inner(
+            customer_id,
+            status
+          ),
+          trailer:trailers(
+            id,
+            trailer_number,
+            type,
+            make,
+            model,
+            status,
+            year
+          )
+        `)
+        .eq("subscription.customer_id", customer.id)
+        .eq("status", "active");
 
       if (error) throw error;
-      setTrailers(data || []);
+
+      // Extract trailers from subscription items
+      const rentedTrailers = (subscriptionItems || [])
+        .filter(item => item.trailer)
+        .map(item => item.trailer as Trailer);
+
+      setTrailers(rentedTrailers);
     } catch (error) {
       console.error("Error fetching rentals:", error);
       toast.error("Failed to load rentals");
