@@ -55,7 +55,9 @@ import {
   Timer,
   Activity,
   FileCheck,
-  Phone
+  Phone,
+  Search,
+  ArrowUpDown
 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -228,6 +230,12 @@ export default function Billing() {
   
   // Retry payment state
   const [isRetrying, setIsRetrying] = useState<string | null>(null);
+  
+  // Payment failures filter/sort state
+  const [failuresSearch, setFailuresSearch] = useState("");
+  const [failuresStatusFilter, setFailuresStatusFilter] = useState<"all" | "unresolved" | "resolved">("all");
+  const [failuresSortBy, setFailuresSortBy] = useState<"failed_at" | "amount" | "customer">("failed_at");
+  const [failuresSortOrder, setFailuresSortOrder] = useState<"asc" | "desc">("desc");
 
   // Manage subscription (pause/resume/cancel)
   const handleManageSubscription = async (subscriptionId: string, action: "pause" | "resume" | "cancel") => {
@@ -510,6 +518,50 @@ export default function Billing() {
       return data as PaymentFailure[];
     }
   });
+
+  // Filter and sort payment failures
+  const filteredPaymentFailures = paymentFailures
+    ?.filter((failure) => {
+      // Status filter
+      if (failuresStatusFilter === "resolved" && !failure.resolved_at) return false;
+      if (failuresStatusFilter === "unresolved" && failure.resolved_at) return false;
+      
+      // Search filter
+      if (failuresSearch) {
+        const search = failuresSearch.toLowerCase();
+        const customerName = failure.customer_subscriptions?.customers?.full_name?.toLowerCase() || "";
+        const customerEmail = failure.customer_subscriptions?.customers?.email?.toLowerCase() || "";
+        const companyName = failure.customer_subscriptions?.customers?.company_name?.toLowerCase() || "";
+        const failureCode = failure.failure_code?.toLowerCase() || "";
+        
+        return customerName.includes(search) || 
+               customerEmail.includes(search) || 
+               companyName.includes(search) ||
+               failureCode.includes(search);
+      }
+      
+      return true;
+    })
+    .sort((a, b) => {
+      let comparison = 0;
+      
+      switch (failuresSortBy) {
+        case "amount":
+          comparison = Number(a.amount) - Number(b.amount);
+          break;
+        case "customer":
+          const nameA = a.customer_subscriptions?.customers?.full_name || "";
+          const nameB = b.customer_subscriptions?.customers?.full_name || "";
+          comparison = nameA.localeCompare(nameB);
+          break;
+        case "failed_at":
+        default:
+          comparison = new Date(a.failed_at).getTime() - new Date(b.failed_at).getTime();
+          break;
+      }
+      
+      return failuresSortOrder === "asc" ? comparison : -comparison;
+    });
 
   // Fetch cron job history
   const { data: cronData, isLoading: loadingCron } = useQuery({
@@ -984,29 +1036,82 @@ export default function Billing() {
                     </Button>
                   </CardHeader>
                   <CardContent>
+                    {/* Search and Filter Controls */}
+                    <div className="flex flex-col sm:flex-row gap-4 mb-4">
+                      <div className="relative flex-1">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          placeholder="Search by customer, email, or failure code..."
+                          value={failuresSearch}
+                          onChange={(e) => setFailuresSearch(e.target.value)}
+                          className="pl-9"
+                        />
+                      </div>
+                      <Select
+                        value={failuresStatusFilter}
+                        onValueChange={(value: "all" | "unresolved" | "resolved") => setFailuresStatusFilter(value)}
+                      >
+                        <SelectTrigger className="w-[160px]">
+                          <SelectValue placeholder="Status" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Status</SelectItem>
+                          <SelectItem value="unresolved">Unresolved</SelectItem>
+                          <SelectItem value="resolved">Resolved</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <Select
+                        value={`${failuresSortBy}-${failuresSortOrder}`}
+                        onValueChange={(value) => {
+                          const [sortBy, sortOrder] = value.split("-") as [typeof failuresSortBy, typeof failuresSortOrder];
+                          setFailuresSortBy(sortBy);
+                          setFailuresSortOrder(sortOrder);
+                        }}
+                      >
+                        <SelectTrigger className="w-[180px]">
+                          <ArrowUpDown className="h-4 w-4 mr-2" />
+                          <SelectValue placeholder="Sort by" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="failed_at-desc">Newest First</SelectItem>
+                          <SelectItem value="failed_at-asc">Oldest First</SelectItem>
+                          <SelectItem value="amount-desc">Highest Amount</SelectItem>
+                          <SelectItem value="amount-asc">Lowest Amount</SelectItem>
+                          <SelectItem value="customer-asc">Customer A-Z</SelectItem>
+                          <SelectItem value="customer-desc">Customer Z-A</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
                     {loadingFailures ? (
                       <div className="flex items-center justify-center py-8">
                         <RefreshCw className="h-6 w-6 animate-spin text-muted-foreground" />
                       </div>
-                    ) : paymentFailures && paymentFailures.length > 0 ? (
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Customer</TableHead>
-                            <TableHead>Amount</TableHead>
-                            <TableHead>Failed At</TableHead>
-                            <TableHead>Reason</TableHead>
-                            <TableHead>Grace Period</TableHead>
-                            <TableHead>Notifications</TableHead>
-                            <TableHead>Retries</TableHead>
-                            <TableHead>Status</TableHead>
-                            <TableHead className="text-right">Actions</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {paymentFailures.map((failure) => {
-                            const gracePeriodStatus = getGracePeriodStatus(failure);
-                            const notifications = getNotificationStatus(failure);
+                    ) : filteredPaymentFailures && filteredPaymentFailures.length > 0 ? (
+                      <>
+                        {paymentFailures && paymentFailures.length !== filteredPaymentFailures.length && (
+                          <p className="text-sm text-muted-foreground mb-2">
+                            Showing {filteredPaymentFailures.length} of {paymentFailures.length} records
+                          </p>
+                        )}
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>Customer</TableHead>
+                              <TableHead>Amount</TableHead>
+                              <TableHead>Failed At</TableHead>
+                              <TableHead>Reason</TableHead>
+                              <TableHead>Grace Period</TableHead>
+                              <TableHead>Notifications</TableHead>
+                              <TableHead>Retries</TableHead>
+                              <TableHead>Status</TableHead>
+                              <TableHead className="text-right">Actions</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {filteredPaymentFailures.map((failure) => {
+                              const gracePeriodStatus = getGracePeriodStatus(failure);
+                              const notifications = getNotificationStatus(failure);
                             
                             return (
                               <TableRow key={failure.id} className={!failure.resolved_at ? "bg-destructive/5" : ""}>
@@ -1124,7 +1229,14 @@ export default function Billing() {
                             );
                           })}
                         </TableBody>
-                      </Table>
+                        </Table>
+                      </>
+                    ) : paymentFailures && paymentFailures.length > 0 ? (
+                      <div className="text-center py-8 text-muted-foreground">
+                        <Search className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                        <p>No matching payment failures</p>
+                        <p className="text-sm">Try adjusting your search or filters</p>
+                      </div>
                     ) : (
                       <div className="text-center py-8 text-muted-foreground">
                         <CheckCircle2 className="h-12 w-12 mx-auto mb-4 opacity-50 text-primary" />
