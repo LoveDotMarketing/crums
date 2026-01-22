@@ -377,6 +377,9 @@ export type Database = {
           deposit_amount: number | null
           deposit_paid: boolean | null
           deposit_paid_at: string | null
+          failed_payment_count: number | null
+          grace_period_end: string | null
+          grace_period_start: string | null
           id: string
           next_billing_date: string | null
           status: string
@@ -391,6 +394,9 @@ export type Database = {
           deposit_amount?: number | null
           deposit_paid?: boolean | null
           deposit_paid_at?: string | null
+          failed_payment_count?: number | null
+          grace_period_end?: string | null
+          grace_period_start?: string | null
           id?: string
           next_billing_date?: string | null
           status?: string
@@ -405,6 +411,9 @@ export type Database = {
           deposit_amount?: number | null
           deposit_paid?: boolean | null
           deposit_paid_at?: string | null
+          failed_payment_count?: number | null
+          grace_period_end?: string | null
+          grace_period_start?: string | null
           id?: string
           next_billing_date?: string | null
           status?: string
@@ -1122,6 +1131,74 @@ export type Database = {
           updated_by?: string | null
         }
         Relationships: []
+      }
+      payment_failures: {
+        Row: {
+          amount: number
+          created_at: string
+          failed_at: string
+          failure_code: string | null
+          failure_message: string | null
+          id: string
+          next_retry_at: string | null
+          notification_sent_day_0: boolean | null
+          notification_sent_day_3: boolean | null
+          notification_sent_day_5: boolean | null
+          resolution_type: string | null
+          resolved_at: string | null
+          retry_count: number | null
+          stripe_invoice_id: string | null
+          stripe_payment_intent_id: string
+          subscription_id: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          failed_at?: string
+          failure_code?: string | null
+          failure_message?: string | null
+          id?: string
+          next_retry_at?: string | null
+          notification_sent_day_0?: boolean | null
+          notification_sent_day_3?: boolean | null
+          notification_sent_day_5?: boolean | null
+          resolution_type?: string | null
+          resolved_at?: string | null
+          retry_count?: number | null
+          stripe_invoice_id?: string | null
+          stripe_payment_intent_id: string
+          subscription_id: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          failed_at?: string
+          failure_code?: string | null
+          failure_message?: string | null
+          id?: string
+          next_retry_at?: string | null
+          notification_sent_day_0?: boolean | null
+          notification_sent_day_3?: boolean | null
+          notification_sent_day_5?: boolean | null
+          resolution_type?: string | null
+          resolved_at?: string | null
+          retry_count?: number | null
+          stripe_invoice_id?: string | null
+          stripe_payment_intent_id?: string
+          subscription_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_failures_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "customer_subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
