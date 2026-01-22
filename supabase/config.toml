@@ -117,6 +117,10 @@ verify_jwt = false
 [functions.process-payment-failures]
 verify_jwt = false
 
+# Retry failed payment - admin only (verified in code)
+[functions.retry-payment]
+verify_jwt = false
+
 # Get cron job history - admin only
 [functions.get-cron-history]
 verify_jwt = false
