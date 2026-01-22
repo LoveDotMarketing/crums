@@ -208,6 +208,23 @@ interface CronRun {
   return_message: string;
 }
 
+interface PaymentRetryLog {
+  id: string;
+  payment_failure_id: string;
+  admin_id: string;
+  stripe_invoice_id: string | null;
+  amount: number;
+  outcome: "success" | "failed" | "already_paid" | "not_retryable";
+  error_message: string | null;
+  customer_notified: boolean;
+  created_at: string;
+  profiles?: {
+    first_name: string | null;
+    last_name: string | null;
+    email: string;
+  };
+}
+
 export default function Billing() {
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState("subscriptions");
@@ -250,6 +267,10 @@ export default function Billing() {
   const [isBulkResolveDialogOpen, setIsBulkResolveDialogOpen] = useState(false);
   const [bulkResolutionType, setBulkResolutionType] = useState<"manual_payment" | "waived" | "other">("manual_payment");
   const [bulkResolutionNotes, setBulkResolutionNotes] = useState("");
+  
+  // Retry history dialog state
+  const [retryHistoryDialogOpen, setRetryHistoryDialogOpen] = useState(false);
+  const [selectedFailureForHistory, setSelectedFailureForHistory] = useState<PaymentFailure | null>(null);
   const [failuresSortOrder, setFailuresSortOrder] = useState<"asc" | "desc">("desc");
 
   // Manage subscription (pause/resume/cancel)
@@ -630,6 +651,31 @@ export default function Billing() {
     onError: (error) => {
       toast.error("Failed to update setting: " + error.message);
     }
+  });
+
+  // Fetch retry logs for a specific failure
+  const { data: retryLogs, isLoading: loadingRetryLogs } = useQuery({
+    queryKey: ["payment-retry-logs", selectedFailureForHistory?.id],
+    queryFn: async () => {
+      if (!selectedFailureForHistory?.id) return [];
+      
+      const { data, error } = await supabase
+        .from("payment_retry_logs")
+        .select(`
+          *,
+          profiles (
+            first_name,
+            last_name,
+            email
+          )
+        `)
+        .eq("payment_failure_id", selectedFailureForHistory.id)
+        .order("created_at", { ascending: false });
+      
+      if (error) throw error;
+      return data as PaymentRetryLog[];
+    },
+    enabled: !!selectedFailureForHistory?.id
   });
 
   // Create discount mutation
@@ -1347,10 +1393,20 @@ export default function Billing() {
                                 </TableCell>
                                 <TableCell>
                                   {failure.retry_count > 0 ? (
-                                    <Badge variant="outline" className="text-xs">
-                                      <RefreshCw className="h-3 w-3 mr-1" />
-                                      {failure.retry_count} attempt{failure.retry_count !== 1 ? 's' : ''}
-                                    </Badge>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-auto p-0"
+                                      onClick={() => {
+                                        setSelectedFailureForHistory(failure);
+                                        setRetryHistoryDialogOpen(true);
+                                      }}
+                                    >
+                                      <Badge variant="outline" className="text-xs cursor-pointer hover:bg-muted">
+                                        <RefreshCw className="h-3 w-3 mr-1" />
+                                        {failure.retry_count} attempt{failure.retry_count !== 1 ? 's' : ''}
+                                      </Badge>
+                                    </Button>
                                   ) : (
                                     <span className="text-muted-foreground text-sm">—</span>
                                   )}
@@ -2073,6 +2129,98 @@ export default function Billing() {
                     disabled={bulkResolveFailuresMutation.isPending}
                   >
                     {bulkResolveFailuresMutation.isPending ? "Resolving..." : `Resolve ${selectedFailureIds.size} Failure${selectedFailureIds.size !== 1 ? 's' : ''}`}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+
+            {/* Retry History Dialog */}
+            <Dialog open={retryHistoryDialogOpen} onOpenChange={setRetryHistoryDialogOpen}>
+              <DialogContent className="max-w-2xl">
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2">
+                    <RefreshCw className="h-5 w-5" />
+                    Payment Retry History
+                  </DialogTitle>
+                  <DialogDescription>
+                    Audit log of all retry attempts for this payment failure
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="py-4">
+                  {selectedFailureForHistory && (
+                    <div className="p-3 bg-muted rounded-lg mb-4">
+                      <p className="text-sm font-medium">
+                        {selectedFailureForHistory.customer_subscriptions?.customers?.full_name}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        Amount: ${Number(selectedFailureForHistory.amount).toFixed(2)} • Failed: {format(new Date(selectedFailureForHistory.failed_at), "MMM d, yyyy")}
+                      </p>
+                    </div>
+                  )}
+                  
+                  {loadingRetryLogs ? (
+                    <div className="flex items-center justify-center py-8">
+                      <RefreshCw className="h-6 w-6 animate-spin text-muted-foreground" />
+                    </div>
+                  ) : retryLogs && retryLogs.length > 0 ? (
+                    <div className="space-y-3 max-h-[400px] overflow-y-auto">
+                      {retryLogs.map((log) => (
+                        <div 
+                          key={log.id} 
+                          className={`p-3 rounded-lg border ${
+                            log.outcome === "success" ? "border-primary/30 bg-primary/5" :
+                            log.outcome === "already_paid" ? "border-primary/30 bg-primary/5" :
+                            "border-destructive/30 bg-destructive/5"
+                          }`}
+                        >
+                          <div className="flex items-start justify-between gap-4">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-1">
+                                <Badge 
+                                  variant={log.outcome === "success" || log.outcome === "already_paid" ? "default" : "destructive"}
+                                  className="text-xs"
+                                >
+                                  {log.outcome === "success" && "Success"}
+                                  {log.outcome === "already_paid" && "Already Paid"}
+                                  {log.outcome === "failed" && "Failed"}
+                                  {log.outcome === "not_retryable" && "Not Retryable"}
+                                </Badge>
+                                {log.customer_notified && (
+                                  <Badge variant="outline" className="text-xs">
+                                    <Mail className="h-3 w-3 mr-1" />
+                                    Notified
+                                  </Badge>
+                                )}
+                              </div>
+                              <p className="text-sm text-muted-foreground">
+                                Retried by {log.profiles?.first_name || log.profiles?.email?.split("@")[0] || "Admin"}
+                                {log.profiles?.last_name ? ` ${log.profiles.last_name}` : ""}
+                              </p>
+                              {log.error_message && (
+                                <p className="text-xs text-destructive mt-1">
+                                  {log.error_message}
+                                </p>
+                              )}
+                            </div>
+                            <div className="text-right text-sm text-muted-foreground whitespace-nowrap">
+                              <p>{format(new Date(log.created_at), "MMM d, yyyy")}</p>
+                              <p>{format(new Date(log.created_at), "h:mm a")}</p>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <RefreshCw className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                      <p>No retry attempts logged</p>
+                      <p className="text-sm">Retry history will appear here after retry attempts</p>
+                    </div>
+                  )}
+                </div>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setRetryHistoryDialogOpen(false)}>
+                    Close
                   </Button>
                 </DialogFooter>
               </DialogContent>
