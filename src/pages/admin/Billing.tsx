@@ -44,8 +44,29 @@ import {
   Clock,
   RefreshCw,
   Plus,
-  Receipt
+  Receipt,
+  Pause,
+  Play,
+  XCircle,
+  MoreHorizontal
 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -137,6 +158,46 @@ export default function Billing() {
     max_uses: null as number | null,
     valid_until: ""
   });
+
+  const [confirmAction, setConfirmAction] = useState<{
+    subscriptionId: string;
+    action: "pause" | "resume" | "cancel";
+    customerName: string;
+  } | null>(null);
+  const [isManaging, setIsManaging] = useState(false);
+
+  // Manage subscription (pause/resume/cancel)
+  const handleManageSubscription = async (subscriptionId: string, action: "pause" | "resume" | "cancel") => {
+    setIsManaging(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast.error("You must be logged in");
+        return;
+      }
+
+      const { data, error } = await supabase.functions.invoke("manage-subscription", {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+        body: { subscriptionId, action, releaseTrailers: true }
+      });
+
+      if (error) throw new Error(error.message);
+
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["customer-subscriptions"] }),
+        queryClient.invalidateQueries({ queryKey: ["subscription-items"] })
+      ]);
+
+      const actionLabels = { pause: "paused", resume: "resumed", cancel: "cancelled" };
+      toast.success(`Subscription ${actionLabels[action]} successfully${data.trailersReleased ? " - trailers released to inventory" : ""}`);
+    } catch (error) {
+      console.error("Manage subscription error:", error);
+      toast.error("Failed to update subscription: " + (error instanceof Error ? error.message : "Unknown error"));
+    } finally {
+      setIsManaging(false);
+      setConfirmAction(null);
+    }
+  };
 
   // Sync payments from Stripe
   const handleSyncPayments = async () => {
@@ -488,6 +549,7 @@ export default function Billing() {
                             <TableHead>Deposit</TableHead>
                             <TableHead>Trailers</TableHead>
                             <TableHead>Status</TableHead>
+                            <TableHead className="w-[50px]">Actions</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -537,6 +599,62 @@ export default function Billing() {
                                   </Badge>
                                 </TableCell>
                                 <TableCell>{getStatusBadge(sub.status)}</TableCell>
+                                <TableCell>
+                                  <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                      <Button variant="ghost" size="icon" disabled={isManaging}>
+                                        <MoreHorizontal className="h-4 w-4" />
+                                      </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end">
+                                      {sub.status === "active" && (
+                                        <DropdownMenuItem
+                                          onClick={() => setConfirmAction({
+                                            subscriptionId: sub.id,
+                                            action: "pause",
+                                            customerName: sub.customers?.full_name || "Unknown"
+                                          })}
+                                        >
+                                          <Pause className="h-4 w-4 mr-2" />
+                                          Pause Subscription
+                                        </DropdownMenuItem>
+                                      )}
+                                      {sub.status === "paused" && (
+                                        <DropdownMenuItem
+                                          onClick={() => setConfirmAction({
+                                            subscriptionId: sub.id,
+                                            action: "resume",
+                                            customerName: sub.customers?.full_name || "Unknown"
+                                          })}
+                                        >
+                                          <Play className="h-4 w-4 mr-2" />
+                                          Resume Subscription
+                                        </DropdownMenuItem>
+                                      )}
+                                      {(sub.status === "active" || sub.status === "paused" || sub.status === "pending") && (
+                                        <>
+                                          <DropdownMenuSeparator />
+                                          <DropdownMenuItem
+                                            className="text-destructive focus:text-destructive"
+                                            onClick={() => setConfirmAction({
+                                              subscriptionId: sub.id,
+                                              action: "cancel",
+                                              customerName: sub.customers?.full_name || "Unknown"
+                                            })}
+                                          >
+                                            <XCircle className="h-4 w-4 mr-2" />
+                                            Cancel Subscription
+                                          </DropdownMenuItem>
+                                        </>
+                                      )}
+                                      {sub.status === "cancelled" && (
+                                        <DropdownMenuItem disabled>
+                                          <span className="text-muted-foreground">No actions available</span>
+                                        </DropdownMenuItem>
+                                      )}
+                                    </DropdownMenuContent>
+                                  </DropdownMenu>
+                                </TableCell>
                               </TableRow>
                             );
                           })}
@@ -840,6 +958,53 @@ export default function Billing() {
                 </Card>
               </TabsContent>
             </Tabs>
+
+            {/* Confirmation Dialog for Subscription Actions */}
+            <AlertDialog open={!!confirmAction} onOpenChange={(open) => !open && setConfirmAction(null)}>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>
+                    {confirmAction?.action === "cancel" && "Cancel Subscription"}
+                    {confirmAction?.action === "pause" && "Pause Subscription"}
+                    {confirmAction?.action === "resume" && "Resume Subscription"}
+                  </AlertDialogTitle>
+                  <AlertDialogDescription>
+                    {confirmAction?.action === "cancel" && (
+                      <>
+                        Are you sure you want to cancel the subscription for <strong>{confirmAction.customerName}</strong>? 
+                        This will stop all billing and release assigned trailers back to inventory. This action cannot be undone.
+                      </>
+                    )}
+                    {confirmAction?.action === "pause" && (
+                      <>
+                        Are you sure you want to pause the subscription for <strong>{confirmAction.customerName}</strong>? 
+                        Billing will be suspended and trailers will be released back to inventory.
+                      </>
+                    )}
+                    {confirmAction?.action === "resume" && (
+                      <>
+                        Are you sure you want to resume the subscription for <strong>{confirmAction.customerName}</strong>? 
+                        Billing will resume on the next cycle. Note: You may need to reassign trailers if they were released.
+                      </>
+                    )}
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel disabled={isManaging}>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={() => confirmAction && handleManageSubscription(confirmAction.subscriptionId, confirmAction.action)}
+                    disabled={isManaging}
+                    className={confirmAction?.action === "cancel" ? "bg-destructive text-destructive-foreground hover:bg-destructive/90" : ""}
+                  >
+                    {isManaging ? "Processing..." : (
+                      confirmAction?.action === "cancel" ? "Cancel Subscription" :
+                      confirmAction?.action === "pause" ? "Pause Subscription" :
+                      "Resume Subscription"
+                    )}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </main>
         </div>
       </div>
