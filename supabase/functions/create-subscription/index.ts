@@ -1,0 +1,256 @@
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import Stripe from "https://esm.sh/stripe@18.5.0";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
+
+const logStep = (step: string, details?: Record<string, unknown>) => {
+  const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
+  console.log(`[CREATE-SUBSCRIPTION] ${step}${detailsStr}`);
+};
+
+interface SubscriptionRequest {
+  customerId: string; // Our internal customer ID
+  trailerIds: string[];
+  billingCycle: "weekly" | "biweekly" | "monthly";
+  depositAmount?: number;
+  discountId?: string;
+}
+
+serve(async (req) => {
+  if (req.method === "OPTIONS") {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    logStep("Function started");
+
+    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
+    if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
+
+    const supabaseClient = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+      { auth: { persistSession: false } }
+    );
+
+    // Verify admin auth
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) throw new Error("No authorization header provided");
+
+    const token = authHeader.replace("Bearer ", "");
+    const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
+    if (userError) throw new Error(`Authentication error: ${userError.message}`);
+
+    // Check admin role
+    const { data: roleData } = await supabaseClient
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userData.user.id)
+      .eq("role", "admin")
+      .single();
+
+    if (!roleData) throw new Error("Admin access required");
+    logStep("Admin verified", { adminId: userData.user.id });
+
+    const body: SubscriptionRequest = await req.json();
+    const { customerId, trailerIds, billingCycle, depositAmount, discountId } = body;
+
+    if (!customerId || !trailerIds?.length || !billingCycle) {
+      throw new Error("Missing required fields: customerId, trailerIds, billingCycle");
+    }
+
+    const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
+
+    // Get customer details
+    const { data: customer, error: custError } = await supabaseClient
+      .from("customers")
+      .select("*")
+      .eq("id", customerId)
+      .single();
+
+    if (custError || !customer) throw new Error("Customer not found");
+    logStep("Customer found", { customerId, email: customer.email });
+
+    // Get trailers with rental rates
+    const { data: trailers, error: trailerError } = await supabaseClient
+      .from("trailers")
+      .select("*")
+      .in("id", trailerIds);
+
+    if (trailerError || !trailers?.length) throw new Error("Trailers not found");
+    logStep("Trailers found", { count: trailers.length });
+
+    // Find or create Stripe customer
+    let stripeCustomerId: string;
+    const customers = await stripe.customers.list({ email: customer.email, limit: 1 });
+
+    if (customers.data.length > 0) {
+      stripeCustomerId = customers.data[0].id;
+      logStep("Found existing Stripe customer", { stripeCustomerId });
+    } else {
+      const newCustomer = await stripe.customers.create({
+        email: customer.email,
+        name: customer.full_name,
+        phone: customer.phone || undefined,
+        metadata: { internal_customer_id: customerId },
+      });
+      stripeCustomerId = newCustomer.id;
+      logStep("Created new Stripe customer", { stripeCustomerId });
+    }
+
+    // Calculate billing interval
+    const intervalMap = {
+      weekly: { interval: "week" as const, interval_count: 1 },
+      biweekly: { interval: "week" as const, interval_count: 2 },
+      monthly: { interval: "month" as const, interval_count: 1 },
+    };
+    const billingInterval = intervalMap[billingCycle];
+
+    // Get discount if provided
+    let coupon: Stripe.Coupon | null = null;
+    if (discountId) {
+      const { data: discount } = await supabaseClient
+        .from("discounts")
+        .select("*")
+        .eq("id", discountId)
+        .eq("is_active", true)
+        .single();
+
+      if (discount) {
+        // Create or find Stripe coupon
+        const couponParams: Stripe.CouponCreateParams = {
+          duration: "forever",
+          metadata: { internal_discount_id: discountId },
+        };
+
+        if (discount.type === "percentage") {
+          couponParams.percent_off = discount.value;
+        } else {
+          couponParams.amount_off = Math.round(discount.value * 100);
+          couponParams.currency = "usd";
+        }
+
+        coupon = await stripe.coupons.create(couponParams);
+        logStep("Created Stripe coupon", { couponId: coupon.id });
+      }
+    }
+
+    // Create subscription items (prices) for each trailer
+    const subscriptionItems: Stripe.SubscriptionCreateParams.Item[] = [];
+
+    for (const trailer of trailers) {
+      const rate = trailer.rental_rate || 500; // Default $500/month
+
+      // Create a price for this trailer
+      const price = await stripe.prices.create({
+        unit_amount: Math.round(rate * 100),
+        currency: "usd",
+        recurring: billingInterval,
+        product_data: {
+          name: `Trailer ${trailer.trailer_number} Lease`,
+          metadata: { trailer_id: trailer.id },
+        },
+      });
+
+      subscriptionItems.push({ price: price.id });
+      logStep("Created price for trailer", { trailerId: trailer.id, priceId: price.id, rate });
+    }
+
+    // Create the subscription
+    const subscriptionParams: Stripe.SubscriptionCreateParams = {
+      customer: stripeCustomerId,
+      items: subscriptionItems,
+      payment_behavior: "default_incomplete",
+      payment_settings: { save_default_payment_method: "on_subscription" },
+      expand: ["latest_invoice.payment_intent"],
+      metadata: { internal_customer_id: customerId },
+    };
+
+    if (coupon) {
+      subscriptionParams.coupon = coupon.id;
+    }
+
+    const subscription = await stripe.subscriptions.create(subscriptionParams);
+    logStep("Created Stripe subscription", { subscriptionId: subscription.id });
+
+    // Create customer_subscription record
+    const { data: custSub, error: subError } = await supabaseClient
+      .from("customer_subscriptions")
+      .insert({
+        customer_id: customerId,
+        stripe_subscription_id: subscription.id,
+        stripe_customer_id: stripeCustomerId,
+        billing_cycle: billingCycle,
+        deposit_amount: depositAmount || null,
+        deposit_paid: false,
+        status: subscription.status,
+        next_billing_date: new Date(subscription.current_period_end * 1000).toISOString(),
+      })
+      .select()
+      .single();
+
+    if (subError) throw new Error(`Failed to create subscription record: ${subError.message}`);
+    logStep("Created customer_subscription record", { id: custSub.id });
+
+    // Create subscription_items for each trailer
+    for (let i = 0; i < trailers.length; i++) {
+      const trailer = trailers[i];
+      const stripeItem = subscription.items.data[i];
+
+      await supabaseClient
+        .from("subscription_items")
+        .insert({
+          subscription_id: custSub.id,
+          trailer_id: trailer.id,
+          monthly_rate: trailer.rental_rate || 500,
+          stripe_subscription_item_id: stripeItem?.id || null,
+          status: "active",
+        });
+
+      // Update trailer to mark as rented
+      await supabaseClient
+        .from("trailers")
+        .update({ is_rented: true, customer_id: customerId })
+        .eq("id", trailer.id);
+    }
+    logStep("Created subscription items", { count: trailers.length });
+
+    // Track discount if applied
+    if (discountId && custSub) {
+      await supabaseClient
+        .from("applied_discounts")
+        .insert({
+          subscription_id: custSub.id,
+          discount_id: discountId,
+        });
+      logStep("Applied discount to subscription");
+    }
+
+    return new Response(
+      JSON.stringify({
+        success: true,
+        subscriptionId: custSub.id,
+        stripeSubscriptionId: subscription.id,
+        status: subscription.status,
+      }),
+      {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      }
+    );
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    logStep("ERROR", { message: errorMessage });
+    return new Response(
+      JSON.stringify({ error: errorMessage }),
+      {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 500,
+      }
+    );
+  }
+});

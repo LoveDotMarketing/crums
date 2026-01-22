@@ -96,3 +96,15 @@ verify_jwt = true
 # IndexNow URL submission - requires admin authentication (handled in code)
 [functions.indexnow-submit]
 verify_jwt = false
+
+# Billing - Create subscription (admin only, verified in code)
+[functions.create-subscription]
+verify_jwt = false
+
+# Billing - Process billing/sync (admin or cron, verified in code)
+[functions.process-billing]
+verify_jwt = false
+
+# Billing - Sync payments from Stripe (admin or cron, verified in code)
+[functions.sync-payments]
+verify_jwt = false
