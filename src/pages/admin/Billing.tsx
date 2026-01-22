@@ -127,6 +127,7 @@ export default function Billing() {
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState("subscriptions");
   const [isDiscountDialogOpen, setIsDiscountDialogOpen] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
   const [newDiscount, setNewDiscount] = useState({
     name: "",
     code: "",
@@ -136,6 +137,50 @@ export default function Billing() {
     max_uses: null as number | null,
     valid_until: ""
   });
+
+  // Sync payments from Stripe
+  const handleSyncPayments = async () => {
+    setIsSyncing(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast.error("You must be logged in to sync payments");
+        return;
+      }
+
+      // First sync subscription statuses
+      const { error: billingError } = await supabase.functions.invoke("process-billing", {
+        headers: { Authorization: `Bearer ${session.access_token}` }
+      });
+      
+      if (billingError) {
+        console.error("Process billing error:", billingError);
+      }
+
+      // Then sync payment intents
+      const { error: syncError } = await supabase.functions.invoke("sync-payments", {
+        headers: { Authorization: `Bearer ${session.access_token}` }
+      });
+      
+      if (syncError) {
+        throw new Error(syncError.message);
+      }
+
+      // Refresh all billing data
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["customer-subscriptions"] }),
+        queryClient.invalidateQueries({ queryKey: ["subscription-items"] }),
+        queryClient.invalidateQueries({ queryKey: ["billing-history"] })
+      ]);
+
+      toast.success("Payment data synced from Stripe");
+    } catch (error) {
+      console.error("Sync error:", error);
+      toast.error("Failed to sync payments: " + (error instanceof Error ? error.message : "Unknown error"));
+    } finally {
+      setIsSyncing(false);
+    }
+  };
 
   // Fetch subscriptions with customer data
   const { data: subscriptions, isLoading: loadingSubscriptions } = useQuery({
@@ -324,6 +369,14 @@ export default function Billing() {
             <SidebarTrigger />
             <div className="flex-1 flex items-center justify-between ml-4">
               <h1 className="text-2xl font-bold text-foreground">Billing & Payments</h1>
+              <Button 
+                variant="outline" 
+                onClick={handleSyncPayments}
+                disabled={isSyncing}
+              >
+                <RefreshCw className={`h-4 w-4 mr-2 ${isSyncing ? "animate-spin" : ""}`} />
+                {isSyncing ? "Syncing..." : "Sync Payments"}
+              </Button>
             </div>
           </header>
 
