@@ -67,10 +67,8 @@ export default function PaymentSetup() {
       }
 
       // Load Stripe.js dynamically
-      // Publishable key is safe to include in frontend code
       const stripePublishableKey = "pk_test_51Sa3rWPtmYCiZhW22r6qr9yOYgo6tLZPWtlebm2BRdoX08weKgT6zFrr2sCIZIbwZY6OyCuKspBzOSnUYNktjkkg00GkEw1CPJ";
 
-      // Load Stripe.js
       const { loadStripe } = await import("@stripe/stripe-js");
       const stripe = await loadStripe(stripePublishableKey);
       
@@ -78,41 +76,76 @@ export default function PaymentSetup() {
         throw new Error("Failed to load Stripe");
       }
 
-      // Confirm the SetupIntent with Financial Connections
-      // The Financial Connections modal will open automatically
-      // For Financial Connections, we pass an empty object - the modal collects bank details
-      // @ts-ignore - Stripe types don't match runtime behavior for Financial Connections
-      const result = await stripe.confirmUsBankAccountSetup(data.clientSecret);
-      
-      const { error: confirmError, setupIntent } = result;
+      // STEP 1: Collect bank account via Financial Connections
+      // This opens the modal for the customer to select and authenticate their bank
+      const { setupIntent: collectedSetupIntent, error: collectError } = 
+        await stripe.collectBankAccountForSetup({
+          clientSecret: data.clientSecret,
+          params: {
+            payment_method_type: 'us_bank_account',
+            payment_method_data: {
+              billing_details: {
+                name: user?.user_metadata?.first_name 
+                  ? `${user.user_metadata.first_name} ${user.user_metadata.last_name || ''}`.trim()
+                  : user?.email || 'Customer',
+                email: user?.email,
+              },
+            },
+          },
+          expand: ['payment_method'],
+        });
 
-      if (confirmError) {
-        console.error("Stripe confirmError:", confirmError);
-        if (confirmError.type === "validation_error") {
-          toast.error(confirmError.message || "Validation error");
-        } else {
-          throw confirmError;
-        }
+      if (collectError) {
+        console.error("Error collecting bank account:", collectError);
+        toast.error(collectError.message || "Failed to collect bank account");
         return;
       }
 
-      if (setupIntent?.status === "succeeded") {
-        // Confirm the setup on our backend
+      // Check if user cancelled or closed the modal
+      if (!collectedSetupIntent || collectedSetupIntent.status === 'requires_payment_method') {
+        toast.info("Bank account linking was cancelled");
+        return;
+      }
+
+      // STEP 2: If the bank requires additional confirmation (e.g., mandate acceptance)
+      if (collectedSetupIntent.status === 'requires_confirmation') {
+        const { setupIntent: confirmedSetupIntent, error: confirmError } = 
+          await stripe.confirmUsBankAccountSetup(data.clientSecret);
+
+        if (confirmError) {
+          console.error("Error confirming setup:", confirmError);
+          toast.error(confirmError.message || "Failed to confirm bank account");
+          return;
+        }
+
+        // Handle the final status
+        if (confirmedSetupIntent?.status === 'succeeded') {
+          await supabase.functions.invoke("confirm-ach-setup", {
+            body: {
+              setupIntentId: confirmedSetupIntent.id,
+              paymentMethodId: confirmedSetupIntent.payment_method,
+            },
+          });
+          toast.success("Bank account linked successfully!");
+          checkPaymentStatus();
+        } else if (confirmedSetupIntent?.status === 'requires_action') {
+          toast.info("Bank account requires verification. Check your email for next steps.");
+          checkPaymentStatus();
+        }
+      } else if (collectedSetupIntent.status === 'succeeded') {
+        // Direct success (instant verification completed)
         await supabase.functions.invoke("confirm-ach-setup", {
           body: {
-            setupIntentId: setupIntent.id,
-            paymentMethodId: setupIntent.payment_method,
+            setupIntentId: collectedSetupIntent.id,
+            paymentMethodId: collectedSetupIntent.payment_method,
           },
         });
-
         toast.success("Bank account linked successfully!");
         checkPaymentStatus();
-      } else if (setupIntent?.status === "requires_action") {
-        // Bank account requires verification (microdeposits)
+      } else if (collectedSetupIntent.status === 'requires_action') {
+        // Microdeposit verification required
         toast.info("Bank account requires verification. Check your email for next steps.");
         checkPaymentStatus();
-      } else {
-        toast.info(`Setup status: ${setupIntent?.status}. Please try again or contact support.`);
       }
     } catch (error) {
       console.error("Error setting up payment:", error);
