@@ -1203,6 +1203,57 @@ export type Database = {
           },
         ]
       }
+      payment_retry_logs: {
+        Row: {
+          admin_id: string
+          amount: number
+          created_at: string
+          customer_notified: boolean | null
+          error_message: string | null
+          id: string
+          outcome: string
+          payment_failure_id: string
+          stripe_invoice_id: string | null
+        }
+        Insert: {
+          admin_id: string
+          amount: number
+          created_at?: string
+          customer_notified?: boolean | null
+          error_message?: string | null
+          id?: string
+          outcome: string
+          payment_failure_id: string
+          stripe_invoice_id?: string | null
+        }
+        Update: {
+          admin_id?: string
+          amount?: number
+          created_at?: string
+          customer_notified?: boolean | null
+          error_message?: string | null
+          id?: string
+          outcome?: string
+          payment_failure_id?: string
+          stripe_invoice_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_retry_logs_admin_id_fkey"
+            columns: ["admin_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_retry_logs_payment_failure_id_fkey"
+            columns: ["payment_failure_id"]
+            isOneToOne: false
+            referencedRelation: "payment_failures"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null

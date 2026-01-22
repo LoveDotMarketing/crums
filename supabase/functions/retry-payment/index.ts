@@ -221,7 +221,18 @@ serve(async (req) => {
         })
         .eq("id", failureId);
 
+      // Log the retry attempt
+      await supabase.from("payment_retry_logs").insert({
+        payment_failure_id: failureId,
+        admin_id: user.id,
+        stripe_invoice_id: failure.stripe_invoice_id,
+        amount: paymentAmount,
+        outcome: "already_paid",
+        customer_notified: false
+      });
+
       // Send success notification
+      let customerNotified = false;
       if (sendgridApiKey && customerEmail) {
         // Check if notifications are enabled
         const { data: notifSetting } = await supabase
@@ -233,7 +244,19 @@ serve(async (req) => {
         const notificationsEnabled = notifSetting?.setting_value !== "false";
         if (notificationsEnabled) {
           await sendRetryNotification(sendgridApiKey, customerEmail, customerName, paymentAmount, true);
+          customerNotified = true;
         }
+      }
+
+      // Update log with notification status
+      if (customerNotified) {
+        await supabase
+          .from("payment_retry_logs")
+          .update({ customer_notified: true })
+          .eq("payment_failure_id", failureId)
+          .eq("outcome", "already_paid")
+          .order("created_at", { ascending: false })
+          .limit(1);
       }
 
       return new Response(
@@ -244,6 +267,17 @@ serve(async (req) => {
 
     // Check if invoice is in a retryable state
     if (invoice.status !== "open") {
+      // Log the non-retryable attempt
+      await supabase.from("payment_retry_logs").insert({
+        payment_failure_id: failureId,
+        admin_id: user.id,
+        stripe_invoice_id: failure.stripe_invoice_id,
+        amount: paymentAmount,
+        outcome: "not_retryable",
+        error_message: `Invoice status is '${invoice.status}'`,
+        customer_notified: false
+      });
+
       return new Response(
         JSON.stringify({ 
           success: false, 
@@ -272,6 +306,7 @@ serve(async (req) => {
 
       if (paidInvoice.status === "paid") {
         // Payment succeeded - send success notification if enabled
+        let customerNotified = false;
         if (sendgridApiKey && customerEmail) {
           const { data: notifSetting } = await supabase
             .from("outreach_settings")
@@ -281,8 +316,19 @@ serve(async (req) => {
           
           if (notifSetting?.setting_value !== "false") {
             await sendRetryNotification(sendgridApiKey, customerEmail, customerName, paymentAmount, true);
+            customerNotified = true;
           }
         }
+
+        // Log successful retry
+        await supabase.from("payment_retry_logs").insert({
+          payment_failure_id: failureId,
+          admin_id: user.id,
+          stripe_invoice_id: failure.stripe_invoice_id,
+          amount: paymentAmount,
+          outcome: "success",
+          customer_notified: customerNotified
+        });
 
         return new Response(
           JSON.stringify({ 
@@ -317,6 +363,7 @@ serve(async (req) => {
       const errorMessage = paymentError instanceof Error ? paymentError.message : "Payment failed";
       
       // Send failure notification if enabled
+      let customerNotified = false;
       if (sendgridApiKey && customerEmail) {
         const { data: notifSetting } = await supabase
           .from("outreach_settings")
@@ -326,8 +373,20 @@ serve(async (req) => {
         
         if (notifSetting?.setting_value !== "false") {
           await sendRetryNotification(sendgridApiKey, customerEmail, customerName, paymentAmount, false, errorMessage);
+          customerNotified = true;
         }
       }
+
+      // Log failed retry
+      await supabase.from("payment_retry_logs").insert({
+        payment_failure_id: failureId,
+        admin_id: user.id,
+        stripe_invoice_id: failure.stripe_invoice_id,
+        amount: paymentAmount,
+        outcome: "failed",
+        error_message: errorMessage,
+        customer_notified: customerNotified
+      });
 
       return new Response(
         JSON.stringify({ 
