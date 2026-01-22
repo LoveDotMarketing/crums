@@ -329,6 +329,34 @@ export default function Fleet() {
     return roi.toFixed(1);
   };
 
+  // Calculate monthly price range based on year and type
+  const getMonthlyPriceRange = (trailer: Trailer): string => {
+    const year = trailer.year;
+    const type = trailer.type?.toLowerCase() || "";
+    
+    if (!year) return "—";
+    
+    // Flatbeds (2024): $750-$800
+    if (type.includes("flatbed")) {
+      return "$750-$800";
+    }
+    
+    // Dry Vans pricing by year
+    if (year >= 2022 && year <= 2024) {
+      return "$850-$875";
+    } else if (year >= 2020 && year <= 2021) {
+      return "$750-$800";
+    } else if (year === 2019) {
+      return "$700-$800";
+    } else if (year >= 2017 && year <= 2018) {
+      return "$700-$720";
+    } else if (year < 2017) {
+      return "$650-$700";
+    }
+    
+    return "—";
+  };
+
   const getStatusBadge = (status: string) => {
     const variants: Record<string, "default" | "secondary" | "destructive"> = {
       rented: "default",
@@ -649,6 +677,7 @@ export default function Fleet() {
                         <SortableHeader column="vin">VIN</SortableHeader>
                         <SortableHeader column="type">Type</SortableHeader>
                         <SortableHeader column="year">Year</SortableHeader>
+                        <TableHead>Monthly Price</TableHead>
                         <TableHead>Lessee</TableHead>
                         <SortableHeader column="status">Status</SortableHeader>
                         <SortableHeader column="purchase_price">Purchase Price</SortableHeader>
@@ -672,6 +701,9 @@ export default function Fleet() {
                             </TableCell>
                             <TableCell>{trailer.type}</TableCell>
                             <TableCell>{trailer.year}</TableCell>
+                            <TableCell className="font-medium text-primary">
+                              {getMonthlyPriceRange(trailer)}
+                            </TableCell>
                             <TableCell onClick={(e) => e.stopPropagation()}>
                               {assignedCustomer ? (
                                 <div className="flex items-center gap-2">
