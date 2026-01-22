@@ -45,6 +45,7 @@ interface Customer {
 interface AvailableTrailer {
   id: string;
   trailer_number: string;
+  vin: string | null;
   type: string;
   year: number | null;
   rental_rate: number | null;
@@ -53,6 +54,7 @@ interface AvailableTrailer {
 interface SelectedTrailer {
   id: string;
   trailer_number: string;
+  vin: string | null;
   type: string;
   year: number | null;
   customRate: number;
@@ -102,7 +104,7 @@ export function CreateSubscriptionDialog({ onSuccess }: CreateSubscriptionDialog
     queryFn: async () => {
       const { data, error } = await supabase
         .from("trailers")
-        .select("id, trailer_number, type, year, rental_rate")
+        .select("id, trailer_number, vin, type, year, rental_rate")
         .eq("status", "available")
         .is("customer_id", null)
         .order("trailer_number");
@@ -168,6 +170,7 @@ export function CreateSubscriptionDialog({ onSuccess }: CreateSubscriptionDialog
         {
           id: trailer.id,
           trailer_number: trailer.trailer_number,
+          vin: trailer.vin,
           type: trailer.type,
           year: trailer.year,
           customRate: trailer.rental_rate || 0
@@ -286,8 +289,9 @@ export function CreateSubscriptionDialog({ onSuccess }: CreateSubscriptionDialog
                   <TableHeader>
                     <TableRow>
                       <TableHead className="w-12"></TableHead>
-                      <TableHead>Trailer #</TableHead>
+                      <TableHead>VIN</TableHead>
                       <TableHead>Type</TableHead>
+                      <TableHead>Length</TableHead>
                       <TableHead>Year</TableHead>
                       <TableHead>Default Rate</TableHead>
                       <TableHead>Custom Rate</TableHead>
@@ -306,14 +310,19 @@ export function CreateSubscriptionDialog({ onSuccess }: CreateSubscriptionDialog
                               onCheckedChange={(checked) => handleTrailerToggle(trailer, !!checked)}
                             />
                           </TableCell>
-                          <TableCell className="font-medium">
+                          <TableCell className="font-medium font-mono text-xs">
                             <div className="flex items-center gap-2">
-                              <Truck className="h-4 w-4 text-muted-foreground" />
-                              {trailer.trailer_number}
+                              <Truck className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                              <span className="truncate max-w-[180px]" title={trailer.vin || "—"}>
+                                {trailer.vin || "—"}
+                              </span>
                             </div>
                           </TableCell>
                           <TableCell>
                             <Badge variant="outline">{trailer.type}</Badge>
+                          </TableCell>
+                          <TableCell>
+                            {trailer.type === "Flat Bed" ? "48'" : "53'"}
                           </TableCell>
                           <TableCell>{trailer.year || "—"}</TableCell>
                           <TableCell className="text-muted-foreground">
