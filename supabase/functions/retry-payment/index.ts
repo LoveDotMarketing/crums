@@ -11,6 +11,83 @@ const logStep = (step: string, details?: Record<string, unknown>) => {
   console.log(`[RETRY-PAYMENT] ${step}`, details ? JSON.stringify(details) : "");
 };
 
+const BASE_URL = "https://crums.lovable.app";
+
+// Send email notification to customer about payment retry
+const sendRetryNotification = async (
+  sendgridApiKey: string,
+  customerEmail: string,
+  customerName: string,
+  amount: number,
+  success: boolean,
+  errorMessage?: string
+) => {
+  const subject = success 
+    ? "Good News! Your Payment Has Been Processed - CRUMS Leasing"
+    : "Payment Retry Update - CRUMS Leasing";
+
+  const successBody = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <h2 style="color: #22c55e;">Payment Successfully Processed!</h2>
+      <p>Hi ${customerName},</p>
+      <p>Great news! We successfully processed your payment of <strong>$${amount.toFixed(2)}</strong>.</p>
+      <p>Your account is now in good standing and your service continues uninterrupted.</p>
+      <p>If you have any questions about this payment, please don't hesitate to contact us.</p>
+      <p style="margin-top: 24px;">
+        <a href="${BASE_URL}/dashboard/customer/billing" style="background-color: #e11d48; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px;">View Your Billing</a>
+      </p>
+      <p style="margin-top: 32px; color: #666;">
+        Thank you for your business!<br>
+        <strong>CRUMS Leasing Team</strong><br>
+        <a href="tel:555-555-5555">555-555-5555</a>
+      </p>
+    </div>
+  `;
+
+  const failureBody = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <h2 style="color: #ef4444;">Payment Retry Unsuccessful</h2>
+      <p>Hi ${customerName},</p>
+      <p>We attempted to process your payment of <strong>$${amount.toFixed(2)}</strong>, but unfortunately it was not successful.</p>
+      ${errorMessage ? `<p style="color: #666; background: #f5f5f5; padding: 12px; border-radius: 4px;"><em>Reason: ${errorMessage}</em></p>` : ""}
+      <p>Please update your payment method or contact us to resolve this issue and avoid any service interruption.</p>
+      <p style="margin-top: 24px;">
+        <a href="${BASE_URL}/dashboard/customer/billing" style="background-color: #e11d48; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px;">Update Payment Method</a>
+      </p>
+      <p style="margin-top: 32px; color: #666;">
+        Need help? Call us at <a href="tel:555-555-5555">555-555-5555</a><br>
+        <strong>CRUMS Leasing Team</strong>
+      </p>
+    </div>
+  `;
+
+  try {
+    const response = await fetch("https://api.sendgrid.com/v3/mail/send", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${sendgridApiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        personalizations: [{ to: [{ email: customerEmail }] }],
+        from: { email: "sales@crumsleasing.com", name: "CRUMS Leasing" },
+        reply_to: { email: "sales@crumsleasing.com" },
+        subject,
+        content: [{ type: "text/html", value: success ? successBody : failureBody }],
+      }),
+    });
+
+    if (response.ok) {
+      logStep("Email notification sent", { customerEmail, success });
+    } else {
+      const errorText = await response.text();
+      logStep("Failed to send email notification", { customerEmail, error: errorText });
+    }
+  } catch (error) {
+    logStep("Error sending email notification", { error: String(error) });
+  }
+};
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -21,6 +98,7 @@ serve(async (req) => {
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
     const stripeSecretKey = Deno.env.get("STRIPE_SECRET_KEY");
+    const sendgridApiKey = Deno.env.get("SENDGRID_API_KEY");
 
     if (!supabaseUrl || !supabaseServiceKey || !stripeSecretKey) {
       throw new Error("Missing required environment variables");
@@ -62,16 +140,28 @@ serve(async (req) => {
 
     logStep("Processing retry request", { failureId });
 
-    // Get payment failure record
+    // Get payment failure record with customer info
     const { data: failure, error: failureError } = await supabase
       .from("payment_failures")
-      .select("*")
+      .select(`
+        *,
+        customer_subscriptions (
+          customers (
+            full_name,
+            email
+          )
+        )
+      `)
       .eq("id", failureId)
       .maybeSingle();
 
     if (failureError || !failure) {
       throw new Error("Payment failure record not found");
     }
+
+    const customerEmail = failure.customer_subscriptions?.customers?.email;
+    const customerName = failure.customer_subscriptions?.customers?.full_name || "Valued Customer";
+    const paymentAmount = Number(failure.amount);
 
     if (failure.resolved_at) {
       return new Response(
@@ -107,7 +197,8 @@ serve(async (req) => {
 
     logStep("Found payment failure", { 
       stripeInvoiceId: failure.stripe_invoice_id,
-      currentRetryCount: failure.retry_count 
+      currentRetryCount: failure.retry_count,
+      customerEmail
     });
 
     // Initialize Stripe
@@ -129,6 +220,11 @@ serve(async (req) => {
           resolution_type: "paid"
         })
         .eq("id", failureId);
+
+      // Send success notification
+      if (sendgridApiKey && customerEmail) {
+        await sendRetryNotification(sendgridApiKey, customerEmail, customerName, paymentAmount, true);
+      }
 
       return new Response(
         JSON.stringify({ success: true, message: "Invoice was already paid. Failure marked as resolved." }),
@@ -165,7 +261,11 @@ serve(async (req) => {
         .eq("id", failureId);
 
       if (paidInvoice.status === "paid") {
-        // Payment succeeded - the webhook will handle marking as resolved
+        // Payment succeeded - send success notification
+        if (sendgridApiKey && customerEmail) {
+          await sendRetryNotification(sendgridApiKey, customerEmail, customerName, paymentAmount, true);
+        }
+
         return new Response(
           JSON.stringify({ 
             success: true, 
@@ -198,6 +298,11 @@ serve(async (req) => {
 
       const errorMessage = paymentError instanceof Error ? paymentError.message : "Payment failed";
       
+      // Send failure notification
+      if (sendgridApiKey && customerEmail) {
+        await sendRetryNotification(sendgridApiKey, customerEmail, customerName, paymentAmount, false, errorMessage);
+      }
+
       return new Response(
         JSON.stringify({ 
           success: false, 
