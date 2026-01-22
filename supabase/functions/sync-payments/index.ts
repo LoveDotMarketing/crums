@@ -196,10 +196,24 @@ serve(async (req) => {
           try {
             const stripeSub = await stripe.subscriptions.retrieve(sub.stripe_subscription_id);
             
+            // Map Stripe status to our allowed values: pending, active, paused, cancelled
+            const statusMap: Record<string, string> = {
+              incomplete: "pending",
+              incomplete_expired: "cancelled",
+              trialing: "active",
+              active: "active",
+              past_due: "active", // Still active but needs attention
+              canceled: "cancelled",
+              unpaid: "paused",
+              paused: "paused",
+            };
+            const mappedStatus = statusMap[stripeSub.status] || "pending";
+            logStep("Mapped subscription status", { stripeStatus: stripeSub.status, mappedStatus });
+            
             await supabaseClient
               .from("customer_subscriptions")
               .update({
-                status: stripeSub.status,
+                status: mappedStatus,
                 next_billing_date: new Date(stripeSub.current_period_end * 1000).toISOString(),
               })
               .eq("id", sub.id);
