@@ -998,6 +998,7 @@ export default function Billing() {
                             <TableHead>Reason</TableHead>
                             <TableHead>Grace Period</TableHead>
                             <TableHead>Notifications</TableHead>
+                            <TableHead>Retries</TableHead>
                             <TableHead>Status</TableHead>
                             <TableHead className="text-right">Actions</TableHead>
                           </TableRow>
@@ -1060,6 +1061,16 @@ export default function Billing() {
                                       <span className="text-muted-foreground text-sm">None sent</span>
                                     )}
                                   </div>
+                                </TableCell>
+                                <TableCell>
+                                  {failure.retry_count > 0 ? (
+                                    <Badge variant="outline" className="text-xs">
+                                      <RefreshCw className="h-3 w-3 mr-1" />
+                                      {failure.retry_count} attempt{failure.retry_count !== 1 ? 's' : ''}
+                                    </Badge>
+                                  ) : (
+                                    <span className="text-muted-foreground text-sm">—</span>
+                                  )}
                                 </TableCell>
                                 <TableCell>
                                   <Badge variant={gracePeriodStatus.variant}>
