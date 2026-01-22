@@ -90,6 +90,7 @@ const SitemapGenerator = lazy(() => import("./pages/admin/SitemapGenerator"));
 const Logs = lazy(() => import("./pages/admin/Logs"));
 const LeadSources = lazy(() => import("./pages/admin/LeadSources"));
 const IndexNow = lazy(() => import("./pages/admin/IndexNow"));
+const DOTInspections = lazy(() => import("./pages/admin/DOTInspections"));
 
 // Public pages
 const ReferralProgram = lazy(() => import("./pages/ReferralProgram"));
@@ -319,6 +320,14 @@ const App = () => (
               element={
                 <ProtectedRoute requiredRole="admin">
                   <IndexNow />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/dashboard/admin/dot-inspections" 
+              element={
+                <ProtectedRoute requiredRole="admin">
+                  <DOTInspections />
                 </ProtectedRoute>
               } 
             />

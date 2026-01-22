@@ -14,7 +14,8 @@ import {
   FileText,
   ScrollText,
   Target,
-  Zap
+  Zap,
+  ClipboardCheck
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/hooks/useAuth";
@@ -36,6 +37,7 @@ const menuItems = [
   { title: "Dashboard", url: "/dashboard/admin", icon: LayoutDashboard },
   { title: "Applications", url: "/dashboard/admin/applications", icon: FileText },
   { title: "Fleet", url: "/dashboard/admin/fleet", icon: Truck },
+  { title: "DOT Inspections", url: "/dashboard/admin/dot-inspections", icon: ClipboardCheck },
   { title: "Customers", url: "/dashboard/admin/customers", icon: Users },
   { title: "Staff", url: "/dashboard/admin/staff", icon: UserCog },
   { title: "Mechanics", url: "/dashboard/admin/mechanics", icon: Wrench },
