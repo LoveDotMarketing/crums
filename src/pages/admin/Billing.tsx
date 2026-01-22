@@ -48,7 +48,10 @@ import {
   Pause,
   Play,
   XCircle,
-  MoreHorizontal
+  MoreHorizontal,
+  AlertTriangle,
+  Mail,
+  Ban
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -139,6 +142,33 @@ interface BillingHistoryItem {
   customer_subscriptions?: {
     customers?: {
       full_name: string;
+      company_name: string | null;
+    };
+  };
+}
+
+interface PaymentFailure {
+  id: string;
+  subscription_id: string;
+  stripe_payment_intent_id: string;
+  stripe_invoice_id: string | null;
+  amount: number;
+  failure_code: string | null;
+  failure_message: string | null;
+  failed_at: string;
+  retry_count: number;
+  resolved_at: string | null;
+  resolution_type: string | null;
+  notification_sent_day_0: boolean;
+  notification_sent_day_3: boolean;
+  notification_sent_day_5: boolean;
+  created_at: string;
+  customer_subscriptions?: {
+    grace_period_start: string | null;
+    grace_period_end: string | null;
+    customers?: {
+      full_name: string;
+      email: string;
       company_name: string | null;
     };
   };
@@ -322,6 +352,32 @@ export default function Billing() {
     }
   });
 
+  // Fetch payment failures
+  const { data: paymentFailures, isLoading: loadingFailures } = useQuery({
+    queryKey: ["payment-failures"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("payment_failures")
+        .select(`
+          *,
+          customer_subscriptions (
+            grace_period_start,
+            grace_period_end,
+            customers (
+              full_name,
+              email,
+              company_name
+            )
+          )
+        `)
+        .order("failed_at", { ascending: false })
+        .limit(100);
+      
+      if (error) throw error;
+      return data as PaymentFailure[];
+    }
+  });
+
   // Create discount mutation
   const createDiscountMutation = useMutation({
     mutationFn: async (discount: typeof newDiscount) => {
@@ -379,6 +435,7 @@ export default function Billing() {
   const totalMonthlyRevenue = subscriptionItems?.filter(i => i.status === "active")
     .reduce((sum, item) => sum + Number(item.monthly_rate), 0) || 0;
   const pendingDeposits = subscriptions?.filter(s => !s.deposit_paid && s.deposit_amount > 0).length || 0;
+  const unresolvedFailures = paymentFailures?.filter(f => !f.resolved_at).length || 0;
   const recentPayments = billingHistory?.filter(h => h.status === "succeeded").slice(0, 5) || [];
 
   const getStatusBadge = (status: string) => {
@@ -418,6 +475,33 @@ export default function Billing() {
       return `${discount.value}% off`;
     }
     return `$${discount.value} off`;
+  };
+
+  const getGracePeriodStatus = (failure: PaymentFailure) => {
+    if (failure.resolved_at) {
+      return { label: failure.resolution_type || "Resolved", variant: "outline" as const };
+    }
+    
+    const now = new Date();
+    const failedAt = new Date(failure.failed_at);
+    const daysSinceFailed = Math.floor((now.getTime() - failedAt.getTime()) / (1000 * 60 * 60 * 24));
+    
+    if (daysSinceFailed >= 7) {
+      return { label: "Grace Expired", variant: "destructive" as const };
+    } else if (daysSinceFailed >= 5) {
+      return { label: `Day ${daysSinceFailed} - Final Warning`, variant: "destructive" as const };
+    } else if (daysSinceFailed >= 3) {
+      return { label: `Day ${daysSinceFailed} - At Risk`, variant: "secondary" as const };
+    }
+    return { label: `Day ${daysSinceFailed}`, variant: "outline" as const };
+  };
+
+  const getNotificationStatus = (failure: PaymentFailure) => {
+    const notifications = [];
+    if (failure.notification_sent_day_0) notifications.push("Day 0");
+    if (failure.notification_sent_day_3) notifications.push("Day 3");
+    if (failure.notification_sent_day_5) notifications.push("Day 5");
+    return notifications;
   };
 
   return (
@@ -494,16 +578,16 @@ export default function Billing() {
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
                   <CardTitle className="text-sm font-medium text-muted-foreground">
-                    Active Discounts
+                    Payment Failures
                   </CardTitle>
-                  <Percent className="h-4 w-4 text-muted-foreground" />
+                  <AlertTriangle className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">
-                    {discounts?.filter(d => d.is_active).length || 0}
+                  <div className={`text-2xl font-bold ${unresolvedFailures > 0 ? "text-destructive" : ""}`}>
+                    {unresolvedFailures}
                   </div>
                   <p className="text-xs text-muted-foreground mt-1">
-                    Currently available
+                    Unresolved failures
                   </p>
                 </CardContent>
               </Card>
@@ -513,6 +597,14 @@ export default function Billing() {
             <Tabs value={activeTab} onValueChange={setActiveTab}>
               <TabsList className="mb-6">
                 <TabsTrigger value="subscriptions">Subscriptions</TabsTrigger>
+                <TabsTrigger value="failures" className="relative">
+                  Payment Failures
+                  {unresolvedFailures > 0 && (
+                    <span className="ml-2 inline-flex items-center justify-center h-5 min-w-5 px-1.5 text-xs font-medium bg-destructive text-destructive-foreground rounded-full">
+                      {unresolvedFailures}
+                    </span>
+                  )}
+                </TabsTrigger>
                 <TabsTrigger value="discounts">Discounts</TabsTrigger>
                 <TabsTrigger value="history">Payment History</TabsTrigger>
               </TabsList>
@@ -665,6 +757,122 @@ export default function Billing() {
                         <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
                         <p>No subscriptions yet</p>
                         <p className="text-sm">Subscriptions are created when customers complete ACH setup</p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              {/* Payment Failures Tab */}
+              <TabsContent value="failures">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <AlertTriangle className="h-5 w-5 text-destructive" />
+                      Payment Failures & Dunning
+                    </CardTitle>
+                    <CardDescription>
+                      Track failed payments, grace periods, and automated notification status
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    {loadingFailures ? (
+                      <div className="flex items-center justify-center py-8">
+                        <RefreshCw className="h-6 w-6 animate-spin text-muted-foreground" />
+                      </div>
+                    ) : paymentFailures && paymentFailures.length > 0 ? (
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Customer</TableHead>
+                            <TableHead>Amount</TableHead>
+                            <TableHead>Failed At</TableHead>
+                            <TableHead>Reason</TableHead>
+                            <TableHead>Grace Period</TableHead>
+                            <TableHead>Notifications</TableHead>
+                            <TableHead>Status</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {paymentFailures.map((failure) => {
+                            const gracePeriodStatus = getGracePeriodStatus(failure);
+                            const notifications = getNotificationStatus(failure);
+                            
+                            return (
+                              <TableRow key={failure.id} className={!failure.resolved_at ? "bg-destructive/5" : ""}>
+                                <TableCell>
+                                  <div>
+                                    <p className="font-medium">
+                                      {failure.customer_subscriptions?.customers?.full_name || "Unknown"}
+                                    </p>
+                                    <p className="text-sm text-muted-foreground">
+                                      {failure.customer_subscriptions?.customers?.email}
+                                    </p>
+                                  </div>
+                                </TableCell>
+                                <TableCell className="font-medium text-destructive">
+                                  ${Number(failure.amount).toFixed(2)}
+                                </TableCell>
+                                <TableCell>
+                                  {format(new Date(failure.failed_at), "MMM d, yyyy h:mm a")}
+                                </TableCell>
+                                <TableCell>
+                                  <div className="max-w-[200px]">
+                                    <p className="text-sm font-medium">{failure.failure_code || "Unknown"}</p>
+                                    <p className="text-xs text-muted-foreground truncate" title={failure.failure_message || ""}>
+                                      {failure.failure_message || "No details available"}
+                                    </p>
+                                  </div>
+                                </TableCell>
+                                <TableCell>
+                                  {failure.customer_subscriptions?.grace_period_end && !failure.resolved_at ? (
+                                    <div className="text-sm">
+                                      <p className="font-medium">
+                                        Ends {format(new Date(failure.customer_subscriptions.grace_period_end), "MMM d")}
+                                      </p>
+                                      <p className="text-xs text-muted-foreground">
+                                        {Math.max(0, Math.ceil((new Date(failure.customer_subscriptions.grace_period_end).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)))} days remaining
+                                      </p>
+                                    </div>
+                                  ) : (
+                                    <span className="text-muted-foreground">—</span>
+                                  )}
+                                </TableCell>
+                                <TableCell>
+                                  <div className="flex flex-wrap gap-1">
+                                    {notifications.length > 0 ? (
+                                      notifications.map((n) => (
+                                        <Badge key={n} variant="outline" className="text-xs">
+                                          <Mail className="h-3 w-3 mr-1" />
+                                          {n}
+                                        </Badge>
+                                      ))
+                                    ) : (
+                                      <span className="text-muted-foreground text-sm">None sent</span>
+                                    )}
+                                  </div>
+                                </TableCell>
+                                <TableCell>
+                                  <Badge variant={gracePeriodStatus.variant}>
+                                    {failure.resolved_at && failure.resolution_type === "paid" && (
+                                      <CheckCircle2 className="h-3 w-3 mr-1" />
+                                    )}
+                                    {failure.resolved_at && failure.resolution_type === "canceled" && (
+                                      <Ban className="h-3 w-3 mr-1" />
+                                    )}
+                                    {gracePeriodStatus.label}
+                                  </Badge>
+                                </TableCell>
+                              </TableRow>
+                            );
+                          })}
+                        </TableBody>
+                      </Table>
+                    ) : (
+                      <div className="text-center py-8 text-muted-foreground">
+                        <CheckCircle2 className="h-12 w-12 mx-auto mb-4 opacity-50 text-primary" />
+                        <p>No payment failures</p>
+                        <p className="text-sm">All payments are processing normally</p>
                       </div>
                     )}
                   </CardContent>
