@@ -64,6 +64,37 @@ serve(async (req) => {
       throw new Error("Missing required fields: customerId, trailerIds, billingCycle");
     }
 
+    // Check for existing active subscription for this customer
+    const { data: existingSubscription } = await supabaseClient
+      .from("customer_subscriptions")
+      .select("id, status, stripe_subscription_id")
+      .eq("customer_id", customerId)
+      .in("status", ["active", "pending", "paused"])
+      .maybeSingle();
+
+    if (existingSubscription) {
+      logStep("Customer already has active subscription", { 
+        existingId: existingSubscription.id, 
+        status: existingSubscription.status 
+      });
+      throw new Error(`Customer already has an ${existingSubscription.status} subscription (ID: ${existingSubscription.id}). Please cancel or manage the existing subscription first.`);
+    }
+    logStep("No existing active subscription found, proceeding");
+
+    // Check if any of the requested trailers are already rented
+    const { data: rentedTrailers } = await supabaseClient
+      .from("trailers")
+      .select("id, trailer_number, is_rented, customer_id")
+      .in("id", trailerIds)
+      .eq("is_rented", true);
+
+    if (rentedTrailers && rentedTrailers.length > 0) {
+      const rentedNumbers = rentedTrailers.map(t => t.trailer_number).join(", ");
+      logStep("Some trailers are already rented", { rentedTrailers });
+      throw new Error(`Trailer(s) ${rentedNumbers} are already rented. Please select available trailers.`);
+    }
+    logStep("All requested trailers are available");
+
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
 
     // Get customer details
