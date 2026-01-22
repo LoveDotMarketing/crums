@@ -36,20 +36,20 @@ import {
   DollarSign, 
   Users,
   CreditCard,
-  Receipt,
-  Plus,
   Percent,
   Tag,
   Truck,
   Calendar,
   CheckCircle2,
-  XCircle,
   Clock,
-  RefreshCw
+  RefreshCw,
+  Plus,
+  Receipt
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { CreateSubscriptionDialog } from "@/components/admin/CreateSubscriptionDialog";
 
 type BillingCycle = "weekly" | "biweekly" | "monthly";
 type DiscountType = "percentage" | "fixed" | "multi_trailer" | "promo_code";
@@ -406,11 +406,19 @@ export default function Billing() {
               {/* Subscriptions Tab */}
               <TabsContent value="subscriptions">
                 <Card>
-                  <CardHeader>
-                    <CardTitle>Customer Subscriptions</CardTitle>
-                    <CardDescription>
-                      Manage billing cycles, deposits, and trailer assignments
-                    </CardDescription>
+                  <CardHeader className="flex flex-row items-center justify-between">
+                    <div>
+                      <CardTitle>Customer Subscriptions</CardTitle>
+                      <CardDescription>
+                        Manage billing cycles, deposits, and trailer assignments
+                      </CardDescription>
+                    </div>
+                    <CreateSubscriptionDialog 
+                      onSuccess={() => {
+                        queryClient.invalidateQueries({ queryKey: ["customer-subscriptions"] });
+                        queryClient.invalidateQueries({ queryKey: ["subscription-items"] });
+                      }}
+                    />
                   </CardHeader>
                   <CardContent>
                     {loadingSubscriptions ? (
