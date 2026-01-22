@@ -1140,6 +1140,7 @@ export type Database = {
           failure_code: string | null
           failure_message: string | null
           id: string
+          last_retry_at: string | null
           next_retry_at: string | null
           notification_sent_day_0: boolean | null
           notification_sent_day_3: boolean | null
@@ -1159,6 +1160,7 @@ export type Database = {
           failure_code?: string | null
           failure_message?: string | null
           id?: string
+          last_retry_at?: string | null
           next_retry_at?: string | null
           notification_sent_day_0?: boolean | null
           notification_sent_day_3?: boolean | null
@@ -1178,6 +1180,7 @@ export type Database = {
           failure_code?: string | null
           failure_message?: string | null
           id?: string
+          last_retry_at?: string | null
           next_retry_at?: string | null
           notification_sent_day_0?: boolean | null
           notification_sent_day_3?: boolean | null
