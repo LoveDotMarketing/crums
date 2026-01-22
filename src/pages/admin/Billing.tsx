@@ -179,6 +179,7 @@ export default function Billing() {
   const [activeTab, setActiveTab] = useState("subscriptions");
   const [isDiscountDialogOpen, setIsDiscountDialogOpen] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [isRunningDunning, setIsRunningDunning] = useState(false);
   const [newDiscount, setNewDiscount] = useState({
     name: "",
     code: "",
@@ -273,7 +274,41 @@ export default function Billing() {
     }
   };
 
-  // Fetch subscriptions with customer data
+  // Run dunning process manually
+  const handleRunDunning = async () => {
+    setIsRunningDunning(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast.error("You must be logged in to run dunning");
+        return;
+      }
+
+      const { data, error } = await supabase.functions.invoke("process-payment-failures", {
+        headers: { Authorization: `Bearer ${session.access_token}` }
+      });
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      // Refresh payment failures data
+      await queryClient.invalidateQueries({ queryKey: ["payment-failures"] });
+
+      const { notificationsSent = 0, subscriptionsSuspended = 0 } = data || {};
+      
+      if (notificationsSent > 0 || subscriptionsSuspended > 0) {
+        toast.success(`Dunning complete: ${notificationsSent} notifications sent, ${subscriptionsSuspended} subscriptions suspended`);
+      } else {
+        toast.success("Dunning process complete - no actions needed");
+      }
+    } catch (error) {
+      console.error("Dunning error:", error);
+      toast.error("Failed to run dunning: " + (error instanceof Error ? error.message : "Unknown error"));
+    } finally {
+      setIsRunningDunning(false);
+    }
+  };
   const { data: subscriptions, isLoading: loadingSubscriptions } = useQuery({
     queryKey: ["customer-subscriptions"],
     queryFn: async () => {
@@ -766,14 +801,24 @@ export default function Billing() {
               {/* Payment Failures Tab */}
               <TabsContent value="failures">
                 <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <AlertTriangle className="h-5 w-5 text-destructive" />
-                      Payment Failures & Dunning
-                    </CardTitle>
-                    <CardDescription>
-                      Track failed payments, grace periods, and automated notification status
-                    </CardDescription>
+                  <CardHeader className="flex flex-row items-center justify-between">
+                    <div>
+                      <CardTitle className="flex items-center gap-2">
+                        <AlertTriangle className="h-5 w-5 text-destructive" />
+                        Payment Failures & Dunning
+                      </CardTitle>
+                      <CardDescription>
+                        Track failed payments, grace periods, and automated notification status
+                      </CardDescription>
+                    </div>
+                    <Button
+                      variant="outline"
+                      onClick={handleRunDunning}
+                      disabled={isRunningDunning || unresolvedFailures === 0}
+                    >
+                      <Mail className={`h-4 w-4 mr-2 ${isRunningDunning ? "animate-pulse" : ""}`} />
+                      {isRunningDunning ? "Processing..." : "Run Dunning"}
+                    </Button>
                   </CardHeader>
                   <CardContent>
                     {loadingFailures ? (
