@@ -220,23 +220,18 @@ export default function Customers() {
           }
         }
 
-        // Calculate profile completion
+        // Calculate profile completion (only profile fields, not application)
         const customerProfile = profiles?.find(p => p.email === customer.email);
-        const customerApplication = customerProfile 
-          ? applications?.find(a => a.user_id === customerProfile.id)
-          : null;
         
-        const requiredFields = [
+        // Profile completion is based on profile fields only
+        const profileFields = [
           customerProfile?.first_name,
           customerProfile?.last_name,
           customerProfile?.phone,
-          customerApplication?.trailer_type,
-          customerApplication?.drivers_license_url,
-          customerApplication?.drivers_license_back_url,
         ];
         
-        const completedFields = requiredFields.filter(field => field && field.toString().length > 0).length;
-        const profileCompletion = Math.round((completedFields / requiredFields.length) * 100);
+        const completedProfileFields = profileFields.filter(field => field && field.toString().length > 0).length;
+        const profileCompletion = Math.round((completedProfileFields / profileFields.length) * 100);
         
         return {
           ...customer,
