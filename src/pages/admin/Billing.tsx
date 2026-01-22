@@ -15,6 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -235,6 +236,12 @@ export default function Billing() {
   const [failuresSearch, setFailuresSearch] = useState("");
   const [failuresStatusFilter, setFailuresStatusFilter] = useState<"all" | "unresolved" | "resolved">("all");
   const [failuresSortBy, setFailuresSortBy] = useState<"failed_at" | "amount" | "customer">("failed_at");
+  
+  // Bulk selection state
+  const [selectedFailureIds, setSelectedFailureIds] = useState<Set<string>>(new Set());
+  const [isBulkResolveDialogOpen, setIsBulkResolveDialogOpen] = useState(false);
+  const [bulkResolutionType, setBulkResolutionType] = useState<"manual_payment" | "waived" | "other">("manual_payment");
+  const [bulkResolutionNotes, setBulkResolutionNotes] = useState("");
   const [failuresSortOrder, setFailuresSortOrder] = useState<"asc" | "desc">("desc");
 
   // Manage subscription (pause/resume/cancel)
@@ -666,6 +673,69 @@ export default function Billing() {
     }
   });
 
+  // Bulk resolve payment failures
+  const bulkResolveFailuresMutation = useMutation({
+    mutationFn: async ({ 
+      failureIds, 
+      resolutionType, 
+      notes 
+    }: { 
+      failureIds: string[]; 
+      resolutionType: string; 
+      notes: string;
+    }) => {
+      const { error } = await supabase
+        .from("payment_failures")
+        .update({
+          resolved_at: new Date().toISOString(),
+          resolution_type: resolutionType,
+          failure_message: notes ? `[Bulk Resolution] ${notes}` : "[Bulk Resolution]"
+        })
+        .in("id", failureIds);
+      
+      if (error) throw error;
+    },
+    onSuccess: (_, { failureIds }) => {
+      queryClient.invalidateQueries({ queryKey: ["payment-failures"] });
+      setIsBulkResolveDialogOpen(false);
+      setSelectedFailureIds(new Set());
+      setBulkResolutionNotes("");
+      setBulkResolutionType("manual_payment");
+      toast.success(`${failureIds.length} payment failure${failureIds.length !== 1 ? 's' : ''} resolved successfully`);
+    },
+    onError: (error) => {
+      toast.error("Failed to bulk resolve: " + error.message);
+    }
+  });
+
+  // Bulk selection helpers
+  const unresolvedFilteredFailures = filteredPaymentFailures?.filter(f => !f.resolved_at) || [];
+  const allUnresolvedSelected = unresolvedFilteredFailures.length > 0 && 
+    unresolvedFilteredFailures.every(f => selectedFailureIds.has(f.id));
+  const someUnresolvedSelected = unresolvedFilteredFailures.some(f => selectedFailureIds.has(f.id));
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      const newSelected = new Set(selectedFailureIds);
+      unresolvedFilteredFailures.forEach(f => newSelected.add(f.id));
+      setSelectedFailureIds(newSelected);
+    } else {
+      const newSelected = new Set(selectedFailureIds);
+      unresolvedFilteredFailures.forEach(f => newSelected.delete(f.id));
+      setSelectedFailureIds(newSelected);
+    }
+  };
+
+  const handleSelectOne = (failureId: string, checked: boolean) => {
+    const newSelected = new Set(selectedFailureIds);
+    if (checked) {
+      newSelected.add(failureId);
+    } else {
+      newSelected.delete(failureId);
+    }
+    setSelectedFailureIds(newSelected);
+  };
+
   // Calculate stats
   const activeSubscriptions = subscriptions?.filter(s => s.status === "active").length || 0;
   const totalMonthlyRevenue = subscriptionItems?.filter(i => i.status === "active")
@@ -1089,14 +1159,45 @@ export default function Billing() {
                       </div>
                     ) : filteredPaymentFailures && filteredPaymentFailures.length > 0 ? (
                       <>
-                        {paymentFailures && paymentFailures.length !== filteredPaymentFailures.length && (
-                          <p className="text-sm text-muted-foreground mb-2">
-                            Showing {filteredPaymentFailures.length} of {paymentFailures.length} records
-                          </p>
-                        )}
+                        <div className="flex items-center justify-between mb-2">
+                          {paymentFailures && paymentFailures.length !== filteredPaymentFailures.length && (
+                            <p className="text-sm text-muted-foreground">
+                              Showing {filteredPaymentFailures.length} of {paymentFailures.length} records
+                            </p>
+                          )}
+                          {selectedFailureIds.size > 0 && (
+                            <div className="flex items-center gap-2 ml-auto">
+                              <span className="text-sm text-muted-foreground">
+                                {selectedFailureIds.size} selected
+                              </span>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setSelectedFailureIds(new Set())}
+                              >
+                                Clear
+                              </Button>
+                              <Button
+                                size="sm"
+                                onClick={() => setIsBulkResolveDialogOpen(true)}
+                              >
+                                <FileCheck className="h-4 w-4 mr-1" />
+                                Bulk Resolve
+                              </Button>
+                            </div>
+                          )}
+                        </div>
                         <Table>
                           <TableHeader>
                             <TableRow>
+                              <TableHead className="w-[40px]">
+                                <Checkbox
+                                  checked={allUnresolvedSelected}
+                                  onCheckedChange={(checked) => handleSelectAll(!!checked)}
+                                  aria-label="Select all unresolved"
+                                  className={someUnresolvedSelected && !allUnresolvedSelected ? "data-[state=checked]:bg-muted" : ""}
+                                />
+                              </TableHead>
                               <TableHead>Customer</TableHead>
                               <TableHead>Amount</TableHead>
                               <TableHead>Failed At</TableHead>
@@ -1112,9 +1213,21 @@ export default function Billing() {
                             {filteredPaymentFailures.map((failure) => {
                               const gracePeriodStatus = getGracePeriodStatus(failure);
                               const notifications = getNotificationStatus(failure);
+                              const isSelected = selectedFailureIds.has(failure.id);
                             
                             return (
-                              <TableRow key={failure.id} className={!failure.resolved_at ? "bg-destructive/5" : ""}>
+                              <TableRow key={failure.id} className={`${!failure.resolved_at ? "bg-destructive/5" : ""} ${isSelected ? "bg-primary/10" : ""}`}>
+                                <TableCell>
+                                  {!failure.resolved_at ? (
+                                    <Checkbox
+                                      checked={isSelected}
+                                      onCheckedChange={(checked) => handleSelectOne(failure.id, !!checked)}
+                                      aria-label={`Select ${failure.customer_subscriptions?.customers?.full_name || "failure"}`}
+                                    />
+                                  ) : (
+                                    <span className="text-muted-foreground">—</span>
+                                  )}
+                                </TableCell>
                                 <TableCell>
                                   <div>
                                     <p className="font-medium">
@@ -1803,6 +1916,98 @@ export default function Billing() {
                     disabled={resolveFailureMutation.isPending}
                   >
                     {resolveFailureMutation.isPending ? "Resolving..." : "Mark as Resolved"}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+
+            {/* Bulk Resolution Dialog */}
+            <Dialog open={isBulkResolveDialogOpen} onOpenChange={setIsBulkResolveDialogOpen}>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Bulk Resolve Payment Failures</DialogTitle>
+                  <DialogDescription>
+                    Mark {selectedFailureIds.size} payment failure{selectedFailureIds.size !== 1 ? 's' : ''} as resolved.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                  <div className="p-3 bg-muted rounded-lg">
+                    <p className="text-sm font-medium">
+                      {selectedFailureIds.size} failure{selectedFailureIds.size !== 1 ? 's' : ''} selected
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      Total amount: ${
+                        filteredPaymentFailures
+                          ?.filter(f => selectedFailureIds.has(f.id))
+                          .reduce((sum, f) => sum + Number(f.amount), 0)
+                          .toFixed(2) || '0.00'
+                      }
+                    </p>
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="bulk_resolution_type">Resolution Type</Label>
+                    <Select
+                      value={bulkResolutionType}
+                      onValueChange={(value: "manual_payment" | "waived" | "other") => setBulkResolutionType(value)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="manual_payment">
+                          <div className="flex items-center gap-2">
+                            <CreditCard className="h-4 w-4" />
+                            Payment Collected (Offline/Phone)
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="waived">
+                          <div className="flex items-center gap-2">
+                            <CheckCircle2 className="h-4 w-4" />
+                            Payment Waived
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="other">
+                          <div className="flex items-center gap-2">
+                            <FileCheck className="h-4 w-4" />
+                            Other Resolution
+                          </div>
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="bulk_notes">Notes (applies to all)</Label>
+                    <Textarea
+                      id="bulk_notes"
+                      value={bulkResolutionNotes}
+                      onChange={(e) => setBulkResolutionNotes(e.target.value)}
+                      placeholder="e.g., Batch resolution for account reconciliation..."
+                      rows={3}
+                    />
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setIsBulkResolveDialogOpen(false);
+                      setBulkResolutionNotes("");
+                      setBulkResolutionType("manual_payment");
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      bulkResolveFailuresMutation.mutate({
+                        failureIds: Array.from(selectedFailureIds),
+                        resolutionType: bulkResolutionType,
+                        notes: bulkResolutionNotes
+                      });
+                    }}
+                    disabled={bulkResolveFailuresMutation.isPending}
+                  >
+                    {bulkResolveFailuresMutation.isPending ? "Resolving..." : `Resolve ${selectedFailureIds.size} Failure${selectedFailureIds.size !== 1 ? 's' : ''}`}
                   </Button>
                 </DialogFooter>
               </DialogContent>
