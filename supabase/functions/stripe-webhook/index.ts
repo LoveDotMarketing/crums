@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient, SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
-import Stripe from "https://esm.sh/stripe@14.21.0";
+import { createClient, SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
+import Stripe from "https://esm.sh/stripe@18.5.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -186,13 +186,15 @@ async function handlePaymentFailed(
 
   // Update subscription with grace period info
   const newFailedCount = (subscription.failed_payment_count || 0) + 1;
+  // Note: We keep status as "active" during grace period - "past_due" is not a valid DB status
+  // The grace_period_start and grace_period_end fields indicate the payment issue
   const { error: updateError } = await supabase
     .from("customer_subscriptions")
     .update({
       failed_payment_count: newFailedCount,
       grace_period_start: subscription.grace_period_start || now.toISOString(),
       grace_period_end: gracePeriodEnd.toISOString(),
-      status: "past_due",
+      // Keep as active during grace period - admin can pause/cancel if needed
     })
     .eq("id", subscription.id);
 
@@ -289,11 +291,12 @@ async function handleSubscriptionUpdated(
 ) {
   logStep("Processing subscription updated", { subscriptionId: subscription.id, status: subscription.status });
 
-  // Map Stripe status to our status
+  // Map Stripe status to our valid DB status: pending | active | paused | canceled
+  // CRITICAL: Do not use "past_due" - it's not in our DB constraint
   const statusMap: Record<string, string> = {
     active: "active",
-    past_due: "past_due",
-    unpaid: "past_due",
+    past_due: "active",      // Keep active during grace period
+    unpaid: "paused",        // Pause when fully unpaid
     canceled: "canceled",
     incomplete: "pending",
     incomplete_expired: "canceled",
