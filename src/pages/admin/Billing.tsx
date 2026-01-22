@@ -162,6 +162,7 @@ interface PaymentFailure {
   failure_message: string | null;
   failed_at: string;
   retry_count: number;
+  last_retry_at: string | null;
   resolved_at: string | null;
   resolution_type: string | null;
   notification_sent_day_0: boolean;
@@ -348,6 +349,13 @@ export default function Billing() {
       return;
     }
 
+    // Check cooldown on client side too
+    const cooldownInfo = getRetryCooldownInfo(failure);
+    if (cooldownInfo.onCooldown) {
+      toast.error(`Please wait ${cooldownInfo.remainingMinutes} minute${cooldownInfo.remainingMinutes !== 1 ? 's' : ''} before retrying again.`);
+      return;
+    }
+
     setIsRetrying(failure.id);
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -367,6 +375,8 @@ export default function Billing() {
         toast.success(data.message || "Payment retry successful!");
         await queryClient.invalidateQueries({ queryKey: ["payment-failures"] });
         await queryClient.invalidateQueries({ queryKey: ["billing-history"] });
+      } else if (data.cooldown) {
+        toast.error(data.message);
       } else {
         toast.error(data.message || "Payment retry failed");
       }
@@ -376,6 +386,25 @@ export default function Billing() {
     } finally {
       setIsRetrying(null);
     }
+  };
+
+  // Check if retry is on cooldown (1 hour between retries)
+  const getRetryCooldownInfo = (failure: PaymentFailure) => {
+    if (!failure.last_retry_at) {
+      return { onCooldown: false, remainingMinutes: 0 };
+    }
+    
+    const COOLDOWN_MS = 60 * 60 * 1000; // 1 hour
+    const lastRetry = new Date(failure.last_retry_at).getTime();
+    const now = Date.now();
+    const timeSinceRetry = now - lastRetry;
+    
+    if (timeSinceRetry < COOLDOWN_MS) {
+      const remainingMinutes = Math.ceil((COOLDOWN_MS - timeSinceRetry) / (60 * 1000));
+      return { onCooldown: true, remainingMinutes };
+    }
+    
+    return { onCooldown: false, remainingMinutes: 0 };
   };
 
   const { data: subscriptions, isLoading: loadingSubscriptions } = useQuery({
@@ -1047,31 +1076,38 @@ export default function Billing() {
                                   </Badge>
                                 </TableCell>
                                 <TableCell className="text-right">
-                                  {!failure.resolved_at && (
-                                    <div className="flex gap-2 justify-end">
-                                      <Button
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() => handleRetryPayment(failure)}
-                                        disabled={!failure.stripe_invoice_id || isRetrying === failure.id}
-                                        title="Retry payment with customer's current payment method"
-                                      >
-                                        <RefreshCw className={`h-3 w-3 mr-1 ${isRetrying === failure.id ? "animate-spin" : ""}`} />
-                                        Retry
-                                      </Button>
-                                      <Button
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() => {
-                                          setSelectedFailure(failure);
-                                          setResolveDialogOpen(true);
-                                        }}
-                                      >
-                                        <Phone className="h-3 w-3 mr-1" />
-                                        Resolve
-                                      </Button>
-                                    </div>
-                                  )}
+                                  {!failure.resolved_at && (() => {
+                                    const cooldownInfo = getRetryCooldownInfo(failure);
+                                    return (
+                                      <div className="flex gap-2 justify-end">
+                                        <Button
+                                          variant="outline"
+                                          size="sm"
+                                          onClick={() => handleRetryPayment(failure)}
+                                          disabled={!failure.stripe_invoice_id || isRetrying === failure.id || cooldownInfo.onCooldown}
+                                          title={cooldownInfo.onCooldown 
+                                            ? `Retry available in ${cooldownInfo.remainingMinutes} min` 
+                                            : "Retry payment with customer's current payment method"}
+                                        >
+                                          <RefreshCw className={`h-3 w-3 mr-1 ${isRetrying === failure.id ? "animate-spin" : ""}`} />
+                                          {cooldownInfo.onCooldown 
+                                            ? `${cooldownInfo.remainingMinutes}m` 
+                                            : "Retry"}
+                                        </Button>
+                                        <Button
+                                          variant="outline"
+                                          size="sm"
+                                          onClick={() => {
+                                            setSelectedFailure(failure);
+                                            setResolveDialogOpen(true);
+                                          }}
+                                        >
+                                          <Phone className="h-3 w-3 mr-1" />
+                                          Resolve
+                                        </Button>
+                                      </div>
+                                    );
+                                  })()}
                                 </TableCell>
                               </TableRow>
                             );

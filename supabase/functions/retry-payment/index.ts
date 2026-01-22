@@ -80,6 +80,27 @@ serve(async (req) => {
       );
     }
 
+    // Check cooldown (1 hour between retries)
+    const COOLDOWN_MS = 60 * 60 * 1000; // 1 hour
+    if (failure.last_retry_at) {
+      const lastRetry = new Date(failure.last_retry_at).getTime();
+      const now = Date.now();
+      const timeSinceRetry = now - lastRetry;
+      
+      if (timeSinceRetry < COOLDOWN_MS) {
+        const remainingMinutes = Math.ceil((COOLDOWN_MS - timeSinceRetry) / (60 * 1000));
+        return new Response(
+          JSON.stringify({ 
+            success: false, 
+            cooldown: true,
+            remainingMinutes,
+            message: `Please wait ${remainingMinutes} minute${remainingMinutes !== 1 ? 's' : ''} before retrying again.`
+          }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+    }
+
     if (!failure.stripe_invoice_id) {
       throw new Error("No Stripe invoice ID associated with this failure");
     }
@@ -133,11 +154,12 @@ serve(async (req) => {
       const paidInvoice = await stripe.invoices.pay(failure.stripe_invoice_id);
       logStep("Invoice payment result", { status: paidInvoice.status });
 
-      // Update retry count regardless of outcome
+      // Update retry count and last_retry_at regardless of outcome
       await supabase
         .from("payment_failures")
         .update({
           retry_count: (failure.retry_count || 0) + 1,
+          last_retry_at: new Date().toISOString(),
           next_retry_at: null
         })
         .eq("id", failureId);
@@ -165,11 +187,12 @@ serve(async (req) => {
       // Payment failed again
       logStep("Payment retry failed", { error: String(paymentError) });
 
-      // Update retry count
+      // Update retry count and last_retry_at
       await supabase
         .from("payment_failures")
         .update({
-          retry_count: (failure.retry_count || 0) + 1
+          retry_count: (failure.retry_count || 0) + 1,
+          last_retry_at: new Date().toISOString()
         })
         .eq("id", failureId);
 
