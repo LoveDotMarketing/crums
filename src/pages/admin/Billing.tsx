@@ -224,6 +224,9 @@ export default function Billing() {
   const [selectedFailure, setSelectedFailure] = useState<PaymentFailure | null>(null);
   const [resolutionNotes, setResolutionNotes] = useState("");
   const [resolutionType, setResolutionType] = useState<"manual_payment" | "waived" | "other">("manual_payment");
+  
+  // Retry payment state
+  const [isRetrying, setIsRetrying] = useState<string | null>(null);
 
   // Manage subscription (pause/resume/cancel)
   const handleManageSubscription = async (subscriptionId: string, action: "pause" | "resume" | "cancel") => {
@@ -337,6 +340,44 @@ export default function Billing() {
       setIsRunningDunning(false);
     }
   };
+
+  // Retry a failed payment via Stripe
+  const handleRetryPayment = async (failure: PaymentFailure) => {
+    if (!failure.stripe_invoice_id) {
+      toast.error("No invoice ID available for retry");
+      return;
+    }
+
+    setIsRetrying(failure.id);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast.error("You must be logged in to retry payments");
+        return;
+      }
+
+      const { data, error } = await supabase.functions.invoke("retry-payment", {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+        body: { failureId: failure.id }
+      });
+
+      if (error) throw error;
+
+      if (data.success) {
+        toast.success(data.message || "Payment retry successful!");
+        await queryClient.invalidateQueries({ queryKey: ["payment-failures"] });
+        await queryClient.invalidateQueries({ queryKey: ["billing-history"] });
+      } else {
+        toast.error(data.message || "Payment retry failed");
+      }
+    } catch (error) {
+      console.error("Retry payment error:", error);
+      toast.error("Failed to retry payment: " + (error instanceof Error ? error.message : "Unknown error"));
+    } finally {
+      setIsRetrying(null);
+    }
+  };
+
   const { data: subscriptions, isLoading: loadingSubscriptions } = useQuery({
     queryKey: ["customer-subscriptions"],
     queryFn: async () => {
@@ -1007,17 +1048,29 @@ export default function Billing() {
                                 </TableCell>
                                 <TableCell className="text-right">
                                   {!failure.resolved_at && (
-                                    <Button
-                                      variant="outline"
-                                      size="sm"
-                                      onClick={() => {
-                                        setSelectedFailure(failure);
-                                        setResolveDialogOpen(true);
-                                      }}
-                                    >
-                                      <Phone className="h-3 w-3 mr-1" />
-                                      Resolve
-                                    </Button>
+                                    <div className="flex gap-2 justify-end">
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => handleRetryPayment(failure)}
+                                        disabled={!failure.stripe_invoice_id || isRetrying === failure.id}
+                                        title="Retry payment with customer's current payment method"
+                                      >
+                                        <RefreshCw className={`h-3 w-3 mr-1 ${isRetrying === failure.id ? "animate-spin" : ""}`} />
+                                        Retry
+                                      </Button>
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => {
+                                          setSelectedFailure(failure);
+                                          setResolveDialogOpen(true);
+                                        }}
+                                      >
+                                        <Phone className="h-3 w-3 mr-1" />
+                                        Resolve
+                                      </Button>
+                                    </div>
                                   )}
                                 </TableCell>
                               </TableRow>
