@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Truck, AlertCircle, CheckCircle, Loader2, Bell, Phone, ExternalLink, Mail, ClipboardCheck, CreditCard } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Truck, AlertCircle, CheckCircle, Loader2, Bell, Phone, ExternalLink, Mail, ClipboardCheck, CreditCard, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
@@ -46,6 +47,7 @@ export default function CustomerDashboard() {
   const [applicationProgress, setApplicationProgress] = useState(0);
   const [applicationStatus, setApplicationStatus] = useState<string | null>(null);
   const [paymentSetupStatus, setPaymentSetupStatus] = useState<string | null>(null);
+  const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(null);
   const [tolls, setTolls] = useState<Toll[]>([]);
   const [tollStats, setTollStats] = useState<TollStats>({ pendingAmount: 0, paidThisMonth: 0, pendingCount: 0 });
   const [trailerCount, setTrailerCount] = useState(0);
@@ -62,6 +64,7 @@ export default function CustomerDashboard() {
       fetchTolls();
       fetchTrailers();
       fetchPendingCheckouts();
+      fetchSubscriptionStatus();
 
       // Set up real-time subscription for tolls
       const tollChannel = supabase
@@ -172,6 +175,35 @@ export default function CustomerDashboard() {
       console.error("Error fetching tolls:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchSubscriptionStatus = async () => {
+    if (!user?.email) return;
+
+    try {
+      // Find customer by email
+      const { data: customer } = await supabase
+        .from("customers")
+        .select("id")
+        .eq("email", user.email)
+        .maybeSingle();
+
+      if (!customer) {
+        setSubscriptionStatus(null);
+        return;
+      }
+
+      // Get subscription status
+      const { data: subscription } = await supabase
+        .from("customer_subscriptions")
+        .select("status")
+        .eq("customer_id", customer.id)
+        .maybeSingle();
+
+      setSubscriptionStatus(subscription?.status || null);
+    } catch (error) {
+      console.error("Error fetching subscription status:", error);
     }
   };
 
@@ -300,6 +332,26 @@ export default function CustomerDashboard() {
               </Button>
             )}
           </div>
+
+          {/* Suspension Alert */}
+          {subscriptionStatus === "suspended" && (
+            <Alert variant="destructive" className="mb-8">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertTitle>Account Suspended</AlertTitle>
+              <AlertDescription className="flex flex-col sm:flex-row sm:items-center gap-4">
+                <span>
+                  Your account has been suspended due to non-payment. Please update your payment method to restore access. 
+                  Service will be automatically reinstated once payment is received.
+                </span>
+                <Link to="/dashboard/customer/billing">
+                  <Button size="sm" variant="outline" className="whitespace-nowrap">
+                    <CreditCard className="h-4 w-4 mr-2" />
+                    Update Payment
+                  </Button>
+                </Link>
+              </AlertDescription>
+            </Alert>
+          )}
 
           {/* Application Status Tracker */}
           {currentUserId && (

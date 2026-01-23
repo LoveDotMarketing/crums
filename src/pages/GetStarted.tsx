@@ -955,10 +955,17 @@ export default function GetStarted() {
                       id="terms" 
                       checked={acceptedTerms}
                       onCheckedChange={(checked) => setAcceptedTerms(checked as boolean)}
+                      className="mt-1"
                     />
                     <Label htmlFor="terms" className="text-sm leading-relaxed cursor-pointer">
-                      I accept the <Link to="/terms" className="text-primary hover:underline">terms and conditions</Link> and <Link to="/privacy" className="text-primary hover:underline">privacy policy</Link>, and authorize CRUM'S Trucking & Leasing to process my application.
-                      I understand that incomplete applications may take longer to process.
+                      I accept the <Link to="/terms" className="text-primary hover:underline">terms and conditions</Link> and <Link to="/privacy" className="text-primary hover:underline">privacy policy</Link>, and authorize CRUM'S Trucking & Leasing to process my application. I understand that:
+                      <ul className="list-disc pl-5 mt-2 space-y-1 text-muted-foreground">
+                        <li>A <span className="font-medium text-foreground">$1,000 security deposit</span> and first month's rent are required before trailer pickup</li>
+                        <li>Payments are processed automatically on my billing cycle (weekly, bi-weekly, or monthly)</li>
+                        <li>If a payment fails, I will receive notifications and have a <span className="font-medium text-foreground">7-day grace period</span> to resolve the issue</li>
+                        <li>After 7 days of non-payment, my account will be <span className="font-medium text-foreground">suspended</span> and trailer access will be restricted</li>
+                        <li>Service can be reinstated once full payment is received</li>
+                      </ul>
                     </Label>
                   </div>
                 </div>
