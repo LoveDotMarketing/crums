@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
@@ -19,6 +19,11 @@ import {
   User,
   Truck,
   Calendar,
+  Camera,
+  X,
+  ChevronLeft,
+  ChevronRight,
+  Image as ImageIcon,
 } from "lucide-react";
 import {
   Table,
@@ -41,8 +46,33 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
+
+interface InspectionPhoto {
+  id: string;
+  category: string;
+  photo_url: string;
+  uploaded_at: string;
+}
+
+const photoCategoryLabels: Record<string, string> = {
+  exterior_front: "Exterior Front",
+  exterior_rear: "Exterior Rear",
+  exterior_left: "Exterior Left",
+  exterior_right: "Exterior Right",
+  interior_front: "Interior Front",
+  interior_rear: "Interior Rear",
+  brakes: "Brakes",
+  tires: "Tires",
+  lights: "Lights",
+  frame: "Frame",
+  doors: "Doors",
+  reflective_tape: "Reflective Tape",
+  license_plate_rear: "Rear View with License Plate",
+  other: "Other",
+};
 
 interface DOTInspection {
   id: string;
@@ -84,6 +114,11 @@ export default function DOTInspections() {
   const [selectedInspection, setSelectedInspection] = useState<DOTInspection | null>(null);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
 
+  const [inspectionPhotos, setInspectionPhotos] = useState<InspectionPhoto[]>([]);
+  const [loadingPhotos, setLoadingPhotos] = useState(false);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
+
   const { data: inspections = [], isLoading } = useQuery({
     queryKey: ["dot-inspections"],
     queryFn: async () => {
@@ -96,6 +131,35 @@ export default function DOTInspections() {
       return data as DOTInspection[];
     },
   });
+
+  // Fetch photos when an inspection is selected
+  useEffect(() => {
+    const fetchPhotos = async () => {
+      if (!selectedInspection) {
+        setInspectionPhotos([]);
+        return;
+      }
+
+      setLoadingPhotos(true);
+      try {
+        const { data, error } = await supabase
+          .from("dot_inspection_photos")
+          .select("id, category, photo_url, uploaded_at")
+          .eq("inspection_id", selectedInspection.id)
+          .order("category", { ascending: true });
+
+        if (error) throw error;
+        setInspectionPhotos(data || []);
+      } catch (err) {
+        console.error("Failed to load photos:", err);
+        setInspectionPhotos([]);
+      } finally {
+        setLoadingPhotos(false);
+      }
+    };
+
+    fetchPhotos();
+  }, [selectedInspection]);
 
   const filteredInspections = inspections.filter((inspection) => {
     const matchesSearch =
@@ -470,7 +534,7 @@ export default function DOTInspections() {
 
       {/* Detail Dialog */}
       <Dialog open={detailDialogOpen} onOpenChange={setDetailDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <ClipboardCheck className="h-5 w-5" />
@@ -479,107 +543,235 @@ export default function DOTInspections() {
           </DialogHeader>
 
           {selectedInspection && (
-            <div className="space-y-6">
-              {/* Trailer Info */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <p className="text-sm text-muted-foreground">Trailer Number</p>
-                  <p className="font-medium">{selectedInspection.trailer_number}</p>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-sm text-muted-foreground">VIN</p>
-                  <p className="font-medium">{selectedInspection.vin || "N/A"}</p>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-sm text-muted-foreground">License Plate</p>
-                  <p className="font-medium">{selectedInspection.license_plate || "N/A"}</p>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-sm text-muted-foreground">Type</p>
-                  <p className="font-medium">{selectedInspection.trailer_type || "N/A"}</p>
-                </div>
-              </div>
+            <Tabs defaultValue="details" className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="details">Details</TabsTrigger>
+                <TabsTrigger value="photos" className="flex items-center gap-2">
+                  <Camera className="h-4 w-4" />
+                  Photos {inspectionPhotos.length > 0 && `(${inspectionPhotos.length})`}
+                </TabsTrigger>
+              </TabsList>
 
-              {/* Inspector Info */}
-              <div className="border-t pt-4">
-                <h4 className="font-medium mb-3">Inspection Details</h4>
+              <TabsContent value="details" className="space-y-6 mt-4">
+                {/* Trailer Info */}
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">
-                    <p className="text-sm text-muted-foreground">Inspector</p>
-                    <p className="font-medium">{selectedInspection.inspector_name || "Unknown"}</p>
+                    <p className="text-sm text-muted-foreground">Trailer Number</p>
+                    <p className="font-medium">{selectedInspection.trailer_number}</p>
                   </div>
                   <div className="space-y-1">
-                    <p className="text-sm text-muted-foreground">Date</p>
-                    <p className="font-medium">{format(new Date(selectedInspection.inspection_date), "MMM d, yyyy h:mm a")}</p>
+                    <p className="text-sm text-muted-foreground">VIN</p>
+                    <p className="font-medium">{selectedInspection.vin || "N/A"}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-sm text-muted-foreground">License Plate</p>
+                    <p className="font-medium">{selectedInspection.license_plate || "N/A"}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-sm text-muted-foreground">Type</p>
+                    <p className="font-medium">{selectedInspection.trailer_type || "N/A"}</p>
                   </div>
                 </div>
-              </div>
 
-              {/* Checklist Summary */}
-              <div className="border-t pt-4">
-                <h4 className="font-medium mb-3">Checklist Summary</h4>
-                <div className="grid grid-cols-2 gap-2">
-                  {[
-                    { label: "Brakes Operational", value: selectedInspection.brakes_operational },
-                    { label: "Tires Tread Depth", value: selectedInspection.tires_tread_depth },
-                    { label: "Lights Operational", value: selectedInspection.brake_lights_operational },
-                    { label: "Frame No Cracks", value: selectedInspection.frame_no_cracks },
-                    { label: "Rear Doors Operational", value: selectedInspection.rear_doors_operational },
-                    { label: "DOT Reflective Tape", value: selectedInspection.dot_reflective_tape_present },
-                    { label: "DOT Release Confirmed", value: selectedInspection.dot_release_confirmed },
-                  ].map((item) => (
-                    <div key={item.label} className="flex items-center gap-2">
-                      {item.value ? (
-                        <CheckCircle className="h-4 w-4 text-green-600" />
-                      ) : (
-                        <AlertCircle className="h-4 w-4 text-destructive" />
-                      )}
-                      <span className="text-sm">{item.label}</span>
+                {/* Inspector Info */}
+                <div className="border-t pt-4">
+                  <h4 className="font-medium mb-3">Inspection Details</h4>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <p className="text-sm text-muted-foreground">Inspector</p>
+                      <p className="font-medium">{selectedInspection.inspector_name || "Unknown"}</p>
                     </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Signatures */}
-              <div className="border-t pt-4">
-                <h4 className="font-medium mb-3">Signatures</h4>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <p className="text-sm text-muted-foreground">Inspector Signature</p>
-                    {selectedInspection.inspector_signature ? (
-                      <img
-                        src={selectedInspection.inspector_signature}
-                        alt="Inspector signature"
-                        className="h-16 border rounded p-1 bg-white"
-                      />
-                    ) : (
-                      <p className="text-sm text-muted-foreground italic">Not signed</p>
-                    )}
-                  </div>
-                  <div className="space-y-2">
-                    <p className="text-sm text-muted-foreground">Customer Signature</p>
-                    {selectedInspection.customer_signature ? (
-                      <img
-                        src={selectedInspection.customer_signature}
-                        alt="Customer signature"
-                        className="h-16 border rounded p-1 bg-white"
-                      />
-                    ) : (
-                      <p className="text-sm text-muted-foreground italic">Pending</p>
-                    )}
+                    <div className="space-y-1">
+                      <p className="text-sm text-muted-foreground">Date</p>
+                      <p className="font-medium">{format(new Date(selectedInspection.inspection_date), "MMM d, yyyy h:mm a")}</p>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Actions */}
-              <div className="border-t pt-4 flex justify-end">
-                <Button onClick={() => handleDownloadPDF(selectedInspection)}>
-                  <Download className="h-4 w-4 mr-2" />
-                  Download PDF
-                </Button>
-              </div>
-            </div>
+                {/* Checklist Summary */}
+                <div className="border-t pt-4">
+                  <h4 className="font-medium mb-3">Checklist Summary</h4>
+                  <div className="grid grid-cols-2 gap-2">
+                    {[
+                      { label: "Brakes Operational", value: selectedInspection.brakes_operational },
+                      { label: "Tires Tread Depth", value: selectedInspection.tires_tread_depth },
+                      { label: "Lights Operational", value: selectedInspection.brake_lights_operational },
+                      { label: "Frame No Cracks", value: selectedInspection.frame_no_cracks },
+                      { label: "Rear Doors Operational", value: selectedInspection.rear_doors_operational },
+                      { label: "DOT Reflective Tape", value: selectedInspection.dot_reflective_tape_present },
+                      { label: "DOT Release Confirmed", value: selectedInspection.dot_release_confirmed },
+                    ].map((item) => (
+                      <div key={item.label} className="flex items-center gap-2">
+                        {item.value ? (
+                          <CheckCircle className="h-4 w-4 text-primary" />
+                        ) : (
+                          <AlertCircle className="h-4 w-4 text-destructive" />
+                        )}
+                        <span className="text-sm">{item.label}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Signatures */}
+                <div className="border-t pt-4">
+                  <h4 className="font-medium mb-3">Signatures</h4>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <p className="text-sm text-muted-foreground">Inspector Signature</p>
+                      {selectedInspection.inspector_signature ? (
+                        <img
+                          src={selectedInspection.inspector_signature}
+                          alt="Inspector signature"
+                          className="h-16 border rounded p-1 bg-white"
+                        />
+                      ) : (
+                        <p className="text-sm text-muted-foreground italic">Not signed</p>
+                      )}
+                    </div>
+                    <div className="space-y-2">
+                      <p className="text-sm text-muted-foreground">Customer Signature</p>
+                      {selectedInspection.customer_signature ? (
+                        <img
+                          src={selectedInspection.customer_signature}
+                          alt="Customer signature"
+                          className="h-16 border rounded p-1 bg-white"
+                        />
+                      ) : (
+                        <p className="text-sm text-muted-foreground italic">Pending</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <div className="border-t pt-4 flex justify-end">
+                  <Button onClick={() => handleDownloadPDF(selectedInspection)}>
+                    <Download className="h-4 w-4 mr-2" />
+                    Download PDF
+                  </Button>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="photos" className="mt-4">
+                {loadingPhotos ? (
+                  <div className="flex items-center justify-center py-12">
+                    <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                  </div>
+                ) : inspectionPhotos.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-12 text-center">
+                    <ImageIcon className="h-12 w-12 text-muted-foreground mb-4" />
+                    <p className="text-muted-foreground">No photos uploaded for this inspection</p>
+                  </div>
+                ) : (
+                  <div className="space-y-6">
+                    {/* Group photos by category */}
+                    {Object.entries(
+                      inspectionPhotos.reduce((acc, photo) => {
+                        if (!acc[photo.category]) acc[photo.category] = [];
+                        acc[photo.category].push(photo);
+                        return acc;
+                      }, {} as Record<string, InspectionPhoto[]>)
+                    ).map(([category, photos]) => (
+                      <div key={category} className="space-y-3">
+                        <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">
+                          {photoCategoryLabels[category] || category}
+                        </h4>
+                        <div className="grid grid-cols-3 gap-3">
+                          {photos.map((photo, idx) => {
+                            const globalIndex = inspectionPhotos.findIndex(p => p.id === photo.id);
+                            return (
+                              <div
+                                key={photo.id}
+                                className="relative aspect-square rounded-lg overflow-hidden border cursor-pointer hover:ring-2 hover:ring-primary transition-all group"
+                                onClick={() => {
+                                  setLightboxIndex(globalIndex);
+                                  setLightboxOpen(true);
+                                }}
+                              >
+                                <img
+                                  src={photo.photo_url}
+                                  alt={`${photoCategoryLabels[category] || category} - ${idx + 1}`}
+                                  className="w-full h-full object-cover"
+                                />
+                                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                                  <Eye className="h-6 w-6 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </TabsContent>
+            </Tabs>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Photo Lightbox */}
+      <Dialog open={lightboxOpen} onOpenChange={setLightboxOpen}>
+        <DialogContent className="max-w-4xl p-0 bg-black/95 border-none">
+          <div className="relative">
+            {/* Close button */}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute top-4 right-4 z-10 text-white hover:bg-white/20"
+              onClick={() => setLightboxOpen(false)}
+            >
+              <X className="h-6 w-6" />
+            </Button>
+
+            {inspectionPhotos[lightboxIndex] && (
+              <>
+                {/* Image */}
+                <div className="flex items-center justify-center min-h-[60vh] p-8">
+                  <img
+                    src={inspectionPhotos[lightboxIndex].photo_url}
+                    alt={`Photo ${lightboxIndex + 1}`}
+                    className="max-w-full max-h-[70vh] object-contain rounded"
+                  />
+                </div>
+
+                {/* Navigation */}
+                <div className="absolute inset-y-0 left-0 flex items-center">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="text-white hover:bg-white/20 ml-2"
+                    onClick={() => setLightboxIndex(prev => prev > 0 ? prev - 1 : inspectionPhotos.length - 1)}
+                    disabled={inspectionPhotos.length <= 1}
+                  >
+                    <ChevronLeft className="h-8 w-8" />
+                  </Button>
+                </div>
+                <div className="absolute inset-y-0 right-0 flex items-center">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="text-white hover:bg-white/20 mr-2"
+                    onClick={() => setLightboxIndex(prev => prev < inspectionPhotos.length - 1 ? prev + 1 : 0)}
+                    disabled={inspectionPhotos.length <= 1}
+                  >
+                    <ChevronRight className="h-8 w-8" />
+                  </Button>
+                </div>
+
+                {/* Caption */}
+                <div className="absolute bottom-0 left-0 right-0 bg-black/60 p-4 text-center">
+                  <p className="text-white font-medium">
+                    {photoCategoryLabels[inspectionPhotos[lightboxIndex].category] || inspectionPhotos[lightboxIndex].category}
+                  </p>
+                  <p className="text-white/70 text-sm">
+                    {lightboxIndex + 1} of {inspectionPhotos.length}
+                  </p>
+                </div>
+              </>
+            )}
+          </div>
         </DialogContent>
       </Dialog>
     </SidebarProvider>
