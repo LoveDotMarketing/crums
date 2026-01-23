@@ -171,12 +171,25 @@ serve(async (req) => {
       }
     }
 
+    // Get type-based default rental rate
+    const getDefaultRate = (trailerType: string): number => {
+      const type = trailerType?.toLowerCase() || "";
+      if (type.includes("flat") || type.includes("flatbed")) {
+        return 750;
+      }
+      if (type.includes("refrigerated") || type.includes("reefer")) {
+        return 850;
+      }
+      // Dry Van default
+      return 700;
+    };
+
     // Create subscription items (prices) for each trailer
     const subscriptionItems: Stripe.SubscriptionCreateParams.Item[] = [];
 
     for (const trailer of trailers) {
-      // Use custom rate if provided, otherwise fall back to trailer's default rate
-      const rate = customRates?.[trailer.id] ?? trailer.rental_rate ?? 500;
+      // Use custom rate if provided, otherwise fall back to trailer's rate or type-based default
+      const rate = customRates?.[trailer.id] ?? trailer.rental_rate ?? getDefaultRate(trailer.type);
 
       // Create a price for this trailer
       const price = await stripe.prices.create({
@@ -288,7 +301,7 @@ serve(async (req) => {
     for (let i = 0; i < trailers.length; i++) {
       const trailer = trailers[i];
       const stripeItem = subscription.items.data[i];
-      const rate = customRates?.[trailer.id] ?? trailer.rental_rate ?? 500;
+      const rate = customRates?.[trailer.id] ?? trailer.rental_rate ?? getDefaultRate(trailer.type);
 
       await supabaseClient
         .from("subscription_items")
