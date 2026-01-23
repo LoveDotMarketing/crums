@@ -69,7 +69,7 @@ export function CreateSubscriptionDialog({ onSuccess }: CreateSubscriptionDialog
   const [isOpen, setIsOpen] = useState(false);
   const [selectedCustomerId, setSelectedCustomerId] = useState<string>("");
   const [billingCycle, setBillingCycle] = useState<BillingCycle>("monthly");
-  const [depositAmount, setDepositAmount] = useState<number>(0);
+  const [depositAmount, setDepositAmount] = useState<number>(1000); // Standard $1,000 deposit requirement
   const [selectedTrailers, setSelectedTrailers] = useState<SelectedTrailer[]>([]);
 
   // Fetch customers without active subscriptions
@@ -159,8 +159,20 @@ export function CreateSubscriptionDialog({ onSuccess }: CreateSubscriptionDialog
   const resetForm = () => {
     setSelectedCustomerId("");
     setBillingCycle("monthly");
-    setDepositAmount(0);
+    setDepositAmount(1000); // Reset to standard $1,000 deposit
     setSelectedTrailers([]);
+  };
+
+  // Get type-based default rental rate
+  const getDefaultRentalRate = (type: string): number => {
+    const typeLower = type?.toLowerCase() || "";
+    if (typeLower.includes("flat") || typeLower.includes("flatbed")) {
+      return 750;
+    }
+    if (typeLower.includes("refrigerated") || typeLower.includes("reefer")) {
+      return 850;
+    }
+    return 700; // Dry Van default
   };
 
   const handleTrailerToggle = (trailer: AvailableTrailer, checked: boolean) => {
@@ -173,7 +185,7 @@ export function CreateSubscriptionDialog({ onSuccess }: CreateSubscriptionDialog
           vin: trailer.vin,
           type: trailer.type,
           year: trailer.year,
-          customRate: trailer.rental_rate || 0
+          customRate: trailer.rental_rate || getDefaultRentalRate(trailer.type)
         }
       ]);
     } else {
@@ -270,8 +282,9 @@ export function CreateSubscriptionDialog({ onSuccess }: CreateSubscriptionDialog
                 step="100"
                 value={depositAmount}
                 onChange={(e) => setDepositAmount(Number(e.target.value))}
-                placeholder="0"
+                placeholder="1000"
               />
+              <p className="text-xs text-muted-foreground">Standard deposit is $1,000</p>
             </div>
           </div>
 

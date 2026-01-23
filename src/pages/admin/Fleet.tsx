@@ -186,6 +186,20 @@ export default function Fleet() {
     }
   };
 
+  // Get type-based default rental rate
+  const getDefaultRentalRate = (type: string): number => {
+    switch (type) {
+      case "Flatbed":
+      case "Flat Bed":
+        return 750;
+      case "Refrigerated":
+        return 850;
+      case "Dry Van":
+      default:
+        return 700;
+    }
+  };
+
   const handleAddTrailer = async () => {
     if (!newTrailer.trailer_number || !newTrailer.type) {
       toast.error("Trailer number and type are required");
@@ -212,6 +226,8 @@ export default function Fleet() {
           is_rented: false,
           total_maintenance_cost: 0,
           rental_income: 0,
+          rental_rate: getDefaultRentalRate(newTrailer.type),
+          rental_frequency: "monthly",
         });
 
       if (error) throw error;

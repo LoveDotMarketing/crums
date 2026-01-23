@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import { 
   FileText, 
   Search, 
@@ -155,6 +156,7 @@ interface AvailableTrailer {
   vin: string | null;
   make: string | null;
   year: number | null;
+  rental_rate: number | null;
 }
 
 export default function Applications() {
@@ -164,7 +166,7 @@ export default function Applications() {
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [statusDialogOpen, setStatusDialogOpen] = useState(false);
   const [assignTrailerDialogOpen, setAssignTrailerDialogOpen] = useState(false);
-  const [selectedTrailerId, setSelectedTrailerId] = useState<string>("");
+  const [selectedTrailerIds, setSelectedTrailerIds] = useState<string[]>([]);
   const [availableTrailers, setAvailableTrailers] = useState<AvailableTrailer[]>([]);
   const [assigningTrailer, setAssigningTrailer] = useState(false);
   const [newStatus, setNewStatus] = useState("");
@@ -358,7 +360,7 @@ export default function Applications() {
     try {
       const { data, error } = await supabase
         .from("trailers")
-        .select("id, trailer_number, type, vin, make, year")
+        .select("id, trailer_number, type, vin, make, year, rental_rate")
         .eq("status", "available")
         .is("customer_id", null)
         .order("trailer_number");
@@ -372,13 +374,33 @@ export default function Applications() {
 
   const openAssignTrailerDialog = async (app: Application) => {
     setSelectedApplication(app);
-    setSelectedTrailerId("");
+    setSelectedTrailerIds([]);
     await fetchAvailableTrailers();
     setAssignTrailerDialogOpen(true);
   };
 
-  const handleAssignTrailer = async () => {
-    if (!selectedApplication || !selectedTrailerId) return;
+  const handleTrailerToggle = (trailerId: string, checked: boolean) => {
+    if (checked) {
+      setSelectedTrailerIds(prev => [...prev, trailerId]);
+    } else {
+      setSelectedTrailerIds(prev => prev.filter(id => id !== trailerId));
+    }
+  };
+
+  // Get type-based default rental rate
+  const getDefaultRentalRate = (type: string): number => {
+    const typeLower = type?.toLowerCase() || "";
+    if (typeLower.includes("flat") || typeLower.includes("flatbed")) {
+      return 750;
+    }
+    if (typeLower.includes("refrigerated") || typeLower.includes("reefer")) {
+      return 850;
+    }
+    return 700; // Dry Van default
+  };
+
+  const handleAssignTrailers = async () => {
+    if (!selectedApplication || selectedTrailerIds.length === 0) return;
     
     setAssigningTrailer(true);
     try {
@@ -400,7 +422,7 @@ export default function Applications() {
         return;
       }
 
-      // Update the trailer with customer assignment
+      // Update all selected trailers with customer assignment
       const { error } = await supabase
         .from("trailers")
         .update({
@@ -408,23 +430,23 @@ export default function Applications() {
           is_rented: true,
           status: "rented"
         })
-        .eq("id", selectedTrailerId);
+        .in("id", selectedTrailerIds);
 
       if (error) throw error;
 
       toast({
-        title: "Trailer Assigned",
-        description: "Trailer has been assigned to the customer successfully."
+        title: "Trailers Assigned",
+        description: `${selectedTrailerIds.length} trailer(s) assigned to the customer successfully.`
       });
       
       setAssignTrailerDialogOpen(false);
       setSelectedApplication(null);
-      setSelectedTrailerId("");
+      setSelectedTrailerIds([]);
     } catch (error) {
-      console.error("Error assigning trailer:", error);
+      console.error("Error assigning trailers:", error);
       toast({
         title: "Assignment Failed",
-        description: "Failed to assign trailer. Please try again.",
+        description: "Failed to assign trailers. Please try again.",
         variant: "destructive"
       });
     } finally {
@@ -916,55 +938,78 @@ export default function Applications() {
         </DialogContent>
       </Dialog>
 
-      {/* Assign Trailer Dialog */}
+      {/* Assign Multiple Trailers Dialog */}
       <Dialog open={assignTrailerDialogOpen} onOpenChange={setAssignTrailerDialogOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Assign Trailer</DialogTitle>
+            <DialogTitle>Assign Trailers</DialogTitle>
             <DialogDescription>
-              Select an available trailer to assign to {selectedApplication?.profiles?.first_name} {selectedApplication?.profiles?.last_name}
+              Select one or more trailers to assign to {selectedApplication?.profiles?.first_name} {selectedApplication?.profiles?.last_name}
             </DialogDescription>
           </DialogHeader>
           <div className="py-4 space-y-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium">Available Trailers</label>
-              <Select value={selectedTrailerId} onValueChange={setSelectedTrailerId}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a trailer..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {availableTrailers.length === 0 ? (
-                    <SelectItem value="none" disabled>No trailers available</SelectItem>
-                  ) : (
-                    availableTrailers.map((trailer) => (
-                      <SelectItem key={trailer.id} value={trailer.id}>
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium">{trailer.trailer_number}</span>
-                          <span className="text-muted-foreground">
-                            - {trailer.type} {trailer.year && `(${trailer.year})`}
-                          </span>
-                        </div>
-                      </SelectItem>
-                    ))
-                  )}
-                </SelectContent>
-              </Select>
+              <label className="text-sm font-medium">Available Trailers ({availableTrailers.length})</label>
+              {availableTrailers.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground border rounded-lg">
+                  <Truck className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                  <p>No available trailers</p>
+                </div>
+              ) : (
+                <div className="border rounded-lg max-h-[300px] overflow-y-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-12"></TableHead>
+                        <TableHead>Number</TableHead>
+                        <TableHead>Type</TableHead>
+                        <TableHead>Year</TableHead>
+                        <TableHead>VIN</TableHead>
+                        <TableHead>Rate</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {availableTrailers.map((trailer) => {
+                        const isSelected = selectedTrailerIds.includes(trailer.id);
+                        const rate = trailer.rental_rate || getDefaultRentalRate(trailer.type);
+                        return (
+                          <TableRow key={trailer.id} className={isSelected ? "bg-muted/50" : ""}>
+                            <TableCell>
+                              <Checkbox
+                                checked={isSelected}
+                                onCheckedChange={(checked) => handleTrailerToggle(trailer.id, !!checked)}
+                              />
+                            </TableCell>
+                            <TableCell className="font-medium">{trailer.trailer_number}</TableCell>
+                            <TableCell>
+                              <Badge variant="outline">{trailer.type}</Badge>
+                            </TableCell>
+                            <TableCell>{trailer.year || "—"}</TableCell>
+                            <TableCell className="font-mono text-xs max-w-[120px] truncate" title={trailer.vin || undefined}>
+                              {trailer.vin || "—"}
+                            </TableCell>
+                            <TableCell className="text-muted-foreground">${rate}/mo</TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
             </div>
-            {selectedTrailerId && (
+            {selectedTrailerIds.length > 0 && (
               <div className="p-3 rounded-lg bg-muted/50 text-sm">
-                <p className="font-medium">Selected Trailer</p>
-                {(() => {
-                  const trailer = availableTrailers.find(t => t.id === selectedTrailerId);
-                  if (!trailer) return null;
-                  return (
-                    <div className="mt-1 space-y-1 text-muted-foreground">
-                      <p>Number: {trailer.trailer_number}</p>
-                      <p>Type: {trailer.type}</p>
-                      {trailer.vin && <p className="font-mono text-xs">VIN: {trailer.vin}</p>}
-                      {trailer.make && <p>Make: {trailer.make}</p>}
-                    </div>
-                  );
-                })()}
+                <p className="font-medium">Selected Trailers ({selectedTrailerIds.length})</p>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {selectedTrailerIds.map(id => {
+                    const trailer = availableTrailers.find(t => t.id === id);
+                    return trailer ? (
+                      <Badge key={id} variant="secondary">
+                        {trailer.trailer_number} - {trailer.type}
+                      </Badge>
+                    ) : null;
+                  })}
+                </div>
               </div>
             )}
           </div>
@@ -973,8 +1018,8 @@ export default function Applications() {
               Cancel
             </Button>
             <Button 
-              onClick={handleAssignTrailer} 
-              disabled={!selectedTrailerId || assigningTrailer}
+              onClick={handleAssignTrailers} 
+              disabled={selectedTrailerIds.length === 0 || assigningTrailer}
             >
               {assigningTrailer ? (
                 <>
@@ -984,7 +1029,7 @@ export default function Applications() {
               ) : (
                 <>
                   <Truck className="mr-2 h-4 w-4" />
-                  Assign Trailer
+                  Assign {selectedTrailerIds.length} Trailer{selectedTrailerIds.length !== 1 ? 's' : ''}
                 </>
               )}
             </Button>
