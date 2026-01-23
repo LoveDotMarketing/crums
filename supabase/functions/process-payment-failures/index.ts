@@ -221,10 +221,10 @@ serve(async (req) => {
           }
         }
 
-        // Update our records
+        // Update our records - use "suspended" instead of "canceled" to allow reinstatement
         await supabase
           .from("customer_subscriptions")
-          .update({ status: "canceled" })
+          .update({ status: "suspended" })
           .eq("id", subscription.id);
 
         // Release trailers
@@ -254,11 +254,11 @@ serve(async (req) => {
           .from("payment_failures")
           .update({
             resolved_at: now.toISOString(),
-            resolution_type: "canceled",
+            resolution_type: "suspended",
           })
           .eq("id", failure.id);
 
-        // Send final cancellation email
+        // Send suspension notification email
         if (customer?.email) {
           await sendTemplatedEmail({
             email: customer.email,
@@ -266,7 +266,7 @@ serve(async (req) => {
             amount: failure.amount,
             gracePeriodEnd: "",
             template: templateMap["subscription_canceled"],
-            fallbackSubject: "Subscription Canceled - Payment Not Received",
+            fallbackSubject: "Account Suspended - Payment Required to Reinstate",
           });
         }
 

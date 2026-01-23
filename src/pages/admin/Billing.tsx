@@ -841,13 +841,29 @@ export default function Billing() {
       active: "default",
       pending: "secondary",
       paused: "outline",
+      suspended: "destructive",
+      canceled: "destructive",
       cancelled: "destructive",
       succeeded: "default",
       failed: "destructive",
       processing: "secondary",
       refunded: "outline"
     };
-    return <Badge variant={variants[status] || "secondary"}>{status}</Badge>;
+    
+    const labels: Record<string, string> = {
+      active: "Active",
+      pending: "Pending",
+      paused: "Paused",
+      suspended: "Suspended",
+      canceled: "Canceled",
+      cancelled: "Cancelled",
+      succeeded: "Succeeded",
+      failed: "Failed",
+      processing: "Processing",
+      refunded: "Refunded"
+    };
+    
+    return <Badge variant={variants[status] || "secondary"}>{labels[status] || status}</Badge>;
   };
 
   const getBillingCycleLabel = (cycle: BillingCycle) => {
@@ -1135,7 +1151,19 @@ export default function Billing() {
                                           Resume Subscription
                                         </DropdownMenuItem>
                                       )}
-                                      {(sub.status === "active" || sub.status === "paused" || sub.status === "pending") && (
+                                      {sub.status === "suspended" && (
+                                        <DropdownMenuItem
+                                          onClick={() => setConfirmAction({
+                                            subscriptionId: sub.id,
+                                            action: "resume",
+                                            customerName: sub.customers?.full_name || "Unknown"
+                                          })}
+                                        >
+                                          <Play className="h-4 w-4 mr-2" />
+                                          Reinstate Account
+                                        </DropdownMenuItem>
+                                      )}
+                                      {(sub.status === "active" || sub.status === "paused" || sub.status === "pending" || sub.status === "suspended") && (
                                         <>
                                           <DropdownMenuSeparator />
                                           <DropdownMenuItem

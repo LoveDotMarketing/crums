@@ -254,16 +254,29 @@ async function handlePaymentSucceeded(
       .eq("stripe_payment_intent_id", piId);
   }
 
-  // Reset subscription grace period
+  // Reset subscription grace period and reinstate if suspended
+  const { data: currentSub } = await supabase
+    .from("customer_subscriptions")
+    .select("status")
+    .eq("id", subscription.id)
+    .single();
+
+  // Auto-reinstate suspended accounts when payment succeeds
+  const newStatus = currentSub?.status === "suspended" ? "active" : "active";
+  
   await supabase
     .from("customer_subscriptions")
     .update({
       failed_payment_count: 0,
       grace_period_start: null,
       grace_period_end: null,
-      status: "active",
+      status: newStatus,
     })
     .eq("id", subscription.id);
+
+  if (currentSub?.status === "suspended") {
+    logStep("Auto-reinstated suspended account", { subscriptionId: subscription.id });
+  }
 
   // Update billing history
   await supabase
