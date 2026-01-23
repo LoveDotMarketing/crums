@@ -731,7 +731,7 @@ export default function DOTInspections() {
                 <div className="flex items-center justify-center min-h-[60vh] p-8">
                   <img
                     src={inspectionPhotos[lightboxIndex].photo_url}
-                    alt={`Photo ${lightboxIndex + 1}`}
+                    alt={`${photoCategoryLabels[inspectionPhotos[lightboxIndex].category] || inspectionPhotos[lightboxIndex].category} - Photo ${lightboxIndex + 1} of ${inspectionPhotos.length}`}
                     className="max-w-full max-h-[70vh] object-contain rounded"
                   />
                 </div>

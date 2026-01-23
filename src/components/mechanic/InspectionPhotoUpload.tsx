@@ -131,7 +131,7 @@ export function InspectionPhotoUpload({
               <div key={photo.id} className="relative group">
                 <img
                   src={photo.photo_url}
-                  alt={`${category} inspection`}
+                  alt={`${label} inspection photo`}
                   className="w-20 h-20 object-cover rounded-md border"
                 />
                 <button
