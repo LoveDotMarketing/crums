@@ -264,8 +264,8 @@ export const Navigation = () => {
 
         {/* Mobile Menu */}
         {mobileMenuOpen && (
-          <div className="lg:hidden py-4 border-t border-border">
-            <div className="flex flex-col space-y-4">
+          <div className="lg:hidden py-4 border-t border-border max-h-[calc(100vh-5rem)] overflow-y-auto">
+            <div className="flex flex-col space-y-4 pb-4">
               <Link
                 to="/services/trailer-leasing"
                 className="text-sm font-medium text-foreground hover:text-primary"
