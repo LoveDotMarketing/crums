@@ -21,7 +21,8 @@ import {
   Loader2,
   LayoutGrid,
   UserX,
-  CalendarClock
+  CalendarClock,
+  LogIn
 } from "lucide-react";
 import {
   Table,
@@ -766,7 +767,7 @@ export default function Fleet() {
                             </TableCell>
                             <TableCell>
                               <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
-                                {trailer.status === "available" && !trailer.is_rented && (
+                                {trailer.status === "available" && !trailer.is_rented && !trailer.customer_id && (
                                   <Button 
                                     size="sm" 
                                     variant="outline"
@@ -777,6 +778,18 @@ export default function Fleet() {
                                     title="Schedule customer pickup"
                                   >
                                     <CalendarClock className="h-4 w-4" />
+                                  </Button>
+                                )}
+                                {(trailer.is_rented || trailer.customer_id) && (
+                                  <Button 
+                                    size="sm" 
+                                    variant="outline"
+                                    className="text-primary border-primary hover:bg-primary/10"
+                                    onClick={() => setUnassignTrailerId(trailer.id)}
+                                    title="Check in trailer (unassign from customer)"
+                                  >
+                                    <LogIn className="h-4 w-4 mr-1" />
+                                    Check In
                                   </Button>
                                 )}
                                 <Button 
@@ -804,20 +817,20 @@ export default function Fleet() {
               </CardContent>
             </Card>
 
-            {/* Unassign Confirmation Dialog */}
+            {/* Check In / Unassign Confirmation Dialog */}
             <AlertDialog open={!!unassignTrailerId} onOpenChange={(open) => !open && setUnassignTrailerId(null)}>
               <AlertDialogContent>
                 <AlertDialogHeader>
-                  <AlertDialogTitle>Unassign Trailer</AlertDialogTitle>
+                  <AlertDialogTitle>Check In Trailer</AlertDialogTitle>
                   <AlertDialogDescription>
-                    Are you sure you want to unassign this trailer from the customer? 
-                    The trailer will be marked as available.
+                    Are you sure you want to check in this trailer? This will unassign it from the customer 
+                    and mark it as available for lease.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                   <AlertDialogCancel>Cancel</AlertDialogCancel>
                   <AlertDialogAction onClick={() => unassignTrailerId && handleUnassignTrailer(unassignTrailerId)}>
-                    Unassign
+                    Check In
                   </AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>

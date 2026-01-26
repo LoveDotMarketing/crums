@@ -278,11 +278,15 @@ export default function MechanicDashboard() {
     try {
       const { error } = await supabase
         .from("trailers")
-        .update({ status: "available" })
+        .update({ 
+          status: "available",
+          customer_id: null,
+          is_rented: false
+        })
         .eq("id", trailer.id);
 
       if (error) throw error;
-      toast.success(`Trailer ${trailer.trailer_number} checked in and available`);
+      toast.success(`Trailer ${trailer.trailer_number} checked in, unassigned, and available`);
       fetchTrailers();
     } catch (error) {
       console.error("Error checking in trailer:", error);
