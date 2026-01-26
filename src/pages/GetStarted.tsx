@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowRight, ArrowLeft, Check, Gift, AlertCircle, Clipboard } from "lucide-react";
+import { ArrowRight, ArrowLeft, Check, Gift, AlertCircle, Clipboard, Zap, FileText } from "lucide-react";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
@@ -22,12 +22,15 @@ import { trackSignup, trackConversion, trackSignupStarted, trackSignupFailed, tr
 import { processReferralCode, validateReferralCode } from "@/lib/referral";
 import { trackLinkedInSignup, trackLinkedInApplicationSubmit } from "@/lib/linkedinAnalytics";
 
+type FormMode = "quick-start" | "prompt" | "full-form";
+
 export default function GetStarted() {
   const breadcrumbSchema = generateBreadcrumbSchema([
     { name: "Home", url: "https://crumsleasing.com/" },
     { name: "Get Started", url: "https://crumsleasing.com/get-started" }
   ]);
 
+  const [formMode, setFormMode] = useState<FormMode>("quick-start");
   const [currentStep, setCurrentStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
@@ -35,15 +38,17 @@ export default function GetStarted() {
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
 
-  // Step 1 - Required fields
+  // Quick Start fields
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [companyName, setCompanyName] = useState("");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
-  const [dateOfBirth, setDateOfBirth] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
+  
+  // Full form fields
+  const [companyName, setCompanyName] = useState("");
+  const [dateOfBirth, setDateOfBirth] = useState("");
   const [companyAddress, setCompanyAddress] = useState("");
   const [businessType, setBusinessType] = useState("");
   const [numberOfTrailers, setNumberOfTrailers] = useState("");
@@ -53,7 +58,7 @@ export default function GetStarted() {
   const [message, setMessage] = useState("");
   const [referralCode, setReferralCode] = useState("");
 
-  // Step 2 - Documents (optional)
+  // Documents
   const [dotDocument, setDotDocument] = useState<File | null>(null);
   const [driversLicenseFront, setDriversLicenseFront] = useState<File | null>(null);
   const [driversLicenseBack, setDriversLicenseBack] = useState<File | null>(null);
@@ -66,10 +71,9 @@ export default function GetStarted() {
   const [secondaryContactPhone, setSecondaryContactPhone] = useState("");
   const [secondaryContactRelationship, setSecondaryContactRelationship] = useState("");
 
-  // Step 3 - Terms
+  // Terms
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [formStarted, setFormStarted] = useState(false);
-  const [showPasteHint, setShowPasteHint] = useState(false);
 
   // Track signup started on page load
   useEffect(() => {
@@ -100,13 +104,9 @@ export default function GetStarted() {
     return age >= 18;
   };
 
-  const validateStep1 = () => {
-    if (!email || !password || !confirmPassword || !firstName || !lastName || !dateOfBirth || !phoneNumber || !companyAddress || !businessType || !numberOfTrailers || !dateNeeded) {
+  const validateQuickStart = () => {
+    if (!email || !password || !confirmPassword || !firstName || !lastName || !phoneNumber) {
       toast({ title: "Error", description: "Please fill in all required fields", variant: "destructive" });
-      return false;
-    }
-    if (!validateAge(dateOfBirth)) {
-      toast({ title: "Error", description: "You must be at least 18 years old to apply", variant: "destructive" });
       return false;
     }
     if (password !== confirmPassword) {
@@ -114,7 +114,6 @@ export default function GetStarted() {
       return false;
     }
 
-    // Validate with zod schema
     const validationResult = fullSignupSchema.safeParse({
       email,
       password,
@@ -129,93 +128,10 @@ export default function GetStarted() {
       return false;
     }
 
-    // Validate application data
-    const appValidation = customerApplicationSchema.safeParse({
-      email,
-      phone_number: phoneNumber,
-      company_name: companyName || "",
-      company_address: companyAddress,
-      business_type: businessType,
-      account_holder_name: "N/A",
-      account_number: "0000",
-      routing_number: "000000000",
-      bank_name: "N/A",
-      insurance_company: insuranceCompany || "N/A",
-      secondary_contact_name: secondaryContactName,
-      secondary_contact_phone: secondaryContactPhone,
-      secondary_contact_relationship: secondaryContactRelationship,
-      message: message
-    });
-
-    if (!appValidation.success) {
-      const firstError = appValidation.error.errors[0];
-      toast({ title: "Validation Error", description: firstError.message, variant: "destructive" });
-      return false;
-    }
-
     return true;
   };
 
-  const handleNext = () => {
-    setCurrentStep(prev => Math.min(prev + 1, 3));
-  };
-
-  const handleBack = () => {
-    setCurrentStep(prev => Math.max(prev - 1, 1));
-  };
-
-  const handleDoThisLater = () => {
-    setCurrentStep(3);
-  };
-
-  const handleStepClick = (step: number) => {
-    setCurrentStep(step);
-  };
-
-  const validateAllRequiredFields = (): { valid: boolean; errors: string[] } => {
-    const errors: string[] = [];
-    
-    // Step 1 required fields
-    if (!email) errors.push("Email is required");
-    if (!password) errors.push("Password is required");
-    if (!confirmPassword) errors.push("Confirm password is required");
-    if (password !== confirmPassword) errors.push("Passwords don't match");
-    if (!firstName) errors.push("First name is required");
-    if (!lastName) errors.push("Last name is required");
-    if (!dateOfBirth) errors.push("Date of birth is required");
-    if (dateOfBirth && !validateAge(dateOfBirth)) errors.push("Must be at least 18 years old");
-    if (!phoneNumber) errors.push("Phone number is required");
-    if (!companyAddress) errors.push("Address is required");
-    if (!businessType) errors.push("Business type is required");
-    if (!numberOfTrailers) errors.push("Number of trailers is required");
-    if (!dateNeeded) errors.push("Date needed is required");
-    
-    // Step 4 required
-    if (!acceptedTerms) errors.push("You must accept the terms and conditions");
-    
-    return { valid: errors.length === 0, errors };
-  };
-
-  const getStepStatus = (step: number): 'complete' | 'warning' | 'default' => {
-    if (step === 1) {
-      const hasAll = email && password && confirmPassword && firstName && lastName && dateOfBirth && phoneNumber && companyAddress && businessType && numberOfTrailers && dateNeeded && ssn;
-      if (hasAll && password === confirmPassword && validateAge(dateOfBirth)) return 'complete';
-      if (email || password || firstName || lastName) return 'warning';
-      return 'default';
-    }
-    if (step === 2) {
-      if (dotDocument && driversLicenseFront && driversLicenseBack && insuranceDocs) return 'complete';
-      return 'default';
-    }
-    if (step === 3) {
-      if (acceptedTerms) return 'complete';
-      return 'default';
-    }
-    return 'default';
-  };
-
   const uploadFile = async (file: File, path: string) => {
-    // Validate file before upload
     const validation = validateFile(file);
     if (!validation.valid) {
       throw new Error(validation.error);
@@ -229,16 +145,8 @@ export default function GetStarted() {
     return data.path;
   };
 
-  const handleSubmit = async () => {
-    const validation = validateAllRequiredFields();
-    if (!validation.valid) {
-      toast({ 
-        title: "Missing Required Information", 
-        description: validation.errors.slice(0, 3).join(", ") + (validation.errors.length > 3 ? ` (+${validation.errors.length - 3} more)` : ""),
-        variant: "destructive" 
-      });
-      return;
-    }
+  const handleQuickStartSubmit = async () => {
+    if (!validateQuickStart()) return;
 
     setIsLoading(true);
     try {
@@ -256,83 +164,26 @@ export default function GetStarted() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error("No session found");
 
-      // Update profile with company name and phone
+      // Update profile
       const { error: profileError } = await supabase
         .from('profiles')
         .update({ 
-          company_name: companyName,
+          company_name: companyName || null,
           phone: phoneNumber,
           first_name: firstName,
-          last_name: lastName,
-          date_of_birth: dateOfBirth
+          last_name: lastName
         })
         .eq('id', session.user.id);
 
       if (profileError) throw profileError;
 
-      // Upload documents if provided
-      let driversLicenseFrontUrl = null;
-      let driversLicenseBackUrl = null;
-      let insuranceDocsUrl = null;
-
-      if (driversLicenseFront) {
-        driversLicenseFrontUrl = await uploadFile(driversLicenseFront, `${session.user.id}/drivers-license-front-${Date.now()}`);
-      }
-      if (driversLicenseBack) {
-        driversLicenseBackUrl = await uploadFile(driversLicenseBack, `${session.user.id}/drivers-license-back-${Date.now()}`);
-      }
-      if (insuranceDocs) {
-        insuranceDocsUrl = await uploadFile(insuranceDocs, `${session.user.id}/insurance-${Date.now()}`);
-      }
-
-      // Upload DOT document
-      let dotNumberUrl = null;
-      if (dotDocument) {
-        dotNumberUrl = await uploadFile(dotDocument, `${session.user.id}/dot-document-${Date.now()}`);
-      }
-
-      // Check if all required fields are filled to determine status
-      const hasDocuments = driversLicenseFrontUrl && driversLicenseBackUrl && insuranceDocsUrl;
-      const applicationStatus = hasDocuments ? 'pending' : 'incomplete';
-
-      // Encrypt SSN before storing
-      let encryptedSSN = ssn;
-      if (ssn) {
-        const { data: encryptData, error: encryptError } = await supabase.functions.invoke('ssn-crypto', {
-          body: { action: 'encrypt', ssn: ssn }
-        });
-        
-        if (encryptError) {
-          console.error("SSN encryption error:", encryptError);
-          throw new Error("Failed to secure SSN data. Please try again.");
-        }
-        encryptedSSN = encryptData.encrypted;
-      }
-
-      // Create customer application (banking will be collected via Stripe)
+      // Create minimal customer application with status 'incomplete'
       const { error: applicationError } = await supabase
         .from('customer_applications')
         .insert({
           user_id: session.user.id,
           phone_number: phoneNumber,
-          dot_number_url: dotNumberUrl,
-          company_address: companyAddress,
-          business_type: businessType,
-          number_of_trailers: parseInt(numberOfTrailers),
-          trailer_type: trailerType || null,
-          date_needed: dateNeeded,
-          truck_vin: truckVin,
-          insurance_company: insuranceCompany || null,
-          insurance_company_phone: insuranceCompanyPhone || null,
-          message: message || null,
-          drivers_license_url: driversLicenseFrontUrl,
-          drivers_license_back_url: driversLicenseBackUrl,
-          ssn: encryptedSSN,
-          insurance_docs_url: insuranceDocsUrl,
-          secondary_contact_name: secondaryContactName || null,
-          secondary_contact_phone: secondaryContactPhone || null,
-          secondary_contact_relationship: secondaryContactRelationship || null,
-          status: applicationStatus
+          status: 'incomplete'
         });
 
       if (applicationError) throw applicationError;
@@ -353,36 +204,14 @@ export default function GetStarted() {
       trackSignup('email');
       trackConversion('signup');
       trackLinkedInSignup();
-      trackLinkedInApplicationSubmit();
-      
-      // LinkedIn CAPI (server-side) - fire in background
-      supabase.functions.invoke('linkedin-capi', {
-        body: {
-          conversionType: 'signup',
-          email,
-          firstName,
-          lastName,
-          company: companyName,
-        }
-      }).catch(err => console.warn('[LinkedIn CAPI] Background call failed:', err));
-      
-      supabase.functions.invoke('linkedin-capi', {
-        body: {
-          conversionType: 'application_submit',
-          email,
-          firstName,
-          lastName,
-          company: companyName,
-        }
-      }).catch(err => console.warn('[LinkedIn CAPI] Background call failed:', err));
 
       toast({ 
-        title: "Success!", 
-        description: "Your account has been created. Welcome aboard!" 
+        title: "Account Created!", 
+        description: "Welcome to CRUMS Leasing!" 
       });
 
-      // Redirect to customer dashboard
-      navigate("/customer/dashboard");
+      // Show prompt to continue or go to dashboard
+      setFormMode("prompt");
 
     } catch (error: any) {
       console.error("Registration error:", error);
@@ -396,23 +225,428 @@ export default function GetStarted() {
     }
   };
 
+  const handleContinueFullForm = () => {
+    setFormMode("full-form");
+    setCurrentStep(1);
+  };
+
+  const handleGoToDashboard = () => {
+    navigate("/dashboard/customer");
+  };
+
+  const handleNext = () => {
+    setCurrentStep(prev => Math.min(prev + 1, 3));
+  };
+
+  const handleBack = () => {
+    setCurrentStep(prev => Math.max(prev - 1, 1));
+  };
+
+  const handleStepClick = (step: number) => {
+    setCurrentStep(step);
+  };
+
+  const validateFullFormStep1 = () => {
+    if (!dateOfBirth || !companyAddress || !businessType || !numberOfTrailers || !dateNeeded) {
+      toast({ title: "Error", description: "Please fill in all required fields", variant: "destructive" });
+      return false;
+    }
+    if (!validateAge(dateOfBirth)) {
+      toast({ title: "Error", description: "You must be at least 18 years old to apply", variant: "destructive" });
+      return false;
+    }
+    return true;
+  };
+
+  const handleFullFormSubmit = async () => {
+    if (!acceptedTerms) {
+      toast({ title: "Error", description: "Please accept the terms and conditions", variant: "destructive" });
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("No session found");
+
+      // Update profile with DOB
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({ 
+          company_name: companyName || null,
+          date_of_birth: dateOfBirth || null
+        })
+        .eq('id', session.user.id);
+
+      if (profileError) throw profileError;
+
+      // Upload documents if provided
+      let driversLicenseFrontUrl = null;
+      let driversLicenseBackUrl = null;
+      let insuranceDocsUrl = null;
+      let dotNumberUrl = null;
+
+      if (driversLicenseFront) {
+        driversLicenseFrontUrl = await uploadFile(driversLicenseFront, `${session.user.id}/drivers-license-front-${Date.now()}`);
+      }
+      if (driversLicenseBack) {
+        driversLicenseBackUrl = await uploadFile(driversLicenseBack, `${session.user.id}/drivers-license-back-${Date.now()}`);
+      }
+      if (insuranceDocs) {
+        insuranceDocsUrl = await uploadFile(insuranceDocs, `${session.user.id}/insurance-${Date.now()}`);
+      }
+      if (dotDocument) {
+        dotNumberUrl = await uploadFile(dotDocument, `${session.user.id}/dot-document-${Date.now()}`);
+      }
+
+      // Encrypt SSN before storing
+      let encryptedSSN = ssn;
+      if (ssn) {
+        const { data: encryptData, error: encryptError } = await supabase.functions.invoke('ssn-crypto', {
+          body: { action: 'encrypt', ssn: ssn }
+        });
+        
+        if (encryptError) {
+          console.error("SSN encryption error:", encryptError);
+          throw new Error("Failed to secure SSN data. Please try again.");
+        }
+        encryptedSSN = encryptData.encrypted;
+      }
+
+      // Determine status based on documents
+      const hasDocuments = driversLicenseFrontUrl && driversLicenseBackUrl && insuranceDocsUrl;
+      const applicationStatus = hasDocuments ? 'pending_review' : 'incomplete';
+
+      // Update customer application
+      const { error: applicationError } = await supabase
+        .from('customer_applications')
+        .update({
+          dot_number_url: dotNumberUrl,
+          company_address: companyAddress || null,
+          business_type: businessType || null,
+          number_of_trailers: numberOfTrailers ? parseInt(numberOfTrailers) : null,
+          trailer_type: trailerType || null,
+          date_needed: dateNeeded || null,
+          truck_vin: truckVin || null,
+          insurance_company: insuranceCompany || null,
+          insurance_company_phone: insuranceCompanyPhone || null,
+          message: message || null,
+          drivers_license_url: driversLicenseFrontUrl,
+          drivers_license_back_url: driversLicenseBackUrl,
+          ssn: encryptedSSN || null,
+          insurance_docs_url: insuranceDocsUrl,
+          secondary_contact_name: secondaryContactName || null,
+          secondary_contact_phone: secondaryContactPhone || null,
+          secondary_contact_relationship: secondaryContactRelationship || null,
+          status: applicationStatus
+        })
+        .eq('user_id', session.user.id);
+
+      if (applicationError) throw applicationError;
+
+      trackLinkedInApplicationSubmit();
+      
+      // LinkedIn CAPI
+      supabase.functions.invoke('linkedin-capi', {
+        body: {
+          conversionType: 'application_submit',
+          email,
+          firstName,
+          lastName,
+          company: companyName,
+        }
+      }).catch(err => console.warn('[LinkedIn CAPI] Background call failed:', err));
+
+      toast({ 
+        title: "Application Updated!", 
+        description: "Your application has been submitted for review." 
+      });
+
+      navigate("/dashboard/customer");
+
+    } catch (error: any) {
+      console.error("Application update error:", error);
+      toast({ 
+        title: "Error", 
+        description: error.message || "Failed to update application. Please try again.", 
+        variant: "destructive" 
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const steps = [
-    { number: 1, title: "Account Info", description: "Create your account" },
+    { number: 1, title: "Details", description: "Business info" },
     { number: 2, title: "Documents", description: "Required documents" },
     { number: 3, title: "Review", description: "Confirm & submit" }
   ];
 
-  const isStepComplete = (step: number) => {
-    if (step === 1) return email && password && confirmPassword && firstName && lastName && dateOfBirth && phoneNumber && ssn;
-    if (step === 2) return dotDocument && driversLicenseFront && driversLicenseBack && insuranceDocs;
-    return false;
+  const getStepStatus = (step: number): 'complete' | 'warning' | 'default' => {
+    if (step === 1) {
+      const hasAll = dateOfBirth && companyAddress && businessType && numberOfTrailers && dateNeeded;
+      if (hasAll && validateAge(dateOfBirth)) return 'complete';
+      if (dateOfBirth || companyAddress || businessType) return 'warning';
+      return 'default';
+    }
+    if (step === 2) {
+      if (dotDocument && driversLicenseFront && driversLicenseBack && insuranceDocs) return 'complete';
+      return 'default';
+    }
+    if (step === 3) {
+      if (acceptedTerms) return 'complete';
+      return 'default';
+    }
+    return 'default';
   };
 
+  // Quick Start Form
+  if (formMode === "quick-start") {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <SEO
+          title="Get Started - Apply for Trailer Leasing"
+          description="Start your trailer leasing application with CRUMS Leasing. Fast approval process for 53-foot dry van and flatbed trailers. Create your account and submit your application today."
+          canonical="https://crumsleasing.com/get-started"
+          structuredData={breadcrumbSchema}
+        />
+        <Navigation />
+        <Breadcrumbs />
+        
+        <main className="flex-1 bg-gradient-to-b from-background to-muted py-12">
+          <div className="container mx-auto px-4 max-w-lg">
+            <div className="text-center mb-8">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-secondary/10 rounded-full mb-4">
+                <Zap className="h-8 w-8 text-secondary" />
+              </div>
+              <h1 className="text-3xl font-bold text-foreground mb-2">Quick Start</h1>
+              <p className="text-muted-foreground">Create your account in 60 seconds</p>
+            </div>
+
+            <Card className="shadow-lg">
+              <CardHeader>
+                <CardTitle className="text-xl">Create Your Account</CardTitle>
+                <CardDescription>
+                  Get started fast - complete your full application later
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="email">Email Address *</Label>
+                    <Input 
+                      id="email" 
+                      type="email" 
+                      value={email} 
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="you@company.com"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="firstName">First Name *</Label>
+                      <Input 
+                        id="firstName" 
+                        value={firstName} 
+                        onChange={(e) => setFirstName(e.target.value)}
+                        placeholder="First name"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="lastName">Last Name *</Label>
+                      <Input 
+                        id="lastName" 
+                        value={lastName} 
+                        onChange={(e) => setLastName(e.target.value)}
+                        placeholder="Last name"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <Label htmlFor="phoneNumber">Phone Number *</Label>
+                    <Input 
+                      id="phoneNumber" 
+                      type="tel" 
+                      value={phoneNumber} 
+                      onChange={(e) => setPhoneNumber(e.target.value)}
+                      placeholder="(555) 123-4567"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="password">Password *</Label>
+                    <Input 
+                      id="password" 
+                      type="password" 
+                      value={password} 
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="Create a strong password"
+                    />
+                    <ul className="text-xs text-muted-foreground mt-1 space-y-0.5 list-disc list-inside">
+                      <li className={password.length >= 8 ? "text-green-600" : ""}>At least 8 characters</li>
+                      <li className={/[A-Z]/.test(password) ? "text-green-600" : ""}>One uppercase letter</li>
+                      <li className={/[a-z]/.test(password) ? "text-green-600" : ""}>One lowercase letter</li>
+                      <li className={/[0-9]/.test(password) ? "text-green-600" : ""}>One number</li>
+                    </ul>
+                  </div>
+                  <div>
+                    <Label htmlFor="confirmPassword">Confirm Password *</Label>
+                    <Input 
+                      id="confirmPassword" 
+                      type="password" 
+                      value={confirmPassword} 
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      placeholder="Re-enter your password"
+                    />
+                  </div>
+
+                  {/* Referral Code */}
+                  <div>
+                    <Label htmlFor="referralCode">Referral Code (Optional)</Label>
+                    <div className="relative">
+                      <Gift className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input 
+                        id="referralCode" 
+                        value={referralCode} 
+                        onChange={(e) => setReferralCode(e.target.value.toUpperCase())}
+                        placeholder="CRUMS-XXXXXX"
+                        className="pl-10"
+                      />
+                    </div>
+                  </div>
+
+                  <Button 
+                    onClick={handleQuickStartSubmit} 
+                    className="w-full bg-secondary hover:bg-secondary/90"
+                    disabled={isLoading}
+                  >
+                    {isLoading ? "Creating Account..." : "Create Account"}
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+
+                  <p className="text-center text-sm text-muted-foreground">
+                    Already have an account?{" "}
+                    <Link to="/login" className="text-primary hover:underline">
+                      Sign in
+                    </Link>
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            <p className="text-center text-xs text-muted-foreground mt-6">
+              By creating an account, you agree to our{" "}
+              <Link to="/terms" className="underline">Terms of Service</Link>
+              {" "}and{" "}
+              <Link to="/privacy" className="underline">Privacy Policy</Link>
+            </p>
+          </div>
+        </main>
+        
+        <Footer />
+      </div>
+    );
+  }
+
+  // Prompt after Quick Start
+  if (formMode === "prompt") {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <SEO
+          title="Account Created - CRUMS Leasing"
+          description="Your account has been created. Complete your application or start exploring your dashboard."
+          canonical="https://crumsleasing.com/get-started"
+        />
+        <Navigation />
+        
+        <main className="flex-1 bg-gradient-to-b from-background to-muted py-12 flex items-center">
+          <div className="container mx-auto px-4 max-w-2xl">
+            <div className="text-center mb-8">
+              <div className="inline-flex items-center justify-center w-20 h-20 bg-green-100 rounded-full mb-4">
+                <Check className="h-10 w-10 text-green-600" />
+              </div>
+              <h1 className="text-3xl font-bold text-foreground mb-2">Welcome to CRUMS Leasing!</h1>
+              <p className="text-muted-foreground">Your account has been created successfully</p>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-6">
+              <Card className="shadow-lg hover:shadow-xl transition-shadow cursor-pointer" onClick={handleContinueFullForm}>
+                <CardHeader className="text-center">
+                  <div className="inline-flex items-center justify-center w-12 h-12 bg-secondary/10 rounded-full mb-2 mx-auto">
+                    <FileText className="h-6 w-6 text-secondary" />
+                  </div>
+                  <CardTitle>Complete Application</CardTitle>
+                  <CardDescription>
+                    Upload documents and submit for faster approval
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ul className="text-sm text-muted-foreground space-y-2 mb-4">
+                    <li className="flex items-center gap-2">
+                      <Check className="h-4 w-4 text-green-600" />
+                      Upload driver's license
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Check className="h-4 w-4 text-green-600" />
+                      Provide insurance details
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Check className="h-4 w-4 text-green-600" />
+                      Submit DOT documentation
+                    </li>
+                  </ul>
+                  <Button className="w-full bg-secondary hover:bg-secondary/90">
+                    Continue Application
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </CardContent>
+              </Card>
+
+              <Card className="shadow-lg hover:shadow-xl transition-shadow cursor-pointer" onClick={handleGoToDashboard}>
+                <CardHeader className="text-center">
+                  <div className="inline-flex items-center justify-center w-12 h-12 bg-primary/10 rounded-full mb-2 mx-auto">
+                    <Zap className="h-6 w-6 text-primary" />
+                  </div>
+                  <CardTitle>Go to Dashboard</CardTitle>
+                  <CardDescription>
+                    Explore your account and finish later
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ul className="text-sm text-muted-foreground space-y-2 mb-4">
+                    <li className="flex items-center gap-2">
+                      <Check className="h-4 w-4 text-primary" />
+                      View available trailers
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Check className="h-4 w-4 text-primary" />
+                      Complete application anytime
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Check className="h-4 w-4 text-primary" />
+                      Contact our team
+                    </li>
+                  </ul>
+                  <Button variant="outline" className="w-full">
+                    Go to Dashboard
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </main>
+        
+        <Footer />
+      </div>
+    );
+  }
+
+  // Full Form (after quick start)
   return (
     <div className="min-h-screen flex flex-col">
       <SEO
-        title="Get Started - Apply for Trailer Leasing"
-        description="Start your trailer leasing application with CRUMS Leasing. Fast approval process for 53-foot dry van and flatbed trailers. Create your account and submit your application today."
+        title="Complete Your Application - CRUMS Leasing"
+        description="Complete your trailer leasing application with CRUMS Leasing."
         canonical="https://crumsleasing.com/get-started"
         structuredData={breadcrumbSchema}
       />
@@ -448,18 +682,13 @@ export default function GetStarted() {
                         ) : (
                           step.number
                         )}
-                        {status === 'warning' && currentStep !== step.number && (
-                          <span className="absolute -top-1 -right-1 w-3 h-3 bg-amber-500 rounded-full border-2 border-background" />
-                        )}
                       </button>
-                      <div className="text-center mt-2 hidden sm:block">
-                        <div className={`text-xs font-medium ${currentStep === step.number ? 'text-primary' : ''}`}>{step.title}</div>
-                        <div className="text-xs text-muted-foreground">{step.description}</div>
-                      </div>
+                      <span className="text-xs mt-2 font-medium text-center">{step.title}</span>
+                      <span className="text-xs text-muted-foreground hidden sm:block">{step.description}</span>
                     </div>
                     {index < steps.length - 1 && (
-                      <div className={`h-0.5 flex-1 transition-colors ${
-                        getStepStatus(step.number) === 'complete' ? 'bg-primary' : 'bg-muted'
+                      <div className={`h-1 flex-1 mx-2 rounded ${
+                        step.number < currentStep ? 'bg-primary' : 'bg-muted'
                       }`} />
                     )}
                   </div>
@@ -468,59 +697,23 @@ export default function GetStarted() {
             </div>
           </div>
 
-          <Card>
+          <Card className="shadow-lg">
             <CardHeader>
               <CardTitle>
-                {currentStep === 1 && "Create Your Account"}
-                {currentStep === 2 && "Documents & Additional Info"}
+                {currentStep === 1 && "Business Details"}
+                {currentStep === 2 && "Upload Documents"}
                 {currentStep === 3 && "Review & Submit"}
               </CardTitle>
               <CardDescription>
-                {currentStep === 1 && "Enter your basic information to get started"}
-                {currentStep === 2 && "Optional - Upload required documents or do this later"}
-                {currentStep === 3 && "Review your information and submit your application"}
+                {currentStep === 1 && "Tell us about your business needs"}
+                {currentStep === 2 && "Upload required documentation (can skip and do later)"}
+                {currentStep === 3 && "Review your information and submit"}
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {/* Step 1: Account Info */}
+              {/* Step 1: Business Details */}
               {currentStep === 1 && (
                 <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="email">Email *</Label>
-                    <Input 
-                      id="email" 
-                      type="email" 
-                      value={email} 
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="your@email.com"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="password">Password *</Label>
-                    <Input 
-                      id="password" 
-                      type="password" 
-                      value={password} 
-                      onChange={(e) => setPassword(e.target.value)}
-                      placeholder="Create a strong password"
-                    />
-                    <ul className="text-xs text-muted-foreground mt-1 space-y-0.5 list-disc list-inside">
-                      <li className={password.length >= 8 ? "text-green-600" : ""}>At least 8 characters</li>
-                      <li className={/[A-Z]/.test(password) ? "text-green-600" : ""}>One uppercase letter</li>
-                      <li className={/[a-z]/.test(password) ? "text-green-600" : ""}>One lowercase letter</li>
-                      <li className={/[0-9]/.test(password) ? "text-green-600" : ""}>One number</li>
-                    </ul>
-                  </div>
-                  <div>
-                    <Label htmlFor="confirmPassword">Confirm Password *</Label>
-                    <Input 
-                      id="confirmPassword" 
-                      type="password" 
-                      value={confirmPassword} 
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      placeholder="Re-enter your password"
-                    />
-                  </div>
                   <div>
                     <Label htmlFor="companyName">Company Name (Optional)</Label>
                     <Input 
@@ -530,27 +723,6 @@ export default function GetStarted() {
                       placeholder="Your company name"
                     />
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="firstName">First Name *</Label>
-                      <Input 
-                        id="firstName" 
-                        value={firstName} 
-                        onChange={(e) => setFirstName(e.target.value)}
-                        placeholder="First name"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="lastName">Last Name *</Label>
-                      <Input 
-                        id="lastName" 
-                        value={lastName} 
-                        onChange={(e) => setLastName(e.target.value)}
-                        placeholder="Last name"
-                      />
-                    </div>
-                  </div>
-                  <p className="text-xs text-muted-foreground -mt-2">Name must match your driver's license exactly</p>
                   <div>
                     <Label htmlFor="dateOfBirth">Date of Birth *</Label>
                     <Input 
@@ -561,16 +733,6 @@ export default function GetStarted() {
                       max={new Date(new Date().setFullYear(new Date().getFullYear() - 18)).toISOString().split('T')[0]}
                     />
                     <p className="text-xs text-muted-foreground mt-1">Must be 18 years or older</p>
-                  </div>
-                  <div>
-                    <Label htmlFor="phoneNumber">Phone Number *</Label>
-                    <Input 
-                      id="phoneNumber" 
-                      type="tel" 
-                      value={phoneNumber} 
-                      onChange={(e) => setPhoneNumber(e.target.value)}
-                      placeholder="(555) 123-4567"
-                    />
                   </div>
                   <div>
                     <Label htmlFor="companyAddress">Address *</Label>
@@ -595,28 +757,30 @@ export default function GetStarted() {
                       </SelectContent>
                     </Select>
                   </div>
-                  <div>
-                    <Label htmlFor="numberOfTrailers">Number of Trailers Needed *</Label>
-                    <Input 
-                      id="numberOfTrailers" 
-                      type="number"
-                      min="1"
-                      value={numberOfTrailers} 
-                      onChange={(e) => setNumberOfTrailers(e.target.value)}
-                      placeholder="1"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="trailerType">Trailer Type *</Label>
-                    <Select value={trailerType} onValueChange={setTrailerType}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select trailer type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="53' Dry Van">53' Dry Van</SelectItem>
-                        <SelectItem value="48' Flatbed">48' Flatbed</SelectItem>
-                      </SelectContent>
-                    </Select>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="numberOfTrailers">Number of Trailers *</Label>
+                      <Input 
+                        id="numberOfTrailers" 
+                        type="number"
+                        min="1"
+                        value={numberOfTrailers} 
+                        onChange={(e) => setNumberOfTrailers(e.target.value)}
+                        placeholder="1"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="trailerType">Trailer Type</Label>
+                      <Select value={trailerType} onValueChange={setTrailerType}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="53' Dry Van">53' Dry Van</SelectItem>
+                          <SelectItem value="48' Flatbed">48' Flatbed</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
                   <div>
                     <Label htmlFor="dateNeeded">Date Needed *</Label>
@@ -628,7 +792,7 @@ export default function GetStarted() {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="truckVin">Cab VIN#</Label>
+                    <Label htmlFor="truckVin">Cab VIN# (Optional)</Label>
                     <Input 
                       id="truckVin" 
                       value={truckVin} 
@@ -636,12 +800,11 @@ export default function GetStarted() {
                       placeholder="Enter your cab/truck VIN"
                       maxLength={17}
                     />
-                    <p className="text-xs text-muted-foreground mt-1">17-character Vehicle Identification Number</p>
                   </div>
                   <div>
                     <div className="flex items-center justify-between mb-1.5">
                       <Label htmlFor="ssn">
-                        {ssnType === "ssn" ? "Social Security Number" : "Employer Identification Number"} *
+                        {ssnType === "ssn" ? "Social Security Number" : "Employer Identification Number"}
                       </Label>
                       <div className="flex items-center gap-2 text-xs">
                         <button
@@ -684,352 +847,248 @@ export default function GetStarted() {
                       placeholder={ssnType === "ein" ? "XX-XXXXXXX" : "XXX-XX-XXXX"}
                       maxLength={ssnType === "ein" ? 10 : 11}
                     />
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {ssnType === "ein" 
-                        ? "9-digit Employer Identification Number for business entities."
-                        : "9-digit Social Security Number for individual owner-operators."
-                      }
-                    </p>
                   </div>
                   <div>
-                    <Label htmlFor="message">Message (Optional)</Label>
+                    <Label htmlFor="message">Additional Notes (Optional)</Label>
                     <Textarea 
                       id="message" 
                       value={message} 
                       onChange={(e) => setMessage(e.target.value)}
-                      placeholder="Any additional information or special requests..."
+                      placeholder="Any special requests or notes..."
                       rows={3}
                     />
                   </div>
-                  <div>
-                    <Label htmlFor="referralCode" className="flex items-center gap-2">
-                      <Gift className="h-4 w-4 text-primary" />
-                      Referral Code (Optional)
-                    </Label>
-                    <div className="flex gap-2">
-                      <div className="relative flex-1">
-                        <Input 
-                          id="referralCode" 
-                          type="text"
-                          value={referralCode} 
-                          onChange={(e) => setReferralCode(e.target.value.toUpperCase())}
-                          placeholder="e.g. CRUMS-ABC123"
-                          className={`pr-10 ${
-                            referralCode.trim() 
-                              ? validateReferralCode(referralCode).valid 
-                                ? "border-green-500 focus-visible:ring-green-500" 
-                                : "border-destructive focus-visible:ring-destructive"
-                              : ""
-                          }`}
-                          onKeyDown={(e) => {
-                            if ((e.ctrlKey || e.metaKey) && e.key === 'v') {
-                              setShowPasteHint(true);
-                              setTimeout(() => setShowPasteHint(false), 2000);
-                            }
-                          }}
-                          onFocus={() => setShowPasteHint(false)}
-                        />
-                        {referralCode.trim() && (
-                          <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                            {validateReferralCode(referralCode).valid ? (
-                              <Check className="h-4 w-4 text-green-500" />
-                            ) : (
-                              <AlertCircle className="h-4 w-4 text-destructive" />
-                            )}
-                          </div>
-                        )}
-                      </div>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="icon"
-                        onClick={async () => {
-                          try {
-                            const text = await navigator.clipboard.readText();
-                            setReferralCode(text.toUpperCase().trim());
-                          } catch {
-                            toast({ title: "Error", description: "Unable to access clipboard", variant: "destructive" });
-                          }
-                        }}
-                        title="Paste from clipboard"
-                      >
-                        <Clipboard className="h-4 w-4" />
-                      </Button>
-                    </div>
-                    {referralCode.trim() && !validateReferralCode(referralCode).valid ? (
-                      <p className="text-xs text-destructive mt-1">
-                        {validateReferralCode(referralCode).error}
-                      </p>
-                    ) : showPasteHint ? (
-                      <p className="text-xs text-primary mt-1 animate-pulse">
-                        Pasting... or click the clipboard button
-                      </p>
-                    ) : (
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Have a referral code? Enter it to save $250 on your lease!
-                      </p>
-                    )}
+
+                  <div className="flex justify-between pt-4">
+                    <Button variant="outline" onClick={handleGoToDashboard}>
+                      Skip for Now
+                    </Button>
+                    <Button onClick={() => {
+                      if (validateFullFormStep1()) handleNext();
+                    }} className="bg-secondary hover:bg-secondary/90">
+                      Continue
+                      <ArrowRight className="ml-2 h-4 w-4" />
+                    </Button>
                   </div>
                 </div>
               )}
 
               {/* Step 2: Documents */}
               {currentStep === 2 && (
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="dotDocument">DOT Registration Document</Label>
-                    <Input 
-                      id="dotDocument" 
-                      type="file"
-                      accept="image/*,.pdf"
-                      onChange={(e) => setDotDocument(e.target.files?.[0] || null)}
-                    />
-                    <p className="text-xs text-muted-foreground mt-1">Accepted: JPG, PNG, PDF</p>
-                    {dotDocument && (
-                      <p className="text-xs text-green-600 mt-1">✓ {dotDocument.name}</p>
-                    )}
+                <div className="space-y-6">
+                  <div className="bg-muted/50 rounded-lg p-4 mb-4">
+                    <p className="text-sm text-muted-foreground flex items-start gap-2">
+                      <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                      Documents can be uploaded now or later from your dashboard. Having all documents speeds up approval.
+                    </p>
                   </div>
-                  <div>
-                    <Label htmlFor="driversLicenseFront">Driver's License (Front) *</Label>
-                    <Input 
-                      id="driversLicenseFront" 
-                      type="file" 
-                      accept="image/*,.pdf"
-                      onChange={(e) => setDriversLicenseFront(e.target.files?.[0] || null)}
-                    />
-                    <p className="text-xs text-muted-foreground mt-1">Accepted: JPG, PNG, PDF</p>
-                    {driversLicenseFront && (
-                      <p className="text-xs text-green-600 mt-1">✓ {driversLicenseFront.name}</p>
-                    )}
-                  </div>
-                  <div>
-                    <Label htmlFor="driversLicenseBack">Driver's License (Back) *</Label>
-                    <Input 
-                      id="driversLicenseBack" 
-                      type="file" 
-                      accept="image/*,.pdf"
-                      onChange={(e) => setDriversLicenseBack(e.target.files?.[0] || null)}
-                    />
-                    <p className="text-xs text-muted-foreground mt-1">Accepted: JPG, PNG, PDF</p>
-                    {driversLicenseBack && (
-                      <p className="text-xs text-green-600 mt-1">✓ {driversLicenseBack.name}</p>
-                    )}
-                  </div>
-                  <div>
-                    <Label htmlFor="insuranceDocs">Insurance Documents</Label>
-                    <Input 
-                      id="insuranceDocs" 
-                      type="file" 
-                      accept="image/*,.pdf"
-                      onChange={(e) => setInsuranceDocs(e.target.files?.[0] || null)}
-                    />
-                    <p className="text-xs text-muted-foreground mt-1">Accepted: JPG, PNG, PDF</p>
-                  </div>
-                  <div>
-                    <Label htmlFor="insuranceCompany">Insurance Company Name</Label>
-                    <Input 
-                      id="insuranceCompany" 
-                      value={insuranceCompany} 
-                      onChange={(e) => setInsuranceCompany(e.target.value)}
-                      placeholder="Insurance company name"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="insuranceCompanyPhone">Insurance Company Phone</Label>
-                    <Input 
-                      id="insuranceCompanyPhone" 
-                      type="tel"
-                      value={insuranceCompanyPhone} 
-                      onChange={(e) => setInsuranceCompanyPhone(e.target.value)}
-                      placeholder="(555) 555-5555"
-                    />
-                  </div>
-                  <div className="pt-4 border-t">
-                    <h3 className="font-semibold mb-4">Secondary Contact (Optional)</h3>
-                    <div className="space-y-4">
-                      <div>
-                        <Label htmlFor="secondaryContactName">Name</Label>
+
+                  <div className="grid gap-4">
+                    <div className="border rounded-lg p-4">
+                      <Label className="font-medium">Driver's License (Front)</Label>
+                      <Input 
+                        type="file" 
+                        accept="image/*,.pdf"
+                        onChange={(e) => setDriversLicenseFront(e.target.files?.[0] || null)}
+                        className="mt-2"
+                      />
+                      {driversLicenseFront && (
+                        <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
+                          <Check className="h-3 w-3" /> {driversLicenseFront.name}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="border rounded-lg p-4">
+                      <Label className="font-medium">Driver's License (Back)</Label>
+                      <Input 
+                        type="file" 
+                        accept="image/*,.pdf"
+                        onChange={(e) => setDriversLicenseBack(e.target.files?.[0] || null)}
+                        className="mt-2"
+                      />
+                      {driversLicenseBack && (
+                        <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
+                          <Check className="h-3 w-3" /> {driversLicenseBack.name}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="border rounded-lg p-4">
+                      <Label className="font-medium">Insurance Documents</Label>
+                      <Input 
+                        type="file" 
+                        accept="image/*,.pdf"
+                        onChange={(e) => setInsuranceDocs(e.target.files?.[0] || null)}
+                        className="mt-2"
+                      />
+                      {insuranceDocs && (
+                        <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
+                          <Check className="h-3 w-3" /> {insuranceDocs.name}
+                        </p>
+                      )}
+                      <div className="mt-3 space-y-2">
                         <Input 
-                          id="secondaryContactName" 
-                          value={secondaryContactName} 
-                          onChange={(e) => setSecondaryContactName(e.target.value)}
-                          placeholder="Secondary contact name"
+                          placeholder="Insurance Company Name"
+                          value={insuranceCompany}
+                          onChange={(e) => setInsuranceCompany(e.target.value)}
                         />
-                      </div>
-                      <div>
-                        <Label htmlFor="secondaryContactPhone">Phone</Label>
                         <Input 
-                          id="secondaryContactPhone" 
-                          type="tel"
-                          value={secondaryContactPhone} 
-                          onChange={(e) => setSecondaryContactPhone(e.target.value)}
-                          placeholder="(555) 123-4567"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="secondaryContactRelationship">Relationship</Label>
-                        <Input 
-                          id="secondaryContactRelationship" 
-                          value={secondaryContactRelationship} 
-                          onChange={(e) => setSecondaryContactRelationship(e.target.value)}
-                          placeholder="e.g., Business Partner, Spouse"
+                          placeholder="Insurance Company Phone"
+                          value={insuranceCompanyPhone}
+                          onChange={(e) => setInsuranceCompanyPhone(e.target.value)}
                         />
                       </div>
                     </div>
+
+                    <div className="border rounded-lg p-4">
+                      <Label className="font-medium">DOT/MC Documentation (Optional)</Label>
+                      <Input 
+                        type="file" 
+                        accept="image/*,.pdf"
+                        onChange={(e) => setDotDocument(e.target.files?.[0] || null)}
+                        className="mt-2"
+                      />
+                      {dotDocument && (
+                        <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
+                          <Check className="h-3 w-3" /> {dotDocument.name}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="border rounded-lg p-4">
+                    <Label className="font-medium mb-3 block">Secondary Contact (Emergency)</Label>
+                    <div className="grid gap-3">
+                      <Input 
+                        placeholder="Contact Name"
+                        value={secondaryContactName}
+                        onChange={(e) => setSecondaryContactName(e.target.value)}
+                      />
+                      <Input 
+                        placeholder="Contact Phone"
+                        value={secondaryContactPhone}
+                        onChange={(e) => setSecondaryContactPhone(e.target.value)}
+                      />
+                      <Input 
+                        placeholder="Relationship (e.g., Spouse, Business Partner)"
+                        value={secondaryContactRelationship}
+                        onChange={(e) => setSecondaryContactRelationship(e.target.value)}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex justify-between pt-4">
+                    <Button variant="outline" onClick={handleBack}>
+                      <ArrowLeft className="mr-2 h-4 w-4" />
+                      Back
+                    </Button>
+                    <Button onClick={handleNext} className="bg-secondary hover:bg-secondary/90">
+                      Continue
+                      <ArrowRight className="ml-2 h-4 w-4" />
+                    </Button>
                   </div>
                 </div>
               )}
 
-              {/* Step 3: Review */}
+              {/* Step 3: Review & Submit */}
               {currentStep === 3 && (
                 <div className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <h3 className="font-semibold text-sm text-muted-foreground">Account Information</h3>
-                      <div className="bg-muted/50 p-4 rounded-lg space-y-1">
-                        <p className="text-sm"><span className="font-medium">Email:</span> {email}</p>
-                        {companyName && <p className="text-sm"><span className="font-medium">Company:</span> {companyName}</p>}
-                        <p className="text-sm"><span className="font-medium">Name:</span> {firstName} {lastName}</p>
-                        <p className="text-sm"><span className="font-medium">Phone:</span> {phoneNumber}</p>
-                        <p className="text-sm"><span className="font-medium">Address:</span> {companyAddress}</p>
-                        <p className="text-sm"><span className="font-medium">Business Type:</span> {businessType}</p>
-                        <p className="text-sm"><span className="font-medium">Trailers Needed:</span> {numberOfTrailers}</p>
-                        <p className="text-sm"><span className="font-medium">Trailer Type:</span> {trailerType}</p>
-                        <p className="text-sm"><span className="font-medium">Date Needed:</span> {dateNeeded}</p>
-                        <p className="text-sm"><span className="font-medium">Cab VIN#:</span> {truckVin}</p>
-                        {message && <p className="text-sm"><span className="font-medium">Message:</span> {message}</p>}
+                  <div className="bg-muted/50 rounded-lg p-6">
+                    <h3 className="font-semibold mb-4">Application Summary</h3>
+                    <div className="grid md:grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <p className="text-muted-foreground">Name</p>
+                        <p className="font-medium">{firstName} {lastName}</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground">Email</p>
+                        <p className="font-medium">{email}</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground">Phone</p>
+                        <p className="font-medium">{phoneNumber}</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground">Business Type</p>
+                        <p className="font-medium">{businessType || "Not specified"}</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground">Trailers Needed</p>
+                        <p className="font-medium">{numberOfTrailers} {trailerType || "trailer(s)"}</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground">Date Needed</p>
+                        <p className="font-medium">{dateNeeded || "Not specified"}</p>
                       </div>
                     </div>
-                    
-                    <div className="space-y-2">
-                      <h3 className="font-semibold text-sm text-muted-foreground">Insurance</h3>
-                      <div className="bg-muted/50 p-4 rounded-lg">
-                        {insuranceCompany ? (
-                          <p className="text-sm"><span className="font-medium">Company:</span> {insuranceCompany}</p>
-                        ) : (
-                          <p className="text-sm text-muted-foreground italic">Not provided</p>
+
+                    <div className="mt-4 pt-4 border-t">
+                      <p className="text-muted-foreground mb-2">Documents Uploaded</p>
+                      <div className="flex flex-wrap gap-2">
+                        {driversLicenseFront && (
+                          <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-800 text-xs rounded">
+                            <Check className="h-3 w-3" /> License (Front)
+                          </span>
                         )}
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <h3 className="font-semibold text-sm text-muted-foreground">Documents</h3>
-                      <div className="bg-muted/50 p-4 rounded-lg space-y-1">
-                        <p className="text-sm flex items-center gap-2">
-                          <span className="font-medium">DOT Document:</span>
-                          {dotDocument ? <Check className="h-4 w-4 text-primary" /> : <span className="text-muted-foreground italic">Not uploaded</span>}
-                        </p>
-                        <p className="text-sm flex items-center gap-2">
-                          <span className="font-medium">Driver's License (Front):</span>
-                          {driversLicenseFront ? <Check className="h-4 w-4 text-primary" /> : <span className="text-muted-foreground italic">Not uploaded</span>}
-                        </p>
-                        <p className="text-sm flex items-center gap-2">
-                          <span className="font-medium">Driver's License (Back):</span>
-                          {driversLicenseBack ? <Check className="h-4 w-4 text-primary" /> : <span className="text-muted-foreground italic">Not uploaded</span>}
-                        </p>
-                        <p className="text-sm flex items-center gap-2">
-                          <span className="font-medium">Insurance:</span>
-                          {insuranceDocs ? <Check className="h-4 w-4 text-primary" /> : <span className="text-muted-foreground italic">Not uploaded</span>}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <h3 className="font-semibold text-sm text-muted-foreground">Secondary Contact</h3>
-                      <div className="bg-muted/50 p-4 rounded-lg">
-                        {secondaryContactName ? (
-                          <div className="space-y-1">
-                            <p className="text-sm"><span className="font-medium">Name:</span> {secondaryContactName}</p>
-                            <p className="text-sm"><span className="font-medium">Phone:</span> {secondaryContactPhone}</p>
-                            <p className="text-sm"><span className="font-medium">Relationship:</span> {secondaryContactRelationship}</p>
-                          </div>
-                        ) : (
-                          <p className="text-sm text-muted-foreground italic">Not provided</p>
+                        {driversLicenseBack && (
+                          <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-800 text-xs rounded">
+                            <Check className="h-3 w-3" /> License (Back)
+                          </span>
+                        )}
+                        {insuranceDocs && (
+                          <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-800 text-xs rounded">
+                            <Check className="h-3 w-3" /> Insurance
+                          </span>
+                        )}
+                        {dotDocument && (
+                          <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-800 text-xs rounded">
+                            <Check className="h-3 w-3" /> DOT Docs
+                          </span>
+                        )}
+                        {!driversLicenseFront && !driversLicenseBack && !insuranceDocs && !dotDocument && (
+                          <span className="text-xs text-muted-foreground">No documents uploaded yet</span>
                         )}
                       </div>
                     </div>
                   </div>
 
-                  <div className="flex items-start space-x-2 pt-4 border-t">
+                  <div className="flex items-start space-x-3 p-4 border rounded-lg">
                     <Checkbox 
                       id="terms" 
                       checked={acceptedTerms}
                       onCheckedChange={(checked) => setAcceptedTerms(checked as boolean)}
-                      className="mt-1"
                     />
-                    <Label htmlFor="terms" className="text-sm leading-relaxed cursor-pointer">
-                      I accept the <Link to="/terms" className="text-primary hover:underline">terms and conditions</Link> and <Link to="/privacy" className="text-primary hover:underline">privacy policy</Link>, and authorize CRUM'S Trucking & Leasing to process my application. I understand that:
-                      <ul className="list-disc pl-5 mt-2 space-y-1 text-muted-foreground">
-                        <li>A <span className="font-medium text-foreground">$1,000 security deposit</span> and first month's rent are required before trailer pickup</li>
-                        <li>Payments are processed automatically on my billing cycle (weekly, bi-weekly, or monthly)</li>
-                        <li>If a payment fails, I will receive notifications and have a <span className="font-medium text-foreground">7-day grace period</span> to resolve the issue</li>
-                        <li>After 7 days of non-payment, my account will be <span className="font-medium text-foreground">suspended</span> and trailer access will be restricted</li>
-                        <li>Service can be reinstated once full payment is received</li>
-                      </ul>
-                    </Label>
+                    <label htmlFor="terms" className="text-sm leading-relaxed cursor-pointer">
+                      I agree to the{" "}
+                      <Link to="/terms" className="text-primary hover:underline" target="_blank">Terms of Service</Link>
+                      {" "}and{" "}
+                      <Link to="/privacy" className="text-primary hover:underline" target="_blank">Privacy Policy</Link>
+                      . I understand that my application will be reviewed and I may be contacted for additional information.
+                    </label>
+                  </div>
+
+                  <div className="flex justify-between pt-4">
+                    <Button variant="outline" onClick={handleBack}>
+                      <ArrowLeft className="mr-2 h-4 w-4" />
+                      Back
+                    </Button>
+                    <Button 
+                      onClick={handleFullFormSubmit}
+                      disabled={isLoading || !acceptedTerms}
+                      className="bg-secondary hover:bg-secondary/90"
+                    >
+                      {isLoading ? "Submitting..." : "Submit Application"}
+                      <ArrowRight className="ml-2 h-4 w-4" />
+                    </Button>
                   </div>
                 </div>
               )}
-
-              {/* Navigation Buttons */}
-              <div className="flex justify-between mt-8 pt-6 border-t">
-                <Button 
-                  variant="outline" 
-                  onClick={handleBack}
-                  disabled={currentStep === 1 || isLoading}
-                >
-                  <ArrowLeft className="mr-2 h-4 w-4" />
-                  Back
-                </Button>
-
-                <div className="flex gap-2">
-                  {currentStep === 2 && (
-                    <Button 
-                      variant="secondary" 
-                      onClick={handleDoThisLater}
-                      disabled={isLoading}
-                    >
-                      Do This Later
-                    </Button>
-                  )}
-
-                  {currentStep < 3 ? (
-                    <Button onClick={handleNext} disabled={isLoading}>
-                      Continue
-                      <ArrowRight className="ml-2 h-4 w-4" />
-                    </Button>
-                  ) : (
-                    <Button onClick={handleSubmit} disabled={isLoading || !acceptedTerms}>
-                      {isLoading ? "Creating Account..." : "Submit Application"}
-                    </Button>
-                  )}
-                </div>
-              </div>
             </CardContent>
           </Card>
-
-          {/* Helpful Links */}
-          <div className="mt-8 text-center">
-            <p className="text-muted-foreground mb-4">
-              Have questions before applying?
-            </p>
-            <div className="flex flex-wrap justify-center gap-4">
-              <Link to="/services/trailer-leasing" className="text-primary hover:underline font-medium">
-                Trailer leasing details
-              </Link>
-              <span className="text-muted-foreground">•</span>
-              <Link to="/contact" className="text-primary hover:underline font-medium">
-                Speak with our team
-              </Link>
-              <span className="text-muted-foreground">•</span>
-              <Link to="/resources" className="text-primary hover:underline font-medium">
-                Carrier resources & tools
-              </Link>
-            </div>
-          </div>
         </div>
       </main>
-
+      
       <Footer />
     </div>
   );
