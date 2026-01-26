@@ -328,14 +328,14 @@ export function CustomerFormDialog({ open, onOpenChange, customer }: CustomerFor
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="w-[95vw] max-w-3xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
         <DialogHeader>
           <DialogTitle>{isEditing ? "Edit Customer" : "Add Customer"}</DialogTitle>
         </DialogHeader>
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="account_number"
@@ -402,7 +402,7 @@ export function CustomerFormDialog({ open, onOpenChange, customer }: CustomerFor
               )}
             />
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="email"
@@ -469,12 +469,12 @@ export function CustomerFormDialog({ open, onOpenChange, customer }: CustomerFor
               )}
             />
 
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
               <FormField
                 control={form.control}
                 name="city"
                 render={({ field }) => (
-                  <FormItem>
+                  <FormItem className="col-span-2 sm:col-span-1">
                     <FormLabel>City</FormLabel>
                     <FormControl>
                       <Input {...field} />
@@ -570,19 +570,19 @@ export function CustomerFormDialog({ open, onOpenChange, customer }: CustomerFor
                         {customerTrailers.map((trailer) => (
                           <div
                             key={trailer.id}
-                            className="flex items-center justify-between p-3 bg-muted/50 rounded-lg"
+                            className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 bg-muted/50 rounded-lg gap-2"
                           >
                             <div className="flex flex-col">
-                              <div className="flex items-center gap-2">
+                              <div className="flex items-center gap-2 flex-wrap">
                                 <span className="font-medium">#{trailer.trailer_number}</span>
                                 <Badge variant="outline">{trailer.type}</Badge>
                               </div>
-                              <span className="text-sm text-muted-foreground font-mono">
+                              <span className="text-sm text-muted-foreground font-mono break-all">
                                 {trailer.vin}
                               </span>
                             </div>
                             {trailer.rental_rate && (
-                              <div className="text-right">
+                              <div className="text-left sm:text-right">
                                 <span className="font-semibold text-green-600">
                                   ${trailer.rental_rate.toLocaleString()}
                                 </span>
@@ -634,11 +634,11 @@ export function CustomerFormDialog({ open, onOpenChange, customer }: CustomerFor
                     {/* Referral Code */}
                     {customer?.referral_code ? (
                       <div className="space-y-3">
-                        <div className="flex items-center justify-between">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                           <div>
                             <p className="text-sm text-muted-foreground">Referral Code</p>
                             <div className="flex items-center gap-2 mt-1">
-                              <code className="bg-muted px-3 py-1 rounded text-lg font-mono">
+                              <code className="bg-muted px-3 py-1 rounded text-base sm:text-lg font-mono break-all">
                                 {customer.referral_code}
                               </code>
                               <Button
@@ -662,21 +662,21 @@ export function CustomerFormDialog({ open, onOpenChange, customer }: CustomerFor
                         </div>
 
                         {/* Stats */}
-                        <div className="grid grid-cols-4 gap-3 pt-2">
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 pt-2">
                           <div className="text-center p-2 bg-muted rounded">
-                            <p className="text-2xl font-bold">{customer.referrals_sent || 0}</p>
+                            <p className="text-xl sm:text-2xl font-bold">{customer.referrals_sent || 0}</p>
                             <p className="text-xs text-muted-foreground">Total Sent</p>
                           </div>
                           <div className="text-center p-2 bg-muted rounded">
-                            <p className="text-2xl font-bold">{customer.referrals_pending || 0}</p>
+                            <p className="text-xl sm:text-2xl font-bold">{customer.referrals_pending || 0}</p>
                             <p className="text-xs text-muted-foreground">Pending</p>
                           </div>
                           <div className="text-center p-2 bg-muted rounded">
-                            <p className="text-2xl font-bold">{customer.referrals_credited || 0}</p>
+                            <p className="text-xl sm:text-2xl font-bold">{customer.referrals_credited || 0}</p>
                             <p className="text-xs text-muted-foreground">Credited</p>
                           </div>
                           <div className="text-center p-2 bg-green-500/10 rounded">
-                            <p className="text-2xl font-bold text-green-600">${customer.credits_earned || 0}</p>
+                            <p className="text-xl sm:text-2xl font-bold text-green-600">${customer.credits_earned || 0}</p>
                             <p className="text-xs text-muted-foreground">Earned</p>
                           </div>
                         </div>
@@ -700,13 +700,13 @@ export function CustomerFormDialog({ open, onOpenChange, customer }: CustomerFor
                               {referralHistory.map((referral) => (
                                 <div
                                   key={referral.id}
-                                  className="flex items-center justify-between p-2 bg-muted/50 rounded text-sm"
+                                  className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-2 bg-muted/50 rounded text-sm gap-1 sm:gap-2"
                                 >
-                                  <div className="flex items-center gap-2">
-                                    <span className="font-medium">{referral.referred_email}</span>
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <span className="font-medium break-all">{referral.referred_email}</span>
                                     {getStatusBadge(referral.status)}
                                   </div>
-                                  <div className="flex items-center gap-2 text-muted-foreground">
+                                  <div className="flex items-center gap-2 text-muted-foreground text-xs sm:text-sm">
                                     <span>${referral.credit_amount}</span>
                                     <span>·</span>
                                     <span>{format(new Date(referral.created_at), "MMM d, yyyy")}</span>
@@ -727,11 +727,11 @@ export function CustomerFormDialog({ open, onOpenChange, customer }: CustomerFor
               </>
             )}
 
-            <div className="flex justify-end gap-3 pt-4">
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 pt-4">
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="w-full sm:w-auto">
                 Cancel
               </Button>
-              <Button type="submit" disabled={isSubmitting}>
+              <Button type="submit" disabled={isSubmitting} className="w-full sm:w-auto">
                 {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {isEditing ? "Save Changes" : "Add Customer"}
               </Button>
