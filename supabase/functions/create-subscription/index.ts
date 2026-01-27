@@ -253,7 +253,7 @@ serve(async (req) => {
     }
 
     if (coupon) {
-      subscriptionParams.coupon = coupon.id;
+      subscriptionParams.discounts = [{ coupon: coupon.id }];
     }
 
     const subscription = await stripe.subscriptions.create(subscriptionParams);
