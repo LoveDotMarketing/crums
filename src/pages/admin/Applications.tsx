@@ -169,6 +169,7 @@ export default function Applications() {
   const [selectedTrailerIds, setSelectedTrailerIds] = useState<string[]>([]);
   const [availableTrailers, setAvailableTrailers] = useState<AvailableTrailer[]>([]);
   const [assigningTrailer, setAssigningTrailer] = useState(false);
+  const [applyVeteransDiscount, setApplyVeteransDiscount] = useState(false);
   const [newStatus, setNewStatus] = useState("");
   const [adminNotes, setAdminNotes] = useState("");
   const [sendEmail, setSendEmail] = useState(true);
@@ -375,6 +376,7 @@ export default function Applications() {
   const openAssignTrailerDialog = async (app: Application) => {
     setSelectedApplication(app);
     setSelectedTrailerIds([]);
+    setApplyVeteransDiscount(false);
     await fetchAvailableTrailers();
     setAssignTrailerDialogOpen(true);
   };
@@ -434,6 +436,58 @@ export default function Applications() {
 
       if (error) throw error;
 
+      // Apply veterans discount if selected
+      if (applyVeteransDiscount) {
+        // Check if customer has an active subscription
+        const { data: subscriptionData } = await supabase
+          .from("customer_subscriptions")
+          .select("id")
+          .eq("customer_id", customerData.id)
+          .eq("status", "active")
+          .maybeSingle();
+
+        if (subscriptionData) {
+          // Get the Veterans discount
+          const { data: discountData } = await supabase
+            .from("discounts")
+            .select("id")
+            .eq("name", "Veterans & Military Discount")
+            .eq("is_active", true)
+            .maybeSingle();
+
+          if (discountData) {
+            // Check if discount not already applied
+            const { data: existingDiscount } = await supabase
+              .from("applied_discounts")
+              .select("id")
+              .eq("subscription_id", subscriptionData.id)
+              .eq("discount_id", discountData.id)
+              .maybeSingle();
+
+            if (!existingDiscount) {
+              // Apply the discount
+              await supabase
+                .from("applied_discounts")
+                .insert({
+                  subscription_id: subscriptionData.id,
+                  discount_id: discountData.id
+                });
+
+              toast({
+                title: "Veterans Discount Applied",
+                description: "10% Veterans & Military discount has been applied to the customer's subscription."
+              });
+            }
+          }
+        } else {
+          toast({
+            title: "Note",
+            description: "Trailers assigned. Veterans discount will be applied when subscription is created.",
+            variant: "default"
+          });
+        }
+      }
+
       toast({
         title: "Trailers Assigned",
         description: `${selectedTrailerIds.length} trailer(s) assigned to the customer successfully.`
@@ -442,6 +496,7 @@ export default function Applications() {
       setAssignTrailerDialogOpen(false);
       setSelectedApplication(null);
       setSelectedTrailerIds([]);
+      setApplyVeteransDiscount(false);
     } catch (error) {
       console.error("Error assigning trailers:", error);
       toast({
@@ -1012,6 +1067,27 @@ export default function Applications() {
                 </div>
               </div>
             )}
+            
+            {/* Veterans Discount Option */}
+            <div className="flex items-center space-x-3 p-4 rounded-lg border border-primary/30 bg-primary/5">
+              <Checkbox 
+                id="veterans-discount"
+                checked={applyVeteransDiscount}
+                onCheckedChange={(checked) => setApplyVeteransDiscount(!!checked)}
+              />
+              <div className="flex-1">
+                <label 
+                  htmlFor="veterans-discount" 
+                  className="text-sm font-medium cursor-pointer flex items-center gap-2"
+                >
+                  <span>🎖️</span>
+                  Apply Veterans & Military Discount (10% off)
+                </label>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Applies to customers who are veterans or active-duty military
+                </p>
+              </div>
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setAssignTrailerDialogOpen(false)}>

@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { CalendarIcon, Loader2, Copy, Gift, UserCheck, Truck } from "lucide-react";
+import { CalendarIcon, Loader2, Copy, Gift, UserCheck, Truck, Award } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -151,6 +151,36 @@ export function CustomerFormDialog({ open, onOpenChange, customer }: CustomerFor
       
       if (error) throw error;
       return (data || []) as TrailerInfo[];
+    },
+    enabled: !!customer?.id && open,
+  });
+
+  // Fetch applied discounts for this customer's subscription
+  const { data: customerDiscounts = [] } = useQuery({
+    queryKey: ['customer-discounts', customer?.id],
+    queryFn: async () => {
+      if (!customer?.id) return [];
+      
+      // Get customer's subscription first
+      const { data: subData } = await supabase
+        .from('customer_subscriptions')
+        .select('id')
+        .eq('customer_id', customer.id)
+        .maybeSingle();
+      
+      if (!subData?.id) return [];
+      
+      const { data, error } = await supabase
+        .from('applied_discounts')
+        .select(`
+          id,
+          applied_at,
+          discounts:discount_id (id, name, type, value, is_active)
+        `)
+        .eq('subscription_id', subData.id);
+      
+      if (error) throw error;
+      return data || [];
     },
     enabled: !!customer?.id && open,
   });
@@ -613,6 +643,46 @@ export function CustomerFormDialog({ open, onOpenChange, customer }: CustomerFor
                         No trailers assigned to this customer.
                       </p>
                     )}
+                  </CardContent>
+                </Card>
+              </>
+            )}
+
+            {/* Active Discounts Section - Only show when editing and has discounts */}
+            {isEditing && customerDiscounts.length > 0 && (
+              <>
+                <Separator className="my-6" />
+                
+                <Card className="border-primary/30 bg-primary/5">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <Award className="h-5 w-5 text-primary" />
+                      Active Discounts
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      {customerDiscounts.map((ad) => {
+                        const discount = ad.discounts as { id: string; name: string; type: string; value: number; is_active: boolean } | null;
+                        if (!discount || !discount.is_active) return null;
+                        return (
+                          <div
+                            key={ad.id}
+                            className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 bg-background rounded-lg gap-2"
+                          >
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <Badge variant="default" className="bg-primary">
+                                {discount.type === 'percentage' ? `${discount.value}% OFF` : `$${discount.value}`}
+                              </Badge>
+                              <span className="font-medium">{discount.name}</span>
+                            </div>
+                            <span className="text-sm text-muted-foreground">
+                              Applied {format(new Date(ad.applied_at), "MMM d, yyyy")}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
                   </CardContent>
                 </Card>
               </>
