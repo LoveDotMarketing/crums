@@ -203,8 +203,8 @@ const About = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center max-w-6xl mx-auto">
             <div>
               <ProgressiveImage
-                src="/images/crums-leasing-trailers.webp"
-                alt="CRUMS Leasing fleet of branded 53-foot dry van trailers"
+                src="/images/crums-trailers-hero.png"
+                alt="CRUMS Leasing flatbed and dry van trailers"
                 className="rounded-lg shadow-2xl"
                 width={800}
                 height={500}
