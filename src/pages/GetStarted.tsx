@@ -177,13 +177,13 @@ export default function GetStarted() {
 
       if (profileError) throw profileError;
 
-      // Create minimal customer application with status 'incomplete'
+      // Create minimal customer application with status 'new'
       const { error: applicationError } = await supabase
         .from('customer_applications')
         .insert({
           user_id: session.user.id,
           phone_number: phoneNumber,
-          status: 'incomplete'
+          status: 'new'
         });
 
       if (applicationError) throw applicationError;
