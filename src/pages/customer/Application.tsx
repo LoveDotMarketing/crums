@@ -259,7 +259,7 @@ export default function Application() {
         drivers_license_url: application.drivers_license_url,
         drivers_license_back_url: application.drivers_license_back_url,
         insurance_docs_url: application.insurance_docs_url,
-        status: calculateProgress() === 100 ? "pending" : "incomplete",
+        status: calculateProgress() === 100 ? "pending_review" : "new",
       };
 
       // Only update SSN if it's not masked - encrypt before saving
