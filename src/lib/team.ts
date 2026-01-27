@@ -73,24 +73,6 @@ export const teamMembers: TeamMember[] = [
       "Believes every call is an opportunity to help"
     ]
   },
-  {
-    slug: "jr",
-    name: "Jr",
-    role: "AC",
-    title: "Accounts Coordinator",
-    icon: Calculator,
-    bio: [
-      "Jr manages all financial operations at CRUMS Leasing with precision and integrity, ensuring smooth billing, payments, and financial processes.",
-      "He understands that cash flow is critical for owner-operators and small carriers, so he works to make our payment and billing processes as transparent and hassle-free as possible.",
-      "Jr's attention to detail keeps the financial side of CRUMS running smoothly, so our team can focus on what matters most — serving our customers."
-    ],
-    specialties: ["Financial Management", "Billing & Invoicing", "Payment Processing", "Budgeting"],
-    funFacts: [
-      "Passionate about clear, transparent billing",
-      "Always happy to explain invoices in detail",
-      "Believes in making finances stress-free for carriers"
-    ]
-  }
 ];
 
 export const getTeamMemberBySlug = (slug: string): TeamMember | undefined =>
