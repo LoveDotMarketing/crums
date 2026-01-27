@@ -318,19 +318,15 @@ export function CreateSubscriptionDialog({ onSuccess }: CreateSubscriptionDialog
           {/* Discount Selection */}
           <div className="space-y-2">
             <Label htmlFor="discount">Apply Discount (Optional)</Label>
-            <Select value={selectedDiscountId} onValueChange={setSelectedDiscountId}>
+            <Select 
+              value={selectedDiscountId || "none"} 
+              onValueChange={(val) => setSelectedDiscountId(val === "none" ? "" : val)}
+            >
               <SelectTrigger>
-                <SelectValue placeholder="No discount">
-                  {selectedDiscountId && discounts?.find(d => d.id === selectedDiscountId) && (
-                    <div className="flex items-center gap-2">
-                      <Tag className="h-4 w-4 text-primary" />
-                      {discounts.find(d => d.id === selectedDiscountId)?.name}
-                    </div>
-                  )}
-                </SelectValue>
+                <SelectValue placeholder="No discount" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">No discount</SelectItem>
+                <SelectItem value="none">No discount</SelectItem>
                 {discounts?.map(discount => (
                   <SelectItem key={discount.id} value={discount.id}>
                     <div className="flex items-center gap-2">
