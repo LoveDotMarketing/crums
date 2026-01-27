@@ -42,6 +42,24 @@ const CustomerBilling = () => {
     enabled: !!subscription?.id,
   });
 
+  // Fetch applied discounts
+  const { data: appliedDiscounts } = useQuery({
+    queryKey: ["customer-applied-discounts", subscription?.id],
+    queryFn: async () => {
+      if (!subscription?.id) return [];
+      const { data, error } = await supabase
+        .from("applied_discounts")
+        .select(`
+          *,
+          discounts:discount_id (name, type, value, is_active)
+        `)
+        .eq("subscription_id", subscription.id);
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!subscription?.id,
+  });
+
   const { data: billingHistory, isLoading: historyLoading } = useQuery({
     queryKey: ["customer-billing-history", subscription?.id],
     queryFn: async () => {
@@ -198,6 +216,39 @@ const CustomerBilling = () => {
                   <Badge variant={subscription.deposit_paid ? "default" : "secondary"}>
                     {subscription.deposit_paid ? "Paid" : "Pending"}
                   </Badge>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Active Discounts */}
+            {appliedDiscounts && appliedDiscounts.length > 0 && (
+              <Card className="border-primary/30 bg-primary/5">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-lg">
+                    <span>🎖️</span>
+                    Active Discounts
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {appliedDiscounts.map((ad) => {
+                      const discount = ad.discounts as { name: string; type: string; value: number; is_active: boolean } | null;
+                      if (!discount || !discount.is_active) return null;
+                      return (
+                        <div key={ad.id} className="flex items-center justify-between p-3 bg-background rounded-lg">
+                          <div className="flex items-center gap-3">
+                            <Badge variant="default" className="bg-primary">
+                              {discount.type === 'percentage' ? `${discount.value}% OFF` : formatCurrency(Number(discount.value))}
+                            </Badge>
+                            <span className="font-medium">{discount.name}</span>
+                          </div>
+                          <span className="text-sm text-muted-foreground">
+                            Applied {format(new Date(ad.applied_at), "MMM d, yyyy")}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </CardContent>
               </Card>
             )}
