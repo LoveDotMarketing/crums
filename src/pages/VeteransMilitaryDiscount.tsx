@@ -261,6 +261,26 @@ const VeteransMilitaryDiscount = () => {
                 </CardContent>
               </Card>
 
+              {/* Download PDF Button */}
+              <div className="text-center mb-12">
+                <a 
+                  href="/documents/veterans-military-discount.pdf" 
+                  download
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => trackCtaClick('Download Veterans PDF', 'veterans-military-discount', '/documents/veterans-military-discount.pdf')}
+                >
+                  <Button 
+                    size="lg" 
+                    variant="outline"
+                    className="border-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground"
+                  >
+                    <FileText className="mr-2 h-5 w-5" />
+                    Download PDF
+                  </Button>
+                </a>
+              </div>
+
               {/* CTA Section */}
               <div className="text-center bg-primary/5 rounded-xl p-8 md:p-12">
                 <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-4">
