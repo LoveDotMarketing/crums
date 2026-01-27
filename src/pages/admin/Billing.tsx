@@ -91,6 +91,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { CreateSubscriptionDialog } from "@/components/admin/CreateSubscriptionDialog";
+import { ManageTrailersDialog } from "@/components/admin/ManageTrailersDialog";
 
 type BillingCycle = "weekly" | "biweekly" | "monthly";
 type DiscountType = "percentage" | "fixed" | "multi_trailer" | "promo_code";
@@ -276,6 +277,15 @@ export default function Billing() {
   const [retryHistoryDialogOpen, setRetryHistoryDialogOpen] = useState(false);
   const [selectedFailureForHistory, setSelectedFailureForHistory] = useState<PaymentFailure | null>(null);
   const [failuresSortOrder, setFailuresSortOrder] = useState<"asc" | "desc">("desc");
+
+  // Manage trailers dialog state
+  const [manageTrailersDialogOpen, setManageTrailersDialogOpen] = useState(false);
+  const [selectedSubscriptionForTrailers, setSelectedSubscriptionForTrailers] = useState<{
+    subscriptionId: string;
+    customerId: string;
+    customerName: string;
+    items: SubscriptionItem[];
+  } | null>(null);
 
   // Manage subscription (pause/resume/cancel)
   const handleManageSubscription = async (subscriptionId: string, action: "pause" | "resume" | "cancel") => {
@@ -1223,16 +1233,36 @@ export default function Billing() {
                                           </>
                                         )}
                                         {sub.status === "active" && (
-                                          <DropdownMenuItem
-                                            onClick={() => setConfirmAction({
-                                              subscriptionId: sub.id,
-                                              action: "pause",
-                                              customerName: sub.customers?.full_name || "Unknown"
-                                            })}
-                                          >
-                                            <Pause className="h-4 w-4 mr-2" />
-                                            Pause Subscription
-                                          </DropdownMenuItem>
+                                          <>
+                                            <DropdownMenuItem
+                                              onClick={() => {
+                                                const items = subscriptionItems?.filter(
+                                                  i => i.subscription_id === sub.id
+                                                ) || [];
+                                                setSelectedSubscriptionForTrailers({
+                                                  subscriptionId: sub.id,
+                                                  customerId: sub.customer_id,
+                                                  customerName: sub.customers?.full_name || "Unknown",
+                                                  items: items,
+                                                });
+                                                setManageTrailersDialogOpen(true);
+                                              }}
+                                            >
+                                              <Truck className="h-4 w-4 mr-2" />
+                                              Manage Trailers
+                                            </DropdownMenuItem>
+                                            <DropdownMenuSeparator />
+                                            <DropdownMenuItem
+                                              onClick={() => setConfirmAction({
+                                                subscriptionId: sub.id,
+                                                action: "pause",
+                                                customerName: sub.customers?.full_name || "Unknown"
+                                              })}
+                                            >
+                                              <Pause className="h-4 w-4 mr-2" />
+                                              Pause Subscription
+                                            </DropdownMenuItem>
+                                          </>
                                         )}
                                         {sub.status === "paused" && (
                                           <DropdownMenuItem
@@ -2349,6 +2379,18 @@ export default function Billing() {
                 </DialogFooter>
               </DialogContent>
             </Dialog>
+
+            {/* Manage Trailers Dialog */}
+            {selectedSubscriptionForTrailers && (
+              <ManageTrailersDialog
+                open={manageTrailersDialogOpen}
+                onOpenChange={setManageTrailersDialogOpen}
+                subscriptionId={selectedSubscriptionForTrailers.subscriptionId}
+                customerId={selectedSubscriptionForTrailers.customerId}
+                customerName={selectedSubscriptionForTrailers.customerName}
+                currentItems={selectedSubscriptionForTrailers.items}
+              />
+            )}
           </main>
         </div>
       </div>
