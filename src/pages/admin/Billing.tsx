@@ -59,7 +59,8 @@ import {
   Phone,
   Search,
   ArrowUpDown,
-  Bell
+  Bell,
+  Zap
 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
@@ -257,6 +258,9 @@ export default function Billing() {
   // Retry payment state
   const [isRetrying, setIsRetrying] = useState<string | null>(null);
   
+  // Activate subscription state
+  const [isActivating, setIsActivating] = useState<string | null>(null);
+  
   // Payment failures filter/sort state
   const [failuresSearch, setFailuresSearch] = useState("");
   const [failuresStatusFilter, setFailuresStatusFilter] = useState<"all" | "unresolved" | "resolved">("all");
@@ -449,6 +453,41 @@ export default function Billing() {
     }
     
     return { onCooldown: false, remainingMinutes: 0 };
+  };
+
+  // Activate an incomplete subscription by paying its open invoice
+  const handleActivateSubscription = async (subscriptionId: string, customerName: string) => {
+    setIsActivating(subscriptionId);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast.error("You must be logged in to activate subscriptions");
+        return;
+      }
+
+      const { data, error } = await supabase.functions.invoke("activate-subscription", {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+        body: { subscriptionId }
+      });
+
+      if (error) throw error;
+
+      if (data.success) {
+        toast.success(data.message || `Subscription activated for ${customerName}`);
+        await Promise.all([
+          queryClient.invalidateQueries({ queryKey: ["customer-subscriptions"] }),
+          queryClient.invalidateQueries({ queryKey: ["subscription-items"] }),
+          queryClient.invalidateQueries({ queryKey: ["billing-history"] })
+        ]);
+      } else {
+        toast.error(data.error || "Failed to activate subscription");
+      }
+    } catch (error) {
+      console.error("Activate subscription error:", error);
+      toast.error("Failed to activate: " + (error instanceof Error ? error.message : "Unknown error"));
+    } finally {
+      setIsActivating(null);
+    }
   };
 
   const { data: subscriptions, isLoading: loadingSubscriptions } = useQuery({
@@ -1078,6 +1117,12 @@ export default function Billing() {
                               i => i.subscription_id === sub.id && i.status === "active"
                             ).length || 0;
                             
+                            // Check if subscription is ready to activate
+                            // (pending status with Stripe IDs means customer completed setup)
+                            const isReadyToActivate = sub.status === "pending" && 
+                              sub.stripe_subscription_id && 
+                              sub.stripe_customer_id;
+                            
                             return (
                               <TableRow key={sub.id}>
                                 <TableCell>
@@ -1118,74 +1163,125 @@ export default function Billing() {
                                     {trailerCount}
                                   </Badge>
                                 </TableCell>
-                                <TableCell>{getStatusBadge(sub.status)}</TableCell>
                                 <TableCell>
-                                  <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                      <Button variant="ghost" size="icon" disabled={isManaging}>
-                                        <MoreHorizontal className="h-4 w-4" />
+                                  <div className="flex items-center gap-2">
+                                    {getStatusBadge(sub.status)}
+                                    {isReadyToActivate && (
+                                      <TooltipProvider>
+                                        <Tooltip>
+                                          <TooltipTrigger asChild>
+                                            <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950 dark:text-amber-400 dark:border-amber-800">
+                                              <Zap className="h-3 w-3 mr-1" />
+                                              Ready
+                                            </Badge>
+                                          </TooltipTrigger>
+                                          <TooltipContent>
+                                            <p>Customer has completed payment setup.</p>
+                                            <p className="text-muted-foreground">Click Activate to charge the initial invoice.</p>
+                                          </TooltipContent>
+                                        </Tooltip>
+                                      </TooltipProvider>
+                                    )}
+                                  </div>
+                                </TableCell>
+                                <TableCell>
+                                  <div className="flex items-center gap-1">
+                                    {isReadyToActivate && (
+                                      <Button
+                                        size="sm"
+                                        variant="default"
+                                        disabled={isActivating === sub.id}
+                                        onClick={() => handleActivateSubscription(sub.id, sub.customers?.full_name || "Unknown")}
+                                        className="h-8"
+                                      >
+                                        {isActivating === sub.id ? (
+                                          <RefreshCw className="h-3 w-3 animate-spin" />
+                                        ) : (
+                                          <>
+                                            <Zap className="h-3 w-3 mr-1" />
+                                            Activate
+                                          </>
+                                        )}
                                       </Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="end">
-                                      {sub.status === "active" && (
-                                        <DropdownMenuItem
-                                          onClick={() => setConfirmAction({
-                                            subscriptionId: sub.id,
-                                            action: "pause",
-                                            customerName: sub.customers?.full_name || "Unknown"
-                                          })}
-                                        >
-                                          <Pause className="h-4 w-4 mr-2" />
-                                          Pause Subscription
-                                        </DropdownMenuItem>
-                                      )}
-                                      {sub.status === "paused" && (
-                                        <DropdownMenuItem
-                                          onClick={() => setConfirmAction({
-                                            subscriptionId: sub.id,
-                                            action: "resume",
-                                            customerName: sub.customers?.full_name || "Unknown"
-                                          })}
-                                        >
-                                          <Play className="h-4 w-4 mr-2" />
-                                          Resume Subscription
-                                        </DropdownMenuItem>
-                                      )}
-                                      {sub.status === "suspended" && (
-                                        <DropdownMenuItem
-                                          onClick={() => setConfirmAction({
-                                            subscriptionId: sub.id,
-                                            action: "resume",
-                                            customerName: sub.customers?.full_name || "Unknown"
-                                          })}
-                                        >
-                                          <Play className="h-4 w-4 mr-2" />
-                                          Reinstate Account
-                                        </DropdownMenuItem>
-                                      )}
-                                      {(sub.status === "active" || sub.status === "paused" || sub.status === "pending" || sub.status === "suspended") && (
-                                        <>
-                                          <DropdownMenuSeparator />
+                                    )}
+                                    <DropdownMenu>
+                                      <DropdownMenuTrigger asChild>
+                                        <Button variant="ghost" size="icon" disabled={isManaging || isActivating === sub.id}>
+                                          <MoreHorizontal className="h-4 w-4" />
+                                        </Button>
+                                      </DropdownMenuTrigger>
+                                      <DropdownMenuContent align="end">
+                                        {isReadyToActivate && (
+                                          <>
+                                            <DropdownMenuItem
+                                              onClick={() => handleActivateSubscription(sub.id, sub.customers?.full_name || "Unknown")}
+                                            >
+                                              <Zap className="h-4 w-4 mr-2" />
+                                              Activate Subscription
+                                            </DropdownMenuItem>
+                                            <DropdownMenuSeparator />
+                                          </>
+                                        )}
+                                        {sub.status === "active" && (
                                           <DropdownMenuItem
-                                            className="text-destructive focus:text-destructive"
                                             onClick={() => setConfirmAction({
                                               subscriptionId: sub.id,
-                                              action: "cancel",
+                                              action: "pause",
                                               customerName: sub.customers?.full_name || "Unknown"
                                             })}
                                           >
-                                            <XCircle className="h-4 w-4 mr-2" />
-                                            Cancel Subscription
+                                            <Pause className="h-4 w-4 mr-2" />
+                                            Pause Subscription
                                           </DropdownMenuItem>
-                                        </>
-                                      )}
-                                      {sub.status === "cancelled" && (
-                                        <DropdownMenuItem disabled>
-                                          <span className="text-muted-foreground">No actions available</span>
-                                        </DropdownMenuItem>
-                                      )}
-                                    </DropdownMenuContent>
-                                  </DropdownMenu>
+                                        )}
+                                        {sub.status === "paused" && (
+                                          <DropdownMenuItem
+                                            onClick={() => setConfirmAction({
+                                              subscriptionId: sub.id,
+                                              action: "resume",
+                                              customerName: sub.customers?.full_name || "Unknown"
+                                            })}
+                                          >
+                                            <Play className="h-4 w-4 mr-2" />
+                                            Resume Subscription
+                                          </DropdownMenuItem>
+                                        )}
+                                        {sub.status === "suspended" && (
+                                          <DropdownMenuItem
+                                            onClick={() => setConfirmAction({
+                                              subscriptionId: sub.id,
+                                              action: "resume",
+                                              customerName: sub.customers?.full_name || "Unknown"
+                                            })}
+                                          >
+                                            <Play className="h-4 w-4 mr-2" />
+                                            Reinstate Account
+                                          </DropdownMenuItem>
+                                        )}
+                                        {(sub.status === "active" || sub.status === "paused" || sub.status === "pending" || sub.status === "suspended") && (
+                                          <>
+                                            <DropdownMenuSeparator />
+                                            <DropdownMenuItem
+                                              className="text-destructive focus:text-destructive"
+                                              onClick={() => setConfirmAction({
+                                                subscriptionId: sub.id,
+                                                action: "cancel",
+                                                customerName: sub.customers?.full_name || "Unknown"
+                                              })}
+                                            >
+                                              <XCircle className="h-4 w-4 mr-2" />
+                                              Cancel Subscription
+                                            </DropdownMenuItem>
+                                          </>
+                                        )}
+                                        {sub.status === "cancelled" && (
+                                          <DropdownMenuItem disabled>
+                                            <span className="text-muted-foreground">No actions available</span>
+                                          </DropdownMenuItem>
+                                        )}
+                                      </DropdownMenuContent>
+                                    </DropdownMenu>
+                                  </div>
                                 </TableCell>
                               </TableRow>
                             );
