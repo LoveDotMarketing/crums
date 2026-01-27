@@ -131,10 +131,25 @@ serve(async (req) => {
     if (paymentMethods.data.length === 0) {
       throw new Error("Customer has no payment method attached. They need to complete ACH setup first.");
     }
-    logStep("Payment method verified", { paymentMethodCount: paymentMethods.data.length });
+    
+    const paymentMethodId = paymentMethods.data[0].id;
+    logStep("Payment method verified", { 
+      paymentMethodCount: paymentMethods.data.length,
+      paymentMethodId 
+    });
 
-    // Pay the invoice
-    const paidInvoice = await stripe.invoices.pay(invoiceId);
+    // Set the payment method as default on the customer for future invoices
+    await stripe.customers.update(subscription.stripe_customer_id, {
+      invoice_settings: {
+        default_payment_method: paymentMethodId,
+      },
+    });
+    logStep("Set default payment method on customer");
+
+    // Pay the invoice with the payment method
+    const paidInvoice = await stripe.invoices.pay(invoiceId, {
+      payment_method: paymentMethodId,
+    });
     logStep("Invoice payment initiated", { 
       invoiceId: paidInvoice.id,
       newStatus: paidInvoice.status
@@ -143,7 +158,7 @@ serve(async (req) => {
     // Update local subscription status to active
     const { error: updateError } = await supabaseClient
       .from("customer_subscriptions")
-      .update({ 
+      .update({
         status: "active",
         next_billing_date: stripeSubscription.current_period_end 
           ? new Date(stripeSubscription.current_period_end * 1000).toISOString()
