@@ -29,7 +29,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Truck, RefreshCw, DollarSign } from "lucide-react";
+import { Plus, Truck, RefreshCw, DollarSign, Tag } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -60,6 +60,14 @@ interface SelectedTrailer {
   customRate: number;
 }
 
+interface Discount {
+  id: string;
+  name: string;
+  type: "percentage" | "fixed";
+  value: number;
+  is_active: boolean;
+}
+
 interface CreateSubscriptionDialogProps {
   onSuccess?: () => void;
 }
@@ -71,6 +79,7 @@ export function CreateSubscriptionDialog({ onSuccess }: CreateSubscriptionDialog
   const [billingCycle, setBillingCycle] = useState<BillingCycle>("monthly");
   const [depositAmount, setDepositAmount] = useState<number>(1000); // Standard $1,000 deposit requirement
   const [selectedTrailers, setSelectedTrailers] = useState<SelectedTrailer[]>([]);
+  const [selectedDiscountId, setSelectedDiscountId] = useState<string>("");
 
   // Fetch customers without active subscriptions
   const { data: customers, isLoading: loadingCustomers } = useQuery({
@@ -115,6 +124,22 @@ export function CreateSubscriptionDialog({ onSuccess }: CreateSubscriptionDialog
     enabled: isOpen
   });
 
+  // Fetch active discounts
+  const { data: discounts } = useQuery({
+    queryKey: ["active-discounts"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("discounts")
+        .select("id, name, type, value, is_active")
+        .eq("is_active", true)
+        .order("name");
+
+      if (error) throw error;
+      return data as Discount[];
+    },
+    enabled: isOpen
+  });
+
   // Create subscription mutation
   const createSubscriptionMutation = useMutation({
     mutationFn: async () => {
@@ -128,6 +153,7 @@ export function CreateSubscriptionDialog({ onSuccess }: CreateSubscriptionDialog
           trailerIds: selectedTrailers.map(t => t.id),
           billingCycle,
           depositAmount,
+          discountId: selectedDiscountId || undefined,
           customRates: selectedTrailers.reduce((acc, t) => {
             acc[t.id] = t.customRate;
             return acc;
@@ -161,6 +187,7 @@ export function CreateSubscriptionDialog({ onSuccess }: CreateSubscriptionDialog
     setBillingCycle("monthly");
     setDepositAmount(1000); // Reset to standard $1,000 deposit
     setSelectedTrailers([]);
+    setSelectedDiscountId("");
   };
 
   // Get type-based default rental rate
@@ -288,6 +315,45 @@ export function CreateSubscriptionDialog({ onSuccess }: CreateSubscriptionDialog
             </div>
           </div>
 
+          {/* Discount Selection */}
+          <div className="space-y-2">
+            <Label htmlFor="discount">Apply Discount (Optional)</Label>
+            <Select value={selectedDiscountId} onValueChange={setSelectedDiscountId}>
+              <SelectTrigger>
+                <SelectValue placeholder="No discount">
+                  {selectedDiscountId && discounts?.find(d => d.id === selectedDiscountId) && (
+                    <div className="flex items-center gap-2">
+                      <Tag className="h-4 w-4 text-primary" />
+                      {discounts.find(d => d.id === selectedDiscountId)?.name}
+                    </div>
+                  )}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">No discount</SelectItem>
+                {discounts?.map(discount => (
+                  <SelectItem key={discount.id} value={discount.id}>
+                    <div className="flex items-center gap-2">
+                      <Tag className="h-4 w-4 text-primary" />
+                      <span>{discount.name}</span>
+                      <span className="text-muted-foreground">
+                        ({discount.type === "percentage" ? `${discount.value}% off` : `$${discount.value} off`})
+                      </span>
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {selectedDiscountId && discounts?.find(d => d.id === selectedDiscountId) && (
+              <p className="text-xs text-primary flex items-center gap-1">
+                <Tag className="h-3 w-3" />
+                {discounts.find(d => d.id === selectedDiscountId)?.type === "percentage"
+                  ? `${discounts.find(d => d.id === selectedDiscountId)?.value}% discount will be applied`
+                  : `$${discounts.find(d => d.id === selectedDiscountId)?.value} discount will be applied`}
+              </p>
+            )}
+          </div>
+
           {/* Trailer Selection */}
           <div className="space-y-2">
             <Label>Select Trailers & Set Rates</Label>
@@ -393,6 +459,18 @@ export function CreateSubscriptionDialog({ onSuccess }: CreateSubscriptionDialog
                   <span className="text-muted-foreground">Deposit:</span>{" "}
                   <span className="font-medium">${depositAmount.toLocaleString()}</span>
                 </div>
+                {selectedDiscountId && discounts?.find(d => d.id === selectedDiscountId) && (
+                  <div className="col-span-2 pt-2 border-t">
+                    <span className="text-muted-foreground">Discount:</span>{" "}
+                    <span className="font-medium text-primary flex items-center gap-1 inline-flex">
+                      <Tag className="h-3 w-3" />
+                      {discounts.find(d => d.id === selectedDiscountId)?.name} 
+                      ({discounts.find(d => d.id === selectedDiscountId)?.type === "percentage"
+                        ? `${discounts.find(d => d.id === selectedDiscountId)?.value}% off`
+                        : `$${discounts.find(d => d.id === selectedDiscountId)?.value} off`})
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
           )}
