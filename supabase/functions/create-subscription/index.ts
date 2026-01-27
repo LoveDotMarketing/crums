@@ -64,22 +64,29 @@ serve(async (req) => {
       throw new Error("Missing required fields: customerId, trailerIds, billingCycle");
     }
 
-    // Check for existing active subscription for this customer
+    // Check for existing subscription for this customer (any status)
     const { data: existingSubscription } = await supabaseClient
       .from("customer_subscriptions")
       .select("id, status, stripe_subscription_id")
       .eq("customer_id", customerId)
-      .in("status", ["active", "pending", "paused"])
       .maybeSingle();
 
-    if (existingSubscription) {
+    // If there's an active/pending/paused subscription, block creation
+    if (existingSubscription && ["active", "pending", "paused"].includes(existingSubscription.status)) {
       logStep("Customer already has active subscription", { 
         existingId: existingSubscription.id, 
         status: existingSubscription.status 
       });
       throw new Error(`Customer already has an ${existingSubscription.status} subscription (ID: ${existingSubscription.id}). Please cancel or manage the existing subscription first.`);
     }
-    logStep("No existing active subscription found, proceeding");
+    
+    // If there's a canceled subscription, we'll reuse that row
+    const reuseExistingRow = existingSubscription && existingSubscription.status === "canceled";
+    if (reuseExistingRow) {
+      logStep("Found canceled subscription, will reuse row", { existingId: existingSubscription.id });
+    } else {
+      logStep("No existing subscription found, will create new row");
+    }
 
     // Check if any of the requested trailers are already rented
     const { data: rentedTrailers } = await supabaseClient
@@ -279,23 +286,51 @@ serve(async (req) => {
     const mappedStatus = statusMap[subscription.status] ?? "pending";
     logStep("Mapping subscription status", { stripeStatus: subscription.status, mappedStatus });
 
-    const { data: custSub, error: subError } = await supabaseClient
-      .from("customer_subscriptions")
-      .insert({
-        customer_id: customerId,
-        stripe_subscription_id: subscription.id,
-        stripe_customer_id: stripeCustomerId,
-        billing_cycle: billingCycle,
-        deposit_amount: depositAmount || null,
-        deposit_paid: false,
-        status: mappedStatus,
-        next_billing_date: nextBillingDate,
-      })
-      .select()
-      .single();
+    // Create or update customer_subscription record
+    let custSub;
+    let subError;
+    
+    if (reuseExistingRow && existingSubscription) {
+      // Update the existing canceled subscription row
+      const { data, error } = await supabaseClient
+        .from("customer_subscriptions")
+        .update({
+          stripe_subscription_id: subscription.id,
+          stripe_customer_id: stripeCustomerId,
+          billing_cycle: billingCycle,
+          deposit_amount: depositAmount || null,
+          deposit_paid: false,
+          status: mappedStatus,
+          next_billing_date: nextBillingDate,
+        })
+        .eq("id", existingSubscription.id)
+        .select()
+        .single();
+      custSub = data;
+      subError = error;
+      logStep("Updated existing subscription record", { id: custSub?.id });
+    } else {
+      // Insert a new subscription row
+      const { data, error } = await supabaseClient
+        .from("customer_subscriptions")
+        .insert({
+          customer_id: customerId,
+          stripe_subscription_id: subscription.id,
+          stripe_customer_id: stripeCustomerId,
+          billing_cycle: billingCycle,
+          deposit_amount: depositAmount || null,
+          deposit_paid: false,
+          status: mappedStatus,
+          next_billing_date: nextBillingDate,
+        })
+        .select()
+        .single();
+      custSub = data;
+      subError = error;
+      logStep("Created new subscription record", { id: custSub?.id });
+    }
 
-    if (subError) throw new Error(`Failed to create subscription record: ${subError.message}`);
-    logStep("Created customer_subscription record", { id: custSub.id });
+    if (subError) throw new Error(`Failed to create/update subscription record: ${subError.message}`);
 
     // Create subscription_items for each trailer
     for (let i = 0; i < trailers.length; i++) {
