@@ -6,6 +6,7 @@ export interface TeamMember {
   role: string;
   title: string;
   icon: LucideIcon;
+  headshot?: string;
   bio: string[];
   email?: string;
   phone?: string;
@@ -25,6 +26,7 @@ export const teamMembers: TeamMember[] = [
     role: "Founder",
     title: "The Heart Behind CRUMS",
     icon: Crown,
+    headshot: "/images/team/mama-crums.webp",
     bio: [
       "Mama CRUMS is the inspiration behind everything we do at CRUMS Leasing. Her values of hard work, integrity, and dedication to family are the foundation upon which this company was built.",
       "She taught us that success isn't just about business — it's about the lives you touch and the people you help along the way. Every decision we make is guided by her wisdom.",
@@ -43,6 +45,7 @@ export const teamMembers: TeamMember[] = [
     role: "CEO / Principal",
     title: "Chief Executive Officer & Principal",
     icon: Users,
+    headshot: "/images/team/eric.webp",
     bio: [
       "As CEO of CRUMS Leasing, Eric leads the company with the same values instilled by Mama CRUMS — integrity, hard work, and a genuine commitment to helping carriers succeed.",
       "With a deep understanding of the trucking industry and a passion for serving owner-operators, Eric has grown CRUMS Leasing from a family vision into a nationwide enterprise.",
@@ -61,6 +64,7 @@ export const teamMembers: TeamMember[] = [
     role: "BOM",
     title: "Business Operations Manager",
     icon: Heart,
+    headshot: "/images/team/ambrosia.webp",
     bio: [
       "Ambrosia is the friendly voice of CRUMS Leasing, dedicated to making every customer interaction positive and productive.",
       "She believes that great customer service means listening first and solving problems with empathy. Whether you're a new carrier or a long-time partner, Ambrosia treats everyone like family.",

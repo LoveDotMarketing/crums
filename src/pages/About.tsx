@@ -6,6 +6,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { Users, TrendingUp, MapPin, Award, ArrowRight } from "lucide-react";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { teamMembers } from "@/lib/team";
 const teamImage = "/images/team-leaders.webp";
 import { SEO } from "@/components/SEO";
 import { organizationSchema, generateBreadcrumbSchema } from "@/lib/structuredData";
@@ -111,16 +113,21 @@ const About = () => {
             />
           </div>
 
-          <div className="flex flex-wrap justify-center gap-6 max-w-5xl mx-auto">
-            {[
-              { name: "Mama CRUMS", role: "Founder", slug: "mama-crums" },
-              { name: "Eric", role: "CEO / Principal", slug: "eric" },
-              { name: "Ambrosia", role: "BOM", slug: "ambrosia" },
-            ].map((member) => (
-              <Link key={member.name} to={`/about/${member.slug}`} className="text-center group">
-                <div className="w-24 h-24 md:w-28 md:h-28 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4 border-2 border-primary/20 group-hover:border-primary group-hover:bg-primary/20 transition-all">
-                  <Users className="h-10 w-10 md:h-12 md:w-12 text-primary/60 group-hover:text-primary transition-colors" />
-                </div>
+          <div className="flex flex-wrap justify-center gap-8 max-w-5xl mx-auto">
+            {teamMembers.map((member) => (
+              <Link key={member.slug} to={`/about/${member.slug}`} className="text-center group">
+                <Avatar className="w-28 h-28 md:w-32 md:h-32 mx-auto mb-4 border-4 border-primary/20 group-hover:border-primary transition-all shadow-lg">
+                  {member.headshot ? (
+                    <AvatarImage 
+                      src={member.headshot} 
+                      alt={`${member.name} - ${member.role}`}
+                      className="object-cover"
+                    />
+                  ) : null}
+                  <AvatarFallback className="bg-primary/10">
+                    <member.icon className="h-12 w-12 text-primary/60" />
+                  </AvatarFallback>
+                </Avatar>
                 <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">{member.name}</h3>
                 <p className="text-sm text-muted-foreground">{member.role}</p>
               </Link>
