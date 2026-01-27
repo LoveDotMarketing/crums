@@ -35,14 +35,14 @@ export function ApplicationAlert({ userId }: ApplicationAlertProps) {
 
   if (!applicationStatus) return null;
 
-  // If application is incomplete
-  if (applicationStatus === 'incomplete') {
+  // If application is new (needs more info)
+  if (applicationStatus === 'new') {
     return (
       <Alert variant="default" className="border-secondary bg-secondary/10">
         <AlertCircle className="h-4 w-4 text-secondary" />
         <AlertTitle>Complete Your Application</AlertTitle>
         <AlertDescription className="space-y-2">
-          <p>Your application is incomplete. Please upload required documents to get approved faster.</p>
+          <p>Please upload your required documents to complete your application and get approved faster.</p>
           <Button 
             onClick={() => navigate('/customer/application')}
             size="sm"

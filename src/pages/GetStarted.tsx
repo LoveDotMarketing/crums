@@ -315,7 +315,7 @@ export default function GetStarted() {
 
       // Determine status based on documents
       const hasDocuments = driversLicenseFrontUrl && driversLicenseBackUrl && insuranceDocsUrl;
-      const applicationStatus = hasDocuments ? 'pending_review' : 'incomplete';
+      const applicationStatus = hasDocuments ? 'pending_review' : 'new';
 
       // Update customer application
       const { error: applicationError } = await supabase
