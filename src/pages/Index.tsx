@@ -361,6 +361,29 @@ const Index = () => {
         </div>
       </section>
 
+      {/* Thank a Veteran Featured Section */}
+      <section className="py-12 bg-brand-navy">
+        <div className="container mx-auto px-4">
+          <div className="flex flex-col md:flex-row items-center justify-center gap-6 md:gap-10">
+            <img 
+              src="/images/thank-a-veteran.png" 
+              alt="Thank a Veteran" 
+              className="h-24 md:h-32 w-auto"
+              loading="lazy"
+              decoding="async"
+            />
+            <div className="text-center md:text-left">
+              <h2 className="text-2xl md:text-3xl font-bold text-white mb-2">
+                Proudly Supporting Our Veterans
+              </h2>
+              <p className="text-white/80 text-lg max-w-xl">
+                CRUMS Leasing is honored to serve those who served. Ask about our special programs for veteran-owned trucking businesses.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Customer Reviews Section */}
       <section className="py-16 bg-gradient-to-b from-secondary/5 to-background">
         <div className="container mx-auto px-4">
