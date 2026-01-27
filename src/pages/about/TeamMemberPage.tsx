@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { 
   ArrowLeft, 
   ArrowRight, 
@@ -69,9 +70,18 @@ const TeamMemberPage = () => {
       <section className="bg-gradient-to-br from-primary via-primary to-primary/90 text-primary-foreground py-20">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto text-center">
-            <div className="w-32 h-32 rounded-full bg-primary-foreground/10 border-4 border-primary-foreground/20 flex items-center justify-center mx-auto mb-6">
-              <MemberIcon className="h-16 w-16 text-primary-foreground/80" />
-            </div>
+            <Avatar className="w-40 h-40 md:w-48 md:h-48 mx-auto mb-6 border-4 border-primary-foreground/30 shadow-2xl">
+              {member.headshot ? (
+                <AvatarImage 
+                  src={member.headshot} 
+                  alt={`${member.name} - ${member.role}`}
+                  className="object-cover"
+                />
+              ) : null}
+              <AvatarFallback className="bg-primary-foreground/10">
+                <MemberIcon className="h-20 w-20 text-primary-foreground/80" />
+              </AvatarFallback>
+            </Avatar>
             <Badge variant="secondary" className="mb-4">
               {member.role}
             </Badge>
