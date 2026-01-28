@@ -45,10 +45,10 @@ serve(async (req) => {
       });
     }
 
-    // Verify webhook signature
+    // Verify webhook signature using async method (required for Stripe SDK v18+)
     let event: Stripe.Event;
     try {
-      event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
+      event = await stripe.webhooks.constructEventAsync(body, signature, webhookSecret);
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : "Unknown error";
       logStep("Webhook signature verification failed", { error: errorMessage });
