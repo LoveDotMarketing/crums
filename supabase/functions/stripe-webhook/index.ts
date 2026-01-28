@@ -68,7 +68,7 @@ serve(async (req) => {
       }
       case "invoice.paid": {
         const invoice = event.data.object as Stripe.Invoice;
-        await handlePaymentSucceeded(supabase, invoice);
+        await handlePaymentSucceeded(supabase, stripe, invoice);
         break;
       }
       case "customer.subscription.updated": {
@@ -219,25 +219,80 @@ async function handlePaymentFailed(
 
 async function handlePaymentSucceeded(
   supabase: SupabaseClient,
+  stripe: Stripe,
   invoice: Stripe.Invoice
 ) {
-  logStep("Processing payment succeeded", { invoiceId: invoice.id });
+  logStep("Processing payment succeeded", { invoiceId: invoice.id, customerId: invoice.customer });
 
-  if (!invoice.subscription) return;
+  if (!invoice.subscription) {
+    logStep("No subscription on invoice, skipping");
+    return;
+  }
 
   const stripeSubscriptionId = typeof invoice.subscription === "string" 
     ? invoice.subscription 
     : invoice.subscription.id;
 
+  logStep("Looking for subscription", { stripeSubscriptionId });
+
   // Find our subscription record
-  const { data: subscription, error: subError } = await supabase
+  let subscription: { id: string; customer_id: string } | null = null;
+  
+  const { data: subData, error: subError } = await supabase
     .from("customer_subscriptions")
     .select("id, customer_id")
     .eq("stripe_subscription_id", stripeSubscriptionId)
-    .single();
+    .maybeSingle();
 
-  if (subError || !subscription) {
-    logStep("Subscription not found", { stripeSubscriptionId });
+  if (subData) {
+    subscription = subData;
+    logStep("Found subscription by stripe_subscription_id", { subscriptionId: subscription.id });
+  } else {
+    logStep("Subscription not found by stripe_subscription_id, trying by customer email", { error: subError?.message });
+    
+    // Fallback: lookup by customer email from Stripe
+    const stripeCustomerId = typeof invoice.customer === "string" ? invoice.customer : invoice.customer?.id;
+    if (stripeCustomerId) {
+      try {
+        const stripeCustomer = await stripe.customers.retrieve(stripeCustomerId);
+        if (stripeCustomer && !stripeCustomer.deleted && stripeCustomer.email) {
+          logStep("Found Stripe customer email", { email: stripeCustomer.email });
+          
+          // Find customer by email, then get their subscription
+          const { data: customer } = await supabase
+            .from("customers")
+            .select("id")
+            .eq("email", stripeCustomer.email)
+            .maybeSingle();
+          
+          if (customer) {
+            const { data: custSub } = await supabase
+              .from("customer_subscriptions")
+              .select("id, customer_id")
+              .eq("customer_id", customer.id)
+              .in("status", ["active", "pending"])
+              .maybeSingle();
+            
+            if (custSub) {
+              subscription = custSub;
+              logStep("Found subscription by customer email fallback", { subscriptionId: subscription.id });
+              
+              // Update the stripe_subscription_id for future lookups
+              await supabase
+                .from("customer_subscriptions")
+                .update({ stripe_subscription_id: stripeSubscriptionId })
+                .eq("id", subscription.id);
+            }
+          }
+        }
+      } catch (err) {
+        logStep("Failed to lookup Stripe customer", { error: err instanceof Error ? err.message : "Unknown" });
+      }
+    }
+  }
+
+  if (!subscription) {
+    logStep("Could not find subscription record for invoice", { stripeSubscriptionId });
     return;
   }
 
@@ -294,6 +349,8 @@ async function handlePaymentSucceeded(
     }, {
       onConflict: "stripe_invoice_id",
     });
+
+  logStep("Billing history updated, now sending receipt email");
 
   // Send payment receipt email via SendGrid
   await sendPaymentReceiptEmail(supabase, subscription.customer_id, {
