@@ -222,10 +222,85 @@ async function handlePaymentSucceeded(
   stripe: Stripe,
   invoice: Stripe.Invoice
 ) {
-  logStep("Processing payment succeeded", { invoiceId: invoice.id, customerId: invoice.customer });
+  logStep("Processing payment succeeded", { 
+    invoiceId: invoice.id, 
+    customerId: invoice.customer,
+    subscriptionId: invoice.subscription,
+    hasSubscription: !!invoice.subscription,
+    billingReason: invoice.billing_reason
+  });
 
+  // Skip invoices that aren't for subscriptions (one-time payments, etc.)
   if (!invoice.subscription) {
-    logStep("No subscription on invoice, skipping");
+    // Try to find subscription by customer email as fallback
+    const stripeCustomerId = typeof invoice.customer === "string" ? invoice.customer : invoice.customer?.id;
+    if (!stripeCustomerId) {
+      logStep("No subscription or customer on invoice, skipping");
+      return;
+    }
+    
+    logStep("No subscription on invoice, trying customer lookup fallback");
+    
+    try {
+      const stripeCustomer = await stripe.customers.retrieve(stripeCustomerId);
+      if (stripeCustomer && !stripeCustomer.deleted && stripeCustomer.email) {
+        logStep("Found Stripe customer for fallback", { email: stripeCustomer.email });
+        
+        // Find customer by email
+        const { data: customer } = await supabase
+          .from("customers")
+          .select("id")
+          .eq("email", stripeCustomer.email)
+          .maybeSingle();
+        
+        if (customer) {
+          // Find their active/pending subscription
+          const { data: custSub } = await supabase
+            .from("customer_subscriptions")
+            .select("id, customer_id")
+            .eq("customer_id", customer.id)
+            .in("status", ["active", "pending"])
+            .maybeSingle();
+          
+          if (custSub) {
+            logStep("Found subscription via customer email fallback", { subscriptionId: custSub.id });
+            
+            // Update billing history and send email for this invoice
+            await supabase
+              .from("billing_history")
+              .upsert({
+                subscription_id: custSub.id,
+                stripe_invoice_id: invoice.id,
+                stripe_payment_intent_id: typeof invoice.payment_intent === "string" 
+                  ? invoice.payment_intent 
+                  : invoice.payment_intent?.id,
+                amount: (invoice.total || 0) / 100,
+                net_amount: (invoice.total || 0) / 100,
+                status: "succeeded",
+                paid_at: new Date().toISOString(),
+              }, {
+                onConflict: "stripe_invoice_id",
+              });
+            
+            // Send receipt email
+            await sendPaymentReceiptEmail(supabase, custSub.customer_id, {
+              amount: (invoice.total || 0) / 100,
+              invoiceNumber: invoice.number || invoice.id,
+              invoiceUrl: invoice.hosted_invoice_url || null,
+              billingPeriodStart: invoice.period_start ? new Date(invoice.period_start * 1000).toISOString() : null,
+              billingPeriodEnd: invoice.period_end ? new Date(invoice.period_end * 1000).toISOString() : null,
+            });
+            
+            logStep("Processed invoice via customer fallback successfully");
+            return;
+          }
+        }
+      }
+    } catch (err) {
+      logStep("Customer fallback lookup failed", { error: err instanceof Error ? err.message : "Unknown" });
+    }
+    
+    logStep("Could not process invoice - no subscription found via any method");
     return;
   }
 
