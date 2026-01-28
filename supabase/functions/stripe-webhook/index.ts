@@ -232,7 +232,7 @@ async function handlePaymentSucceeded(
   // Find our subscription record
   const { data: subscription, error: subError } = await supabase
     .from("customer_subscriptions")
-    .select("id")
+    .select("id, customer_id")
     .eq("stripe_subscription_id", stripeSubscriptionId)
     .single();
 
@@ -294,6 +294,15 @@ async function handlePaymentSucceeded(
     }, {
       onConflict: "stripe_invoice_id",
     });
+
+  // Send payment receipt email via SendGrid
+  await sendPaymentReceiptEmail(supabase, subscription.customer_id, {
+    amount: (invoice.total || 0) / 100,
+    invoiceNumber: invoice.number || invoice.id,
+    invoiceUrl: invoice.hosted_invoice_url || null,
+    billingPeriodStart: invoice.period_start ? new Date(invoice.period_start * 1000).toISOString() : null,
+    billingPeriodEnd: invoice.period_end ? new Date(invoice.period_end * 1000).toISOString() : null,
+  });
 
   logStep("Payment success processed", { subscriptionId: subscription.id });
 }
@@ -440,5 +449,130 @@ CRUMS Leasing Team
   } catch (err: unknown) {
     const errorMessage = err instanceof Error ? err.message : "Unknown error";
     logStep("Error sending email", { error: errorMessage });
+  }
+}
+
+async function sendPaymentReceiptEmail(
+  supabase: SupabaseClient,
+  customerId: string,
+  details: { 
+    amount: number; 
+    invoiceNumber: string; 
+    invoiceUrl: string | null;
+    billingPeriodStart: string | null;
+    billingPeriodEnd: string | null;
+  }
+) {
+  // Get customer email
+  const { data: customer } = await supabase
+    .from("customers")
+    .select("email, full_name")
+    .eq("id", customerId)
+    .single();
+
+  if (!customer?.email) {
+    logStep("No customer email found for receipt notification");
+    return;
+  }
+
+  const paidDate = new Date().toLocaleDateString("en-US", {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+
+  let billingPeriodText = "";
+  if (details.billingPeriodStart && details.billingPeriodEnd) {
+    const startDate = new Date(details.billingPeriodStart).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+    const endDate = new Date(details.billingPeriodEnd).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+    billingPeriodText = `<p><strong>Billing Period:</strong> ${startDate} - ${endDate}</p>`;
+  }
+
+  const invoiceLinkHtml = details.invoiceUrl 
+    ? `<p><a href="${details.invoiceUrl}" style="color: #0066cc; text-decoration: underline;">View Invoice Details</a></p>`
+    : "";
+
+  const subject = `Payment Receipt - $${details.amount.toFixed(2)} - CRUMS Leasing`;
+
+  const body = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+  <div style="text-align: center; margin-bottom: 30px;">
+    <h1 style="color: #1a1a1a; margin-bottom: 5px;">Payment Received</h1>
+    <p style="color: #666; font-size: 14px;">Thank you for your payment</p>
+  </div>
+  
+  <div style="background-color: #f8f9fa; border-radius: 8px; padding: 25px; margin-bottom: 25px;">
+    <p style="margin: 0 0 15px 0;">Dear ${customer.full_name || "Valued Customer"},</p>
+    
+    <p>We have successfully received your payment. Here are the details:</p>
+    
+    <div style="background-color: #fff; border-radius: 6px; padding: 20px; margin: 20px 0; border: 1px solid #e9ecef;">
+      <p style="margin: 0 0 10px 0;"><strong>Amount Paid:</strong> <span style="color: #28a745; font-size: 18px; font-weight: bold;">$${details.amount.toFixed(2)}</span></p>
+      <p style="margin: 0 0 10px 0;"><strong>Invoice Number:</strong> ${details.invoiceNumber}</p>
+      <p style="margin: 0 0 10px 0;"><strong>Payment Date:</strong> ${paidDate}</p>
+      ${billingPeriodText}
+    </div>
+    
+    ${invoiceLinkHtml}
+    
+    <p>This payment confirms your continued trailer leasing service with CRUMS Leasing.</p>
+  </div>
+  
+  <div style="border-top: 1px solid #e9ecef; padding-top: 20px; text-align: center; color: #666; font-size: 13px;">
+    <p style="margin: 0 0 10px 0;">If you have any questions about this payment, please contact us.</p>
+    <p style="margin: 0;">
+      <strong>CRUMS Leasing</strong><br>
+      <a href="mailto:sales@crumsleasing.com" style="color: #0066cc;">sales@crumsleasing.com</a> | 
+      <a href="https://crums.lovable.app" style="color: #0066cc;">crums.lovable.app</a>
+    </p>
+  </div>
+</body>
+</html>
+  `.trim();
+
+  try {
+    // Use the existing send-outreach-email function
+    const response = await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/send-outreach-email`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+      },
+      body: JSON.stringify({
+        recipients: [{
+          email: customer.email,
+          customer_id: customerId,
+          customer_name: customer.full_name,
+        }],
+        subject,
+        body,
+        email_type: "payment_receipt",
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      logStep("Failed to send receipt email", { status: response.status, error: errorText });
+    } else {
+      logStep("Payment receipt email sent", { email: customer.email, amount: details.amount });
+    }
+  } catch (err: unknown) {
+    const errorMessage = err instanceof Error ? err.message : "Unknown error";
+    logStep("Error sending receipt email", { error: errorMessage });
   }
 }
