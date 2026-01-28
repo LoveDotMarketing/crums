@@ -69,10 +69,10 @@ serve(async (req) => {
     const { subscriptionId, action, addTrailerIds, removeTrailerIds, swapFromTrailerId, swapToTrailerId, customRates } = body;
     logStep("Request received", { subscriptionId, action });
 
-    // Fetch the subscription with items
+    // Fetch the subscription with active items only
     const { data: subscription, error: subError } = await supabaseClient
       .from("customer_subscriptions")
-      .select("*, subscription_items(id, trailer_id, stripe_subscription_item_id, monthly_rate)")
+      .select("*, subscription_items(id, trailer_id, stripe_subscription_item_id, monthly_rate, status)")
       .eq("id", subscriptionId)
       .single();
 
@@ -87,11 +87,17 @@ serve(async (req) => {
     if (subscription.status !== "active") {
       throw new Error(`Cannot modify subscription with status: ${subscription.status}. Only active subscriptions can be modified.`);
     }
+
+    // Filter to only active subscription items for operations
+    const activeSubscriptionItems = subscription.subscription_items?.filter(
+      (item: { status: string }) => item.status === 'active'
+    ) || [];
     
     logStep("Found subscription", { 
       stripeId: subscription.stripe_subscription_id,
       customerId: subscription.customer_id,
-      itemCount: subscription.subscription_items?.length 
+      totalItemCount: subscription.subscription_items?.length,
+      activeItemCount: activeSubscriptionItems.length
     });
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
@@ -122,12 +128,13 @@ serve(async (req) => {
         throw new Error("swap_trailer requires swapFromTrailerId and swapToTrailerId");
       }
 
-      // Find the subscription item to remove
-      const itemToRemove = subscription.subscription_items?.find(
+      // Find the subscription item to remove (from active items only)
+      const itemToRemove = activeSubscriptionItems.find(
         (i: { trailer_id: string }) => i.trailer_id === swapFromTrailerId
       );
       if (!itemToRemove?.stripe_subscription_item_id) {
-        throw new Error("Could not find subscription item to swap from");
+        const activeIds = activeSubscriptionItems.map((i: { trailer_id: string }) => i.trailer_id);
+        throw new Error(`Could not find active subscription item to swap from. Trailer ID: ${swapFromTrailerId}. Active trailer IDs: ${activeIds.join(', ') || 'none'}`);
       }
 
       // Get new trailer
@@ -206,11 +213,12 @@ serve(async (req) => {
     // Handle REMOVE action
     if (action === "remove_trailers" && removeTrailerIds?.length) {
       for (const trailerId of removeTrailerIds) {
-        const itemToRemove = subscription.subscription_items?.find(
+        // Use activeSubscriptionItems to find items to remove
+        const itemToRemove = activeSubscriptionItems.find(
           (i: { trailer_id: string }) => i.trailer_id === trailerId
         );
         if (!itemToRemove?.stripe_subscription_item_id) {
-          logStep("Warning: Could not find subscription item for trailer", { trailerId });
+          logStep("Warning: Could not find active subscription item for trailer", { trailerId });
           continue;
         }
 
@@ -218,8 +226,8 @@ serve(async (req) => {
         removedTrailerIds.push(trailerId);
       }
       
-      // Prevent removing all trailers
-      const remainingItems = (subscription.subscription_items?.length || 0) - removedTrailerIds.length + addedTrailers.length;
+      // Prevent removing all trailers - use active items count
+      const remainingItems = activeSubscriptionItems.length - removedTrailerIds.length + addedTrailers.length;
       if (remainingItems < 1) {
         throw new Error("Cannot remove all trailers from subscription. Cancel the subscription instead.");
       }
