@@ -132,10 +132,88 @@ serve(async (req) => {
       const itemToRemove = activeSubscriptionItems.find(
         (i: { trailer_id: string }) => i.trailer_id === swapFromTrailerId
       );
-      if (!itemToRemove?.stripe_subscription_item_id) {
+      
+      if (!itemToRemove) {
         const activeIds = activeSubscriptionItems.map((i: { trailer_id: string }) => i.trailer_id);
         throw new Error(`Could not find active subscription item to swap from. Trailer ID: ${swapFromTrailerId}. Active trailer IDs: ${activeIds.join(', ') || 'none'}`);
       }
+
+      // If stripe_subscription_item_id is null, we need to find it from Stripe
+      let stripeItemIdToRemove = itemToRemove.stripe_subscription_item_id;
+      
+      if (!stripeItemIdToRemove) {
+        logStep("stripe_subscription_item_id is null, looking up from Stripe", { trailerId: swapFromTrailerId });
+        
+        // Retrieve the Stripe subscription with expanded products
+        const stripeSubWithProducts = await stripe.subscriptions.retrieve(
+          subscription.stripe_subscription_id,
+          { expand: ['items.data.price.product'] }
+        );
+        
+        // Find the Stripe item that matches this trailer
+        for (const stripeItem of stripeSubWithProducts.items.data) {
+          const product = stripeItem.price?.product;
+          if (typeof product === 'object' && product !== null && 'metadata' in product) {
+            const productMetadata = (product as Stripe.Product).metadata;
+            if (productMetadata?.trailer_id === swapFromTrailerId) {
+              stripeItemIdToRemove = stripeItem.id;
+              
+              // Also update the local database with the correct stripe_subscription_item_id
+              await supabaseClient
+                .from("subscription_items")
+                .update({ stripe_subscription_item_id: stripeItem.id })
+                .eq("id", itemToRemove.id);
+                
+              logStep("Found and updated stripe_subscription_item_id", { 
+                stripeItemId: stripeItem.id,
+                localItemId: itemToRemove.id 
+              });
+              break;
+            }
+          }
+          
+          // Also try matching by price name containing trailer number
+          const priceName = stripeItem.price?.nickname;
+          const productName = typeof product === 'object' && product !== null ? (product as Stripe.Product).name : null;
+          
+          if (productName) {
+            // Look up the trailer number for this trailer ID
+            const { data: trailerData } = await supabaseClient
+              .from("trailers")
+              .select("trailer_number")
+              .eq("id", swapFromTrailerId)
+              .single();
+              
+            if (trailerData && productName.includes(trailerData.trailer_number)) {
+              stripeItemIdToRemove = stripeItem.id;
+              
+              await supabaseClient
+                .from("subscription_items")
+                .update({ stripe_subscription_item_id: stripeItem.id })
+                .eq("id", itemToRemove.id);
+                
+              logStep("Found stripe item by product name match", { 
+                stripeItemId: stripeItem.id,
+                productName 
+              });
+              break;
+            }
+          }
+        }
+        
+        if (!stripeItemIdToRemove) {
+          // Log all Stripe items for debugging
+          const stripeItemsDebug = stripeSubWithProducts.items.data.map((item: Stripe.SubscriptionItem) => ({
+            id: item.id,
+            productName: typeof item.price?.product === 'object' ? (item.price.product as Stripe.Product).name : item.price?.product,
+            metadata: typeof item.price?.product === 'object' ? (item.price.product as Stripe.Product).metadata : null
+          }));
+          logStep("Could not match Stripe item", { stripeItems: stripeItemsDebug, swapFromTrailerId });
+          throw new Error(`Could not find Stripe subscription item for trailer. The subscription may be out of sync.`);
+        }
+      }
+      
+      logStep("Found stripe_subscription_item_id for swap", { stripeItemId: stripeItemIdToRemove });
 
       // Get new trailer
       const { data: newTrailer, error: trailerErr } = await supabaseClient
@@ -164,7 +242,7 @@ serve(async (req) => {
         },
       });
 
-      itemsToRemove.push({ id: itemToRemove.stripe_subscription_item_id, deleted: true });
+      itemsToRemove.push({ id: stripeItemIdToRemove, deleted: true });
       itemsToAdd.push({ price: price.id });
       removedTrailerIds.push(swapFromTrailerId);
       addedTrailers.push({ id: swapToTrailerId, rate, trailer_number: newTrailer.trailer_number });
@@ -212,17 +290,62 @@ serve(async (req) => {
 
     // Handle REMOVE action
     if (action === "remove_trailers" && removeTrailerIds?.length) {
+      // Get Stripe subscription with expanded products for item lookup if needed
+      let stripeSubExpanded: Stripe.Subscription | null = null;
+      
       for (const trailerId of removeTrailerIds) {
         // Use activeSubscriptionItems to find items to remove
         const itemToRemove = activeSubscriptionItems.find(
           (i: { trailer_id: string }) => i.trailer_id === trailerId
         );
-        if (!itemToRemove?.stripe_subscription_item_id) {
+        
+        if (!itemToRemove) {
           logStep("Warning: Could not find active subscription item for trailer", { trailerId });
           continue;
         }
+        
+        let stripeItemId = itemToRemove.stripe_subscription_item_id;
+        
+        // If stripe_subscription_item_id is null, look it up from Stripe
+        if (!stripeItemId) {
+          if (!stripeSubExpanded) {
+            stripeSubExpanded = await stripe.subscriptions.retrieve(
+              subscription.stripe_subscription_id,
+              { expand: ['items.data.price.product'] }
+            );
+          }
+          
+          // Look up the trailer number
+          const { data: trailerData } = await supabaseClient
+            .from("trailers")
+            .select("trailer_number")
+            .eq("id", trailerId)
+            .single();
+          
+          for (const stripeItem of stripeSubExpanded.items.data) {
+            const product = stripeItem.price?.product;
+            if (typeof product === 'object' && product !== null && 'metadata' in product) {
+              if ((product as Stripe.Product).metadata?.trailer_id === trailerId) {
+                stripeItemId = stripeItem.id;
+                break;
+              }
+            }
+            // Also try matching by product name
+            if (trailerData && typeof product === 'object' && product !== null) {
+              if ((product as Stripe.Product).name?.includes(trailerData.trailer_number)) {
+                stripeItemId = stripeItem.id;
+                break;
+              }
+            }
+          }
+          
+          if (!stripeItemId) {
+            logStep("Warning: Could not find Stripe item for trailer", { trailerId });
+            continue;
+          }
+        }
 
-        itemsToRemove.push({ id: itemToRemove.stripe_subscription_item_id, deleted: true });
+        itemsToRemove.push({ id: stripeItemId, deleted: true });
         removedTrailerIds.push(trailerId);
       }
       
@@ -278,18 +401,48 @@ serve(async (req) => {
 
       // Update local database - add items
       if (addedTrailers.length > 0) {
-        // Find the new Stripe subscription items
-        const newStripeItems = updatedSubscription.items.data;
+        // Retrieve the updated subscription with expanded products to properly match items
+        const expandedSubscription = await stripe.subscriptions.retrieve(
+          subscription.stripe_subscription_id,
+          { expand: ['items.data.price.product'] }
+        );
+        const newStripeItems = expandedSubscription.items.data;
         
         for (const trailer of addedTrailers) {
-          // Find matching Stripe item by product metadata
-          const stripeItem = newStripeItems.find((item: Stripe.SubscriptionItem) => {
-            const product = item.price?.product;
-            if (typeof product === 'object' && product !== null && 'metadata' in product) {
-              return (product as Stripe.Product).metadata?.trailer_id === trailer.id;
+          let matchedStripeItemId: string | null = null;
+          
+          // Find matching Stripe item by product metadata or name
+          for (const stripeItem of newStripeItems) {
+            const product = stripeItem.price?.product;
+            if (typeof product === 'object' && product !== null) {
+              const productObj = product as Stripe.Product;
+              
+              // Try matching by metadata first
+              if (productObj.metadata?.trailer_id === trailer.id) {
+                matchedStripeItemId = stripeItem.id;
+                break;
+              }
+              
+              // Try matching by product name containing trailer number
+              if (productObj.name?.includes(trailer.trailer_number)) {
+                matchedStripeItemId = stripeItem.id;
+                break;
+              }
             }
-            return false;
-          });
+          }
+          
+          if (matchedStripeItemId) {
+            logStep("Matched Stripe item for trailer", { 
+              trailerId: trailer.id, 
+              trailerNumber: trailer.trailer_number,
+              stripeItemId: matchedStripeItemId 
+            });
+          } else {
+            logStep("Warning: Could not match Stripe item for trailer", { 
+              trailerId: trailer.id, 
+              trailerNumber: trailer.trailer_number 
+            });
+          }
 
           await supabaseClient
             .from("subscription_items")
@@ -297,7 +450,7 @@ serve(async (req) => {
               subscription_id: subscriptionId,
               trailer_id: trailer.id,
               monthly_rate: trailer.rate,
-              stripe_subscription_item_id: stripeItem?.id || null,
+              stripe_subscription_item_id: matchedStripeItemId,
               status: "active",
               start_date: new Date().toISOString(),
             });
