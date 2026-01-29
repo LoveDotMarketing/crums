@@ -166,6 +166,12 @@ const WhyLeasingDryVan = () => {
         description={articleData.description}
         canonical="https://crumsleasing.com/resources/guides/why-leasing-a-dry-van-trailer-is-a-smart-business-decision"
         structuredData={[articleSchema, faqSchema, breadcrumbSchema]}
+        article={{
+          publishedTime: articleData.publishedDate,
+          modifiedTime: articleData.updatedDate,
+          section: "Industry Guides",
+          author: articleData.author
+        }}
       />
       <Navigation />
 

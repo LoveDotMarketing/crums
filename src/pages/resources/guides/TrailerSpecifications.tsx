@@ -93,6 +93,12 @@ const TrailerSpecifications = () => {
         description="Complete trailer specifications: 53-foot trailer has 3,489 cubic feet. 48-foot dry van dimensions, flatbed deck heights, weight capacities, and more."
         canonical="https://crumsleasing.com/resources/guides/trailer-specifications"
         structuredData={combinedSchema}
+        article={{
+          publishedTime: "2025-12-26",
+          modifiedTime: "2025-12-26",
+          section: "Industry Guides",
+          author: "CRUMS Leasing"
+        }}
       />
       <Navigation />
 
