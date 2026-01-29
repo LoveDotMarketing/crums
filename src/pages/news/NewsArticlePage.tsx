@@ -14,6 +14,9 @@ const matsBoothArea = "/images/news/mats-2026-booth-area.webp";
 const matsBoothDetail = "/images/news/mats-2026-booth-detail.webp";
 const matsLogo = "/images/news/mats-logo.webp";
 
+// San Antonio Chamber of Commerce
+const chamberLogo = "/images/news/san-antonio-chamber-logo.png";
+
 const NewsArticlePage = () => {
   const { slug } = useParams<{ slug: string }>();
   const article = slug ? getArticleBySlug(slug) : undefined;
@@ -110,15 +113,60 @@ const NewsArticlePage = () => {
               <p className="text-xl text-muted-foreground leading-relaxed">
                 {article.description}
               </p>
-              <div className="mt-8 p-6 bg-muted/30 rounded-lg border border-border">
-                <p className="text-foreground">
-                  This milestone represents an important moment in CRUMS Leasing's journey to 
-                  empower carriers across the United States with reliable, affordable trailer 
-                  leasing solutions. Founded on the values of family, hard work, and dedication 
-                  passed down from "CRUMS" herself, the company continues to grow while 
-                  maintaining its people-first approach.
-                </p>
-              </div>
+              
+              {/* Chamber of Commerce specific content */}
+              {slug === "crums-leasing-joins-greater-san-antonio-chamber-of-commerce" ? (
+                <div className="mt-8 space-y-6">
+                  <div className="p-6 bg-muted/30 rounded-lg border border-border">
+                    <p className="text-foreground mb-4">
+                      CRUMS Leasing is excited to announce our membership in The Greater San Antonio Chamber of Commerce, 
+                      the leading business organization serving the San Antonio region. This partnership reflects our 
+                      commitment to investing in our local community and supporting the growth of businesses throughout 
+                      South Texas.
+                    </p>
+                    <p className="text-foreground">
+                      As a member of the Chamber, CRUMS Leasing joins a network of over 1,800 businesses working together 
+                      to create jobs, drive economic development, and build a stronger San Antonio. Our headquarters at 
+                      7450 Prue Rd serves as our home base for operations across Texas, and this membership strengthens 
+                      our ties to the community that has supported our growth.
+                    </p>
+                  </div>
+                  
+                  <div className="flex flex-col md:flex-row gap-6 items-center p-6 bg-secondary/10 rounded-xl border border-border">
+                    <a 
+                      href="https://www.sachamber.org/" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="flex-shrink-0 hover:opacity-80 transition-opacity"
+                    >
+                      <img 
+                        src={chamberLogo} 
+                        alt="The Greater San Antonio Chamber of Commerce"
+                        className="h-32 w-auto"
+                      />
+                    </a>
+                    <div>
+                      <h3 className="text-lg font-bold text-foreground mb-2">About The Greater San Antonio Chamber</h3>
+                      <p className="text-muted-foreground text-sm">
+                        The Greater San Antonio Chamber is the voice of business in San Antonio, advocating for policies 
+                        that support economic growth, workforce development, and a thriving business environment. The 
+                        Chamber connects businesses of all sizes to resources, networking opportunities, and the support 
+                        they need to succeed.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="mt-8 p-6 bg-muted/30 rounded-lg border border-border">
+                  <p className="text-foreground">
+                    This milestone represents an important moment in CRUMS Leasing's journey to 
+                    empower carriers across the United States with reliable, affordable trailer 
+                    leasing solutions. Founded on the values of family, hard work, and dedication 
+                    passed down from "CRUMS" herself, the company continues to grow while 
+                    maintaining its people-first approach.
+                  </p>
+                </div>
+              )}
             </div>
 
             {/* Booth Location Section - MATS 2026 specific */}
