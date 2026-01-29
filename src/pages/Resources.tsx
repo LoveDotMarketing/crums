@@ -87,8 +87,13 @@ const Resources = () => {
       icon: Truck,
       title: "Equipment Knowledge",
       description: "Learn about trailer types, maintenance schedules, and equipment specifications.",
-      items: ["Trailer Types Explained", "Maintenance Schedules", "Tire Care Guide"],
-      comingSoon: true
+      items: [
+        { name: "Choosing the Right Trailer", href: "/resources/guides/choosing-trailer", available: true },
+        { name: "Trailer Specifications Guide", href: "/resources/guides/trailer-specifications", available: true },
+        { name: "Trailer Maintenance Schedules", href: "/resources/guides/maintenance-schedules", available: true },
+        { name: "Tire Care & Inspection", href: "/resources/guides/tire-care", available: true }
+      ],
+      comingSoon: false
     }
   ];
 
@@ -200,6 +205,14 @@ const Resources = () => {
                       <Link to="/resources/guides">
                         <BookOpen className="h-4 w-4 mr-2" />
                         View All Guides
+                      </Link>
+                    </Button>
+                  )}
+                  {!category.comingSoon && category.title === "Equipment Knowledge" && (
+                    <Button asChild variant="default" size="sm" className="mt-4 w-full">
+                      <Link to="/resources/guides">
+                        <Truck className="h-4 w-4 mr-2" />
+                        View Equipment Guides
                       </Link>
                     </Button>
                   )}

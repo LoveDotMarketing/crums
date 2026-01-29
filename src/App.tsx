@@ -55,6 +55,8 @@ const WhyLeasingDryVan = lazy(() => import("./pages/resources/guides/WhyLeasingD
 const TrailerSpecifications = lazy(() => import("./pages/resources/guides/TrailerSpecifications"));
 const PreTripInspection = lazy(() => import("./pages/resources/guides/PreTripInspection"));
 const WinterDriving = lazy(() => import("./pages/resources/guides/WinterDriving"));
+const MaintenanceSchedules = lazy(() => import("./pages/resources/guides/MaintenanceSchedules"));
+const TireCare = lazy(() => import("./pages/resources/guides/TireCare"));
 const WhyChooseCrums = lazy(() => import("./pages/WhyChooseCrums"));
 const EmergencyTrailerRental = lazy(() => import("./pages/EmergencyTrailerRental"));
 const VeteransMilitaryDiscount = lazy(() => import("./pages/VeteransMilitaryDiscount"));
@@ -430,6 +432,8 @@ const App = () => (
             <Route path="/resources/guides/trailer-specifications" element={<TrailerSpecifications />} />
             <Route path="/resources/guides/pre-trip-inspection" element={<PreTripInspection />} />
             <Route path="/resources/guides/winter-driving" element={<WinterDriving />} />
+            <Route path="/resources/guides/maintenance-schedules" element={<MaintenanceSchedules />} />
+            <Route path="/resources/guides/tire-care" element={<TireCare />} />
             {/* Redirects for old guide URLs */}
             <Route path="/insights/f/why-leasing-a-dry-van-trailer-is-a-smart-business-decision" element={<Navigate to="/resources/guides/why-leasing-a-dry-van-trailer-is-a-smart-business-decision" replace />} />
             <Route path="/guides" element={<Navigate to="/resources/guides" replace />} />
