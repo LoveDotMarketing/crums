@@ -58,6 +58,26 @@ export const guides: Guide[] = [
     changefreq: "monthly"
   },
   {
+    slug: "maintenance-schedules",
+    title: "Trailer Maintenance Schedules: Keep Your Equipment Road-Ready",
+    description: "Complete maintenance schedule guide for dry van and flatbed trailers. Daily, weekly, monthly, and annual inspection checklists.",
+    icon: ClipboardCheck,
+    available: true,
+    lastModified: "2026-01-29",
+    priority: 0.8,
+    changefreq: "monthly"
+  },
+  {
+    slug: "tire-care",
+    title: "Commercial Trailer Tire Care & Inspection Guide",
+    description: "Everything you need to know about trailer tire maintenance, inspection, pressure, tread depth, and replacement timing.",
+    icon: Truck,
+    available: true,
+    lastModified: "2026-01-29",
+    priority: 0.8,
+    changefreq: "monthly"
+  },
+  {
     slug: "pre-trip-inspection",
     title: "How to Check Your Trailer Before Every Trip",
     description: "Quick, visual pre-trip inspection checklist to avoid breakdowns and DOT violations.",
