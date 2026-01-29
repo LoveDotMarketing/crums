@@ -36,8 +36,8 @@ import {
 const articleSchema = {
   "@context": "https://schema.org",
   "@type": "Article",
-  "headline": "Load Boards Guide: How to Find Trucking Loads on DAT, Truckstop & More",
-  "description": "Complete guide to load boards for truck drivers. Compare DAT, Truckstop.com, 123Loadboard, Convoy, and more. Learn how to find and evaluate freight loads.",
+  "headline": "Load Boards Guide: DAT, Truckstop & More",
+  "description": "Compare DAT, Truckstop, 123Loadboard, Convoy and more. Learn how to find freight, evaluate loads, and avoid scams as a new driver.",
   "author": {
     "@type": "Organization",
     "name": "CRUMS Leasing"
@@ -187,8 +187,8 @@ const LoadBoardsGuide = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <SEO
-        title="Load Boards Guide: How to Find Trucking Loads on DAT, Truckstop & More"
-        description="Complete guide to load boards for truck drivers. Compare DAT, Truckstop.com, 123Loadboard, Convoy, and more. Learn how to find and evaluate freight loads."
+        title="Load Boards Guide: DAT, Truckstop & More"
+        description="Compare DAT, Truckstop, 123Loadboard, Convoy and more. Learn how to find freight, evaluate loads, and avoid scams as a new driver."
         canonical="https://crumsleasing.com/resources/guides/load-boards-guide"
         structuredData={[articleSchema, faqSchema, breadcrumbSchema]}
         article={{
