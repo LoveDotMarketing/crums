@@ -80,11 +80,11 @@ export const guides: Guide[] = [
   {
     slug: "winter-driving",
     title: "How to Handle Winter Roads Like a Pro",
-    description: "Driving tips for snow, black ice awareness, and emergency prep — plus, how CRUMS Leasing maintains equipment for safety.",
+    description: "Essential winter driving tips for truck drivers. Learn how to handle snow, black ice, and extreme cold while staying safe and avoiding breakdowns.",
     icon: Snowflake,
-    available: false,
-    lastModified: "2025-12-04",
-    priority: 0.7,
+    available: true,
+    lastModified: "2026-01-29",
+    priority: 0.8,
     changefreq: "monthly"
   },
   {
