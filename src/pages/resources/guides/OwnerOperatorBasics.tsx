@@ -30,8 +30,8 @@ import {
 const articleSchema = {
   "@context": "https://schema.org",
   "@type": "Article",
-  "headline": "Owner-Operator Business Basics: Start Your Trucking Business Right",
-  "description": "Essential guide for starting your trucking business. Learn about MC numbers, operating authority, insurance requirements, IFTA, LLC setup, and first-year planning for owner-operators.",
+  "headline": "Owner-Operator Basics: Start Your Trucking Business",
+  "description": "Essential business guide: MC numbers, operating authority, insurance, IFTA, LLC setup, and first-year planning for owner-operators.",
   "author": {
     "@type": "Organization",
     "name": "CRUMS Leasing"
@@ -199,8 +199,8 @@ const OwnerOperatorBasics = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <SEO
-        title="Owner-Operator Business Basics: Start Your Trucking Business Right"
-        description="Essential guide for starting your trucking business. Learn about MC numbers, operating authority, insurance requirements, IFTA, LLC setup, and first-year planning for owner-operators."
+        title="Owner-Operator Basics: Start Your Trucking Business"
+        description="Essential business guide: MC numbers, operating authority, insurance, IFTA, LLC setup, and first-year planning for owner-operators."
         canonical="https://crumsleasing.com/resources/guides/owner-operator-basics"
         structuredData={[articleSchema, faqSchema, breadcrumbSchema]}
         article={{

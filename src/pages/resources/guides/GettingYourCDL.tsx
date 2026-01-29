@@ -28,8 +28,8 @@ import {
 const articleSchema = {
   "@context": "https://schema.org",
   "@type": "Article",
-  "headline": "How to Get Your CDL License: Complete Guide for New Truck Drivers",
-  "description": "Step-by-step guide to getting your Commercial Driver's License (CDL). Learn about CDL classes, ELDT requirements, DOT physicals, training costs, and timeline expectations.",
+  "headline": "How to Get Your CDL License: New Driver Guide",
+  "description": "Step-by-step CDL guide covering classes, ELDT requirements, DOT physicals, training costs, and timelines. Start your trucking career right.",
   "author": {
     "@type": "Organization",
     "name": "CRUMS Leasing"
@@ -214,8 +214,8 @@ const GettingYourCDL = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <SEO
-        title="How to Get Your CDL License: Complete Guide for New Truck Drivers"
-        description="Step-by-step guide to getting your Commercial Driver's License (CDL). Learn about CDL classes, ELDT requirements, DOT physicals, training costs, and timeline expectations."
+        title="How to Get Your CDL License: New Driver Guide"
+        description="Step-by-step CDL guide covering classes, ELDT requirements, DOT physicals, training costs, and timelines. Start your trucking career right."
         canonical="https://crumsleasing.com/resources/guides/getting-your-cdl"
         structuredData={[articleSchema, faqSchema, howToSchema, breadcrumbSchema]}
         article={{

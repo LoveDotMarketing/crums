@@ -29,8 +29,8 @@ import {
 const articleSchema = {
   "@context": "https://schema.org",
   "@type": "Article",
-  "headline": "Why Lease Your First Trailer: A Guide for New Owner-Operators",
-  "description": "Learn why leasing a trailer makes sense for new truck drivers. Compare leasing vs buying, understand what to look for in a lease provider, and discover why CRUMS Leasing is ideal for new drivers.",
+  "headline": "Why Lease Your First Trailer: New Driver Guide",
+  "description": "Why leasing makes sense for new drivers. Compare lease vs buy, find the right provider, and preserve capital for your trucking business.",
   "author": {
     "@type": "Organization",
     "name": "CRUMS Leasing"
@@ -207,8 +207,8 @@ const LeaseFirstTrailer = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <SEO
-        title="Why Lease Your First Trailer: A Guide for New Owner-Operators"
-        description="Learn why leasing a trailer makes sense for new truck drivers. Compare leasing vs buying, understand what to look for in a lease provider, and discover why CRUMS Leasing is ideal for new drivers."
+        title="Why Lease Your First Trailer: New Driver Guide"
+        description="Why leasing makes sense for new drivers. Compare lease vs buy, find the right provider, and preserve capital for your trucking business."
         canonical="https://crumsleasing.com/resources/guides/lease-first-trailer"
         structuredData={[articleSchema, faqSchema, breadcrumbSchema]}
         article={{
