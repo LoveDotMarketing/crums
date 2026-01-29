@@ -741,7 +741,7 @@ const ChoosingTrailer = () => {
             <Button asChild variant="secondary" size="lg">
               <Link to="/get-started">Start Your Lease Today</Link>
             </Button>
-            <Button asChild variant="outline" size="lg" className="border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary">
+            <Button asChild variant="outline" size="lg" className="bg-transparent border-primary-foreground text-primary-foreground hover:bg-primary-foreground/10">
               <Link to="/guides">Browse All Guides</Link>
             </Button>
           </div>

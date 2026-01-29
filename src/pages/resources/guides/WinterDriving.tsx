@@ -751,7 +751,7 @@ const WinterDriving = () => {
                     <Button asChild size="lg" variant="secondary">
                       <Link to="/get-started">Get a Quote</Link>
                     </Button>
-                    <Button asChild size="lg" variant="outline" className="border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary">
+                    <Button asChild size="lg" variant="outline" className="bg-transparent border-primary-foreground text-primary-foreground hover:bg-primary-foreground/10">
                       <Link to="/contact">
                         <Phone className="h-4 w-4 mr-2" />
                         Contact Us
