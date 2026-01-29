@@ -51,7 +51,7 @@ const Resources = () => {
         { name: "View All Guides", href: "/resources/guides", available: true, featured: true },
         { name: "Choosing the Right Trailer", href: "/resources/guides/choosing-trailer", available: true },
         { name: "Pre-Trip Inspection Checklist", href: "/resources/guides/pre-trip-inspection", available: true },
-        { name: "Winter Driving Tips", href: "/resources/guides/winter-driving", available: false }
+        { name: "Winter Driving Tips", href: "/resources/guides/winter-driving", available: true }
       ],
       comingSoon: false
     },
