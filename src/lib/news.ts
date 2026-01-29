@@ -1,4 +1,5 @@
 const mats2026Image = "/images/news/crums-mats-booth.webp";
+const chamberLogo = "/images/news/san-antonio-chamber-logo.png";
 
 export interface NewsArticle {
   slug: string;
@@ -15,6 +16,21 @@ export interface NewsArticle {
 }
 
 export const newsArticles: NewsArticle[] = [
+  {
+    slug: "crums-leasing-joins-greater-san-antonio-chamber-of-commerce",
+    title: "CRUMS Leasing Joins The Greater San Antonio Chamber of Commerce",
+    description: "CRUMS Leasing proudly announces its membership in The Greater San Antonio Chamber of Commerce, reinforcing our commitment to the local business community and supporting economic growth in the San Antonio region.",
+    date: "January 29, 2026",
+    sortDate: "2026-01-29",
+    externalLinks: [
+      "https://www.sachamber.org/"
+    ],
+    lastModified: "2026-01-29",
+    priority: 0.9,
+    changefreq: "monthly",
+    image: chamberLogo,
+    articleSection: "Company News"
+  },
   {
     slug: "mats-2026-crums-leasing-booth-38024",
     title: "CRUMS Leasing Returns to Mid-America Trucking Show 2026",
