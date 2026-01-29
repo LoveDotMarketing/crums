@@ -5,10 +5,11 @@ import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { SEO } from "@/components/SEO";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Calculator, BookOpen, Play } from "lucide-react";
+import { ArrowRight, Calculator, BookOpen, Play, GraduationCap } from "lucide-react";
 import { guides, getGuideHref } from "@/lib/guides";
 import whyChooseThumb from "@/assets/why-choose-crums-video-thumb.png";
 import { generateBreadcrumbSchema } from "@/lib/structuredData";
+import { Progress } from "@/components/ui/progress";
 
 const guidesCollectionSchema = {
   "@context": "https://schema.org",
@@ -107,6 +108,51 @@ const Guides = () => {
         </div>
       </section>
 
+      {/* New Driver Roadmap Section */}
+      <section className="py-12 bg-background border-b">
+        <div className="container mx-auto px-4">
+          <div className="flex items-center gap-3 mb-6">
+            <GraduationCap className="h-8 w-8 text-primary" />
+            <div>
+              <h2 className="text-2xl font-bold text-foreground">New Driver Roadmap</h2>
+              <p className="text-muted-foreground">5-step pathway from CDL to your first loads</p>
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+            {guides.filter(g => g.category === "new-driver").map((guide, index) => (
+              <Link 
+                key={guide.slug}
+                to={getGuideHref(guide.slug)}
+                className="group relative bg-muted/50 hover:bg-muted rounded-lg p-4 transition-colors"
+              >
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center">
+                    {index + 1}
+                  </span>
+                  <guide.icon className="h-5 w-5 text-primary" />
+                </div>
+                <h3 className="font-medium text-foreground text-sm leading-tight group-hover:text-primary transition-colors">
+                  {guide.title}
+                </h3>
+                {index < 4 && (
+                  <ArrowRight className="hidden md:block absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 h-4 w-4 text-muted-foreground z-10" />
+                )}
+              </Link>
+            ))}
+          </div>
+          
+          <div className="mt-6 flex justify-center">
+            <Button asChild variant="outline">
+              <Link to="/resources/guides/getting-your-cdl">
+                Start the New Driver Roadmap
+                <ArrowRight className="h-4 w-4 ml-2" />
+              </Link>
+            </Button>
+          </div>
+        </div>
+      </section>
+
       {/* Definition Blocks */}
       <section className="py-12 bg-muted/30 border-b">
         <div className="container mx-auto px-4">
@@ -132,7 +178,7 @@ const Guides = () => {
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold mb-4 text-foreground">
-              Carrier How-To Guides
+              All Carrier Guides
             </h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
               Real-world advice from the trucking industry. Each guide is designed to help you save time, money, and stress.
@@ -140,7 +186,7 @@ const Guides = () => {
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {guides.map((guide, index) => (
+            {guides.filter(g => g.category !== "new-driver").map((guide, index) => (
               <Card 
                 key={index} 
                 className={`hover:shadow-lg transition-all duration-300 ${

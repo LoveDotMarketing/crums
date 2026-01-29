@@ -5,7 +5,7 @@ import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { SEO } from "@/components/SEO";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { BookOpen, FileText, TrendingUp, Shield, Truck, Calculator, ArrowRight } from "lucide-react";
+import { BookOpen, FileText, TrendingUp, Shield, Truck, Calculator, ArrowRight, GraduationCap } from "lucide-react";
 import { generateBreadcrumbSchema } from "@/lib/structuredData";
 
 const webPageSchema = {
@@ -40,6 +40,19 @@ const Resources = () => {
         { name: "IFTA Tax Estimator", href: "/resources/tools/ifta-calculator", available: true },
         { name: "Fuel Cost Calculator", href: "/resources/tools/fuel-calculator", available: true },
         { name: "Tax Deduction Guide", href: "/resources/tools/tax-deductions", available: true }
+      ],
+      comingSoon: false
+    },
+    {
+      icon: GraduationCap,
+      title: "New Driver Roadmap",
+      description: "Starting your trucking career? Follow our step-by-step pathway from CDL to your first loads.",
+      items: [
+        { name: "Getting Your CDL License", href: "/resources/guides/getting-your-cdl", available: true },
+        { name: "Understanding Load Boards", href: "/resources/guides/load-boards-guide", available: true },
+        { name: "Finding Your First Loads", href: "/resources/guides/finding-first-loads", available: true },
+        { name: "Why Lease Your First Trailer", href: "/resources/guides/lease-first-trailer", available: true },
+        { name: "Owner-Operator Business Basics", href: "/resources/guides/owner-operator-basics", available: true }
       ],
       comingSoon: false
     },
@@ -197,6 +210,14 @@ const Resources = () => {
                       <Link to="/resources/tools">
                         <Calculator className="h-4 w-4 mr-2" />
                         View All Tools
+                      </Link>
+                    </Button>
+                  )}
+                  {!category.comingSoon && category.title === "New Driver Roadmap" && (
+                    <Button asChild variant="default" size="sm" className="mt-4 w-full">
+                      <Link to="/resources/guides/getting-your-cdl">
+                        <GraduationCap className="h-4 w-4 mr-2" />
+                        Start the Roadmap
                       </Link>
                     </Button>
                   )}
