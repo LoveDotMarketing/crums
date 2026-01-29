@@ -57,6 +57,11 @@ const PreTripInspection = lazy(() => import("./pages/resources/guides/PreTripIns
 const WinterDriving = lazy(() => import("./pages/resources/guides/WinterDriving"));
 const MaintenanceSchedules = lazy(() => import("./pages/resources/guides/MaintenanceSchedules"));
 const TireCare = lazy(() => import("./pages/resources/guides/TireCare"));
+const GettingYourCDL = lazy(() => import("./pages/resources/guides/GettingYourCDL"));
+const LoadBoardsGuide = lazy(() => import("./pages/resources/guides/LoadBoardsGuide"));
+const FindingFirstLoads = lazy(() => import("./pages/resources/guides/FindingFirstLoads"));
+const LeaseFirstTrailer = lazy(() => import("./pages/resources/guides/LeaseFirstTrailer"));
+const OwnerOperatorBasics = lazy(() => import("./pages/resources/guides/OwnerOperatorBasics"));
 const WhyChooseCrums = lazy(() => import("./pages/WhyChooseCrums"));
 const EmergencyTrailerRental = lazy(() => import("./pages/EmergencyTrailerRental"));
 const VeteransMilitaryDiscount = lazy(() => import("./pages/VeteransMilitaryDiscount"));
@@ -446,6 +451,11 @@ const App = () => (
 <Route path="/resources/tools/fuel-calculator" element={<FuelCostCalculator />} />
 <Route path="/resources/tools/tax-deductions" element={<TaxDeductionGuide />} />
 <Route path="/resources/tools/per-diem-calculator" element={<PerDiemCalculator />} />
+            <Route path="/resources/guides/getting-your-cdl" element={<GettingYourCDL />} />
+            <Route path="/resources/guides/load-boards-guide" element={<LoadBoardsGuide />} />
+            <Route path="/resources/guides/finding-first-loads" element={<FindingFirstLoads />} />
+            <Route path="/resources/guides/lease-first-trailer" element={<LeaseFirstTrailer />} />
+            <Route path="/resources/guides/owner-operator-basics" element={<OwnerOperatorBasics />} />
             <Route path="/referral-program" element={<ReferralProgram />} />
             <Route path="/partners" element={<Partners />} />
             <Route path="/news" element={<News />} />

@@ -12,6 +12,10 @@ import {
   GraduationCap, 
   Brain,
   Ruler,
+  Search,
+  Package,
+  FileSignature,
+  Briefcase,
   LucideIcon
 } from "lucide-react";
 
@@ -24,9 +28,67 @@ export interface Guide {
   lastModified: string;
   priority: number;
   changefreq: "daily" | "weekly" | "monthly" | "yearly";
+  category?: "new-driver" | "equipment" | "operations";
 }
 
 export const guides: Guide[] = [
+  // New Driver Roadmap Series
+  {
+    slug: "getting-your-cdl",
+    title: "How to Get Your CDL License",
+    description: "Step-by-step guide to getting your Commercial Driver's License. Learn about CDL classes, ELDT requirements, DOT physicals, and training options.",
+    icon: GraduationCap,
+    available: true,
+    lastModified: "2026-01-29",
+    priority: 0.9,
+    changefreq: "monthly",
+    category: "new-driver"
+  },
+  {
+    slug: "load-boards-guide",
+    title: "Understanding Load Boards: DAT, Truckstop & More",
+    description: "Complete guide to load boards for truck drivers. Compare DAT, Truckstop.com, Convoy, Uber Freight, and learn how to find profitable freight.",
+    icon: Search,
+    available: true,
+    lastModified: "2026-01-29",
+    priority: 0.9,
+    changefreq: "monthly",
+    category: "new-driver"
+  },
+  {
+    slug: "finding-first-loads",
+    title: "How to Find Your First Trucking Loads",
+    description: "New driver's guide to finding and booking loads. Learn rate negotiation, broker communication, scam avoidance, and building repeat business.",
+    icon: Package,
+    available: true,
+    lastModified: "2026-01-29",
+    priority: 0.9,
+    changefreq: "monthly",
+    category: "new-driver"
+  },
+  {
+    slug: "lease-first-trailer",
+    title: "Why Lease Your First Trailer",
+    description: "Learn why leasing a trailer makes sense for new drivers. Compare leasing vs buying and discover what to look for in a lease provider.",
+    icon: FileSignature,
+    available: true,
+    lastModified: "2026-01-29",
+    priority: 0.9,
+    changefreq: "monthly",
+    category: "new-driver"
+  },
+  {
+    slug: "owner-operator-basics",
+    title: "Owner-Operator Business Basics",
+    description: "Essential guide for starting your trucking business. Learn about MC numbers, insurance, IFTA, LLC setup, and first-year planning.",
+    icon: Briefcase,
+    available: true,
+    lastModified: "2026-01-29",
+    priority: 0.9,
+    changefreq: "monthly",
+    category: "new-driver"
+  },
+  // Equipment & Operations Guides
   {
     slug: "choosing-trailer",
     title: "How to Choose the Right Trailer for Your Haul",
