@@ -233,13 +233,19 @@ serve(async (req) => {
       logStep("Created deposit price", { depositAmount, priceId: depositPrice.id });
     }
 
+    // Calculate trial end date (15 days from now) for delayed first rent payment
+    const trialEndDate = Math.floor(Date.now() / 1000) + (15 * 24 * 60 * 60);
+    logStep("Setting 15-day trial period for delayed first rent", { trialEndDate: new Date(trialEndDate * 1000).toISOString() });
+
     // Create the subscription with deposit as one-time charge on first invoice
+    // Trial period delays the first recurring charge by 15 days
     const subscriptionParams: Stripe.SubscriptionCreateParams = {
       customer: stripeCustomerId,
       items: subscriptionItems,
       payment_behavior: "default_incomplete",
       payment_settings: { save_default_payment_method: "on_subscription" },
       expand: ["latest_invoice.payment_intent"],
+      trial_end: trialEndDate, // First rent charged 15 days after deposit
       metadata: { 
         internal_customer_id: customerId,
         deposit_amount: depositAmount?.toString() || "0",
