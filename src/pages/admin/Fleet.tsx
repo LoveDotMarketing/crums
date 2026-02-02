@@ -282,13 +282,27 @@ export default function Fleet() {
     }
   };
 
+  // Create a map of customer_id to customer for quick lookup
+  const customerMap = customers.reduce((acc, customer) => {
+    acc[customer.id] = customer;
+    return acc;
+  }, {} as Record<string, Customer>);
+
   const filteredTrailers = trailers
     .filter((trailer) => {
+      const searchLower = searchQuery.toLowerCase();
+      const customer = trailer.customer_id ? customerMap[trailer.customer_id] : null;
+      
       const matchesSearch = 
-        trailer.trailer_number.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        trailer.type.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        trailer.make?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        trailer.vin?.toLowerCase().includes(searchQuery.toLowerCase());
+        trailer.trailer_number.toLowerCase().includes(searchLower) ||
+        trailer.type.toLowerCase().includes(searchLower) ||
+        trailer.make?.toLowerCase().includes(searchLower) ||
+        trailer.vin?.toLowerCase().includes(searchLower) ||
+        trailer.license_plate?.toLowerCase().includes(searchLower) ||
+        trailer.model?.toLowerCase().includes(searchLower) ||
+        trailer.status?.toLowerCase().includes(searchLower) ||
+        customer?.full_name?.toLowerCase().includes(searchLower) ||
+        customer?.company_name?.toLowerCase().includes(searchLower);
       
       const matchesStatus = statusFilter === "all" || 
         (statusFilter === "rented" && trailer.is_rented) ||
@@ -667,7 +681,7 @@ export default function Fleet() {
               <div className="relative max-w-md">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Search by number, type, or make..."
+                  placeholder="Search by VIN, lessee, type, status..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-10"
