@@ -27,6 +27,9 @@ interface TwilioResponse {
   page_size: number;
 }
 
+// CRUMS Leasing business phone number - only show calls for this number
+const BUSINESS_PHONE_NUMBER = '+18885704564';
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -125,8 +128,15 @@ Deno.serve(async (req) => {
 
     const data: TwilioResponse = await twilioResponse.json();
 
+    // Filter to only show calls involving the CRUMS business number
+    let calls = data.calls.filter(call => {
+      const normalizedFrom = call.from.replace(/\D/g, '');
+      const normalizedTo = call.to.replace(/\D/g, '');
+      const normalizedBusiness = BUSINESS_PHONE_NUMBER.replace(/\D/g, '');
+      return normalizedFrom === normalizedBusiness || normalizedTo === normalizedBusiness;
+    });
+
     // Filter by direction if specified
-    let calls = data.calls;
     if (direction !== 'all') {
       calls = calls.filter(call => {
         if (direction === 'inbound') {
