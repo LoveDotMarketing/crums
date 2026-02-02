@@ -1737,6 +1737,120 @@ export type Database = {
           },
         ]
       }
+      trailer_checkout_agreements: {
+        Row: {
+          completed_at: string | null
+          completed_by: string | null
+          created_at: string
+          customer_id: string
+          final_release_document_url: string | null
+          final_release_signed: boolean | null
+          final_release_signed_at: string | null
+          final_release_signer_ip: string | null
+          final_release_signer_name: string | null
+          id: string
+          id_verification_notes: string | null
+          id_verified: boolean | null
+          id_verified_at: string | null
+          id_verified_by: string | null
+          pre_pickup_document_url: string | null
+          pre_pickup_signed: boolean | null
+          pre_pickup_signed_at: string | null
+          pre_pickup_signer_ip: string | null
+          pre_pickup_signer_name: string | null
+          release_request_id: string | null
+          status: string
+          trailer_id: string
+          updated_at: string
+        }
+        Insert: {
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string
+          customer_id: string
+          final_release_document_url?: string | null
+          final_release_signed?: boolean | null
+          final_release_signed_at?: string | null
+          final_release_signer_ip?: string | null
+          final_release_signer_name?: string | null
+          id?: string
+          id_verification_notes?: string | null
+          id_verified?: boolean | null
+          id_verified_at?: string | null
+          id_verified_by?: string | null
+          pre_pickup_document_url?: string | null
+          pre_pickup_signed?: boolean | null
+          pre_pickup_signed_at?: string | null
+          pre_pickup_signer_ip?: string | null
+          pre_pickup_signer_name?: string | null
+          release_request_id?: string | null
+          status?: string
+          trailer_id: string
+          updated_at?: string
+        }
+        Update: {
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string
+          customer_id?: string
+          final_release_document_url?: string | null
+          final_release_signed?: boolean | null
+          final_release_signed_at?: string | null
+          final_release_signer_ip?: string | null
+          final_release_signer_name?: string | null
+          id?: string
+          id_verification_notes?: string | null
+          id_verified?: boolean | null
+          id_verified_at?: string | null
+          id_verified_by?: string | null
+          pre_pickup_document_url?: string | null
+          pre_pickup_signed?: boolean | null
+          pre_pickup_signed_at?: string | null
+          pre_pickup_signer_ip?: string | null
+          pre_pickup_signer_name?: string | null
+          release_request_id?: string | null
+          status?: string
+          trailer_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trailer_checkout_agreements_completed_by_fkey"
+            columns: ["completed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trailer_checkout_agreements_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trailer_checkout_agreements_id_verified_by_fkey"
+            columns: ["id_verified_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trailer_checkout_agreements_release_request_id_fkey"
+            columns: ["release_request_id"]
+            isOneToOne: false
+            referencedRelation: "trailer_release_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trailer_checkout_agreements_trailer_id_fkey"
+            columns: ["trailer_id"]
+            isOneToOne: false
+            referencedRelation: "trailers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       trailer_release_requests: {
         Row: {
           assigned_mechanic_id: string | null
