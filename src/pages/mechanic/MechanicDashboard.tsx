@@ -61,6 +61,21 @@ interface MaintenanceRecord {
   maintenance_type: string | null;
 }
 
+interface FleetActivityLog {
+  id: string;
+  trailer_id: string;
+  action_type: string;
+  previous_status: string | null;
+  new_status: string | null;
+  notes: string | null;
+  created_at: string;
+  metadata: {
+    trailer_number?: string;
+    vin?: string;
+    customer_name?: string;
+  } | null;
+}
+
 export default function MechanicDashboard() {
   const navigate = useNavigate();
   const { user, signOut, effectiveUserId, isImpersonating, impersonatedUser } = useAuth();
@@ -86,6 +101,9 @@ export default function MechanicDashboard() {
   const [loadingHistory, setLoadingHistory] = useState(false);
   const [isCompleteServiceDialogOpen, setIsCompleteServiceDialogOpen] = useState(false);
   const [completeServiceTrailer, setCompleteServiceTrailer] = useState<{ id: string; trailer_number: string } | null>(null);
+  const [fleetActivityLogs, setFleetActivityLogs] = useState<FleetActivityLog[]>([]);
+  const [loadingActivityLogs, setLoadingActivityLogs] = useState(false);
+  const [isActivityLogOpen, setIsActivityLogOpen] = useState(false);
 
   // Helper to log fleet activity
   const logFleetActivity = async (
@@ -139,6 +157,50 @@ export default function MechanicDashboard() {
     setHistoryTrailer(trailer);
     setIsHistoryDialogOpen(true);
     fetchMaintenanceHistory(trailer.id);
+  };
+
+  const fetchFleetActivityLogs = async () => {
+    setLoadingActivityLogs(true);
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data, error } = await (supabase as any)
+        .from("fleet_activity_logs")
+        .select("id, trailer_id, action_type, previous_status, new_status, notes, created_at, metadata")
+        .order("created_at", { ascending: false })
+        .limit(50);
+
+      if (error) throw error;
+      setFleetActivityLogs(data || []);
+    } catch (error) {
+      console.error("Error fetching fleet activity logs:", error);
+      toast.error("Failed to load activity logs");
+    } finally {
+      setLoadingActivityLogs(false);
+    }
+  };
+
+  const handleViewActivityLog = () => {
+    setIsActivityLogOpen(true);
+    fetchFleetActivityLogs();
+  };
+
+  const getActionTypeLabel = (actionType: string): string => {
+    const labels: Record<string, string> = {
+      check_in: "Check In",
+      check_out_service: "Check Out (Service)",
+      check_out_transport: "Check Out (Transport)",
+      customer_checkout: "Released to Customer",
+      maintenance_started: "Maintenance Started",
+      service_completed: "Service Completed",
+    };
+    return labels[actionType] || actionType.replace(/_/g, " ");
+  };
+
+  const getActionTypeBadgeVariant = (actionType: string): "default" | "secondary" | "destructive" | "outline" => {
+    if (actionType.includes("check_in") || actionType === "service_completed") return "default";
+    if (actionType.includes("customer") || actionType === "customer_checkout") return "secondary";
+    if (actionType.includes("maintenance")) return "destructive";
+    return "outline";
   };
 
   const fetchPendingInspections = async () => {
@@ -726,7 +788,7 @@ export default function MechanicDashboard() {
           </Card>
         )}
 
-        {/* Search */}
+        {/* Search and Activity Log */}
         <div className="mb-6 flex items-center gap-4">
           <div className="relative max-w-md flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -742,6 +804,10 @@ export default function MechanicDashboard() {
               Clear filter
             </Button>
           )}
+          <Button variant="outline" onClick={handleViewActivityLog}>
+            <History className="mr-2 h-4 w-4" />
+            Activity Log
+          </Button>
         </div>
 
         {loading ? (
@@ -1212,6 +1278,86 @@ export default function MechanicDashboard() {
             <Button onClick={handleCompleteService}>
               <Wrench className="mr-2 h-4 w-4" />
               Complete Service
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Fleet Activity Log Dialog */}
+      <Dialog open={isActivityLogOpen} onOpenChange={setIsActivityLogOpen}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <History className="h-5 w-5" />
+              Fleet Activity Log
+            </DialogTitle>
+            <DialogDescription>
+              Recent check-in, check-out, and maintenance activity
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex-1 overflow-y-auto">
+            {loadingActivityLogs ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+              </div>
+            ) : fleetActivityLogs.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                No activity logs found
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Date/Time</TableHead>
+                    <TableHead>Trailer</TableHead>
+                    <TableHead>VIN</TableHead>
+                    <TableHead>Action</TableHead>
+                    <TableHead>Status Change</TableHead>
+                    <TableHead>Notes</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {fleetActivityLogs.map((log) => (
+                    <TableRow key={log.id}>
+                      <TableCell className="whitespace-nowrap text-sm">
+                        {new Date(log.created_at).toLocaleString()}
+                      </TableCell>
+                      <TableCell className="font-medium">
+                        {log.metadata?.trailer_number || "-"}
+                      </TableCell>
+                      <TableCell>
+                        <code className="text-xs font-mono">
+                          {log.metadata?.vin ? log.metadata.vin.slice(-8) : "-"}
+                        </code>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={getActionTypeBadgeVariant(log.action_type)}>
+                          {getActionTypeLabel(log.action_type)}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-sm">
+                        {log.previous_status && log.new_status ? (
+                          <span>
+                            <span className="text-muted-foreground">{log.previous_status}</span>
+                            {" → "}
+                            <span className="font-medium">{log.new_status}</span>
+                          </span>
+                        ) : (
+                          "-"
+                        )}
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground max-w-[200px] truncate">
+                        {log.notes || "-"}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsActivityLogOpen(false)}>
+              Close
             </Button>
           </DialogFooter>
         </DialogContent>
