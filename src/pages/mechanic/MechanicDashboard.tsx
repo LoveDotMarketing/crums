@@ -84,6 +84,8 @@ export default function MechanicDashboard() {
   const [historyTrailer, setHistoryTrailer] = useState<Trailer | null>(null);
   const [maintenanceHistory, setMaintenanceHistory] = useState<MaintenanceRecord[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
+  const [isCompleteServiceDialogOpen, setIsCompleteServiceDialogOpen] = useState(false);
+  const [completeServiceTrailer, setCompleteServiceTrailer] = useState<{ id: string; trailer_number: string } | null>(null);
 
   // Helper to log fleet activity
   const logFleetActivity = async (
@@ -419,7 +421,16 @@ export default function MechanicDashboard() {
     }
   };
 
-  const handleCompleteService = async (trailerId: string, trailerNumber: string) => {
+  const openCompleteServiceConfirmation = (trailerId: string, trailerNumber: string) => {
+    setCompleteServiceTrailer({ id: trailerId, trailer_number: trailerNumber });
+    setIsCompleteServiceDialogOpen(true);
+  };
+
+  const handleCompleteService = async () => {
+    if (!completeServiceTrailer) return;
+    
+    const { id: trailerId, trailer_number: trailerNumber } = completeServiceTrailer;
+    
     try {
       // Get current trailer to find VIN
       const trailer = trailers.find(t => t.id === trailerId);
@@ -450,6 +461,8 @@ export default function MechanicDashboard() {
       );
 
       toast.success(`${trailerNumber} service completed and marked available`);
+      setIsCompleteServiceDialogOpen(false);
+      setCompleteServiceTrailer(null);
     } catch (error) {
       console.error("Error completing service:", error);
       toast.error("Failed to complete service");
@@ -698,7 +711,7 @@ export default function MechanicDashboard() {
                         onClick={() => {
                           const trailer = trailers.find(t => t.id === job.trailer_id);
                           if (trailer) {
-                            handleCompleteService(trailer.id, trailer.trailer_number);
+                            openCompleteServiceConfirmation(trailer.id, trailer.trailer_number);
                           }
                         }}
                       >
@@ -797,7 +810,7 @@ export default function MechanicDashboard() {
                               <Button 
                                 size="sm" 
                                 variant="secondary"
-                                onClick={() => handleCompleteService(trailer.id, trailer.trailer_number)}
+                                onClick={() => openCompleteServiceConfirmation(trailer.id, trailer.trailer_number)}
                               >
                                 <Wrench className="mr-2 h-4 w-4" />
                                 Complete Service
@@ -1177,6 +1190,28 @@ export default function MechanicDashboard() {
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsHistoryDialogOpen(false)}>
               Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Complete Service Confirmation Dialog */}
+      <Dialog open={isCompleteServiceDialogOpen} onOpenChange={setIsCompleteServiceDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirm Complete Service</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to mark <strong>{completeServiceTrailer?.trailer_number}</strong> as service complete? 
+              This will set the trailer status to available and close all open maintenance records.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" onClick={() => setIsCompleteServiceDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleCompleteService}>
+              <Wrench className="mr-2 h-4 w-4" />
+              Complete Service
             </Button>
           </DialogFooter>
         </DialogContent>
