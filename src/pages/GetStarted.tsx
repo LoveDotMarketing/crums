@@ -177,13 +177,16 @@ export default function GetStarted() {
 
       if (profileError) throw profileError;
 
-      // Create minimal customer application with status 'new'
+      // Create or update customer application (upsert to prevent duplicates)
       const { error: applicationError } = await supabase
         .from('customer_applications')
-        .insert({
+        .upsert({
           user_id: session.user.id,
           phone_number: phoneNumber,
           status: 'new'
+        }, { 
+          onConflict: 'user_id',
+          ignoreDuplicates: false 
         });
 
       if (applicationError) throw applicationError;
