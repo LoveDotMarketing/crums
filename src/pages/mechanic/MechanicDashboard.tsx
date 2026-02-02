@@ -9,12 +9,14 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Wrench, LogOut, Truck, Search, MapPin, DollarSign, ClipboardList, ClipboardCheck, Eye, ArrowDownToLine, ArrowUpFromLine, History, Calendar, Loader2 } from "lucide-react";
+import { Wrench, LogOut, Truck, Search, MapPin, DollarSign, ClipboardList, ClipboardCheck, Eye, ArrowDownToLine, ArrowUpFromLine, History, Calendar, Loader2, UserCheck, Users } from "lucide-react";
 import { toast } from "sonner";
 import { ChatBot } from "@/components/ChatBot";
 import { SEO } from "@/components/SEO";
 import { cn } from "@/lib/utils";
 import { PendingReleasesQueue } from "@/components/mechanic/PendingReleasesQueue";
+import { CustomerCheckoutDialog } from "@/components/mechanic/CustomerCheckoutDialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -70,7 +72,11 @@ export default function MechanicDashboard() {
   const [maintenanceCost, setMaintenanceCost] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isCheckOutDialogOpen, setIsCheckOutDialogOpen] = useState(false);
-  const [checkOutType, setCheckOutType] = useState<"service" | "use">("service");
+  const [checkOutType, setCheckOutType] = useState<"service" | "use" | "customer">("service");
+  const [isCustomerCheckoutOpen, setIsCustomerCheckoutOpen] = useState(false);
+  const [customers, setCustomers] = useState<Array<{ id: string; full_name: string; company_name: string | null; email: string }>>([]);
+  const [selectedCustomerId, setSelectedCustomerId] = useState<string>("");
+  const [loadingCustomers, setLoadingCustomers] = useState(false);
   const [pendingInspections, setPendingInspections] = useState<Record<string, string>>({});
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
   const [activeJobs, setActiveJobs] = useState<ActiveJob[]>([]);
@@ -201,6 +207,24 @@ export default function MechanicDashboard() {
       setActiveJobs(jobs);
     } catch (error) {
       console.error("Error fetching active jobs:", error);
+    }
+  };
+
+  const fetchCustomers = async () => {
+    setLoadingCustomers(true);
+    try {
+      const { data, error } = await supabase
+        .from("customers")
+        .select("id, full_name, company_name, email")
+        .eq("status", "active")
+        .order("full_name");
+      
+      if (error) throw error;
+      setCustomers(data || []);
+    } catch (error) {
+      console.error("Error fetching customers:", error);
+    } finally {
+      setLoadingCustomers(false);
     }
   };
 
@@ -902,9 +926,16 @@ export default function MechanicDashboard() {
       {/* Check Out Dialog */}
       <Dialog open={isCheckOutDialogOpen} onOpenChange={(open) => {
         setIsCheckOutDialogOpen(open);
-        if (!open) setSelectedTrailer(null);
+        if (!open) {
+          setSelectedTrailer(null);
+          setSelectedCustomerId("");
+          setCheckOutType("service");
+        } else {
+          // Fetch customers when dialog opens for customer checkout
+          fetchCustomers();
+        }
       }}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle>Check Out Trailer</DialogTitle>
             <DialogDescription>
@@ -935,47 +966,154 @@ export default function MechanicDashboard() {
                 </div>
               </div>
             )}
-            <div className="space-y-2">
+            <div className="space-y-3">
               <Label>Check Out Type</Label>
-              <div className="flex gap-4">
-                <label className="flex items-center gap-2 cursor-pointer">
+              <div className="grid gap-3">
+                <label className={cn(
+                  "flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors",
+                  checkOutType === "service" ? "border-primary bg-primary/5" : "border-border hover:border-muted-foreground"
+                )}>
                   <input
                     type="radio"
                     name="checkout-type"
                     value="service"
                     checked={checkOutType === "service"}
-                    onChange={(e) => setCheckOutType(e.target.value as "service" | "use")}
+                    onChange={(e) => setCheckOutType(e.target.value as "service" | "use" | "customer")}
                     className="h-4 w-4"
                   />
-                  <span className="text-sm">For Service</span>
+                  <Wrench className="h-4 w-4 text-muted-foreground" />
+                  <div>
+                    <span className="text-sm font-medium">For Maintenance</span>
+                    <p className="text-xs text-muted-foreground">Check out for service or repairs</p>
+                  </div>
                 </label>
-                <label className="flex items-center gap-2 cursor-pointer">
+                <label className={cn(
+                  "flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors",
+                  checkOutType === "use" ? "border-primary bg-primary/5" : "border-border hover:border-muted-foreground"
+                )}>
                   <input
                     type="radio"
                     name="checkout-type"
                     value="use"
                     checked={checkOutType === "use"}
-                    onChange={(e) => setCheckOutType(e.target.value as "service" | "use")}
+                    onChange={(e) => setCheckOutType(e.target.value as "service" | "use" | "customer")}
                     className="h-4 w-4"
                   />
-                  <span className="text-sm">For Use (Yard/Transport)</span>
+                  <ArrowUpFromLine className="h-4 w-4 text-muted-foreground" />
+                  <div>
+                    <span className="text-sm font-medium">For Yard/Transport</span>
+                    <p className="text-xs text-muted-foreground">Internal use or yard movement</p>
+                  </div>
+                </label>
+                <label className={cn(
+                  "flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors",
+                  checkOutType === "customer" ? "border-primary bg-primary/5" : "border-border hover:border-muted-foreground"
+                )}>
+                  <input
+                    type="radio"
+                    name="checkout-type"
+                    value="customer"
+                    checked={checkOutType === "customer"}
+                    onChange={(e) => setCheckOutType(e.target.value as "service" | "use" | "customer")}
+                    className="h-4 w-4"
+                  />
+                  <UserCheck className="h-4 w-4 text-muted-foreground" />
+                  <div>
+                    <span className="text-sm font-medium">Release to Customer</span>
+                    <p className="text-xs text-muted-foreground">Customer pickup with ID verification & agreements</p>
+                  </div>
                 </label>
               </div>
             </div>
+
+            {/* Customer Selection - only show when customer checkout is selected */}
+            {checkOutType === "customer" && (
+              <div className="space-y-2 pt-2 border-t">
+                <Label>Select Customer</Label>
+                {loadingCustomers ? (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Loading customers...
+                  </div>
+                ) : (
+                  <Select value={selectedCustomerId} onValueChange={setSelectedCustomerId}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a customer" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {customers.map((customer) => (
+                        <SelectItem key={customer.id} value={customer.id}>
+                          <div className="flex items-center gap-2">
+                            <Users className="h-4 w-4" />
+                            <span>{customer.full_name}</span>
+                            {customer.company_name && (
+                              <span className="text-muted-foreground">({customer.company_name})</span>
+                            )}
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              </div>
+            )}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => {
               setIsCheckOutDialogOpen(false);
               setSelectedTrailer(null);
+              setSelectedCustomerId("");
             }}>
               Cancel
             </Button>
-            <Button onClick={handleSubmitCheckOut} disabled={!selectedTrailer}>
-              Check Out
-            </Button>
+            {checkOutType === "customer" ? (
+              <Button 
+                onClick={() => {
+                  setIsCheckOutDialogOpen(false);
+                  setIsCustomerCheckoutOpen(true);
+                }} 
+                disabled={!selectedTrailer || !selectedCustomerId}
+              >
+                <UserCheck className="mr-2 h-4 w-4" />
+                Start Customer Checkout
+              </Button>
+            ) : (
+              <Button onClick={handleSubmitCheckOut} disabled={!selectedTrailer}>
+                Check Out
+              </Button>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Customer Checkout Dialog */}
+      {selectedTrailer && selectedCustomerId && (
+        <CustomerCheckoutDialog
+          open={isCustomerCheckoutOpen}
+          onOpenChange={(open) => {
+            setIsCustomerCheckoutOpen(open);
+            if (!open) {
+              setSelectedTrailer(null);
+              setSelectedCustomerId("");
+            }
+          }}
+          trailer={{
+            id: selectedTrailer.id,
+            trailer_number: selectedTrailer.trailer_number,
+            vin: selectedTrailer.vin,
+            license_plate: selectedTrailer.license_plate,
+            type: selectedTrailer.type
+          }}
+          customerId={selectedCustomerId}
+          mechanicId={currentUserId}
+          onCheckoutComplete={() => {
+            fetchTrailers();
+            setIsCustomerCheckoutOpen(false);
+            setSelectedTrailer(null);
+            setSelectedCustomerId("");
+          }}
+        />
+      )}
 
       {/* Maintenance History Dialog */}
       <Dialog open={isHistoryDialogOpen} onOpenChange={setIsHistoryDialogOpen}>
