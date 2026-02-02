@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { format, subDays, startOfDay, endOfDay } from "date-fns";
-import { Phone, PhoneIncoming, PhoneOutgoing, PhoneMissed, Clock, RefreshCw, Download } from "lucide-react";
+import { Phone, PhoneIncoming, PhoneOutgoing, PhoneMissed, Clock, RefreshCw, Download, Play, Pause, Volume2 } from "lucide-react";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -25,6 +25,8 @@ interface CallLog {
   endTime: string;
   price: number | null;
   priceUnit: string;
+  recordingSid: string | null;
+  recordingDuration: number | null;
 }
 
 interface CallStats {
@@ -86,6 +88,94 @@ const getDirectionBadge = (direction: string) => {
   );
 };
 
+interface AudioPlayerProps {
+  recordingSid: string;
+}
+
+function AudioPlayer({ recordingSid }: AudioPlayerProps) {
+  const audioRef = useRef<HTMLAudioElement>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const { toast } = useToast();
+
+  const handlePlay = async () => {
+    if (isPlaying && audioRef.current) {
+      audioRef.current.pause();
+      setIsPlaying(false);
+      return;
+    }
+
+    if (!audioUrl) {
+      setIsLoading(true);
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) throw new Error("Not authenticated");
+
+        const response = await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/twilio-call-recording?recordingSid=${recordingSid}`,
+          {
+            headers: {
+              Authorization: `Bearer ${session.access_token}`,
+            },
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error("Failed to load recording");
+        }
+
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        setAudioUrl(url);
+        
+        if (audioRef.current) {
+          audioRef.current.src = url;
+          audioRef.current.play();
+          setIsPlaying(true);
+        }
+      } catch (error) {
+        console.error("Failed to load recording:", error);
+        toast({
+          title: "Failed to load recording",
+          description: "The recording could not be loaded. Please try again.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    } else if (audioRef.current) {
+      audioRef.current.play();
+      setIsPlaying(true);
+    }
+  };
+
+  const handleEnded = () => {
+    setIsPlaying(false);
+  };
+
+  return (
+    <div className="flex items-center gap-1">
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={handlePlay}
+        disabled={isLoading}
+        className="h-8 w-8 p-0"
+      >
+        {isLoading ? (
+          <RefreshCw className="h-4 w-4 animate-spin" />
+        ) : isPlaying ? (
+          <Pause className="h-4 w-4" />
+        ) : (
+          <Play className="h-4 w-4" />
+        )}
+      </Button>
+      <audio ref={audioRef} onEnded={handleEnded} className="hidden" />
+    </div>
+  );
+}
+
 export default function CallLogs() {
   const { toast } = useToast();
   const [dateRange, setDateRange] = useState("7");
@@ -128,13 +218,15 @@ export default function CallLogs() {
     return true;
   }) || [];
 
+  const callsWithRecordings = filteredCalls.filter(c => c.recordingSid).length;
+
   const handleExportCSV = () => {
     if (!filteredCalls.length) {
       toast({ title: "No data to export", variant: "destructive" });
       return;
     }
 
-    const headers = ["Date/Time", "From", "To", "Direction", "Duration", "Status"];
+    const headers = ["Date/Time", "From", "To", "Direction", "Duration", "Status", "Has Recording"];
     const rows = filteredCalls.map(call => [
       call.startTime ? format(new Date(call.startTime), "MMM d, yyyy h:mm a") : "N/A",
       call.fromFormatted || call.from,
@@ -142,6 +234,7 @@ export default function CallLogs() {
       call.direction,
       formatDuration(call.duration),
       call.status,
+      call.recordingSid ? "Yes" : "No",
     ]);
 
     const csv = [headers, ...rows].map(row => row.map(cell => `"${cell}"`).join(",")).join("\n");
@@ -223,21 +316,37 @@ export default function CallLogs() {
               </Card>
             </div>
 
-            {/* Total Duration Card */}
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Call Duration</CardTitle>
-                <Clock className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
-                  {formatTotalDuration(data?.stats?.totalDuration ?? 0)}
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Across {data?.stats?.completed ?? 0} completed calls
-                </p>
-              </CardContent>
-            </Card>
+            {/* Duration and Recordings Stats */}
+            <div className="grid gap-4 md:grid-cols-2">
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Total Call Duration</CardTitle>
+                  <Clock className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    {formatTotalDuration(data?.stats?.totalDuration ?? 0)}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Across {data?.stats?.completed ?? 0} completed calls
+                  </p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Calls with Recordings</CardTitle>
+                  <Volume2 className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{callsWithRecordings}</div>
+                  <p className="text-xs text-muted-foreground">
+                    {filteredCalls.length > 0 
+                      ? `${Math.round((callsWithRecordings / filteredCalls.length) * 100)}% of calls recorded`
+                      : "No calls in selected range"}
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
 
             {/* Filters */}
             <div className="flex flex-wrap gap-4">
@@ -294,12 +403,13 @@ export default function CallLogs() {
                       <TableHead>Direction</TableHead>
                       <TableHead>Duration</TableHead>
                       <TableHead>Status</TableHead>
+                      <TableHead>Recording</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {isLoading ? (
                       <TableRow>
-                        <TableCell colSpan={6} className="text-center py-8">
+                        <TableCell colSpan={7} className="text-center py-8">
                           <div className="flex items-center justify-center gap-2">
                             <RefreshCw className="h-4 w-4 animate-spin" />
                             Loading call logs...
@@ -308,7 +418,7 @@ export default function CallLogs() {
                       </TableRow>
                     ) : filteredCalls.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                        <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                           No call logs found for the selected filters
                         </TableCell>
                       </TableRow>
@@ -325,6 +435,13 @@ export default function CallLogs() {
                           <TableCell>{getDirectionBadge(call.direction)}</TableCell>
                           <TableCell>{formatDuration(call.duration)}</TableCell>
                           <TableCell>{getStatusBadge(call.status)}</TableCell>
+                          <TableCell>
+                            {call.recordingSid ? (
+                              <AudioPlayer recordingSid={call.recordingSid} />
+                            ) : (
+                              <span className="text-muted-foreground text-sm">—</span>
+                            )}
+                          </TableCell>
                         </TableRow>
                       ))
                     )}

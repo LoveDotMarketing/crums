@@ -20,11 +20,22 @@ interface TwilioCall {
   price_unit: string;
 }
 
+interface TwilioRecording {
+  sid: string;
+  call_sid: string;
+  duration: string;
+  status: string;
+}
+
 interface TwilioResponse {
   calls: TwilioCall[];
   next_page_uri: string | null;
   page: number;
   page_size: number;
+}
+
+interface TwilioRecordingsResponse {
+  recordings: TwilioRecording[];
 }
 
 // CRUMS Leasing business phone number - only show calls for this number
@@ -148,21 +159,58 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Format response
-    const formattedCalls = calls.map(call => ({
-      sid: call.sid,
-      from: call.from,
-      fromFormatted: call.from_formatted,
-      to: call.to,
-      toFormatted: call.to_formatted,
-      direction: call.direction.startsWith('outbound') ? 'outbound' : call.direction,
-      status: call.status,
-      duration: parseInt(call.duration) || 0,
-      startTime: call.start_time,
-      endTime: call.end_time,
-      price: call.price ? parseFloat(call.price) : null,
-      priceUnit: call.price_unit
-    }));
+    // Fetch recordings for all calls in parallel
+    const recordingsMap = new Map<string, TwilioRecording>();
+    
+    // Batch fetch recordings for completed calls only (recordings only exist for completed calls)
+    const completedCalls = calls.filter(c => c.status === 'completed');
+    
+    if (completedCalls.length > 0) {
+      const recordingPromises = completedCalls.map(async (call) => {
+        try {
+          const recordingsUrl = `https://api.twilio.com/2010-04-01/Accounts/${TWILIO_ACCOUNT_SID}/Calls/${call.sid}/Recordings.json`;
+          const response = await fetch(recordingsUrl, {
+            headers: {
+              'Authorization': `Basic ${auth}`,
+              'Content-Type': 'application/json'
+            }
+          });
+          
+          if (response.ok) {
+            const data: TwilioRecordingsResponse = await response.json();
+            if (data.recordings && data.recordings.length > 0) {
+              // Use the first recording (most calls have only one)
+              recordingsMap.set(call.sid, data.recordings[0]);
+            }
+          }
+        } catch (error) {
+          console.error(`Failed to fetch recordings for call ${call.sid}:`, error);
+        }
+      });
+      
+      await Promise.all(recordingPromises);
+    }
+
+    // Format response with recording info
+    const formattedCalls = calls.map(call => {
+      const recording = recordingsMap.get(call.sid);
+      return {
+        sid: call.sid,
+        from: call.from,
+        fromFormatted: call.from_formatted,
+        to: call.to,
+        toFormatted: call.to_formatted,
+        direction: call.direction.startsWith('outbound') ? 'outbound' : call.direction,
+        status: call.status,
+        duration: parseInt(call.duration) || 0,
+        startTime: call.start_time,
+        endTime: call.end_time,
+        price: call.price ? parseFloat(call.price) : null,
+        priceUnit: call.price_unit,
+        recordingSid: recording?.sid || null,
+        recordingDuration: recording ? parseInt(recording.duration) || 0 : null,
+      };
+    });
 
     // Calculate stats
     const today = new Date().toISOString().split('T')[0];
