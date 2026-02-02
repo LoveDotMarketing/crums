@@ -128,3 +128,7 @@ verify_jwt = false
 # Twilio call logs - admin only (auth handled in code)
 [functions.twilio-call-logs]
 verify_jwt = false
+
+# Twilio call recording proxy - admin only (auth handled in code)
+[functions.twilio-call-recording]
+verify_jwt = false
