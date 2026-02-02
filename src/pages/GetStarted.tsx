@@ -792,16 +792,6 @@ export default function GetStarted() {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="truckVin">Cab VIN# (Optional)</Label>
-                    <Input 
-                      id="truckVin" 
-                      value={truckVin} 
-                      onChange={(e) => setTruckVin(e.target.value.toUpperCase())}
-                      placeholder="Enter your cab/truck VIN"
-                      maxLength={17}
-                    />
-                  </div>
-                  <div>
                     <div className="flex items-center justify-between mb-1.5">
                       <Label htmlFor="ssn">
                         {ssnType === "ssn" ? "Social Security Number" : "Employer Identification Number"}
