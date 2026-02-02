@@ -1,7 +1,7 @@
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { format, subDays, startOfDay, endOfDay } from "date-fns";
-import { Phone, PhoneIncoming, PhoneOutgoing, PhoneMissed, Clock, RefreshCw, Download, Play, Pause, Volume2 } from "lucide-react";
+import { Phone, PhoneIncoming, PhoneOutgoing, PhoneMissed, Clock, RefreshCw, Download, Volume2 } from "lucide-react";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { WaveformPlayer } from "@/components/admin/WaveformPlayer";
 
 interface CallLog {
   sid: string;
@@ -87,94 +88,6 @@ const getDirectionBadge = (direction: string) => {
     </Badge>
   );
 };
-
-interface AudioPlayerProps {
-  recordingSid: string;
-}
-
-function AudioPlayer({ recordingSid }: AudioPlayerProps) {
-  const audioRef = useRef<HTMLAudioElement>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [audioUrl, setAudioUrl] = useState<string | null>(null);
-  const { toast } = useToast();
-
-  const handlePlay = async () => {
-    if (isPlaying && audioRef.current) {
-      audioRef.current.pause();
-      setIsPlaying(false);
-      return;
-    }
-
-    if (!audioUrl) {
-      setIsLoading(true);
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session) throw new Error("Not authenticated");
-
-        const response = await fetch(
-          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/twilio-call-recording?recordingSid=${recordingSid}`,
-          {
-            headers: {
-              Authorization: `Bearer ${session.access_token}`,
-            },
-          }
-        );
-
-        if (!response.ok) {
-          throw new Error("Failed to load recording");
-        }
-
-        const blob = await response.blob();
-        const url = URL.createObjectURL(blob);
-        setAudioUrl(url);
-        
-        if (audioRef.current) {
-          audioRef.current.src = url;
-          audioRef.current.play();
-          setIsPlaying(true);
-        }
-      } catch (error) {
-        console.error("Failed to load recording:", error);
-        toast({
-          title: "Failed to load recording",
-          description: "The recording could not be loaded. Please try again.",
-          variant: "destructive",
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    } else if (audioRef.current) {
-      audioRef.current.play();
-      setIsPlaying(true);
-    }
-  };
-
-  const handleEnded = () => {
-    setIsPlaying(false);
-  };
-
-  return (
-    <div className="flex items-center gap-1">
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={handlePlay}
-        disabled={isLoading}
-        className="h-8 w-8 p-0"
-      >
-        {isLoading ? (
-          <RefreshCw className="h-4 w-4 animate-spin" />
-        ) : isPlaying ? (
-          <Pause className="h-4 w-4" />
-        ) : (
-          <Play className="h-4 w-4" />
-        )}
-      </Button>
-      <audio ref={audioRef} onEnded={handleEnded} className="hidden" />
-    </div>
-  );
-}
 
 export default function CallLogs() {
   const { toast } = useToast();
@@ -435,9 +348,12 @@ export default function CallLogs() {
                           <TableCell>{getDirectionBadge(call.direction)}</TableCell>
                           <TableCell>{formatDuration(call.duration)}</TableCell>
                           <TableCell>{getStatusBadge(call.status)}</TableCell>
-                          <TableCell>
+                          <TableCell className="min-w-[320px]">
                             {call.recordingSid ? (
-                              <AudioPlayer recordingSid={call.recordingSid} />
+                              <WaveformPlayer 
+                                recordingSid={call.recordingSid} 
+                                recordingDuration={call.recordingDuration}
+                              />
                             ) : (
                               <span className="text-muted-foreground text-sm">—</span>
                             )}
