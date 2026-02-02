@@ -443,37 +443,21 @@ export function CustomerCheckoutDialog({
         <IdCard className="h-4 w-4" />
         <AlertTitle>ID Verification Required</AlertTitle>
         <AlertDescription>
-          Compare the customer's physical ID with their uploaded documents before proceeding.
+          Compare the customer's physical ID with their uploaded driver's license before proceeding.
         </AlertDescription>
       </Alert>
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Uploaded ID Documents</CardTitle>
-          <CardDescription>Review these documents and compare with physical ID</CardDescription>
+          <CardTitle className="text-lg">Customer Driver's License</CardTitle>
+          <CardDescription>Compare the physical ID presented by the customer with this document</CardDescription>
         </CardHeader>
-        <CardContent className="grid gap-4 md:grid-cols-2">
+        <CardContent>
           <div className="space-y-2">
             <Label>Driver's License (Front)</Label>
             {eligibility?.profile?.drivers_license_url ? (
               <a 
                 href={eligibility.profile.drivers_license_url} 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="flex items-center gap-2 text-primary hover:underline"
-              >
-                <ExternalLink className="h-4 w-4" />
-                View Document
-              </a>
-            ) : (
-              <p className="text-muted-foreground text-sm">Not uploaded</p>
-            )}
-          </div>
-          <div className="space-y-2">
-            <Label>Driver's License (Back)</Label>
-            {eligibility?.profile?.drivers_license_back_url ? (
-              <a 
-                href={eligibility.profile.drivers_license_back_url} 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="flex items-center gap-2 text-primary hover:underline"
