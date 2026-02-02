@@ -69,8 +69,9 @@ const Terms = () => {
                 By entering into a lease agreement, you agree to the following payment terms:
               </p>
               <ul className="list-disc pl-6 space-y-2">
-                <li><strong>Security Deposit:</strong> A $1,000 security deposit and the first month's rent are required before trailer pickup</li>
-                <li><strong>Automatic Payments:</strong> Payments are automatically charged on your selected billing cycle (weekly, bi-weekly, or monthly)</li>
+                <li><strong>Security Deposit:</strong> A $1,000 security deposit is required before trailer pickup</li>
+                <li><strong>First Month's Rent:</strong> Your first monthly lease payment will be automatically charged 15 days after your deposit is paid</li>
+                <li><strong>Automatic Payments:</strong> After the first payment, recurring payments are automatically charged on your selected billing cycle (weekly, bi-weekly, or monthly)</li>
                 <li><strong>Failed Payment Notifications:</strong> If a payment fails, you will receive email notifications at Day 0, Day 3, and Day 5</li>
                 <li><strong>Grace Period:</strong> A 7-day grace period begins after any failed payment attempt</li>
                 <li><strong>Account Suspension:</strong> Failure to resolve payment within 7 days will result in account suspension and restricted trailer access</li>
