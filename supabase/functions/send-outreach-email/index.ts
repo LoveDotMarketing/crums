@@ -34,8 +34,12 @@ const replaceTemplateVariables = (
 ): string => {
   return text
     .replace(/\{\{customer_name\}\}/g, customer.name || "Valued Customer")
+    .replace(/\{\{customer_email\}\}/g, customer.email)
+    .replace(/\{\{username\}\}/g, customer.email)
     .replace(/\{\{login_url\}\}/g, `${BASE_URL}/login`)
     .replace(/\{\{profile_url\}\}/g, `${BASE_URL}/dashboard/customer/profile`)
+    .replace(/\{\{application_url\}\}/g, `${BASE_URL}/dashboard/customer/application`)
+    .replace(/\{\{get_started_url\}\}/g, `${BASE_URL}/get-started`)
     .replace(/\{\{unsubscribe_url\}\}/g, `${BASE_URL}/unsubscribe?email=${encodeURIComponent(customer.email)}`);
 };
 
