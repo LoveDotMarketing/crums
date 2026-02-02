@@ -36,6 +36,7 @@ interface Trailer {
   is_rented: boolean;
   assigned_to: string | null;
   vin: string | null;
+  license_plate: string | null;
 }
 
 interface ActiveJob {
@@ -221,9 +222,10 @@ export default function MechanicDashboard() {
           total_maintenance_cost,
           is_rented,
           assigned_to,
-          vin
+          vin,
+          license_plate
         `)
-        .order("trailer_number");
+        .order("vin");
 
       if (error) throw error;
       setTrailers(data || []);
@@ -372,10 +374,13 @@ export default function MechanicDashboard() {
   };
 
   const filteredTrailers = trailers.filter((trailer) => {
+    const query = searchQuery.toLowerCase();
     const matchesSearch =
-      trailer.trailer_number.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      trailer.type.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      trailer.make?.toLowerCase().includes(searchQuery.toLowerCase());
+      trailer.vin?.toLowerCase().includes(query) ||
+      trailer.license_plate?.toLowerCase().includes(query) ||
+      trailer.trailer_number.toLowerCase().includes(query) ||
+      trailer.type.toLowerCase().includes(query) ||
+      trailer.make?.toLowerCase().includes(query);
     
     if (!statusFilter) return matchesSearch;
     
@@ -614,7 +619,7 @@ export default function MechanicDashboard() {
           <div className="relative max-w-md flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search by number, type, or make..."
+              placeholder="Search by VIN, license plate, or type..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10"
