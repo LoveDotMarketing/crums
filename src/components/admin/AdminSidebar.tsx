@@ -15,7 +15,8 @@ import {
   ScrollText,
   Target,
   Zap,
-  ClipboardCheck
+  ClipboardCheck,
+  Phone
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/hooks/useAuth";
@@ -46,6 +47,7 @@ const menuItems = [
   { title: "Referrals", url: "/dashboard/admin/referrals", icon: Users },
   { title: "Support", url: "/dashboard/admin/support", icon: HelpCircle },
   { title: "Outreach", url: "/dashboard/admin/outreach", icon: Send },
+  { title: "Call Logs", url: "/dashboard/admin/call-logs", icon: Phone },
   { title: "Lead Sources", url: "/dashboard/admin/lead-sources", icon: Target },
   { title: "Reports", url: "/dashboard/admin/reports", icon: Receipt },
   { title: "Analytics", url: "/dashboard/admin/analytics", icon: BarChart3 },
