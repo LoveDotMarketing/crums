@@ -79,6 +79,31 @@ export default function MechanicDashboard() {
   const [maintenanceHistory, setMaintenanceHistory] = useState<MaintenanceRecord[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
 
+  // Helper to log fleet activity
+  const logFleetActivity = async (
+    trailerId: string,
+    actionType: string,
+    previousStatus: string,
+    newStatus: string,
+    notes?: string,
+    metadata?: Record<string, unknown>
+  ) => {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (supabase as any).from("fleet_activity_logs").insert([{
+        trailer_id: trailerId,
+        performed_by: currentUserId,
+        action_type: actionType,
+        previous_status: previousStatus,
+        new_status: newStatus,
+        notes,
+        metadata: metadata || {},
+      }]);
+    } catch (error) {
+      console.error("Error logging fleet activity:", error);
+    }
+  };
+
   // Use effectiveUserId for queries when impersonating
   const currentUserId = effectiveUserId;
 
@@ -257,6 +282,7 @@ export default function MechanicDashboard() {
     if (!selectedTrailer) return;
 
     try {
+      const previousStatus = selectedTrailer.status;
       const newStatus = checkOutType === "service" ? "maintenance" : "checked_out";
       
       const { error } = await supabase
@@ -265,6 +291,16 @@ export default function MechanicDashboard() {
         .eq("id", selectedTrailer.id);
 
       if (error) throw error;
+
+      // Log the activity
+      await logFleetActivity(
+        selectedTrailer.id,
+        checkOutType === "service" ? "check_out_service" : "check_out_transport",
+        previousStatus,
+        newStatus,
+        `Checked out for ${checkOutType === "service" ? "service/maintenance" : "yard/transport"}`,
+        { trailer_number: selectedTrailer.trailer_number, vin: selectedTrailer.vin }
+      );
 
       toast.success(`Trailer ${selectedTrailer.trailer_number} checked out for ${checkOutType === "service" ? "service" : "yard/transport"}`);
       setIsCheckOutDialogOpen(false);
@@ -278,6 +314,8 @@ export default function MechanicDashboard() {
 
   const handleCheckIn = async (trailer: Trailer) => {
     try {
+      const previousStatus = trailer.status;
+      
       const { error } = await supabase
         .from("trailers")
         .update({ 
@@ -288,6 +326,17 @@ export default function MechanicDashboard() {
         .eq("id", trailer.id);
 
       if (error) throw error;
+
+      // Log the activity
+      await logFleetActivity(
+        trailer.id,
+        "check_in",
+        previousStatus,
+        "available",
+        "Checked in, unassigned, and marked available",
+        { trailer_number: trailer.trailer_number, vin: trailer.vin }
+      );
+
       toast.success(`Trailer ${trailer.trailer_number} checked in, unassigned, and available`);
       fetchTrailers();
     } catch (error) {
@@ -303,6 +352,8 @@ export default function MechanicDashboard() {
     }
 
     try {
+      const previousStatus = selectedTrailer.status;
+
       // Create maintenance record
       const { error: maintenanceError } = await supabase
         .from("maintenance_records")
@@ -325,6 +376,16 @@ export default function MechanicDashboard() {
 
       if (statusError) throw statusError;
 
+      // Log the activity
+      await logFleetActivity(
+        selectedTrailer.id,
+        "maintenance_started",
+        previousStatus,
+        "maintenance",
+        maintenanceDescription,
+        { trailer_number: selectedTrailer.trailer_number, vin: selectedTrailer.vin, estimated_cost: parseFloat(maintenanceCost) || 0 }
+      );
+
       toast.success(`${selectedTrailer.trailer_number} checked in for maintenance`);
       setIsDialogOpen(false);
       setSelectedTrailer(null);
@@ -336,6 +397,9 @@ export default function MechanicDashboard() {
 
   const handleCompleteService = async (trailerId: string, trailerNumber: string) => {
     try {
+      // Get current trailer to find VIN
+      const trailer = trailers.find(t => t.id === trailerId);
+      
       // Mark all maintenance records for this trailer as completed
       await supabase
         .from("maintenance_records")
@@ -350,6 +414,17 @@ export default function MechanicDashboard() {
         .eq("id", trailerId);
 
       if (error) throw error;
+
+      // Log the activity
+      await logFleetActivity(
+        trailerId,
+        "service_completed",
+        "maintenance",
+        "available",
+        "Service completed and trailer marked available",
+        { trailer_number: trailerNumber, vin: trailer?.vin }
+      );
+
       toast.success(`${trailerNumber} service completed and marked available`);
     } catch (error) {
       console.error("Error completing service:", error);

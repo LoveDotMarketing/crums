@@ -913,6 +913,77 @@ export type Database = {
         }
         Relationships: []
       }
+      fleet_activity_logs: {
+        Row: {
+          action_type: string
+          created_at: string
+          id: string
+          metadata: Json | null
+          new_customer_id: string | null
+          new_status: string | null
+          notes: string | null
+          performed_by: string
+          previous_customer_id: string | null
+          previous_status: string | null
+          trailer_id: string
+        }
+        Insert: {
+          action_type: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          new_customer_id?: string | null
+          new_status?: string | null
+          notes?: string | null
+          performed_by: string
+          previous_customer_id?: string | null
+          previous_status?: string | null
+          trailer_id: string
+        }
+        Update: {
+          action_type?: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          new_customer_id?: string | null
+          new_status?: string | null
+          notes?: string | null
+          performed_by?: string
+          previous_customer_id?: string | null
+          previous_status?: string | null
+          trailer_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fleet_activity_logs_new_customer_id_fkey"
+            columns: ["new_customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fleet_activity_logs_performed_by_fkey"
+            columns: ["performed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fleet_activity_logs_previous_customer_id_fkey"
+            columns: ["previous_customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fleet_activity_logs_trailer_id_fkey"
+            columns: ["trailer_id"]
+            isOneToOne: false
+            referencedRelation: "trailers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       login_attempts: {
         Row: {
           attempt_count: number
