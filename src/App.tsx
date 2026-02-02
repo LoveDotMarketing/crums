@@ -100,6 +100,7 @@ const Logs = lazy(() => import("./pages/admin/Logs"));
 const LeadSources = lazy(() => import("./pages/admin/LeadSources"));
 const IndexNow = lazy(() => import("./pages/admin/IndexNow"));
 const DOTInspections = lazy(() => import("./pages/admin/DOTInspections"));
+const CallLogs = lazy(() => import("./pages/admin/CallLogs"));
 
 // Public pages
 const ReferralProgram = lazy(() => import("./pages/ReferralProgram"));
@@ -338,6 +339,14 @@ const App = () => (
               element={
                 <ProtectedRoute requiredRole="admin">
                   <DOTInspections />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/dashboard/admin/call-logs" 
+              element={
+                <ProtectedRoute requiredRole="admin">
+                  <CallLogs />
                 </ProtectedRoute>
               } 
             />
