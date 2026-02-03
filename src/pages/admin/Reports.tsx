@@ -15,7 +15,8 @@ import {
   Loader2,
   Receipt,
   Code,
-  FileText
+  FileText,
+  Search
 } from "lucide-react";
 import {
   Table,
@@ -41,6 +42,7 @@ import {
 import { format, subDays, differenceInDays } from "date-fns";
 import { DevelopmentTab } from "@/components/admin/DevelopmentTab";
 import { ContentTab } from "@/components/admin/ContentTab";
+import { SEOTab } from "@/components/admin/SEOTab";
 
 interface UnpaidToll {
   id: string;
@@ -388,6 +390,10 @@ export default function Reports() {
                   <FileText className="h-3.5 w-3.5" />
                   Content
                 </TabsTrigger>
+                <TabsTrigger value="seo" className="flex items-center gap-1">
+                  <Search className="h-3.5 w-3.5" />
+                  SEO
+                </TabsTrigger>
               </TabsList>
 
               <TabsContent value="unpaid-tolls">
@@ -685,6 +691,10 @@ export default function Reports() {
 
               <TabsContent value="content">
                 <ContentTab />
+              </TabsContent>
+
+              <TabsContent value="seo">
+                <SEOTab />
               </TabsContent>
             </Tabs>
           </main>
