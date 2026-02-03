@@ -63,6 +63,7 @@ interface Trailer {
   notes: string | null;
   gps_latitude: number | null;
   gps_longitude: number | null;
+  gps_box_number: string | null;
   company_id: string;
   created_at: string;
   updated_at: string;
@@ -177,6 +178,7 @@ export default function TrailerDetail() {
           purchase_price: formData.purchase_price,
           vin: formData.vin,
           license_plate: formData.license_plate,
+          gps_box_number: formData.gps_box_number,
           status: newStatus,
           is_rented: hasCustomer,
           customer_id: formData.customer_id || null,
@@ -372,6 +374,19 @@ export default function TrailerDetail() {
                         />
                       ) : (
                         <p className="text-lg">{trailer.license_plate || "-"}</p>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>GPS Box Number</Label>
+                      {isEditing ? (
+                        <Input
+                          value={formData.gps_box_number || ""}
+                          onChange={(e) => setFormData({ ...formData, gps_box_number: e.target.value })}
+                          placeholder="GPS-001"
+                        />
+                      ) : (
+                        <p className="text-lg">{trailer.gps_box_number || "-"}</p>
                       )}
                     </div>
 

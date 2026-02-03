@@ -1933,6 +1933,7 @@ export type Database = {
           company_id: string
           created_at: string
           customer_id: string | null
+          gps_box_number: string | null
           gps_latitude: number | null
           gps_longitude: number | null
           id: string
@@ -1960,6 +1961,7 @@ export type Database = {
           company_id: string
           created_at?: string
           customer_id?: string | null
+          gps_box_number?: string | null
           gps_latitude?: number | null
           gps_longitude?: number | null
           id?: string
@@ -1987,6 +1989,7 @@ export type Database = {
           company_id?: string
           created_at?: string
           customer_id?: string | null
+          gps_box_number?: string | null
           gps_latitude?: number | null
           gps_longitude?: number | null
           id?: string
