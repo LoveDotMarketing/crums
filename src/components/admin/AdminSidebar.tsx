@@ -1,3 +1,5 @@
+import { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import { 
   LayoutDashboard, 
   Receipt, 
@@ -16,7 +18,14 @@ import {
   Target,
   Zap,
   ClipboardCheck,
-  Phone
+  Phone,
+  ChevronRight,
+  Settings,
+  UsersRound,
+  TrendingUp,
+  Megaphone,
+  Search,
+  LucideIcon
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/hooks/useAuth";
@@ -25,39 +34,118 @@ import {
   SidebarContent,
   SidebarGroup,
   SidebarGroupContent,
-  SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
   SidebarHeader,
   SidebarFooter,
+  SidebarMenuSub,
+  SidebarMenuSubItem,
+  SidebarMenuSubButton,
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 
-const menuItems = [
-  { title: "Dashboard", url: "/dashboard/admin", icon: LayoutDashboard },
-  { title: "Applications", url: "/dashboard/admin/applications", icon: FileText },
-  { title: "Fleet", url: "/dashboard/admin/fleet", icon: Truck },
-  { title: "DOT Inspections", url: "/dashboard/admin/dot-inspections", icon: ClipboardCheck },
-  { title: "Customers", url: "/dashboard/admin/customers", icon: Users },
-  { title: "Staff", url: "/dashboard/admin/staff", icon: UserCog },
-  { title: "Mechanics", url: "/dashboard/admin/mechanics", icon: Wrench },
-  { title: "Tolls", url: "/dashboard/admin/tolls", icon: Receipt },
-  { title: "Billing", url: "/dashboard/admin/billing", icon: DollarSign },
-  { title: "Referrals", url: "/dashboard/admin/referrals", icon: Users },
-  { title: "Support", url: "/dashboard/admin/support", icon: HelpCircle },
-  { title: "Outreach", url: "/dashboard/admin/outreach", icon: Send },
-  { title: "Call Logs", url: "/dashboard/admin/call-logs", icon: Phone },
-  { title: "Lead Sources", url: "/dashboard/admin/lead-sources", icon: Target },
-  { title: "Reports", url: "/dashboard/admin/reports", icon: Receipt },
-  { title: "Analytics", url: "/dashboard/admin/analytics", icon: BarChart3 },
-  { title: "Logs", url: "/dashboard/admin/logs", icon: ScrollText },
-  { title: "Sitemap", url: "/dashboard/admin/sitemap-generator", icon: FileCode },
-  { title: "IndexNow", url: "/dashboard/admin/indexnow", icon: Zap },
+interface MenuItem {
+  title: string;
+  url: string;
+  icon: LucideIcon;
+}
+
+interface MenuGroup {
+  title: string;
+  icon: LucideIcon;
+  items: MenuItem[];
+}
+
+const menuGroups: MenuGroup[] = [
+  {
+    title: "Operations",
+    icon: Settings,
+    items: [
+      { title: "Applications", url: "/dashboard/admin/applications", icon: FileText },
+      { title: "Fleet", url: "/dashboard/admin/fleet", icon: Truck },
+      { title: "DOT Inspections", url: "/dashboard/admin/dot-inspections", icon: ClipboardCheck },
+      { title: "Tolls", url: "/dashboard/admin/tolls", icon: Receipt },
+    ]
+  },
+  {
+    title: "People",
+    icon: UsersRound,
+    items: [
+      { title: "Customers", url: "/dashboard/admin/customers", icon: Users },
+      { title: "Staff", url: "/dashboard/admin/staff", icon: UserCog },
+      { title: "Mechanics", url: "/dashboard/admin/mechanics", icon: Wrench },
+      { title: "Referrals", url: "/dashboard/admin/referrals", icon: Users },
+    ]
+  },
+  {
+    title: "Finance",
+    icon: DollarSign,
+    items: [
+      { title: "Billing", url: "/dashboard/admin/billing", icon: DollarSign },
+      { title: "Reports", url: "/dashboard/admin/reports", icon: Receipt },
+    ]
+  },
+  {
+    title: "Marketing",
+    icon: Megaphone,
+    items: [
+      { title: "Support", url: "/dashboard/admin/support", icon: HelpCircle },
+      { title: "Outreach", url: "/dashboard/admin/outreach", icon: Send },
+      { title: "Call Logs", url: "/dashboard/admin/call-logs", icon: Phone },
+      { title: "Lead Sources", url: "/dashboard/admin/lead-sources", icon: Target },
+    ]
+  },
+  {
+    title: "Insights",
+    icon: TrendingUp,
+    items: [
+      { title: "Analytics", url: "/dashboard/admin/analytics", icon: BarChart3 },
+      { title: "Logs", url: "/dashboard/admin/logs", icon: ScrollText },
+    ]
+  },
+  {
+    title: "SEO Tools",
+    icon: Search,
+    items: [
+      { title: "Sitemap", url: "/dashboard/admin/sitemap-generator", icon: FileCode },
+      { title: "IndexNow", url: "/dashboard/admin/indexnow", icon: Zap },
+    ]
+  },
 ];
 
 export function AdminSidebar() {
   const { signOut } = useAuth();
+  const location = useLocation();
+  const [openGroups, setOpenGroups] = useState<Set<string>>(new Set());
+
+  // Auto-expand group containing active page
+  useEffect(() => {
+    const currentPath = location.pathname;
+    menuGroups.forEach(group => {
+      const hasActiveItem = group.items.some(item => currentPath.startsWith(item.url));
+      if (hasActiveItem) {
+        setOpenGroups(prev => new Set([...prev, group.title]));
+      }
+    });
+  }, [location.pathname]);
+
+  const toggleGroup = (groupTitle: string) => {
+    setOpenGroups(prev => {
+      const next = new Set(prev);
+      if (next.has(groupTitle)) {
+        next.delete(groupTitle);
+      } else {
+        next.add(groupTitle);
+      }
+      return next;
+    });
+  };
 
   return (
     <Sidebar>
@@ -75,23 +163,64 @@ export function AdminSidebar() {
 
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Menu</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {menuItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild>
-                    <NavLink 
-                      to={item.url} 
-                      end={item.url === "/dashboard/admin"}
-                      className="flex items-center gap-3"
-                      activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
-                    >
-                      <item.icon className="h-4 w-4" />
-                      <span>{item.title}</span>
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
+              {/* Dashboard - standalone item */}
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <NavLink 
+                    to="/dashboard/admin" 
+                    end
+                    className="flex items-center gap-3"
+                    activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+                  >
+                    <LayoutDashboard className="h-4 w-4" />
+                    <span>Dashboard</span>
+                  </NavLink>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+
+              {/* Collapsible groups */}
+              {menuGroups.map((group) => (
+                <Collapsible
+                  key={group.title}
+                  open={openGroups.has(group.title)}
+                  onOpenChange={() => toggleGroup(group.title)}
+                >
+                  <SidebarMenuItem>
+                    <CollapsibleTrigger asChild>
+                      <SidebarMenuButton className="w-full justify-between">
+                        <span className="flex items-center gap-3">
+                          <group.icon className="h-4 w-4" />
+                          <span>{group.title}</span>
+                        </span>
+                        <ChevronRight 
+                          className={`h-4 w-4 transition-transform duration-200 ${
+                            openGroups.has(group.title) ? "rotate-90" : ""
+                          }`} 
+                        />
+                      </SidebarMenuButton>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      <SidebarMenuSub>
+                        {group.items.map((item) => (
+                          <SidebarMenuSubItem key={item.title}>
+                            <SidebarMenuSubButton asChild>
+                              <NavLink 
+                                to={item.url}
+                                className="flex items-center gap-3"
+                                activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+                              >
+                                <item.icon className="h-4 w-4" />
+                                <span>{item.title}</span>
+                              </NavLink>
+                            </SidebarMenuSubButton>
+                          </SidebarMenuSubItem>
+                        ))}
+                      </SidebarMenuSub>
+                    </CollapsibleContent>
+                  </SidebarMenuItem>
+                </Collapsible>
               ))}
             </SidebarMenu>
           </SidebarGroupContent>
