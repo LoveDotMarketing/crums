@@ -1,233 +1,99 @@
 
-# Development Changelog with Activity Overview Chart
+# Admin Sidebar Navigation Reorganization
 
-## Corrected Timeline
+## Overview
+Reorganize the 19 flat menu items into logical, collapsible groups to improve navigation and reduce visual clutter. This will use the existing sidebar components (`Collapsible`, `SidebarMenuSub`, `SidebarMenuSubItem`, `SidebarMenuSubButton`) that are already available in the UI library.
 
-**Important Clarification**: This Lovable project was created on **November 18, 2025** (based on first database migration). The project is approximately **2.5 months old**.
-
-The news articles with dates from July 2024 onwards are historical business events that were documented in the content registry, not when pages were built in this project.
-
-### Actual Project Timeline
-
-| Month | Development Activity |
-|-------|---------------------|
-| **November 2025** | Project created, initial database tables, core structure, authentication |
-| **December 2025** | Tools launched, guides added, location pages, admin features |
-| **January 2026** | Major guide updates (8), Chamber news, Call Logs, Lead Sources, Outreach |
-| **February 2026** | Stripe Events logging, latest admin updates |
-
----
-
-## What Gets Tracked
-
-### Front-Facing / SEO Content
-| Category | Source | Date Field | Current Count |
-|----------|--------|------------|---------------|
-| News Articles | `src/lib/news.ts` | `sortDate` | 15 articles |
-| Guides | `src/lib/guides.ts` | `lastModified` | 12 available |
-| Tools | `src/lib/tools.ts` | `lastModified` | 7 available |
-
-### Admin / Backend Features
-| Category | Source | Date Field |
-|----------|--------|------------|
-| Database Tables | Migration files | Filename timestamp (YYYYMMDD) |
-| Edge Functions | `supabase/functions/` | Directory tracking |
-| Admin Modules | `src/pages/admin/` | Historical log |
-
----
-
-## Activity Chart Design
-
-A stacked area chart at the top showing development activity by category over time (November 2025 - present):
+## Proposed Navigation Structure
 
 ```text
-+----------------------------------------------------------+
-|  Development Activity Overview                            |
-|  [All Time v]  [Category: All v]                         |
-+----------------------------------------------------------+
-|  ^                                                        |
-|  |         ████                                           |
-|  |        █████████                                       |
-|  |       ██████████████              ██████              |
-|  |      █████████████████          ██████████            |
-|  +────────────────────────────────────────────────────>   |
-|       Nov'25    Dec'25    Jan'26    Feb'26               |
-|                                                           |
-|  ● News  ● Guides  ● Tools  ● Admin  ● Database          |
-+----------------------------------------------------------+
++---------------------------+
+| Dashboard                 |  (standalone - always visible)
++---------------------------+
+| Operations           [v]  |  (collapsible group)
+|   Applications            |
+|   Fleet                   |
+|   DOT Inspections         |
+|   Tolls                   |
++---------------------------+
+| People                [v]  |  (collapsible group)
+|   Customers               |
+|   Staff                   |
+|   Mechanics               |
+|   Referrals               |
++---------------------------+
+| Finance               [v]  |  (collapsible group)
+|   Billing                 |
+|   Reports                 |
++---------------------------+
+| Marketing             [v]  |  (collapsible group)
+|   Support                 |
+|   Outreach                |
+|   Call Logs               |
+|   Lead Sources            |
++---------------------------+
+| Insights              [v]  |  (collapsible group)
+|   Analytics               |
+|   Logs                    |
++---------------------------+
+| SEO Tools             [v]  |  (collapsible group)
+|   Sitemap                 |
+|   IndexNow                |
++---------------------------+
 ```
 
-### Chart Features
-- Stacked AreaChart using recharts (already installed)
-- Color-coded by category
-- X-axis: Months (Nov 2025 - Feb 2026)
-- Y-axis: Number of items added/updated
-- Interactive tooltip with breakdown per month
+## Technical Implementation
 
----
+### File Changes
+**`src/components/admin/AdminSidebar.tsx`**
 
-## Summary Cards Row
+1. **Add imports**: Import `Collapsible`, `CollapsibleTrigger`, `CollapsibleContent` from the collapsible component, plus `ChevronRight` icon for the expand/collapse indicator
 
-| Total Items | Content Added | Database Tables | Edge Functions |
-|-------------|---------------|-----------------|----------------|
-| 35+         | 22 pages      | 20+ tables      | 15+ functions  |
+2. **Restructure data**: Replace the flat `menuItems` array with a grouped structure:
+   ```typescript
+   interface MenuItem {
+     title: string;
+     url: string;
+     icon: LucideIcon;
+   }
 
----
+   interface MenuGroup {
+     title: string;
+     icon: LucideIcon;
+     items: MenuItem[];
+   }
 
-## Historical Data by Month (Accurate)
+   const menuGroups: MenuGroup[] = [
+     {
+       title: "Operations",
+       icon: Settings,
+       items: [
+         { title: "Applications", url: "/dashboard/admin/applications", icon: FileText },
+         { title: "Fleet", url: "/dashboard/admin/fleet", icon: Truck },
+         // ...
+       ]
+     },
+     // ... other groups
+   ];
+   ```
 
-### November 2025 (Project Creation)
-**Week of Nov 18:**
-- Database tables created: profiles, user_roles, companies, trailers, tolls, support_tickets, subscriptions, payments, and more
-- Initial admin dashboard structure
-- Customer and mechanic portals
-- Authentication system
+3. **Add state management**: Use `useState` or track open groups via URL matching to auto-expand the group containing the current page
 
-### December 2025
-**Content:**
-- Tools: Cost Per Mile, Lease vs Buy, IFTA, Fuel, Profit, Tax Deductions, Per Diem (7 tools)
-- Guides: Choosing Trailer, Why Leasing Dry Van, Trailer Specifications (3 guides)
+4. **Render collapsible groups**: For each group, render:
+   - A `Collapsible` wrapper with open state
+   - A `SidebarMenuItem` with `CollapsibleTrigger` as the header (shows group name + chevron)
+   - A `CollapsibleContent` containing `SidebarMenuSub` with all child items
 
-**Admin Features:**
-- Billing system
-- Fleet management
-- Customer management
+5. **Keep Dashboard standalone**: Dashboard remains a top-level item, not nested in any group
 
-### January 2026
-**Content (January 20-29):**
-- News: Chamber of Commerce article (Jan 29)
-- Guides updated (Jan 29): CDL License, Load Boards, Finding First Loads, Lease First Trailer, Owner-Operator Basics, Maintenance Schedules, Tire Care, Winter Driving
-- Pre-Trip Inspection guide (Jan 20)
+### Visual Behavior
+- Groups collapse/expand on click
+- Chevron icon rotates to indicate open/closed state
+- Active page's parent group auto-expands on page load
+- Groups remember their state during the session
 
-**Admin Features:**
-- Call Logs (Twilio integration)
-- Lead Sources tracking
-- Outreach Automation
-- DOT Inspections module
-
-**Database additions (Jan 6-23):**
-- lead_sources table
-- outreach tables
-- subscription_audit_log
-- cron_history
-
-### February 2026 (Current)
-**Admin Features (Feb 2-3):**
-- Stripe Events logging tab
-- stripe_webhook_logs table
-- Payment failure handling improvements
-
----
-
-## Implementation Details
-
-### Database Table: `development_changelog`
-
-| Column | Type | Description |
-|--------|------|-------------|
-| id | uuid | Primary key |
-| category | text | news, guide, tool, admin_feature, edge_function, database_table |
-| item_name | text | Display title |
-| item_slug | text | URL slug or identifier |
-| item_url | text | Full URL path (nullable for non-public items) |
-| action | text | added, updated, removed |
-| date_recorded | date | When change occurred |
-| month_year | text | "2026-01" for filtering |
-| notes | text | Optional description |
-| created_at | timestamptz | Record creation time |
-
-### Edge Function: `sync-development-changelog`
-
-Weekly sync that:
-1. Reads content registries (news.ts, guides.ts, tools.ts)
-2. Compares against existing changelog entries
-3. Detects new/updated/removed items
-4. Inserts changelog entries
-
-### Weekly Automation
-
-```sql
-SELECT cron.schedule(
-  'sync-development-changelog-weekly',
-  '0 0 * * 0', -- Every Sunday at midnight
-  $$ SELECT net.http_post(...) $$
-);
-```
-
----
-
-## UI Components for Reports.tsx
-
-### New "Development" Tab
-
-1. **Activity Chart Section**
-   - Time period selector (All Time, Last 3 months)
-   - Stacked AreaChart with category gradients
-   - Legend with category colors
-
-2. **Summary Cards Row**
-   - Total Items
-   - Content Published
-   - Features Built
-   - Database Changes
-
-3. **Filters**
-   - Month/Year dropdown (defaults to current month)
-   - Category filter (All, News, Guides, Tools, Admin, Database)
-
-4. **Changelog Table**
-   - Date column
-   - Category badge (color-coded)
-   - Item name (clickable for public URLs)
-   - Action badge (green=added, blue=updated, red=removed)
-
-5. **Export CSV** button
-
----
-
-## Files to Create/Modify
-
-| File | Action | Description |
-|------|--------|-------------|
-| Database migration | Create | `development_changelog` table with RLS |
-| `supabase/functions/sync-development-changelog/index.ts` | Create | Edge function to sync registries |
-| `src/pages/admin/Reports.tsx` | Modify | Add "Development" tab with chart and table |
-| Cron job | Create | Weekly schedule trigger |
-
----
-
-## Data Flow
-
-```text
-Content Registries (news.ts, guides.ts, tools.ts)
-                |
-                v
-    Weekly Cron Job (Sunday midnight)
-                |
-                v
-    sync-development-changelog Edge Function
-                |
-                +-> Compare with existing entries
-                |
-                v
-    development_changelog Database Table
-                |
-                v
-    Reports.tsx -> "Development" Tab
-                |
-                +-> Activity Chart (visual overview)
-                +-> Summary Cards (counts)
-                +-> Changelog Table (details)
-```
-
----
-
-## Seeding Historical Data
-
-The seed will include entries from:
-- **November 2025**: Core database tables (parsed from migration filenames)
-- **December 2025**: Tools and guides with lastModified dates
-- **January 2026**: Guide updates, news, admin features
-- **February 2026**: Latest changes
-
-This gives an accurate 2.5-month development history rather than incorrectly starting from July 2024.
+### Benefits
+- Reduces visible items from 19 to 7 (Dashboard + 6 groups)
+- Logical grouping makes navigation intuitive
+- Collapsible behavior keeps the sidebar clean while maintaining quick access
+- Uses existing UI components with no new dependencies
