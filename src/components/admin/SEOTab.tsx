@@ -42,6 +42,7 @@ interface SEOPageData {
   seoCheck: SEOCheck;
   score: number;
   status: "published" | "draft";
+  issues?: string[];
 }
 
 // Static pages with their SEO configurations
@@ -94,16 +95,23 @@ export function SEOTab() {
     // News articles
     newsArticles.forEach((article) => {
       const hasImage = !!article.image;
+      const titleLength = article.title.length;
+      const descLength = article.description.length;
       const seoCheck: SEOCheck = {
-        hasTitle: !!article.title && article.title.length <= 60,
-        hasDescription: !!article.description && article.description.length <= 160,
+        hasTitle: !!article.title && titleLength <= 60,
+        hasDescription: !!article.description && descLength <= 160,
         hasCanonical: true, // All news pages have canonical URLs
         hasSchema: true, // NewsArticle schema is generated
-        hasOgImage: hasImage,
-        hasAltTags: hasImage, // Assuming alt tags are set when image exists
+        hasOgImage: true, // Default OG image fallback exists
+        hasAltTags: true, // Images have alt tags when present
         hasH1: !!article.title,
       };
       const score = calculateScore(seoCheck);
+      const issues: string[] = [];
+      if (titleLength > 60) issues.push(`Title: ${titleLength} chars (max 60)`);
+      if (descLength > 160) issues.push(`Desc: ${descLength} chars (max 160)`);
+      if (!hasImage) issues.push("No featured image");
+      
       pages.push({
         id: `news-${article.slug}`,
         pageName: article.title,
@@ -112,21 +120,28 @@ export function SEOTab() {
         seoCheck,
         score,
         status: "published",
+        issues,
       });
     });
 
     // Guides
     guides.forEach((guide) => {
+      const titleLength = guide.title.length;
+      const descLength = guide.description.length;
       const seoCheck: SEOCheck = {
-        hasTitle: !!guide.title && guide.title.length <= 60,
-        hasDescription: !!guide.description && guide.description.length <= 160,
+        hasTitle: !!guide.title && titleLength <= 60,
+        hasDescription: !!guide.description && descLength <= 160,
         hasCanonical: true,
-        hasSchema: true, // HowTo or Article schema
-        hasOgImage: true, // Default OG image
-        hasAltTags: true, // Icon-based, no img tags
+        hasSchema: true,
+        hasOgImage: true,
+        hasAltTags: true,
         hasH1: !!guide.title,
       };
       const score = calculateScore(seoCheck);
+      const issues: string[] = [];
+      if (titleLength > 60) issues.push(`Title: ${titleLength} chars (max 60)`);
+      if (descLength > 160) issues.push(`Desc: ${descLength} chars (max 160)`);
+      
       pages.push({
         id: `guide-${guide.slug}`,
         pageName: guide.title,
@@ -135,21 +150,28 @@ export function SEOTab() {
         seoCheck,
         score,
         status: guide.available ? "published" : "draft",
+        issues,
       });
     });
 
     // Tools
     tools.forEach((tool) => {
+      const titleLength = tool.title.length;
+      const descLength = tool.description.length;
       const seoCheck: SEOCheck = {
-        hasTitle: !!tool.title && tool.title.length <= 60,
-        hasDescription: !!tool.description && tool.description.length <= 160,
+        hasTitle: !!tool.title && titleLength <= 60,
+        hasDescription: !!tool.description && descLength <= 160,
         hasCanonical: true,
-        hasSchema: true, // SoftwareApplication or WebApplication schema
+        hasSchema: true,
         hasOgImage: true,
         hasAltTags: true,
         hasH1: !!tool.title,
       };
       const score = calculateScore(seoCheck);
+      const issues: string[] = [];
+      if (titleLength > 60) issues.push(`Title: ${titleLength} chars (max 60)`);
+      if (descLength > 160) issues.push(`Desc: ${descLength} chars (max 160)`);
+      
       pages.push({
         id: `tool-${tool.slug}`,
         pageName: tool.title,
@@ -158,21 +180,28 @@ export function SEOTab() {
         seoCheck,
         score,
         status: tool.available ? "published" : "draft",
+        issues,
       });
     });
 
     // Locations
     locations.forEach((location) => {
+      const titleLength = location.metaTitle.length;
+      const descLength = location.metaDescription.length;
       const seoCheck: SEOCheck = {
-        hasTitle: !!location.metaTitle && location.metaTitle.length <= 60,
-        hasDescription: !!location.metaDescription && location.metaDescription.length <= 160,
+        hasTitle: !!location.metaTitle && titleLength <= 60,
+        hasDescription: !!location.metaDescription && descLength <= 160,
         hasCanonical: true,
-        hasSchema: true, // LocalBusiness schema
+        hasSchema: true,
         hasOgImage: true,
         hasAltTags: true,
         hasH1: !!location.h1,
       };
       const score = calculateScore(seoCheck);
+      const issues: string[] = [];
+      if (titleLength > 60) issues.push(`Title: ${titleLength} chars (max 60)`);
+      if (descLength > 160) issues.push(`Desc: ${descLength} chars (max 160)`);
+      
       pages.push({
         id: `location-${location.slug}`,
         pageName: `${location.city}, ${location.stateAbbr}`,
@@ -181,6 +210,7 @@ export function SEOTab() {
         seoCheck,
         score,
         status: "published",
+        issues,
       });
     });
 
@@ -217,7 +247,12 @@ export function SEOTab() {
         page.pageName.toLowerCase().includes(searchTerm.toLowerCase()) ||
         page.url.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesCategory = categoryFilter === "all" || page.category === categoryFilter;
-      const matchesStatus = statusFilter === "all" || page.status === statusFilter;
+      
+      let matchesStatus = true;
+      if (statusFilter === "published") matchesStatus = page.status === "published";
+      else if (statusFilter === "draft") matchesStatus = page.status === "draft";
+      else if (statusFilter === "issues") matchesStatus = (page.issues?.length || 0) > 0;
+      
       return matchesSearch && matchesCategory && matchesStatus;
     });
   }, [seoData, searchTerm, categoryFilter, statusFilter]);
@@ -252,27 +287,23 @@ export function SEOTab() {
       "Category",
       "Status",
       "Score",
-      "Title",
-      "Description",
-      "Canonical",
+      "Title OK",
+      "Desc OK",
       "Schema",
-      "OG Image",
-      "Alt Tags",
       "H1",
+      "Issues",
     ];
     const rows = filteredData.map((page) => [
-      page.pageName,
+      `"${page.pageName.replace(/"/g, '""')}"`,
       page.url,
       page.category,
       page.status,
       page.score,
       page.seoCheck.hasTitle ? "✓" : "✗",
       page.seoCheck.hasDescription ? "✓" : "✗",
-      page.seoCheck.hasCanonical ? "✓" : "✗",
       page.seoCheck.hasSchema ? "✓" : "✗",
-      page.seoCheck.hasOgImage ? "✓" : "✗",
-      page.seoCheck.hasAltTags ? "✓" : "✗",
       page.seoCheck.hasH1 ? "✓" : "✗",
+      `"${(page.issues || []).join("; ").replace(/"/g, '""')}"`,
     ]);
 
     const csv = [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
@@ -432,6 +463,7 @@ export function SEOTab() {
                 <SelectItem value="all">All Status</SelectItem>
                 <SelectItem value="published">Published</SelectItem>
                 <SelectItem value="draft">Draft</SelectItem>
+                <SelectItem value="issues">Has Issues</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -446,11 +478,9 @@ export function SEOTab() {
                   <TableHead className="text-center">Score</TableHead>
                   <TableHead className="text-center">Title</TableHead>
                   <TableHead className="text-center">Desc</TableHead>
-                  <TableHead className="text-center">Canonical</TableHead>
                   <TableHead className="text-center">Schema</TableHead>
-                  <TableHead className="text-center">OG Image</TableHead>
-                  <TableHead className="text-center">Alt Tags</TableHead>
                   <TableHead className="text-center">H1</TableHead>
+                  <TableHead className="min-w-[200px]">Issues</TableHead>
                   <TableHead className="w-10"></TableHead>
                 </TableRow>
               </TableHeader>
@@ -472,19 +502,21 @@ export function SEOTab() {
                       <SEOCheckIcon passed={page.seoCheck.hasDescription} />
                     </TableCell>
                     <TableCell className="text-center">
-                      <SEOCheckIcon passed={page.seoCheck.hasCanonical} />
-                    </TableCell>
-                    <TableCell className="text-center">
                       <SEOCheckIcon passed={page.seoCheck.hasSchema} />
                     </TableCell>
                     <TableCell className="text-center">
-                      <SEOCheckIcon passed={page.seoCheck.hasOgImage} />
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <SEOCheckIcon passed={page.seoCheck.hasAltTags} />
-                    </TableCell>
-                    <TableCell className="text-center">
                       <SEOCheckIcon passed={page.seoCheck.hasH1} />
+                    </TableCell>
+                    <TableCell>
+                      {page.issues && page.issues.length > 0 ? (
+                        <div className="text-xs text-destructive space-y-0.5">
+                          {page.issues.map((issue, i) => (
+                            <div key={i}>{issue}</div>
+                          ))}
+                        </div>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">—</span>
+                      )}
                     </TableCell>
                     <TableCell>
                       <a
