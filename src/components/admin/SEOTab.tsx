@@ -18,7 +18,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Download, CheckCircle2, XCircle, Search, ExternalLink, AlertTriangle } from "lucide-react";
+import { Download, CheckCircle2, XCircle, Search, ExternalLink, AlertTriangle, ImageIcon } from "lucide-react";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { newsArticles } from "@/lib/news";
 import { guides } from "@/lib/guides";
 import { tools } from "@/lib/tools";
@@ -43,6 +44,7 @@ interface SEOPageData {
   score: number;
   status: "published" | "draft";
   issues?: string[];
+  featuredImage?: string;
 }
 
 // Static pages with their SEO configurations
@@ -121,6 +123,7 @@ export function SEOTab() {
         score,
         status: "published",
         issues,
+        featuredImage: article.image,
       });
     });
 
@@ -480,7 +483,8 @@ export function SEOTab() {
                   <TableHead className="text-center">Desc</TableHead>
                   <TableHead className="text-center">Schema</TableHead>
                   <TableHead className="text-center">H1</TableHead>
-                  <TableHead className="min-w-[200px]">Issues</TableHead>
+                  <TableHead className="min-w-[150px]">Issues</TableHead>
+                  <TableHead className="min-w-[120px]">Featured Image</TableHead>
                   <TableHead className="w-10"></TableHead>
                 </TableRow>
               </TableHeader>
@@ -510,10 +514,45 @@ export function SEOTab() {
                     <TableCell>
                       {page.issues && page.issues.length > 0 ? (
                         <div className="text-xs text-destructive space-y-0.5">
-                          {page.issues.map((issue, i) => (
+                          {page.issues.filter(i => !i.includes("featured image")).map((issue, i) => (
                             <div key={i}>{issue}</div>
                           ))}
                         </div>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">—</span>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {page.category === "news" ? (
+                        page.featuredImage ? (
+                          <HoverCard>
+                            <HoverCardTrigger asChild>
+                              <div className="flex items-center gap-2 cursor-pointer">
+                                <div className="w-10 h-10 rounded border overflow-hidden bg-muted flex-shrink-0">
+                                  <img 
+                                    src={page.featuredImage} 
+                                    alt="Featured" 
+                                    className="w-full h-full object-cover"
+                                  />
+                                </div>
+                                <CheckCircle2 className="h-4 w-4 text-green-600" />
+                              </div>
+                            </HoverCardTrigger>
+                            <HoverCardContent className="w-64 p-2" side="left">
+                              <img 
+                                src={page.featuredImage} 
+                                alt="Featured preview" 
+                                className="w-full h-auto rounded"
+                              />
+                              <p className="text-xs text-muted-foreground mt-2 truncate">{page.featuredImage}</p>
+                            </HoverCardContent>
+                          </HoverCard>
+                        ) : (
+                          <span className="text-xs text-destructive flex items-center gap-1">
+                            <ImageIcon className="h-4 w-4" />
+                            No featured image
+                          </span>
+                        )
                       ) : (
                         <span className="text-xs text-muted-foreground">—</span>
                       )}
