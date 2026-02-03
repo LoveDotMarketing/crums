@@ -22,7 +22,8 @@ import {
   LayoutGrid,
   UserX,
   CalendarClock,
-  LogIn
+  LogIn,
+  ClipboardList
 } from "lucide-react";
 import {
   Table,
@@ -308,7 +309,8 @@ export default function Fleet() {
         (statusFilter === "rented" && trailer.is_rented) ||
         (statusFilter === "available" && !trailer.is_rented && trailer.status === "available") ||
         (statusFilter === "maintenance" && trailer.status === "maintenance") ||
-        (statusFilter === "checked_out" && trailer.status === "checked_out");
+        (statusFilter === "checked_out" && trailer.status === "checked_out") ||
+        (statusFilter === "under_review" && trailer.status === "under_review");
       
       return matchesSearch && matchesStatus;
     })
@@ -393,19 +395,25 @@ export default function Fleet() {
   };
 
   const getStatusBadge = (status: string) => {
-    const variants: Record<string, "default" | "secondary" | "destructive"> = {
-      rented: "default",
-      available: "secondary",
-      maintenance: "destructive",
-      checked_out: "default",
-      pending_release: "default"
+    const colorMap: Record<string, string> = {
+      rented: "bg-teal-500 text-white hover:bg-teal-600",
+      available: "bg-teal-600 text-white hover:bg-teal-700",
+      maintenance: "bg-red-500 text-white hover:bg-red-600",
+      checked_out: "bg-blue-500 text-white hover:bg-blue-600",
+      pending_release: "bg-orange-500 text-white hover:bg-orange-600",
+      under_review: "bg-purple-500 text-white hover:bg-purple-600"
     };
     const displayMap: Record<string, string> = {
       checked_out: "Checked Out",
-      pending_release: "Pending Release"
+      pending_release: "Pending Release",
+      under_review: "Under Review"
     };
     const displayStatus = displayMap[status] || status;
-    return <Badge variant={variants[status] || "secondary"}>{displayStatus}</Badge>;
+    return (
+      <Badge className={colorMap[status] || "bg-gray-500 text-white"}>
+        {displayStatus}
+      </Badge>
+    );
   };
 
   const totalFleetCount = trailers.length;
@@ -415,6 +423,8 @@ export default function Fleet() {
   const totalMaintenanceCost = trailers.reduce((sum, t) => sum + (t.total_maintenance_cost || 0), 0);
   const totalRentalIncome = trailers.reduce((sum, t) => sum + (t.rental_income || 0), 0);
   const availableCount = trailers.filter(t => t.status === "available").length;
+  const maintenanceCount = trailers.filter(t => t.status === "maintenance").length;
+  const underReviewCount = trailers.filter(t => t.status === "under_review").length;
 
   // Group trailers by type
   const trailersByType = trailers.reduce((acc, trailer) => {
@@ -562,7 +572,7 @@ export default function Fleet() {
 
           <main className="flex-1 p-6 overflow-auto">
             {/* Fleet Stats */}
-            <div className="grid gap-6 md:grid-cols-5 mb-8">
+            <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-6 mb-8">
               <Card 
                 className={`cursor-pointer transition-all hover:shadow-md ${statusFilter === 'all' ? 'ring-2 ring-primary' : ''}`}
                 onClick={() => setStatusFilter('all')}
@@ -582,12 +592,12 @@ export default function Fleet() {
               </Card>
 
               <Card 
-                className={`cursor-pointer transition-all hover:shadow-md ${statusFilter === 'rented' ? 'ring-2 ring-blue-500' : ''}`}
+                className={`cursor-pointer transition-all hover:shadow-md ${statusFilter === 'rented' ? 'ring-2 ring-teal-500' : ''}`}
                 onClick={() => setStatusFilter('rented')}
               >
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
                   <CardTitle className="text-sm font-medium text-muted-foreground">
-                    Out (Rented)
+                    Rented
                   </CardTitle>
                   <Truck className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
@@ -600,19 +610,55 @@ export default function Fleet() {
               </Card>
 
               <Card 
-                className={`cursor-pointer transition-all hover:shadow-md ${statusFilter === 'available' ? 'ring-2 ring-green-500' : ''}`}
+                className={`cursor-pointer transition-all hover:shadow-md ${statusFilter === 'available' ? 'ring-2 ring-teal-600' : ''}`}
                 onClick={() => setStatusFilter('available')}
               >
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
                   <CardTitle className="text-sm font-medium text-muted-foreground">
-                    In (Yard)
+                    Available
                   </CardTitle>
                   <Truck className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{totalIn}</div>
+                  <div className="text-2xl font-bold">{availableCount}</div>
                   <p className="text-xs text-muted-foreground mt-1">
-                    Available in yard
+                    Ready to lease
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card 
+                className={`cursor-pointer transition-all hover:shadow-md ${statusFilter === 'maintenance' ? 'ring-2 ring-red-500' : ''}`}
+                onClick={() => setStatusFilter('maintenance')}
+              >
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">
+                    Maintenance
+                  </CardTitle>
+                  <Wrench className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{maintenanceCount}</div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    In service
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card 
+                className={`cursor-pointer transition-all hover:shadow-md ${statusFilter === 'under_review' ? 'ring-2 ring-purple-500' : ''}`}
+                onClick={() => setStatusFilter('under_review')}
+              >
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">
+                    Under Review
+                  </CardTitle>
+                  <ClipboardList className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{underReviewCount}</div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Pending review
                   </p>
                 </CardContent>
               </Card>
@@ -620,32 +666,14 @@ export default function Fleet() {
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
                   <CardTitle className="text-sm font-medium text-muted-foreground">
-                    Total Fleet Value
+                    Fleet Value
                   </CardTitle>
                   <DollarSign className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">${totalFleetValue.toLocaleString()}</div>
                   <p className="text-xs text-muted-foreground mt-1">
-                    {trailers.length} trailers total
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card 
-                className={`cursor-pointer transition-all hover:shadow-md ${statusFilter === 'maintenance' ? 'ring-2 ring-yellow-500' : ''}`}
-                onClick={() => setStatusFilter('maintenance')}
-              >
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">
-                    Total Maintenance
-                  </CardTitle>
-                  <Wrench className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">${totalMaintenanceCost.toLocaleString()}</div>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    All-time costs
+                    Total value
                   </p>
                 </CardContent>
               </Card>
