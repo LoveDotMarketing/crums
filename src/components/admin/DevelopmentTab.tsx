@@ -33,8 +33,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  AreaChart,
-  Area,
+  BarChart,
+  Bar,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -42,7 +42,7 @@ import {
   ResponsiveContainer,
   Legend,
 } from "recharts";
-import { format, parseISO } from "date-fns";
+import { format, parseISO, startOfWeek, startOfMonth, getISOWeek, getYear } from "date-fns";
 import { toast } from "sonner";
 
 interface ChangelogEntry {
@@ -59,7 +59,8 @@ interface ChangelogEntry {
 }
 
 interface ChartDataPoint {
-  month: string;
+  period: string;
+  displayLabel: string;
   news: number;
   guide: number;
   tool: number;
@@ -67,6 +68,8 @@ interface ChartDataPoint {
   database_table: number;
   edge_function: number;
 }
+
+type GranularityType = "daily" | "weekly" | "monthly";
 
 const categoryColors: Record<string, string> = {
   news: "hsl(var(--chart-1))",
@@ -105,6 +108,7 @@ export function DevelopmentTab() {
   const [monthFilter, setMonthFilter] = useState<string>("all");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [isSyncing, setIsSyncing] = useState(false);
+  const [granularity, setGranularity] = useState<GranularityType>("weekly");
 
   const { data: changelog = [], isLoading, refetch } = useQuery({
     queryKey: ["development-changelog", monthFilter, categoryFilter],
@@ -143,15 +147,36 @@ export function DevelopmentTab() {
     },
   });
 
-  // Generate chart data grouped by month
+  // Generate chart data grouped by granularity
   const chartData: ChartDataPoint[] = (() => {
-    const monthMap = new Map<string, ChartDataPoint>();
+    const dataMap = new Map<string, ChartDataPoint>();
     
     allEntries.forEach((entry) => {
-      const month = entry.month_year;
-      if (!monthMap.has(month)) {
-        monthMap.set(month, {
-          month,
+      const date = parseISO(entry.date_recorded);
+      let periodKey: string;
+      let displayLabel: string;
+      
+      switch (granularity) {
+        case "daily":
+          periodKey = entry.date_recorded;
+          displayLabel = format(date, "MMM d");
+          break;
+        case "weekly":
+          const weekStart = startOfWeek(date, { weekStartsOn: 1 });
+          periodKey = format(weekStart, "yyyy-'W'II");
+          displayLabel = `W${getISOWeek(date)} ${format(date, "MMM")}`;
+          break;
+        case "monthly":
+        default:
+          periodKey = entry.month_year;
+          displayLabel = format(parseISO(`${entry.month_year}-01`), "MMM yy");
+          break;
+      }
+      
+      if (!dataMap.has(periodKey)) {
+        dataMap.set(periodKey, {
+          period: periodKey,
+          displayLabel,
           news: 0,
           guide: 0,
           tool: 0,
@@ -160,14 +185,14 @@ export function DevelopmentTab() {
           edge_function: 0,
         });
       }
-      const data = monthMap.get(month)!;
-      const category = entry.category as keyof Omit<ChartDataPoint, "month">;
+      const data = dataMap.get(periodKey)!;
+      const category = entry.category as keyof Omit<ChartDataPoint, "period" | "displayLabel">;
       if (category in data) {
         data[category]++;
       }
     });
 
-    return Array.from(monthMap.values()).sort((a, b) => a.month.localeCompare(b.month));
+    return Array.from(dataMap.values()).sort((a, b) => a.period.localeCompare(b.period));
   })();
 
   // Get available months for filter
@@ -229,6 +254,12 @@ export function DevelopmentTab() {
     }
   };
 
+  const granularityOptions = [
+    { value: "daily", label: "Daily" },
+    { value: "weekly", label: "Weekly" },
+    { value: "monthly", label: "Monthly" },
+  ];
+
   return (
     <div className="space-y-6">
       {/* Activity Overview Chart */}
@@ -244,19 +275,34 @@ export function DevelopmentTab() {
                 Project development activity from November 2025 to present
               </CardDescription>
             </div>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={handleSync}
-              disabled={isSyncing}
-            >
-              {isSyncing ? (
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              ) : (
-                <RefreshCw className="h-4 w-4 mr-2" />
-              )}
-              Sync Now
-            </Button>
+            <div className="flex items-center gap-3">
+              <div className="flex rounded-lg border p-1 bg-muted/50">
+                {granularityOptions.map((option) => (
+                  <Button
+                    key={option.value}
+                    variant={granularity === option.value ? "secondary" : "ghost"}
+                    size="sm"
+                    className="h-7 px-3 text-xs"
+                    onClick={() => setGranularity(option.value as GranularityType)}
+                  >
+                    {option.label}
+                  </Button>
+                ))}
+              </div>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleSync}
+                disabled={isSyncing}
+              >
+                {isSyncing ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                )}
+                Sync Now
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent>
@@ -270,43 +316,25 @@ export function DevelopmentTab() {
             </div>
           ) : (
             <ResponsiveContainer width="100%" height={300}>
-              <AreaChart data={chartData}>
-                <defs>
-                  <linearGradient id="newsGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor={categoryColors.news} stopOpacity={0.8} />
-                    <stop offset="95%" stopColor={categoryColors.news} stopOpacity={0.1} />
-                  </linearGradient>
-                  <linearGradient id="guideGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor={categoryColors.guide} stopOpacity={0.8} />
-                    <stop offset="95%" stopColor={categoryColors.guide} stopOpacity={0.1} />
-                  </linearGradient>
-                  <linearGradient id="toolGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor={categoryColors.tool} stopOpacity={0.8} />
-                    <stop offset="95%" stopColor={categoryColors.tool} stopOpacity={0.1} />
-                  </linearGradient>
-                  <linearGradient id="adminGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor={categoryColors.admin_feature} stopOpacity={0.8} />
-                    <stop offset="95%" stopColor={categoryColors.admin_feature} stopOpacity={0.1} />
-                  </linearGradient>
-                  <linearGradient id="dbGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor={categoryColors.database_table} stopOpacity={0.8} />
-                    <stop offset="95%" stopColor={categoryColors.database_table} stopOpacity={0.1} />
-                  </linearGradient>
-                </defs>
+              <BarChart data={chartData}>
                 <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                 <XAxis 
-                  dataKey="month" 
-                  tickFormatter={formatMonthLabel}
+                  dataKey="displayLabel"
                   className="text-xs"
+                  interval={granularity === "daily" ? 2 : 0}
+                  angle={granularity === "daily" ? -45 : 0}
+                  textAnchor={granularity === "daily" ? "end" : "middle"}
+                  height={granularity === "daily" ? 60 : 30}
                 />
                 <YAxis allowDecimals={false} className="text-xs" />
                 <Tooltip 
                   content={({ active, payload, label }) => {
-                    if (!active || !payload) return null;
+                    if (!active || !payload || payload.length === 0) return null;
+                    const total = payload.reduce((sum, entry) => sum + (Number(entry.value) || 0), 0);
                     return (
                       <div className="bg-popover border rounded-lg p-3 shadow-lg">
-                        <p className="font-medium mb-2">{formatMonthLabel(label)}</p>
-                        {payload.map((entry, idx) => (
+                        <p className="font-medium mb-2">{label}</p>
+                        {payload.filter(entry => Number(entry.value) > 0).map((entry, idx) => (
                           <div key={idx} className="flex items-center gap-2 text-sm">
                             <div 
                               className="w-3 h-3 rounded-full" 
@@ -318,6 +346,11 @@ export function DevelopmentTab() {
                             <span className="font-medium">{entry.value}</span>
                           </div>
                         ))}
+                        {total > 0 && (
+                          <div className="border-t mt-2 pt-2 text-sm font-medium">
+                            Total: {total}
+                          </div>
+                        )}
                       </div>
                     );
                   }}
@@ -326,42 +359,39 @@ export function DevelopmentTab() {
                   formatter={(value) => categoryLabels[value] || value}
                   wrapperStyle={{ paddingTop: "20px" }}
                 />
-                <Area
-                  type="monotone"
+                <Bar
                   dataKey="news"
                   stackId="1"
-                  stroke={categoryColors.news}
-                  fill="url(#newsGradient)"
+                  fill={categoryColors.news}
+                  radius={[0, 0, 0, 0]}
                 />
-                <Area
-                  type="monotone"
+                <Bar
                   dataKey="guide"
                   stackId="1"
-                  stroke={categoryColors.guide}
-                  fill="url(#guideGradient)"
+                  fill={categoryColors.guide}
                 />
-                <Area
-                  type="monotone"
+                <Bar
                   dataKey="tool"
                   stackId="1"
-                  stroke={categoryColors.tool}
-                  fill="url(#toolGradient)"
+                  fill={categoryColors.tool}
                 />
-                <Area
-                  type="monotone"
+                <Bar
                   dataKey="admin_feature"
                   stackId="1"
-                  stroke={categoryColors.admin_feature}
-                  fill="url(#adminGradient)"
+                  fill={categoryColors.admin_feature}
                 />
-                <Area
-                  type="monotone"
+                <Bar
                   dataKey="database_table"
                   stackId="1"
-                  stroke={categoryColors.database_table}
-                  fill="url(#dbGradient)"
+                  fill={categoryColors.database_table}
                 />
-              </AreaChart>
+                <Bar
+                  dataKey="edge_function"
+                  stackId="1"
+                  fill={categoryColors.edge_function}
+                  radius={[4, 4, 0, 0]}
+                />
+              </BarChart>
             </ResponsiveContainer>
           )}
         </CardContent>
