@@ -24,7 +24,8 @@ import {
   ArrowUpDown,
   ArrowUp,
   ArrowDown,
-  Eye
+  Eye,
+  CreditCard
 } from "lucide-react";
 import {
   Table,
@@ -101,6 +102,7 @@ interface Customer {
   profile_completion?: number;
   application_completion?: number;
   has_application?: boolean;
+  ach_linked?: boolean;
 }
 
 export default function Customers() {
@@ -179,10 +181,10 @@ export default function Customers() {
         .from('profiles')
         .select('id, email, first_name, last_name, phone, home_address');
 
-      // Fetch applications for profile completion calculation
+      // Fetch applications for profile completion calculation and ACH status
       const { data: applications } = await supabase
         .from('customer_applications')
-        .select('user_id, trailer_type, drivers_license_url, drivers_license_back_url, insurance_docs_url, dot_number_url');
+        .select('user_id, trailer_type, drivers_license_url, drivers_license_back_url, insurance_docs_url, dot_number_url, stripe_payment_method_id');
       
       // Map data to customers
       return filteredData.map((customer: Customer) => {
@@ -250,6 +252,9 @@ export default function Customers() {
         const applicationCompletion = customerApplication 
           ? Math.round((completedApplicationFields / applicationFields.length) * 100)
           : 0;
+
+        // Check if ACH is linked (has stripe_payment_method_id)
+        const achLinked = !!customerApplication?.stripe_payment_method_id;
         
         return {
           ...customer,
@@ -269,6 +274,7 @@ export default function Customers() {
           profile_completion: profileCompletion,
           application_completion: applicationCompletion,
           has_application: !!customerApplication,
+          ach_linked: achLinked,
         };
       });
     }
@@ -418,6 +424,10 @@ export default function Customers() {
       case "profile":
         aValue = a.profile_completion || 0;
         bValue = b.profile_completion || 0;
+        break;
+      case "ach":
+        aValue = a.ach_linked ? 1 : 0;
+        bValue = b.ach_linked ? 1 : 0;
         break;
       case "application":
         aValue = a.application_completion || 0;
@@ -668,6 +678,15 @@ export default function Customers() {
                       </TableHead>
                       <TableHead 
                         className="cursor-pointer hover:bg-muted/50 select-none"
+                        onClick={() => handleSort("ach")}
+                      >
+                        <div className="flex items-center">
+                          ACH
+                          {getSortIcon("ach")}
+                        </div>
+                      </TableHead>
+                      <TableHead 
+                        className="cursor-pointer hover:bg-muted/50 select-none"
                         onClick={() => handleSort("trailers")}
                       >
                         <div className="flex items-center">
@@ -726,7 +745,7 @@ export default function Customers() {
                   <TableBody>
                     {sortedCustomers.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={10} className="text-center py-8 text-muted-foreground">
+                        <TableCell colSpan={11} className="text-center py-8 text-muted-foreground">
                           No customers found
                         </TableCell>
                       </TableRow>
@@ -762,6 +781,18 @@ export default function Customers() {
                               </div>
                             ) : (
                               <span className="text-xs text-muted-foreground">—</span>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            {customer.ach_linked ? (
+                              <Badge variant="default" className="text-xs">
+                                <CreditCard className="h-3 w-3 mr-1" />
+                                Linked
+                              </Badge>
+                            ) : (
+                              <Badge variant="outline" className="text-xs text-muted-foreground">
+                                Not Linked
+                              </Badge>
                             )}
                           </TableCell>
                           <TableCell className="text-sm max-w-[200px]">
