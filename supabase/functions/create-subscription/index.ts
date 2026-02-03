@@ -19,6 +19,7 @@ interface SubscriptionRequest {
   depositAmount?: number;
   discountId?: string;
   customRates?: Record<string, number>; // trailerId -> custom rate override
+  endDate?: string; // Optional end date for fixed-term leases (YYYY-MM-DD)
 }
 
 serve(async (req) => {
@@ -58,7 +59,7 @@ serve(async (req) => {
     logStep("Admin verified", { adminId: userData.user.id });
 
     const body: SubscriptionRequest = await req.json();
-    const { customerId, trailerIds, billingCycle, depositAmount, discountId, customRates } = body;
+    const { customerId, trailerIds, billingCycle, depositAmount, discountId, customRates, endDate } = body;
 
     if (!customerId || !trailerIds?.length || !billingCycle) {
       throw new Error("Missing required fields: customerId, trailerIds, billingCycle");
@@ -308,13 +309,14 @@ serve(async (req) => {
           deposit_paid: false,
           status: mappedStatus,
           next_billing_date: nextBillingDate,
+          end_date: endDate || null,
         })
         .eq("id", existingSubscription.id)
         .select()
         .single();
       custSub = data;
       subError = error;
-      logStep("Updated existing subscription record", { id: custSub?.id });
+      logStep("Updated existing subscription record", { id: custSub?.id, endDate });
     } else {
       // Insert a new subscription row
       const { data, error } = await supabaseClient
@@ -328,12 +330,13 @@ serve(async (req) => {
           deposit_paid: false,
           status: mappedStatus,
           next_billing_date: nextBillingDate,
+          end_date: endDate || null,
         })
         .select()
         .single();
       custSub = data;
       subError = error;
-      logStep("Created new subscription record", { id: custSub?.id });
+      logStep("Created new subscription record", { id: custSub?.id, endDate });
     }
 
     if (subError) throw new Error(`Failed to create/update subscription record: ${subError.message}`);

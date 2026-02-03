@@ -377,6 +377,7 @@ export type Database = {
           deposit_amount: number | null
           deposit_paid: boolean | null
           deposit_paid_at: string | null
+          end_date: string | null
           failed_payment_count: number | null
           grace_period_end: string | null
           grace_period_start: string | null
@@ -394,6 +395,7 @@ export type Database = {
           deposit_amount?: number | null
           deposit_paid?: boolean | null
           deposit_paid_at?: string | null
+          end_date?: string | null
           failed_payment_count?: number | null
           grace_period_end?: string | null
           grace_period_start?: string | null
@@ -411,6 +413,7 @@ export type Database = {
           deposit_amount?: number | null
           deposit_paid?: boolean | null
           deposit_paid_at?: string | null
+          end_date?: string | null
           failed_payment_count?: number | null
           grace_period_end?: string | null
           grace_period_start?: string | null
