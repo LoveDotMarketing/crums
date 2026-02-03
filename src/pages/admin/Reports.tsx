@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
@@ -13,7 +13,8 @@ import {
   TrendingUp,
   AlertCircle,
   Loader2,
-  Receipt
+  Receipt,
+  Code
 } from "lucide-react";
 import {
   Table,
@@ -37,6 +38,7 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs";
 import { format, subDays, differenceInDays } from "date-fns";
+import { DevelopmentTab } from "@/components/admin/DevelopmentTab";
 
 interface UnpaidToll {
   id: string;
@@ -376,6 +378,10 @@ export default function Reports() {
                 <TabsTrigger value="new-users">New Users</TabsTrigger>
                 <TabsTrigger value="billing">Toll Summary</TabsTrigger>
                 <TabsTrigger value="support">Support Tickets</TabsTrigger>
+                <TabsTrigger value="development" className="flex items-center gap-1">
+                  <Code className="h-3.5 w-3.5" />
+                  Development
+                </TabsTrigger>
               </TabsList>
 
               <TabsContent value="unpaid-tolls">
@@ -665,6 +671,10 @@ export default function Reports() {
                     )}
                   </CardContent>
                 </Card>
+              </TabsContent>
+
+              <TabsContent value="development">
+                <DevelopmentTab />
               </TabsContent>
             </Tabs>
           </main>

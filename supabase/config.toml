@@ -129,6 +129,10 @@ verify_jwt = false
 [functions.twilio-call-logs]
 verify_jwt = false
 
+# Sync development changelog - weekly cron job, uses service role
+[functions.sync-development-changelog]
+verify_jwt = false
+
 # Twilio call recording proxy - admin only (auth handled in code)
 [functions.twilio-call-recording]
 verify_jwt = false
