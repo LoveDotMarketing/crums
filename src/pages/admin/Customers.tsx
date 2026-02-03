@@ -110,6 +110,7 @@ export default function Customers() {
   const { startImpersonation } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [achFilter, setAchFilter] = useState<string>("all");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [sortColumn, setSortColumn] = useState<string>("full_name");
@@ -409,7 +410,11 @@ export default function Customers() {
     
     const matchesStatus = statusFilter === "all" || customer.status === statusFilter;
     
-    return matchesSearch && matchesStatus;
+    const matchesAch = achFilter === "all" || 
+      (achFilter === "linked" && customer.ach_linked) ||
+      (achFilter === "not_linked" && !customer.ach_linked);
+    
+    return matchesSearch && matchesStatus && matchesAch;
   });
 
   const sortedCustomers = [...filteredCustomers].sort((a, b) => {
@@ -512,6 +517,8 @@ export default function Customers() {
   const totalOutstanding = customers.reduce((sum, c) => sum + (c.outstanding_tolls || 0), 0);
   const customersWithReferrals = customers.filter(c => (c.referrals_sent || 0) > 0).length;
   const totalCreditsEarned = customers.reduce((sum, c) => sum + (c.credits_earned || 0), 0);
+  const achLinkedCount = customers.filter(c => c.ach_linked).length;
+  const achNotLinkedCount = customers.filter(c => !c.ach_linked).length;
 
   if (isLoading) {
     return (
@@ -545,10 +552,10 @@ export default function Customers() {
 
           <main className="flex-1 p-6 overflow-auto">
             {/* Customer Stats */}
-            <div className="grid gap-6 md:grid-cols-4 mb-8">
+            <div className="grid gap-6 md:grid-cols-5 mb-8">
               <Card 
-                className={`cursor-pointer transition-all hover:shadow-md ${statusFilter === 'active' ? 'ring-2 ring-primary' : ''}`}
-                onClick={() => setStatusFilter('active')}
+                className={`cursor-pointer transition-all hover:shadow-md ${statusFilter === 'active' && achFilter === 'all' ? 'ring-2 ring-primary' : ''}`}
+                onClick={() => { setStatusFilter('active'); setAchFilter('all'); }}
               >
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
                   <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -565,8 +572,8 @@ export default function Customers() {
               </Card>
 
               <Card 
-                className={`cursor-pointer transition-all hover:shadow-md ${statusFilter === 'all' ? 'ring-2 ring-primary' : ''}`}
-                onClick={() => setStatusFilter('all')}
+                className={`cursor-pointer transition-all hover:shadow-md ${statusFilter === 'all' && achFilter === 'all' ? 'ring-2 ring-primary' : ''}`}
+                onClick={() => { setStatusFilter('all'); setAchFilter('all'); }}
               >
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
                   <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -582,6 +589,24 @@ export default function Customers() {
                 </CardContent>
               </Card>
 
+              <Card 
+                className={`cursor-pointer transition-all hover:shadow-md ${achFilter === 'linked' ? 'ring-2 ring-primary' : ''}`}
+                onClick={() => { setAchFilter(achFilter === 'linked' ? 'all' : 'linked'); setStatusFilter('all'); }}
+              >
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">
+                    ACH Linked
+                  </CardTitle>
+                  <CreditCard className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{achLinkedCount}</div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {achNotLinkedCount} not linked
+                  </p>
+                </CardContent>
+              </Card>
+
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
                   <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -591,15 +616,15 @@ export default function Customers() {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">${totalOutstanding.toLocaleString()}</div>
-                  <p className="text-xs text-red-600 mt-1">
+                  <p className="text-xs text-destructive mt-1">
                     Pending payment
                   </p>
                 </CardContent>
               </Card>
 
               <Card 
-                className={`cursor-pointer transition-all hover:shadow-md ${statusFilter === 'archived' ? 'ring-2 ring-red-500' : ''}`}
-                onClick={() => setStatusFilter('archived')}
+                className={`cursor-pointer transition-all hover:shadow-md ${statusFilter === 'archived' && achFilter === 'all' ? 'ring-2 ring-destructive' : ''}`}
+                onClick={() => { setStatusFilter('archived'); setAchFilter('all'); }}
               >
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
                   <CardTitle className="text-sm font-medium text-muted-foreground">
