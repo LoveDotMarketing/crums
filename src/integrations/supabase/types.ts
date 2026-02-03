@@ -494,6 +494,45 @@ export type Database = {
         }
         Relationships: []
       }
+      development_changelog: {
+        Row: {
+          action: string
+          category: string
+          created_at: string
+          date_recorded: string
+          id: string
+          item_name: string
+          item_slug: string
+          item_url: string | null
+          month_year: string
+          notes: string | null
+        }
+        Insert: {
+          action: string
+          category: string
+          created_at?: string
+          date_recorded: string
+          id?: string
+          item_name: string
+          item_slug: string
+          item_url?: string | null
+          month_year: string
+          notes?: string | null
+        }
+        Update: {
+          action?: string
+          category?: string
+          created_at?: string
+          date_recorded?: string
+          id?: string
+          item_name?: string
+          item_slug?: string
+          item_url?: string | null
+          month_year?: string
+          notes?: string | null
+        }
+        Relationships: []
+      }
       discounts: {
         Row: {
           code: string | null
