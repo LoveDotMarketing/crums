@@ -55,6 +55,7 @@ interface Trailer {
   customer_id: string | null;
   gps_latitude: number | null;
   gps_longitude: number | null;
+  gps_box_number: string | null;
   vin: string | null;
   license_plate: string | null;
   company_id: string;
@@ -93,6 +94,7 @@ export default function Fleet() {
     purchase_price: "",
     vin: "",
     license_plate: "",
+    gps_box_number: "",
   });
 
   useEffect(() => {
@@ -224,6 +226,7 @@ export default function Fleet() {
           purchase_price: newTrailer.purchase_price ? parseFloat(newTrailer.purchase_price) : null,
           vin: newTrailer.vin || null,
           license_plate: newTrailer.license_plate || null,
+          gps_box_number: newTrailer.gps_box_number || null,
           status: "available",
           is_rented: false,
           total_maintenance_cost: 0,
@@ -246,6 +249,7 @@ export default function Fleet() {
         purchase_price: "",
         vin: "",
         license_plate: "",
+        gps_box_number: "",
       });
     } catch (error) {
       console.error("Error adding trailer:", error);
@@ -540,13 +544,22 @@ export default function Fleet() {
                         placeholder="1UYVS25387A123456"
                       />
                     </div>
-                    <div className="space-y-2 col-span-2">
+                    <div className="space-y-2">
                       <Label htmlFor="license_plate">License Plate</Label>
                       <Input
                         id="license_plate"
                         value={newTrailer.license_plate}
                         onChange={(e) => setNewTrailer({ ...newTrailer, license_plate: e.target.value })}
                         placeholder="ABC1234"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="gps_box_number">GPS Box Number</Label>
+                      <Input
+                        id="gps_box_number"
+                        value={newTrailer.gps_box_number}
+                        onChange={(e) => setNewTrailer({ ...newTrailer, gps_box_number: e.target.value })}
+                        placeholder="GPS-001"
                       />
                     </div>
                   </div>
