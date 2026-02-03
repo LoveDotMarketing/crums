@@ -60,7 +60,8 @@ import {
   Search,
   ArrowUpDown,
   Bell,
-  Zap
+  Zap,
+  Pencil
 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
@@ -92,6 +93,7 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { CreateSubscriptionDialog } from "@/components/admin/CreateSubscriptionDialog";
 import { ManageTrailersDialog } from "@/components/admin/ManageTrailersDialog";
+import { EditSubscriptionDatesDialog } from "@/components/admin/EditSubscriptionDatesDialog";
 
 type BillingCycle = "weekly" | "biweekly" | "monthly";
 type DiscountType = "percentage" | "fixed" | "multi_trailer" | "promo_code";
@@ -109,6 +111,7 @@ interface CustomerSubscription {
   deposit_paid_at: string | null;
   status: string;
   created_at: string;
+  end_date: string | null;
   customers?: {
     full_name: string;
     email: string;
@@ -285,6 +288,15 @@ export default function Billing() {
     customerId: string;
     customerName: string;
     items: SubscriptionItem[];
+  } | null>(null);
+
+  // Edit dates dialog state
+  const [editDatesDialogOpen, setEditDatesDialogOpen] = useState(false);
+  const [selectedSubscriptionForDates, setSelectedSubscriptionForDates] = useState<{
+    id: string;
+    customerName: string;
+    startDate: string;
+    endDate: string | null;
   } | null>(null);
 
   // Manage subscription (pause/resume/cancel)
@@ -1113,6 +1125,7 @@ export default function Billing() {
                         <TableHeader>
                           <TableRow>
                             <TableHead>Customer</TableHead>
+                            <TableHead>Contract Period</TableHead>
                             <TableHead>Billing Cycle</TableHead>
                             <TableHead>Next Billing</TableHead>
                             <TableHead>Deposit</TableHead>
@@ -1142,6 +1155,16 @@ export default function Billing() {
                                     </p>
                                     <p className="text-sm text-muted-foreground">
                                       {sub.customers?.company_name || sub.customers?.email}
+                                    </p>
+                                  </div>
+                                </TableCell>
+                                <TableCell>
+                                  <div className="text-sm">
+                                    <p>{format(new Date(sub.created_at), "MMM d, yyyy")}</p>
+                                    <p className="text-muted-foreground">
+                                      {sub.end_date 
+                                        ? `to ${format(new Date(sub.end_date), "MMM d, yyyy")}`
+                                        : "Ongoing"}
                                     </p>
                                   </div>
                                 </TableCell>
@@ -1221,6 +1244,22 @@ export default function Billing() {
                                         </Button>
                                       </DropdownMenuTrigger>
                                       <DropdownMenuContent align="end">
+                                        {/* Edit Contract Dates - always available */}
+                                        <DropdownMenuItem
+                                          onClick={() => {
+                                            setSelectedSubscriptionForDates({
+                                              id: sub.id,
+                                              customerName: sub.customers?.full_name || "Unknown",
+                                              startDate: sub.created_at,
+                                              endDate: sub.end_date,
+                                            });
+                                            setEditDatesDialogOpen(true);
+                                          }}
+                                        >
+                                          <Pencil className="h-4 w-4 mr-2" />
+                                          Edit Contract Dates
+                                        </DropdownMenuItem>
+                                        <DropdownMenuSeparator />
                                         {isReadyToActivate && (
                                           <>
                                             <DropdownMenuItem
@@ -2391,6 +2430,13 @@ export default function Billing() {
                 currentItems={selectedSubscriptionForTrailers.items}
               />
             )}
+
+            {/* Edit Contract Dates Dialog */}
+            <EditSubscriptionDatesDialog
+              open={editDatesDialogOpen}
+              onOpenChange={setEditDatesDialogOpen}
+              subscription={selectedSubscriptionForDates}
+            />
           </main>
         </div>
       </div>
