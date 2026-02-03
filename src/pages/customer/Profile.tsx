@@ -11,8 +11,8 @@ import { CustomerNav } from "@/components/customer/CustomerNav";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
 import { toast } from "sonner";
-import { Loader2, Truck, CreditCard } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Loader2, Truck, FileText, Calendar } from "lucide-react";
+import { format } from "date-fns";
 
 interface TrailerInfo {
   id: string;
@@ -21,6 +21,15 @@ interface TrailerInfo {
   type: string;
   rental_rate: number | null;
   rental_frequency: string | null;
+}
+
+interface SubscriptionInfo {
+  id: string;
+  status: string;
+  billing_cycle: string;
+  created_at: string;
+  end_date: string | null;
+  next_billing_date: string | null;
 }
 
 export default function Profile() {
@@ -45,32 +54,56 @@ export default function Profile() {
   const currentUserId = effectiveUserId;
   const currentEmail = isImpersonating && impersonatedUser ? impersonatedUser.email : user?.email;
 
-  // Fetch customer's trailers
-  const { data: trailers = [] } = useQuery({
-    queryKey: ['my-trailers', currentEmail],
+  // Fetch customer record
+  const { data: customerRecord } = useQuery({
+    queryKey: ['customer-record', currentEmail],
     queryFn: async () => {
-      if (!currentEmail) return [];
-      
-      // First get the customer record by email
-      const { data: customer, error: customerError } = await supabase
+      if (!currentEmail) return null;
+      const { data, error } = await supabase
         .from('customers')
         .select('id')
         .eq('email', currentEmail)
         .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!currentEmail,
+  });
+
+  // Fetch customer's trailers
+  const { data: trailers = [] } = useQuery({
+    queryKey: ['my-trailers', customerRecord?.id],
+    queryFn: async () => {
+      if (!customerRecord?.id) return [];
       
-      if (customerError || !customer) return [];
-      
-      // Then get trailers for this customer
       const { data, error } = await supabase
         .from('trailers')
         .select('id, vin, trailer_number, type, rental_rate, rental_frequency')
-        .eq('customer_id', customer.id)
+        .eq('customer_id', customerRecord.id)
         .order('trailer_number');
       
       if (error) throw error;
       return (data || []) as TrailerInfo[];
     },
-    enabled: !!currentEmail,
+    enabled: !!customerRecord?.id,
+  });
+
+  // Fetch subscription/contract info
+  const { data: subscription } = useQuery({
+    queryKey: ['my-subscription', customerRecord?.id],
+    queryFn: async () => {
+      if (!customerRecord?.id) return null;
+      
+      const { data, error } = await supabase
+        .from('customer_subscriptions')
+        .select('id, status, billing_cycle, created_at, end_date, next_billing_date')
+        .eq('customer_id', customerRecord.id)
+        .maybeSingle();
+      
+      if (error) throw error;
+      return data as SubscriptionInfo | null;
+    },
+    enabled: !!customerRecord?.id,
   });
 
   useEffect(() => {
@@ -219,6 +252,57 @@ export default function Profile() {
             </Card>
           ) : (
             <div className="space-y-6">
+              {/* Contract Details Section */}
+              {subscription && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <FileText className="h-5 w-5" />
+                      Contract Details
+                    </CardTitle>
+                    <CardDescription>Your lease agreement information</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="flex items-center gap-3 p-4 bg-muted/50 rounded-lg border">
+                        <Calendar className="h-5 w-5 text-primary" />
+                        <div>
+                          <p className="text-sm text-muted-foreground">Contract Start</p>
+                          <p className="font-semibold">
+                            {format(new Date(subscription.created_at), "MMMM d, yyyy")}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3 p-4 bg-muted/50 rounded-lg border">
+                        <Calendar className="h-5 w-5 text-primary" />
+                        <div>
+                          <p className="text-sm text-muted-foreground">Contract End</p>
+                          <p className="font-semibold">
+                            {subscription.end_date 
+                              ? format(new Date(subscription.end_date), "MMMM d, yyyy")
+                              : "Ongoing (No end date)"}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3 p-4 bg-muted/50 rounded-lg border">
+                        <div>
+                          <p className="text-sm text-muted-foreground">Status</p>
+                          <Badge variant={subscription.status === 'active' ? 'default' : 'secondary'} className="mt-1">
+                            {subscription.status.charAt(0).toUpperCase() + subscription.status.slice(1)}
+                          </Badge>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3 p-4 bg-muted/50 rounded-lg border">
+                        <div>
+                          <p className="text-sm text-muted-foreground">Billing Cycle</p>
+                          <p className="font-semibold capitalize">{subscription.billing_cycle}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
               {/* My Trailers Section */}
               {trailers.length > 0 && (
                 <Card>
