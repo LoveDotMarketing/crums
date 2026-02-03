@@ -61,7 +61,8 @@ import {
   ArrowUpDown,
   Bell,
   Zap,
-  Pencil
+  Pencil,
+  Webhook
 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
@@ -228,6 +229,20 @@ interface PaymentRetryLog {
     last_name: string | null;
     email: string;
   };
+}
+
+interface StripeWebhookLog {
+  id: string;
+  event_id: string;
+  event_type: string;
+  status: string;
+  customer_email: string | null;
+  customer_id: string | null;
+  subscription_id: string | null;
+  stripe_subscription_id: string | null;
+  amount: number | null;
+  error_message: string | null;
+  created_at: string;
 }
 
 export default function Billing() {
@@ -691,6 +706,23 @@ export default function Billing() {
     }
   });
 
+  // Fetch Stripe webhook logs
+  const { data: webhookLogs, isLoading: loadingWebhookLogs } = useQuery({
+    queryKey: ["stripe-webhook-logs"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("stripe_webhook_logs")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(100);
+      
+      if (error) throw error;
+      return data as StripeWebhookLog[];
+    }
+  });
+
+  const webhookErrorCount = webhookLogs?.filter(log => log.status === "error").length || 0;
+
   // Toggle retry notification setting
   const toggleRetryNotificationMutation = useMutation({
     mutationFn: async (enabled: boolean) => {
@@ -1095,6 +1127,15 @@ export default function Billing() {
                 <TabsTrigger value="cron">
                   <Timer className="h-4 w-4 mr-1" />
                   Scheduled Jobs
+                </TabsTrigger>
+                <TabsTrigger value="stripe-events" className="relative">
+                  <Webhook className="h-4 w-4 mr-1" />
+                  Stripe Events
+                  {webhookErrorCount > 0 && (
+                    <span className="ml-2 inline-flex items-center justify-center h-5 min-w-5 px-1.5 text-xs font-medium bg-destructive text-destructive-foreground rounded-full">
+                      {webhookErrorCount}
+                    </span>
+                  )}
                 </TabsTrigger>
               </TabsList>
 
@@ -2095,6 +2136,122 @@ export default function Billing() {
                     </CardContent>
                   </Card>
                 </div>
+              </TabsContent>
+
+              {/* Stripe Events Tab */}
+              <TabsContent value="stripe-events">
+                <Card>
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <CardTitle className="flex items-center gap-2">
+                          <Webhook className="h-5 w-5" />
+                          Stripe Webhook Events
+                        </CardTitle>
+                        <CardDescription>
+                          Real-time log of Stripe webhook events received by the system
+                        </CardDescription>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => queryClient.invalidateQueries({ queryKey: ["stripe-webhook-logs"] })}
+                      >
+                        <RefreshCw className="h-4 w-4 mr-2" />
+                        Refresh
+                      </Button>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    {loadingWebhookLogs ? (
+                      <div className="flex items-center justify-center py-8">
+                        <RefreshCw className="h-6 w-6 animate-spin text-muted-foreground" />
+                      </div>
+                    ) : webhookLogs && webhookLogs.length > 0 ? (
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Time</TableHead>
+                            <TableHead>Event Type</TableHead>
+                            <TableHead>Status</TableHead>
+                            <TableHead>Customer</TableHead>
+                            <TableHead>Amount</TableHead>
+                            <TableHead>Details</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {webhookLogs.map((log) => (
+                            <TableRow key={log.id}>
+                              <TableCell>
+                                <div className="text-sm">
+                                  <p>{format(new Date(log.created_at), "MMM d, yyyy")}</p>
+                                  <p className="text-muted-foreground text-xs">
+                                    {format(new Date(log.created_at), "h:mm:ss a")}
+                                  </p>
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <Badge variant="outline" className="font-mono text-xs">
+                                  {log.event_type}
+                                </Badge>
+                              </TableCell>
+                              <TableCell>
+                                <Badge variant={log.status === "success" ? "default" : "destructive"}>
+                                  {log.status === "success" ? (
+                                    <CheckCircle2 className="h-3 w-3 mr-1" />
+                                  ) : (
+                                    <XCircle className="h-3 w-3 mr-1" />
+                                  )}
+                                  {log.status}
+                                </Badge>
+                              </TableCell>
+                              <TableCell>
+                                {log.customer_email ? (
+                                  <span className="text-sm">{log.customer_email}</span>
+                                ) : (
+                                  <span className="text-muted-foreground text-sm">—</span>
+                                )}
+                              </TableCell>
+                              <TableCell>
+                                {log.amount !== null ? (
+                                  <span className="font-medium">${log.amount.toFixed(2)}</span>
+                                ) : (
+                                  <span className="text-muted-foreground">—</span>
+                                )}
+                              </TableCell>
+                              <TableCell>
+                                {log.error_message ? (
+                                  <TooltipProvider>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <span className="text-destructive text-sm cursor-help truncate max-w-[200px] block">
+                                          {log.error_message}
+                                        </span>
+                                      </TooltipTrigger>
+                                      <TooltipContent className="max-w-[400px]">
+                                        <p className="text-sm">{log.error_message}</p>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
+                                ) : (
+                                  <span className="text-muted-foreground text-sm">
+                                    {log.stripe_subscription_id ? `Sub: ${log.stripe_subscription_id.slice(0, 12)}...` : "—"}
+                                  </span>
+                                )}
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    ) : (
+                      <div className="text-center py-8 text-muted-foreground">
+                        <Webhook className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                        <p>No webhook events logged yet</p>
+                        <p className="text-sm">Events will appear here as Stripe sends webhooks</p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
               </TabsContent>
             </Tabs>
 
