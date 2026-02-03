@@ -60,29 +60,92 @@ serve(async (req) => {
 
     logStep("Received webhook event", { type: event.type, id: event.id });
 
-    switch (event.type) {
-      case "invoice.payment_failed": {
-        const invoice = event.data.object as Stripe.Invoice;
-        await handlePaymentFailed(supabase, stripe, invoice);
-        break;
+    // Prepare webhook log data
+    let logData: {
+      event_id: string;
+      event_type: string;
+      status: string;
+      customer_email?: string;
+      customer_id?: string;
+      subscription_id?: string;
+      stripe_subscription_id?: string;
+      amount?: number;
+      error_message?: string;
+      payload?: object;
+    } = {
+      event_id: event.id,
+      event_type: event.type,
+      status: "success",
+      payload: { livemode: event.livemode, api_version: event.api_version }
+    };
+
+    try {
+      switch (event.type) {
+        case "invoice.payment_failed": {
+          const invoice = event.data.object as Stripe.Invoice;
+          logData.amount = (invoice.amount_due || 0) / 100;
+          logData.stripe_subscription_id = typeof invoice.subscription === "string" 
+            ? invoice.subscription 
+            : invoice.subscription?.id;
+          await handlePaymentFailed(supabase, stripe, invoice);
+          break;
+        }
+        case "invoice.paid": {
+          const invoice = event.data.object as Stripe.Invoice;
+          logData.amount = (invoice.total || 0) / 100;
+          logData.stripe_subscription_id = typeof invoice.subscription === "string" 
+            ? invoice.subscription 
+            : invoice.subscription?.id;
+          await handlePaymentSucceeded(supabase, stripe, invoice);
+          break;
+        }
+        case "customer.subscription.updated": {
+          const subscription = event.data.object as Stripe.Subscription;
+          logData.stripe_subscription_id = subscription.id;
+          logData.payload = { ...logData.payload, subscription_status: subscription.status };
+          await handleSubscriptionUpdated(supabase, subscription);
+          break;
+        }
+        case "customer.subscription.deleted": {
+          const subscription = event.data.object as Stripe.Subscription;
+          logData.stripe_subscription_id = subscription.id;
+          await handleSubscriptionDeleted(supabase, subscription);
+          break;
+        }
+        default:
+          logStep("Unhandled event type", { type: event.type });
       }
-      case "invoice.paid": {
-        const invoice = event.data.object as Stripe.Invoice;
-        await handlePaymentSucceeded(supabase, stripe, invoice);
-        break;
+
+      // Look up our subscription and customer IDs if we have a stripe_subscription_id
+      if (logData.stripe_subscription_id) {
+        const { data: subData } = await supabase
+          .from("customer_subscriptions")
+          .select("id, customer_id, customers(email)")
+          .eq("stripe_subscription_id", logData.stripe_subscription_id)
+          .maybeSingle();
+        
+        if (subData) {
+          logData.subscription_id = subData.id;
+          logData.customer_id = subData.customer_id;
+          // customers is a joined table result
+          const customers = subData.customers as unknown as { email?: string } | null;
+          logData.customer_email = customers?.email || undefined;
+        }
       }
-      case "customer.subscription.updated": {
-        const subscription = event.data.object as Stripe.Subscription;
-        await handleSubscriptionUpdated(supabase, subscription);
-        break;
-      }
-      case "customer.subscription.deleted": {
-        const subscription = event.data.object as Stripe.Subscription;
-        await handleSubscriptionDeleted(supabase, subscription);
-        break;
-      }
-      default:
-        logStep("Unhandled event type", { type: event.type });
+    } catch (handlerError: unknown) {
+      const errorMessage = handlerError instanceof Error ? handlerError.message : "Unknown error";
+      logStep("Handler error", { error: errorMessage });
+      logData.status = "error";
+      logData.error_message = errorMessage;
+    }
+
+    // Log the webhook event
+    const { error: logError } = await supabase
+      .from("stripe_webhook_logs")
+      .insert(logData);
+    
+    if (logError) {
+      logStep("Failed to insert webhook log", { error: logError.message });
     }
 
     return new Response(JSON.stringify({ received: true }), {
@@ -92,6 +155,21 @@ serve(async (req) => {
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
     logStep("Webhook handler error", { error: errorMessage });
+    
+    // Try to log the error even if we can't process the event
+    try {
+      await supabase
+        .from("stripe_webhook_logs")
+        .insert({
+          event_id: `error-${Date.now()}`,
+          event_type: "unknown",
+          status: "error",
+          error_message: errorMessage,
+        });
+    } catch {
+      // Ignore logging errors
+    }
+    
     return new Response(JSON.stringify({ error: errorMessage }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
