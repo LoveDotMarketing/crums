@@ -14,7 +14,8 @@ import {
   AlertCircle,
   Loader2,
   Receipt,
-  Code
+  Code,
+  FileText
 } from "lucide-react";
 import {
   Table,
@@ -39,6 +40,7 @@ import {
 } from "@/components/ui/tabs";
 import { format, subDays, differenceInDays } from "date-fns";
 import { DevelopmentTab } from "@/components/admin/DevelopmentTab";
+import { ContentTab } from "@/components/admin/ContentTab";
 
 interface UnpaidToll {
   id: string;
@@ -382,6 +384,10 @@ export default function Reports() {
                   <Code className="h-3.5 w-3.5" />
                   Development
                 </TabsTrigger>
+                <TabsTrigger value="content" className="flex items-center gap-1">
+                  <FileText className="h-3.5 w-3.5" />
+                  Content
+                </TabsTrigger>
               </TabsList>
 
               <TabsContent value="unpaid-tolls">
@@ -675,6 +681,10 @@ export default function Reports() {
 
               <TabsContent value="development">
                 <DevelopmentTab />
+              </TabsContent>
+
+              <TabsContent value="content">
+                <ContentTab />
               </TabsContent>
             </Tabs>
           </main>
