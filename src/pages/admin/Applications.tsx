@@ -28,7 +28,8 @@ import {
   Loader2 as LucideLoader2,
   CreditCard,
   Send,
-  Truck
+  Truck,
+  Trash2
 } from "lucide-react";
 import {
   Table,
@@ -165,6 +166,7 @@ export default function Applications() {
   const [selectedApplication, setSelectedApplication] = useState<Application | null>(null);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [statusDialogOpen, setStatusDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [assignTrailerDialogOpen, setAssignTrailerDialogOpen] = useState(false);
   const [selectedTrailerIds, setSelectedTrailerIds] = useState<string[]>([]);
   const [availableTrailers, setAvailableTrailers] = useState<AvailableTrailer[]>([]);
@@ -270,6 +272,34 @@ export default function Applications() {
       toast({
         title: "Update Failed",
         description: "Failed to update application status. Please try again.",
+        variant: "destructive"
+      });
+    }
+  });
+
+  const deleteApplicationMutation = useMutation({
+    mutationFn: async (applicationId: string) => {
+      const { error } = await supabase
+        .from('customer_applications')
+        .delete()
+        .eq('id', applicationId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['applications'] });
+      setDeleteDialogOpen(false);
+      setSelectedApplication(null);
+      toast({
+        title: "Application Deleted",
+        description: "The application has been permanently deleted."
+      });
+    },
+    onError: (error) => {
+      console.error('Delete error:', error);
+      toast({
+        title: "Delete Failed",
+        description: "Failed to delete application. Please try again.",
         variant: "destructive"
       });
     }
@@ -743,6 +773,18 @@ export default function Applications() {
                               {app.payment_setup_status === "completed" && (
                                 <Badge variant="outline" className="ml-1 text-xs">ACH ✓</Badge>
                               )}
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                  setSelectedApplication(app);
+                                  setDeleteDialogOpen(true);
+                                }}
+                                className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                                title="Delete application"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
                             </div>
                           </TableCell>
                         </TableRow>
@@ -1106,6 +1148,44 @@ export default function Applications() {
                 <>
                   <Truck className="mr-2 h-4 w-4" />
                   Assign {selectedTrailerIds.length} Trailer{selectedTrailerIds.length !== 1 ? 's' : ''}
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Application</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete the application for{" "}
+              <span className="font-semibold">
+                {selectedApplication?.profiles?.first_name} {selectedApplication?.profiles?.last_name}
+              </span>
+              ? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button 
+              variant="destructive" 
+              onClick={() => selectedApplication && deleteApplicationMutation.mutate(selectedApplication.id)}
+              disabled={deleteApplicationMutation.isPending}
+            >
+              {deleteApplicationMutation.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                <>
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Delete Application
                 </>
               )}
             </Button>
