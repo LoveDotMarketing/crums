@@ -88,7 +88,6 @@ const menuGroups: MenuGroup[] = [
     icon: DollarSign,
     items: [
       { title: "Billing", url: "/dashboard/admin/billing", icon: DollarSign },
-      { title: "Reports", url: "/dashboard/admin/reports", icon: Receipt },
     ]
   },
   {
@@ -222,6 +221,20 @@ export function AdminSidebar() {
                   </SidebarMenuItem>
                 </Collapsible>
               ))}
+
+              {/* Reports - standalone item at bottom */}
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <NavLink 
+                    to="/dashboard/admin/reports"
+                    className="flex items-center gap-3"
+                    activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+                  >
+                    <Receipt className="h-4 w-4" />
+                    <span>Reports</span>
+                  </NavLink>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
