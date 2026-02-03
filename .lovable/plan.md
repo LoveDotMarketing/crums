@@ -1,202 +1,187 @@
 
-# Twilio Call Logs Integration - Implementation Plan
+# Development Changelog with Activity Overview Chart
 
-## Overview
-This plan integrates Twilio call logs into the CRUMS Leasing admin dashboard, allowing administrators to view, search, and analyze incoming/outgoing phone calls. This provides visibility into customer communications and helps track lead engagement.
+## Corrected Timeline
+
+**Important Clarification**: This Lovable project was created on **November 18, 2025** (based on first database migration). The project is approximately **2.5 months old**.
+
+The news articles with dates from July 2024 onwards are historical business events that were documented in the content registry, not when pages were built in this project.
+
+### Actual Project Timeline
+
+| Month | Development Activity |
+|-------|---------------------|
+| **November 2025** | Project created, initial database tables, core structure, authentication |
+| **December 2025** | Tools launched, guides added, location pages, admin features |
+| **January 2026** | Major guide updates (8), Chamber news, Call Logs, Lead Sources, Outreach |
+| **February 2026** | Stripe Events logging, latest admin updates |
 
 ---
 
-## Architecture
+## What Gets Tracked
+
+### Front-Facing / SEO Content
+| Category | Source | Date Field | Current Count |
+|----------|--------|------------|---------------|
+| News Articles | `src/lib/news.ts` | `sortDate` | 15 articles |
+| Guides | `src/lib/guides.ts` | `lastModified` | 12 available |
+| Tools | `src/lib/tools.ts` | `lastModified` | 7 available |
+
+### Admin / Backend Features
+| Category | Source | Date Field |
+|----------|--------|------------|
+| Database Tables | Migration files | Filename timestamp (YYYYMMDD) |
+| Edge Functions | `supabase/functions/` | Directory tracking |
+| Admin Modules | `src/pages/admin/` | Historical log |
+
+---
+
+## Activity Chart Design
+
+A stacked area chart at the top showing development activity by category over time (November 2025 - present):
 
 ```text
-Frontend (Admin Dashboard)
-        │
-        ▼
-Edge Function (twilio-call-logs)
-        │
-        ▼
-Twilio REST API
++----------------------------------------------------------+
+|  Development Activity Overview                            |
+|  [All Time v]  [Category: All v]                         |
++----------------------------------------------------------+
+|  ^                                                        |
+|  |         ████                                           |
+|  |        █████████                                       |
+|  |       ██████████████              ██████              |
+|  |      █████████████████          ██████████            |
+|  +────────────────────────────────────────────────────>   |
+|       Nov'25    Dec'25    Jan'26    Feb'26               |
+|                                                           |
+|  ● News  ● Guides  ● Tools  ● Admin  ● Database          |
++----------------------------------------------------------+
 ```
 
-The integration will:
-1. Create a new Edge Function to securely proxy Twilio API requests
-2. Add a new "Call Logs" admin page with search, filtering, and stats
-3. Add navigation menu entry in the admin sidebar
+### Chart Features
+- Stacked AreaChart using recharts (already installed)
+- Color-coded by category
+- X-axis: Months (Nov 2025 - Feb 2026)
+- Y-axis: Number of items added/updated
+- Interactive tooltip with breakdown per month
 
 ---
 
-## Required Secrets
+## Summary Cards Row
 
-Before implementation, you'll need to provide two Twilio credentials:
-
-| Secret Name | Description |
-|-------------|-------------|
-| `TWILIO_ACCOUNT_SID` | Your Twilio Account SID (starts with AC...) |
-| `TWILIO_AUTH_TOKEN` | Your Twilio Auth Token |
-
-These can be found in your Twilio Console dashboard.
+| Total Items | Content Added | Database Tables | Edge Functions |
+|-------------|---------------|-----------------|----------------|
+| 35+         | 22 pages      | 20+ tables      | 15+ functions  |
 
 ---
 
-## Technical Implementation
+## Historical Data by Month (Accurate)
 
-### 1. Edge Function: `twilio-call-logs`
+### November 2025 (Project Creation)
+**Week of Nov 18:**
+- Database tables created: profiles, user_roles, companies, trailers, tolls, support_tickets, subscriptions, payments, and more
+- Initial admin dashboard structure
+- Customer and mechanic portals
+- Authentication system
 
-**File:** `supabase/functions/twilio-call-logs/index.ts`
+### December 2025
+**Content:**
+- Tools: Cost Per Mile, Lease vs Buy, IFTA, Fuel, Profit, Tax Deductions, Per Diem (7 tools)
+- Guides: Choosing Trailer, Why Leasing Dry Van, Trailer Specifications (3 guides)
 
-Features:
-- Admin-only authentication (JWT + role check)
-- Fetches call logs from Twilio REST API with pagination
-- Supports filtering by date range, direction, and status
-- Returns formatted call data including:
-  - Call SID
-  - From/To phone numbers
-  - Direction (inbound/outbound)
-  - Status (completed, busy, no-answer, failed)
-  - Duration (seconds)
-  - Start/End time
-  - Price
+**Admin Features:**
+- Billing system
+- Fleet management
+- Customer management
 
-API Endpoint structure:
-```
-GET /twilio-call-logs
-Query params:
-  - startDate (optional): Filter calls after this date
-  - endDate (optional): Filter calls before this date
-  - direction (optional): "inbound" | "outbound" | "all"
-  - limit (optional): Number of records (default 50)
-```
+### January 2026
+**Content (January 20-29):**
+- News: Chamber of Commerce article (Jan 29)
+- Guides updated (Jan 29): CDL License, Load Boards, Finding First Loads, Lease First Trailer, Owner-Operator Basics, Maintenance Schedules, Tire Care, Winter Driving
+- Pre-Trip Inspection guide (Jan 20)
 
-### 2. Config Update
+**Admin Features:**
+- Call Logs (Twilio integration)
+- Lead Sources tracking
+- Outreach Automation
+- DOT Inspections module
 
-**File:** `supabase/config.toml`
+**Database additions (Jan 6-23):**
+- lead_sources table
+- outreach tables
+- subscription_audit_log
+- cron_history
 
-Add configuration for the new function:
-```toml
-[functions.twilio-call-logs]
-verify_jwt = false  # Auth handled in code
-```
-
-### 3. Admin Page: Call Logs
-
-**File:** `src/pages/admin/CallLogs.tsx`
-
-Features:
-- **Stats Cards:**
-  - Today's Calls
-  - Inbound vs Outbound ratio
-  - Total Duration
-  - Missed Calls (busy/no-answer/failed)
-
-- **Filters:**
-  - Date range picker (7d, 30d, 90d, custom)
-  - Direction filter (All, Inbound, Outbound)
-  - Status filter (All, Completed, Missed, Failed)
-
-- **Call Log Table:**
-  - Date/Time
-  - From (formatted phone number)
-  - To (formatted phone number)
-  - Direction (badge: inbound/outbound)
-  - Duration (formatted as Xm Ys)
-  - Status (badge with color coding)
-  - Cost (if available)
-
-- **Actions:**
-  - Refresh button
-  - Export to CSV
-
-UI Pattern: Follows existing admin page patterns (Logs.tsx, Reports.tsx) with:
-- SidebarProvider wrapper
-- AdminSidebar component
-- Tabs for different views if needed
-- useQuery for data fetching
-
-### 4. Sidebar Update
-
-**File:** `src/components/admin/AdminSidebar.tsx`
-
-Add new menu item:
-```tsx
-{ title: "Call Logs", url: "/dashboard/admin/call-logs", icon: Phone }
-```
-
-Position: After "Outreach" (communication-related grouping)
-
-### 5. Route Registration
-
-**File:** `src/App.tsx`
-
-Add lazy import and route:
-```tsx
-const CallLogs = lazy(() => import("./pages/admin/CallLogs"));
-
-<Route path="/dashboard/admin/call-logs" element={
-  <ProtectedRoute requiredRole="admin">
-    <CallLogs />
-  </ProtectedRoute>
-} />
-```
+### February 2026 (Current)
+**Admin Features (Feb 2-3):**
+- Stripe Events logging tab
+- stripe_webhook_logs table
+- Payment failure handling improvements
 
 ---
 
-## Data Flow
+## Implementation Details
 
-1. Admin navigates to Call Logs page
-2. Frontend calls edge function with auth token
-3. Edge function validates admin role
-4. Edge function calls Twilio API: `GET /2010-04-01/Accounts/{AccountSid}/Calls.json`
-5. Response is parsed and returned to frontend
-6. UI displays calls with filtering/sorting
+### Database Table: `development_changelog`
 
----
+| Column | Type | Description |
+|--------|------|-------------|
+| id | uuid | Primary key |
+| category | text | news, guide, tool, admin_feature, edge_function, database_table |
+| item_name | text | Display title |
+| item_slug | text | URL slug or identifier |
+| item_url | text | Full URL path (nullable for non-public items) |
+| action | text | added, updated, removed |
+| date_recorded | date | When change occurred |
+| month_year | text | "2026-01" for filtering |
+| notes | text | Optional description |
+| created_at | timestamptz | Record creation time |
 
-## Twilio API Integration Details
+### Edge Function: `sync-development-changelog`
 
-The edge function will use Basic Auth with Twilio:
-```typescript
-const auth = btoa(`${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}`);
-const response = await fetch(
-  `https://api.twilio.com/2010-04-01/Accounts/${TWILIO_ACCOUNT_SID}/Calls.json?PageSize=50`,
-  {
-    headers: {
-      "Authorization": `Basic ${auth}`,
-      "Content-Type": "application/json"
-    }
-  }
+Weekly sync that:
+1. Reads content registries (news.ts, guides.ts, tools.ts)
+2. Compares against existing changelog entries
+3. Detects new/updated/removed items
+4. Inserts changelog entries
+
+### Weekly Automation
+
+```sql
+SELECT cron.schedule(
+  'sync-development-changelog-weekly',
+  '0 0 * * 0', -- Every Sunday at midnight
+  $$ SELECT net.http_post(...) $$
 );
 ```
 
-Response fields we'll use:
-- `sid` - Unique call identifier
-- `from` / `from_formatted` - Caller phone number
-- `to` / `to_formatted` - Recipient phone number
-- `direction` - "inbound" or "outbound-api" or "outbound-dial"
-- `status` - "completed", "busy", "no-answer", "failed", "canceled"
-- `duration` - Call duration in seconds
-- `start_time` / `end_time` - Timestamps
-- `price` - Cost in USD (if available)
-
 ---
 
-## UI Design
+## UI Components for Reports.tsx
 
-### Stats Row (4 cards)
-| Today's Calls | Inbound | Outbound | Missed |
-|--------------|---------|----------|--------|
-| 23           | 15      | 8        | 3      |
+### New "Development" Tab
 
-### Filters Bar
-- Date Range: [Last 7 days ▾]
-- Direction: [All ▾]
-- Status: [All ▾]
-- [Refresh] [Export CSV]
+1. **Activity Chart Section**
+   - Time period selector (All Time, Last 3 months)
+   - Stacked AreaChart with category gradients
+   - Legend with category colors
 
-### Calls Table
-| Date & Time | From | To | Direction | Duration | Status |
-|-------------|------|-----|-----------|----------|--------|
-| Feb 2, 2:30 PM | (210) 555-1234 | (210) 555-9876 | Inbound | 4m 23s | Completed |
-| Feb 2, 1:15 PM | (210) 555-9876 | (512) 555-4321 | Outbound | 1m 02s | Completed |
+2. **Summary Cards Row**
+   - Total Items
+   - Content Published
+   - Features Built
+   - Database Changes
+
+3. **Filters**
+   - Month/Year dropdown (defaults to current month)
+   - Category filter (All, News, Guides, Tools, Admin, Database)
+
+4. **Changelog Table**
+   - Date column
+   - Category badge (color-coded)
+   - Item name (clickable for public URLs)
+   - Action badge (green=added, blue=updated, red=removed)
+
+5. **Export CSV** button
 
 ---
 
@@ -204,38 +189,45 @@ Response fields we'll use:
 
 | File | Action | Description |
 |------|--------|-------------|
-| `supabase/functions/twilio-call-logs/index.ts` | Create | Edge function for Twilio API |
-| `supabase/config.toml` | Modify | Add function config |
-| `src/pages/admin/CallLogs.tsx` | Create | Admin page component |
-| `src/components/admin/AdminSidebar.tsx` | Modify | Add menu item |
-| `src/App.tsx` | Modify | Add route |
+| Database migration | Create | `development_changelog` table with RLS |
+| `supabase/functions/sync-development-changelog/index.ts` | Create | Edge function to sync registries |
+| `src/pages/admin/Reports.tsx` | Modify | Add "Development" tab with chart and table |
+| Cron job | Create | Weekly schedule trigger |
 
 ---
 
-## Security Considerations
+## Data Flow
 
-1. **Admin-only access**: Edge function verifies JWT and admin role
-2. **Secrets stored securely**: Twilio credentials in Supabase secrets
-3. **No client-side exposure**: Twilio credentials never sent to browser
-4. **Rate limiting**: Twilio API has built-in rate limits
+```text
+Content Registries (news.ts, guides.ts, tools.ts)
+                |
+                v
+    Weekly Cron Job (Sunday midnight)
+                |
+                v
+    sync-development-changelog Edge Function
+                |
+                +-> Compare with existing entries
+                |
+                v
+    development_changelog Database Table
+                |
+                v
+    Reports.tsx -> "Development" Tab
+                |
+                +-> Activity Chart (visual overview)
+                +-> Summary Cards (counts)
+                +-> Changelog Table (details)
+```
 
 ---
 
-## Future Enhancements (Not in scope)
+## Seeding Historical Data
 
-- Click-to-call functionality
-- Call recordings playback (if enabled in Twilio)
-- Webhook for real-time call notifications
-- Link calls to customer records
-- Call analytics/reporting charts
+The seed will include entries from:
+- **November 2025**: Core database tables (parsed from migration filenames)
+- **December 2025**: Tools and guides with lastModified dates
+- **January 2026**: Guide updates, news, admin features
+- **February 2026**: Latest changes
 
----
-
-## Implementation Steps
-
-1. Request Twilio credentials (TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
-2. Create edge function with Twilio API integration
-3. Create CallLogs admin page
-4. Add sidebar navigation
-5. Register route in App.tsx
-6. Test end-to-end
+This gives an accurate 2.5-month development history rather than incorrectly starting from July 2024.
