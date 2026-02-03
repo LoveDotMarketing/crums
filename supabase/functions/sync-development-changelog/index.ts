@@ -67,6 +67,24 @@ const tools: ContentItem[] = [
   { slug: "per-diem-calculator", title: "Truck Driver Per Diem Calculator", lastModified: "2025-12-27", available: true },
 ];
 
+// Admin features registry - tracks admin modules and features
+const adminFeatures: ContentItem[] = [
+  { slug: "dashboard", title: "Admin Dashboard", lastModified: "2025-11-18", available: true },
+  { slug: "customers", title: "Customer Management", lastModified: "2025-11-20", available: true },
+  { slug: "fleet", title: "Fleet Management", lastModified: "2025-11-22", available: true },
+  { slug: "billing", title: "Billing System", lastModified: "2025-12-01", available: true },
+  { slug: "applications", title: "Application Review", lastModified: "2025-12-05", available: true },
+  { slug: "tolls", title: "Toll Management", lastModified: "2025-12-10", available: true },
+  { slug: "support", title: "Support Tickets", lastModified: "2025-12-15", available: true },
+  { slug: "reports", title: "Reports & Analytics", lastModified: "2025-12-20", available: true },
+  { slug: "call-logs", title: "Call Logs (Twilio)", lastModified: "2026-01-10", available: true },
+  { slug: "lead-sources", title: "Lead Sources Tracking", lastModified: "2026-01-15", available: true },
+  { slug: "outreach", title: "Outreach Automation", lastModified: "2026-01-18", available: true },
+  { slug: "dot-inspections", title: "DOT Inspections", lastModified: "2026-01-20", available: true },
+  { slug: "stripe-events", title: "Stripe Events Logging", lastModified: "2026-02-02", available: true },
+  { slug: "development-tab", title: "Development Activity Tab", lastModified: "2026-02-03", available: true },
+];
+
 function getMonthYear(dateStr: string): string {
   return dateStr.substring(0, 7); // "2026-01-29" -> "2026-01"
 }
@@ -151,6 +169,23 @@ Deno.serve(async (req) => {
       }
     }
 
+    // Process admin features
+    for (const feature of adminFeatures.filter(f => f.available !== false)) {
+      const key = `admin_feature:${feature.slug}`;
+      if (!existingMap.has(key)) {
+        newEntries.push({
+          category: "admin_feature",
+          item_name: feature.title,
+          item_slug: feature.slug,
+          item_url: `/dashboard/admin/${feature.slug === "dashboard" ? "" : feature.slug.replace("-tab", "")}`,
+          action: "added",
+          date_recorded: feature.lastModified,
+          month_year: getMonthYear(feature.lastModified),
+          notes: null,
+        });
+      }
+    }
+
     // Insert new entries if any
     let insertedCount = 0;
     if (newEntries.length > 0) {
@@ -175,6 +210,7 @@ Deno.serve(async (req) => {
             news: newEntries.filter(e => e.category === "news").length,
             guides: newEntries.filter(e => e.category === "guide").length,
             tools: newEntries.filter(e => e.category === "tool").length,
+            admin_features: newEntries.filter(e => e.category === "admin_feature").length,
           },
         },
       }),
