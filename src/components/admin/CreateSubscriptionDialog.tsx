@@ -1,9 +1,13 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
 import {
   Dialog,
   DialogContent,
@@ -29,7 +33,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Truck, RefreshCw, DollarSign, Tag } from "lucide-react";
+import { Plus, Truck, RefreshCw, DollarSign, Tag, CalendarIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -80,6 +84,7 @@ export function CreateSubscriptionDialog({ onSuccess }: CreateSubscriptionDialog
   const [depositAmount, setDepositAmount] = useState<number>(1000); // Standard $1,000 deposit requirement
   const [selectedTrailers, setSelectedTrailers] = useState<SelectedTrailer[]>([]);
   const [selectedDiscountId, setSelectedDiscountId] = useState<string>("");
+  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
 
   // Fetch customers without active subscriptions
   const { data: customers, isLoading: loadingCustomers } = useQuery({
@@ -157,7 +162,8 @@ export function CreateSubscriptionDialog({ onSuccess }: CreateSubscriptionDialog
           customRates: selectedTrailers.reduce((acc, t) => {
             acc[t.id] = t.customRate;
             return acc;
-          }, {} as Record<string, number>)
+          }, {} as Record<string, number>),
+          endDate: endDate ? format(endDate, "yyyy-MM-dd") : undefined
         }
       });
 
@@ -188,6 +194,7 @@ export function CreateSubscriptionDialog({ onSuccess }: CreateSubscriptionDialog
     setDepositAmount(1000); // Reset to standard $1,000 deposit
     setSelectedTrailers([]);
     setSelectedDiscountId("");
+    setEndDate(undefined);
   };
 
   // Get type-based default rental rate
@@ -313,6 +320,49 @@ export function CreateSubscriptionDialog({ onSuccess }: CreateSubscriptionDialog
               />
               <p className="text-xs text-muted-foreground">Standard deposit is $1,000</p>
             </div>
+          </div>
+
+          {/* End Date */}
+          <div className="space-y-2">
+            <Label>Lease End Date (Optional)</Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={cn(
+                    "w-full justify-start text-left font-normal",
+                    !endDate && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {endDate ? format(endDate, "PPP") : "No end date (ongoing)"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={endDate}
+                  onSelect={setEndDate}
+                  disabled={(date) => date < new Date()}
+                  initialFocus
+                  className="p-3 pointer-events-auto"
+                />
+              </PopoverContent>
+            </Popover>
+            {endDate && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="text-xs h-auto p-0 text-muted-foreground hover:text-foreground"
+                onClick={() => setEndDate(undefined)}
+              >
+                Clear end date
+              </Button>
+            )}
+            <p className="text-xs text-muted-foreground">
+              Leave empty for an open-ended lease. Set a date for fixed-term agreements.
+            </p>
           </div>
 
           {/* Discount Selection */}
