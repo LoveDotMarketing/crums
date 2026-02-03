@@ -24,7 +24,7 @@ export const tools: Tool[] = [
   {
     slug: "cost-per-mile",
     title: "Trucking Cost Per Mile Calculator",
-    description: "Free trucking CPM calculator for owner-operators. Calculate your true operating cost per mile including fuel, maintenance, insurance, and more.",
+    description: "Free trucking CPM calculator for owner-operators. Calculate your operating cost per mile including fuel, maintenance, and insurance.",
     icon: Calculator,
     available: true,
     lastModified: "2025-12-26",

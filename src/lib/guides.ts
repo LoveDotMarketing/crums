@@ -101,7 +101,7 @@ export const guides: Guide[] = [
   },
   {
     slug: "why-leasing-a-dry-van-trailer-is-a-smart-business-decision",
-    title: "Why Leasing a Dry Van Trailer is a Smart Business Decision",
+    title: "Why Leasing a Dry Van Trailer is Smart for Business",
     description: "Discover the financial and operational advantages of leasing dry van trailers versus buying for your trucking business.",
     icon: Wallet,
     available: true,
@@ -121,8 +121,8 @@ export const guides: Guide[] = [
   },
   {
     slug: "maintenance-schedules",
-    title: "Trailer Maintenance Schedules: Keep Your Equipment Road-Ready",
-    description: "Complete maintenance schedule guide for dry van and flatbed trailers. Daily, weekly, monthly, and annual inspection checklists.",
+    title: "Trailer Maintenance Schedules for Road-Ready Equipment",
+    description: "Complete maintenance schedule guide for dry van and flatbed trailers. Daily, weekly, monthly, and annual checklists.",
     icon: ClipboardCheck,
     available: true,
     lastModified: "2026-01-29",

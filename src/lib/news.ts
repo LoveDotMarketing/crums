@@ -18,8 +18,8 @@ export interface NewsArticle {
 export const newsArticles: NewsArticle[] = [
   {
     slug: "crums-leasing-joins-greater-san-antonio-chamber-of-commerce",
-    title: "CRUMS Leasing Joins The Greater San Antonio Chamber of Commerce",
-    description: "CRUMS Leasing proudly announces its membership in The Greater San Antonio Chamber of Commerce, reinforcing our commitment to the local business community and supporting economic growth in the San Antonio region.",
+    title: "CRUMS Leasing Joins San Antonio Chamber of Commerce",
+    description: "CRUMS Leasing announces membership in The Greater San Antonio Chamber of Commerce, reinforcing our commitment to local business and economic growth.",
     date: "January 29, 2026",
     sortDate: "2026-01-29",
     externalLinks: [
@@ -34,7 +34,7 @@ export const newsArticles: NewsArticle[] = [
   {
     slug: "mats-2026-crums-leasing-booth-38024",
     title: "CRUMS Leasing Returns to Mid-America Trucking Show 2026",
-    description: "CRUMS Leasing exhibits at MATS 2026 in Louisville, KY at Booth #38024, showcasing trailer leasing services, fleet innovations, and networking with trucking industry professionals.",
+    description: "CRUMS Leasing exhibits at MATS 2026 in Louisville, KY at Booth #38024, showcasing trailer leasing services and networking with industry pros.",
     date: "March 26–28, 2026",
     sortDate: "2026-03-26",
     externalLinks: [
@@ -53,7 +53,7 @@ export const newsArticles: NewsArticle[] = [
   {
     slug: "family-first-core-values-reaffirmation",
     title: "CRUMS Leasing Reaffirms Core Values: Family First",
-    description: "Instagram post reinforces the company's foundation on family values from Eric Bledsoe's mother, highlighting hassle-free rentals and customer support as operations stabilize.",
+    description: "Instagram post reinforces the company's family values foundation, highlighting hassle-free rentals and customer support as operations stabilize.",
     date: "September 9, 2025",
     sortDate: "2025-09-09",
     externalLinks: ["https://www.instagram.com/p/DOZeCBREvLx/"],
@@ -65,7 +65,7 @@ export const newsArticles: NewsArticle[] = [
   {
     slug: "mats-2025-debut-louisville",
     title: "CRUMS Leasing Debuts at Mid-America Trucking Show 2025",
-    description: "CRUMS Leasing exhibits at North America's largest trucking event in Louisville, KY, showcasing its fleet, networking, and promoting driver-friendly leasing options.",
+    description: "CRUMS Leasing exhibits at North America's largest trucking event in Louisville, KY, showcasing its fleet and driver-friendly leasing options.",
     date: "March 27–29, 2025",
     sortDate: "2025-03-27",
     externalLinks: ["https://truckingshow.com/"],
@@ -77,7 +77,7 @@ export const newsArticles: NewsArticle[] = [
   {
     slug: "major-launch-texas-expansion-march-2025",
     title: "CRUMS Leasing Announces Major Launch and Texas Expansion",
-    description: "Multiple press releases announce CRUMS Leasing's official market entry with GPS-equipped trailers in Texas hubs including Laredo, San Antonio, Houston, and Austin with flexible terms.",
+    description: "Press releases announce CRUMS Leasing's market entry with GPS-equipped trailers in Texas hubs: Laredo, San Antonio, Houston, and Austin.",
     date: "March 24, 2025",
     sortDate: "2025-03-24",
     externalLinks: [
@@ -109,7 +109,7 @@ export const newsArticles: NewsArticle[] = [
   {
     slug: "official-industry-entry-announcement",
     title: "CRUMS Leasing Makes Official Industry Entry Announcement",
-    description: "News article announces Eric Bledsoe's leap into trailer leasing with CRUMS, offering GPS-equipped 53' dry vans, inspired by family and aimed at empowering drivers.",
+    description: "News article announces Eric Bledsoe's leap into trailer leasing with GPS-equipped 53' dry vans, inspired by family values.",
     date: "February 13, 2025",
     sortDate: "2025-02-13",
     externalLinks: ["https://www.truckpartsandservice.com/trucks-trailers/trailers/article/15737375/nba-star-leaps-into-trailer-leasing-business"],
@@ -133,7 +133,7 @@ export const newsArticles: NewsArticle[] = [
   {
     slug: "new-year-launch-tease-texas-focus",
     title: "New Year Launch Tease and Texas Focus",
-    description: "Instagram reel celebrates the new year from the San Antonio/Bulverde headquarters, teasing promotions and reliable rentals for Texas carriers as part of initial market entry.",
+    description: "Instagram reel celebrates the new year from San Antonio headquarters, teasing promotions and reliable rentals for Texas carriers.",
     date: "January 1, 2025",
     sortDate: "2025-01-01",
     externalLinks: ["https://www.instagram.com/reel/DETJQYoSg92/"],
@@ -144,8 +144,8 @@ export const newsArticles: NewsArticle[] = [
   },
   {
     slug: "eric-bledsoe-shanghai-sharks-contract-extension",
-    title: "Eric Bledsoe Signs Contract Extension with Shanghai Sharks Amid Business Growth",
-    description: "Eric Bledsoe re-signs with the CBA's Shanghai Sharks, showcasing his ability to balance pro basketball overseas with scaling CRUMS Leasing in the U.S.",
+    title: "Eric Bledsoe Re-Signs with Shanghai Sharks",
+    description: "Eric Bledsoe re-signs with the CBA's Shanghai Sharks, balancing pro basketball overseas with scaling CRUMS Leasing in the U.S.",
     date: "November 23, 2024",
     sortDate: "2024-11-23",
     externalLinks: ["https://www.nationofblue.com/eric-bledsoe-reportedly-re-signs-with-the-shanghai-sharks/"],
@@ -168,8 +168,8 @@ export const newsArticles: NewsArticle[] = [
   },
   {
     slug: "founder-spotlight-public-introduction",
-    title: "Founder Spotlight: Public Introduction of CRUMS Leasing Vision",
-    description: "Instagram post introduces Eric Bledsoe as founder, detailing his NBA transition to entrepreneurship and the company's mission for affordable, reliable trailer leasing inspired by his mother.",
+    title: "Founder Spotlight: Eric Bledsoe Introduces CRUMS Leasing",
+    description: "Instagram post introduces Eric Bledsoe as founder, detailing his NBA transition to entrepreneurship and the company's mission.",
     date: "November 1, 2024",
     sortDate: "2024-11-01",
     externalLinks: ["https://www.instagram.com/p/DB1_Ew0zP0K/"],
@@ -181,7 +181,7 @@ export const newsArticles: NewsArticle[] = [
   {
     slug: "promotional-debut-meet-greet-basketball-tournament",
     title: "Promotional Debut: Meet & Greet at Basketball Tournament",
-    description: "Eric Bledsoe hosts a meet-and-greet at a basketball tournament to promote CRUMS Leasing, blending his sports background with business networking in the trucking space.",
+    description: "Eric Bledsoe hosts a meet-and-greet at a basketball tournament to promote CRUMS Leasing, blending sports and business networking.",
     date: "July 19, 2024",
     sortDate: "2024-07-19",
     externalLinks: ["https://x.com/thetournament/status/1814413634615030091"],
@@ -193,7 +193,7 @@ export const newsArticles: NewsArticle[] = [
   {
     slug: "first-public-tease-fleet-preview",
     title: "First Public Tease: Fleet Preview with \"CRUMS\"",
-    description: "Eric Bledsoe shares a LinkedIn photo of his mother with a 2024 Great Dane trailer, hinting at the upcoming launch and emphasizing family roots in the trucking business.",
+    description: "Eric Bledsoe shares a LinkedIn photo of his mother with a 2024 Great Dane trailer, hinting at the launch and family roots.",
     date: "July 2, 2024",
     sortDate: "2024-07-02",
     externalLinks: ["https://www.linkedin.com/posts/eric-bledsoe-6083336a_crums-with-one-of-the-2024-great-danes-crums-activity-7213884559686295552-JBxY"],
@@ -205,7 +205,7 @@ export const newsArticles: NewsArticle[] = [
   {
     slug: "conception-early-planning",
     title: "CRUMS Leasing: Conception and Early Planning",
-    description: "Eric Bledsoe begins developing the idea for CRUMS Leasing as his first major entrepreneurial venture post-NBA, naming it after his mother \"CRUMS\" to honor family values and support for carriers.",
+    description: "Eric Bledsoe develops the idea for CRUMS Leasing post-NBA, naming it after his mother to honor family values and carriers.",
     date: "Mid-2024",
     sortDate: "2024-06-01",
     externalLinks: [],
