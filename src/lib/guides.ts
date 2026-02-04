@@ -202,10 +202,10 @@ export const guides: Guide[] = [
   {
     slug: "breakdown-safety",
     title: "How to Handle a Breakdown Safely",
-    description: "Step-by-step on what to do when stranded — who to call, what to check, and how CRUMS Leasing supports carriers through it.",
+    description: "Step-by-step emergency guide for truck breakdowns. Learn safety protocols, who to call first, and how CRUMS Leasing supports carriers through roadside emergencies.",
     icon: AlertTriangle,
-    available: false,
-    lastModified: "2025-12-04",
+    available: true,
+    lastModified: "2026-02-04",
     priority: 0.8,
     changefreq: "monthly"
   },
