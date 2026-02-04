@@ -1561,6 +1561,53 @@ export type Database = {
           },
         ]
       }
+      scheduled_content: {
+        Row: {
+          content_type: string
+          created_at: string
+          created_by: string | null
+          id: string
+          published_at: string | null
+          scheduled_date: string
+          slug: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          content_type: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          published_at?: string | null
+          scheduled_date: string
+          slug: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          content_type?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          published_at?: string | null
+          scheduled_date?: string
+          slug?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scheduled_content_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       stripe_webhook_logs: {
         Row: {
           amount: number | null
