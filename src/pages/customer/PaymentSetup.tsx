@@ -192,7 +192,6 @@ export default function PaymentSetup() {
     );
   }
 
-  const isApproved = paymentStatus?.applicationStatus === "approved";
   const hasPaymentMethod = paymentStatus?.hasPaymentMethod;
 
   return (
@@ -208,17 +207,6 @@ export default function PaymentSetup() {
           </p>
         </div>
 
-        {/* Application Required Alert */}
-        {!isApproved && (
-          <Alert variant="default" className="mb-6">
-            <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Application Required</AlertTitle>
-            <AlertDescription>
-              Your application must be approved before you can set up payment. 
-              Please complete your application first.
-            </AlertDescription>
-          </Alert>
-        )}
 
         {/* Current Payment Method - Already Connected */}
         {hasPaymentMethod && paymentStatus?.paymentMethod && (
@@ -455,7 +443,7 @@ export default function PaymentSetup() {
                   size="lg" 
                   className="w-full"
                   onClick={handleSetupPayment}
-                  disabled={!isApproved || isSettingUp}
+                  disabled={isSettingUp}
                 >
                   {isSettingUp ? (
                     <>
@@ -469,12 +457,6 @@ export default function PaymentSetup() {
                     </>
                   )}
                 </Button>
-
-                {!isApproved && (
-                  <p className="text-sm text-center text-muted-foreground mt-3">
-                    Button disabled until your application is approved
-                  </p>
-                )}
 
                 <div className="flex items-center justify-center gap-2 mt-4 text-sm text-muted-foreground">
                   <ShieldCheck className="h-4 w-4" />
