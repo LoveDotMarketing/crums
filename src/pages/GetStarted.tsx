@@ -1046,7 +1046,7 @@ export default function GetStarted() {
                     </div>
                   </div>
 
-                  <div className="flex items-start space-x-3 p-4 border rounded-lg">
+                  <div className="flex items-start space-x-3 p-4 border rounded-lg bg-muted/30">
                     <Checkbox 
                       id="terms" 
                       checked={acceptedTerms}
@@ -1057,7 +1057,13 @@ export default function GetStarted() {
                       <Link to="/terms" className="text-primary hover:underline" target="_blank">Terms of Service</Link>
                       {" "}and{" "}
                       <Link to="/privacy" className="text-primary hover:underline" target="_blank">Privacy Policy</Link>
-                      . I understand that my application will be reviewed and I may be contacted for additional information.
+                      . I understand that:
+                      <ul className="mt-2 ml-4 space-y-1 text-muted-foreground list-disc">
+                        <li>My application will be reviewed and I may be contacted for additional information</li>
+                        <li>Upon approval, I will be required to sign a <strong>Trailer Leasing Agreement</strong> via DocuSign</li>
+                        <li>The lease agreement includes ACH authorization, payment terms, and policies for late fees and defaults</li>
+                        <li>I will need to link my bank account for ACH payments before trailer pickup</li>
+                      </ul>
                     </label>
                   </div>
 
