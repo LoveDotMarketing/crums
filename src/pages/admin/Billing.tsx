@@ -95,6 +95,7 @@ import { format } from "date-fns";
 import { CreateSubscriptionDialog } from "@/components/admin/CreateSubscriptionDialog";
 import { ManageTrailersDialog } from "@/components/admin/ManageTrailersDialog";
 import { EditSubscriptionDatesDialog } from "@/components/admin/EditSubscriptionDatesDialog";
+import { ReadyToActivateCard } from "@/components/admin/ReadyToActivateCard";
 
 type BillingCycle = "weekly" | "biweekly" | "monthly";
 type DiscountType = "percentage" | "fixed" | "multi_trailer" | "promo_code";
@@ -1108,6 +1109,11 @@ export default function Billing() {
                   </p>
                 </CardContent>
               </Card>
+            </div>
+
+            {/* Ready to Activate Section */}
+            <div className="mb-8">
+              <ReadyToActivateCard />
             </div>
 
             {/* Tabs */}

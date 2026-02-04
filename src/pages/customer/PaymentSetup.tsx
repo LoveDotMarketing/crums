@@ -305,6 +305,10 @@ export default function PaymentSetup() {
                     </Label>
                   </div>
                 </RadioGroup>
+                <p className="text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1.5">
+                  <AlertCircle className="h-3.5 w-3.5" />
+                  This selection is final and cannot be changed after setup. Choose carefully.
+                </p>
               </div>
 
               {/* How it Works */}
