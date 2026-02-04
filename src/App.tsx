@@ -62,6 +62,7 @@ const LoadBoardsGuide = lazy(() => import("./pages/resources/guides/LoadBoardsGu
 const FindingFirstLoads = lazy(() => import("./pages/resources/guides/FindingFirstLoads"));
 const LeaseFirstTrailer = lazy(() => import("./pages/resources/guides/LeaseFirstTrailer"));
 const OwnerOperatorBasics = lazy(() => import("./pages/resources/guides/OwnerOperatorBasics"));
+const BreakdownSafety = lazy(() => import("./pages/resources/guides/BreakdownSafety"));
 const WhyChooseCrums = lazy(() => import("./pages/WhyChooseCrums"));
 const EmergencyTrailerRental = lazy(() => import("./pages/EmergencyTrailerRental"));
 const VeteransMilitaryDiscount = lazy(() => import("./pages/VeteransMilitaryDiscount"));
@@ -465,6 +466,7 @@ const App = () => (
             <Route path="/resources/guides/finding-first-loads" element={<FindingFirstLoads />} />
             <Route path="/resources/guides/lease-first-trailer" element={<LeaseFirstTrailer />} />
             <Route path="/resources/guides/owner-operator-basics" element={<OwnerOperatorBasics />} />
+            <Route path="/resources/guides/breakdown-safety" element={<BreakdownSafety />} />
             <Route path="/referral-program" element={<ReferralProgram />} />
             <Route path="/partners" element={<Partners />} />
             <Route path="/news" element={<News />} />
