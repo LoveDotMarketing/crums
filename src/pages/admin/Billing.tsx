@@ -62,7 +62,9 @@ import {
   Bell,
   Zap,
   Pencil,
-  Webhook
+  Webhook,
+  KeyRound,
+  Warehouse
 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
@@ -98,6 +100,7 @@ import { EditSubscriptionDatesDialog } from "@/components/admin/EditSubscription
 import { ReadyToActivateCard } from "@/components/admin/ReadyToActivateCard";
 
 type BillingCycle = "weekly" | "biweekly" | "semimonthly" | "monthly";
+type SubscriptionType = "standard_lease" | "rent_for_storage" | "lease_to_own" | "repayment_plan";
 type DiscountType = "percentage" | "fixed" | "multi_trailer" | "promo_code";
 type PaymentStatus = "pending" | "processing" | "succeeded" | "failed" | "refunded";
 
@@ -114,6 +117,7 @@ interface CustomerSubscription {
   status: string;
   created_at: string;
   end_date: string | null;
+  subscription_type: SubscriptionType | null;
   customers?: {
     full_name: string;
     email: string;
@@ -544,7 +548,11 @@ export default function Billing() {
         .order("created_at", { ascending: false });
       
       if (error) throw error;
-      return data as CustomerSubscription[];
+      // Type assertion to handle the subscription_type field
+      return (data || []).map(sub => ({
+        ...sub,
+        subscription_type: sub.subscription_type as SubscriptionType | null
+      })) as CustomerSubscription[];
     }
   });
 
@@ -970,6 +978,17 @@ export default function Billing() {
     return labels[cycle];
   };
 
+  const getSubscriptionTypeLabel = (type: SubscriptionType | null) => {
+    if (!type) return { label: "Standard Lease", icon: null, variant: "outline" as const };
+    const config: Record<SubscriptionType, { label: string; icon: React.ReactNode; variant: "default" | "secondary" | "outline" | "destructive" }> = {
+      standard_lease: { label: "Standard Lease", icon: null, variant: "outline" },
+      rent_for_storage: { label: "Storage", icon: <Warehouse className="h-3 w-3 mr-1" />, variant: "secondary" },
+      lease_to_own: { label: "Lease to Own", icon: <KeyRound className="h-3 w-3 mr-1" />, variant: "default" },
+      repayment_plan: { label: "Repayment", icon: <CreditCard className="h-3 w-3 mr-1" />, variant: "destructive" },
+    };
+    return config[type];
+  };
+
   const getDiscountTypeIcon = (type: DiscountType) => {
     switch (type) {
       case "percentage": return <Percent className="h-4 w-4" />;
@@ -1173,6 +1192,7 @@ export default function Billing() {
                         <TableHeader>
                           <TableRow>
                             <TableHead>Customer</TableHead>
+                            <TableHead>Type</TableHead>
                             <TableHead>Contract Period</TableHead>
                             <TableHead>Billing Cycle</TableHead>
                             <TableHead>Next Billing</TableHead>
@@ -1196,7 +1216,7 @@ export default function Billing() {
                             
                             return (
                               <TableRow key={sub.id}>
-                                <TableCell>
+                              <TableCell>
                                   <div>
                                     <p className="font-medium">
                                       {sub.customers?.full_name || "Unknown"}
@@ -1205,6 +1225,17 @@ export default function Billing() {
                                       {sub.customers?.company_name || sub.customers?.email}
                                     </p>
                                   </div>
+                                </TableCell>
+                                <TableCell>
+                                  {(() => {
+                                    const typeConfig = getSubscriptionTypeLabel(sub.subscription_type);
+                                    return (
+                                      <Badge variant={typeConfig.variant} className="whitespace-nowrap">
+                                        {typeConfig.icon}
+                                        {typeConfig.label}
+                                      </Badge>
+                                    );
+                                  })()}
                                 </TableCell>
                                 <TableCell>
                                   <div className="text-sm">
