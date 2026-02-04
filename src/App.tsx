@@ -67,6 +67,10 @@ const RoadComfort = lazy(() => import("./pages/resources/guides/RoadComfort"));
 const Budgeting = lazy(() => import("./pages/resources/guides/Budgeting"));
 const TruckCooking = lazy(() => import("./pages/resources/guides/TruckCooking"));
 const WorkLifeBalance = lazy(() => import("./pages/resources/guides/WorkLifeBalance"));
+const MaximizeLease = lazy(() => import("./pages/resources/guides/MaximizeLease"));
+const FuelEfficiency = lazy(() => import("./pages/resources/guides/FuelEfficiency"));
+const TruckingCareer = lazy(() => import("./pages/resources/guides/TruckingCareer"));
+const MentalHealth = lazy(() => import("./pages/resources/guides/MentalHealth"));
 const WhyChooseCrums = lazy(() => import("./pages/WhyChooseCrums"));
 const EmergencyTrailerRental = lazy(() => import("./pages/EmergencyTrailerRental"));
 const VeteransMilitaryDiscount = lazy(() => import("./pages/VeteransMilitaryDiscount"));
@@ -484,6 +488,10 @@ const App = () => (
             <Route path="/resources/guides/budgeting" element={<Budgeting />} />
             <Route path="/resources/guides/truck-cooking" element={<TruckCooking />} />
             <Route path="/resources/guides/work-life-balance" element={<WorkLifeBalance />} />
+            <Route path="/resources/guides/maximize-lease" element={<MaximizeLease />} />
+            <Route path="/resources/guides/fuel-efficiency" element={<FuelEfficiency />} />
+            <Route path="/resources/guides/trucking-career" element={<TruckingCareer />} />
+            <Route path="/resources/guides/mental-health" element={<MentalHealth />} />
             <Route path="/referral-program" element={<ReferralProgram />} />
             <Route path="/partners" element={<Partners />} />
             <Route path="/news" element={<News />} />
