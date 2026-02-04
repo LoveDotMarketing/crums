@@ -12,6 +12,21 @@ const logStep = (step: string, details?: Record<string, unknown>) => {
   console.log(`[CREATE-SUBSCRIPTION] ${step}${detailsStr}`);
 };
 
+// Helper function to calculate next anchor date for billing cycle
+function calculateNextAnchorDate(anchorDay: number | null): number | undefined {
+  if (!anchorDay || (anchorDay !== 1 && anchorDay !== 15)) return undefined;
+  
+  const now = new Date();
+  const targetDate = new Date(now.getFullYear(), now.getMonth(), anchorDay);
+  
+  // If the target day has passed this month, use next month
+  if (targetDate <= now) {
+    targetDate.setMonth(targetDate.getMonth() + 1);
+  }
+  
+  return Math.floor(targetDate.getTime() / 1000);
+}
+
 interface SubscriptionRequest {
   customerId: string; // Our internal customer ID
   trailerIds: string[];
@@ -114,6 +129,24 @@ serve(async (req) => {
 
     if (custError || !customer) throw new Error("Customer not found");
     logStep("Customer found", { customerId, email: customer.email });
+
+    // Get customer's application to fetch billing anchor preference
+    const { data: customerApplication } = await supabaseClient
+      .from("customer_applications")
+      .select("billing_anchor_day, user_id")
+      .eq("user_id", (
+        // First we need to find the user_id from profile matching customer email
+        await supabaseClient
+          .from("profiles")
+          .select("id")
+          .eq("email", customer.email)
+          .maybeSingle()
+      ).data?.id || "")
+      .maybeSingle();
+    
+    logStep("Customer billing preference", { 
+      anchorDay: customerApplication?.billing_anchor_day 
+    });
 
     // Get trailers with rental rates
     const { data: trailers, error: trailerError } = await supabaseClient
@@ -234,24 +267,32 @@ serve(async (req) => {
       logStep("Created deposit price", { depositAmount, priceId: depositPrice.id });
     }
 
-    // Calculate trial end date (15 days from now) for delayed first rent payment
-    const trialEndDate = Math.floor(Date.now() / 1000) + (15 * 24 * 60 * 60);
-    logStep("Setting 15-day trial period for delayed first rent", { trialEndDate: new Date(trialEndDate * 1000).toISOString() });
+    // Calculate billing anchor date based on customer preference
+    const anchorDate = calculateNextAnchorDate(customerApplication?.billing_anchor_day);
 
     // Create the subscription with deposit as one-time charge on first invoice
-    // Trial period delays the first recurring charge by 15 days
     const subscriptionParams: Stripe.SubscriptionCreateParams = {
       customer: stripeCustomerId,
       items: subscriptionItems,
       payment_behavior: "default_incomplete",
       payment_settings: { save_default_payment_method: "on_subscription" },
       expand: ["latest_invoice.payment_intent"],
-      trial_end: trialEndDate, // First rent charged 15 days after deposit
       metadata: { 
         internal_customer_id: customerId,
         deposit_amount: depositAmount?.toString() || "0",
       },
     };
+
+    // Use billing_cycle_anchor if customer has preference, otherwise use trial period
+    if (anchorDate) {
+      subscriptionParams.billing_cycle_anchor = anchorDate;
+      logStep("Using billing cycle anchor", { anchorDate: new Date(anchorDate * 1000).toISOString() });
+    } else {
+      // Fallback to 15-day trial for delayed first rent payment
+      const trialEndDate = Math.floor(Date.now() / 1000) + (15 * 24 * 60 * 60);
+      subscriptionParams.trial_end = trialEndDate;
+      logStep("Using 15-day trial period (no anchor preference)", { trialEndDate: new Date(trialEndDate * 1000).toISOString() });
+    }
 
     // Add deposit as one-time invoice item on the first invoice
     if (depositInvoiceItem) {

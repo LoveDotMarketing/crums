@@ -205,6 +205,7 @@ export type Database = {
       customer_applications: {
         Row: {
           admin_notes: string | null
+          billing_anchor_day: number | null
           business_type: string | null
           company_address: string | null
           created_at: string
@@ -237,6 +238,7 @@ export type Database = {
         }
         Insert: {
           admin_notes?: string | null
+          billing_anchor_day?: number | null
           business_type?: string | null
           company_address?: string | null
           created_at?: string
@@ -269,6 +271,7 @@ export type Database = {
         }
         Update: {
           admin_notes?: string | null
+          billing_anchor_day?: number | null
           business_type?: string | null
           company_address?: string | null
           created_at?: string

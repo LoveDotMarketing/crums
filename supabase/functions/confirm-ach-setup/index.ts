@@ -42,8 +42,9 @@ serve(async (req) => {
     logStep("User authenticated", { userId: user.id, email: user.email });
 
     // Get request body
-    const { setupIntentId, paymentMethodId } = await req.json();
+    const { setupIntentId, paymentMethodId, billingAnchorDay } = await req.json();
     if (!setupIntentId) throw new Error("setupIntentId is required");
+    logStep("Received request", { setupIntentId, billingAnchorDay });
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
 
@@ -75,12 +76,13 @@ serve(async (req) => {
       throw new Error("Application not found");
     }
 
-    // Update the application with the payment method
+    // Update the application with the payment method and billing anchor preference
     const { error: updateError } = await supabaseClient
       .from("customer_applications")
       .update({
         stripe_payment_method_id: pmId as string,
         payment_setup_status: "completed",
+        billing_anchor_day: billingAnchorDay || null,
       })
       .eq("id", application.id);
 
@@ -89,9 +91,10 @@ serve(async (req) => {
       throw new Error("Failed to update application with payment method");
     }
 
-    logStep("Application updated with payment method", { 
+    logStep("Application updated with payment method and billing anchor", { 
       applicationId: application.id, 
-      paymentMethodId: pmId 
+      paymentMethodId: pmId,
+      billingAnchorDay: billingAnchorDay || null,
     });
 
     return new Response(
