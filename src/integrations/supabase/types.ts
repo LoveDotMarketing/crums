@@ -1676,7 +1676,9 @@ export type Database = {
           created_at: string
           end_date: string | null
           id: string
+          lease_to_own: boolean | null
           monthly_rate: number
+          ownership_transfer_date: string | null
           start_date: string
           status: string
           stripe_subscription_item_id: string | null
@@ -1688,7 +1690,9 @@ export type Database = {
           created_at?: string
           end_date?: string | null
           id?: string
+          lease_to_own?: boolean | null
           monthly_rate: number
+          ownership_transfer_date?: string | null
           start_date?: string
           status?: string
           stripe_subscription_item_id?: string | null
@@ -1700,7 +1704,9 @@ export type Database = {
           created_at?: string
           end_date?: string | null
           id?: string
+          lease_to_own?: boolean | null
           monthly_rate?: number
+          ownership_transfer_date?: string | null
           start_date?: string
           status?: string
           stripe_subscription_item_id?: string | null

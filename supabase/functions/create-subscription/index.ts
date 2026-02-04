@@ -34,6 +34,7 @@ interface SubscriptionRequest {
   depositAmount?: number;
   discountId?: string;
   customRates?: Record<string, number>; // trailerId -> custom rate override
+  leaseToOwnFlags?: Record<string, boolean>; // trailerId -> lease to own flag
   endDate?: string; // Optional end date for fixed-term leases (YYYY-MM-DD)
 }
 
@@ -74,7 +75,7 @@ serve(async (req) => {
     logStep("Admin verified", { adminId: userData.user.id });
 
     const body: SubscriptionRequest = await req.json();
-    const { customerId, trailerIds, billingCycle, depositAmount, discountId, customRates, endDate } = body;
+    const { customerId, trailerIds, billingCycle, depositAmount, discountId, customRates, leaseToOwnFlags, endDate } = body;
 
     if (!customerId || !trailerIds?.length || !billingCycle) {
       throw new Error("Missing required fields: customerId, trailerIds, billingCycle");
@@ -390,6 +391,10 @@ serve(async (req) => {
       const trailer = trailers[i];
       const stripeItem = subscription.items.data[i];
       const rate = customRates?.[trailer.id] ?? trailer.rental_rate ?? getDefaultRate(trailer.type);
+      const isLeaseToOwn = leaseToOwnFlags?.[trailer.id] ?? false;
+
+      // For lease-to-own, use the subscription end_date as ownership transfer date
+      const ownershipTransferDate = isLeaseToOwn && endDate ? endDate : null;
 
       await supabaseClient
         .from("subscription_items")
@@ -399,7 +404,15 @@ serve(async (req) => {
           monthly_rate: rate,
           stripe_subscription_item_id: stripeItem?.id || null,
           status: "active",
+          lease_to_own: isLeaseToOwn,
+          ownership_transfer_date: ownershipTransferDate,
         });
+
+      logStep("Created subscription item", { 
+        trailerId: trailer.id, 
+        leaseToOwn: isLeaseToOwn, 
+        ownershipTransferDate 
+      });
 
       // Update trailer to mark as rented
       await supabaseClient

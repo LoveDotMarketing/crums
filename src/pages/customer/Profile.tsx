@@ -11,7 +11,7 @@ import { CustomerNav } from "@/components/customer/CustomerNav";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
 import { toast } from "sonner";
-import { Loader2, Truck, FileText, Calendar } from "lucide-react";
+import { Loader2, Truck, FileText, Calendar, KeyRound } from "lucide-react";
 import { format } from "date-fns";
 
 interface TrailerInfo {
@@ -21,6 +21,20 @@ interface TrailerInfo {
   type: string;
   rental_rate: number | null;
   rental_frequency: string | null;
+}
+
+interface SubscriptionItemInfo {
+  id: string;
+  trailer_id: string;
+  monthly_rate: number;
+  lease_to_own: boolean | null;
+  ownership_transfer_date: string | null;
+  trailers: {
+    id: string;
+    vin: string;
+    trailer_number: string;
+    type: string;
+  } | null;
 }
 
 interface SubscriptionInfo {
@@ -104,6 +118,31 @@ export default function Profile() {
       return data as SubscriptionInfo | null;
     },
     enabled: !!customerRecord?.id,
+  });
+
+  // Fetch subscription items with lease-to-own info
+  const { data: subscriptionItems = [] } = useQuery({
+    queryKey: ['my-subscription-items', subscription?.id],
+    queryFn: async () => {
+      if (!subscription?.id) return [];
+      
+      const { data, error } = await supabase
+        .from('subscription_items')
+        .select(`
+          id,
+          trailer_id,
+          monthly_rate,
+          lease_to_own,
+          ownership_transfer_date,
+          trailers (id, vin, trailer_number, type)
+        `)
+        .eq('subscription_id', subscription.id)
+        .eq('status', 'active');
+      
+      if (error) throw error;
+      return (data || []) as SubscriptionItemInfo[];
+    },
+    enabled: !!subscription?.id,
   });
 
   useEffect(() => {
@@ -303,8 +342,64 @@ export default function Profile() {
                 </Card>
               )}
 
-              {/* My Trailers Section */}
-              {trailers.length > 0 && (
+              {/* My Trailers Section - Uses subscription items for lease-to-own info */}
+              {subscriptionItems.length > 0 ? (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Truck className="h-5 w-5" />
+                      My Trailers ({subscriptionItems.length})
+                    </CardTitle>
+                    <CardDescription>Trailers currently leased to you</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      {subscriptionItems.map((item) => (
+                        <div
+                          key={item.id}
+                          className={`flex items-center justify-between p-4 rounded-lg border ${
+                            item.lease_to_own 
+                              ? "bg-primary/5 border-primary/20" 
+                              : "bg-muted/50"
+                          }`}
+                        >
+                          <div className="flex flex-col">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="font-semibold text-lg">
+                                #{item.trailers?.trailer_number || "—"}
+                              </span>
+                              <Badge variant="outline">{item.trailers?.type || "—"}</Badge>
+                              {item.lease_to_own && (
+                                <Badge variant="default" className="bg-primary/90 flex items-center gap-1">
+                                  <KeyRound className="h-3 w-3" />
+                                  Lease to Own
+                                </Badge>
+                              )}
+                            </div>
+                            <span className="text-sm text-muted-foreground font-mono">
+                              VIN: {item.trailers?.vin || "—"}
+                            </span>
+                            {item.lease_to_own && item.ownership_transfer_date && (
+                              <span className="text-xs text-primary mt-1 flex items-center gap-1">
+                                <Calendar className="h-3 w-3" />
+                                Ownership Transfer: {format(new Date(item.ownership_transfer_date), "MMMM d, yyyy")}
+                              </span>
+                            )}
+                          </div>
+                          <div className="text-right">
+                            <span className="font-bold text-lg text-primary">
+                              ${item.monthly_rate.toLocaleString()}
+                            </span>
+                            <span className="text-sm text-muted-foreground ml-1">
+                              /month
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              ) : trailers.length > 0 ? (
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
@@ -344,7 +439,7 @@ export default function Profile() {
                     </div>
                   </CardContent>
                 </Card>
-              )}
+              ) : null}
 
               <Card>
                 <CardHeader>

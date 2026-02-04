@@ -62,6 +62,7 @@ interface SelectedTrailer {
   type: string;
   year: number | null;
   customRate: number;
+  leaseToOwn: boolean;
 }
 
 interface Discount {
@@ -199,6 +200,10 @@ export function CreateSubscriptionDialog({ onSuccess }: CreateSubscriptionDialog
             acc[t.id] = t.customRate;
             return acc;
           }, {} as Record<string, number>),
+          leaseToOwnFlags: selectedTrailers.reduce((acc, t) => {
+            acc[t.id] = t.leaseToOwn;
+            return acc;
+          }, {} as Record<string, boolean>),
           endDate: endDate ? format(endDate, "yyyy-MM-dd") : undefined
         }
       });
@@ -255,12 +260,19 @@ export function CreateSubscriptionDialog({ onSuccess }: CreateSubscriptionDialog
           vin: trailer.vin,
           type: trailer.type,
           year: trailer.year,
-          customRate: trailer.rental_rate || getDefaultRentalRate(trailer.type)
+          customRate: trailer.rental_rate || getDefaultRentalRate(trailer.type),
+          leaseToOwn: false
         }
       ]);
     } else {
       setSelectedTrailers(prev => prev.filter(t => t.id !== trailer.id));
     }
+  };
+
+  const handleLeaseToOwnToggle = (trailerId: string, checked: boolean) => {
+    setSelectedTrailers(prev =>
+      prev.map(t => t.id === trailerId ? { ...t, leaseToOwn: checked } : t)
+    );
   };
 
   const handleRateChange = (trailerId: string, rate: number) => {
@@ -477,6 +489,7 @@ export function CreateSubscriptionDialog({ onSuccess }: CreateSubscriptionDialog
                       <TableHead>Year</TableHead>
                       <TableHead>Default Rate</TableHead>
                       <TableHead>Custom Rate</TableHead>
+                      <TableHead className="text-center">Lease to Own</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -523,6 +536,16 @@ export function CreateSubscriptionDialog({ onSuccess }: CreateSubscriptionDialog
                                   onChange={(e) => handleRateChange(trailer.id, Number(e.target.value))}
                                 />
                               </div>
+                            ) : (
+                              <span className="text-muted-foreground">—</span>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-center">
+                            {isSelected ? (
+                              <Checkbox
+                                checked={selectedTrailer?.leaseToOwn || false}
+                                onCheckedChange={(checked) => handleLeaseToOwnToggle(trailer.id, !!checked)}
+                              />
                             ) : (
                               <span className="text-muted-foreground">—</span>
                             )}
