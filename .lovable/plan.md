@@ -1,181 +1,143 @@
 
-
-# Redesign ACH Payment Setup Page - "No Charges Until Trailer Assignment" First
+# Subscription Type Options Implementation Plan
 
 ## Overview
+Add four distinct subscription/lease type scenarios as selectable options in the subscription creation flow and display them on the subscription pages:
+1. **Lease to Own** (already implemented at trailer level)
+2. **Rent for Storage** (new)
+3. **Standard 12 Month Lease** (new)
+4. **Repayment Plan** (new - for failed payments recovery)
 
-Completely restructure the Payment Setup page to lead with the most important message: **linking your bank account does NOT charge you anything**. Billing only begins when we assign a trailer.
-
----
-
-## Page Structure (New Order)
-
-```text
-+--------------------------------------------------+
-|  HERO ALERT: NO CHARGES TODAY                    |
-|  "You're only linking for future billing.        |
-|   No charges until we assign your trailer."      |
-+--------------------------------------------------+
-|  WHAT YOU'RE DOING TODAY                         |
-|  Simple 3-point summary                          |
-+--------------------------------------------------+
-|  BILLING TIMELINE (Visual)                       |
-|  Shows when charges actually happen              |
-+--------------------------------------------------+
-|  PAYMENT DATE SELECTION                          |
-|  1st or 15th (existing)                          |
-+--------------------------------------------------+
-|  LINK BANK ACCOUNT BUTTON                        |
-+--------------------------------------------------+
-|  WHY ACH? (Collapsed/Secondary)                  |
-+--------------------------------------------------+
-|  EXPANDED FAQ                                    |
-+--------------------------------------------------+
-```
+## Current State Analysis
+- The system already has a `lease_to_own` boolean on the `subscription_items` table (trailer-level)
+- Customer subscriptions support billing cycles (weekly, biweekly, semimonthly, monthly)
+- The `CreateSubscriptionDialog` component handles subscription creation with trailer selection
+- The admin Billing page displays subscription details
 
 ---
 
-## Detailed Changes
+## Technical Implementation
 
-### 1. Hero Alert - "No Charges Today" (NEW - Top of Page)
+### 1. Database Schema Changes
 
-Add a prominent, reassuring alert as the FIRST thing customers see:
+Add a new column to the `customer_subscriptions` table to track the subscription type at the subscription level:
 
-**Design**: Full-width card with green/success styling and large icon
+```sql
+-- Add subscription_type enum
+CREATE TYPE subscription_type AS ENUM (
+  'standard_lease',
+  'rent_for_storage', 
+  'lease_to_own',
+  'repayment_plan'
+);
 
-**Content**:
+-- Add column to customer_subscriptions
+ALTER TABLE customer_subscriptions 
+ADD COLUMN subscription_type subscription_type DEFAULT 'standard_lease';
 ```
-🔒 You Won't Be Charged Today
 
-You're simply linking your bank account for future billing. 
-No money will be withdrawn until:
-• We assign a trailer to your account
-• You receive notification of your first charge
+**Note:** `lease_to_own` at the trailer level (in `subscription_items`) will be preserved for individual trailer tracking, while the subscription-level type provides the primary classification.
 
-This is just an authorization - not a payment.
-```
+### 2. Update CreateSubscriptionDialog Component
 
-**Styling**: Green border, CheckCircle icon, large text, prominent placement
+**File:** `src/components/admin/CreateSubscriptionDialog.tsx`
+
+Add a new section with checkboxes/radio buttons for subscription type selection:
+
+- Add state: `subscriptionType` (string) to track selected type
+- Add a new UI section before the trailer selection with four options:
+  - Standard 12 Month Lease (default)
+  - Rent for Storage
+  - Lease to Own
+  - Repayment Plan
+
+**Behavior by Type:**
+| Type | Auto End Date | Notes |
+|------|--------------|-------|
+| Standard 12 Month Lease | Sets end date to 12 months from start | Minimum lease term |
+| Rent for Storage | Optional end date | Flexible storage arrangement |
+| Lease to Own | Required end date | Ownership transfer date matches end date |
+| Repayment Plan | Optional end date | For customers recovering from failed payments |
+
+When "Lease to Own" is selected at the subscription level, automatically check all trailers' `leaseToOwn` checkbox.
+
+### 3. Update Edge Function
+
+**File:** `supabase/functions/create-subscription/index.ts`
+
+- Add `subscriptionType` to the `SubscriptionRequest` interface
+- Store the subscription type in the `customer_subscriptions` table
+- When `subscriptionType` is `lease_to_own`, automatically set all trailer items' `lease_to_own` flag to true
+
+### 4. Update Admin Billing Display
+
+**File:** `src/pages/admin/Billing.tsx`
+
+- Add a "Type" column to the subscriptions table
+- Display the subscription type with appropriate badge styling:
+  - Standard Lease: Default badge
+  - Rent for Storage: Blue/info badge
+  - Lease to Own: Green/primary badge with key icon
+  - Repayment Plan: Amber/warning badge
+
+### 5. Update Customer Profile Display
+
+**File:** `src/pages/customer/Profile.tsx`
+
+- Display the subscription type in the "Contract Details" section
+- Add visual indication (badge or text) showing the lease type
+- For Lease to Own, show ownership transfer date prominently
 
 ---
 
-### 2. "What You're Doing Today" Section (NEW)
+## UI Design
 
-Replace the current card header with a clear, simple explanation:
-
-**Content**:
+### CreateSubscriptionDialog - New Section
 ```
-What You're Doing Today
-
-✓ Authorizing CRUMS Leasing to collect future payments
-✓ Selecting your preferred payment due date (1st or 15th)
-✓ That's it - no charges, no commitments today
+┌─────────────────────────────────────────────────────────────┐
+│  Subscription Type                                          │
+├─────────────────────────────────────────────────────────────┤
+│  ○ Standard 12 Month Lease                                  │
+│    Minimum 12-month commitment with recurring billing       │
+│                                                             │
+│  ○ Rent for Storage                                         │
+│    Flexible rental for storage purposes                     │
+│                                                             │
+│  ○ Lease to Own                                             │
+│    Customer will own trailer(s) at end of lease             │
+│                                                             │
+│  ○ Repayment Plan                                           │
+│    Recovery plan for customers with failed payments         │
+└─────────────────────────────────────────────────────────────┘
 ```
+
+### Billing Page - Subscriptions Table
+Add a "Type" column with colored badges:
+- `Standard Lease` - neutral/outline badge
+- `Rent for Storage` - blue badge with Storage icon
+- `Lease to Own` - green badge with KeyRound icon
+- `Repayment Plan` - amber badge with RefreshCw icon
 
 ---
 
-### 3. Billing Timeline (NEW)
-
-Visual timeline showing exactly when charges occur:
-
-```
-TIMELINE:
-
-[TODAY] ────────────────────────────────────────────────────────
-   📋 Link your bank account (no charge)
-   
-[WHEN WE ASSIGN YOUR TRAILER] ──────────────────────────────────
-   💰 $1,000 security deposit charged
-   📧 You'll receive email notification first
-   
-[RECURRING MONTHLY] ────────────────────────────────────────────
-   📅 Monthly rent on your selected date (1st or 15th)
-   💳 Automatic - no action needed from you
-```
-
-**Each step has:**
-- Clear icon
-- Description
-- "NO CHARGE" badge on today's step
-
----
-
-### 4. What is ACH? (Collapsible/Secondary)
-
-Move the ACH explanation to AFTER the main action, as additional context:
-
-**Content** (in collapsible card):
-```
-What is ACH?
-
-ACH (Automated Clearing House) is the same secure system used for:
-• Direct deposit of paychecks
-• Utility and mortgage payments
-• Government benefit payments
-
-Why we use ACH instead of credit cards:
-• Lower fees = lower costs for you
-• Direct bank connection = no expired cards or declined payments
-• Reliable = helps avoid payment failures and service interruptions
-```
-
----
-
-### 5. Enhanced FAQ Section
-
-Convert to Accordion component with these questions:
-
-| Question | Answer |
-|----------|--------|
-| **Will I be charged when I link my account?** | No. Linking your account is just an authorization. No charges are made until we assign a trailer to your account. You'll receive email notification before your first charge. |
-| **When does billing actually start?** | Billing starts when we assign a trailer to your account. Your $1,000 security deposit is charged first, then monthly rent begins on your selected date (1st or 15th). |
-| **What happens if a payment fails?** | Per your lease agreement, you'll receive notifications at Day 0, 3, and 5. A 7-day grace period applies. ACH helps avoid these issues with reliable direct bank connection. |
-| **Can I use a credit card instead?** | CRUMS Leasing only accepts ACH. This keeps processing fees low and ensures reliable payments. Credit cards often decline, causing service interruptions. |
-| **Is my bank information secure?** | Yes. We use Stripe, a PCI Level 1 certified processor. Your credentials are never stored on our servers. |
-| **What if my bank isn't supported?** | We'll verify via micro-deposits (1-2 business days). Two small deposits appear in your account for you to confirm. |
-
----
-
-### 6. Payment Terms Reference
-
-Add subtle reference to lease agreement terms:
-
-```
-Important: Payment Terms
-
-Your lease agreement outlines our payment policies including the 7-day grace 
-period for failed payments. ACH provides a reliable direct bank connection 
-that helps avoid payment issues.
-
-[View Lease Agreement Terms →]
-```
-
----
-
-## File to Modify
+## Files to Modify
 
 | File | Changes |
 |------|---------|
-| `src/pages/customer/PaymentSetup.tsx` | Complete restructure with new sections |
+| Database migration | Add `subscription_type` enum and column |
+| `src/components/admin/CreateSubscriptionDialog.tsx` | Add subscription type selection UI and state |
+| `supabase/functions/create-subscription/index.ts` | Handle subscription type in creation logic |
+| `src/pages/admin/Billing.tsx` | Display subscription type in table |
+| `src/pages/customer/Profile.tsx` | Show subscription type to customer |
+| `src/integrations/supabase/types.ts` | Auto-updated with new enum/column |
 
 ---
 
-## Components Used
+## Implementation Order
 
-- **Alert** - Hero "No Charges" message
-- **Card** - Content sections
-- **Badge** - "NO CHARGE" emphasis
-- **Accordion** - FAQ section
-- **Separator** - Between sections
-- **RadioGroup** - Payment date selection (existing)
-
----
-
-## Key Messaging Hierarchy
-
-1. **FIRST**: "You won't be charged today"
-2. **SECOND**: What you're doing (simple 3 points)
-3. **THIRD**: Timeline showing when charges happen
-4. **FOURTH**: Select payment date + Link button
-5. **FIFTH**: Additional context (Why ACH, FAQ)
-
+1. Create database migration for new enum and column
+2. Update `CreateSubscriptionDialog` with type selection UI
+3. Update `create-subscription` edge function to handle new field
+4. Update admin Billing page to display subscription type
+5. Update customer Profile page to show subscription type
+6. Deploy edge function and test end-to-end
