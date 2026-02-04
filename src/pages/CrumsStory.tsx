@@ -59,6 +59,32 @@ const CrumsStory = () => {
                 className="w-full h-full"
               />
             </div>
+            
+            {/* Credits Box */}
+            <div className="mt-6 bg-muted/50 rounded-xl p-6 border border-border">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                <div>
+                  <span className="font-semibold text-foreground">Title:</span>
+                  <span className="ml-2 text-muted-foreground">The CRUMS Story</span>
+                </div>
+                <div>
+                  <span className="font-semibold text-foreground">Music Video:</span>
+                  <span className="ml-2 text-muted-foreground">Veo AI</span>
+                </div>
+                <div>
+                  <span className="font-semibold text-foreground">Song Credit:</span>
+                  <span className="ml-2 text-muted-foreground">Suno AI</span>
+                </div>
+                <div>
+                  <span className="font-semibold text-foreground">Singer:</span>
+                  <span className="ml-2 text-muted-foreground">AI Vocals Sampled from Eric's Voice</span>
+                </div>
+                <div className="sm:col-span-2">
+                  <span className="font-semibold text-foreground">Produced by:</span>
+                  <span className="ml-2 text-muted-foreground">Love.Marketing</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
