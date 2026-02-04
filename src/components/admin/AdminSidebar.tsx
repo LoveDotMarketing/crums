@@ -25,6 +25,7 @@ import {
   TrendingUp,
   Megaphone,
   Search,
+  Calendar,
   LucideIcon
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
@@ -112,6 +113,7 @@ const menuGroups: MenuGroup[] = [
     title: "SEO Tools",
     icon: Search,
     items: [
+      { title: "Content Schedule", url: "/dashboard/admin/content-schedule", icon: Calendar },
       { title: "Sitemap", url: "/dashboard/admin/sitemap-generator", icon: FileCode },
       { title: "IndexNow", url: "/dashboard/admin/indexnow", icon: Zap },
     ]
