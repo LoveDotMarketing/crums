@@ -11,7 +11,7 @@ import { CustomerNav } from "@/components/customer/CustomerNav";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
 import { toast } from "sonner";
-import { Loader2, Truck, FileText, Calendar, KeyRound } from "lucide-react";
+import { Loader2, Truck, FileText, Calendar, KeyRound, Warehouse, CreditCard } from "lucide-react";
 import { format } from "date-fns";
 
 interface TrailerInfo {
@@ -37,6 +37,8 @@ interface SubscriptionItemInfo {
   } | null;
 }
 
+type SubscriptionType = "standard_lease" | "rent_for_storage" | "lease_to_own" | "repayment_plan";
+
 interface SubscriptionInfo {
   id: string;
   status: string;
@@ -44,6 +46,7 @@ interface SubscriptionInfo {
   created_at: string;
   end_date: string | null;
   next_billing_date: string | null;
+  subscription_type: SubscriptionType | null;
 }
 
 export default function Profile() {
@@ -110,12 +113,12 @@ export default function Profile() {
       
       const { data, error } = await supabase
         .from('customer_subscriptions')
-        .select('id, status, billing_cycle, created_at, end_date, next_billing_date')
+        .select('id, status, billing_cycle, created_at, end_date, next_billing_date, subscription_type')
         .eq('customer_id', customerRecord.id)
         .maybeSingle();
       
       if (error) throw error;
-      return data as SubscriptionInfo | null;
+      return data ? { ...data, subscription_type: data.subscription_type as SubscriptionType | null } : null;
     },
     enabled: !!customerRecord?.id,
   });
@@ -303,6 +306,35 @@ export default function Profile() {
                   </CardHeader>
                   <CardContent>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {/* Subscription Type Badge */}
+                      {subscription.subscription_type && (
+                        <div className="col-span-full mb-2">
+                          {subscription.subscription_type === 'lease_to_own' && (
+                            <Badge variant="default" className="bg-primary/90 flex items-center gap-1 w-fit">
+                              <KeyRound className="h-3 w-3" />
+                              Lease to Own Agreement
+                            </Badge>
+                          )}
+                          {subscription.subscription_type === 'rent_for_storage' && (
+                            <Badge variant="secondary" className="flex items-center gap-1 w-fit">
+                              <Warehouse className="h-3 w-3" />
+                              Rent for Storage
+                            </Badge>
+                          )}
+                          {subscription.subscription_type === 'repayment_plan' && (
+                            <Badge variant="destructive" className="flex items-center gap-1 w-fit">
+                              <CreditCard className="h-3 w-3" />
+                              Repayment Plan
+                            </Badge>
+                          )}
+                          {subscription.subscription_type === 'standard_lease' && (
+                            <Badge variant="outline" className="flex items-center gap-1 w-fit">
+                              <FileText className="h-3 w-3" />
+                              Standard 12 Month Lease
+                            </Badge>
+                          )}
+                        </div>
+                      )}
                       <div className="flex items-center gap-3 p-4 bg-muted/50 rounded-lg border">
                         <Calendar className="h-5 w-5 text-primary" />
                         <div>
@@ -315,7 +347,9 @@ export default function Profile() {
                       <div className="flex items-center gap-3 p-4 bg-muted/50 rounded-lg border">
                         <Calendar className="h-5 w-5 text-primary" />
                         <div>
-                          <p className="text-sm text-muted-foreground">Contract End</p>
+                          <p className="text-sm text-muted-foreground">
+                            {subscription.subscription_type === 'lease_to_own' ? 'Ownership Transfer Date' : 'Contract End'}
+                          </p>
                           <p className="font-semibold">
                             {subscription.end_date 
                               ? format(new Date(subscription.end_date), "MMMM d, yyyy")

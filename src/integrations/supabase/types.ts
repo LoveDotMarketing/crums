@@ -389,6 +389,9 @@ export type Database = {
           status: string
           stripe_customer_id: string | null
           stripe_subscription_id: string | null
+          subscription_type:
+            | Database["public"]["Enums"]["subscription_type"]
+            | null
           updated_at: string
         }
         Insert: {
@@ -407,6 +410,9 @@ export type Database = {
           status?: string
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
+          subscription_type?:
+            | Database["public"]["Enums"]["subscription_type"]
+            | null
           updated_at?: string
         }
         Update: {
@@ -425,6 +431,9 @@ export type Database = {
           status?: string
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
+          subscription_type?:
+            | Database["public"]["Enums"]["subscription_type"]
+            | null
           updated_at?: string
         }
         Relationships: [
@@ -2404,6 +2413,11 @@ export type Database = {
         | "succeeded"
         | "failed"
         | "refunded"
+      subscription_type:
+        | "standard_lease"
+        | "rent_for_storage"
+        | "lease_to_own"
+        | "repayment_plan"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -2540,6 +2554,12 @@ export const Constants = {
         "succeeded",
         "failed",
         "refunded",
+      ],
+      subscription_type: [
+        "standard_lease",
+        "rent_for_storage",
+        "lease_to_own",
+        "repayment_plan",
       ],
     },
   },

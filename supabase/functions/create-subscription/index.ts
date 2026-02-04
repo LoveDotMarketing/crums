@@ -36,6 +36,7 @@ interface SubscriptionRequest {
   customRates?: Record<string, number>; // trailerId -> custom rate override
   leaseToOwnFlags?: Record<string, boolean>; // trailerId -> lease to own flag
   endDate?: string; // Optional end date for fixed-term leases (YYYY-MM-DD)
+  subscriptionType?: "standard_lease" | "rent_for_storage" | "lease_to_own" | "repayment_plan";
 }
 
 serve(async (req) => {
@@ -75,7 +76,7 @@ serve(async (req) => {
     logStep("Admin verified", { adminId: userData.user.id });
 
     const body: SubscriptionRequest = await req.json();
-    const { customerId, trailerIds, billingCycle, depositAmount, discountId, customRates, leaseToOwnFlags, endDate } = body;
+    const { customerId, trailerIds, billingCycle, depositAmount, discountId, customRates, leaseToOwnFlags, endDate, subscriptionType } = body;
 
     if (!customerId || !trailerIds?.length || !billingCycle) {
       throw new Error("Missing required fields: customerId, trailerIds, billingCycle");
@@ -342,6 +343,10 @@ serve(async (req) => {
     let custSub;
     let subError;
     
+    // Determine the subscription type to store (defaults to standard_lease)
+    const subType = subscriptionType || "standard_lease";
+    logStep("Setting subscription type", { subscriptionType: subType });
+    
     if (reuseExistingRow && existingSubscription) {
       // Update the existing canceled subscription row
       const { data, error } = await supabaseClient
@@ -355,13 +360,14 @@ serve(async (req) => {
           status: mappedStatus,
           next_billing_date: nextBillingDate,
           end_date: endDate || null,
+          subscription_type: subType,
         })
         .eq("id", existingSubscription.id)
         .select()
         .single();
       custSub = data;
       subError = error;
-      logStep("Updated existing subscription record", { id: custSub?.id, endDate });
+      logStep("Updated existing subscription record", { id: custSub?.id, endDate, subscriptionType: subType });
     } else {
       // Insert a new subscription row
       const { data, error } = await supabaseClient
@@ -376,12 +382,13 @@ serve(async (req) => {
           status: mappedStatus,
           next_billing_date: nextBillingDate,
           end_date: endDate || null,
+          subscription_type: subType,
         })
         .select()
         .single();
       custSub = data;
       subError = error;
-      logStep("Created new subscription record", { id: custSub?.id, endDate });
+      logStep("Created new subscription record", { id: custSub?.id, endDate, subscriptionType: subType });
     }
 
     if (subError) throw new Error(`Failed to create/update subscription record: ${subError.message}`);
@@ -391,7 +398,8 @@ serve(async (req) => {
       const trailer = trailers[i];
       const stripeItem = subscription.items.data[i];
       const rate = customRates?.[trailer.id] ?? trailer.rental_rate ?? getDefaultRate(trailer.type);
-      const isLeaseToOwn = leaseToOwnFlags?.[trailer.id] ?? false;
+      // For lease_to_own subscription type, override individual flags
+      const isLeaseToOwn = subscriptionType === "lease_to_own" ? true : (leaseToOwnFlags?.[trailer.id] ?? false);
 
       // For lease-to-own, use the subscription end_date as ownership transfer date
       const ownershipTransferDate = isLeaseToOwn && endDate ? endDate : null;

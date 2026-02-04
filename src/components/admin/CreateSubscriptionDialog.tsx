@@ -33,11 +33,13 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Truck, RefreshCw, DollarSign, Tag, CalendarIcon, Info } from "lucide-react";
+import { Plus, Truck, RefreshCw, DollarSign, Tag, CalendarIcon, Info, KeyRound, Warehouse, FileText, CreditCard } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 type BillingCycle = "weekly" | "biweekly" | "semimonthly" | "monthly";
+type SubscriptionType = "standard_lease" | "rent_for_storage" | "lease_to_own" | "repayment_plan";
 
 interface Customer {
   id: string;
@@ -86,6 +88,7 @@ export function CreateSubscriptionDialog({ onSuccess }: CreateSubscriptionDialog
   const [selectedTrailers, setSelectedTrailers] = useState<SelectedTrailer[]>([]);
   const [selectedDiscountId, setSelectedDiscountId] = useState<string>("");
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
+  const [subscriptionType, setSubscriptionType] = useState<SubscriptionType>("standard_lease");
 
   // Fetch customer's billing anchor preference
   const { data: customerApplication } = useQuery({
@@ -188,6 +191,12 @@ export function CreateSubscriptionDialog({ onSuccess }: CreateSubscriptionDialog
       if (!selectedCustomerId) throw new Error("Please select a customer");
       if (selectedTrailers.length === 0) throw new Error("Please select at least one trailer");
 
+      // For lease_to_own subscription type, all trailers should be marked as lease to own
+      const leaseToOwnFlags = selectedTrailers.reduce((acc, t) => {
+        acc[t.id] = subscriptionType === "lease_to_own" ? true : t.leaseToOwn;
+        return acc;
+      }, {} as Record<string, boolean>);
+
       // Call edge function to create subscription in Stripe and local DB
       const { data, error } = await supabase.functions.invoke("create-subscription", {
         body: {
@@ -200,11 +209,9 @@ export function CreateSubscriptionDialog({ onSuccess }: CreateSubscriptionDialog
             acc[t.id] = t.customRate;
             return acc;
           }, {} as Record<string, number>),
-          leaseToOwnFlags: selectedTrailers.reduce((acc, t) => {
-            acc[t.id] = t.leaseToOwn;
-            return acc;
-          }, {} as Record<string, boolean>),
-          endDate: endDate ? format(endDate, "yyyy-MM-dd") : undefined
+          leaseToOwnFlags,
+          endDate: endDate ? format(endDate, "yyyy-MM-dd") : undefined,
+          subscriptionType
         }
       });
 
@@ -236,6 +243,7 @@ export function CreateSubscriptionDialog({ onSuccess }: CreateSubscriptionDialog
     setSelectedTrailers([]);
     setSelectedDiscountId("");
     setEndDate(undefined);
+    setSubscriptionType("standard_lease");
   };
 
   // Get type-based default rental rate
@@ -273,6 +281,25 @@ export function CreateSubscriptionDialog({ onSuccess }: CreateSubscriptionDialog
     setSelectedTrailers(prev =>
       prev.map(t => t.id === trailerId ? { ...t, leaseToOwn: checked } : t)
     );
+  };
+
+  // Handle subscription type change
+  const handleSubscriptionTypeChange = (value: SubscriptionType) => {
+    setSubscriptionType(value);
+    
+    // Auto-set end date for standard lease (12 months)
+    if (value === "standard_lease" && !endDate) {
+      const twelveMonthsFromNow = new Date();
+      twelveMonthsFromNow.setMonth(twelveMonthsFromNow.getMonth() + 12);
+      setEndDate(twelveMonthsFromNow);
+    }
+    
+    // If lease to own, mark all trailers as lease to own
+    if (value === "lease_to_own") {
+      setSelectedTrailers(prev =>
+        prev.map(t => ({ ...t, leaseToOwn: true }))
+      );
+    }
   };
 
   const handleRateChange = (trailerId: string, rate: number) => {
@@ -359,6 +386,80 @@ export function CreateSubscriptionDialog({ onSuccess }: CreateSubscriptionDialog
             </div>
           )}
 
+          {/* Subscription Type Selection */}
+          <div className="space-y-3">
+            <Label>Subscription Type</Label>
+            <RadioGroup 
+              value={subscriptionType} 
+              onValueChange={(v) => handleSubscriptionTypeChange(v as SubscriptionType)}
+              className="grid gap-3"
+            >
+              <div className={cn(
+                "flex items-start space-x-3 p-3 rounded-lg border cursor-pointer hover:bg-muted/50 transition-colors",
+                subscriptionType === "standard_lease" && "border-primary bg-primary/5"
+              )}>
+                <RadioGroupItem value="standard_lease" id="standard_lease" className="mt-1" />
+                <Label htmlFor="standard_lease" className="flex-1 cursor-pointer">
+                  <div className="flex items-center gap-2 font-medium">
+                    <FileText className="h-4 w-4 text-muted-foreground" />
+                    Standard 12 Month Lease
+                  </div>
+                  <p className="text-sm text-muted-foreground font-normal mt-0.5">
+                    Minimum 12-month commitment with recurring billing
+                  </p>
+                </Label>
+              </div>
+
+              <div className={cn(
+                "flex items-start space-x-3 p-3 rounded-lg border cursor-pointer hover:bg-muted/50 transition-colors",
+                subscriptionType === "rent_for_storage" && "border-blue-500 bg-blue-500/5"
+              )}>
+                <RadioGroupItem value="rent_for_storage" id="rent_for_storage" className="mt-1" />
+                <Label htmlFor="rent_for_storage" className="flex-1 cursor-pointer">
+                  <div className="flex items-center gap-2 font-medium">
+                    <Warehouse className="h-4 w-4 text-blue-500" />
+                    Rent for Storage
+                  </div>
+                  <p className="text-sm text-muted-foreground font-normal mt-0.5">
+                    Flexible rental for storage purposes
+                  </p>
+                </Label>
+              </div>
+
+              <div className={cn(
+                "flex items-start space-x-3 p-3 rounded-lg border cursor-pointer hover:bg-muted/50 transition-colors",
+                subscriptionType === "lease_to_own" && "border-primary bg-primary/5"
+              )}>
+                <RadioGroupItem value="lease_to_own" id="lease_to_own" className="mt-1" />
+                <Label htmlFor="lease_to_own" className="flex-1 cursor-pointer">
+                  <div className="flex items-center gap-2 font-medium">
+                    <KeyRound className="h-4 w-4 text-primary" />
+                    Lease to Own
+                  </div>
+                  <p className="text-sm text-muted-foreground font-normal mt-0.5">
+                    Customer will own trailer(s) at end of lease
+                  </p>
+                </Label>
+              </div>
+
+              <div className={cn(
+                "flex items-start space-x-3 p-3 rounded-lg border cursor-pointer hover:bg-muted/50 transition-colors",
+                subscriptionType === "repayment_plan" && "border-amber-500 bg-amber-500/5"
+              )}>
+                <RadioGroupItem value="repayment_plan" id="repayment_plan" className="mt-1" />
+                <Label htmlFor="repayment_plan" className="flex-1 cursor-pointer">
+                  <div className="flex items-center gap-2 font-medium">
+                    <CreditCard className="h-4 w-4 text-amber-500" />
+                    Repayment Plan
+                  </div>
+                  <p className="text-sm text-muted-foreground font-normal mt-0.5">
+                    Recovery plan for customers with failed payments
+                  </p>
+                </Label>
+              </div>
+            </RadioGroup>
+          </div>
+
           {/* Billing Cycle */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
@@ -390,6 +491,7 @@ export function CreateSubscriptionDialog({ onSuccess }: CreateSubscriptionDialog
               <p className="text-xs text-muted-foreground">Standard deposit is $1,000</p>
             </div>
           </div>
+
 
           {/* End Date */}
           <div className="space-y-2">
