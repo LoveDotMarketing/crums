@@ -74,6 +74,7 @@ const MentalHealth = lazy(() => import("./pages/resources/guides/MentalHealth"))
 const WhyChooseCrums = lazy(() => import("./pages/WhyChooseCrums"));
 const EmergencyTrailerRental = lazy(() => import("./pages/EmergencyTrailerRental"));
 const VeteransMilitaryDiscount = lazy(() => import("./pages/VeteransMilitaryDiscount"));
+const CrumsStory = lazy(() => import("./pages/CrumsStory"));
 
 // News pages
 const News = lazy(() => import("./pages/News"));
@@ -183,6 +184,7 @@ const App = () => (
             <Route path="/why-choose-crums" element={<WhyChooseCrums />} />
             <Route path="/emergency-trailer-rental" element={<EmergencyTrailerRental />} />
             <Route path="/veterans-military-discount" element={<VeteransMilitaryDiscount />} />
+            <Route path="/crums-story" element={<CrumsStory />} />
             <Route path="/industries" element={<Industries />} />
             <Route path="/industries/fleet-leasing" element={<FleetLeasing />} />
             <Route path="/industries/owner-operators" element={<OwnerOperators />} />
