@@ -33,7 +33,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Truck, RefreshCw, DollarSign, Tag, CalendarIcon } from "lucide-react";
+import { Plus, Truck, RefreshCw, DollarSign, Tag, CalendarIcon, Info } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -85,6 +85,42 @@ export function CreateSubscriptionDialog({ onSuccess }: CreateSubscriptionDialog
   const [selectedTrailers, setSelectedTrailers] = useState<SelectedTrailer[]>([]);
   const [selectedDiscountId, setSelectedDiscountId] = useState<string>("");
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
+
+  // Fetch customer's billing anchor preference
+  const { data: customerApplication } = useQuery({
+    queryKey: ["customer-application-billing-preference", selectedCustomerId],
+    queryFn: async () => {
+      if (!selectedCustomerId) return null;
+      // First get the customer email to find their profile
+      const { data: customer } = await supabase
+        .from("customers")
+        .select("email")
+        .eq("id", selectedCustomerId)
+        .single();
+      
+      if (!customer?.email) return null;
+      
+      // Get profile by email to find user_id
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("email", customer.email)
+        .maybeSingle();
+      
+      if (!profile?.id) return null;
+      
+      // Get application with billing preference
+      const { data, error } = await supabase
+        .from("customer_applications")
+        .select("billing_anchor_day")
+        .eq("user_id", profile.id)
+        .maybeSingle();
+      
+      if (error) return null;
+      return data;
+    },
+    enabled: !!selectedCustomerId && isOpen,
+  });
 
   // Fetch customers without active subscriptions
   const { data: customers, isLoading: loadingCustomers } = useQuery({
@@ -290,6 +326,26 @@ export function CreateSubscriptionDialog({ onSuccess }: CreateSubscriptionDialog
               </p>
             )}
           </div>
+
+          {/* Customer Billing Preference Info */}
+          {selectedCustomerId && (
+            <div className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg border">
+              <Info className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+              <div className="text-sm">
+                <span className="font-medium text-foreground">Customer's Preferred Payment Date: </span>
+                {customerApplication?.billing_anchor_day ? (
+                  <span className="text-primary font-semibold">
+                    {customerApplication.billing_anchor_day === 1 ? "1st" : "15th"} of the month
+                  </span>
+                ) : (
+                  <span className="text-muted-foreground">No preference set</span>
+                )}
+                <p className="text-xs text-muted-foreground mt-1">
+                  This preference will be used for the Stripe billing cycle anchor.
+                </p>
+              </div>
+            </div>
+          )}
 
           {/* Billing Cycle */}
           <div className="grid grid-cols-2 gap-4">

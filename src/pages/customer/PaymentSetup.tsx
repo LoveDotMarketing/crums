@@ -8,7 +8,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, CreditCard, Building2, CheckCircle2, AlertCircle, ShieldCheck, ExternalLink } from "lucide-react";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Loader2, CreditCard, Building2, CheckCircle2, AlertCircle, ShieldCheck, ExternalLink, Calendar } from "lucide-react";
 import { toast } from "sonner";
 
 interface PaymentMethod {
@@ -31,6 +33,7 @@ export default function PaymentSetup() {
   const [paymentStatus, setPaymentStatus] = useState<PaymentStatus | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSettingUp, setIsSettingUp] = useState(false);
+  const [billingAnchorDay, setBillingAnchorDay] = useState<1 | 15>(1);
 
   useEffect(() => {
     if (user) {
@@ -124,6 +127,7 @@ export default function PaymentSetup() {
             body: {
               setupIntentId: confirmedSetupIntent.id,
               paymentMethodId: confirmedSetupIntent.payment_method,
+              billingAnchorDay: billingAnchorDay,
             },
           });
           toast.success("Bank account linked successfully!");
@@ -138,6 +142,7 @@ export default function PaymentSetup() {
           body: {
             setupIntentId: collectedSetupIntent.id,
             paymentMethodId: collectedSetupIntent.payment_method,
+            billingAnchorDay: billingAnchorDay,
           },
         });
         toast.success("Bank account linked successfully!");
@@ -255,6 +260,51 @@ export default function PaymentSetup() {
                     are never stored on our servers. Most banks verify instantly.
                   </p>
                 </div>
+              </div>
+
+              {/* Preferred Payment Due Date */}
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-5 w-5 text-primary" />
+                  <Label className="font-medium text-foreground">Preferred Payment Due Date</Label>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Choose when you'd like your monthly payments to be due
+                </p>
+                <RadioGroup
+                  value={billingAnchorDay.toString()}
+                  onValueChange={(val) => setBillingAnchorDay(val === "1" ? 1 : 15)}
+                  className="grid grid-cols-2 gap-4"
+                >
+                  <div>
+                    <RadioGroupItem
+                      value="1"
+                      id="anchor-1"
+                      className="peer sr-only"
+                    />
+                    <Label
+                      htmlFor="anchor-1"
+                      className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer"
+                    >
+                      <span className="text-2xl font-bold">1st</span>
+                      <span className="text-sm text-muted-foreground">of the month</span>
+                    </Label>
+                  </div>
+                  <div>
+                    <RadioGroupItem
+                      value="15"
+                      id="anchor-15"
+                      className="peer sr-only"
+                    />
+                    <Label
+                      htmlFor="anchor-15"
+                      className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer"
+                    >
+                      <span className="text-2xl font-bold">15th</span>
+                      <span className="text-sm text-muted-foreground">of the month</span>
+                    </Label>
+                  </div>
+                </RadioGroup>
               </div>
 
               {/* How it Works */}
