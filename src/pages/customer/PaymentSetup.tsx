@@ -10,8 +10,27 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Loader2, CreditCard, Building2, CheckCircle2, AlertCircle, ShieldCheck, ExternalLink, Calendar } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { 
+  Loader2, 
+  Building2, 
+  CheckCircle2, 
+  AlertCircle, 
+  ShieldCheck, 
+  ExternalLink, 
+  Calendar,
+  FileText,
+  DollarSign,
+  Mail,
+  CreditCard,
+  ChevronDown,
+  Clock,
+  Check
+} from "lucide-react";
 import { toast } from "sonner";
+import { Link } from "react-router-dom";
 
 interface PaymentMethod {
   id: string;
@@ -34,6 +53,7 @@ export default function PaymentSetup() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSettingUp, setIsSettingUp] = useState(false);
   const [billingAnchorDay, setBillingAnchorDay] = useState<1 | 15>(1);
+  const [isAchInfoOpen, setIsAchInfoOpen] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -181,14 +201,14 @@ export default function PaymentSetup() {
       <CustomerNav />
       
       <main className="flex-1 container mx-auto px-4 py-8 max-w-3xl">
-        <div className="mb-8">
+        <div className="mb-6">
           <h1 className="text-3xl font-bold text-foreground">Payment Setup</h1>
           <p className="text-muted-foreground mt-2">
-            Link your bank account for secure ACH payments
+            Link your bank account for future billing
           </p>
         </div>
 
-        {/* Status Alert */}
+        {/* Application Required Alert */}
         {!isApproved && (
           <Alert variant="default" className="mb-6">
             <AlertCircle className="h-4 w-4" />
@@ -200,7 +220,7 @@ export default function PaymentSetup() {
           </Alert>
         )}
 
-        {/* Current Payment Method */}
+        {/* Current Payment Method - Already Connected */}
         {hasPaymentMethod && paymentStatus?.paymentMethod && (
           <Card className="mb-6 border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950/20">
             <CardHeader>
@@ -237,40 +257,156 @@ export default function PaymentSetup() {
           </Card>
         )}
 
-        {/* Setup Card */}
+        {/* Main Setup Flow - Only show if no payment method */}
         {!hasPaymentMethod && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <CreditCard className="h-5 w-5" />
-                Link Your Bank Account
-              </CardTitle>
-              <CardDescription>
-                Connect your bank account securely for ACH direct debit payments
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {/* Security Notice */}
-              <div className="flex items-start gap-3 p-4 bg-muted/50 rounded-lg">
-                <ShieldCheck className="h-5 w-5 text-primary mt-0.5" />
-                <div className="text-sm">
-                  <p className="font-medium text-foreground">Secure Bank Verification</p>
-                  <p className="text-muted-foreground mt-1">
-                    We use Stripe's secure bank verification to link your account. Your credentials 
-                    are never stored on our servers. Most banks verify instantly.
-                  </p>
+          <div className="space-y-6">
+            {/* SECTION 1: Hero Alert - No Charges Today */}
+            <Card className="border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950/20">
+              <CardContent className="pt-6">
+                <div className="flex gap-4">
+                  <div className="flex-shrink-0">
+                    <div className="h-12 w-12 rounded-full bg-green-100 dark:bg-green-900/50 flex items-center justify-center">
+                      <ShieldCheck className="h-6 w-6 text-green-600 dark:text-green-400" />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <h2 className="text-xl font-semibold text-green-700 dark:text-green-400">
+                      You Won't Be Charged Today
+                    </h2>
+                    <p className="text-green-700/80 dark:text-green-300/80">
+                      You're simply linking your bank account for future billing. 
+                      No money will be withdrawn until:
+                    </p>
+                    <ul className="space-y-1 text-green-700/80 dark:text-green-300/80">
+                      <li className="flex items-center gap-2">
+                        <Check className="h-4 w-4 text-green-600" />
+                        We assign a trailer to your account
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <Check className="h-4 w-4 text-green-600" />
+                        You receive notification of your first charge
+                      </li>
+                    </ul>
+                    <p className="text-sm font-medium text-green-600 dark:text-green-400 pt-1">
+                      This is just an authorization — not a payment.
+                    </p>
+                  </div>
                 </div>
-              </div>
+              </CardContent>
+            </Card>
 
-              {/* Preferred Payment Due Date */}
-              <div className="space-y-3">
+            {/* SECTION 2: What You're Doing Today */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">What You're Doing Today</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex items-center gap-3">
+                  <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Check className="h-4 w-4 text-primary" />
+                  </div>
+                  <span className="text-foreground">Authorizing CRUMS Leasing to collect future payments</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Check className="h-4 w-4 text-primary" />
+                  </div>
+                  <span className="text-foreground">Selecting your preferred payment due date (1st or 15th)</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Check className="h-4 w-4 text-primary" />
+                  </div>
+                  <span className="text-foreground">That's it — no charges, no commitments today</span>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* SECTION 3: Billing Timeline */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">When Will I Be Charged?</CardTitle>
+                <CardDescription>Here's exactly when billing happens</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-0">
+                {/* Timeline Item 1: Today */}
+                <div className="flex gap-4">
+                  <div className="flex flex-col items-center">
+                    <div className="h-10 w-10 rounded-full bg-green-100 dark:bg-green-900/50 flex items-center justify-center border-2 border-green-500">
+                      <FileText className="h-5 w-5 text-green-600" />
+                    </div>
+                    <div className="w-0.5 h-full bg-border flex-1 min-h-[40px]" />
+                  </div>
+                  <div className="pb-6">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="font-semibold text-foreground">Today</span>
+                      <Badge className="bg-green-100 text-green-700 border-green-300 hover:bg-green-100">
+                        NO CHARGE
+                      </Badge>
+                    </div>
+                    <p className="text-muted-foreground">
+                      Link your bank account securely. This is just an authorization.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Timeline Item 2: Trailer Assignment */}
+                <div className="flex gap-4">
+                  <div className="flex flex-col items-center">
+                    <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center border-2 border-muted-foreground/30">
+                      <DollarSign className="h-5 w-5 text-muted-foreground" />
+                    </div>
+                    <div className="w-0.5 h-full bg-border flex-1 min-h-[40px]" />
+                  </div>
+                  <div className="pb-6">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="font-semibold text-foreground">When We Assign Your Trailer</span>
+                    </div>
+                    <p className="text-muted-foreground">
+                      $1,000 security deposit charged via ACH
+                    </p>
+                    <p className="text-sm text-muted-foreground flex items-center gap-1.5 mt-1">
+                      <Mail className="h-3.5 w-3.5" />
+                      You'll receive email notification before this charge
+                    </p>
+                  </div>
+                </div>
+
+                {/* Timeline Item 3: Recurring Monthly */}
+                <div className="flex gap-4">
+                  <div className="flex flex-col items-center">
+                    <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center border-2 border-muted-foreground/30">
+                      <Calendar className="h-5 w-5 text-muted-foreground" />
+                    </div>
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="font-semibold text-foreground">Recurring Monthly</span>
+                    </div>
+                    <p className="text-muted-foreground">
+                      Monthly rent charged automatically on your selected date (1st or 15th)
+                    </p>
+                    <p className="text-sm text-muted-foreground flex items-center gap-1.5 mt-1">
+                      <Clock className="h-3.5 w-3.5" />
+                      No action needed from you — fully automatic
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* SECTION 4: Payment Date Selection */}
+            <Card>
+              <CardHeader>
                 <div className="flex items-center gap-2">
                   <Calendar className="h-5 w-5 text-primary" />
-                  <Label className="font-medium text-foreground">Preferred Payment Due Date</Label>
+                  <CardTitle className="text-lg">Select Your Payment Due Date</CardTitle>
                 </div>
-                <p className="text-sm text-muted-foreground">
+                <CardDescription>
                   Choose when you'd like your monthly payments to be due
-                </p>
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
                 <RadioGroup
                   value={billingAnchorDay.toString()}
                   onValueChange={(val) => setBillingAnchorDay(val === "1" ? 1 : 15)}
@@ -309,97 +445,198 @@ export default function PaymentSetup() {
                   <AlertCircle className="h-3.5 w-3.5" />
                   This selection is final and cannot be changed after setup. Choose carefully.
                 </p>
-              </div>
+              </CardContent>
+            </Card>
 
-              {/* How it Works */}
-              <div className="space-y-3">
-                <h4 className="font-medium text-foreground">How it works:</h4>
-                <ol className="space-y-2 text-sm text-muted-foreground">
-                  <li className="flex items-start gap-2">
-                    <span className="flex-shrink-0 w-5 h-5 rounded-full bg-primary/10 text-primary text-xs flex items-center justify-center font-medium">1</span>
-                    <span>Click "Link Bank Account" to open secure verification</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="flex-shrink-0 w-5 h-5 rounded-full bg-primary/10 text-primary text-xs flex items-center justify-center font-medium">2</span>
-                    <span>Select your bank and log in with your online banking credentials</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="flex-shrink-0 w-5 h-5 rounded-full bg-primary/10 text-primary text-xs flex items-center justify-center font-medium">3</span>
-                    <span>Choose which account to use for payments</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="flex-shrink-0 w-5 h-5 rounded-full bg-primary/10 text-primary text-xs flex items-center justify-center font-medium">4</span>
-                    <span>Your account will be instantly verified and ready for billing</span>
-                  </li>
-                </ol>
-              </div>
+            {/* SECTION 5: Link Bank Account Button */}
+            <Card>
+              <CardContent className="pt-6">
+                <Button 
+                  size="lg" 
+                  className="w-full"
+                  onClick={handleSetupPayment}
+                  disabled={!isApproved || isSettingUp}
+                >
+                  {isSettingUp ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Setting Up...
+                    </>
+                  ) : (
+                    <>
+                      <ExternalLink className="mr-2 h-4 w-4" />
+                      Link Bank Account
+                    </>
+                  )}
+                </Button>
 
-              {/* Action Button */}
-              <Button 
-                size="lg" 
-                className="w-full"
-                onClick={handleSetupPayment}
-                disabled={!isApproved || isSettingUp}
-              >
-                {isSettingUp ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Setting Up...
-                  </>
-                ) : (
-                  <>
-                    <ExternalLink className="mr-2 h-4 w-4" />
-                    Link Bank Account
-                  </>
+                {!isApproved && (
+                  <p className="text-sm text-center text-muted-foreground mt-3">
+                    Button disabled until your application is approved
+                  </p>
                 )}
-              </Button>
 
-              {!isApproved && (
-                <p className="text-sm text-center text-muted-foreground">
-                  Button disabled until your application is approved
+                <div className="flex items-center justify-center gap-2 mt-4 text-sm text-muted-foreground">
+                  <ShieldCheck className="h-4 w-4" />
+                  <span>Secured by Stripe • Bank-level encryption</span>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Separator />
+
+            {/* SECTION 6: What is ACH? (Collapsible) */}
+            <Collapsible open={isAchInfoOpen} onOpenChange={setIsAchInfoOpen}>
+              <Card>
+                <CollapsibleTrigger asChild>
+                  <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Building2 className="h-5 w-5 text-primary" />
+                        <CardTitle className="text-lg">What is ACH?</CardTitle>
+                      </div>
+                      <ChevronDown className={`h-5 w-5 text-muted-foreground transition-transform ${isAchInfoOpen ? 'rotate-180' : ''}`} />
+                    </div>
+                  </CardHeader>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <CardContent className="pt-0 space-y-4">
+                    <p className="text-muted-foreground">
+                      ACH (Automated Clearing House) is the same secure electronic payment system used for:
+                    </p>
+                    <ul className="space-y-2 text-muted-foreground">
+                      <li className="flex items-center gap-2">
+                        <Check className="h-4 w-4 text-primary" />
+                        Direct deposit of paychecks
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <Check className="h-4 w-4 text-primary" />
+                        Utility and mortgage payments
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <Check className="h-4 w-4 text-primary" />
+                        Government benefit payments
+                      </li>
+                    </ul>
+                    
+                    <Separator />
+                    
+                    <div>
+                      <h4 className="font-medium text-foreground mb-2">Why we use ACH instead of credit cards:</h4>
+                      <ul className="space-y-2 text-muted-foreground">
+                        <li className="flex items-center gap-2">
+                          <DollarSign className="h-4 w-4 text-green-600" />
+                          Lower fees = lower costs for you
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <CreditCard className="h-4 w-4 text-primary" />
+                          Direct bank connection = no expired cards or declined payments
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <Clock className="h-4 w-4 text-primary" />
+                          Reliable = helps avoid payment failures and service interruptions
+                        </li>
+                      </ul>
+                    </div>
+                  </CardContent>
+                </CollapsibleContent>
+              </Card>
+            </Collapsible>
+
+            {/* SECTION 7: Payment Terms Reference */}
+            <Alert>
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Important: Payment Terms</AlertTitle>
+              <AlertDescription className="space-y-2">
+                <p>
+                  Your lease agreement outlines our payment policies including the 7-day grace 
+                  period for failed payments. ACH provides a reliable direct bank connection 
+                  that helps avoid payment issues.
                 </p>
-              )}
-            </CardContent>
-          </Card>
-        )}
+                <Link 
+                  to="/terms#payment-terms" 
+                  className="inline-flex items-center gap-1 text-primary hover:underline text-sm font-medium"
+                >
+                  View Lease Agreement Terms
+                  <ExternalLink className="h-3 w-3" />
+                </Link>
+              </AlertDescription>
+            </Alert>
 
-        {/* FAQ Section */}
-        <div className="mt-8 space-y-4">
-          <h3 className="text-lg font-semibold text-foreground">Frequently Asked Questions</h3>
-          
-          <div className="space-y-3">
-            <details className="group">
-              <summary className="cursor-pointer text-sm font-medium text-foreground hover:text-primary">
-                Is my bank information secure?
-              </summary>
-              <p className="mt-2 text-sm text-muted-foreground pl-4">
-                Yes. We partner with Stripe, a PCI Level 1 certified payment processor. Your bank 
-                credentials are never stored on our servers. The connection uses bank-level encryption.
-              </p>
-            </details>
-            
-            <details className="group">
-              <summary className="cursor-pointer text-sm font-medium text-foreground hover:text-primary">
-                What if my bank isn't supported for instant verification?
-              </summary>
-              <p className="mt-2 text-sm text-muted-foreground pl-4">
-                If instant verification isn't available for your bank, we'll verify your account using 
-                micro-deposits. Two small deposits will appear in your account within 1-2 business days, 
-                which you'll confirm to complete verification.
-              </p>
-            </details>
-            
-            <details className="group">
-              <summary className="cursor-pointer text-sm font-medium text-foreground hover:text-primary">
-                Can I change my payment method later?
-              </summary>
-              <p className="mt-2 text-sm text-muted-foreground pl-4">
-                Yes. Contact our support team to update your payment method. We'll help you link a 
-                new bank account.
-              </p>
-            </details>
+            {/* SECTION 8: FAQ */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Frequently Asked Questions</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Accordion type="single" collapsible className="w-full">
+                  <AccordionItem value="item-1">
+                    <AccordionTrigger>Will I be charged when I link my account?</AccordionTrigger>
+                    <AccordionContent>
+                      No. Linking your account is just an authorization. No charges are made until we 
+                      assign a trailer to your account. You'll receive email notification before your 
+                      first charge.
+                    </AccordionContent>
+                  </AccordionItem>
+                  
+                  <AccordionItem value="item-2">
+                    <AccordionTrigger>When does billing actually start?</AccordionTrigger>
+                    <AccordionContent>
+                      Billing starts when we assign a trailer to your account. Your $1,000 security 
+                      deposit is charged first, then monthly rent begins on your selected date 
+                      (1st or 15th of the month).
+                    </AccordionContent>
+                  </AccordionItem>
+                  
+                  <AccordionItem value="item-3">
+                    <AccordionTrigger>What happens if a payment fails?</AccordionTrigger>
+                    <AccordionContent>
+                      Per your lease agreement, you'll receive email notifications at Day 0, 3, and 5. 
+                      A 7-day grace period applies to resolve the issue. ACH helps avoid these issues 
+                      by providing a reliable direct bank connection — no expired cards or declined 
+                      transactions.
+                    </AccordionContent>
+                  </AccordionItem>
+                  
+                  <AccordionItem value="item-4">
+                    <AccordionTrigger>Can I use a credit card instead?</AccordionTrigger>
+                    <AccordionContent>
+                      CRUMS Leasing only accepts ACH bank payments. This keeps processing fees low 
+                      (saving you money) and ensures reliable, consistent payments. Credit cards often 
+                      decline due to limits, fraud alerts, or expiration, which can interrupt your service.
+                    </AccordionContent>
+                  </AccordionItem>
+                  
+                  <AccordionItem value="item-5">
+                    <AccordionTrigger>Is my bank information secure?</AccordionTrigger>
+                    <AccordionContent>
+                      Yes. We partner with Stripe, a PCI Level 1 certified payment processor — the 
+                      highest level of security certification. Your bank credentials are never stored 
+                      on our servers. The connection uses bank-level encryption.
+                    </AccordionContent>
+                  </AccordionItem>
+                  
+                  <AccordionItem value="item-6">
+                    <AccordionTrigger>What if my bank isn't supported for instant verification?</AccordionTrigger>
+                    <AccordionContent>
+                      If instant verification isn't available for your bank, we'll verify your account 
+                      using micro-deposits. Two small deposits (usually a few cents each) will appear 
+                      in your account within 1-2 business days, which you'll confirm to complete verification.
+                    </AccordionContent>
+                  </AccordionItem>
+
+                  <AccordionItem value="item-7">
+                    <AccordionTrigger>Can I change my payment method later?</AccordionTrigger>
+                    <AccordionContent>
+                      Yes. Contact our support team to update your payment method. We'll help you 
+                      link a new bank account if needed.
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
+              </CardContent>
+            </Card>
           </div>
-        </div>
+        )}
       </main>
 
       <Footer />
