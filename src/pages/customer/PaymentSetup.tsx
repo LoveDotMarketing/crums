@@ -543,25 +543,126 @@ export default function PaymentSetup() {
               </Card>
             </Collapsible>
 
-            {/* SECTION 7: Payment Terms Reference */}
-            <Alert>
-              <AlertCircle className="h-4 w-4" />
-              <AlertTitle>Important: Payment Terms</AlertTitle>
-              <AlertDescription className="space-y-2">
-                <p>
-                  Your lease agreement outlines our payment policies including the 7-day grace 
-                  period for failed payments. ACH provides a reliable direct bank connection 
-                  that helps avoid payment issues.
-                </p>
-                <Link 
-                  to="/terms#payment-terms" 
-                  className="inline-flex items-center gap-1 text-primary hover:underline text-sm font-medium"
-                >
-                  View Lease Agreement Terms
-                  <ExternalLink className="h-3 w-3" />
-                </Link>
-              </AlertDescription>
-            </Alert>
+            {/* SECTION 7: Billing Terms from Lease Agreement */}
+            <Card>
+              <CardHeader>
+                <div className="flex items-center gap-2">
+                  <FileText className="h-5 w-5 text-primary" />
+                  <CardTitle className="text-lg">Billing Terms (From Your Lease Agreement)</CardTitle>
+                </div>
+                <CardDescription>
+                  These terms are outlined in your Trailer Leasing Agreement which you will sign via DocuSign
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Accordion type="single" collapsible className="w-full">
+                  <AccordionItem value="ach-authorization">
+                    <AccordionTrigger>ACH Authorization</AccordionTrigger>
+                    <AccordionContent className="space-y-2 text-muted-foreground">
+                      <p>
+                        By signing the Trailer Leasing Agreement, you authorize CRUMS Leasing to initiate 
+                        ACH withdrawals for all amounts owed, including:
+                      </p>
+                      <ul className="list-disc pl-5 space-y-1">
+                        <li>Monthly lease payments</li>
+                        <li>Security deposit ($1,000 per trailer)</li>
+                        <li>Late fees</li>
+                        <li>Toll charges</li>
+                        <li>Damage invoices</li>
+                        <li>Any outstanding balances</li>
+                      </ul>
+                    </AccordionContent>
+                  </AccordionItem>
+
+                  <AccordionItem value="payment-failure">
+                    <AccordionTrigger>ACH Payment Failure</AccordionTrigger>
+                    <AccordionContent className="space-y-2 text-muted-foreground">
+                      <p>If any ACH payment is declined or returned for any reason:</p>
+                      <ul className="list-disc pl-5 space-y-1">
+                        <li>A <strong>$100.00 ACH decline fee</strong> will be applied</li>
+                        <li>CRUMS Leasing will contact you requesting updated payment information</li>
+                        <li>All outstanding balances remain immediately due until resolved</li>
+                      </ul>
+                    </AccordionContent>
+                  </AccordionItem>
+
+                  <AccordionItem value="grace-period">
+                    <AccordionTrigger>Grace Period & Late Fees</AccordionTrigger>
+                    <AccordionContent className="space-y-2 text-muted-foreground">
+                      <p>
+                        You have <strong>seven (7) calendar days</strong> after your selected payment due date 
+                        to submit payment manually through the Customer Portal.
+                      </p>
+                      <p>If payment is not received by the end of Day 7:</p>
+                      <ul className="list-disc pl-5 space-y-1">
+                        <li>A <strong>$150.00 late fee</strong> will be assessed</li>
+                        <li>CRUMS Leasing will automatically deduct the outstanding balance via ACH</li>
+                      </ul>
+                      <p className="text-sm pt-2">
+                        <strong>Note:</strong> You will receive email notifications at Day 0, 3, and 5 to help 
+                        you avoid late fees.
+                      </p>
+                    </AccordionContent>
+                  </AccordionItem>
+
+                  <AccordionItem value="default">
+                    <AccordionTrigger>Default Conditions</AccordionTrigger>
+                    <AccordionContent className="space-y-2 text-muted-foreground">
+                      <p>You are in default if you:</p>
+                      <ul className="list-disc pl-5 space-y-1">
+                        <li>Fail to make any payment when due</li>
+                        <li>Fail to maintain required insurance</li>
+                        <li>Violate any term of the Agreement</li>
+                        <li>Provide false or misleading information</li>
+                      </ul>
+                      <p className="pt-2">
+                        Upon default, CRUMS Leasing may recover or repossess the Trailer, terminate the 
+                        Agreement, and pursue all available remedies.
+                      </p>
+                    </AccordionContent>
+                  </AccordionItem>
+
+                  <AccordionItem value="security-deposit">
+                    <AccordionTrigger>Security Deposit</AccordionTrigger>
+                    <AccordionContent className="space-y-2 text-muted-foreground">
+                      <p>
+                        The <strong>$1,000.00 security deposit</strong> (per trailer) may be applied toward:
+                      </p>
+                      <ul className="list-disc pl-5 space-y-1">
+                        <li>Damages to the trailer</li>
+                        <li>Unpaid tolls</li>
+                        <li>Outstanding balances</li>
+                        <li>Excessive wear</li>
+                      </ul>
+                      <p className="pt-2">
+                        If no charges are owed at the end of your lease, the deposit will be returned via 
+                        ACH within fourteen (14) days after inspection completion.
+                      </p>
+                    </AccordionContent>
+                  </AccordionItem>
+
+                  <AccordionItem value="tolls">
+                    <AccordionTrigger>Tolls & Administrative Fees</AccordionTrigger>
+                    <AccordionContent className="space-y-2 text-muted-foreground">
+                      <p>
+                        You are solely responsible for all tolls, toll invoices, administrative charges, 
+                        penalties, and violations incurred during use or possession of the Trailer(s).
+                      </p>
+                      <p>If CRUMS Leasing receives a toll notice:</p>
+                      <ul className="list-disc pl-5 space-y-1">
+                        <li>You will receive an email invoice detailing the charge</li>
+                        <li>The toll amount will be deducted via ACH</li>
+                      </ul>
+                      <p className="pt-2">
+                        <strong>Unpaid Toll Charges:</strong> You have twenty (20) calendar days from 
+                        invoice date to resolve the toll. If unpaid after 20 days, a <strong>$20.00 per 
+                        day administrative late fee</strong> will accrue until paid.
+                      </p>
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
+              </CardContent>
+            </Card>
 
             {/* SECTION 8: FAQ */}
             <Card>
