@@ -97,7 +97,7 @@ import { ManageTrailersDialog } from "@/components/admin/ManageTrailersDialog";
 import { EditSubscriptionDatesDialog } from "@/components/admin/EditSubscriptionDatesDialog";
 import { ReadyToActivateCard } from "@/components/admin/ReadyToActivateCard";
 
-type BillingCycle = "weekly" | "biweekly" | "monthly";
+type BillingCycle = "weekly" | "biweekly" | "semimonthly" | "monthly";
 type DiscountType = "percentage" | "fixed" | "multi_trailer" | "promo_code";
 type PaymentStatus = "pending" | "processing" | "succeeded" | "failed" | "refunded";
 
@@ -964,6 +964,7 @@ export default function Billing() {
     const labels: Record<BillingCycle, string> = {
       weekly: "Weekly",
       biweekly: "Bi-weekly",
+      semimonthly: "Twice Monthly",
       monthly: "Monthly"
     };
     return labels[cycle];

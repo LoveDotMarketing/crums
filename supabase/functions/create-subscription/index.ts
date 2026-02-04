@@ -30,7 +30,7 @@ function calculateNextAnchorDate(anchorDay: number | null): number | undefined {
 interface SubscriptionRequest {
   customerId: string; // Our internal customer ID
   trailerIds: string[];
-  billingCycle: "weekly" | "biweekly" | "monthly";
+  billingCycle: "weekly" | "biweekly" | "monthly" | "semimonthly";
   depositAmount?: number;
   discountId?: string;
   customRates?: Record<string, number>; // trailerId -> custom rate override
@@ -175,10 +175,12 @@ serve(async (req) => {
       logStep("Created new Stripe customer", { stripeCustomerId });
     }
 
-    // Calculate billing interval
+    // Calculate billing interval for recurring charges after initial payment
+    // Note: semimonthly (twice monthly) uses biweekly as Stripe approximation
     const intervalMap = {
       weekly: { interval: "week" as const, interval_count: 1 },
       biweekly: { interval: "week" as const, interval_count: 2 },
+      semimonthly: { interval: "week" as const, interval_count: 2 }, // ~twice monthly
       monthly: { interval: "month" as const, interval_count: 1 },
     };
     const billingInterval = intervalMap[billingCycle];
@@ -267,10 +269,11 @@ serve(async (req) => {
       logStep("Created deposit price", { depositAmount, priceId: depositPrice.id });
     }
 
-    // Calculate billing anchor date based on customer preference
-    const anchorDate = calculateNextAnchorDate(customerApplication?.billing_anchor_day);
+    // NEW BILLING FLOW: Charge deposit + first period's rent IMMEDIATELY
+    // No trial period, no delayed anchor - customer pays upfront
+    // Subsequent recurring charges happen based on billing cycle
 
-    // Create the subscription with deposit as one-time charge on first invoice
+    // Create the subscription - charges deposit + first period immediately
     const subscriptionParams: Stripe.SubscriptionCreateParams = {
       customer: stripeCustomerId,
       items: subscriptionItems,
@@ -280,21 +283,11 @@ serve(async (req) => {
       metadata: { 
         internal_customer_id: customerId,
         deposit_amount: depositAmount?.toString() || "0",
+        billing_cycle: billingCycle,
       },
     };
 
-    // Use billing_cycle_anchor if customer has preference, otherwise use trial period
-    if (anchorDate) {
-      subscriptionParams.billing_cycle_anchor = anchorDate;
-      logStep("Using billing cycle anchor", { anchorDate: new Date(anchorDate * 1000).toISOString() });
-    } else {
-      // Fallback to 15-day trial for delayed first rent payment
-      const trialEndDate = Math.floor(Date.now() / 1000) + (15 * 24 * 60 * 60);
-      subscriptionParams.trial_end = trialEndDate;
-      logStep("Using 15-day trial period (no anchor preference)", { trialEndDate: new Date(trialEndDate * 1000).toISOString() });
-    }
-
-    // Add deposit as one-time invoice item on the first invoice
+    // Add deposit as one-time invoice item on the first invoice (charged with first period rent)
     if (depositInvoiceItem) {
       subscriptionParams.add_invoice_items = [depositInvoiceItem];
       logStep("Adding deposit to first invoice", { depositAmount });
@@ -305,10 +298,20 @@ serve(async (req) => {
     }
 
     const subscription = await stripe.subscriptions.create(subscriptionParams);
-    logStep("Created Stripe subscription", { 
+    
+    // Calculate what was charged on first invoice
+    const firstPeriodRent = trailers.reduce((sum, trailer) => {
+      const rate = customRates?.[trailer.id] ?? trailer.rental_rate ?? getDefaultRate(trailer.type);
+      return sum + rate;
+    }, 0);
+    
+    logStep("Created Stripe subscription with upfront charges", { 
       subscriptionId: subscription.id,
       hasDeposit: !!depositInvoiceItem,
-      depositAmount: depositAmount || 0
+      depositAmount: depositAmount || 0,
+      firstPeriodRent,
+      totalFirstInvoice: (depositAmount || 0) + firstPeriodRent,
+      nextRecurringCharge: billingCycle
     });
 
     // Create customer_subscription record

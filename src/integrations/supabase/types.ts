@@ -2390,7 +2390,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "customer" | "mechanic"
-      billing_cycle: "weekly" | "biweekly" | "monthly"
+      billing_cycle: "weekly" | "biweekly" | "monthly" | "semimonthly"
       discount_type: "percentage" | "fixed" | "multi_trailer" | "promo_code"
       payment_status:
         | "pending"
@@ -2526,7 +2526,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "customer", "mechanic"],
-      billing_cycle: ["weekly", "biweekly", "monthly"],
+      billing_cycle: ["weekly", "biweekly", "monthly", "semimonthly"],
       discount_type: ["percentage", "fixed", "multi_trailer", "promo_code"],
       payment_status: [
         "pending",
