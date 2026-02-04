@@ -37,7 +37,7 @@ import { Plus, Truck, RefreshCw, DollarSign, Tag, CalendarIcon, Info } from "luc
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-type BillingCycle = "weekly" | "biweekly" | "monthly";
+type BillingCycle = "weekly" | "biweekly" | "semimonthly" | "monthly";
 
 interface Customer {
   id: string;
@@ -357,7 +357,8 @@ export function CreateSubscriptionDialog({ onSuccess }: CreateSubscriptionDialog
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="weekly">Weekly</SelectItem>
-                  <SelectItem value="biweekly">Bi-weekly</SelectItem>
+                  <SelectItem value="biweekly">Bi-weekly (every 2 weeks)</SelectItem>
+                  <SelectItem value="semimonthly">Twice Monthly (1st & 15th)</SelectItem>
                   <SelectItem value="monthly">Monthly</SelectItem>
                 </SelectContent>
               </Select>
