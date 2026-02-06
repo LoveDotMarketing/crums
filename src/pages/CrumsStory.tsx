@@ -20,7 +20,7 @@ const CrumsStory = () => {
       <SEO
         title="The CRUMS Story"
         description="The story of CRUMS Leasing told through music - a journey from humble beginnings to building something meaningful."
-        noindex={true}
+        canonical="https://crumsleasing.com/crums-story"
         ogImage="/images/crums-story-og.png"
         structuredData={structuredData}
       />
