@@ -26,4 +26,18 @@
       <video:live>no</video:live>
     </video:video>
   </url>
+  <url>
+    <loc>https://crumsleasing.com/crums-story</loc>
+    <video:video>
+      <video:thumbnail_loc>https://img.youtube.com/vi/6bgpMNmkQbc/maxresdefault.jpg</video:thumbnail_loc>
+      <video:title>The CRUMS Story</video:title>
+      <video:description>The story of CRUMS Leasing told through music - a journey from humble beginnings to building something meaningful.</video:description>
+      <video:content_loc>https://www.youtube.com/watch?v=6bgpMNmkQbc</video:content_loc>
+      <video:player_loc allow_embed="yes">https://www.youtube.com/embed/6bgpMNmkQbc</video:player_loc>
+      <video:duration>215</video:duration>
+      <video:publication_date>2026-02-04</video:publication_date>
+      <video:family_friendly>yes</video:family_friendly>
+      <video:live>no</video:live>
+    </video:video>
+  </url>
 </urlset>
