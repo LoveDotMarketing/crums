@@ -616,17 +616,30 @@ const Index = () => {
                 in your success. Our team understands the challenges of the trucking industry because we've 
                 built relationships with drivers and carriers across the country.
               </p>
-              <Link to="/about">
-                <Button 
-                  size="lg" 
-                  variant="outline"
-                  className="border-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground"
-                  onClick={() => trackCtaClick('Learn More About Us', 'home', '/about')}
-                >
-                  Learn More About Us
-                  <ArrowRight className="ml-2 h-5 w-5" />
-                </Button>
-              </Link>
+              <div className="flex flex-wrap gap-4">
+                <Link to="/about">
+                  <Button 
+                    size="lg" 
+                    variant="outline"
+                    className="border-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground"
+                    onClick={() => trackCtaClick('Learn More About Us', 'home', '/about')}
+                  >
+                    Learn More About Us
+                    <ArrowRight className="ml-2 h-5 w-5" />
+                  </Button>
+                </Link>
+                <Link to="/crums-story">
+                  <Button 
+                    size="lg" 
+                    variant="outline"
+                    className="border-2 border-secondary text-secondary hover:bg-secondary hover:text-secondary-foreground"
+                    onClick={() => trackCtaClick('The CRUMS Story', 'home', '/crums-story')}
+                  >
+                    The CRUMS Story
+                    <Heart className="ml-2 h-5 w-5" />
+                  </Button>
+                </Link>
+              </div>
             </div>
             <div className="relative">
               <ProgressiveImage 
