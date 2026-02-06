@@ -2,7 +2,6 @@ import { SEO } from "@/components/SEO";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
-
 const CrumsStory = () => {
   const structuredData = {
     "@context": "https://schema.org",
@@ -14,23 +13,16 @@ const CrumsStory = () => {
     "contentUrl": "https://youtu.be/6bgpMNmkQbc",
     "embedUrl": "https://www.youtube.com/embed/6bgpMNmkQbc"
   };
-
-  return (
-    <div className="min-h-screen flex flex-col bg-background">
-      <SEO
-        title="The CRUMS Story"
-        description="The story of CRUMS Leasing told through music - a journey from humble beginnings to building something meaningful."
-        canonical="https://crumsleasing.com/crums-story"
-        ogImage="/images/crums-story-og.png"
-        structuredData={structuredData}
-      />
+  return <div className="min-h-screen flex flex-col bg-background">
+      <SEO title="The CRUMS Story" description="The story of CRUMS Leasing told through music - a journey from humble beginnings to building something meaningful." canonical="https://crumsleasing.com/crums-story" ogImage="/images/crums-story-og.png" structuredData={structuredData} />
       <Navigation />
-      <Breadcrumbs
-        items={[
-          { label: "Home", href: "/" },
-          { label: "The CRUMS Story", href: "/crums-story" }
-        ]}
-      />
+      <Breadcrumbs items={[{
+      label: "Home",
+      href: "/"
+    }, {
+      label: "The CRUMS Story",
+      href: "/crums-story"
+    }]} />
 
       {/* Hero Section */}
       <section className="relative bg-brand-navy text-white py-16 md:py-24">
@@ -52,13 +44,7 @@ const CrumsStory = () => {
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto">
             <div className="aspect-video rounded-xl overflow-hidden shadow-2xl bg-black">
-              <iframe
-                src="https://www.youtube.com/embed/6bgpMNmkQbc?rel=0"
-                title="The CRUMS Story Music Video"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-                className="w-full h-full"
-              />
+              <iframe src="https://www.youtube.com/embed/6bgpMNmkQbc?rel=0" title="The CRUMS Story Music Video" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen className="w-full h-full" />
             </div>
             
             {/* Credits Box */}
@@ -78,7 +64,7 @@ const CrumsStory = () => {
                 </div>
                 <div>
                   <span className="font-semibold text-foreground">Singer:</span>
-                  <span className="ml-2 text-muted-foreground">AI Vocals Sampled from Eric's Voice</span>
+                  <span className="ml-2 text-muted-foreground">AI Vocals Sampled from Eric Bledseo Voice</span>
                 </div>
                 <div className="sm:col-span-2">
                   <span className="font-semibold text-foreground">Produced by:</span>
@@ -269,8 +255,6 @@ const CrumsStory = () => {
       </section>
 
       <Footer />
-    </div>
-  );
+    </div>;
 };
-
 export default CrumsStory;
