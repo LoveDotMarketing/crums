@@ -174,10 +174,13 @@ serve(async (req: Request) => {
       // Don't fail - user was created, just role assignment failed
     }
 
-    // Generate password reset link and send email
+    // Generate password reset link - this triggers the email hook automatically
     const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
       type: "recovery",
       email: email.toLowerCase(),
+      options: {
+        redirectTo: `${req.headers.get("origin") || "https://crumsleasing.com"}/reset-password`,
+      },
     });
 
     if (linkError) {
@@ -192,19 +195,8 @@ serve(async (req: Request) => {
       );
     }
 
-    // Send password reset email using Supabase's built-in email
-    const { error: resetError } = await supabaseAdmin.auth.resetPasswordForEmail(
-      email.toLowerCase(),
-      {
-        redirectTo: `${req.headers.get("origin") || "https://crumsleasing.com"}/reset-password`,
-      }
-    );
-
-    if (resetError) {
-      console.error("[invite-staff] Reset email error:", resetError);
-    }
-
-    console.log(`[invite-staff] Successfully invited ${email} as ${role}`);
+    // Email is sent automatically via the email hook - no need for resetPasswordForEmail
+    console.log(`[invite-staff] Recovery email sent via hook to ${email}`);
 
     return new Response(
       JSON.stringify({ 
