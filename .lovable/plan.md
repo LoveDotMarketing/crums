@@ -1,143 +1,94 @@
 
-# Subscription Type Options Implementation Plan
+# Fix Staff Invitation Email Issue
 
-## Overview
-Add four distinct subscription/lease type scenarios as selectable options in the subscription creation flow and display them on the subscription pages:
-1. **Lease to Own** (already implemented at trailer level)
-2. **Rent for Storage** (new)
-3. **Standard 12 Month Lease** (new)
-4. **Repayment Plan** (new - for failed payments recovery)
+## Problem Identified
+The `invite-staff` edge function is calling **two email-sending methods** in succession:
+1. `auth.admin.generateLink({ type: "recovery" })` - Generates a link and triggers the email hook
+2. `auth.resetPasswordForEmail()` - Attempts to send another password reset email
 
-## Current State Analysis
-- The system already has a `lease_to_own` boolean on the `subscription_items` table (trailer-level)
-- Customer subscriptions support billing cycles (weekly, biweekly, semimonthly, monthly)
-- The `CreateSubscriptionDialog` component handles subscription creation with trailer selection
-- The admin Billing page displays subscription details
+The second call hits the Supabase rate limit (59-second cooldown between recovery emails), so no email actually gets delivered to the new staff member.
+
+## Solution
+Remove the redundant `resetPasswordForEmail()` call and rely on `generateLink()` which already sends the email via the configured email hook.
 
 ---
 
-## Technical Implementation
+## Technical Changes
 
-### 1. Database Schema Changes
+### File: `supabase/functions/invite-staff/index.ts`
 
-Add a new column to the `customer_subscriptions` table to track the subscription type at the subscription level:
+**Current code (lines 177-205):**
+```typescript
+// Generate password reset link and send email
+const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
+  type: "recovery",
+  email: email.toLowerCase(),
+});
 
-```sql
--- Add subscription_type enum
-CREATE TYPE subscription_type AS ENUM (
-  'standard_lease',
-  'rent_for_storage', 
-  'lease_to_own',
-  'repayment_plan'
+if (linkError) {
+  // ... error handling
+}
+
+// Send password reset email using Supabase's built-in email
+const { error: resetError } = await supabaseAdmin.auth.resetPasswordForEmail(
+  email.toLowerCase(),
+  {
+    redirectTo: `${req.headers.get("origin") || "https://crumsleasing.com"}/reset-password`,
+  }
 );
-
--- Add column to customer_subscriptions
-ALTER TABLE customer_subscriptions 
-ADD COLUMN subscription_type subscription_type DEFAULT 'standard_lease';
 ```
 
-**Note:** `lease_to_own` at the trailer level (in `subscription_items`) will be preserved for individual trailer tracking, while the subscription-level type provides the primary classification.
+**Updated code:**
+```typescript
+// Generate password reset link - this triggers the email hook automatically
+const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
+  type: "recovery",
+  email: email.toLowerCase(),
+  options: {
+    redirectTo: `${req.headers.get("origin") || "https://crumsleasing.com"}/reset-password`,
+  },
+});
 
-### 2. Update CreateSubscriptionDialog Component
+if (linkError) {
+  console.error("[invite-staff] Generate link error:", linkError);
+  return new Response(
+    JSON.stringify({ 
+      success: true, 
+      message: `User created with ${role} role but password reset email could not be sent. They can use 'Forgot Password' to set their password.`,
+      userId 
+    }),
+    { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+  );
+}
 
-**File:** `src/components/admin/CreateSubscriptionDialog.tsx`
+// Email is sent automatically via the email hook - no need for resetPasswordForEmail
+console.log(`[invite-staff] Recovery email sent via hook to ${email}`);
+```
 
-Add a new section with checkboxes/radio buttons for subscription type selection:
-
-- Add state: `subscriptionType` (string) to track selected type
-- Add a new UI section before the trailer selection with four options:
-  - Standard 12 Month Lease (default)
-  - Rent for Storage
-  - Lease to Own
-  - Repayment Plan
-
-**Behavior by Type:**
-| Type | Auto End Date | Notes |
-|------|--------------|-------|
-| Standard 12 Month Lease | Sets end date to 12 months from start | Minimum lease term |
-| Rent for Storage | Optional end date | Flexible storage arrangement |
-| Lease to Own | Required end date | Ownership transfer date matches end date |
-| Repayment Plan | Optional end date | For customers recovering from failed payments |
-
-When "Lease to Own" is selected at the subscription level, automatically check all trailers' `leaseToOwn` checkbox.
-
-### 3. Update Edge Function
-
-**File:** `supabase/functions/create-subscription/index.ts`
-
-- Add `subscriptionType` to the `SubscriptionRequest` interface
-- Store the subscription type in the `customer_subscriptions` table
-- When `subscriptionType` is `lease_to_own`, automatically set all trailer items' `lease_to_own` flag to true
-
-### 4. Update Admin Billing Display
-
-**File:** `src/pages/admin/Billing.tsx`
-
-- Add a "Type" column to the subscriptions table
-- Display the subscription type with appropriate badge styling:
-  - Standard Lease: Default badge
-  - Rent for Storage: Blue/info badge
-  - Lease to Own: Green/primary badge with key icon
-  - Repayment Plan: Amber/warning badge
-
-### 5. Update Customer Profile Display
-
-**File:** `src/pages/customer/Profile.tsx`
-
-- Display the subscription type in the "Contract Details" section
-- Add visual indication (badge or text) showing the lease type
-- For Lease to Own, show ownership transfer date prominently
+**Changes:**
+1. Add `options.redirectTo` to the `generateLink` call so the correct redirect URL is used
+2. Remove the redundant `resetPasswordForEmail()` call entirely
+3. Update logging to clarify email is sent via hook
 
 ---
 
-## UI Design
+## Why This Works
+The project has an email hook configured (`https://api.lovable.dev/projects/.../backend/email-hook`) that intercepts and sends authentication emails. When `generateLink({ type: "recovery" })` is called, this hook automatically sends the password reset email.
 
-### CreateSubscriptionDialog - New Section
-```
-┌─────────────────────────────────────────────────────────────┐
-│  Subscription Type                                          │
-├─────────────────────────────────────────────────────────────┤
-│  ○ Standard 12 Month Lease                                  │
-│    Minimum 12-month commitment with recurring billing       │
-│                                                             │
-│  ○ Rent for Storage                                         │
-│    Flexible rental for storage purposes                     │
-│                                                             │
-│  ○ Lease to Own                                             │
-│    Customer will own trailer(s) at end of lease             │
-│                                                             │
-│  ○ Repayment Plan                                           │
-│    Recovery plan for customers with failed payments         │
-└─────────────────────────────────────────────────────────────┘
-```
-
-### Billing Page - Subscriptions Table
-Add a "Type" column with colored badges:
-- `Standard Lease` - neutral/outline badge
-- `Rent for Storage` - blue badge with Storage icon
-- `Lease to Own` - green badge with KeyRound icon
-- `Repayment Plan` - amber badge with RefreshCw icon
+## Verification After Fix
+Once deployed, the next staff invitation will:
+1. Create the user account
+2. Assign the role
+3. Generate recovery link with proper redirect URL
+4. Email hook sends the password reset email (no rate limit conflict)
 
 ---
 
-## Files to Modify
+## Immediate Workaround for sales@crumsleasing.com
+Since the account exists but no email was received, the user can:
+1. Go to `/forgot-password`
+2. Enter `sales@crumsleasing.com`
+3. Receive a password reset email
+4. Set their password and log in
 
-| File | Changes |
-|------|---------|
-| Database migration | Add `subscription_type` enum and column |
-| `src/components/admin/CreateSubscriptionDialog.tsx` | Add subscription type selection UI and state |
-| `supabase/functions/create-subscription/index.ts` | Handle subscription type in creation logic |
-| `src/pages/admin/Billing.tsx` | Display subscription type in table |
-| `src/pages/customer/Profile.tsx` | Show subscription type to customer |
-| `src/integrations/supabase/types.ts` | Auto-updated with new enum/column |
-
----
-
-## Implementation Order
-
-1. Create database migration for new enum and column
-2. Update `CreateSubscriptionDialog` with type selection UI
-3. Update `create-subscription` edge function to handle new field
-4. Update admin Billing page to display subscription type
-5. Update customer Profile page to show subscription type
-6. Deploy edge function and test end-to-end
+Or an admin can manually trigger the reset from the Staff page if that feature exists.
