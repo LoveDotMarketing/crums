@@ -439,6 +439,7 @@ export default function TrailerDetail() {
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="available">Available</SelectItem>
+                            <SelectItem value="pending">Pending</SelectItem>
                             <SelectItem value="rented">Rented</SelectItem>
                             <SelectItem value="maintenance">Maintenance</SelectItem>
                           </SelectContent>
