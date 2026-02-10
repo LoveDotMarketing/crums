@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useState, useEffect } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -66,6 +66,29 @@ export default function Logs() {
   const [eventFilter, setEventFilter] = useState<string>("all");
   const [roleFilter, setRoleFilter] = useState<string>("all");
   const [impersonationSearch, setImpersonationSearch] = useState("");
+  const queryClient = useQueryClient();
+
+  // Real-time subscription for live updates
+  useEffect(() => {
+    const channel = supabase
+      .channel('activity-logs-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'user_activity_logs',
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ['activity-logs'] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
 
   const { data: logs = [], isLoading, refetch, isRefetching } = useQuery({
     queryKey: ['activity-logs'],
