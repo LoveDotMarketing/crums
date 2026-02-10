@@ -1,47 +1,47 @@
 
 
-## Fix Missing Login Logs and Add Real-Time Updates
+## Add Contract Start Date for DocuSign Completion
 
-### Problem
-1. **Missing customer login**: `dispatch@groundlinkllc.com` logged in today via session token refresh, but no activity log was recorded. The login tracking only fires during explicit password sign-in (`signIn` function), not when a user returns with a valid session or refreshes their token.
-2. **No live updates**: The Logs page requires a manual "Refresh" click to see new entries.
+### What This Does
+Adds a dedicated `contract_start_date` column to the `customer_subscriptions` table so that when a client completes their DocuSign contract, the exact contract start date is recorded and displayed on their profile. Currently, the profile shows `created_at` (when the subscription record was created in the system), which may differ from the actual contract signing date.
 
-### Root Cause
-In `src/hooks/useAuth.tsx`, the `onAuthStateChange` listener updates state but never calls `trackLoginEvent`. The `SIGNED_IN` and `TOKEN_REFRESHED` events are ignored for logging purposes. This means:
-- Password logins: logged (via `signIn` function)
-- Session restorations (returning users): NOT logged
-- Token refreshes: NOT logged
+### Changes
 
-### Solution
+**1. Database Migration**
+- Add `contract_start_date` (date, nullable) to `customer_subscriptions`
+- Add `docusign_envelope_id` (text, nullable) to `customer_subscriptions` for future DocuSign integration tracking
+- Add `docusign_completed_at` (timestamptz, nullable) to `customer_subscriptions` to record when the signing was completed
 
-**1. Track all auth events in `onAuthStateChange` (`src/hooks/useAuth.tsx`)**
+**2. Customer Profile Page (`src/pages/customer/Profile.tsx`)**
+- Update the "Contract Start" display to use `contract_start_date` when available, falling back to `created_at`
+- Add the `contract_start_date`, `docusign_envelope_id`, and `docusign_completed_at` fields to the subscription query select
+- If DocuSign was completed, show a "Contract Signed" date beneath the start date
 
-Add login tracking inside the `onAuthStateChange` callback for the `SIGNED_IN` event. Use a ref to prevent duplicate logging (since `SIGNED_IN` fires on both password login and session restore):
-
-- When `event === 'SIGNED_IN'`, fetch the user's role and call `trackLoginEvent`
-- Skip if the login was already tracked by the `signIn` function (use a `justSignedIn` ref flag)
-- This catches token refreshes and session restorations that currently go unlogged
-
-**2. Add real-time subscription to Logs page (`src/pages/admin/Logs.tsx`)**
-
-- Subscribe to `postgres_changes` on the `user_activity_logs` table
-- When a new row is inserted, automatically invalidate the query to refresh the table
-- This gives admins a live view without needing to click Refresh
+**3. Admin Customers Page**
+- Allow admins to set the `contract_start_date` when activating a subscription or editing contract details
+- This field will later be auto-populated by the DocuSign webhook when the document integration is ready
 
 ### Technical Details
 
-**File: `src/hooks/useAuth.tsx`**
-- Add a `useRef` flag (`signInTrackedRef`) set to `true` inside `signIn()` after tracking
-- In `onAuthStateChange`, when `event === 'SIGNED_IN'`:
-  - Check if `signInTrackedRef.current` is true; if so, reset it and skip (already logged by `signIn`)
-  - Otherwise, fetch role and call `trackLoginEvent` (this is a session restore / token login)
+**Migration SQL:**
+```sql
+ALTER TABLE customer_subscriptions
+  ADD COLUMN contract_start_date date,
+  ADD COLUMN docusign_envelope_id text,
+  ADD COLUMN docusign_completed_at timestamptz;
+```
 
-**File: `src/pages/admin/Logs.tsx`**
-- Add a `useEffect` with a Supabase realtime channel subscription on `user_activity_logs`
-- On `INSERT` event, call `queryClient.invalidateQueries({ queryKey: ['activity-logs'] })`
-- Clean up subscription on unmount
+**Profile display logic (Profile.tsx, line ~341-345):**
+- Change from: `format(new Date(subscription.created_at), "MMMM d, yyyy")`
+- Change to: `format(new Date(subscription.contract_start_date || subscription.created_at), "MMMM d, yyyy")`
+- Add label clarification: show "Contract Signed" with date if `docusign_completed_at` exists
 
-### What changes
-- All customer/mechanic/admin logins will be captured, whether by password, session restore, or token refresh
-- The Logs page will update in real-time as new login/logout events occur
-- No data loss for returning users who don't explicitly type their password
+**Subscription query update:**
+- Add `contract_start_date, docusign_envelope_id, docusign_completed_at` to the select in the subscription query
+
+### Future DocuSign Integration
+Once the DocuSign document is ready, a webhook endpoint will be created to:
+1. Receive the `envelope.completed` event from DocuSign
+2. Match the envelope to the customer subscription via `docusign_envelope_id`
+3. Auto-set `contract_start_date` and `docusign_completed_at`
+
