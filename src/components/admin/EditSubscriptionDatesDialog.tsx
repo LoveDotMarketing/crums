@@ -61,7 +61,7 @@ export function EditSubscriptionDatesDialog({
       const { error } = await supabase
         .from("customer_subscriptions")
         .update({
-          created_at: startDate?.toISOString(),
+          contract_start_date: startDate ? format(startDate, "yyyy-MM-dd") : null,
           end_date: endDate ? format(endDate, "yyyy-MM-dd") : null,
         })
         .eq("id", subscription.id);

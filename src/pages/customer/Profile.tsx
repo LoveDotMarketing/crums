@@ -47,6 +47,8 @@ interface SubscriptionInfo {
   end_date: string | null;
   next_billing_date: string | null;
   subscription_type: SubscriptionType | null;
+  contract_start_date: string | null;
+  docusign_completed_at: string | null;
 }
 
 export default function Profile() {
@@ -113,7 +115,7 @@ export default function Profile() {
       
       const { data, error } = await supabase
         .from('customer_subscriptions')
-        .select('id, status, billing_cycle, created_at, end_date, next_billing_date, subscription_type')
+        .select('id, status, billing_cycle, created_at, end_date, next_billing_date, subscription_type, contract_start_date, docusign_completed_at')
         .eq('customer_id', customerRecord.id)
         .maybeSingle();
       
@@ -340,8 +342,13 @@ export default function Profile() {
                         <div>
                           <p className="text-sm text-muted-foreground">Contract Start</p>
                           <p className="font-semibold">
-                            {format(new Date(subscription.created_at), "MMMM d, yyyy")}
+                            {format(new Date(subscription.contract_start_date || subscription.created_at), "MMMM d, yyyy")}
                           </p>
+                          {subscription.docusign_completed_at && (
+                            <p className="text-xs text-muted-foreground mt-1">
+                              Contract Signed: {format(new Date(subscription.docusign_completed_at), "MMMM d, yyyy")}
+                            </p>
+                          )}
                         </div>
                       </div>
                       <div className="flex items-center gap-3 p-4 bg-muted/50 rounded-lg border">
