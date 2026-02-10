@@ -37,6 +37,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { ScheduleReleaseDialog } from "@/components/admin/ScheduleReleaseDialog";
+import { ScheduleDropoffDialog } from "@/components/admin/ScheduleDropoffDialog";
 
 interface Trailer {
   id: string;
@@ -83,6 +84,8 @@ export default function Fleet() {
   const [unassignTrailerId, setUnassignTrailerId] = useState<string | null>(null);
   const [scheduleReleaseTrailer, setScheduleReleaseTrailer] = useState<Trailer | null>(null);
   const [isScheduleDialogOpen, setIsScheduleDialogOpen] = useState(false);
+  const [scheduleDropoffTrailer, setScheduleDropoffTrailer] = useState<Trailer | null>(null);
+  const [isDropoffDialogOpen, setIsDropoffDialogOpen] = useState(false);
   
   const [newTrailer, setNewTrailer] = useState({
     trailer_number: "",
@@ -836,16 +839,30 @@ export default function Fleet() {
                                   </Button>
                                 )}
                                 {(trailer.is_rented || trailer.customer_id) && (
-                                  <Button 
-                                    size="sm" 
-                                    variant="outline"
-                                    className="text-primary border-primary hover:bg-primary/10"
-                                    onClick={() => setUnassignTrailerId(trailer.id)}
-                                    title="Check in trailer (unassign from customer)"
-                                  >
-                                    <LogIn className="h-4 w-4 mr-1" />
-                                    Check In
-                                  </Button>
+                                  <>
+                                    <Button 
+                                      size="sm" 
+                                      variant="outline"
+                                      className="text-blue-600 border-blue-500 hover:bg-blue-50"
+                                      onClick={() => {
+                                        setScheduleDropoffTrailer(trailer);
+                                        setIsDropoffDialogOpen(true);
+                                      }}
+                                      title="Schedule drop-off"
+                                    >
+                                      <CalendarClock className="h-4 w-4" />
+                                    </Button>
+                                    <Button 
+                                      size="sm" 
+                                      variant="outline"
+                                      className="text-primary border-primary hover:bg-primary/10"
+                                      onClick={() => setUnassignTrailerId(trailer.id)}
+                                      title="Check in trailer (unassign from customer)"
+                                    >
+                                      <LogIn className="h-4 w-4 mr-1" />
+                                      Check In
+                                    </Button>
+                                  </>
                                 )}
                                 <Button 
                                   size="sm" 
@@ -899,6 +916,17 @@ export default function Fleet() {
               onScheduled={() => {
                 fetchCompanyAndTrailers();
                 setScheduleReleaseTrailer(null);
+              }}
+            />
+
+            {/* Schedule Drop-off Dialog */}
+            <ScheduleDropoffDialog
+              open={isDropoffDialogOpen}
+              onOpenChange={setIsDropoffDialogOpen}
+              trailer={scheduleDropoffTrailer}
+              onScheduled={() => {
+                fetchCompanyAndTrailers();
+                setScheduleDropoffTrailer(null);
               }}
             />
           </main>

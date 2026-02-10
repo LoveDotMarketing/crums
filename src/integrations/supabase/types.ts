@@ -2030,6 +2030,72 @@ export type Database = {
           },
         ]
       }
+      trailer_dropoff_requests: {
+        Row: {
+          created_at: string
+          customer_company: string | null
+          customer_id: string | null
+          customer_name: string | null
+          customer_phone: string | null
+          id: string
+          notes: string | null
+          received_at: string | null
+          received_by: string | null
+          scheduled_by: string
+          scheduled_dropoff_date: string
+          status: string
+          trailer_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          customer_company?: string | null
+          customer_id?: string | null
+          customer_name?: string | null
+          customer_phone?: string | null
+          id?: string
+          notes?: string | null
+          received_at?: string | null
+          received_by?: string | null
+          scheduled_by: string
+          scheduled_dropoff_date: string
+          status?: string
+          trailer_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          customer_company?: string | null
+          customer_id?: string | null
+          customer_name?: string | null
+          customer_phone?: string | null
+          id?: string
+          notes?: string | null
+          received_at?: string | null
+          received_by?: string | null
+          scheduled_by?: string
+          scheduled_dropoff_date?: string
+          status?: string
+          trailer_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trailer_dropoff_requests_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trailer_dropoff_requests_trailer_id_fkey"
+            columns: ["trailer_id"]
+            isOneToOne: false
+            referencedRelation: "trailers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       trailer_release_requests: {
         Row: {
           assigned_mechanic_id: string | null
