@@ -174,7 +174,7 @@ serve(async (req: Request) => {
       // Don't fail - user was created, just role assignment failed
     }
 
-    // Generate password reset link - this triggers the email hook automatically
+    // Generate password reset link
     const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
       type: "recovery",
       email: email.toLowerCase(),
@@ -195,13 +195,80 @@ serve(async (req: Request) => {
       );
     }
 
-    // Email is sent automatically via the email hook - no need for resetPasswordForEmail
-    console.log(`[invite-staff] Recovery email sent via hook to ${email}`);
+    // Extract the action link from the generated link data
+    const resetLink = linkData?.properties?.action_link;
+    console.log(`[invite-staff] Generated reset link for ${email}`);
+
+    // Send welcome email via SendGrid
+    const SENDGRID_API_KEY = Deno.env.get("SENDGRID_API_KEY");
+    if (SENDGRID_API_KEY && resetLink) {
+      const roleName = role === "admin" ? "Administrator" : "Mechanic";
+      const staffName = firstName || email.split("@")[0];
+
+      const emailHtml = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <div style="text-align: center; margin-bottom: 30px;">
+            <h1 style="color: #1a1a1a; margin-bottom: 5px;">Welcome to CRUMS Leasing</h1>
+            <p style="color: #666; font-size: 16px;">You've been invited as a <strong>${roleName}</strong></p>
+          </div>
+          <div style="background: #f9fafb; border-radius: 8px; padding: 24px; margin-bottom: 24px;">
+            <p style="color: #333; font-size: 15px; line-height: 1.6;">Hi ${staffName},</p>
+            <p style="color: #333; font-size: 15px; line-height: 1.6;">
+              You've been added to the CRUMS Leasing team as a <strong>${roleName}</strong>. 
+              To get started, please set your password by clicking the button below.
+            </p>
+          </div>
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${resetLink}" style="background-color: #e85d04; color: white; padding: 14px 32px; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: bold; display: inline-block;">
+              Set Your Password
+            </a>
+          </div>
+          <div style="background: #f9fafb; border-radius: 8px; padding: 16px; margin-bottom: 24px;">
+            <p style="color: #555; font-size: 14px; margin: 0;"><strong>Your login email:</strong> ${email.toLowerCase()}</p>
+          </div>
+          <p style="color: #999; font-size: 13px; text-align: center;">
+            If the button doesn't work, copy and paste this link into your browser:<br/>
+            <a href="${resetLink}" style="color: #e85d04; word-break: break-all;">${resetLink}</a>
+          </p>
+          <hr style="border: none; border-top: 1px solid #eee; margin: 24px 0;"/>
+          <p style="color: #999; font-size: 12px; text-align: center;">
+            CRUMS Leasing &bull; San Antonio, TX
+          </p>
+        </div>
+      `;
+
+      try {
+        const sgResponse = await fetch("https://api.sendgrid.com/v3/mail/send", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${SENDGRID_API_KEY}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            personalizations: [{ to: [{ email: email.toLowerCase() }] }],
+            from: { email: "sales@crumsleasing.com", name: "CRUMS Leasing" },
+            subject: `Welcome to CRUMS Leasing — Set Your Password`,
+            content: [{ type: "text/html", value: emailHtml }],
+          }),
+        });
+
+        if (sgResponse.ok) {
+          console.log(`[invite-staff] Welcome email sent to ${email} via SendGrid`);
+        } else {
+          const errText = await sgResponse.text();
+          console.error(`[invite-staff] SendGrid error: ${errText}`);
+        }
+      } catch (sgErr) {
+        console.error("[invite-staff] SendGrid send failed:", sgErr);
+      }
+    } else {
+      console.warn("[invite-staff] SENDGRID_API_KEY not set or no reset link — skipping welcome email");
+    }
 
     return new Response(
       JSON.stringify({ 
         success: true, 
-        message: `${existingUser ? "Existing user updated" : "New user created"} with ${role} role. Password reset email sent to ${email}.`,
+        message: `${existingUser ? "Existing user updated" : "New user created"} with ${role} role. Welcome email sent to ${email}.`,
         userId 
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
