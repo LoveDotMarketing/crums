@@ -1,39 +1,83 @@
 
 
-## Enhance Mechanic ID Verification for Customer Pickup
+## Add Pickup and Drop-off Queue to Mechanic Dashboard
 
 ### What This Does
-When a customer arrives at the yard to pick up their trailer, the mechanic needs to confirm the person is who they claim to be. The system already has a pending pickups queue and a checkout dialog with an ID verification step, but currently the driver's license is only shown as a clickable link. This update will display the customer's uploaded ID photo **inline** so the mechanic can visually compare it to the person standing in front of them, alongside the customer's profile name for a side-by-side identity check.
-
-### Current Flow (already working)
-1. Admin schedules a release -- appears in mechanic's "Pending Customer Pickups" queue
-2. Mechanic starts DOT inspection on the trailer
-3. After inspection, mechanic opens the Customer Checkout dialog
-4. Dialog checks eligibility (application approved, ID uploaded, ACH linked)
-5. **ID Verification step** -- mechanic confirms physical ID matches (currently just a "View Document" link)
-6. Final release -- trailer marked as rented
+Makes the "Pending Customer Pickups" section always visible on the mechanic dashboard (even when there are no upcoming pickups) and adds a new "Scheduled Drop-offs" section so mechanics can see when customers are returning trailers. Both sections update in real-time.
 
 ### Changes
 
-**1. Customer Checkout Dialog -- Inline ID Display (`src/components/mechanic/CustomerCheckoutDialog.tsx`)**
-- Replace the "View Document" external link with an inline `<img>` tag showing the driver's license front photo directly in the dialog
-- Add a second inline image for the driver's license back
-- Display the customer's **full name** and **company** prominently above the images so the mechanic can compare name-on-ID vs name-on-file
-- Add a visual "Name on File" badge next to the images for quick cross-reference
-- Keep the external link as a fallback "Open Full Size" option beneath the image
+**1. Database: Create `trailer_dropoff_requests` Table**
+- New table to track scheduled trailer returns with fields for trailer, customer details, scheduled date, notes, and status
+- Statuses: `scheduled`, `received`, `inspected`, `completed`
+- RLS policies for admin/mechanic access
+- Enable realtime so the mechanic dashboard updates live
 
-**2. Pending Releases Queue -- Customer Name Visibility (`src/components/mechanic/PendingReleasesQueue.tsx`)**
-- Already shows customer name, company, phone, and pickup date -- no changes needed here
+**2. Update `PendingReleasesQueue` Component**
+- Show an empty state ("No upcoming pickups scheduled") instead of hiding the component when there are zero pending releases
+- This ensures the section is always visible on the dashboard
+
+**3. Create `ScheduledDropoffsQueue` Component**
+- New component similar to `PendingReleasesQueue` but for trailer returns
+- Shows customer name, company, phone, trailer number, and scheduled drop-off date/time
+- Urgency badges (OVERDUE, TODAY, TOMORROW) matching the pickup queue style
+- "Mark Received" button for the mechanic to acknowledge the trailer has been returned
+- Real-time subscription on `trailer_dropoff_requests` table
+- Always visible with an empty state when there are no upcoming drop-offs
+
+**4. Add Drop-off Queue to Mechanic Dashboard**
+- Render `ScheduledDropoffsQueue` alongside the existing `PendingReleasesQueue`
+- Positioned right after the pickups queue so both are visible together
+
+**5. Admin: Add Schedule Drop-off Capability**
+- Create a `ScheduleDropoffDialog` component for admins to schedule a trailer return from the Fleet page
+- Fields: customer (auto-populated from assigned trailer), scheduled return date/time, notes
+- Available on rented trailers in the admin Fleet view
 
 ### Technical Details
 
-**CustomerCheckoutDialog.tsx -- ID Verify Step (lines ~440-504):**
-- Replace the simple link with an image grid:
-  - Front of license displayed as an inline image (max-height constrained for the dialog)
-  - Back of license displayed as an inline image
-  - Both images clickable to open full-size in a new tab
-- Add a prominent "Name on File" section showing `customer.full_name` and `customer.company_name` so the mechanic can compare it to the name printed on the physical ID
-- Add visual cues: a bordered comparison card with the profile name on one side and the ID image on the other
+**Migration SQL:**
+```sql
+CREATE TABLE public.trailer_dropoff_requests (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  trailer_id uuid NOT NULL REFERENCES trailers(id),
+  customer_id uuid REFERENCES customers(id),
+  scheduled_by uuid NOT NULL REFERENCES auth.users(id),
+  customer_name text,
+  customer_company text,
+  customer_phone text,
+  scheduled_dropoff_date timestamptz NOT NULL,
+  notes text,
+  status text NOT NULL DEFAULT 'scheduled',
+  received_by uuid REFERENCES auth.users(id),
+  received_at timestamptz,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
 
-**Image source:** The driver's license URLs come from `customer_applications.drivers_license_url` and `drivers_license_back_url`, which are already fetched during the eligibility check and passed through `eligibility.profile.drivers_license_url`.
+ALTER TABLE trailer_dropoff_requests ENABLE ROW LEVEL SECURITY;
 
+-- Admin and mechanic read/write policies
+CREATE POLICY "Admins can manage dropoff requests"
+  ON trailer_dropoff_requests FOR ALL
+  USING (public.has_role(auth.uid(), 'admin'));
+
+CREATE POLICY "Mechanics can view and update dropoff requests"
+  ON trailer_dropoff_requests FOR SELECT
+  USING (public.has_role(auth.uid(), 'mechanic'));
+
+CREATE POLICY "Mechanics can update dropoff requests"
+  ON trailer_dropoff_requests FOR UPDATE
+  USING (public.has_role(auth.uid(), 'mechanic'));
+
+ALTER PUBLICATION supabase_realtime ADD TABLE public.trailer_dropoff_requests;
+```
+
+**New files:**
+- `src/components/mechanic/ScheduledDropoffsQueue.tsx` -- drop-off queue component
+- `src/components/admin/ScheduleDropoffDialog.tsx` -- admin scheduling dialog
+
+**Modified files:**
+- `src/components/mechanic/PendingReleasesQueue.tsx` -- show empty state instead of hiding
+- `src/pages/mechanic/MechanicDashboard.tsx` -- add drop-off queue import and render
+- `src/pages/admin/Fleet.tsx` -- add schedule drop-off button for rented trailers
