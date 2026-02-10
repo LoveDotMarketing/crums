@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format, addWeeks, nextWednesday, isWednesday, parseISO } from "date-fns";
 import { Calendar, FileText, Calculator, Newspaper, Clock, CheckCircle, XCircle, Plus, Trash2, RefreshCw, Eye, CalendarIcon } from "lucide-react";
@@ -93,7 +93,32 @@ export default function ContentSchedule() {
     },
   });
 
-  // Auto-schedule unpublished content
+  // Auto-publish past-due scheduled items
+  const hasAutoPublished = useRef(false);
+  useEffect(() => {
+    if (!scheduledContent || hasAutoPublished.current) return;
+    const today = format(new Date(), "yyyy-MM-dd");
+    const pastDue = scheduledContent.filter(
+      (item) => item.status === "scheduled" && item.scheduled_date < today
+    );
+    if (pastDue.length === 0) return;
+    hasAutoPublished.current = true;
+
+    const updateAll = async () => {
+      for (const item of pastDue) {
+        await supabase
+          .from("scheduled_content")
+          .update({
+            status: "published",
+            published_at: `${item.scheduled_date}T15:00:00Z`,
+          })
+          .eq("id", item.id);
+      }
+      queryClient.invalidateQueries({ queryKey: ["scheduled-content"] });
+    };
+    updateAll();
+  }, [scheduledContent, queryClient]);
+
   const autoScheduleMutation = useMutation({
     mutationFn: async () => {
       const unpublishedGuides = getUnpublishedGuides();
