@@ -68,6 +68,7 @@ interface InspectionData {
   // Reflective
   dot_reflective_tape_present: boolean;
   conspicuity_markings_intact: boolean;
+  trailer_id_visible: boolean;
   reflective_comments: string;
   // Signature
   inspector_signature: string | null;
@@ -110,6 +111,7 @@ const initialData: InspectionData = {
   coupling_comments: "",
   dot_reflective_tape_present: false,
   conspicuity_markings_intact: false,
+  trailer_id_visible: false,
   reflective_comments: "",
   inspector_signature: null,
   dot_release_confirmed: false
@@ -217,6 +219,7 @@ export default function DOTInspectionForm() {
           coupling_comments: existingInspection.coupling_comments || "",
           dot_reflective_tape_present: existingInspection.dot_reflective_tape_present || false,
           conspicuity_markings_intact: existingInspection.conspicuity_markings_intact || false,
+          trailer_id_visible: (existingInspection as any).trailer_id_visible || false,
           reflective_comments: existingInspection.reflective_comments || "",
           inspector_signature: existingInspection.inspector_signature,
           dot_release_confirmed: existingInspection.dot_release_confirmed || false
@@ -707,7 +710,8 @@ export default function DOTInspectionForm() {
                   title="Reflective Marking Inspection"
                   items={[
                     { id: "dot_reflective_tape_present", label: "DOT reflective tape present (sides/rear)", checked: formData.dot_reflective_tape_present },
-                    { id: "conspicuity_markings_intact", label: "Conspicuity markings intact and visible", checked: formData.conspicuity_markings_intact }
+                    { id: "conspicuity_markings_intact", label: "Conspicuity markings intact and visible", checked: formData.conspicuity_markings_intact },
+                    { id: "trailer_id_visible", label: "Trailer identification clearly visible", checked: formData.trailer_id_visible }
                   ]}
                   comments={formData.reflective_comments}
                   onItemChange={(id, checked) => updateField(id as keyof InspectionData, checked)}

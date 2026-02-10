@@ -1,0 +1,1 @@
+ALTER TABLE public.dot_inspections ADD COLUMN trailer_id_visible boolean DEFAULT null;
