@@ -87,6 +87,15 @@ interface MaintenanceRecord {
   mechanic_id: string | null;
 }
 
+type AgreementType = 'standard_lease' | 'lease_to_own' | 'rent_for_storage' | 'repayment_plan';
+
+const AGREEMENT_LABELS: Record<AgreementType, string> = {
+  standard_lease: 'Standard Lease',
+  lease_to_own: 'Lease to Own',
+  rent_for_storage: 'Rent for Storage',
+  repayment_plan: 'Repayment Plan',
+};
+
 export default function TrailerDetail() {
   const { trailerId } = useParams<{ trailerId: string }>();
   const navigate = useNavigate();
@@ -97,11 +106,16 @@ export default function TrailerDetail() {
   const [saving, setSaving] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState<Partial<Trailer>>({});
+  const [agreementType, setAgreementType] = useState<AgreementType | null>(null);
+  const [editAgreementType, setEditAgreementType] = useState<AgreementType | null>(null);
+  const [subscriptionId, setSubscriptionId] = useState<string | null>(null);
+  const [subscriptionItemId, setSubscriptionItemId] = useState<string | null>(null);
 
   useEffect(() => {
     if (trailerId) {
       fetchTrailerData();
       fetchCustomers();
+      fetchAgreementType();
     }
   }, [trailerId]);
 
@@ -119,6 +133,44 @@ export default function TrailerDetail() {
       console.error("Error fetching customers:", error);
     }
   };
+
+  const fetchAgreementType = async () => {
+    if (!trailerId) return;
+    try {
+      // Get subscription item for this trailer to find the subscription
+      const { data: subItem } = await supabase
+        .from("subscription_items")
+        .select("id, lease_to_own, subscription_id")
+        .eq("trailer_id", trailerId)
+        .in("status", ["active", "paused"])
+        .maybeSingle();
+
+      if (subItem) {
+        setSubscriptionItemId(subItem.id);
+        setSubscriptionId(subItem.subscription_id);
+
+        // Fetch subscription type
+        const { data: sub } = await supabase
+          .from("customer_subscriptions")
+          .select("subscription_type")
+          .eq("id", subItem.subscription_id)
+          .maybeSingle();
+
+        const type = (sub?.subscription_type as AgreementType) || 'standard_lease';
+        setAgreementType(type);
+        setEditAgreementType(type);
+      } else {
+        setAgreementType(null);
+        setEditAgreementType(null);
+        setSubscriptionId(null);
+        setSubscriptionItemId(null);
+      }
+    } catch (error) {
+      console.error("Error fetching agreement type:", error);
+    }
+  };
+
+
 
   const fetchTrailerData = async () => {
     try {
@@ -189,6 +241,23 @@ export default function TrailerDetail() {
         .eq("id", trailer.id);
 
       if (error) throw error;
+
+      // Save agreement type if subscription exists
+      if (subscriptionId && editAgreementType && editAgreementType !== agreementType) {
+        await supabase
+          .from("customer_subscriptions")
+          .update({ subscription_type: editAgreementType })
+          .eq("id", subscriptionId);
+
+        if (subscriptionItemId) {
+          await supabase
+            .from("subscription_items")
+            .update({ lease_to_own: editAgreementType === 'lease_to_own' })
+            .eq("id", subscriptionItemId);
+        }
+
+        setAgreementType(editAgreementType);
+      }
 
       toast.success("Trailer updated successfully");
       setTrailer({ ...trailer, ...formData, status: newStatus, is_rented: hasCustomer } as Trailer);
@@ -269,7 +338,7 @@ export default function TrailerDetail() {
               <div className="flex gap-2">
                 {isEditing ? (
                   <>
-                    <Button variant="outline" onClick={() => { setIsEditing(false); setFormData(trailer); }}>
+                    <Button variant="outline" onClick={() => { setIsEditing(false); setFormData(trailer); setEditAgreementType(agreementType); }}>
                       Cancel
                     </Button>
                     <Button onClick={handleSave} disabled={saving}>
@@ -475,7 +544,7 @@ export default function TrailerDetail() {
                   <CardDescription>Assign this trailer to a customer</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="space-y-2">
                       <Label>Assigned Customer</Label>
                       {isEditing ? (
@@ -512,7 +581,37 @@ export default function TrailerDetail() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label>Rental Rate</Label>
+                      <Label>Agreement Type</Label>
+                      {isEditing ? (
+                        <Select
+                          value={editAgreementType || "standard_lease"}
+                          onValueChange={(value) => setEditAgreementType(value as AgreementType)}
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="standard_lease">Standard Lease</SelectItem>
+                            <SelectItem value="lease_to_own">Lease to Own</SelectItem>
+                            <SelectItem value="rent_for_storage">Rent for Storage</SelectItem>
+                            <SelectItem value="repayment_plan">Repayment Plan</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        <div>
+                          {agreementType ? (
+                            <Badge variant={agreementType === 'lease_to_own' ? 'default' : 'secondary'}>
+                              {AGREEMENT_LABELS[agreementType]}
+                            </Badge>
+                          ) : (
+                            <span className="text-muted-foreground text-sm">No subscription</span>
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Rate</Label>
                       {isEditing ? (
                         <div className="flex gap-2">
                           <Input
@@ -526,7 +625,7 @@ export default function TrailerDetail() {
                             value={formData.rental_frequency || "monthly"}
                             onValueChange={(value) => setFormData({ ...formData, rental_frequency: value })}
                           >
-                            <SelectTrigger className="w-32">
+                            <SelectTrigger className="w-28">
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
