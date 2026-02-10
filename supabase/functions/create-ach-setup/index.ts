@@ -21,7 +21,9 @@ serve(async (req) => {
     logStep("Function started");
 
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
+    const stripePublishableKey = Deno.env.get("STRIPE_PUBLISHABLE_KEY");
     if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
+    if (!stripePublishableKey) throw new Error("STRIPE_PUBLISHABLE_KEY is not set");
 
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
@@ -127,6 +129,7 @@ serve(async (req) => {
         clientSecret: setupIntent.client_secret,
         setupIntentId: setupIntent.id,
         customerId: customerId,
+        publishableKey: stripePublishableKey,
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
