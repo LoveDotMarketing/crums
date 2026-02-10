@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Wrench, LogOut, Truck, Search, MapPin, DollarSign, ClipboardList, ClipboardCheck, Eye, ArrowDownToLine, ArrowUpFromLine, History, Calendar, Loader2, UserCheck, Users } from "lucide-react";
+import { Wrench, LogOut, Truck, Search, MapPin, DollarSign, ClipboardList, ClipboardCheck, Eye, ArrowDownToLine, ArrowUpFromLine, History, Calendar, Loader2, UserCheck, Users, CheckCircle2, Clock, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import { ChatBot } from "@/components/ChatBot";
 import { SEO } from "@/components/SEO";
@@ -104,6 +104,15 @@ export default function MechanicDashboard() {
   const [fleetActivityLogs, setFleetActivityLogs] = useState<FleetActivityLog[]>([]);
   const [loadingActivityLogs, setLoadingActivityLogs] = useState(false);
   const [isActivityLogOpen, setIsActivityLogOpen] = useState(false);
+  const [awaitingAcknowledgments, setAwaitingAcknowledgments] = useState<Array<{
+    id: string;
+    trailer_id: string;
+    trailer_number: string;
+    inspection_date: string;
+    customer_name: string | null;
+    customer_company_name: string | null;
+    customer_acknowledged: boolean;
+  }>>([]);
 
   // Helper to log fleet activity
   const logFleetActivity = async (
@@ -222,6 +231,22 @@ export default function MechanicDashboard() {
     }
   };
 
+  const fetchAwaitingAcknowledgments = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("dot_inspections")
+        .select("id, trailer_id, trailer_number, inspection_date, customer_name, customer_company_name, customer_acknowledged")
+        .eq("status", "completed")
+        .eq("customer_acknowledged", false)
+        .order("inspection_date", { ascending: false });
+
+      if (error) throw error;
+      setAwaitingAcknowledgments(data || []);
+    } catch (error) {
+      console.error("Error fetching awaiting acknowledgments:", error);
+    }
+  };
+
   const fetchActiveJobs = async () => {
     if (!currentUserId) return;
     try {
@@ -297,6 +322,7 @@ export default function MechanicDashboard() {
     if (currentUserId) {
       fetchPendingInspections();
       fetchActiveJobs();
+      fetchAwaitingAcknowledgments();
     }
     
     const channel = supabase
@@ -314,9 +340,18 @@ export default function MechanicDashboard() {
       })
       .subscribe();
 
+    const inspectionChannel = supabase
+      .channel('inspection-ack-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'dot_inspections' }, () => {
+        fetchAwaitingAcknowledgments();
+        fetchPendingInspections();
+      })
+      .subscribe();
+
     return () => { 
       supabase.removeChannel(channel); 
       supabase.removeChannel(maintenanceChannel);
+      supabase.removeChannel(inspectionChannel);
     };
   }, [currentUserId]);
 
@@ -732,6 +767,69 @@ export default function MechanicDashboard() {
 
         {/* Pending Releases Queue */}
         <PendingReleasesQueue />
+
+        {/* Awaiting Customer DOT Acknowledgment */}
+        {awaitingAcknowledgments.length > 0 && (
+          <Card className="mb-6 border-blue-500/30 bg-gradient-to-br from-blue-50/50 to-indigo-50/30 dark:from-blue-950/20 dark:to-indigo-950/10">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <UserCheck className="h-5 w-5 text-blue-600" />
+                  <CardTitle>Awaiting Customer DOT Acknowledgment</CardTitle>
+                </div>
+                <Badge variant="outline" className="border-blue-500 text-blue-700">
+                  {awaitingAcknowledgments.length} pending
+                </Badge>
+              </div>
+              <CardDescription>
+                DOT inspections completed — waiting for customers to sign their acknowledgment form
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {awaitingAcknowledgments.map((inspection) => (
+                  <Card key={inspection.id} className="bg-card">
+                    <CardHeader className="pb-2">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Truck className="h-4 w-4 text-muted-foreground" />
+                          <CardTitle className="text-base font-semibold">
+                            {inspection.trailer_number}
+                          </CardTitle>
+                        </div>
+                        <Badge variant="outline" className="border-blue-500 text-blue-600">
+                          <Clock className="h-3 w-3 mr-1" />
+                          Awaiting
+                        </Badge>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+                      {inspection.customer_name && (
+                        <div className="flex items-center gap-2 text-sm">
+                          <Users className="h-3.5 w-3.5 text-muted-foreground" />
+                          <span className="font-medium">{inspection.customer_name}</span>
+                        </div>
+                      )}
+                      {inspection.customer_company_name && (
+                        <p className="text-xs text-muted-foreground ml-5">
+                          {inspection.customer_company_name}
+                        </p>
+                      )}
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <ClipboardCheck className="h-3.5 w-3.5" />
+                        <span>Inspected {new Date(inspection.inspection_date).toLocaleDateString()}</span>
+                      </div>
+                      <div className="flex items-center gap-2 mt-2 p-2 bg-blue-50 dark:bg-blue-950/30 rounded text-xs text-blue-700 dark:text-blue-400">
+                        <XCircle className="h-3.5 w-3.5 flex-shrink-0" />
+                        <span>Customer has not yet signed the DOT acknowledgment</span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* My Active Jobs Section */}
         {activeJobs.length > 0 && (
