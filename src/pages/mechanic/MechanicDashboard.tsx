@@ -15,6 +15,7 @@ import { ChatBot } from "@/components/ChatBot";
 import { SEO } from "@/components/SEO";
 import { cn } from "@/lib/utils";
 import { PendingReleasesQueue } from "@/components/mechanic/PendingReleasesQueue";
+import { ScheduledDropoffsQueue } from "@/components/mechanic/ScheduledDropoffsQueue";
 import { CustomerCheckoutDialog } from "@/components/mechanic/CustomerCheckoutDialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
@@ -767,6 +768,9 @@ export default function MechanicDashboard() {
 
         {/* Pending Releases Queue */}
         <PendingReleasesQueue />
+
+        {/* Scheduled Drop-offs Queue */}
+        <ScheduledDropoffsQueue />
 
         {/* Awaiting Customer DOT Acknowledgment */}
         {awaitingAcknowledgments.length > 0 && (

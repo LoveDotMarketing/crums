@@ -173,7 +173,19 @@ export function PendingReleasesQueue({ onStartInspection }: PendingReleasesQueue
   }
 
   if (releases.length === 0) {
-    return null;
+    return (
+      <Card className="mb-6 border-amber-500/30 bg-gradient-to-br from-amber-50/50 to-orange-50/30 dark:from-amber-950/20 dark:to-orange-950/10">
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Clock className="h-5 w-5 text-amber-600" />
+            <CardTitle>Pending Customer Pickups</CardTitle>
+          </div>
+          <CardDescription>
+            No upcoming pickups scheduled
+          </CardDescription>
+        </CardHeader>
+      </Card>
+    );
   }
 
   return (
