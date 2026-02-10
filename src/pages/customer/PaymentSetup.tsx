@@ -89,11 +89,13 @@ export default function PaymentSetup() {
         throw new Error("Failed to create setup session");
       }
 
-      // Load Stripe.js dynamically
-      const stripePublishableKey = "pk_test_51Sa3rWPtmYCiZhW22r6qr9yOYgo6tLZPWtlebm2BRdoX08weKgT6zFrr2sCIZIbwZY6OyCuKspBzOSnUYNktjkkg00GkEw1CPJ";
+      if (!data?.publishableKey) {
+        throw new Error("Stripe publishable key not available");
+      }
 
+      // Load Stripe.js dynamically
       const { loadStripe } = await import("@stripe/stripe-js");
-      const stripe = await loadStripe(stripePublishableKey);
+      const stripe = await loadStripe(data.publishableKey);
       
       if (!stripe) {
         throw new Error("Failed to load Stripe");
