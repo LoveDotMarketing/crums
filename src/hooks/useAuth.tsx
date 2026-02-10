@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState, useRef } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
@@ -55,6 +55,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
 
   const sessionStartTime = useState<Date | null>(null);
+  const signInTrackedRef = useRef(false);
 
   // Impersonation helpers
   const isImpersonating = impersonatedUser !== null;
@@ -159,6 +160,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setTimeout(() => {
             fetchUserRole(session.user.id);
           }, 0);
+
+          // Track session restore / token refresh logins
+          if (event === 'SIGNED_IN') {
+            if (signInTrackedRef.current) {
+              // Already tracked by the signIn() function, skip
+              signInTrackedRef.current = false;
+            } else {
+              // Session restore or token login — track it
+              setTimeout(async () => {
+                try {
+                  const { data: roleData } = await supabase
+                    .from("user_roles")
+                    .select("role")
+                    .eq("user_id", session.user.id)
+                    .single();
+                  trackLoginEvent(session.user.id, session.user.email || '', roleData?.role || null);
+                } catch (err) {
+                  console.error("Error tracking session restore login:", err);
+                }
+              }, 0);
+            }
+          }
         } else {
           setUserRole(null);
           // Clear impersonation on logout
@@ -274,6 +297,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .eq("user_id", loggedInUser.id)
         .single();
       
+      signInTrackedRef.current = true;
       trackLoginEvent(loggedInUser.id, email, roleData?.role || null);
     }
 
