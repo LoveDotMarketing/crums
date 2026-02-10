@@ -375,11 +375,14 @@ export type Database = {
       customer_subscriptions: {
         Row: {
           billing_cycle: Database["public"]["Enums"]["billing_cycle"]
+          contract_start_date: string | null
           created_at: string
           customer_id: string
           deposit_amount: number | null
           deposit_paid: boolean | null
           deposit_paid_at: string | null
+          docusign_completed_at: string | null
+          docusign_envelope_id: string | null
           end_date: string | null
           failed_payment_count: number | null
           grace_period_end: string | null
@@ -396,11 +399,14 @@ export type Database = {
         }
         Insert: {
           billing_cycle?: Database["public"]["Enums"]["billing_cycle"]
+          contract_start_date?: string | null
           created_at?: string
           customer_id: string
           deposit_amount?: number | null
           deposit_paid?: boolean | null
           deposit_paid_at?: string | null
+          docusign_completed_at?: string | null
+          docusign_envelope_id?: string | null
           end_date?: string | null
           failed_payment_count?: number | null
           grace_period_end?: string | null
@@ -417,11 +423,14 @@ export type Database = {
         }
         Update: {
           billing_cycle?: Database["public"]["Enums"]["billing_cycle"]
+          contract_start_date?: string | null
           created_at?: string
           customer_id?: string
           deposit_amount?: number | null
           deposit_paid?: boolean | null
           deposit_paid_at?: string | null
+          docusign_completed_at?: string | null
+          docusign_envelope_id?: string | null
           end_date?: string | null
           failed_payment_count?: number | null
           grace_period_end?: string | null
