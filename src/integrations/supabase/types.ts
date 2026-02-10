@@ -682,6 +682,7 @@ export type Database = {
           tires_no_damage: boolean | null
           tires_tread_depth: boolean | null
           trailer_id: string
+          trailer_id_visible: boolean | null
           trailer_number: string
           trailer_type: string | null
           turn_signals_operational: boolean | null
@@ -745,6 +746,7 @@ export type Database = {
           tires_no_damage?: boolean | null
           tires_tread_depth?: boolean | null
           trailer_id: string
+          trailer_id_visible?: boolean | null
           trailer_number: string
           trailer_type?: string | null
           turn_signals_operational?: boolean | null
@@ -808,6 +810,7 @@ export type Database = {
           tires_no_damage?: boolean | null
           tires_tread_depth?: boolean | null
           trailer_id?: string
+          trailer_id_visible?: boolean | null
           trailer_number?: string
           trailer_type?: string | null
           turn_signals_operational?: boolean | null
