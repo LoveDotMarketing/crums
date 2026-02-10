@@ -443,35 +443,112 @@ export function CustomerCheckoutDialog({
         <IdCard className="h-4 w-4" />
         <AlertTitle>ID Verification Required</AlertTitle>
         <AlertDescription>
-          Compare the customer's physical ID with their uploaded driver's license before proceeding.
+          Compare the customer's physical ID with their uploaded driver's license and profile name before proceeding.
         </AlertDescription>
       </Alert>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Customer Driver's License</CardTitle>
-          <CardDescription>Compare the physical ID presented by the customer with this document</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-2">
-            <Label>Driver's License (Front)</Label>
-            {eligibility?.profile?.drivers_license_url ? (
-              <a 
-                href={eligibility.profile.drivers_license_url} 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="flex items-center gap-2 text-primary hover:underline"
-              >
-                <ExternalLink className="h-4 w-4" />
-                View Document
-              </a>
-            ) : (
-              <p className="text-muted-foreground text-sm">Not uploaded</p>
-            )}
+      {/* Name on File comparison card */}
+      <Card className="border-2 border-primary/30 bg-primary/5">
+        <CardContent className="pt-5 pb-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
+              <User className="h-5 w-5 text-primary" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Name on File</p>
+              <p className="text-lg font-semibold leading-tight">{eligibility?.customer?.full_name}</p>
+              {eligibility?.customer?.company_name && (
+                <p className="text-sm text-muted-foreground">{eligibility.customer.company_name}</p>
+              )}
+            </div>
+            <Badge variant="outline" className="ml-auto flex-shrink-0 border-primary/40 text-primary">
+              <IdCard className="h-3 w-3 mr-1" />
+              Profile
+            </Badge>
           </div>
         </CardContent>
       </Card>
 
+      {/* Inline ID images */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg">Uploaded Driver's License</CardTitle>
+          <CardDescription>Compare the physical ID presented by the customer with these images</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Front of license */}
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Front</Label>
+              {eligibility?.profile?.drivers_license_url ? (
+                <div className="space-y-1.5">
+                  <a
+                    href={eligibility.profile.drivers_license_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block border rounded-lg overflow-hidden hover:ring-2 hover:ring-primary/50 transition-all cursor-pointer"
+                  >
+                    <img
+                      src={eligibility.profile.drivers_license_url}
+                      alt="Driver's license front"
+                      className="w-full max-h-48 object-contain bg-muted"
+                    />
+                  </a>
+                  <a
+                    href={eligibility.profile.drivers_license_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary"
+                  >
+                    <ExternalLink className="h-3 w-3" />
+                    Open Full Size
+                  </a>
+                </div>
+              ) : (
+                <div className="border rounded-lg p-6 flex items-center justify-center bg-muted/50">
+                  <p className="text-muted-foreground text-sm">Not uploaded</p>
+                </div>
+              )}
+            </div>
+
+            {/* Back of license */}
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Back</Label>
+              {eligibility?.profile?.drivers_license_back_url ? (
+                <div className="space-y-1.5">
+                  <a
+                    href={eligibility.profile.drivers_license_back_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block border rounded-lg overflow-hidden hover:ring-2 hover:ring-primary/50 transition-all cursor-pointer"
+                  >
+                    <img
+                      src={eligibility.profile.drivers_license_back_url}
+                      alt="Driver's license back"
+                      className="w-full max-h-48 object-contain bg-muted"
+                    />
+                  </a>
+                  <a
+                    href={eligibility.profile.drivers_license_back_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary"
+                  >
+                    <ExternalLink className="h-3 w-3" />
+                    Open Full Size
+                  </a>
+                </div>
+              ) : (
+                <div className="border rounded-lg p-6 flex items-center justify-center bg-muted/50">
+                  <p className="text-muted-foreground text-sm">Not uploaded</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Verification checkbox and notes */}
       <Card>
         <CardContent className="pt-6 space-y-4">
           <div className="flex items-start space-x-3">
@@ -482,7 +559,7 @@ export function CustomerCheckoutDialog({
             />
             <div className="grid gap-1.5 leading-none">
               <Label htmlFor="idVerified" className="font-medium">
-                I have verified the customer's physical ID matches the uploaded documents
+                I have verified the customer's physical ID matches the uploaded documents and the name on file
               </Label>
               <p className="text-sm text-muted-foreground">
                 Confirm name, photo, and expiration date match
