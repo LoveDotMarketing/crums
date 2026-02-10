@@ -102,7 +102,18 @@ interface TrailerInfo {
   type: string;
   rental_rate: number | null;
   rental_frequency: string | null;
+  lease_to_own: boolean | null;
 }
+
+const formatSubscriptionType = (type: string | null): string => {
+  switch (type) {
+    case 'standard_lease': return 'Standard Lease';
+    case 'rent_for_storage': return 'Rent for Storage';
+    case 'lease_to_own': return 'Lease to Own';
+    case 'repayment_plan': return 'Repayment Plan';
+    default: return type || 'Unknown';
+  }
+};
 
 interface CustomerFormDialogProps {
   open: boolean;
@@ -137,20 +148,63 @@ export function CustomerFormDialog({ open, onOpenChange, customer }: CustomerFor
     },
   });
 
-  // Fetch trailers assigned to this customer
+  // Fetch subscription type for this customer
+  const { data: subscriptionData } = useQuery({
+    queryKey: ['customer-subscription-type', customer?.id],
+    queryFn: async () => {
+      if (!customer?.id) return null;
+      const { data, error } = await supabase
+        .from('customer_subscriptions')
+        .select('subscription_type')
+        .eq('customer_id', customer.id)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!customer?.id && open,
+  });
+
+  // Fetch trailers assigned to this customer via subscription_items
   const { data: customerTrailers = [] } = useQuery({
     queryKey: ['customer-trailers', customer?.id],
     queryFn: async () => {
       if (!customer?.id) return [];
       
-      const { data, error } = await supabase
+      // Get trailers through subscription_items to include lease_to_own
+      const { data: subItems, error: subError } = await supabase
+        .from('subscription_items')
+        .select(`
+          lease_to_own,
+          subscription:customer_subscriptions!inner(customer_id),
+          trailer:trailers(id, vin, trailer_number, type, rental_rate, rental_frequency)
+        `)
+        .eq('subscription.customer_id', customer.id)
+        .in('status', ['active', 'paused']);
+      
+      if (subError) throw subError;
+      
+      const trailersFromSubs: TrailerInfo[] = (subItems || [])
+        .filter(item => item.trailer)
+        .map(item => ({
+          ...(item.trailer as any),
+          lease_to_own: item.lease_to_own,
+        }));
+      
+      // Also get directly assigned trailers not in subscription_items
+      const subTrailerIds = trailersFromSubs.map(t => t.id);
+      const { data: directTrailers, error: directError } = await supabase
         .from('trailers')
         .select('id, vin, trailer_number, type, rental_rate, rental_frequency')
         .eq('customer_id', customer.id)
         .order('trailer_number');
       
-      if (error) throw error;
-      return (data || []) as TrailerInfo[];
+      if (directError) throw directError;
+      
+      const extraTrailers: TrailerInfo[] = (directTrailers || [])
+        .filter(t => !subTrailerIds.includes(t.id))
+        .map(t => ({ ...t, lease_to_own: null }));
+      
+      return [...trailersFromSubs, ...extraTrailers];
     },
     enabled: !!customer?.id && open,
   });
@@ -568,6 +622,24 @@ export function CustomerFormDialog({ open, onOpenChange, customer }: CustomerFor
               )}
             />
 
+            {/* Lease Agreement Type - Only show when editing and has subscription */}
+            {isEditing && subscriptionData?.subscription_type && (
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium">Lease Agreement:</span>
+                <Badge 
+                  variant="secondary" 
+                  className={cn(
+                    subscriptionData.subscription_type === 'lease_to_own' && 'bg-blue-100 text-blue-800 border-blue-200',
+                    subscriptionData.subscription_type === 'standard_lease' && 'bg-green-100 text-green-800 border-green-200',
+                    subscriptionData.subscription_type === 'rent_for_storage' && 'bg-amber-100 text-amber-800 border-amber-200',
+                    subscriptionData.subscription_type === 'repayment_plan' && 'bg-purple-100 text-purple-800 border-purple-200',
+                  )}
+                >
+                  {formatSubscriptionType(subscriptionData.subscription_type)}
+                </Badge>
+              </div>
+            )}
+
             <FormField
               control={form.control}
               name="notes"
@@ -606,6 +678,17 @@ export function CustomerFormDialog({ open, onOpenChange, customer }: CustomerFor
                               <div className="flex items-center gap-2 flex-wrap">
                                 <span className="font-medium">#{trailer.trailer_number}</span>
                                 <Badge variant="outline">{trailer.type}</Badge>
+                                {trailer.lease_to_own !== null && (
+                                  <Badge 
+                                    variant="secondary"
+                                    className={trailer.lease_to_own 
+                                      ? 'bg-blue-100 text-blue-800 border-blue-200' 
+                                      : 'bg-green-100 text-green-800 border-green-200'
+                                    }
+                                  >
+                                    {trailer.lease_to_own ? 'Lease to Own' : 'Standard Lease'}
+                                  </Badge>
+                                )}
                               </div>
                               <span className="text-sm text-muted-foreground font-mono break-all">
                                 {trailer.vin}
