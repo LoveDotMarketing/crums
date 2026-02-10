@@ -1,26 +1,30 @@
 
 
-## Auto-Update Past-Due Scheduled Content to "Published"
+## Sync Guides Page with Content Schedule
 
 ### Problem
-Content items with a `scheduled_date` in the past still show "Scheduled" status. They should automatically transition to "Published" since the release date has passed.
+The /resources/guides page uses a static `available` flag in `src/lib/guides.ts` to show "Coming Soon" vs "Read Guide". But the content scheduler in the admin backend tracks actual publication dates. These are disconnected, so guides stay "Coming Soon" even after their scheduled date passes.
 
 ### Solution
-Add logic to the Content Schedule page that automatically marks past-due "scheduled" items as "published" when the page loads. This is a simple client-side check on each data fetch.
+Make the Guides page query the `scheduled_content` table to dynamically determine guide availability. If a guide has been published (status = "published" or scheduled date has passed), it shows as available. If it has a future scheduled date, show the date instead of "Coming Soon".
 
-### Implementation
+### Changes
 
-**File: `src/pages/admin/ContentSchedule.tsx`**
+**1. `src/pages/resources/Guides.tsx`**
+- Add a query to fetch `scheduled_content` records for guides.
+- Cross-reference each guide's slug with the scheduled content data.
+- If `status === 'published'` or `scheduled_date <= today`, treat the guide as available (show "Read Guide" button).
+- If `status === 'scheduled'` and `scheduled_date > today`, show "Scheduled: [date]" instead of "Coming Soon".
+- Fall back to the static `available` flag if no scheduled_content record exists.
 
-1. Add a `useEffect` that runs after `scheduledContent` is fetched.
-2. It filters for items where `status === "scheduled"` and `scheduled_date < today`.
-3. For each past-due item, it updates the status to `"published"` and sets `published_at` to the scheduled date (9:00 AM CST).
-4. After updates, it invalidates the query to refresh the table.
+**2. `src/lib/guides.ts`**
+- Set `available: true` for all guides that have fully built page components and have been published per the schedule. Specifically, flip `road-comfort` to `available: true` since its Feb 4 date has passed and the page exists.
 
-### Technical Details
+**3. `src/pages/admin/ContentSchedule.tsx`**
+- Enhance the auto-publish logic: when marking a guide as "published", also note that the front-end will now pick this up dynamically.
 
-- The check compares `scheduled_date` against today's date (`new Date()` formatted as `yyyy-MM-dd`).
-- The update sets `status = 'published'` and `published_at = scheduled_date + 'T15:00:00Z'` (9:00 AM CST = 15:00 UTC).
-- Currently only 1 record is affected (Feb 4 guide), but this will automatically handle future items as their dates pass.
-- The auto-update runs silently without toast notifications to avoid noise on every page load.
+### What the user will see
+- Guides with past scheduled dates: "Read Guide" button (clickable)
+- Guides with future scheduled dates: "Scheduled: Feb 18" (with date shown)
+- Guides with no schedule and not available: "Coming Soon" (unchanged)
 
