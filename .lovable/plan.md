@@ -1,31 +1,26 @@
 
-## Add Lease Agreement Type to Trailer Detail Page
 
-### What Changes
+## Auto-Update Past-Due Scheduled Content to "Published"
 
-Replace the "Rental Rate" field in the Lessee Assignment card with a "Lease Agreement" type selector, and keep the rate/frequency fields.
+### Problem
+Content items with a `scheduled_date` in the past still show "Scheduled" status. They should automatically transition to "Published" since the release date has passed.
 
-### Layout (Lessee Assignment card)
+### Solution
+Add logic to the Content Schedule page that automatically marks past-due "scheduled" items as "published" when the page loads. This is a simple client-side check on each data fetch.
 
-The card will show 3 fields in the grid:
+### Implementation
 
-1. **Assigned Customer** (existing, no change)
-2. **Agreement Type** (new) -- Select dropdown with options: "Standard Lease", "Lease to Own", "Rent for Storage", "Repayment Plan"
-3. **Rate** (existing rental rate + frequency, kept as-is)
+**File: `src/pages/admin/ContentSchedule.tsx`**
+
+1. Add a `useEffect` that runs after `scheduledContent` is fetched.
+2. It filters for items where `status === "scheduled"` and `scheduled_date < today`.
+3. For each past-due item, it updates the status to `"published"` and sets `published_at` to the scheduled date (9:00 AM CST).
+4. After updates, it invalidates the query to refresh the table.
 
 ### Technical Details
 
-**File: `src/pages/admin/TrailerDetail.tsx`**
+- The check compares `scheduled_date` against today's date (`new Date()` formatted as `yyyy-MM-dd`).
+- The update sets `status = 'published'` and `published_at = scheduled_date + 'T15:00:00Z'` (9:00 AM CST = 15:00 UTC).
+- Currently only 1 record is affected (Feb 4 guide), but this will automatically handle future items as their dates pass.
+- The auto-update runs silently without toast notifications to avoid noise on every page load.
 
-- Add a query to fetch the `subscription_type` from `customer_subscriptions` for the trailer's assigned customer (using `customer_id`).
-- Also fetch the `lease_to_own` flag from `subscription_items` for this specific trailer.
-- In the Lessee Assignment card (lines 468-549):
-  - Change the grid from `grid-cols-2` to allow 3 fields (or stack Agreement Type below Assigned Customer).
-  - Replace the "Rental Rate" label area with an "Agreement Type" field that displays a badge (read mode) or a Select dropdown (edit mode) with options: Standard Lease, Lease to Own, Rent for Storage, Repayment Plan.
-  - Keep the Rental Rate field below or beside it.
-- On save, update the `subscription_type` on the `customer_subscriptions` record and/or the `lease_to_own` flag on `subscription_items` for this trailer.
-- Update the `Trailer` interface if needed (though agreement type lives on subscription tables, not the trailer itself).
-
-### No Database Changes Required
-
-The `customer_subscriptions.subscription_type` enum and `subscription_items.lease_to_own` boolean already exist.
