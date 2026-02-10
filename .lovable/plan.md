@@ -1,24 +1,24 @@
 
+## Add Lease Agreement Type to Customer Profile
 
-# Fix: Add Missing Admin Role for lovedotmarketing@gmail.com
+### What Changes
+Two additions to the admin customer profile dialog:
 
-## Problem
-After logging in, the app queries the `user_roles` table to determine which dashboard to redirect to. Your account (`lovedotmarketing@gmail.com`) has no entry in this table, so `userRole` remains `null` and the redirect logic never executes -- leaving you stuck on the login page.
+1. **Customer-level lease type label** -- Show the `subscription_type` from `customer_subscriptions` (e.g., "Standard Lease", "Lease to Own", "Rent for Storage", "Repayment Plan") as a badge near the top of the profile or in the Payment Type area.
 
-## Solution
-Insert the admin role for your account into the `user_roles` table.
+2. **Per-trailer lease type badge** -- Under each assigned trailer in the "Assigned Trailers" section, show whether that specific trailer is "Lease to Own" or "Standard Rental" using the `lease_to_own` boolean from `subscription_items`.
 
----
+### Technical Details
 
-## Technical Details
+**File: `src/components/admin/CustomerFormDialog.tsx`**
 
-### Database Change
-Run a single SQL insert to add your admin role:
+- **New query**: Fetch the customer's `customer_subscriptions` record to get `subscription_type`.
+- **Update trailer query**: Instead of querying `trailers` directly, query `subscription_items` joined with `trailers` to get both trailer info and the `lease_to_own` flag per trailer.
+- **Update `TrailerInfo` interface**: Add `lease_to_own: boolean | null` field.
+- **UI -- Subscription type badge**: Add a badge/label after the "Payment Type" field showing the subscription type (formatted nicely, e.g., "Lease to Own" instead of "lease_to_own").
+- **UI -- Per-trailer badge**: Next to each trailer's type badge (e.g., "Dry Van"), add a second badge showing "Lease to Own" or "Standard Lease" based on the `lease_to_own` field.
 
-```sql
-INSERT INTO user_roles (user_id, role)
-VALUES ('b51b1d07-969d-4139-b7c3-2d55fef9ca8c', 'admin');
-```
-
-No code changes are needed. Once the role exists, the existing login flow will detect `userRole === "admin"` and redirect to `/dashboard/admin` as expected.
-
+### No Database Changes Required
+All the data already exists:
+- `customer_subscriptions.subscription_type` enum: `standard_lease`, `rent_for_storage`, `lease_to_own`, `repayment_plan`
+- `subscription_items.lease_to_own` boolean per trailer
