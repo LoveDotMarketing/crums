@@ -1,24 +1,31 @@
 
-## Add Lease Agreement Type to Customer Profile
+## Add Lease Agreement Type to Trailer Detail Page
 
 ### What Changes
-Two additions to the admin customer profile dialog:
 
-1. **Customer-level lease type label** -- Show the `subscription_type` from `customer_subscriptions` (e.g., "Standard Lease", "Lease to Own", "Rent for Storage", "Repayment Plan") as a badge near the top of the profile or in the Payment Type area.
+Replace the "Rental Rate" field in the Lessee Assignment card with a "Lease Agreement" type selector, and keep the rate/frequency fields.
 
-2. **Per-trailer lease type badge** -- Under each assigned trailer in the "Assigned Trailers" section, show whether that specific trailer is "Lease to Own" or "Standard Rental" using the `lease_to_own` boolean from `subscription_items`.
+### Layout (Lessee Assignment card)
+
+The card will show 3 fields in the grid:
+
+1. **Assigned Customer** (existing, no change)
+2. **Agreement Type** (new) -- Select dropdown with options: "Standard Lease", "Lease to Own", "Rent for Storage", "Repayment Plan"
+3. **Rate** (existing rental rate + frequency, kept as-is)
 
 ### Technical Details
 
-**File: `src/components/admin/CustomerFormDialog.tsx`**
+**File: `src/pages/admin/TrailerDetail.tsx`**
 
-- **New query**: Fetch the customer's `customer_subscriptions` record to get `subscription_type`.
-- **Update trailer query**: Instead of querying `trailers` directly, query `subscription_items` joined with `trailers` to get both trailer info and the `lease_to_own` flag per trailer.
-- **Update `TrailerInfo` interface**: Add `lease_to_own: boolean | null` field.
-- **UI -- Subscription type badge**: Add a badge/label after the "Payment Type" field showing the subscription type (formatted nicely, e.g., "Lease to Own" instead of "lease_to_own").
-- **UI -- Per-trailer badge**: Next to each trailer's type badge (e.g., "Dry Van"), add a second badge showing "Lease to Own" or "Standard Lease" based on the `lease_to_own` field.
+- Add a query to fetch the `subscription_type` from `customer_subscriptions` for the trailer's assigned customer (using `customer_id`).
+- Also fetch the `lease_to_own` flag from `subscription_items` for this specific trailer.
+- In the Lessee Assignment card (lines 468-549):
+  - Change the grid from `grid-cols-2` to allow 3 fields (or stack Agreement Type below Assigned Customer).
+  - Replace the "Rental Rate" label area with an "Agreement Type" field that displays a badge (read mode) or a Select dropdown (edit mode) with options: Standard Lease, Lease to Own, Rent for Storage, Repayment Plan.
+  - Keep the Rental Rate field below or beside it.
+- On save, update the `subscription_type` on the `customer_subscriptions` record and/or the `lease_to_own` flag on `subscription_items` for this trailer.
+- Update the `Trailer` interface if needed (though agreement type lives on subscription tables, not the trailer itself).
 
 ### No Database Changes Required
-All the data already exists:
-- `customer_subscriptions.subscription_type` enum: `standard_lease`, `rent_for_storage`, `lease_to_own`, `repayment_plan`
-- `subscription_items.lease_to_own` boolean per trailer
+
+The `customer_subscriptions.subscription_type` enum and `subscription_items.lease_to_own` boolean already exist.
