@@ -1,47 +1,39 @@
 
 
-## Add Contract Start Date for DocuSign Completion
+## Enhance Mechanic ID Verification for Customer Pickup
 
 ### What This Does
-Adds a dedicated `contract_start_date` column to the `customer_subscriptions` table so that when a client completes their DocuSign contract, the exact contract start date is recorded and displayed on their profile. Currently, the profile shows `created_at` (when the subscription record was created in the system), which may differ from the actual contract signing date.
+When a customer arrives at the yard to pick up their trailer, the mechanic needs to confirm the person is who they claim to be. The system already has a pending pickups queue and a checkout dialog with an ID verification step, but currently the driver's license is only shown as a clickable link. This update will display the customer's uploaded ID photo **inline** so the mechanic can visually compare it to the person standing in front of them, alongside the customer's profile name for a side-by-side identity check.
+
+### Current Flow (already working)
+1. Admin schedules a release -- appears in mechanic's "Pending Customer Pickups" queue
+2. Mechanic starts DOT inspection on the trailer
+3. After inspection, mechanic opens the Customer Checkout dialog
+4. Dialog checks eligibility (application approved, ID uploaded, ACH linked)
+5. **ID Verification step** -- mechanic confirms physical ID matches (currently just a "View Document" link)
+6. Final release -- trailer marked as rented
 
 ### Changes
 
-**1. Database Migration**
-- Add `contract_start_date` (date, nullable) to `customer_subscriptions`
-- Add `docusign_envelope_id` (text, nullable) to `customer_subscriptions` for future DocuSign integration tracking
-- Add `docusign_completed_at` (timestamptz, nullable) to `customer_subscriptions` to record when the signing was completed
+**1. Customer Checkout Dialog -- Inline ID Display (`src/components/mechanic/CustomerCheckoutDialog.tsx`)**
+- Replace the "View Document" external link with an inline `<img>` tag showing the driver's license front photo directly in the dialog
+- Add a second inline image for the driver's license back
+- Display the customer's **full name** and **company** prominently above the images so the mechanic can compare name-on-ID vs name-on-file
+- Add a visual "Name on File" badge next to the images for quick cross-reference
+- Keep the external link as a fallback "Open Full Size" option beneath the image
 
-**2. Customer Profile Page (`src/pages/customer/Profile.tsx`)**
-- Update the "Contract Start" display to use `contract_start_date` when available, falling back to `created_at`
-- Add the `contract_start_date`, `docusign_envelope_id`, and `docusign_completed_at` fields to the subscription query select
-- If DocuSign was completed, show a "Contract Signed" date beneath the start date
-
-**3. Admin Customers Page**
-- Allow admins to set the `contract_start_date` when activating a subscription or editing contract details
-- This field will later be auto-populated by the DocuSign webhook when the document integration is ready
+**2. Pending Releases Queue -- Customer Name Visibility (`src/components/mechanic/PendingReleasesQueue.tsx`)**
+- Already shows customer name, company, phone, and pickup date -- no changes needed here
 
 ### Technical Details
 
-**Migration SQL:**
-```sql
-ALTER TABLE customer_subscriptions
-  ADD COLUMN contract_start_date date,
-  ADD COLUMN docusign_envelope_id text,
-  ADD COLUMN docusign_completed_at timestamptz;
-```
+**CustomerCheckoutDialog.tsx -- ID Verify Step (lines ~440-504):**
+- Replace the simple link with an image grid:
+  - Front of license displayed as an inline image (max-height constrained for the dialog)
+  - Back of license displayed as an inline image
+  - Both images clickable to open full-size in a new tab
+- Add a prominent "Name on File" section showing `customer.full_name` and `customer.company_name` so the mechanic can compare it to the name printed on the physical ID
+- Add visual cues: a bordered comparison card with the profile name on one side and the ID image on the other
 
-**Profile display logic (Profile.tsx, line ~341-345):**
-- Change from: `format(new Date(subscription.created_at), "MMMM d, yyyy")`
-- Change to: `format(new Date(subscription.contract_start_date || subscription.created_at), "MMMM d, yyyy")`
-- Add label clarification: show "Contract Signed" with date if `docusign_completed_at` exists
-
-**Subscription query update:**
-- Add `contract_start_date, docusign_envelope_id, docusign_completed_at` to the select in the subscription query
-
-### Future DocuSign Integration
-Once the DocuSign document is ready, a webhook endpoint will be created to:
-1. Receive the `envelope.completed` event from DocuSign
-2. Match the envelope to the customer subscription via `docusign_envelope_id`
-3. Auto-set `contract_start_date` and `docusign_completed_at`
+**Image source:** The driver's license URLs come from `customer_applications.drivers_license_url` and `drivers_license_back_url`, which are already fetched during the eligibility check and passed through `eligibility.profile.drivers_license_url`.
 
