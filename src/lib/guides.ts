@@ -154,7 +154,7 @@ export const guides: Guide[] = [
     title: "How to Stay Comfortable on the Road (Without Breaking the Bank)",
     description: "Cab organization hacks, sleeping tips, and small upgrades to make life easier in your rig.",
     icon: Sofa,
-    available: false,
+    available: true,
     lastModified: "2025-12-04",
     priority: 0.7,
     changefreq: "monthly"

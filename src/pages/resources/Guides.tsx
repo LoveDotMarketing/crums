@@ -6,10 +6,13 @@ import { SEO } from "@/components/SEO";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Calculator, BookOpen, Play, GraduationCap } from "lucide-react";
-import { guides, getGuideHref } from "@/lib/guides";
+import { guides, getGuideHref, type Guide } from "@/lib/guides";
 import whyChooseThumb from "@/assets/why-choose-crums-video-thumb.png";
 import { generateBreadcrumbSchema } from "@/lib/structuredData";
 import { Progress } from "@/components/ui/progress";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { format, parseISO } from "date-fns";
 
 const guidesCollectionSchema = {
   "@context": "https://schema.org",
@@ -30,7 +33,57 @@ const breadcrumbSchema = generateBreadcrumbSchema([
   { name: "Guides", url: "https://crumsleasing.com/resources/guides" },
 ]);
 
+type ScheduledGuide = {
+  slug: string;
+  status: string;
+  scheduled_date: string;
+  published_at: string | null;
+};
+
+const useGuideAvailability = () => {
+  return useQuery({
+    queryKey: ["scheduled-guides"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("scheduled_content")
+        .select("slug, status, scheduled_date, published_at")
+        .eq("content_type", "guide");
+      if (error) throw error;
+      return (data || []) as ScheduledGuide[];
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+};
+
+const getGuideStatus = (
+  guide: Guide,
+  scheduledGuides: ScheduledGuide[]
+): { available: boolean; label?: string } => {
+  const today = new Date().toISOString().split("T")[0];
+  const scheduled = scheduledGuides.find((s) => s.slug === guide.slug);
+
+  if (!scheduled) {
+    return { available: guide.available };
+  }
+
+  if (
+    scheduled.status === "published" ||
+    scheduled.scheduled_date <= today
+  ) {
+    return { available: true };
+  }
+
+  if (scheduled.status === "scheduled" && scheduled.scheduled_date > today) {
+    const dateLabel = format(parseISO(scheduled.scheduled_date), "MMM d");
+    return { available: false, label: `Scheduled: ${dateLabel}` };
+  }
+
+  return { available: guide.available };
+};
+
 const Guides = () => {
+  const { data: scheduledGuides = [] } = useGuideAvailability();
+
   return (
     <div className="min-h-screen flex flex-col">
       <SEO
@@ -186,38 +239,45 @@ const Guides = () => {
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {guides.filter(g => g.category !== "new-driver").map((guide, index) => (
-              <Card 
-                key={index} 
-                className={`hover:shadow-lg transition-all duration-300 ${
-                  guide.available 
-                    ? 'hover:border-primary cursor-pointer' 
-                    : 'opacity-90'
-                }`}
-              >
-                <CardHeader>
-                  <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
-                    <guide.icon className="h-6 w-6 text-primary" />
-                  </div>
-                  <CardTitle className="text-lg leading-tight">{guide.title}</CardTitle>
-                  <CardDescription className="text-sm">{guide.description}</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {guide.available ? (
-                    <Button asChild variant="outline" className="w-full">
-                      <Link to={getGuideHref(guide.slug)}>
-                        Read Guide
-                        <ArrowRight className="h-4 w-4 ml-2" />
-                      </Link>
-                    </Button>
-                  ) : (
-                    <div className="flex items-center justify-center py-2 px-4 bg-muted rounded-md">
-                      <span className="text-sm text-muted-foreground font-medium">Coming Soon</span>
+            {guides.filter(g => g.category !== "new-driver").map((guide, index) => {
+              const status = getGuideStatus(guide, scheduledGuides);
+              return (
+                <Card 
+                  key={index} 
+                  className={`hover:shadow-lg transition-all duration-300 ${
+                    status.available 
+                      ? 'hover:border-primary cursor-pointer' 
+                      : 'opacity-90'
+                  }`}
+                >
+                  <CardHeader>
+                    <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
+                      <guide.icon className="h-6 w-6 text-primary" />
                     </div>
-                  )}
-                </CardContent>
-              </Card>
-            ))}
+                    <CardTitle className="text-lg leading-tight">{guide.title}</CardTitle>
+                    <CardDescription className="text-sm">{guide.description}</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    {status.available ? (
+                      <Button asChild variant="outline" className="w-full">
+                        <Link to={getGuideHref(guide.slug)}>
+                          Read Guide
+                          <ArrowRight className="h-4 w-4 ml-2" />
+                        </Link>
+                      </Button>
+                    ) : status.label ? (
+                      <div className="flex items-center justify-center py-2 px-4 bg-primary/10 rounded-md">
+                        <span className="text-sm text-primary font-medium">{status.label}</span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-center py-2 px-4 bg-muted rounded-md">
+                        <span className="text-sm text-muted-foreground font-medium">Coming Soon</span>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
         </div>
       </section>
