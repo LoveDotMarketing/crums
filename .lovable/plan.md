@@ -1,30 +1,47 @@
 
 
-## Sync Guides Page with Content Schedule
+## Fix Missing Login Logs and Add Real-Time Updates
 
 ### Problem
-The /resources/guides page uses a static `available` flag in `src/lib/guides.ts` to show "Coming Soon" vs "Read Guide". But the content scheduler in the admin backend tracks actual publication dates. These are disconnected, so guides stay "Coming Soon" even after their scheduled date passes.
+1. **Missing customer login**: `dispatch@groundlinkllc.com` logged in today via session token refresh, but no activity log was recorded. The login tracking only fires during explicit password sign-in (`signIn` function), not when a user returns with a valid session or refreshes their token.
+2. **No live updates**: The Logs page requires a manual "Refresh" click to see new entries.
+
+### Root Cause
+In `src/hooks/useAuth.tsx`, the `onAuthStateChange` listener updates state but never calls `trackLoginEvent`. The `SIGNED_IN` and `TOKEN_REFRESHED` events are ignored for logging purposes. This means:
+- Password logins: logged (via `signIn` function)
+- Session restorations (returning users): NOT logged
+- Token refreshes: NOT logged
 
 ### Solution
-Make the Guides page query the `scheduled_content` table to dynamically determine guide availability. If a guide has been published (status = "published" or scheduled date has passed), it shows as available. If it has a future scheduled date, show the date instead of "Coming Soon".
 
-### Changes
+**1. Track all auth events in `onAuthStateChange` (`src/hooks/useAuth.tsx`)**
 
-**1. `src/pages/resources/Guides.tsx`**
-- Add a query to fetch `scheduled_content` records for guides.
-- Cross-reference each guide's slug with the scheduled content data.
-- If `status === 'published'` or `scheduled_date <= today`, treat the guide as available (show "Read Guide" button).
-- If `status === 'scheduled'` and `scheduled_date > today`, show "Scheduled: [date]" instead of "Coming Soon".
-- Fall back to the static `available` flag if no scheduled_content record exists.
+Add login tracking inside the `onAuthStateChange` callback for the `SIGNED_IN` event. Use a ref to prevent duplicate logging (since `SIGNED_IN` fires on both password login and session restore):
 
-**2. `src/lib/guides.ts`**
-- Set `available: true` for all guides that have fully built page components and have been published per the schedule. Specifically, flip `road-comfort` to `available: true` since its Feb 4 date has passed and the page exists.
+- When `event === 'SIGNED_IN'`, fetch the user's role and call `trackLoginEvent`
+- Skip if the login was already tracked by the `signIn` function (use a `justSignedIn` ref flag)
+- This catches token refreshes and session restorations that currently go unlogged
 
-**3. `src/pages/admin/ContentSchedule.tsx`**
-- Enhance the auto-publish logic: when marking a guide as "published", also note that the front-end will now pick this up dynamically.
+**2. Add real-time subscription to Logs page (`src/pages/admin/Logs.tsx`)**
 
-### What the user will see
-- Guides with past scheduled dates: "Read Guide" button (clickable)
-- Guides with future scheduled dates: "Scheduled: Feb 18" (with date shown)
-- Guides with no schedule and not available: "Coming Soon" (unchanged)
+- Subscribe to `postgres_changes` on the `user_activity_logs` table
+- When a new row is inserted, automatically invalidate the query to refresh the table
+- This gives admins a live view without needing to click Refresh
 
+### Technical Details
+
+**File: `src/hooks/useAuth.tsx`**
+- Add a `useRef` flag (`signInTrackedRef`) set to `true` inside `signIn()` after tracking
+- In `onAuthStateChange`, when `event === 'SIGNED_IN'`:
+  - Check if `signInTrackedRef.current` is true; if so, reset it and skip (already logged by `signIn`)
+  - Otherwise, fetch role and call `trackLoginEvent` (this is a session restore / token login)
+
+**File: `src/pages/admin/Logs.tsx`**
+- Add a `useEffect` with a Supabase realtime channel subscription on `user_activity_logs`
+- On `INSERT` event, call `queryClient.invalidateQueries({ queryKey: ['activity-logs'] })`
+- Clean up subscription on unmount
+
+### What changes
+- All customer/mechanic/admin logins will be captured, whether by password, session restore, or token refresh
+- The Logs page will update in real-time as new login/logout events occur
+- No data loss for returning users who don't explicitly type their password
