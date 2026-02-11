@@ -71,6 +71,7 @@ const menuGroups: MenuGroup[] = [
       { title: "Applications", url: "/dashboard/admin/applications", icon: FileText },
       { title: "Fleet", url: "/dashboard/admin/fleet", icon: Truck },
       { title: "DOT Inspections", url: "/dashboard/admin/dot-inspections", icon: ClipboardCheck },
+      { title: "Work Orders", url: "/dashboard/admin/work-orders", icon: ScrollText },
       { title: "Tolls", url: "/dashboard/admin/tolls", icon: Receipt },
     ]
   },

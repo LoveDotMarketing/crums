@@ -772,6 +772,20 @@ export default function MechanicDashboard() {
         {/* Scheduled Drop-offs Queue */}
         <ScheduledDropoffsQueue />
 
+        {/* Work Orders Quick Access */}
+        <Card className="mb-6 cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate("/dashboard/mechanic/work-orders")}>
+          <CardContent className="p-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <ClipboardList className="h-5 w-5 text-primary" />
+              <div>
+                <p className="font-semibold">Work Orders</p>
+                <p className="text-sm text-muted-foreground">Create and manage invoices for labor &amp; parts</p>
+              </div>
+            </div>
+            <Button variant="outline" size="sm">View All</Button>
+          </CardContent>
+        </Card>
+
         {/* Awaiting Customer DOT Acknowledgment */}
         {awaitingAcknowledgments.length > 0 && (
           <Card className="mb-6 border-blue-500/30 bg-gradient-to-br from-blue-50/50 to-indigo-50/30 dark:from-blue-950/20 dark:to-indigo-950/10">
