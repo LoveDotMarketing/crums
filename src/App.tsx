@@ -112,6 +112,7 @@ const IndexNow = lazy(() => import("./pages/admin/IndexNow"));
 const DOTInspections = lazy(() => import("./pages/admin/DOTInspections"));
 const CallLogs = lazy(() => import("./pages/admin/CallLogs"));
 const ContentSchedule = lazy(() => import("./pages/admin/ContentSchedule"));
+const AdminWorkOrders = lazy(() => import("./pages/admin/WorkOrders"));
 
 // Public pages
 const ReferralProgram = lazy(() => import("./pages/ReferralProgram"));
@@ -131,6 +132,7 @@ const CustomerBilling = lazy(() => import("./pages/customer/Billing"));
 // Mechanic pages
 const MechanicDashboard = lazy(() => import("./pages/mechanic/MechanicDashboard"));
 const DOTInspectionForm = lazy(() => import("./pages/mechanic/DOTInspectionForm"));
+const MechanicWorkOrders = lazy(() => import("./pages/mechanic/WorkOrders"));
 // Loading fallback component
 const PageLoader = () => (
   <div className="flex items-center justify-center min-h-screen">
@@ -371,6 +373,14 @@ const App = () => (
               } 
             />
             <Route 
+              path="/dashboard/admin/work-orders" 
+              element={
+                <ProtectedRoute requiredRole="admin">
+                  <AdminWorkOrders />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
               path="/dashboard/customer/application"
               element={
                 <ProtectedRoute requiredRole="customer">
@@ -455,6 +465,14 @@ const App = () => (
               element={
                 <ProtectedRoute requiredRole="mechanic">
                   <DOTInspectionForm />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/dashboard/mechanic/work-orders"
+              element={
+                <ProtectedRoute requiredRole="mechanic">
+                  <MechanicWorkOrders />
                 </ProtectedRoute>
               } 
             />

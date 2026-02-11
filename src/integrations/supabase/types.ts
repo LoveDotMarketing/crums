@@ -2332,6 +2332,130 @@ export type Database = {
         }
         Relationships: []
       }
+      work_order_line_items: {
+        Row: {
+          created_at: string
+          description: string
+          id: string
+          item_type: string
+          line_total: number | null
+          quantity: number
+          unit_cost: number
+          work_order_id: string
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          id?: string
+          item_type?: string
+          line_total?: number | null
+          quantity?: number
+          unit_cost?: number
+          work_order_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          id?: string
+          item_type?: string
+          line_total?: number | null
+          quantity?: number
+          unit_cost?: number
+          work_order_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "work_order_line_items_work_order_id_fkey"
+            columns: ["work_order_id"]
+            isOneToOne: false
+            referencedRelation: "work_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      work_orders: {
+        Row: {
+          approval_notes: string | null
+          approved_at: string | null
+          approved_by: string | null
+          created_at: string
+          description: string
+          grand_total: number
+          id: string
+          invoice_document_url: string | null
+          labor_hours: number
+          labor_rate: number
+          labor_total: number | null
+          mechanic_id: string
+          parts_total: number
+          photo_urls: Json | null
+          repair_type: string
+          status: string
+          submitted_at: string | null
+          trailer_id: string
+          travel_fee: number
+          updated_at: string
+          work_completion_date: string | null
+          work_start_date: string
+        }
+        Insert: {
+          approval_notes?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          description: string
+          grand_total?: number
+          id?: string
+          invoice_document_url?: string | null
+          labor_hours?: number
+          labor_rate?: number
+          labor_total?: number | null
+          mechanic_id: string
+          parts_total?: number
+          photo_urls?: Json | null
+          repair_type: string
+          status?: string
+          submitted_at?: string | null
+          trailer_id: string
+          travel_fee?: number
+          updated_at?: string
+          work_completion_date?: string | null
+          work_start_date: string
+        }
+        Update: {
+          approval_notes?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          description?: string
+          grand_total?: number
+          id?: string
+          invoice_document_url?: string | null
+          labor_hours?: number
+          labor_rate?: number
+          labor_total?: number | null
+          mechanic_id?: string
+          parts_total?: number
+          photo_urls?: Json | null
+          repair_type?: string
+          status?: string
+          submitted_at?: string | null
+          trailer_id?: string
+          travel_fee?: number
+          updated_at?: string
+          work_completion_date?: string | null
+          work_start_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "work_orders_trailer_id_fkey"
+            columns: ["trailer_id"]
+            isOneToOne: false
+            referencedRelation: "trailers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       customer_application_safe: {
