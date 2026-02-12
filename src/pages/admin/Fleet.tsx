@@ -157,9 +157,11 @@ export default function Fleet() {
       }
 
       // Admins can view ALL trailers - RLS already enforces access control
+      // Exclude archived trailers from normal fleet view
       const { data, error } = await supabase
         .from("trailers")
         .select("*")
+        .neq("status", "archived")
         .order("trailer_number");
 
       if (error) throw error;
@@ -262,22 +264,18 @@ export default function Fleet() {
     }
   };
 
-  const handleDeleteTrailer = async (trailerId: string, trailerNumber: string) => {
-    if (!confirm(`Are you sure you want to delete trailer ${trailerNumber}?`)) {
-      return;
-    }
-
+  const handleArchiveTrailer = async (trailerId: string, trailerNumber: string) => {
     try {
       const { error } = await supabase
         .from("trailers")
-        .delete()
+        .update({ status: "archived" })
         .eq("id", trailerId);
 
       if (error) throw error;
-      toast.success(`Trailer ${trailerNumber} deleted`);
+      toast.success(`Trailer ${trailerNumber} archived`);
     } catch (error) {
-      console.error("Error deleting trailer:", error);
-      toast.error("Failed to delete trailer");
+      console.error("Error archiving trailer:", error);
+      toast.error("Failed to archive trailer");
     }
   };
 
@@ -874,7 +872,12 @@ export default function Fleet() {
                                 <Button 
                                   size="sm" 
                                   variant="ghost"
-                                  onClick={() => handleDeleteTrailer(trailer.id, trailer.trailer_number)}
+                                  onClick={() => {
+                                    if (confirm(`Archive trailer ${trailer.trailer_number}? It can be restored later.`)) {
+                                      handleArchiveTrailer(trailer.id, trailer.trailer_number);
+                                    }
+                                  }}
+                                  title="Archive trailer"
                                 >
                                   <Trash2 className="h-4 w-4 text-destructive" />
                                 </Button>
