@@ -1,45 +1,119 @@
 
-
-## Restore Deleted Customers and Prevent Accidental Permanent Deletion
+## Trailer Soft-Delete and Restore Feature
 
 ### The Problem
-The current "Delete Customer" button performs a **permanent hard delete** -- it removes the customer record and cascades through outreach logs, referral codes, referrals, tolls, and applications. Once deleted, there is no way to recover.
+Currently, trailers can only be permanently deleted. Once deleted, they are completely removed from the system with no way to recover them. The database already has the necessary columns to support soft-delete (`archived_at`, `archived_by` via status change), but the UI only performs hard deletes.
 
-Your system already has an **archive** feature (soft delete with `status='archived'`, `archived_at`, `archived_by` columns), but the delete button bypasses it entirely.
+### What We'll Build
+A soft-delete system for trailers that:
+1. **Archives** trailers instead of permanently deleting them (sets `status = 'archived'`)
+2. **Filters out** archived trailers from the normal fleet view
+3. **Shows archived trailers** in a separate list with restore functionality
+4. **Restores** archived trailers back to `active` or `available` status
+5. **Prevents accidental data loss** while maintaining the ability to permanently remove records
 
-### What We'll Change
+### Architecture Overview
+```text
+Trailer Deletion Flow:
 
-**1. Replace "Delete" with "Archive" as the default action**
-- The dropdown menu will show "Archive Customer" instead of "Delete Customer"
-- Archiving sets `status = 'archived'`, `archived_at = now()`, `archived_by = admin name` -- no data is destroyed
-- A separate "Permanently Delete" option will be available only for already-archived customers, with a stronger warning
+BEFORE (Hard Delete):
+  Delete Button --> Hard delete cascade --> Data lost forever
 
-**2. Add a "Restore Customer" button for archived customers**
-- When viewing the archived customers list, each row gets a "Restore" action
-- Restoring sets `status = 'active'`, clears `archived_at` and `archived_by`
+AFTER (Soft Delete with Restore):
+  Archive Button --> Set status='archived' --> Data preserved
+  Fleet View --> Filter out status='archived' --> Normal workflow
+  Archived List --> Show status='archived' --> Admin can restore
+  Restore Button --> Set status='available' --> Back in fleet
+  Permanent Delete --> Only for archived records --> Extra confirmation
+```
 
-**3. Check if the recently deleted customer can be recovered**
-- Unfortunately, if the hard delete already ran, the record is gone from the database. I'll check the archived list to see if it's there instead.
+### Database Changes
+**No schema changes needed.** The trailers table already has a `status` column that supports archive semantics. We'll use:
+- `status = 'archived'` to indicate archived trailers
+- Filter logic in queries to exclude archived trailers from normal views
+- Separate admin page to view and restore archived trailers
 
-### Files Changed
+### UI Changes
 
-**`src/pages/admin/Customers.tsx`**
-- Replace the delete mutation with an archive mutation (sets status to archived)
-- Add a restore mutation (sets status back to active)
-- Add "Restore" action in the dropdown for archived customers
-- Move "Permanently Delete" behind a second confirmation, only available for archived records
-- Update confirmation dialog text for archive vs. permanent delete
+**1. Fleet.tsx (Update Archive/Delete Behavior)**
+- Change "Delete Trailer" button to "Archive Trailer"
+- Archive operation: `UPDATE trailers SET status = 'archived' WHERE id = ?`
+- Remove data from normal fleet view (add `status != 'archived'` to query filter)
+- Add button/link to view archived trailers
+
+**2. TrailerDetail.tsx (Single Trailer Page)**
+- Change "Delete" button label to "Archive"
+- Archive sets `status = 'archived'`
+- If already archived, show "Restore" and "Permanently Delete" buttons instead
+- Restore sets `status = 'available'`
+
+**3. New Admin Page: AdminArchivedTrailers.tsx**
+- List all trailers with `status = 'archived'`
+- Show trailer number, type, year, customer info, archive date
+- Restore button (sets status back to 'available')
+- Permanent delete button (only for archived records, with extra confirmation)
+- Link in AdminSidebar
+
+**4. AdminSidebar.tsx**
+- Add link to "Archived Trailers" in Fleet section
+
+### Implementation Files
+
+**Files to Create:**
+- `src/pages/admin/AdminArchivedTrailers.tsx` -- Manage archived trailers
+
+**Files to Modify:**
+- `src/pages/admin/Fleet.tsx` -- Change delete to archive, add filter
+- `src/pages/admin/TrailerDetail.tsx` -- Archive/restore UI based on status
+- `src/components/admin/AdminSidebar.tsx` -- Add sidebar link
+- `src/App.tsx` -- Add route for archived trailers page
 
 ### Technical Details
 
-```text
-Current Flow:
-  Delete Button --> Hard delete (cascading) --> Data gone forever
-
-New Flow:
-  Archive Button --> Soft delete (status='archived') --> Data preserved
-  Restore Button --> Set status='active' --> Customer is back
-  Permanent Delete --> Only for archived customers --> Extra confirmation --> Hard delete
+**Archive operation** (soft delete):
+```typescript
+await supabase.from('trailers').update({ status: 'archived' }).eq('id', trailerId);
 ```
 
-No database changes needed -- the `archived_at`, `archived_by`, and `status` columns already exist.
+**Restore operation**:
+```typescript
+await supabase.from('trailers').update({ status: 'available' }).eq('id', trailerId);
+```
+
+**Filter logic** (exclude archived from normal fleet view):
+```typescript
+.neq('status', 'archived')  // Add to existing query
+```
+
+**Permanent delete** (only for archived):
+```typescript
+await supabase.from('trailers').delete().eq('id', trailerId);
+```
+
+### User Flow
+
+**Admin Archives Trailer:**
+1. Views Fleet Management page
+2. Clicks "Archive" on a trailer row (not "Delete")
+3. Confirms archive action
+4. Trailer disappears from fleet list (not deleted, just hidden)
+5. Toast: "Trailer {number} archived"
+
+**Admin Views Archived Trailers:**
+1. Clicks "Archived Trailers" link in sidebar
+2. Sees list of all archived trailers with archive timestamp
+3. Can restore any archived trailer
+4. Can permanently delete archived trailers (with extra confirmation)
+
+**Admin Restores Trailer:**
+1. On archived trailers page, clicks "Restore"
+2. Trailer status changes back to `available`
+3. Trailer reappears in normal fleet view
+4. Toast: "Trailer {number} restored"
+
+### Prevents Accidental Loss
+- Archive is reversible
+- Normal "Delete" is gone
+- Permanent deletion only available for already-archived records
+- Extra confirmation required for permanent deletion
+- All data preserved during archive period
