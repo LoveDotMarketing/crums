@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,6 +18,33 @@ export default function RentalRequest() {
   const { user } = useAuth();
   const [submitting, setSubmitting] = useState(false);
   const [formStarted, setFormStarted] = useState(false);
+  const [userEmail, setUserEmail] = useState("");
+  const [userName, setUserName] = useState("");
+
+  useEffect(() => {
+    // Fetch user profile data
+    const fetchUserData = async () => {
+      if (user?.id) {
+        const { data, error } = await supabase
+          .from("profiles")
+          .select("email, first_name, last_name")
+          .eq("id", user.id)
+          .single();
+
+        if (!error && data) {
+          setUserEmail(data.email);
+          setUserName(
+            [data.first_name, data.last_name]
+              .filter(Boolean)
+              .join(" ") || "Customer"
+          );
+        }
+      }
+    };
+
+    fetchUserData();
+  }, [user?.id]);
+
   const [formData, setFormData] = useState({
     phone_number: "",
     trailer_type: "",
@@ -52,6 +79,15 @@ export default function RentalRequest() {
         });
 
       if (error) throw error;
+
+      // Send email notification to Henry and team
+      await supabase.functions.invoke('send-rental-request-email', {
+        body: {
+          ...formData,
+          user_email: userEmail,
+          user_name: userName,
+        },
+      }).catch(err => console.warn('Email notification failed:', err));
 
       trackFormSubmission('rental_request', true);
       trackConversion('rental_request');
