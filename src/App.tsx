@@ -113,6 +113,7 @@ const DOTInspections = lazy(() => import("./pages/admin/DOTInspections"));
 const CallLogs = lazy(() => import("./pages/admin/CallLogs"));
 const ContentSchedule = lazy(() => import("./pages/admin/ContentSchedule"));
 const AdminWorkOrders = lazy(() => import("./pages/admin/WorkOrders"));
+const AdminArchivedTrailers = lazy(() => import("./pages/admin/AdminArchivedTrailers"));
 
 // Public pages
 const ReferralProgram = lazy(() => import("./pages/ReferralProgram"));
@@ -233,6 +234,14 @@ const App = () => (
               element={
                 <ProtectedRoute requiredRole="admin">
                   <TrailerDetail />
+                </ProtectedRoute>
+              } 
+            />
+            <Route
+              path="/dashboard/admin/archived-trailers" 
+              element={
+                <ProtectedRoute requiredRole="admin">
+                  <AdminArchivedTrailers />
                 </ProtectedRoute>
               } 
             />

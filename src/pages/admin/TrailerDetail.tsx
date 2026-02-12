@@ -270,7 +270,45 @@ export default function TrailerDetail() {
     }
   };
 
-  const handleDelete = async () => {
+  const handleArchive = async () => {
+    if (!trailer) return;
+
+    try {
+      const { error } = await supabase
+        .from("trailers")
+        .update({ status: "archived" })
+        .eq("id", trailer.id);
+
+      if (error) throw error;
+
+      toast.success(`Trailer ${trailer.trailer_number} archived`);
+      navigate("/dashboard/admin/fleet");
+    } catch (error) {
+      console.error("Error archiving trailer:", error);
+      toast.error("Failed to archive trailer");
+    }
+  };
+
+  const handleRestore = async () => {
+    if (!trailer) return;
+
+    try {
+      const { error } = await supabase
+        .from("trailers")
+        .update({ status: "available" })
+        .eq("id", trailer.id);
+
+      if (error) throw error;
+
+      toast.success(`Trailer ${trailer.trailer_number} restored`);
+      fetchTrailerData();
+    } catch (error) {
+      console.error("Error restoring trailer:", error);
+      toast.error("Failed to restore trailer");
+    }
+  };
+
+  const handlePermanentDelete = async () => {
     if (!trailer) return;
 
     try {
@@ -281,7 +319,7 @@ export default function TrailerDetail() {
 
       if (error) throw error;
 
-      toast.success(`Trailer ${trailer.trailer_number} deleted`);
+      toast.success(`Trailer ${trailer.trailer_number} permanently deleted`);
       navigate("/dashboard/admin/fleet");
     } catch (error) {
       console.error("Error deleting trailer:", error);
@@ -351,26 +389,56 @@ export default function TrailerDetail() {
                     <Button variant="outline" onClick={() => setIsEditing(true)}>
                       Edit Trailer
                     </Button>
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button variant="destructive">
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          Delete
+                    {trailer.status === "archived" ? (
+                      <>
+                        <Button variant="default" onClick={handleRestore}>
+                          Restore
                         </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Delete Trailer</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            Are you sure you want to delete trailer #{trailer.trailer_number}? This action cannot be undone.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancel</AlertDialogCancel>
-                          <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="destructive">
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Permanently Delete
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Permanently Delete Trailer</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Are you sure you want to permanently delete trailer #{trailer.trailer_number}? This action cannot be undone and all associated data will be lost.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={handlePermanentDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                                Permanently Delete
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </>
+                    ) : (
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="destructive">
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Archive
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Archive Trailer</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Are you sure you want to archive trailer #{trailer.trailer_number}? It can be restored later from the Archived Trailers page.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={handleArchive}>Archive</AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    )}
                   </>
                 )}
               </div>
