@@ -45,41 +45,59 @@ export function InspectionPhotoUpload({
     }
 
     setUploading(true);
-    try {
-      const fileExt = file.name.split(".").pop();
-      const fileName = `${inspectionId}/${category}/${Date.now()}.${fileExt}`;
+    const fileExt = file.name.split(".").pop();
+    const fileName = `${inspectionId}/${category}/${Date.now()}.${fileExt}`;
 
-      const { error: uploadError } = await supabase.storage
-        .from("dot-inspection-photos")
-        .upload(fileName, file);
+    // Retry logic: attempt up to 2 times
+    for (let attempt = 1; attempt <= 2; attempt++) {
+      try {
+        const { error: uploadError } = await supabase.storage
+          .from("dot-inspection-photos")
+          .upload(fileName, file);
 
-      if (uploadError) throw uploadError;
+        if (uploadError) {
+          console.error(`Storage upload error (attempt ${attempt}):`, uploadError);
+          if (attempt === 2) {
+            toast.error(`Storage upload failed: ${uploadError.message}`);
+            break;
+          }
+          await new Promise(r => setTimeout(r, 1500));
+          continue;
+        }
 
-      const { data: { publicUrl } } = supabase.storage
-        .from("dot-inspection-photos")
-        .getPublicUrl(fileName);
+        const { data: { publicUrl } } = supabase.storage
+          .from("dot-inspection-photos")
+          .getPublicUrl(fileName);
 
-      // Save to database
-      const { error: dbError } = await supabase
-        .from("dot_inspection_photos")
-        .insert({
-          inspection_id: inspectionId,
-          category,
-          photo_url: publicUrl
-        });
+        const { error: dbError } = await supabase
+          .from("dot_inspection_photos")
+          .insert({
+            inspection_id: inspectionId,
+            category,
+            photo_url: publicUrl
+          });
 
-      if (dbError) throw dbError;
+        if (dbError) {
+          console.error("Database insert error:", dbError);
+          toast.error(`Failed to save photo record: ${dbError.message}`);
+          break;
+        }
 
-      onPhotoUploaded(publicUrl);
-      toast.success("Photo uploaded successfully");
-    } catch (error) {
-      console.error("Error uploading photo:", error);
-      toast.error("Failed to upload photo");
-    } finally {
-      setUploading(false);
-      // Reset input
-      e.target.value = "";
+        onPhotoUploaded(publicUrl);
+        toast.success("Photo uploaded successfully");
+        break;
+      } catch (error: any) {
+        console.error(`Photo upload error (attempt ${attempt}):`, error);
+        if (attempt === 2) {
+          toast.error(`Upload failed: ${error?.message || "Unknown error. Please check your connection and try again."}`);
+        } else {
+          await new Promise(r => setTimeout(r, 1500));
+        }
+      }
     }
+
+    setUploading(false);
+    e.target.value = "";
   };
 
   const handleDelete = async (photoId: string, photoUrl: string) => {
