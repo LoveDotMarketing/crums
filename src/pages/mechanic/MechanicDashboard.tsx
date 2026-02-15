@@ -1025,15 +1025,19 @@ export default function MechanicDashboard() {
                                   <ArrowUpFromLine className="mr-2 h-4 w-4" />
                                   Check Out
                                 </Button>
-                                <Button 
-                                  size="sm"
-                                  variant="default"
-                                  onClick={() => handleStartDOTInspection(trailer)}
-                                >
-                                  <ClipboardCheck className="mr-2 h-4 w-4" />
-                                  DOT Inspection
-                                </Button>
                               </>
+                            )}
+                            
+                            {/* DOT Inspection - available for available, maintenance, and pending trailers */}
+                            {["available", "maintenance", "pending"].includes(trailer.status) && !trailer.is_rented && (
+                              <Button 
+                                size="sm"
+                                variant="default"
+                                onClick={() => handleStartDOTInspection(trailer)}
+                              >
+                                <ClipboardCheck className="mr-2 h-4 w-4" />
+                                DOT Inspection
+                              </Button>
                             )}
                             
                             {/* Rented - view only, no actions */}
