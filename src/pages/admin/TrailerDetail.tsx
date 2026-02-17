@@ -85,6 +85,9 @@ interface MaintenanceRecord {
   maintenance_date: string;
   completed: boolean | null;
   mechanic_id: string | null;
+  maintenance_type: string | null;
+  source: string | null;
+  work_order_id: string | null;
 }
 
 type AgreementType = 'standard_lease' | 'lease_to_own' | 'rent_for_storage' | 'repayment_plan';
@@ -813,7 +816,9 @@ export default function TrailerDetail() {
                       <TableRow>
                         <TableHead>Date</TableHead>
                         <TableHead>Description</TableHead>
+                        <TableHead>Type</TableHead>
                         <TableHead>Cost</TableHead>
+                        <TableHead>Source</TableHead>
                         <TableHead>Status</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -822,7 +827,22 @@ export default function TrailerDetail() {
                         <TableRow key={record.id}>
                           <TableCell>{new Date(record.maintenance_date).toLocaleDateString()}</TableCell>
                           <TableCell>{record.description}</TableCell>
+                          <TableCell className="text-muted-foreground">{record.maintenance_type || "—"}</TableCell>
                           <TableCell>${record.cost.toLocaleString()}</TableCell>
+                          <TableCell>
+                            {record.source === "work_order" && record.work_order_id ? (
+                              <Button
+                                variant="link"
+                                size="sm"
+                                className="h-auto p-0 text-xs"
+                                onClick={() => navigate(`/dashboard/admin/work-orders`)}
+                              >
+                                Work Order
+                              </Button>
+                            ) : (
+                              <span className="text-xs text-muted-foreground">Manual</span>
+                            )}
+                          </TableCell>
                           <TableCell>
                             <Badge variant={record.completed ? "default" : "secondary"}>
                               {record.completed ? "Completed" : "Pending"}
