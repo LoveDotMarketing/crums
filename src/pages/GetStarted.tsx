@@ -75,6 +75,7 @@ export default function GetStarted() {
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [formStarted, setFormStarted] = useState(false);
   const [phoneError, setPhoneError] = useState("");
+  const [isCompletionMode, setIsCompletionMode] = useState(false);
 
   const formatPhoneNumber = (value: string) => {
     const digits = value.replace(/\D/g, '');
@@ -93,6 +94,60 @@ export default function GetStarted() {
       setPhoneError("");
     }
   };
+
+  // Persist form data in localStorage to prevent mobile data loss
+  const STORAGE_KEY = 'crums_getstarted_form';
+
+  useEffect(() => {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      try {
+        const data = JSON.parse(saved);
+        if (data.email) setEmail(data.email);
+        if (data.firstName) setFirstName(data.firstName);
+        if (data.lastName) setLastName(data.lastName);
+        if (data.phoneNumber) setPhoneNumber(data.phoneNumber);
+        if (data.companyName) setCompanyName(data.companyName);
+        if (data.referralCode) setReferralCode(data.referralCode);
+      } catch { /* ignore corrupt data */ }
+    }
+  }, []);
+
+  useEffect(() => {
+    if (email || firstName || lastName || phoneNumber || companyName) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        email, firstName, lastName, phoneNumber, companyName, referralCode
+      }));
+    }
+  }, [email, firstName, lastName, phoneNumber, companyName, referralCode]);
+
+  const clearSavedForm = () => localStorage.removeItem(STORAGE_KEY);
+
+  // Check for completion mode (incomplete profile redirect from login)
+  useEffect(() => {
+    const complete = searchParams.get("complete");
+    if (complete === "true") {
+      setIsCompletionMode(true);
+      // Load profile data for pre-fill
+      (async () => {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('first_name, last_name, phone, company_name, email')
+            .eq('id', session.user.id)
+            .single();
+          if (profile) {
+            if (profile.email) setEmail(profile.email);
+            if (profile.first_name) setFirstName(profile.first_name);
+            if (profile.last_name) setLastName(profile.last_name);
+            if (profile.phone) setPhoneNumber(profile.phone);
+            if (profile.company_name) setCompanyName(profile.company_name);
+          }
+        }
+      })();
+    }
+  }, [searchParams]);
 
   // Track signup started on page load
   useEffect(() => {
@@ -164,7 +219,60 @@ export default function GetStarted() {
     return data.path;
   };
 
+  // Session retry helper for mobile network latency
+  const getSessionWithRetry = async (maxRetries = 3) => {
+    for (let i = 0; i < maxRetries; i++) {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) return session;
+      await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
+    }
+    return null;
+  };
+
   const handleQuickStartSubmit = async () => {
+    // In completion mode, skip account creation
+    if (isCompletionMode) {
+      if (!firstName || !lastName || !phoneNumber) {
+        toast({ title: "Error", description: "Please fill in all required fields", variant: "destructive" });
+        return;
+      }
+      setIsLoading(true);
+      try {
+        const session = await getSessionWithRetry();
+        if (!session) throw new Error("Please log in again and retry.");
+
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .update({ 
+            company_name: companyName || null,
+            phone: phoneNumber,
+            first_name: firstName,
+            last_name: lastName
+          })
+          .eq('id', session.user.id);
+
+        if (profileError) throw profileError;
+
+        // Upsert application
+        await supabase
+          .from('customer_applications')
+          .upsert({
+            user_id: session.user.id,
+            phone_number: phoneNumber,
+            status: 'new'
+          }, { onConflict: 'user_id', ignoreDuplicates: false });
+
+        clearSavedForm();
+        toast({ title: "Profile Updated!", description: "Your profile has been completed." });
+        setFormMode("prompt");
+      } catch (error: any) {
+        toast({ title: "Error", description: error.message || "Failed to update profile.", variant: "destructive" });
+      } finally {
+        setIsLoading(false);
+      }
+      return;
+    }
+
     if (!validateQuickStart()) return;
 
     setIsLoading(true);
@@ -179,9 +287,17 @@ export default function GetStarted() {
         return;
       }
 
-      // Get the user session
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error("No session found");
+      // Get the user session with retry for mobile latency
+      const session = await getSessionWithRetry();
+      if (!session) {
+        toast({ 
+          title: "Account Created", 
+          description: "Your account was created but we couldn't complete your profile. Please log in at the login page to finish setup.",
+          variant: "destructive"
+        });
+        setIsLoading(false);
+        return;
+      }
 
       // Update profile
       const { error: profileError } = await supabase
@@ -226,6 +342,8 @@ export default function GetStarted() {
       trackSignup('email');
       trackConversion('signup');
       trackLinkedInSignup();
+
+      clearSavedForm();
 
       toast({ 
         title: "Account Created!", 
@@ -441,29 +559,39 @@ export default function GetStarted() {
               <div className="inline-flex items-center justify-center w-16 h-16 bg-secondary/10 rounded-full mb-4">
                 <Zap className="h-8 w-8 text-secondary" />
               </div>
-              <h1 className="text-3xl font-bold text-foreground mb-2">Quick Start</h1>
-              <p className="text-muted-foreground">Create your account in 60 seconds</p>
+              <h1 className="text-3xl font-bold text-foreground mb-2">
+                {isCompletionMode ? "Complete Your Profile" : "Quick Start"}
+              </h1>
+              <p className="text-muted-foreground">
+                {isCompletionMode ? "Please fill in your details to finish setup" : "Create your account in 60 seconds"}
+              </p>
             </div>
 
             <Card className="shadow-lg">
               <CardHeader>
-                <CardTitle className="text-xl">Create Your Account</CardTitle>
+                <CardTitle className="text-xl">
+                  {isCompletionMode ? "Your Information" : "Create Your Account"}
+                </CardTitle>
                 <CardDescription>
-                  Get started fast - complete your full application later
+                  {isCompletionMode 
+                    ? "We need a few details to complete your profile"
+                    : "Get started fast - complete your full application later"}
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="email">Email Address *</Label>
-                    <Input 
-                      id="email" 
-                      type="email" 
-                      value={email} 
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="you@company.com"
-                    />
-                  </div>
+                  {!isCompletionMode && (
+                    <div>
+                      <Label htmlFor="email">Email Address *</Label>
+                      <Input 
+                        id="email" 
+                        type="email" 
+                        value={email} 
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="you@company.com"
+                      />
+                    </div>
+                  )}
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <Label htmlFor="firstName">First Name *</Label>
@@ -498,54 +626,60 @@ export default function GetStarted() {
                       <p className="text-sm text-destructive mt-1">{phoneError}</p>
                     )}
                   </div>
-                  <div>
-                    <Label htmlFor="password">Password *</Label>
-                    <Input 
-                      id="password" 
-                      type="password" 
-                      value={password} 
-                      onChange={(e) => setPassword(e.target.value)}
-                      placeholder="Create a strong password"
-                    />
-                    <ul className="text-xs text-muted-foreground mt-1 space-y-0.5 list-disc list-inside">
-                      <li className={password.length >= 8 ? "text-green-600" : ""}>At least 8 characters</li>
-                      <li className={/[A-Z]/.test(password) ? "text-green-600" : ""}>One uppercase letter</li>
-                      <li className={/[a-z]/.test(password) ? "text-green-600" : ""}>One lowercase letter</li>
-                      <li className={/[0-9]/.test(password) ? "text-green-600" : ""}>One number</li>
-                    </ul>
-                  </div>
-                  <div>
-                    <Label htmlFor="confirmPassword">Confirm Password *</Label>
-                    <Input 
-                      id="confirmPassword" 
-                      type="password" 
-                      value={confirmPassword} 
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      placeholder="Re-enter your password"
-                    />
-                  </div>
+                  {!isCompletionMode && (
+                    <>
+                      <div>
+                        <Label htmlFor="password">Password *</Label>
+                        <Input 
+                          id="password" 
+                          type="password" 
+                          value={password} 
+                          onChange={(e) => setPassword(e.target.value)}
+                          placeholder="Create a strong password"
+                        />
+                        <ul className="text-xs text-muted-foreground mt-1 space-y-0.5 list-disc list-inside">
+                          <li className={password.length >= 8 ? "text-green-600" : ""}>At least 8 characters</li>
+                          <li className={/[A-Z]/.test(password) ? "text-green-600" : ""}>One uppercase letter</li>
+                          <li className={/[a-z]/.test(password) ? "text-green-600" : ""}>One lowercase letter</li>
+                          <li className={/[0-9]/.test(password) ? "text-green-600" : ""}>One number</li>
+                        </ul>
+                      </div>
+                      <div>
+                        <Label htmlFor="confirmPassword">Confirm Password *</Label>
+                        <Input 
+                          id="confirmPassword" 
+                          type="password" 
+                          value={confirmPassword} 
+                          onChange={(e) => setConfirmPassword(e.target.value)}
+                          placeholder="Re-enter your password"
+                        />
+                      </div>
+                    </>
+                  )}
 
                   {/* Referral Code */}
-                  <div>
-                    <Label htmlFor="referralCode">Referral Code (Optional)</Label>
-                    <div className="relative">
-                      <Gift className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input 
-                        id="referralCode" 
-                        value={referralCode} 
-                        onChange={(e) => setReferralCode(e.target.value.toUpperCase())}
-                        placeholder="CRUMS-XXXXXX"
-                        className="pl-10"
-                      />
+                  {!isCompletionMode && (
+                    <div>
+                      <Label htmlFor="referralCode">Referral Code (Optional)</Label>
+                      <div className="relative">
+                        <Gift className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input 
+                          id="referralCode" 
+                          value={referralCode} 
+                          onChange={(e) => setReferralCode(e.target.value.toUpperCase())}
+                          placeholder="CRUMS-XXXXXX"
+                          className="pl-10"
+                        />
+                      </div>
                     </div>
-                  </div>
+                  )}
 
                   <Button 
                     onClick={handleQuickStartSubmit} 
                     className="w-full bg-secondary hover:bg-secondary/90"
                     disabled={isLoading}
                   >
-                    {isLoading ? "Creating Account..." : "Create Account"}
+                    {isLoading ? "Please wait..." : isCompletionMode ? "Complete Profile" : "Create Account"}
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
 

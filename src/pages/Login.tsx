@@ -144,6 +144,21 @@ const Login = () => {
           setLockoutMinutes(null);
           // Track successful login
           trackLogin('email');
+
+          // Check for incomplete profile and redirect to complete it
+          const { data: { session } } = await supabase.auth.getSession();
+          if (session) {
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('first_name, last_name, phone')
+              .eq('id', session.user.id)
+              .single();
+
+            if (profile && (!profile.first_name || !profile.last_name)) {
+              navigate('/get-started?complete=true');
+              return;
+            }
+          }
         }
       }
     } catch (err) {
