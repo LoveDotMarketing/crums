@@ -1668,6 +1668,42 @@ export type Database = {
           },
         ]
       }
+      service_catalog: {
+        Row: {
+          category: string
+          created_at: string
+          id: string
+          is_active: boolean
+          labor_hours: number | null
+          labor_price: number | null
+          name: string
+          parts_price: number | null
+          updated_at: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          labor_hours?: number | null
+          labor_price?: number | null
+          name: string
+          parts_price?: number | null
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          labor_hours?: number | null
+          labor_price?: number | null
+          name?: string
+          parts_price?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       stripe_webhook_logs: {
         Row: {
           amount: number | null
