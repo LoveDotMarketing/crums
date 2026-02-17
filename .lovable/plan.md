@@ -1,89 +1,63 @@
 
 
-## Fix Mobile Sign-Up Data Loss
+## Proactive Fixes: Prevent More Customer Profile/Signup Issues
 
-### Problem
-The Do It Moving customer (`doitmoving6@gmail.com`) created an account but their profile is completely empty -- first_name, last_name, phone are all null and no application record exists. They logged in 51 times trying to fix it. Two root causes:
+Based on the patterns from the Do It Moving incident, here are 5 related issues that could hit other customers.
 
-**1. Session race condition after signup**
-After `signUp()` succeeds, the code immediately calls `supabase.auth.getSession()`. On mobile (slower networks), the session is often not available yet, causing a "No session found" error. The profile and application updates silently fail, but the account already exists -- so they can't re-register.
+### Issue 1: Full Form Submit Uses `getSession()` Without Retry
+In `GetStarted.tsx` line 409, the full application form (step 2 after Quick Start) calls `supabase.auth.getSession()` directly without the retry logic we added for Quick Start. On mobile, this will fail the same way -- silently losing all the document uploads and business details the customer just entered.
 
-**2. No form data persistence**
-All form fields are plain React `useState`. On mobile, browsers frequently refresh/kill background tabs. Every time the page reloads, all typed data is gone. This is likely what the customer meant by "kept deleting his info."
+**Fix:** Use `getSessionWithRetry()` in `handleFullFormSubmit` instead of direct `getSession()`.
 
-### Changes
+### Issue 2: Application Page Has No Phone Auto-Formatting
+The customer Application page (`/customer/application`) has a raw phone input with no formatting or validation (line 400-404). Customers editing their phone here can enter any format, which may conflict with validation elsewhere and create inconsistent data.
 
-**1. Persist form data in localStorage (src/pages/GetStarted.tsx)**
-- Save Quick Start fields (email, firstName, lastName, phone, companyName) to localStorage on every change
-- Restore from localStorage on page load
-- Clear localStorage on successful submission
-- This prevents data loss from page refreshes and mobile tab kills
+**Fix:** Add the same `formatPhoneNumber` handler to the Application page phone fields (main phone and insurance phone).
 
-**2. Fix session race condition (src/pages/GetStarted.tsx)**
-- After `signUp()`, wait for the `onAuthStateChange` SIGNED_IN event instead of immediately calling `getSession()`
-- Use a short polling/retry approach: try `getSession()`, and if no session, wait and retry up to 3 times
-- This handles the mobile network latency issue
+### Issue 3: Application Page Doesn't Persist Form Data
+The Application page (`/customer/application`) has no localStorage persistence. If a customer is halfway through uploading documents and their mobile browser refreshes, all unsaved text fields reset to what was last saved to the database. Document uploads in progress are lost entirely.
 
-**3. Add incomplete profile detection (src/pages/Login.tsx)**
-- After login, check if profile has first_name/last_name/phone
-- If profile is incomplete, redirect to `/get-started` with a query param like `?complete=true` so the form pre-fills and lets them finish
-- This gives customers like Do It Moving a recovery path
+**Fix:** Add localStorage persistence for in-progress application edits, similar to the GetStarted form.
 
-**4. Handle the "complete profile" mode in GetStarted (src/pages/GetStarted.tsx)**
-- Detect `?complete=true` query param
-- If user is already logged in and profile is incomplete, show the Quick Start form pre-filled from localStorage or profile data
-- On submit, just update the profile (skip signUp since account already exists)
+### Issue 4: Login Page Signup Creates No Profile Data
+When customers sign up via the Login page (not GetStarted), the `signUp` call at line 86 creates the auth account and role, but never updates the profile with first/last name or creates an application record. The `handle_new_user` trigger only sets email. These customers end up with empty profiles and no application -- the exact same "stuck" state as Do It Moving.
+
+**Fix:** After successful signup on the Login page, redirect to `/get-started?complete=true` instead of `/dashboard/customer` so the customer completes their profile immediately.
+
+### Issue 5: No Company Name Field in Completion Mode
+When a user hits the completion mode (`/get-started?complete=true`), the company name field is not shown in the form (it's hidden behind `!isCompletionMode` checks along with other fields). Company name should be available in completion mode since it's a key field for the customer record.
+
+**Fix:** Show the company name field in completion mode.
+
+---
 
 ### Files to Modify
-- `src/pages/GetStarted.tsx` -- localStorage persistence, session retry, complete-profile mode
-- `src/pages/Login.tsx` -- Incomplete profile detection and redirect
+- `src/pages/GetStarted.tsx` -- Use session retry in full form submit; show company name in completion mode
+- `src/pages/Login.tsx` -- Redirect new signups to complete profile instead of dashboard
+- `src/pages/customer/Application.tsx` -- Add phone formatting and localStorage persistence for in-progress edits
 
 ### Technical Details
 
-**localStorage persistence:**
-```typescript
-// Save on change
-useEffect(() => {
-  localStorage.setItem('getStartedForm', JSON.stringify({
-    email, firstName, lastName, phoneNumber, companyName
-  }));
-}, [email, firstName, lastName, phoneNumber, companyName]);
+**Login page redirect (Login.tsx line 132):**
+Change `navigate("/dashboard/customer")` after signup to `navigate("/get-started?complete=true")` so new Login-page signups always complete their profile.
 
-// Restore on mount
-useEffect(() => {
-  const saved = localStorage.getItem('getStartedForm');
-  if (saved) {
-    const data = JSON.parse(saved);
-    setEmail(data.email || '');
-    // ...etc
-  }
-}, []);
+**Full form session fix (GetStarted.tsx line 409):**
+Replace:
+```typescript
+const { data: { session } } = await supabase.auth.getSession();
+if (!session) throw new Error("No session found");
+```
+With:
+```typescript
+const session = await getSessionWithRetry();
+if (!session) throw new Error("Session expired. Please log in again.");
 ```
 
-**Session retry after signup:**
-```typescript
-const getSessionWithRetry = async (maxRetries = 3): Promise<Session | null> => {
-  for (let i = 0; i < maxRetries; i++) {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (session) return session;
-    await new Promise(resolve => setTimeout(resolve, 1000));
-  }
-  return null;
-};
-```
+**Application page phone formatting:**
+Reuse the same `formatPhoneNumber` utility from GetStarted, applied to phone and insurance phone inputs.
 
-**Incomplete profile redirect (Login.tsx):**
-After successful login, before navigating to dashboard, check:
-```typescript
-const { data: profile } = await supabase
-  .from('profiles')
-  .select('first_name, last_name, phone')
-  .eq('id', user.id)
-  .single();
+**Application page localStorage:**
+Save form edits to `crums_application_form` key on change, restore on mount, clear on successful save.
 
-if (!profile?.first_name || !profile?.last_name) {
-  navigate('/get-started?complete=true');
-  return;
-}
-```
-
+**Company name in completion mode:**
+Move the company name input outside the `!isCompletionMode` conditional so it renders in both modes.
