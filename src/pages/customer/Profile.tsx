@@ -200,12 +200,6 @@ export default function Profile() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Don't allow saving when impersonating
-    if (isImpersonating) {
-      toast.error("Cannot modify profile while viewing as customer");
-      return;
-    }
-    
     setSaving(true);
 
     try {
@@ -486,7 +480,7 @@ export default function Profile() {
                 <CardHeader>
                   <CardTitle>Personal Information</CardTitle>
                   <CardDescription>
-                    {isImpersonating ? "Viewing customer profile (read-only)" : "Update your profile information"}
+                    {isImpersonating ? "Editing customer profile as admin" : "Update your profile information"}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -499,8 +493,6 @@ export default function Profile() {
                           value={profile.first_name}
                           onChange={(e) => setProfile({ ...profile, first_name: e.target.value })}
                           placeholder="John"
-                          disabled={isImpersonating}
-                          className={isImpersonating ? "bg-muted" : ""}
                         />
                       </div>
                       <div className="space-y-2">
@@ -510,8 +502,6 @@ export default function Profile() {
                           value={profile.last_name}
                           onChange={(e) => setProfile({ ...profile, last_name: e.target.value })}
                           placeholder="Doe"
-                          disabled={isImpersonating}
-                          className={isImpersonating ? "bg-muted" : ""}
                         />
                       </div>
                     </div>
@@ -538,23 +528,19 @@ export default function Profile() {
                           value={profile.phone}
                           onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
                           placeholder="(555) 123-4567"
-                          disabled={isImpersonating}
-                          className={isImpersonating ? "bg-muted" : ""}
                         />
                       </div>
 
-                    {!isImpersonating && (
-                      <Button type="submit" disabled={saving} className="w-full md:w-auto">
-                        {saving ? (
-                          <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Saving...
-                          </>
-                        ) : (
-                          "Save Changes"
-                        )}
-                      </Button>
-                    )}
+                    <Button type="submit" disabled={saving} className="w-full md:w-auto">
+                      {saving ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Saving...
+                        </>
+                      ) : (
+                        isImpersonating ? "Save Changes (Admin)" : "Save Changes"
+                      )}
+                    </Button>
                   </form>
                 </CardContent>
               </Card>
