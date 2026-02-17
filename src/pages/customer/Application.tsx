@@ -151,25 +151,24 @@ export default function Application() {
         await supabase.from("profiles").update(profileUpdate).eq("id", currentUserId);
       }
 
-      // Auto-save application fields (excluding SSN and status)
-      if (application.id) {
-        const appUpdate: Record<string, any> = {
-          phone_number: sanitizeInput(profile.phone),
-          company_address: sanitizeInput(application.company_address),
-          business_type: application.business_type,
-          truck_vin: sanitizeInput(application.truck_vin),
-          trailer_type: application.trailer_type,
-          number_of_trailers: application.number_of_trailers,
-          date_needed: application.date_needed || null,
-          insurance_company: sanitizeInput(application.insurance_company),
-          insurance_company_phone: sanitizeInput(application.insurance_company_phone),
-          message: sanitizeInput(application.message),
-          secondary_contact_name: sanitizeInput(application.secondary_contact_name),
-          secondary_contact_phone: sanitizeInput(application.secondary_contact_phone),
-          secondary_contact_relationship: sanitizeInput(application.secondary_contact_relationship),
-        };
-        await supabase.from("customer_applications").update(appUpdate).eq("id", application.id);
-      }
+      // Auto-save application fields (excluding SSN and status) using upsert
+      const appUpdate: Record<string, any> = {
+        user_id: currentUserId,
+        phone_number: sanitizeInput(profile.phone) || "",
+        company_address: sanitizeInput(application.company_address),
+        business_type: application.business_type,
+        truck_vin: sanitizeInput(application.truck_vin),
+        trailer_type: application.trailer_type,
+        number_of_trailers: application.number_of_trailers,
+        date_needed: application.date_needed || null,
+        insurance_company: sanitizeInput(application.insurance_company),
+        insurance_company_phone: sanitizeInput(application.insurance_company_phone),
+        message: sanitizeInput(application.message),
+        secondary_contact_name: sanitizeInput(application.secondary_contact_name),
+        secondary_contact_phone: sanitizeInput(application.secondary_contact_phone),
+        secondary_contact_relationship: sanitizeInput(application.secondary_contact_relationship),
+      };
+      await supabase.from("customer_applications").upsert(appUpdate as any, { onConflict: 'user_id' });
     } catch (error) {
       console.error("Auto-save error:", error);
     }
@@ -373,18 +372,11 @@ export default function Application() {
         applicationData.ssn = encryptData.encrypted;
       }
 
-      if (application.id) {
-        const { error } = await supabase
-          .from("customer_applications")
-          .update(applicationData)
-          .eq("id", application.id);
-        if (error) throw error;
-      } else {
-        const { error } = await supabase
-          .from("customer_applications")
-          .insert(applicationData as any);
-        if (error) throw error;
-      }
+      // Always upsert to prevent unique constraint errors
+      const { error } = await supabase
+        .from("customer_applications")
+        .upsert(applicationData as any, { onConflict: 'user_id' });
+      if (error) throw error;
 
       toast.success("Application saved successfully");
       clearSavedApplication();
