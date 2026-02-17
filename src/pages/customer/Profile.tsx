@@ -98,7 +98,7 @@ export default function Profile() {
       const { data, error } = await supabase
         .from('customers')
         .select('id')
-        .eq('email', currentEmail)
+        .ilike('email', currentEmail)
         .maybeSingle();
       if (error) throw error;
       return data;

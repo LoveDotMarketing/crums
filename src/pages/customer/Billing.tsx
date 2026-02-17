@@ -11,17 +11,38 @@ import { Navigation } from "@/components/Navigation";
 import { useAuth } from "@/hooks/useAuth";
 
 const CustomerBilling = () => {
-  const { isImpersonating } = useAuth();
-  const { data: subscription, isLoading: subLoading } = useQuery({
-    queryKey: ["customer-subscription"],
+  const { user, isImpersonating, impersonatedUser } = useAuth();
+  const currentEmail = isImpersonating && impersonatedUser ? impersonatedUser.email : user?.email;
+
+  // First look up the customer record by email
+  const { data: customerRecord } = useQuery({
+    queryKey: ["customer-record-billing", currentEmail],
     queryFn: async () => {
+      if (!currentEmail) return null;
       const { data, error } = await supabase
-        .from("customer_subscriptions")
-        .select("*")
+        .from("customers")
+        .select("id")
+        .ilike("email", currentEmail)
         .maybeSingle();
       if (error) throw error;
       return data;
     },
+    enabled: !!currentEmail,
+  });
+
+  const { data: subscription, isLoading: subLoading } = useQuery({
+    queryKey: ["customer-subscription", customerRecord?.id],
+    queryFn: async () => {
+      if (!customerRecord?.id) return null;
+      const { data, error } = await supabase
+        .from("customer_subscriptions")
+        .select("*")
+        .eq("customer_id", customerRecord.id)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!customerRecord?.id,
   });
 
   // Fetch customer's billing anchor preference from application
