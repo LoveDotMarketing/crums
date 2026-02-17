@@ -97,6 +97,20 @@ export default function Application() {
     status: "new",
   });
 
+  const APP_STORAGE_KEY = 'crums_application_form';
+
+  // Restore from localStorage on mount (before DB fetch overwrites)
+  useEffect(() => {
+    const saved = localStorage.getItem(APP_STORAGE_KEY);
+    if (saved) {
+      try {
+        const data = JSON.parse(saved);
+        if (data.profile) setProfile(prev => ({ ...prev, ...data.profile }));
+        if (data.application) setApplication(prev => ({ ...prev, ...data.application }));
+      } catch { /* ignore corrupt data */ }
+    }
+  }, []);
+
   useEffect(() => {
     fetchData();
   }, [user]);
@@ -104,6 +118,14 @@ export default function Application() {
   useEffect(() => {
     trackApplicationStarted();
   }, []);
+  // Save form edits to localStorage to prevent mobile data loss
+  useEffect(() => {
+    if (profile.first_name || application.company_address || application.insurance_company) {
+      localStorage.setItem(APP_STORAGE_KEY, JSON.stringify({ profile, application }));
+    }
+  }, [profile, application]);
+
+  const clearSavedApplication = () => localStorage.removeItem(APP_STORAGE_KEY);
 
   const fetchData = async () => {
     if (!user) return;
@@ -302,6 +324,7 @@ export default function Application() {
       }
 
       toast.success("Application saved successfully");
+      clearSavedApplication();
       trackFormSubmission('customer_application', true);
       fetchData();
     } catch (error) {
@@ -401,7 +424,15 @@ export default function Application() {
                     id="phone"
                     type="tel"
                     value={profile.phone}
-                    onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
+                    onChange={(e) => {
+                      const digits = e.target.value.replace(/\D/g, '');
+                      let formatted = digits;
+                      if (digits.length <= 3) formatted = digits;
+                      else if (digits.length <= 6) formatted = `(${digits.slice(0, 3)}) ${digits.slice(3)}`;
+                      else formatted = `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6, 10)}`;
+                      setProfile({ ...profile, phone: formatted });
+                    }}
+                    placeholder="(555) 123-4567"
                   />
                 </div>
                 <div>
@@ -527,7 +558,15 @@ export default function Application() {
                     id="insurancePhone"
                     type="tel"
                     value={application.insurance_company_phone}
-                    onChange={(e) => setApplication({ ...application, insurance_company_phone: e.target.value })}
+                    onChange={(e) => {
+                      const digits = e.target.value.replace(/\D/g, '');
+                      let formatted = digits;
+                      if (digits.length <= 3) formatted = digits;
+                      else if (digits.length <= 6) formatted = `(${digits.slice(0, 3)}) ${digits.slice(3)}`;
+                      else formatted = `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6, 10)}`;
+                      setApplication({ ...application, insurance_company_phone: formatted });
+                    }}
+                    placeholder="(555) 123-4567"
                   />
                 </div>
               </CardContent>
@@ -653,7 +692,15 @@ export default function Application() {
                     id="secondaryPhone"
                     type="tel"
                     value={application.secondary_contact_phone}
-                    onChange={(e) => setApplication({ ...application, secondary_contact_phone: e.target.value })}
+                    onChange={(e) => {
+                      const digits = e.target.value.replace(/\D/g, '');
+                      let formatted = digits;
+                      if (digits.length <= 3) formatted = digits;
+                      else if (digits.length <= 6) formatted = `(${digits.slice(0, 3)}) ${digits.slice(3)}`;
+                      else formatted = `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6, 10)}`;
+                      setApplication({ ...application, secondary_contact_phone: formatted });
+                    }}
+                    placeholder="(555) 123-4567"
                   />
                 </div>
                 <div>
