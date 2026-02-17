@@ -54,6 +54,7 @@ interface ActivityLog {
   user_agent: string | null;
   session_duration_seconds: number | null;
   created_at: string;
+  metadata: Record<string, unknown> | null;
 }
 
 interface ImpersonationLog {
@@ -137,24 +138,14 @@ export default function Logs() {
   const impersonationLogs: ImpersonationLog[] = logs
     .filter(log => log.event_type === 'impersonation_start' || log.event_type === 'impersonation_end')
     .map(log => {
-      let targetInfo = { id: '', email: '', role: '' };
-      try {
-        if (log.user_agent) {
-          const parsed = JSON.parse(log.user_agent);
-          targetInfo = {
-            id: parsed.target_user_id || '',
-            email: parsed.target_email || '',
-            role: parsed.target_role || ''
-          };
-        }
-      } catch { /* ignore */ }
+      const meta = log.metadata as Record<string, string> | null;
       return {
         id: log.id,
         admin_id: log.user_id,
         admin_email: log.email,
-        target_id: targetInfo.id,
-        target_email: targetInfo.email,
-        target_role: targetInfo.role,
+        target_id: meta?.target_user_id || '',
+        target_email: meta?.target_email || meta?.target_display_name || '',
+        target_role: meta?.target_role || '',
         event_type: log.event_type as 'impersonation_start' | 'impersonation_end',
         created_at: log.created_at
       };

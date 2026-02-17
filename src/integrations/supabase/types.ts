@@ -2330,6 +2330,7 @@ export type Database = {
           event_type: string
           id: string
           ip_address: string | null
+          metadata: Json | null
           role: string | null
           session_duration_seconds: number | null
           user_agent: string | null
@@ -2341,6 +2342,7 @@ export type Database = {
           event_type: string
           id?: string
           ip_address?: string | null
+          metadata?: Json | null
           role?: string | null
           session_duration_seconds?: number | null
           user_agent?: string | null
@@ -2352,6 +2354,7 @@ export type Database = {
           event_type?: string
           id?: string
           ip_address?: string | null
+          metadata?: Json | null
           role?: string | null
           session_duration_seconds?: number | null
           user_agent?: string | null
