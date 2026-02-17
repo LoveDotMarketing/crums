@@ -110,12 +110,12 @@ export default function AdminDashboard() {
           .from("tolls")
           .select("id, amount, status, created_at, customer_id, toll_authority, toll_location")
           .order("created_at", { ascending: false })
-          .limit(5),
+          .limit(15),
         supabase
           .from("customer_applications")
           .select("id, status, created_at, updated_at, user_id")
           .order("updated_at", { ascending: false })
-          .limit(5),
+          .limit(15),
         supabase
           .from("profiles")
           .select("id, first_name, last_name, company_name, email"),
@@ -180,7 +180,7 @@ export default function AdminDashboard() {
       });
 
       activities.sort((a, b) => b.timestamp - a.timestamp);
-      return activities.slice(0, 6);
+      return activities.slice(0, 20);
     },
   });
 
@@ -299,7 +299,7 @@ export default function AdminDashboard() {
                   <CardTitle className="text-foreground">Recent Activity</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-4">
+                  <div className="space-y-4 max-h-[500px] overflow-y-auto pr-1">
                     {isLoadingActivity ? (
                       <div className="flex items-center justify-center py-8">
                         <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
