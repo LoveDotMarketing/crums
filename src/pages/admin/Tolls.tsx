@@ -112,7 +112,8 @@ export default function Tolls() {
       });
 
       if (error) {
-        const msg = data?.error || error.message || "Failed to charge toll";
+        // When edge function returns non-2xx, the body is still in data
+        const msg = data?.error || "Failed to charge toll. Ensure customer has ACH payment set up.";
         toast.error(msg);
         return;
       }
