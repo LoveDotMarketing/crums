@@ -21,6 +21,7 @@ import { generateBreadcrumbSchema } from "@/lib/structuredData";
 import { trackSignup, trackConversion, trackSignupStarted, trackSignupFailed, trackFormStart } from "@/lib/analytics";
 import { processReferralCode, validateReferralCode } from "@/lib/referral";
 import { trackLinkedInSignup, trackLinkedInApplicationSubmit } from "@/lib/linkedinAnalytics";
+import { logSignupStarted, logSignupCompleted, logSignupFailed, logSessionError, logDocumentUploadFailed, logCustomerEvent } from "@/lib/eventLogger";
 
 type FormMode = "quick-start" | "prompt" | "full-form";
 
@@ -276,12 +277,14 @@ export default function GetStarted() {
     if (!validateQuickStart()) return;
 
     setIsLoading(true);
+    logSignupStarted(email);
     try {
       // Create user account
       const { error: signUpError } = await signUp(email, password, "customer");
       
       if (signUpError) {
         trackSignupFailed(signUpError.message || 'unknown_error');
+        logSignupFailed(email, signUpError.message || 'unknown_error');
         toast({ title: "Error", description: signUpError.message, variant: "destructive" });
         setIsLoading(false);
         return;
@@ -290,6 +293,7 @@ export default function GetStarted() {
       // Get the user session with retry for mobile latency
       const session = await getSessionWithRetry();
       if (!session) {
+        logSessionError("signup_profile_update", "Session not available after signup");
         toast({ 
           title: "Account Created", 
           description: "Your account was created but we couldn't complete your profile. Please log in at the login page to finish setup.",
@@ -342,6 +346,7 @@ export default function GetStarted() {
       trackSignup('email');
       trackConversion('signup');
       trackLinkedInSignup();
+      logSignupCompleted(email);
 
       clearSavedForm();
 
@@ -355,6 +360,7 @@ export default function GetStarted() {
 
     } catch (error: any) {
       console.error("Registration error:", error);
+      logSignupFailed(email, error.message || "Unknown registration error");
       toast({ 
         title: "Error", 
         description: error.message || "Failed to create account. Please try again.", 
@@ -407,7 +413,10 @@ export default function GetStarted() {
     setIsLoading(true);
     try {
       const session = await getSessionWithRetry();
-      if (!session) throw new Error("Session expired. Please log in again.");
+      if (!session) {
+        logSessionError("full_form_submit", "Session expired during application submit");
+        throw new Error("Session expired. Please log in again.");
+      }
 
       // Update profile with DOB
       const { error: profileError } = await supabase
@@ -506,6 +515,7 @@ export default function GetStarted() {
 
     } catch (error: any) {
       console.error("Application update error:", error);
+      logCustomerEvent("application_submit_failed", `Application submit failed: ${error.message}`, { error: error.message });
       toast({ 
         title: "Error", 
         description: error.message || "Failed to update application. Please try again.", 

@@ -5,6 +5,7 @@ import { z } from "zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { CalendarIcon, Loader2, Copy, Gift, UserCheck, Truck, Award } from "lucide-react";
+import { logCustomerCreated } from "@/lib/eventLogger";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -319,9 +320,10 @@ export function CustomerFormDialog({ open, onOpenChange, customer }: CustomerFor
       });
       if (error) throw error;
     },
-    onSuccess: () => {
+    onSuccess: (_, values) => {
       queryClient.invalidateQueries({ queryKey: ["customers"] });
       toast({ title: "Customer created successfully" });
+      logCustomerCreated(values.full_name, values.email || undefined);
       onOpenChange(false);
     },
     onError: (error: Error) => {

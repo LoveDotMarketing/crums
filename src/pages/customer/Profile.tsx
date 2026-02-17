@@ -13,6 +13,7 @@ import { Footer } from "@/components/Footer";
 import { toast } from "sonner";
 import { Loader2, Truck, FileText, Calendar, KeyRound, Warehouse, CreditCard } from "lucide-react";
 import { format } from "date-fns";
+import { logProfileSaved, logProfileSaveFailed } from "@/lib/eventLogger";
 
 interface TrailerInfo {
   id: string;
@@ -222,8 +223,10 @@ export default function Profile() {
       }
 
       toast.success("Profile updated successfully");
-    } catch (error) {
+      logProfileSaved(["first_name", "last_name", "phone"]);
+    } catch (error: any) {
       console.error("Error updating profile:", error);
+      logProfileSaveFailed(error.message || "Unknown error");
       toast.error("Failed to update profile");
     } finally {
       setSaving(false);
