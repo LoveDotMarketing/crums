@@ -1131,6 +1131,7 @@ export type Database = {
           status: string | null
           trailer_id: string
           updated_at: string
+          work_order_id: string | null
         }
         Insert: {
           completed?: boolean | null
@@ -1146,6 +1147,7 @@ export type Database = {
           status?: string | null
           trailer_id: string
           updated_at?: string
+          work_order_id?: string | null
         }
         Update: {
           completed?: boolean | null
@@ -1161,6 +1163,7 @@ export type Database = {
           status?: string | null
           trailer_id?: string
           updated_at?: string
+          work_order_id?: string | null
         }
         Relationships: [
           {
@@ -1175,6 +1178,13 @@ export type Database = {
             columns: ["trailer_id"]
             isOneToOne: false
             referencedRelation: "trailers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_records_work_order_id_fkey"
+            columns: ["work_order_id"]
+            isOneToOne: false
+            referencedRelation: "work_orders"
             referencedColumns: ["id"]
           },
         ]
