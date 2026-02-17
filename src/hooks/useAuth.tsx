@@ -64,7 +64,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Start impersonation
   const startImpersonation = async (targetUser: ImpersonatedUser) => {
-    // Log impersonation start event
+    // Log impersonation start event with target user details
     if (user && user.email) {
       try {
         await supabase.from('user_activity_logs').insert({
@@ -73,6 +73,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           role: 'admin',
           event_type: 'impersonation_start',
           user_agent: navigator.userAgent,
+          metadata: {
+            target_user_id: targetUser.id,
+            target_email: targetUser.email,
+            target_role: targetUser.role,
+            target_display_name: targetUser.displayName || null,
+          },
         });
       } catch (err) {
         console.error("Error logging impersonation start:", err);
@@ -98,7 +104,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Stop impersonation
   const stopImpersonation = async () => {
-    // Log impersonation end event
+    // Log impersonation end event with target user details
     if (user && user.email && impersonatedUser) {
       try {
         await supabase.from('user_activity_logs').insert({
@@ -107,6 +113,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           role: 'admin',
           event_type: 'impersonation_end',
           user_agent: navigator.userAgent,
+          metadata: {
+            target_user_id: impersonatedUser.id,
+            target_email: impersonatedUser.email,
+            target_role: impersonatedUser.role,
+            target_display_name: impersonatedUser.displayName || null,
+          },
         });
       } catch (err) {
         console.error("Error logging impersonation end:", err);

@@ -1,0 +1,1 @@
+ALTER TABLE public.user_activity_logs ADD COLUMN metadata jsonb DEFAULT '{}'::jsonb;
