@@ -1,53 +1,89 @@
 
 
-## Fix Sign-Up Flow: Phone Validation and Data Loss Prevention
+## Fix Mobile Sign-Up Data Loss
 
-### Root Cause
-The sign-up form has a **phone number format mismatch**. The placeholder says `(555) 123-4567` but the validation requires strict international format like `+15551234567`. When a customer types a normal US number, validation fails with a toast error that may not be obvious -- and if they refresh or navigate away, all form data is lost.
+### Problem
+The Do It Moving customer (`doitmoving6@gmail.com`) created an account but their profile is completely empty -- first_name, last_name, phone are all null and no application record exists. They logged in 51 times trying to fix it. Two root causes:
 
-Looking at the specific customer (Do It Moving), their account was created but the profile update failed silently -- first name, last name, and phone are all null, and no application record exists.
+**1. Session race condition after signup**
+After `signUp()` succeeds, the code immediately calls `supabase.auth.getSession()`. On mobile (slower networks), the session is often not available yet, causing a "No session found" error. The profile and application updates silently fail, but the account already exists -- so they can't re-register.
+
+**2. No form data persistence**
+All form fields are plain React `useState`. On mobile, browsers frequently refresh/kill background tabs. Every time the page reloads, all typed data is gone. This is likely what the customer meant by "kept deleting his info."
 
 ### Changes
 
-**1. Fix phone number validation (src/lib/validations.ts)**
-- Replace the strict E.164 regex with a lenient US phone regex that accepts formats like `(555) 123-4567`, `555-123-4567`, `5551234567`, etc.
-- Apply to both `fullSignupSchema` and `customerApplicationSchema`
+**1. Persist form data in localStorage (src/pages/GetStarted.tsx)**
+- Save Quick Start fields (email, firstName, lastName, phone, companyName) to localStorage on every change
+- Restore from localStorage on page load
+- Clear localStorage on successful submission
+- This prevents data loss from page refreshes and mobile tab kills
 
-**2. Auto-format phone input (src/pages/GetStarted.tsx)**
-- Add a phone formatter that auto-formats as the user types: `(555) 123-4567`
-- Strip non-digits before saving to database so storage is consistent
-- This prevents validation mismatches entirely
+**2. Fix session race condition (src/pages/GetStarted.tsx)**
+- After `signUp()`, wait for the `onAuthStateChange` SIGNED_IN event instead of immediately calling `getSession()`
+- Use a short polling/retry approach: try `getSession()`, and if no session, wait and retry up to 3 times
+- This handles the mobile network latency issue
 
-**3. Show inline validation errors instead of just toasts**
-- Add visible error text below the phone field when format is wrong
-- Users on mobile especially may miss toast notifications
+**3. Add incomplete profile detection (src/pages/Login.tsx)**
+- After login, check if profile has first_name/last_name/phone
+- If profile is incomplete, redirect to `/get-started` with a query param like `?complete=true` so the form pre-fills and lets them finish
+- This gives customers like Do It Moving a recovery path
 
-**4. Prevent data loss on failed submission**
-- Currently if `signUp` succeeds but the profile update fails, the user is stuck -- account exists but can't re-register
-- Add error recovery: if profile/application update fails after signup, show a clear error and keep the user on the form rather than navigating away
-- The form already catches errors, but the issue is the validation blocks submission before signup even happens
+**4. Handle the "complete profile" mode in GetStarted (src/pages/GetStarted.tsx)**
+- Detect `?complete=true` query param
+- If user is already logged in and profile is incomplete, show the Quick Start form pre-filled from localStorage or profile data
+- On submit, just update the profile (skip signUp since account already exists)
 
 ### Files to Modify
-- `src/lib/validations.ts` -- Relax phone regex to accept common US formats
-- `src/pages/GetStarted.tsx` -- Add phone auto-formatting and inline validation feedback
+- `src/pages/GetStarted.tsx` -- localStorage persistence, session retry, complete-profile mode
+- `src/pages/Login.tsx` -- Incomplete profile detection and redirect
 
 ### Technical Details
 
-**New phone regex:**
-```
-/^[\+]?[(]?[0-9]{1,4}[)]?[-\s\./0-9]*$/
-```
-This accepts: `(555) 123-4567`, `555-123-4567`, `+1 555 123 4567`, `5551234567`
-
-Minimum 10 digits required (after stripping non-digits) to ensure it's a real US number.
-
-**Phone formatter function:**
+**localStorage persistence:**
 ```typescript
-const formatPhoneNumber = (value: string) => {
-  const digits = value.replace(/\D/g, '');
-  if (digits.length <= 3) return digits;
-  if (digits.length <= 6) return `(${digits.slice(0,3)}) ${digits.slice(3)}`;
-  return `(${digits.slice(0,3)}) ${digits.slice(3,6)}-${digits.slice(6,10)}`;
+// Save on change
+useEffect(() => {
+  localStorage.setItem('getStartedForm', JSON.stringify({
+    email, firstName, lastName, phoneNumber, companyName
+  }));
+}, [email, firstName, lastName, phoneNumber, companyName]);
+
+// Restore on mount
+useEffect(() => {
+  const saved = localStorage.getItem('getStartedForm');
+  if (saved) {
+    const data = JSON.parse(saved);
+    setEmail(data.email || '');
+    // ...etc
+  }
+}, []);
+```
+
+**Session retry after signup:**
+```typescript
+const getSessionWithRetry = async (maxRetries = 3): Promise<Session | null> => {
+  for (let i = 0; i < maxRetries; i++) {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session) return session;
+    await new Promise(resolve => setTimeout(resolve, 1000));
+  }
+  return null;
 };
+```
+
+**Incomplete profile redirect (Login.tsx):**
+After successful login, before navigating to dashboard, check:
+```typescript
+const { data: profile } = await supabase
+  .from('profiles')
+  .select('first_name, last_name, phone')
+  .eq('id', user.id)
+  .single();
+
+if (!profile?.first_name || !profile?.last_name) {
+  navigate('/get-started?complete=true');
+  return;
+}
 ```
 
