@@ -105,10 +105,10 @@ export default function AdminDashboard() {
   const { data: recentActivity, isLoading: isLoadingActivity } = useQuery({
     queryKey: ["admin-recent-activity"],
     queryFn: async () => {
-      const [tollsResult, applicationsResult, profilesResult] = await Promise.all([
+      const [tollsResult, applicationsResult, profilesResult, customersResult] = await Promise.all([
         supabase
           .from("tolls")
-          .select("id, amount, status, created_at, customer_id, profiles:customer_id(first_name, last_name, company_name)")
+          .select("id, amount, status, created_at, customer_id")
           .order("created_at", { ascending: false })
           .limit(5),
         supabase
@@ -119,7 +119,14 @@ export default function AdminDashboard() {
         supabase
           .from("profiles")
           .select("id, first_name, last_name, company_name"),
+        supabase
+          .from("customers")
+          .select("id, full_name, company_name"),
       ]);
+
+      const customersMap = new Map<string, { full_name: string; company_name: string | null }>(
+        (customersResult.data || []).map(c => [c.id, c])
+      );
 
       const profilesData = profilesResult.data || [];
       const profilesMap = new Map<string, { id: string; first_name: string | null; last_name: string | null; company_name: string | null }>(
@@ -135,12 +142,10 @@ export default function AdminDashboard() {
       }> = [];
 
       tollsResult.data?.forEach(toll => {
-        const profile = toll.profiles as { first_name: string | null; last_name: string | null; company_name: string | null } | null;
-        const customerName = profile?.company_name || 
-          [profile?.first_name, profile?.last_name].filter(Boolean).join(" ") || 
-          "Unknown";
+        const customer = customersMap.get(toll.customer_id);
+        const customerName = customer?.company_name || customer?.full_name || "Unknown";
         activities.push({
-          type: toll.status === "paid" ? "payment" : "toll",
+          type: "toll",
           customer: customerName,
           amount: `$${Number(toll.amount).toFixed(2)}`,
           status: toll.status,
@@ -291,10 +296,12 @@ export default function AdminDashboard() {
                     ) : (
                       recentActivity.map((activity, i) => (
                         <div key={i} className="flex items-center justify-between py-3 border-b last:border-0 border-border">
-                          <div className="flex-1">
-                            <p className="font-medium text-foreground">{activity.customer}</p>
-                            <p className="text-sm text-muted-foreground">{activity.time}</p>
-                          </div>
+                            <div className="flex-1">
+                              <p className="font-medium text-foreground">{activity.customer}</p>
+                              <p className="text-sm text-muted-foreground">
+                                {activity.type === "toll" ? "Toll charge" : activity.type === "application" ? "Application" : "Payment"} · {activity.time}
+                              </p>
+                            </div>
                           <div className="flex items-center gap-3">
                             <span className="font-semibold text-foreground">{activity.amount}</span>
                             <span className={`text-xs px-2 py-1 rounded-full ${
