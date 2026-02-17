@@ -157,6 +157,13 @@ const AnalyticsTracker = () => {
   return null;
 };
 
+// Redirect /customer/* to /dashboard/customer/*
+const CustomerRedirect = () => {
+  const location = useLocation();
+  const subpath = location.pathname.replace(/^\/customer/, '');
+  return <Navigate to={`/dashboard/customer${subpath}`} replace />;
+};
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -532,6 +539,8 @@ const App = () => (
             <Route path="/terms" element={<Terms />} />
             <Route path="/api-docs" element={<ApiDocs />} />
             <Route path="/unsubscribe" element={<Unsubscribe />} />
+            {/* Redirect old /customer/* URLs to /dashboard/customer/* */}
+            <Route path="/customer/*" element={<CustomerRedirect />} />
             <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>
