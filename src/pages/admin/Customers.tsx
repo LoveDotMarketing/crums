@@ -359,7 +359,7 @@ export default function Customers() {
     const { data: profile, error } = await supabase
       .from("profiles")
       .select("id, first_name, last_name")
-      .eq("email", customer.email)
+      .ilike("email", customer.email)
       .maybeSingle();
 
     if (error || !profile) {
