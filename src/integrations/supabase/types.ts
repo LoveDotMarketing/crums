@@ -1848,6 +1848,8 @@ export type Database = {
           receipt_url: string | null
           reminder_count: number | null
           status: string
+          stripe_invoice_id: string | null
+          stripe_payment_intent_id: string | null
           toll_authority: string | null
           toll_date: string
           toll_location: string | null
@@ -1867,6 +1869,8 @@ export type Database = {
           receipt_url?: string | null
           reminder_count?: number | null
           status?: string
+          stripe_invoice_id?: string | null
+          stripe_payment_intent_id?: string | null
           toll_authority?: string | null
           toll_date: string
           toll_location?: string | null
@@ -1886,6 +1890,8 @@ export type Database = {
           receipt_url?: string | null
           reminder_count?: number | null
           status?: string
+          stripe_invoice_id?: string | null
+          stripe_payment_intent_id?: string | null
           toll_authority?: string | null
           toll_date?: string
           toll_location?: string | null

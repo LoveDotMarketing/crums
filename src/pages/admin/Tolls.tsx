@@ -16,7 +16,8 @@ import {
   AlertCircle,
   CheckCircle,
   Clock,
-  Loader2
+  Loader2,
+  CreditCard
 } from "lucide-react";
 import {
   Table,
@@ -51,6 +52,7 @@ export default function Tolls() {
   const [tolls, setTolls] = useState<Toll[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [chargingTollId, setChargingTollId] = useState<string | null>(null);
 
   useEffect(() => {
     setCustomerFilter(customerIdFromUrl);
@@ -99,6 +101,37 @@ export default function Tolls() {
     } else {
       toast.success("Toll marked as paid");
       fetchTolls();
+    }
+  };
+
+  const chargeViaStripe = async (tollId: string) => {
+    setChargingTollId(tollId);
+    try {
+      const { data, error } = await supabase.functions.invoke("charge-toll", {
+        body: { toll_id: tollId },
+      });
+
+      if (error) {
+        const msg = data?.error || error.message || "Failed to charge toll";
+        toast.error(msg);
+        return;
+      }
+
+      if (data?.error) {
+        toast.error(data.error);
+        return;
+      }
+
+      if (data?.status === "paid") {
+        toast.success("Toll charged successfully via Stripe");
+      } else {
+        toast.success("Stripe invoice created — payment is processing");
+      }
+      fetchTolls();
+    } catch (err: any) {
+      toast.error(err.message || "Failed to charge toll");
+    } finally {
+      setChargingTollId(null);
     }
   };
 
@@ -343,13 +376,28 @@ export default function Tolls() {
                           </TableCell>
                           <TableCell>
                             {toll.status !== "paid" && (
-                              <Button 
-                                variant="ghost" 
-                                size="sm"
-                                onClick={() => markAsPaid(toll.id)}
-                              >
-                                Mark Paid
-                              </Button>
+                              <div className="flex gap-1">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => chargeViaStripe(toll.id)}
+                                  disabled={chargingTollId === toll.id}
+                                >
+                                  {chargingTollId === toll.id ? (
+                                    <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                                  ) : (
+                                    <CreditCard className="h-3 w-3 mr-1" />
+                                  )}
+                                  Charge
+                                </Button>
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm"
+                                  onClick={() => markAsPaid(toll.id)}
+                                >
+                                  Mark Paid
+                                </Button>
+                              </div>
                             )}
                           </TableCell>
                         </TableRow>
