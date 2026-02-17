@@ -37,6 +37,7 @@ interface SubscriptionRequest {
   leaseToOwnFlags?: Record<string, boolean>; // trailerId -> lease to own flag
   endDate?: string; // Optional end date for fixed-term leases (YYYY-MM-DD)
   subscriptionType?: "standard_lease" | "rent_for_storage" | "lease_to_own" | "repayment_plan";
+  leaseToOwnTotal?: number; // Total buyout price for lease-to-own agreements
 }
 
 serve(async (req) => {
@@ -76,7 +77,7 @@ serve(async (req) => {
     logStep("Admin verified", { adminId: userData.user.id });
 
     const body: SubscriptionRequest = await req.json();
-    const { customerId, trailerIds, billingCycle, depositAmount, discountId, customRates, leaseToOwnFlags, endDate, subscriptionType } = body;
+    const { customerId, trailerIds, billingCycle, depositAmount, discountId, customRates, leaseToOwnFlags, endDate, subscriptionType, leaseToOwnTotal } = body;
 
     if (!customerId || !trailerIds?.length || !billingCycle) {
       throw new Error("Missing required fields: customerId, trailerIds, billingCycle");
@@ -414,6 +415,7 @@ serve(async (req) => {
           status: "active",
           lease_to_own: isLeaseToOwn,
           ownership_transfer_date: ownershipTransferDate,
+          lease_to_own_total: isLeaseToOwn && leaseToOwnTotal ? leaseToOwnTotal : null,
         });
 
       logStep("Created subscription item", { 
