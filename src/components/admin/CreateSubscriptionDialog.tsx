@@ -89,6 +89,7 @@ export function CreateSubscriptionDialog({ onSuccess }: CreateSubscriptionDialog
   const [selectedDiscountId, setSelectedDiscountId] = useState<string>("");
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
   const [subscriptionType, setSubscriptionType] = useState<SubscriptionType>("standard_lease");
+  const [leaseToOwnTotal, setLeaseToOwnTotal] = useState<number>(0);
 
   // Fetch customer's billing anchor preference
   const { data: customerApplication } = useQuery({
@@ -211,7 +212,8 @@ export function CreateSubscriptionDialog({ onSuccess }: CreateSubscriptionDialog
           }, {} as Record<string, number>),
           leaseToOwnFlags,
           endDate: endDate ? format(endDate, "yyyy-MM-dd") : undefined,
-          subscriptionType
+          subscriptionType,
+          leaseToOwnTotal: subscriptionType === "lease_to_own" && leaseToOwnTotal > 0 ? leaseToOwnTotal : undefined
         }
       });
 
@@ -244,6 +246,7 @@ export function CreateSubscriptionDialog({ onSuccess }: CreateSubscriptionDialog
     setSelectedDiscountId("");
     setEndDate(undefined);
     setSubscriptionType("standard_lease");
+    setLeaseToOwnTotal(0);
   };
 
   // Get type-based default rental rate
@@ -458,6 +461,28 @@ export function CreateSubscriptionDialog({ onSuccess }: CreateSubscriptionDialog
                 </Label>
               </div>
             </RadioGroup>
+
+            {/* Lease to Own Total Price */}
+            {subscriptionType === "lease_to_own" && (
+              <div className="mt-3 p-3 border rounded-lg bg-primary/5 space-y-2">
+                <Label htmlFor="lease-to-own-total" className="flex items-center gap-2">
+                  <DollarSign className="h-4 w-4 text-primary" />
+                  Total Buyout Price
+                </Label>
+                <Input
+                  id="lease-to-own-total"
+                  type="number"
+                  min="0"
+                  step="500"
+                  value={leaseToOwnTotal || ""}
+                  onChange={(e) => setLeaseToOwnTotal(Number(e.target.value))}
+                  placeholder="e.g. 25000"
+                />
+                <p className="text-xs text-muted-foreground">
+                  The total amount the customer must pay to own the trailer(s). This will be shown on their portal.
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Billing Cycle */}

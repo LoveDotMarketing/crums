@@ -1698,6 +1698,7 @@ export type Database = {
           end_date: string | null
           id: string
           lease_to_own: boolean | null
+          lease_to_own_total: number | null
           monthly_rate: number
           ownership_transfer_date: string | null
           start_date: string
@@ -1712,6 +1713,7 @@ export type Database = {
           end_date?: string | null
           id?: string
           lease_to_own?: boolean | null
+          lease_to_own_total?: number | null
           monthly_rate: number
           ownership_transfer_date?: string | null
           start_date?: string
@@ -1726,6 +1728,7 @@ export type Database = {
           end_date?: string | null
           id?: string
           lease_to_own?: boolean | null
+          lease_to_own_total?: number | null
           monthly_rate?: number
           ownership_transfer_date?: string | null
           start_date?: string
