@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -122,10 +122,70 @@ export default function Application() {
   }, []);
   // Save form edits to localStorage to prevent mobile data loss
   useEffect(() => {
-    if (profile.first_name || application.company_address || application.insurance_company) {
+    const hasProfileData = Object.values(profile).some(v => v && v.toString().trim() !== '');
+    const hasAppData = Object.entries(application).some(([k, v]) => {
+      if (k === 'status' || k === 'id') return false;
+      if (v === null || v === undefined) return false;
+      if (typeof v === 'string') return v.trim() !== '' && v !== 'new';
+      return true;
+    });
+    if (hasProfileData || hasAppData) {
       localStorage.setItem(APP_STORAGE_KEY, JSON.stringify({ profile, application }));
     }
   }, [profile, application]);
+
+  // Debounced auto-save to database
+  const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const autoSaveToDb = useCallback(async () => {
+    if (!currentUserId) return;
+    try {
+      // Only save profile fields that have values
+      const profileUpdate: Record<string, any> = {};
+      if (profile.first_name) profileUpdate.first_name = sanitizeInput(profile.first_name);
+      if (profile.last_name) profileUpdate.last_name = sanitizeInput(profile.last_name);
+      if (profile.phone) profileUpdate.phone = sanitizeInput(profile.phone);
+      if (profile.date_of_birth) profileUpdate.date_of_birth = profile.date_of_birth;
+      if (profile.home_address) profileUpdate.home_address = sanitizeInput(profile.home_address);
+
+      if (Object.keys(profileUpdate).length > 0) {
+        await supabase.from("profiles").update(profileUpdate).eq("id", currentUserId);
+      }
+
+      // Auto-save application fields (excluding SSN and status)
+      if (application.id) {
+        const appUpdate: Record<string, any> = {
+          phone_number: sanitizeInput(profile.phone),
+          company_address: sanitizeInput(application.company_address),
+          business_type: application.business_type,
+          truck_vin: sanitizeInput(application.truck_vin),
+          trailer_type: application.trailer_type,
+          number_of_trailers: application.number_of_trailers,
+          date_needed: application.date_needed || null,
+          insurance_company: sanitizeInput(application.insurance_company),
+          insurance_company_phone: sanitizeInput(application.insurance_company_phone),
+          message: sanitizeInput(application.message),
+          secondary_contact_name: sanitizeInput(application.secondary_contact_name),
+          secondary_contact_phone: sanitizeInput(application.secondary_contact_phone),
+          secondary_contact_relationship: sanitizeInput(application.secondary_contact_relationship),
+        };
+        await supabase.from("customer_applications").update(appUpdate).eq("id", application.id);
+      }
+    } catch (error) {
+      console.error("Auto-save error:", error);
+    }
+  }, [currentUserId, profile, application]);
+
+  // Trigger debounced auto-save when form data changes
+  useEffect(() => {
+    if (loading) return;
+    if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
+    autoSaveTimerRef.current = setTimeout(() => {
+      autoSaveToDb();
+    }, 3000);
+    return () => {
+      if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
+    };
+  }, [profile, application, loading, autoSaveToDb]);
 
   const clearSavedApplication = () => localStorage.removeItem(APP_STORAGE_KEY);
 
@@ -143,14 +203,14 @@ export default function Application() {
       if (profileError) throw profileError;
 
       if (profileData) {
-        setProfile({
-          first_name: profileData.first_name || "",
-          last_name: profileData.last_name || "",
-          email: profileData.email || "",
-          phone: profileData.phone || "",
-          date_of_birth: profileData.date_of_birth || "",
-          home_address: profileData.home_address || "",
-        });
+        setProfile(prev => ({
+          first_name: profileData.first_name || prev.first_name || "",
+          last_name: profileData.last_name || prev.last_name || "",
+          email: profileData.email || prev.email || "",
+          phone: profileData.phone || prev.phone || "",
+          date_of_birth: profileData.date_of_birth || prev.date_of_birth || "",
+          home_address: profileData.home_address || prev.home_address || "",
+        }));
       }
 
       // Fetch application data
@@ -163,28 +223,28 @@ export default function Application() {
       if (appError) throw appError;
 
       if (appData) {
-        setApplication({
+        setApplication(prev => ({
           id: appData.id,
-          phone_number: appData.phone_number || "",
-          company_address: appData.company_address || "",
-          business_type: appData.business_type || "",
-          truck_vin: appData.truck_vin || "",
-          trailer_type: appData.trailer_type || "",
-          number_of_trailers: appData.number_of_trailers || null,
-          date_needed: appData.date_needed || "",
-          ssn: appData.ssn ? "***-**-" + appData.ssn.slice(-4) : "",
-          insurance_company: appData.insurance_company || "",
-          insurance_company_phone: appData.insurance_company_phone || "",
-          message: appData.message || "",
-          secondary_contact_name: appData.secondary_contact_name || "",
-          secondary_contact_phone: appData.secondary_contact_phone || "",
-          secondary_contact_relationship: appData.secondary_contact_relationship || "",
-          dot_number_url: appData.dot_number_url || null,
-          drivers_license_url: appData.drivers_license_url || null,
-          drivers_license_back_url: appData.drivers_license_back_url || null,
-          insurance_docs_url: appData.insurance_docs_url || null,
+          phone_number: appData.phone_number || prev.phone_number || "",
+          company_address: appData.company_address || prev.company_address || "",
+          business_type: appData.business_type || prev.business_type || "",
+          truck_vin: appData.truck_vin || prev.truck_vin || "",
+          trailer_type: appData.trailer_type || prev.trailer_type || "",
+          number_of_trailers: appData.number_of_trailers ?? prev.number_of_trailers ?? null,
+          date_needed: appData.date_needed || prev.date_needed || "",
+          ssn: appData.ssn ? "***-**-" + appData.ssn.slice(-4) : prev.ssn || "",
+          insurance_company: appData.insurance_company || prev.insurance_company || "",
+          insurance_company_phone: appData.insurance_company_phone || prev.insurance_company_phone || "",
+          message: appData.message || prev.message || "",
+          secondary_contact_name: appData.secondary_contact_name || prev.secondary_contact_name || "",
+          secondary_contact_phone: appData.secondary_contact_phone || prev.secondary_contact_phone || "",
+          secondary_contact_relationship: appData.secondary_contact_relationship || prev.secondary_contact_relationship || "",
+          dot_number_url: appData.dot_number_url || prev.dot_number_url || null,
+          drivers_license_url: appData.drivers_license_url || prev.drivers_license_url || null,
+          drivers_license_back_url: appData.drivers_license_back_url || prev.drivers_license_back_url || null,
+          insurance_docs_url: appData.insurance_docs_url || prev.insurance_docs_url || null,
           status: appData.status,
-        });
+        }));
       }
     } catch (error) {
       console.error("Error fetching data:", error);
