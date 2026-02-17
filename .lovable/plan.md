@@ -1,71 +1,76 @@
 
 
-## Fix Mechanic DOT Inspection Access and Photo Uploads
+## Stripe Toll Charging -- What's Missing and How to Fix It
 
-Two issues reported by the mechanics team:
+### The Problem
+Right now, tolls are **only tracked in the database** -- there is no connection to Stripe whatsoever. When you add a toll and it shows "pending," that just means a record was inserted into the `tolls` table. Nothing happens on Stripe's side.
 
-### Issue 1: "Not all trailers have the option to fill out DOT"
+### What We'll Build
+A complete toll-to-Stripe charging pipeline:
 
-Currently the "DOT Inspection" button **only shows for trailers with status "available"**. Out of 49 trailers, only 3 are available -- the other 46 (12 maintenance, 8 pending, 26 rented) have no DOT inspection option.
+1. **New backend function**: `charge-toll` -- Creates a Stripe Invoice for the toll amount against the customer's existing ACH payment method, then auto-finalizes and attempts payment
+2. **"Charge via Stripe" button** on the admin Tolls page for each pending/overdue toll
+3. **Automatic status sync** -- Updates the toll record to "paid" when Stripe confirms payment
+4. **Tracking columns** -- Add `stripe_invoice_id` and `stripe_payment_intent_id` to the `tolls` table so you can trace every charge
 
-**Fix:** Show the DOT Inspection button for trailers in `available`, `maintenance`, and `pending` statuses. Mechanics need to be able to run DOT inspections on trailers in maintenance (that's often why they're in maintenance) and pending trailers that need certification before release.
+### How It Works
 
-### Issue 2: "Photos won't upload when we take them"
-
-The storage bucket and database table both have RLS policies that require the `mechanic` role via the `has_role()` function, which checks the `user_roles` table. Currently only **one user** (`prroadside@gmail.com`) has the mechanic role. Any other mechanics logging in would have their photo uploads silently rejected by RLS.
-
-**Fix:** Two changes:
-- Add better error surfacing in the photo upload component so mechanics see the actual error instead of a generic "Failed to upload photo" message
-- Ensure the `dot_inspection_photos` INSERT policy also accepts users who created the inspection (matching `inspector_id`), not just role-based checks -- this is already the case for the table, but the **storage bucket** policy only checks role, so if a mechanic's role is missing, the file never makes it to storage
-
-We'll also add a storage UPDATE policy (currently missing), since some upload flows may need it.
-
-### Files to Change
-
-**`src/pages/mechanic/MechanicDashboard.tsx`**
-- Expand the DOT Inspection button visibility from `status === "available"` to also include `maintenance` and `pending` statuses
-- Keep existing conditions (not rented) intact
-
-**`src/components/mechanic/InspectionPhotoUpload.tsx`**
-- Improve error messaging to show the actual error from storage/database so mechanics can report specific issues
-- Add a retry mechanism for failed uploads
-
-**Database Migration**
-- Add a storage UPDATE policy for the `dot-inspection-photos` bucket (currently missing -- could cause issues with certain upload flows)
-- Broaden the storage INSERT policy to also allow users who own the inspection (via a subquery on `dot_inspections.inspector_id`), so even if the `user_roles` entry is missing, the photo upload still works for the active inspector
-
-### Technical Details
-
-**MechanicDashboard.tsx line ~1015 change:**
 ```text
-BEFORE: trailer.status === "available" && !trailer.is_rented
-AFTER:  ["available", "maintenance", "pending"].includes(trailer.status) && !trailer.is_rented
+Admin clicks "Charge via Stripe" on a pending toll
+       |
+       v
+Edge function: charge-toll
+  1. Looks up customer's stripe_customer_id from customer_subscriptions
+  2. Creates a Stripe InvoiceItem ($65.00, description: "Toll - DMB Delaware Memorial Br - 1/19/2026")
+  3. Creates a Stripe Invoice for that customer
+  4. Finalizes the invoice (triggers auto-charge via default ACH payment method)
+  5. Saves stripe_invoice_id back to the tolls table
+  6. Updates toll status to "paid" if payment succeeds, or "pending" if payment is processing
+       |
+       v
+Toll shows as "paid" in dashboard + visible in Stripe
 ```
 
-**Storage policy addition (SQL migration):**
-```sql
--- Add UPDATE policy (missing)
-CREATE POLICY "Mechanics can update their inspection photos"
-ON storage.objects FOR UPDATE TO authenticated
-USING (bucket_id = 'dot-inspection-photos' AND has_role(auth.uid(), 'mechanic'::app_role));
+### Database Changes
 
--- Broaden INSERT to also check inspector ownership
-DROP POLICY "Mechanics can upload inspection photos" ON storage.objects;
-CREATE POLICY "Mechanics can upload inspection photos"
-ON storage.objects FOR INSERT TO authenticated
-WITH CHECK (
-  bucket_id = 'dot-inspection-photos'
-  AND (
-    has_role(auth.uid(), 'mechanic'::app_role)
-    OR EXISTS (
-      SELECT 1 FROM dot_inspections
-      WHERE inspector_id = auth.uid()
-      AND status = 'in_progress'
-    )
-  )
-);
-```
+Add two columns to the `tolls` table:
+- `stripe_invoice_id` (text, nullable) -- Links to the Stripe invoice
+- `stripe_payment_intent_id` (text, nullable) -- Links to the Stripe payment intent for tracking
 
-**InspectionPhotoUpload.tsx improvements:**
-- Show specific error messages from the storage/database response
-- Log the error details for debugging
+### New Backend Function: `charge-toll`
+
+**Input**: `{ toll_id: string }`
+
+**Logic**:
+1. Fetch the toll record (amount, customer_id, location, date, authority)
+2. Look up the customer's `stripe_customer_id` from `customer_subscriptions`
+3. If no Stripe customer exists, return an error ("Customer has no linked payment method")
+4. Create a Stripe Invoice Item with the toll amount and description
+5. Create and finalize a Stripe Invoice (auto-charges the default payment method)
+6. Update the `tolls` record with `stripe_invoice_id`, `stripe_payment_intent_id`, `status`, and `payment_date`
+7. Return success/failure
+
+### UI Changes (Tolls.tsx)
+
+**For each pending/overdue toll row**, add a "Charge via Stripe" button next to the existing "Mark Paid" button:
+- Shows a loading spinner while processing
+- Disables if the customer has no Stripe account linked
+- On success: toast "Toll charged successfully via Stripe" and refresh the list
+- On failure: toast with specific error (e.g., "Customer has no linked payment method")
+
+### Files to Create
+- `supabase/functions/charge-toll/index.ts` -- New edge function to create Stripe invoice and charge
+
+### Files to Modify
+- `src/pages/admin/Tolls.tsx` -- Add "Charge via Stripe" button per toll row
+- Database migration -- Add `stripe_invoice_id` and `stripe_payment_intent_id` columns to `tolls`
+
+### What About Future Tolls?
+Once this is built, every new toll you add can be immediately charged by clicking the button. You could also optionally enable auto-charging (charge on creation) in the future, but for now the manual button gives you control over when to bill the customer.
+
+### Prerequisites Already Met
+- Stripe secret key is configured
+- Customers have `stripe_customer_id` stored in `customer_subscriptions`
+- ACH payment methods are already linked via the existing onboarding flow
+- No new API keys or secrets needed
+
