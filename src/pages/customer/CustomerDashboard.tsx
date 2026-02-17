@@ -54,6 +54,7 @@ export default function CustomerDashboard() {
   const [pendingCheckouts, setPendingCheckouts] = useState<PendingCheckout[]>([]);
   const [loading, setLoading] = useState(true);
   const [markingPaid, setMarkingPaid] = useState<string | null>(null);
+  const [profileData, setProfileData] = useState<{ first_name: string | null; last_name: string | null; company_name: string | null } | null>(null);
 
   // Use effectiveUserId for queries when impersonating
   const currentUserId = effectiveUserId;
@@ -65,6 +66,7 @@ export default function CustomerDashboard() {
       fetchTrailers();
       fetchPendingCheckouts();
       fetchSubscriptionStatus();
+      fetchProfile();
 
       // Set up real-time subscription for tolls
       const tollChannel = supabase
@@ -105,6 +107,20 @@ export default function CustomerDashboard() {
       };
     }
   }, [currentUserId]);
+
+  const fetchProfile = async () => {
+    if (!currentUserId) return;
+    try {
+      const { data } = await supabase
+        .from("profiles")
+        .select("first_name, last_name, company_name")
+        .eq("id", currentUserId)
+        .maybeSingle();
+      if (data) setProfileData(data);
+    } catch (error) {
+      console.error("Error fetching profile:", error);
+    }
+  };
 
   const checkApplicationStatus = async () => {
     if (!currentUserId) return;
@@ -323,7 +339,13 @@ export default function CustomerDashboard() {
             <div>
               <h1 className="text-3xl font-bold text-foreground">Customer Dashboard</h1>
               <p className="text-muted-foreground mt-1">
-                Welcome back, {isImpersonating && impersonatedUser ? impersonatedUser.displayName || impersonatedUser.email : user?.email}
+                Welcome back, {(() => {
+                  if (isImpersonating && impersonatedUser) return impersonatedUser.displayName || impersonatedUser.email;
+                  const fullName = [profileData?.first_name, profileData?.last_name].filter(Boolean).join(" ");
+                  if (fullName && profileData?.company_name) return `${fullName}, ${profileData.company_name}`;
+                  if (fullName) return fullName;
+                  return user?.email;
+                })()}
               </p>
             </div>
             {!isImpersonating && (
