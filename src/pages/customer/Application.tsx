@@ -61,7 +61,7 @@ const TRAILER_TYPES = [
 ];
 
 export default function Application() {
-  const { user } = useAuth();
+  const { user, effectiveUserId, isImpersonating } = useAuth();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploadingDoc, setUploadingDoc] = useState<string | null>(null);
@@ -98,6 +98,7 @@ export default function Application() {
   });
 
   const APP_STORAGE_KEY = 'crums_application_form';
+  const currentUserId = effectiveUserId || user?.id;
 
   // Restore from localStorage on mount (before DB fetch overwrites)
   useEffect(() => {
@@ -113,7 +114,7 @@ export default function Application() {
 
   useEffect(() => {
     fetchData();
-  }, [user]);
+  }, [currentUserId]);
 
   useEffect(() => {
     trackApplicationStarted();
@@ -128,14 +129,14 @@ export default function Application() {
   const clearSavedApplication = () => localStorage.removeItem(APP_STORAGE_KEY);
 
   const fetchData = async () => {
-    if (!user) return;
+    if (!currentUserId) return;
 
     try {
       // Fetch profile data
       const { data: profileData, error: profileError } = await supabase
         .from("profiles")
         .select("first_name, last_name, email, phone, date_of_birth, home_address")
-        .eq("id", user.id)
+        .eq("id", currentUserId)
         .single();
 
       if (profileError) throw profileError;
@@ -155,7 +156,7 @@ export default function Application() {
       const { data: appData, error: appError } = await supabase
         .from("customer_applications")
         .select("*")
-        .eq("user_id", user.id)
+        .eq("user_id", currentUserId)
         .maybeSingle();
 
       if (appError) throw appError;
@@ -193,7 +194,7 @@ export default function Application() {
   };
 
   const handleFileUpload = async (file: File, fieldName: string) => {
-    if (!user) return;
+    if (!currentUserId) return;
 
     const validation = validateFile(file);
     if (!validation.valid) {
@@ -204,7 +205,7 @@ export default function Application() {
     setUploadingDoc(fieldName);
     try {
       const fileExt = file.name.split('.').pop();
-      const fileName = `${user.id}/${fieldName}_${Date.now()}.${fileExt}`;
+      const fileName = `${currentUserId}/${fieldName}_${Date.now()}.${fileExt}`;
 
       const { error: uploadError } = await supabase.storage
         .from('customer-documents')
@@ -257,13 +258,13 @@ export default function Application() {
           date_of_birth: profile.date_of_birth || null,
           home_address: sanitizeInput(profile.home_address),
         })
-        .eq("id", user?.id);
+        .eq("id", currentUserId);
 
       if (profileError) throw profileError;
 
       // Prepare application data
       const applicationData: Record<string, any> = {
-        user_id: user?.id,
+        user_id: currentUserId,
         phone_number: sanitizeInput(profile.phone),
         company_address: sanitizeInput(application.company_address),
         business_type: application.business_type,
