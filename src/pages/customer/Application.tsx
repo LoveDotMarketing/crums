@@ -15,6 +15,7 @@ import { Progress } from "@/components/ui/progress";
 import { validateFile, sanitizeInput } from "@/lib/validations";
 import { format } from "date-fns";
 import { trackApplicationStarted, trackFormSubmission } from "@/lib/analytics";
+import { logApplicationSubmitted, logApplicationSaveFailed, logDocumentUploadFailed } from "@/lib/eventLogger";
 import {
   Select,
   SelectContent,
@@ -221,8 +222,9 @@ export default function Application() {
 
       setApplication({ ...application, [fieldName]: data.signedUrl });
       toast.success("Document uploaded successfully");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error uploading file:", error);
+      logDocumentUploadFailed(fieldName, error.message || "Unknown upload error");
       toast.error("Failed to upload document");
     } finally {
       setUploadingDoc(null);
@@ -327,9 +329,11 @@ export default function Application() {
       toast.success("Application saved successfully");
       clearSavedApplication();
       trackFormSubmission('customer_application', true);
+      logApplicationSubmitted();
       fetchData();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error saving application:", error);
+      logApplicationSaveFailed(error.message || "Unknown error");
       toast.error("Failed to save application");
     } finally {
       setSaving(false);

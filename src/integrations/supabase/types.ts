@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      app_event_logs: {
+        Row: {
+          created_at: string
+          description: string | null
+          event_category: string
+          event_type: string
+          id: string
+          metadata: Json | null
+          page_url: string | null
+          user_email: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          event_category: string
+          event_type: string
+          id?: string
+          metadata?: Json | null
+          page_url?: string | null
+          user_email?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          event_category?: string
+          event_type?: string
+          id?: string
+          metadata?: Json | null
+          page_url?: string | null
+          user_email?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       applied_discounts: {
         Row: {
           applied_at: string

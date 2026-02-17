@@ -29,6 +29,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { getTollAuthorityOptions } from "@/lib/tollAuthorities";
+import { logTollAssigned } from "@/lib/eventLogger";
 
 const COMPANY_ID = "fac613bd-c65f-42a5-b241-75afe75d53c5";
 
@@ -134,6 +135,13 @@ export function TollFormDialog({ open, onOpenChange, onSuccess }: TollFormDialog
       if (error) throw error;
 
       toast.success("Toll added successfully");
+      // Log the admin action
+      const customerProfile = profiles?.find(p => p.id === values.customer_id);
+      logTollAssigned(
+        customerProfile ? `${customerProfile.first_name || ''} ${customerProfile.last_name || ''}`.trim() || customerProfile.email : values.customer_id,
+        parseFloat(values.amount),
+        values.toll_authority || undefined
+      );
       form.reset();
       onOpenChange(false);
       onSuccess();
