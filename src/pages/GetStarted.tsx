@@ -406,8 +406,8 @@ export default function GetStarted() {
 
     setIsLoading(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error("No session found");
+      const session = await getSessionWithRetry();
+      if (!session) throw new Error("Session expired. Please log in again.");
 
       // Update profile with DOB
       const { error: profileError } = await supabase
@@ -626,6 +626,17 @@ export default function GetStarted() {
                       <p className="text-sm text-destructive mt-1">{phoneError}</p>
                     )}
                   </div>
+                  {/* Company Name - shown in both modes */}
+                  <div>
+                    <Label htmlFor="companyName">Company Name (Optional)</Label>
+                    <Input 
+                      id="companyName" 
+                      value={companyName} 
+                      onChange={(e) => setCompanyName(e.target.value)}
+                      placeholder="Your trucking company name"
+                    />
+                  </div>
+
                   {!isCompletionMode && (
                     <>
                       <div>

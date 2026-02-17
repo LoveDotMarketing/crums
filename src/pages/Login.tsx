@@ -129,7 +129,7 @@ const Login = () => {
             }
           }).catch(err => console.warn('[LinkedIn CAPI] Background call failed:', err));
           
-          navigate("/dashboard/customer");
+          navigate("/get-started?complete=true");
         }
       } else {
         const result = await signIn(email, password);
