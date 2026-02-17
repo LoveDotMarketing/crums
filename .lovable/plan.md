@@ -1,62 +1,58 @@
 
 
-## Fix: Application Form Data Getting Lost
+## Preventive Fixes: Customer Journey Pain Points
 
-### Root Cause
+After reviewing every customer-facing page, here are the issues customers could hit -- and the fixes to prevent them.
 
-There's a **race condition** between localStorage restore and the database fetch that causes the customer's typed data to be wiped out:
+---
 
-1. Page loads -- localStorage restores the user's previously typed data (good)
-2. `fetchData()` runs and **overwrites the entire state** with database values (bad)
-3. Since this customer's profile is all NULL in the database, the state gets reset to empty strings
-4. The localStorage save effect then fires and **saves the now-empty state**, destroying the backup too
+### Issue 1: Document Upload Has No "Replace" Option
 
-So every time the page loads or re-renders, all their work gets erased. This is especially bad on mobile where browsers reload tabs more aggressively.
+**Problem:** Once a document is uploaded (Driver's License, Insurance, DOT), the customer sees "Document uploaded" with a green checkmark but has NO way to re-upload if they uploaded the wrong file or a blurry photo. They're stuck.
 
-Additionally, the localStorage save condition (line 125) only triggers if `first_name`, `company_address`, or `insurance_company` are truthy -- so if the user fills in other fields first (like phone, trailer type, documents), those edits are never saved to localStorage at all.
+**Fix:** Add a "Replace" button next to each uploaded document so the customer can re-upload without needing to contact support.
 
-### The Fix
+---
 
-**1. Make `fetchData` merge with existing state instead of overwriting**
+### Issue 2: No Application Created for Some Users
 
-When fetching from the database, only overwrite a field if the database actually has a value for it. Preserve any locally-typed data that hasn't been saved to the DB yet.
+**Problem:** The `RentalRequest.tsx` page does an INSERT into `customer_applications` -- but if the customer already has one (from GetStarted signup), it will fail with a unique constraint error and show "Failed to submit rental request" with no helpful message. Conversely, customers who sign up via the Login page's quick signup never get a `customer_applications` record created until they visit the Application page, so the dashboard shows no status tracker.
 
-```
-setProfile(prev => ({
-  first_name: profileData.first_name || prev.first_name || "",
-  last_name: profileData.last_name || prev.last_name || "",
-  ...
-}));
-```
+**Fix:** Change the RentalRequest insert to an upsert, and ensure the Login page signup flow also creates a `customer_applications` record (like GetStarted does).
 
-Same for the application data -- merge instead of replace.
+---
 
-**2. Fix the localStorage save condition**
+### Issue 3: Profile Page Doesn't Have the Same Data Loss Protection
 
-Change the guard condition to save whenever ANY field has data, not just three specific fields. This prevents silently dropping edits to phone, trailer type, documents, etc.
+**Problem:** The Profile page (`src/pages/customer/Profile.tsx`) has NO localStorage persistence. If a customer fills in their name and phone, then accidentally navigates away or their phone refreshes the tab, all typed data is lost. We fixed this on the Application page but the Profile page has the same vulnerability.
 
-```
-// Before (broken): only saves if these 3 specific fields are set
-if (profile.first_name || application.company_address || application.insurance_company)
+**Fix:** Add localStorage backup to the Profile page form, matching the pattern used in Application.tsx.
 
-// After (fixed): saves whenever any meaningful data exists  
-const hasData = Object.values(profile).some(v => v) || 
-                Object.values(application).some(v => v && v !== 'new');
-if (hasData) { ... }
-```
+---
 
-**3. Add auto-save on blur (not just on submit)**
+### Issue 4: Signed URL Expiration for Uploaded Documents
 
-Currently the form only saves to the database when the user scrolls to the bottom and clicks "Save Application". Add a debounced auto-save that saves profile data after the user finishes typing in a field, so progress isn't lost if they navigate away.
+**Problem:** When customers upload documents, the app creates a signed URL with a 1-year expiration (`31536000` seconds). After 1 year, these URLs will break and the admin won't be able to view the customer's documents. The customer will see "Document uploaded" but the link behind it will be dead.
 
-### Files to Change
+**Fix:** Switch from signed URLs to storing the storage path, and generate fresh signed URLs on demand when viewing documents. This also reduces security risk from long-lived signed URLs.
+
+---
+
+### Issue 5: No Error Recovery on Payment Setup
+
+**Problem:** If the ACH bank linking (PaymentSetup page) fails partway through -- for example the bank modal crashes or the customer's internet drops during the Stripe confirmation step -- the page shows a generic "Failed to set up payment method" error. The customer has no idea if they should try again, wait, or call support.
+
+**Fix:** Add specific error messages for common failure scenarios (bank modal closed, network timeout, verification required) and a clear "Try Again" button with guidance text.
+
+---
+
+### Technical Changes
 
 | File | Change |
 |------|--------|
-| `src/pages/customer/Application.tsx` | Fix fetchData merge logic, broaden localStorage save condition, add debounced auto-save |
+| `src/pages/customer/Application.tsx` | Add "Replace" button for uploaded documents instead of showing only the green checkmark |
+| `src/pages/customer/Profile.tsx` | Add localStorage backup/restore for form fields to prevent data loss on refresh |
+| `src/pages/customer/RentalRequest.tsx` | Change INSERT to UPSERT on `customer_applications` to prevent duplicate constraint errors |
+| `src/pages/Login.tsx` | After quick signup, create `customer_applications` record (matching GetStarted flow) |
+| `src/pages/customer/PaymentSetup.tsx` | Improve error messages for bank linking failures with specific guidance |
 
-### What This Fixes for Trinity Freight
-
-- Their profile has all NULL fields in the database, so every page load was wiping their form
-- Any data they typed was being overwritten within milliseconds by the empty database response
-- After this fix, typed data will persist through page reloads and auto-save to the database as they go
