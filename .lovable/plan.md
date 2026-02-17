@@ -1,47 +1,73 @@
 
+# Fix Customer Data Accuracy Across All Customer Pages
 
-## Fix: Admin Dashboard Recent Activity Identity & Sorting
+## Problems Found
 
-### Problem
-1. Isaac Lee appears as "Lone Star Logistics Unlimited" because the activity feed shows `company_name` first, hiding the person's actual name
-2. The feed only fetches by `created_at`, so recent application updates (saves, status changes) don't appear as new activity
+### 1. Billing Page Shows Wrong Customer's Data (During Impersonation)
+The Billing page (`customer/Billing.tsx`) queries `customer_subscriptions` with `.maybeSingle()` and **no customer filter** -- it relies entirely on RLS. When an admin uses "View As", the admin's RLS policy returns ALL subscriptions, so `.maybeSingle()` picks a random customer's subscription. This is why trailers 130035 and 248088 at $1,000/mo appeared for Trinity.
 
-### Changes
+### 2. Dashboard and Rentals Use Admin's Email During Impersonation
+- `CustomerDashboard.tsx` uses `user.email` (the admin's email) for `fetchSubscriptionStatus()` and `fetchTrailers()` instead of the impersonated customer's email
+- `Rentals.tsx` uses `user?.email` for its data fetch instead of the impersonated customer's email
+- The Profile page already handles this correctly with `currentEmail`
 
-**File: `src/pages/admin/AdminDashboard.tsx`**
+### 3. Case-Sensitive Email Lookups
+All customer pages use `.eq('email', ...)` which is case-sensitive. If the customers table has `Trinityfreightllc@gmail.com` but the profiles table has `trinityfreightllc@gmail.com`, queries fail silently and return no data.
 
-1. Change the customer name display for applications to show **both** name and company:
-   - Format: `"Isaac Lee"` with company as subtitle, or `"Isaac Lee - Lone Star Logistics Unlimited"` if both exist
-   - Fall back to email if no name is set
+### 4. RLS Policies Use Case-Sensitive Email Joins
+Multiple RLS policies (on `customer_subscriptions`, `billing_history`, `trailers`, etc.) join `profiles.email = customers.email` which is case-sensitive. This means customers with mixed-case emails may be silently denied access to their own data.
 
-2. Sort applications by `updated_at` instead of `created_at` so recent saves/edits appear in the feed
+---
 
-3. Sort the combined activities list by recency (currently it just concatenates tolls then applications without interleaving by time)
+## Plan
 
-### Technical Detail
+### Step 1: Fix Billing Page Data Source
+Update `customer/Billing.tsx` to follow the same pattern as Profile page:
+- First look up the customer record by email (using the impersonated email when applicable)
+- Then filter `customer_subscriptions` by `customer_id`
+- This prevents showing another customer's subscription data
 
-Current code (line 163-176):
-```typescript
-// Shows company_name FIRST, hiding the person's name
-const customerName = profile?.company_name || 
-  [profile?.first_name, profile?.last_name].filter(Boolean).join(" ") || 
-  "New Applicant";
+### Step 2: Fix Dashboard Email References
+Update `CustomerDashboard.tsx`:
+- Add `currentEmail` variable (impersonated email or user email)
+- Change `fetchSubscriptionStatus()` and `fetchTrailers()` to use `currentEmail` instead of `user.email`
+
+### Step 3: Fix Rentals Page Email Reference
+Update `Rentals.tsx`:
+- Add impersonation awareness using `useAuth()` destructuring
+- Use the impersonated customer's email instead of `user?.email`
+
+### Step 4: Case-Insensitive Email Queries
+Change all `.eq('email', ...)` customer lookups to `.ilike('email', ...)` across:
+- `customer/Billing.tsx`
+- `customer/CustomerDashboard.tsx`
+- `customer/Profile.tsx`
+- `customer/Rentals.tsx`
+
+### Step 5: Fix RLS Policies (Database Migration)
+Update RLS policies that join `profiles.email = customers.email` to use `lower(p.email) = lower(c.email)` on these tables:
+- `customer_subscriptions`
+- `billing_history`
+- `trailers`
+- `trailer_checkout_agreements`
+- `dot_inspections`
+
+---
+
+## Technical Details
+
+### Files Modified
+- `src/pages/customer/Billing.tsx` -- Add customer lookup, filter by customer_id, use impersonated email
+- `src/pages/customer/CustomerDashboard.tsx` -- Use `currentEmail` for subscription/trailer queries
+- `src/pages/customer/Rentals.tsx` -- Add impersonation awareness, use correct email
+- `src/pages/customer/Profile.tsx` -- Switch `.eq` to `.ilike` for email lookup
+- New database migration -- Update RLS policies for case-insensitive email matching
+
+### Pattern to Follow (from Profile.tsx)
+```text
+const currentEmail = isImpersonating && impersonatedUser 
+  ? impersonatedUser.email 
+  : user?.email;
+
+// Then use currentEmail with .ilike() for customer lookups
 ```
-
-New logic:
-```typescript
-// Show person's name first, company in parentheses
-const fullName = [profile?.first_name, profile?.last_name].filter(Boolean).join(" ");
-const customerName = fullName 
-  ? (profile?.company_name ? `${fullName} - ${profile.company_name}` : fullName)
-  : profile?.company_name || profile?.email || "New Applicant";
-```
-
-Application query change:
-- Sort by `updated_at` descending instead of `created_at`
-- Use `updated_at` for the time display so it says "14 minutes ago" based on last update
-
-Combined activity sort:
-- Add a raw timestamp to each activity entry
-- Sort the merged array by timestamp descending before slicing to 6
-
