@@ -44,7 +44,7 @@ export function ApplicationAlert({ userId }: ApplicationAlertProps) {
         <AlertDescription className="space-y-2">
           <p>Please upload your required documents to complete your application and get approved faster.</p>
           <Button 
-            onClick={() => navigate('/customer/application')}
+            onClick={() => navigate('/dashboard/customer/application')}
             size="sm"
             className="mt-2"
           >
