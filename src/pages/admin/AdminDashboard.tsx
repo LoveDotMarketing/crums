@@ -108,7 +108,7 @@ export default function AdminDashboard() {
       const [tollsResult, applicationsResult, profilesResult, customersResult] = await Promise.all([
         supabase
           .from("tolls")
-          .select("id, amount, status, created_at, customer_id")
+          .select("id, amount, status, created_at, customer_id, toll_authority, toll_location")
           .order("created_at", { ascending: false })
           .limit(5),
         supabase
@@ -118,35 +118,42 @@ export default function AdminDashboard() {
           .limit(3),
         supabase
           .from("profiles")
-          .select("id, first_name, last_name, company_name"),
+          .select("id, first_name, last_name, company_name, email"),
         supabase
           .from("customers")
-          .select("id, full_name, company_name"),
+          .select("id, full_name, company_name, email"),
       ]);
 
-      const customersMap = new Map<string, { full_name: string; company_name: string | null }>(
+      const customersMap = new Map<string, { full_name: string; company_name: string | null; email: string | null }>(
         (customersResult.data || []).map(c => [c.id, c])
       );
 
       const profilesData = profilesResult.data || [];
-      const profilesMap = new Map<string, { id: string; first_name: string | null; last_name: string | null; company_name: string | null }>(
+      const profilesMap = new Map<string, { id: string; first_name: string | null; last_name: string | null; company_name: string | null; email: string }>(
         profilesData.map(p => [p.id, p])
       );
 
       const activities: Array<{
         type: string;
         customer: string;
+        detail: string;
         amount: string;
         status: string;
         time: string;
       }> = [];
 
       tollsResult.data?.forEach(toll => {
+        // customer_id in tolls references profiles.id
+        const profile = profilesMap.get(toll.customer_id);
         const customer = customersMap.get(toll.customer_id);
-        const customerName = customer?.company_name || customer?.full_name || "Unknown";
+        const customerName = profile?.company_name || customer?.company_name ||
+          [profile?.first_name, profile?.last_name].filter(Boolean).join(" ") ||
+          customer?.full_name || profile?.email || "Unknown";
+        const tollDetail = toll.toll_authority || toll.toll_location || "Toll";
         activities.push({
           type: "toll",
           customer: customerName,
+          detail: tollDetail,
           amount: `$${Number(toll.amount).toFixed(2)}`,
           status: toll.status,
           time: formatDistanceToNow(new Date(toll.created_at), { addSuffix: true }),
@@ -161,6 +168,7 @@ export default function AdminDashboard() {
         activities.push({
           type: "application",
           customer: customerName,
+          detail: "New application",
           amount: `Application`,
           status: app.status,
           time: formatDistanceToNow(new Date(app.created_at), { addSuffix: true }),
@@ -299,7 +307,7 @@ export default function AdminDashboard() {
                             <div className="flex-1">
                               <p className="font-medium text-foreground">{activity.customer}</p>
                               <p className="text-sm text-muted-foreground">
-                                {activity.type === "toll" ? "Toll charge" : activity.type === "application" ? "Application" : "Payment"} · {activity.time}
+                                {activity.detail} · {activity.time}
                               </p>
                             </div>
                           <div className="flex items-center gap-3">
