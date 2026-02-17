@@ -1,61 +1,43 @@
 
 
-## Mechanic Service Catalog and Maintenance Invoicing
+## Link Work Orders to Trailer Maintenance History
 
-### What We're Building
+### The Problem
+When a mechanic's work order is approved, nothing happens to the trailer's financial records. The `maintenance_records` table and `trailers.total_maintenance_cost` field exist but are never updated from approved work orders. This means you can't track per-trailer repair costs or calculate ROI.
 
-The mechanic's Work Order form currently requires manually typing part names and costs. We'll replace this with a **pre-built service catalog** based on the uploaded CRUMS Leasing Breakdown List, so the mechanic can select services/parts from a dropdown and the prices auto-fill. The compiled invoice then goes to the admin Work Orders page for review, approval, and payment.
+### The Fix
 
-### Changes
+**1. Database trigger: auto-create maintenance record on work order approval**
 
-**1. Add a Service Catalog table to the database**
+When a work order's status changes to "approved", a database trigger will automatically:
+- Insert a row into `maintenance_records` with the trailer_id, cost (grand_total), description, mechanic_id, date, and mark it completed
+- Store the `work_order_id` on the maintenance record so they're linked
+- Add the work order's `grand_total` to the trailer's `total_maintenance_cost`
 
-A new `service_catalog` table stores all items from the PDF. Each row has:
-- `name` (e.g., "RECAP TIRE")
-- `category` (Tires, Brakes, Electrical, General, etc.)
-- `parts_price` (nullable, e.g., 275.00)
-- `labor_price` (nullable, for flat-rate services like DOT Inspection at $67)
-- `labor_hours` (nullable, e.g., 0.5)
-- `is_active` (default true)
+This means the Financial Summary on the Trailer Detail page (Purchase Price, Total Maintenance, Rental Income, Net Return) will automatically reflect approved work order costs.
 
-Pre-seed all ~50 items from the PDF into this table. RLS: admins can manage, mechanics can read.
+**2. Add `work_order_id` column to `maintenance_records`**
 
-**2. Update the Mechanic Work Order Form**
+A new nullable column linking maintenance records back to the work order that created them, so you can trace costs back to the original invoice.
 
-Replace the current free-text "Add Part" flow with a **"Add Service/Part" picker** that:
-- Shows a searchable dropdown grouped by category (Tires, Brakes, Electrical, etc.)
-- When selected, auto-fills the description, unit cost, and labor hours
-- Mechanic can still override quantities and adjust costs if needed (e.g., "RIM AND TIRE" says "$350 depending on brand")
-- A "Custom Item" option remains for anything not on the list
-- Labor hours from selected services auto-accumulate into the total labor calculation
+**3. Show work order details in the trailer's Maintenance History**
 
-The categories from the PDF:
-- **General**: Hourly Rate, Service Fee, DOT Inspection, Alignment
-- **Tires and Wheels**: Recap Tire, Rim and Tire, Rim, Tire Repair, Tire Lube, Valve Stem, Airline Hose, Lug Nut, TPMS Hose, Spindle Plugs, Tru-Tees, Mounting/Dismount
-- **Maintenance Supplies**: Brake Cleaner, Rags, Gear Oil, Grease Tube, Hub Oil
-- **Mud Flaps**: Mud Flap, Mudflap Bracket, Mudflap Bracket Spring Loaded, Straightening Bracket
-- **Hub and Bearings**: Hubcap, Hubcap and Gasket, Inner/Outer Bearing, Wheel Seal
-- **Brakes**: Brakes, Adjusting Brakes, Brake Drums, SR-5 Valve, Cotter Pins Kit, S-Cam Bushing Kit/Brackets, Slack Adjuster, Brake Chamber (Welded/Cut Rod), Clevis/Pins, Brake Chamber Hose, Airbag (all sizes), Airbag Valve
-- **Electrical and Lights**: Red/Blue Gladhand, 7-Way Plug/Box, Clearance Light, Marker Light, Penny Light, ABS Light, ABS Sensors
-- **Body and Structure**: Panel Patches, Bolts and Nuts
+Update the Maintenance History table on the Trailer Detail page to show the repair type and link back to the work order when one exists, so you get full visibility into what was done and what it cost.
 
-**3. No admin page changes needed**
-
-The existing admin Work Orders page already handles review, approve, reject, and request-info workflows. The line items table already displays parts with quantities and costs. No changes needed there -- it will automatically show the catalog items the mechanic selected.
-
-### Technical Details
+### What Changes
 
 | File | Change |
 |------|--------|
-| New migration SQL | Create `service_catalog` table, seed ~50 rows from PDF, add RLS policies |
-| `src/components/mechanic/WorkOrderForm.tsx` | Replace free-text parts entry with catalog picker (searchable Select grouped by category), auto-fill prices/hours, keep custom item option |
+| New migration SQL | Add `work_order_id` to `maintenance_records`, create trigger that fires when work order status becomes "approved" to insert maintenance record and update trailer cost |
+| `src/pages/admin/TrailerDetail.tsx` | Update Maintenance History table to show repair type and source (work order vs manual entry) |
 
-### How It Works (Mechanic Flow)
+### How It Works
 
-1. Mechanic selects a trailer and repair type (unchanged)
-2. Mechanic clicks "Add Service/Part" -- sees grouped catalog
-3. Selects e.g. "BRAKES" from the Brakes category -- price ($125) and labor (1.5 hrs) auto-fill
-4. Can adjust quantity, override price if needed
-5. Adds more items, labor hours auto-sum
-6. Submits for review -- goes to admin Work Orders as today
-
+1. Mechanic submits a work order for trailer #56171 -- $875 total (brakes + tires)
+2. Admin reviews and clicks "Approve"
+3. Trigger fires automatically:
+   - Creates a maintenance record: "Brakes / Tire Repair -- $875, completed"
+   - Updates trailer #56171: `total_maintenance_cost += $875`
+4. Admin opens Trailer Detail page and sees:
+   - Financial Summary shows updated maintenance costs and net return
+   - Maintenance History shows the new record linked to the work order
