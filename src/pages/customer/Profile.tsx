@@ -58,12 +58,28 @@ export default function Profile() {
   const [saving, setSaving] = useState(false);
   const [paymentSetupStatus, setPaymentSetupStatus] = useState<string | null>(null);
   const [applicationStatus, setApplicationStatus] = useState<string | null>(null);
-  const [profile, setProfile] = useState({
-    first_name: "",
-    last_name: "",
-    phone: "",
-    email: "",
+  
+  const PROFILE_STORAGE_KEY = 'crums_profile_form';
+  
+  const [profile, setProfile] = useState(() => {
+    // Restore from localStorage on initial render
+    const saved = localStorage.getItem('crums_profile_form');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch { /* ignore */ }
+    }
+    return { first_name: "", last_name: "", phone: "", email: "" };
   });
+
+  // Save profile edits to localStorage
+  useEffect(() => {
+    if (loading) return;
+    const hasData = profile.first_name || profile.last_name || profile.phone;
+    if (hasData) {
+      localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(profile));
+    }
+  }, [profile, loading]);
   const [passwordData, setPasswordData] = useState({
     newPassword: "",
     confirmPassword: "",
@@ -183,12 +199,12 @@ export default function Profile() {
       if (error) throw error;
 
       if (data) {
-        setProfile({
-          first_name: data.first_name || "",
-          last_name: data.last_name || "",
-          phone: data.phone || "",
-          email: data.email || "",
-        });
+        setProfile((prev: typeof profile) => ({
+          first_name: data.first_name || prev.first_name || "",
+          last_name: data.last_name || prev.last_name || "",
+          phone: data.phone || prev.phone || "",
+          email: data.email || prev.email || "",
+        }));
       }
     } catch (error) {
       console.error("Error fetching profile:", error);
@@ -223,6 +239,7 @@ export default function Profile() {
       }
 
       toast.success("Profile updated successfully");
+      localStorage.removeItem(PROFILE_STORAGE_KEY);
       logProfileSaved(["first_name", "last_name", "phone"]);
     } catch (error: any) {
       console.error("Error updating profile:", error);

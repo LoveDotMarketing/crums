@@ -645,93 +645,62 @@ export default function Application() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid gap-4 md:grid-cols-2">
-                  <div>
-                    <Label>DOT Registration</Label>
-                    <div className="mt-2">
-                      {application.dot_number_url ? (
-                        <div className="flex items-center gap-2 text-sm text-primary">
-                          <CheckCircle className="h-4 w-4" />
-                          Document uploaded
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-2">
-                          <Input
-                            type="file"
-                            accept="image/*,.pdf"
-                            onChange={(e) => e.target.files?.[0] && handleFileUpload(e.target.files[0], "dot_number_url")}
-                            disabled={uploadingDoc === "dot_number_url"}
-                          />
-                          {uploadingDoc === "dot_number_url" && <Loader2 className="h-4 w-4 animate-spin" />}
-                        </div>
-                      )}
+                  {[
+                    { field: "dot_number_url", label: "DOT Registration" },
+                    { field: "drivers_license_url", label: "Driver's License (Front)" },
+                    { field: "drivers_license_back_url", label: "Driver's License (Back)" },
+                    { field: "insurance_docs_url", label: "Insurance Documents" },
+                  ].map(({ field, label }) => (
+                    <div key={field}>
+                      <Label>{label}</Label>
+                      <div className="mt-2">
+                        {application[field as keyof ApplicationData] ? (
+                          <div className="flex items-center gap-2 text-sm">
+                            <CheckCircle className="h-4 w-4 text-primary" />
+                            <span className="text-primary">Document uploaded</span>
+                            <label className="ml-auto">
+                              <Input
+                                type="file"
+                                accept="image/*,.pdf"
+                                className="hidden"
+                                onChange={(e) => e.target.files?.[0] && handleFileUpload(e.target.files[0], field)}
+                                disabled={uploadingDoc === field}
+                              />
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                className="cursor-pointer"
+                                disabled={uploadingDoc === field}
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  const input = e.currentTarget.parentElement?.querySelector('input[type="file"]') as HTMLInputElement;
+                                  input?.click();
+                                }}
+                              >
+                                {uploadingDoc === field ? (
+                                  <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                                ) : (
+                                  <Upload className="h-3 w-3 mr-1" />
+                                )}
+                                Replace
+                              </Button>
+                            </label>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-2">
+                            <Input
+                              type="file"
+                              accept="image/*,.pdf"
+                              onChange={(e) => e.target.files?.[0] && handleFileUpload(e.target.files[0], field)}
+                              disabled={uploadingDoc === field}
+                            />
+                            {uploadingDoc === field && <Loader2 className="h-4 w-4 animate-spin" />}
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                  
-                  <div>
-                    <Label>Driver's License (Front)</Label>
-                    <div className="mt-2">
-                      {application.drivers_license_url ? (
-                        <div className="flex items-center gap-2 text-sm text-primary">
-                          <CheckCircle className="h-4 w-4" />
-                          Document uploaded
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-2">
-                          <Input
-                            type="file"
-                            accept="image/*,.pdf"
-                            onChange={(e) => e.target.files?.[0] && handleFileUpload(e.target.files[0], "drivers_license_url")}
-                            disabled={uploadingDoc === "drivers_license_url"}
-                          />
-                          {uploadingDoc === "drivers_license_url" && <Loader2 className="h-4 w-4 animate-spin" />}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  <div>
-                    <Label>Driver's License (Back)</Label>
-                    <div className="mt-2">
-                      {application.drivers_license_back_url ? (
-                        <div className="flex items-center gap-2 text-sm text-primary">
-                          <CheckCircle className="h-4 w-4" />
-                          Document uploaded
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-2">
-                          <Input
-                            type="file"
-                            accept="image/*,.pdf"
-                            onChange={(e) => e.target.files?.[0] && handleFileUpload(e.target.files[0], "drivers_license_back_url")}
-                            disabled={uploadingDoc === "drivers_license_back_url"}
-                          />
-                          {uploadingDoc === "drivers_license_back_url" && <Loader2 className="h-4 w-4 animate-spin" />}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  <div>
-                    <Label>Insurance Documents</Label>
-                    <div className="mt-2">
-                      {application.insurance_docs_url ? (
-                        <div className="flex items-center gap-2 text-sm text-primary">
-                          <CheckCircle className="h-4 w-4" />
-                          Document uploaded
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-2">
-                          <Input
-                            type="file"
-                            accept="image/*,.pdf"
-                            onChange={(e) => e.target.files?.[0] && handleFileUpload(e.target.files[0], "insurance_docs_url")}
-                            disabled={uploadingDoc === "insurance_docs_url"}
-                          />
-                          {uploadingDoc === "insurance_docs_url" && <Loader2 className="h-4 w-4 animate-spin" />}
-                        </div>
-                      )}
-                    </div>
-                  </div>
+                  ))}
                 </div>
               </CardContent>
             </Card>

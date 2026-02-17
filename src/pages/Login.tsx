@@ -103,6 +103,22 @@ const Login = () => {
             // Non-critical, don't block signup flow
           }
 
+          // Create customer_applications record so dashboard shows status tracker
+          try {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session?.user?.id) {
+              await supabase
+                .from("customer_applications")
+                .upsert({
+                  user_id: session.user.id,
+                  phone_number: "",
+                  status: "new",
+                }, { onConflict: 'user_id' });
+            }
+          } catch {
+            // Non-critical, application page will create it if needed
+          }
+
           // Track referral if a code was provided
           if (referralCode.trim()) {
             const referralResult = await processReferralCode(referralCode, email);
