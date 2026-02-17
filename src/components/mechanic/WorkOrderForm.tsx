@@ -6,11 +6,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Plus, Trash2, Loader2, DollarSign } from "lucide-react";
+import { Plus, Trash2, Loader2, DollarSign, Search } from "lucide-react";
 import { toast } from "sonner";
 
 interface Trailer {
@@ -20,11 +20,21 @@ interface Trailer {
   vin: string | null;
 }
 
+interface CatalogItem {
+  id: string;
+  name: string;
+  category: string;
+  parts_price: number | null;
+  labor_price: number | null;
+  labor_hours: number | null;
+}
+
 interface LineItem {
   id?: string;
   description: string;
   quantity: number;
   unit_cost: number;
+  catalog_labor_hours?: number | null;
 }
 
 interface WorkOrderFormProps {
@@ -39,9 +49,21 @@ const REPAIR_TYPES = [
   "Emergency Repair",
 ];
 
+const CATEGORY_ORDER = [
+  "General",
+  "Tires and Wheels",
+  "Brakes",
+  "Electrical and Lights",
+  "Hub and Bearings",
+  "Mud Flaps",
+  "Maintenance Supplies",
+  "Body and Structure",
+];
+
 export function WorkOrderForm({ onSuccess, onCancel }: WorkOrderFormProps) {
   const { effectiveUserId } = useAuth();
   const [trailers, setTrailers] = useState<Trailer[]>([]);
+  const [catalog, setCatalog] = useState<CatalogItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [loadingTrailers, setLoadingTrailers] = useState(true);
 
@@ -58,12 +80,16 @@ export function WorkOrderForm({ onSuccess, onCancel }: WorkOrderFormProps) {
   const LABOR_RATE = 85;
   const TRAVEL_FEE = 75;
 
-  const laborTotal = laborHours * LABOR_RATE + (includeTravelFee ? TRAVEL_FEE : 0);
+  // Auto-sum catalog labor hours into the labor hours field
+  const catalogLaborHours = parts.reduce((sum, p) => sum + ((p.catalog_labor_hours || 0) * p.quantity), 0);
+  const totalLaborHours = laborHours + catalogLaborHours;
+  const laborTotal = totalLaborHours * LABOR_RATE + (includeTravelFee ? TRAVEL_FEE : 0);
   const partsTotal = parts.reduce((sum, p) => sum + p.quantity * p.unit_cost, 0);
   const grandTotal = laborTotal + partsTotal;
 
   useEffect(() => {
     fetchTrailers();
+    fetchCatalog();
   }, []);
 
   const fetchTrailers = async () => {
@@ -81,16 +107,49 @@ export function WorkOrderForm({ onSuccess, onCancel }: WorkOrderFormProps) {
     }
   };
 
-  const addPart = () => {
-    setParts([...parts, { description: "", quantity: 1, unit_cost: 0 }]);
+  const fetchCatalog = async () => {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data, error } = await (supabase as any)
+        .from("service_catalog")
+        .select("id, name, category, parts_price, labor_price, labor_hours")
+        .eq("is_active", true)
+        .order("category")
+        .order("name");
+      if (error) throw error;
+      setCatalog(data || []);
+    } catch (error) {
+      console.error("Error fetching service catalog:", error);
+    }
+  };
+
+  const addFromCatalog = (catalogId: string) => {
+    if (catalogId === "custom") {
+      setParts([...parts, { description: "", quantity: 1, unit_cost: 0, catalog_labor_hours: null }]);
+      return;
+    }
+
+    const item = catalog.find((c) => c.id === catalogId);
+    if (!item) return;
+
+    const unitCost = item.parts_price || item.labor_price || 0;
+    setParts([
+      ...parts,
+      {
+        description: item.name,
+        quantity: 1,
+        unit_cost: unitCost,
+        catalog_labor_hours: item.labor_hours,
+      },
+    ]);
   };
 
   const updatePart = (index: number, field: keyof LineItem, value: string | number) => {
     const updated = [...parts];
     if (field === "quantity" || field === "unit_cost") {
       updated[index][field] = typeof value === "string" ? parseFloat(value) || 0 : value;
-    } else {
-      updated[index][field as "description"] = value as string;
+    } else if (field === "description") {
+      updated[index].description = value as string;
     }
     setParts(updated);
   };
@@ -98,6 +157,13 @@ export function WorkOrderForm({ onSuccess, onCancel }: WorkOrderFormProps) {
   const removePart = (index: number) => {
     setParts(parts.filter((_, i) => i !== index));
   };
+
+  // Group catalog items by category
+  const groupedCatalog = CATEGORY_ORDER.reduce<Record<string, CatalogItem[]>>((acc, cat) => {
+    const items = catalog.filter((c) => c.category === cat);
+    if (items.length > 0) acc[cat] = items;
+    return acc;
+  }, {});
 
   const handleSubmit = async (submitForReview: boolean) => {
     if (!trailerId || !repairType || !description || !workStartDate) {
@@ -118,11 +184,11 @@ export function WorkOrderForm({ onSuccess, onCancel }: WorkOrderFormProps) {
           description,
           work_start_date: workStartDate,
           work_completion_date: workCompletionDate || null,
-          labor_hours: laborHours,
+          labor_hours: totalLaborHours,
           labor_rate: LABOR_RATE,
           travel_fee: includeTravelFee ? TRAVEL_FEE : 0,
           parts_total: partsTotal,
-          grand_total: laborHours * LABOR_RATE + (includeTravelFee ? TRAVEL_FEE : 0) + partsTotal,
+          grand_total: totalLaborHours * LABOR_RATE + (includeTravelFee ? TRAVEL_FEE : 0) + partsTotal,
           status: submitForReview ? "submitted" : "in_progress",
           submitted_at: submitForReview ? new Date().toISOString() : null,
         })
@@ -230,7 +296,7 @@ export function WorkOrderForm({ onSuccess, onCancel }: WorkOrderFormProps) {
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
             <div className="space-y-2">
-              <Label>Hours Worked</Label>
+              <Label>Additional Hours</Label>
               <Input
                 type="number"
                 min="0"
@@ -247,12 +313,17 @@ export function WorkOrderForm({ onSuccess, onCancel }: WorkOrderFormProps) {
               </div>
             </div>
             <div className="space-y-2">
-              <Label>Subtotal</Label>
+              <Label>Total Hours</Label>
               <div className="flex items-center h-10 px-3 rounded-md border bg-muted font-medium">
-                ${(laborHours * LABOR_RATE).toFixed(2)}
+                {totalLaborHours.toFixed(1)} hrs = ${(totalLaborHours * LABOR_RATE).toFixed(2)}
               </div>
             </div>
           </div>
+          {catalogLaborHours > 0 && (
+            <p className="text-xs text-muted-foreground">
+              Includes {catalogLaborHours.toFixed(1)} hrs from catalog items + {laborHours.toFixed(1)} hrs additional
+            </p>
+          )}
           <div className="flex items-center justify-between p-3 rounded-md border">
             <div>
               <p className="font-medium">Travel Fee</p>
@@ -272,26 +343,56 @@ export function WorkOrderForm({ onSuccess, onCancel }: WorkOrderFormProps) {
         </CardContent>
       </Card>
 
-      {/* Parts */}
+      {/* Parts & Services */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-lg">Parts</CardTitle>
-          <Button variant="outline" size="sm" onClick={addPart}>
-            <Plus className="h-4 w-4 mr-1" /> Add Part
-          </Button>
+          <CardTitle className="text-lg">Parts & Services</CardTitle>
+          <Select onValueChange={addFromCatalog}>
+            <SelectTrigger className="w-[260px]">
+              <div className="flex items-center gap-2">
+                <Plus className="h-4 w-4" />
+                <span>Add Service/Part</span>
+              </div>
+            </SelectTrigger>
+            <SelectContent className="max-h-[400px]">
+              <SelectGroup>
+                <SelectItem value="custom">
+                  <span className="font-medium">✏️ Custom Item</span>
+                </SelectItem>
+              </SelectGroup>
+              {Object.entries(groupedCatalog).map(([category, items]) => (
+                <SelectGroup key={category}>
+                  <SelectLabel className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                    {category}
+                  </SelectLabel>
+                  {items.map((item) => (
+                    <SelectItem key={item.id} value={item.id}>
+                      <div className="flex items-center justify-between w-full gap-4">
+                        <span>{item.name}</span>
+                        <span className="text-xs text-muted-foreground">
+                          ${(item.parts_price || item.labor_price || 0).toFixed(0)}
+                          {item.labor_hours ? ` · ${item.labor_hours}hr` : ""}
+                        </span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              ))}
+            </SelectContent>
+          </Select>
         </CardHeader>
         <CardContent className="space-y-3">
           {parts.length === 0 && (
-            <p className="text-sm text-muted-foreground text-center py-4">No parts added yet</p>
+            <p className="text-sm text-muted-foreground text-center py-4">No parts or services added yet. Use the dropdown above to add from the catalog.</p>
           )}
           {parts.map((part, index) => (
             <div key={index} className="grid grid-cols-12 gap-2 items-end">
               <div className="col-span-5 space-y-1">
-                {index === 0 && <Label className="text-xs">Part Name</Label>}
+                {index === 0 && <Label className="text-xs">Description</Label>}
                 <Input
                   value={part.description}
                   onChange={(e) => updatePart(index, "description", e.target.value)}
-                  placeholder="Part name"
+                  placeholder="Part or service name"
                 />
               </div>
               <div className="col-span-2 space-y-1">
@@ -350,8 +451,8 @@ export function WorkOrderForm({ onSuccess, onCancel }: WorkOrderFormProps) {
           <Separator className="my-4" />
           <div className="grid grid-cols-3 gap-4 text-sm text-muted-foreground">
             <div>
-              <p>Labor</p>
-              <p className="font-medium text-foreground">${(laborHours * LABOR_RATE).toFixed(2)}</p>
+              <p>Labor ({totalLaborHours.toFixed(1)} hrs)</p>
+              <p className="font-medium text-foreground">${(totalLaborHours * LABOR_RATE).toFixed(2)}</p>
             </div>
             <div>
               <p>Travel</p>
