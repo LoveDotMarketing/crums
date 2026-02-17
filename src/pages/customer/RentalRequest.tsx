@@ -68,15 +68,16 @@ export default function RentalRequest() {
     try {
       const { error } = await supabase
         .from("customer_applications")
-        .insert({
+        .upsert({
           user_id: user?.id,
           phone_number: formData.phone_number,
-          rental_start_date: formData.start_date || null,
+          date_needed: formData.start_date || null,
           secondary_contact_name: formData.secondary_contact_name || null,
           secondary_contact_phone: formData.secondary_contact_phone || null,
           secondary_contact_relationship: formData.secondary_contact_relationship || null,
+          trailer_type: formData.trailer_type || null,
           status: "new",
-        });
+        }, { onConflict: 'user_id' });
 
       if (error) throw error;
 

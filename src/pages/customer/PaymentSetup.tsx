@@ -76,9 +76,12 @@ export default function PaymentSetup() {
     }
   };
 
+  const [setupError, setSetupError] = useState<{ message: string; canRetry: boolean } | null>(null);
+
   const handleSetupPayment = async () => {
     try {
       setIsSettingUp(true);
+      setSetupError(null);
       
       // Create SetupIntent
       const { data, error } = await supabase.functions.invoke("create-ach-setup");
@@ -102,7 +105,6 @@ export default function PaymentSetup() {
       }
 
       // STEP 1: Collect bank account via Financial Connections
-      // This opens the modal for the customer to select and authenticate their bank
       const { setupIntent: collectedSetupIntent, error: collectError } = 
         await stripe.collectBankAccountForSetup({
           clientSecret: data.clientSecret,
@@ -122,13 +124,17 @@ export default function PaymentSetup() {
 
       if (collectError) {
         console.error("Error collecting bank account:", collectError);
-        toast.error(collectError.message || "Failed to collect bank account");
+        if (collectError.type === 'validation_error') {
+          setSetupError({ message: "Please check your information and try again.", canRetry: true });
+        } else {
+          setSetupError({ message: collectError.message || "Failed to connect to your bank. Please try again.", canRetry: true });
+        }
         return;
       }
 
       // Check if user cancelled or closed the modal
       if (!collectedSetupIntent || collectedSetupIntent.status === 'requires_payment_method') {
-        toast.info("Bank account linking was cancelled");
+        toast.info("Bank account linking was cancelled. You can try again when you're ready.");
         return;
       }
 
@@ -139,7 +145,10 @@ export default function PaymentSetup() {
 
         if (confirmError) {
           console.error("Error confirming setup:", confirmError);
-          toast.error(confirmError.message || "Failed to confirm bank account");
+          setSetupError({ 
+            message: "Bank verification failed. This can happen if your bank session timed out. Please try again.", 
+            canRetry: true 
+          });
           return;
         }
 
@@ -176,7 +185,17 @@ export default function PaymentSetup() {
       }
     } catch (error) {
       console.error("Error setting up payment:", error);
-      toast.error(error instanceof Error ? error.message : "Failed to set up payment method");
+      const message = error instanceof Error ? error.message : "Failed to set up payment method";
+      
+      // Detect network errors
+      if (message.includes('fetch') || message.includes('network') || message.includes('NetworkError')) {
+        setSetupError({ 
+          message: "Connection lost during setup. Your bank was not charged. Please check your internet and try again.", 
+          canRetry: true 
+        });
+      } else {
+        setSetupError({ message, canRetry: true });
+      }
     } finally {
       setIsSettingUp(false);
     }
@@ -464,6 +483,31 @@ export default function PaymentSetup() {
                   <ShieldCheck className="h-4 w-4" />
                   <span>Secured by Stripe • Bank-level encryption</span>
                 </div>
+
+                {setupError && (
+                  <Alert variant="destructive" className="mt-4">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertTitle>Setup Issue</AlertTitle>
+                    <AlertDescription className="space-y-2">
+                      <p>{setupError.message}</p>
+                      {setupError.canRetry && (
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => { setSetupError(null); handleSetupPayment(); }}
+                          disabled={isSettingUp}
+                        >
+                          Try Again
+                        </Button>
+                      )}
+                      <p className="text-xs mt-2">
+                        Still having trouble? Call us at{" "}
+                        <a href="tel:+12103909498" className="underline font-medium">(210) 390-9498</a>
+                        {" "}and we'll help you get set up.
+                      </p>
+                    </AlertDescription>
+                  </Alert>
+                )}
               </CardContent>
             </Card>
 
