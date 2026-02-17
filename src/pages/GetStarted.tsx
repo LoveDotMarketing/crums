@@ -74,6 +74,25 @@ export default function GetStarted() {
   // Terms
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [formStarted, setFormStarted] = useState(false);
+  const [phoneError, setPhoneError] = useState("");
+
+  const formatPhoneNumber = (value: string) => {
+    const digits = value.replace(/\D/g, '');
+    if (digits.length <= 3) return digits;
+    if (digits.length <= 6) return `(${digits.slice(0, 3)}) ${digits.slice(3)}`;
+    return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6, 10)}`;
+  };
+
+  const handlePhoneChange = (value: string) => {
+    const formatted = formatPhoneNumber(value);
+    setPhoneNumber(formatted);
+    const digits = formatted.replace(/\D/g, '');
+    if (digits.length > 0 && digits.length < 10) {
+      setPhoneError("Phone number must have at least 10 digits");
+    } else {
+      setPhoneError("");
+    }
+  };
 
   // Track signup started on page load
   useEffect(() => {
@@ -471,9 +490,13 @@ export default function GetStarted() {
                       id="phoneNumber" 
                       type="tel" 
                       value={phoneNumber} 
-                      onChange={(e) => setPhoneNumber(e.target.value)}
+                      onChange={(e) => handlePhoneChange(e.target.value)}
                       placeholder="(555) 123-4567"
+                      className={phoneError ? "border-destructive" : ""}
                     />
+                    {phoneError && (
+                      <p className="text-sm text-destructive mt-1">{phoneError}</p>
+                    )}
                   </div>
                   <div>
                     <Label htmlFor="password">Password *</Label>

@@ -3,7 +3,9 @@ import { z } from "zod";
 // Customer Application Validation
 export const customerApplicationSchema = z.object({
   email: z.string().email("Invalid email address").max(255, "Email must be less than 255 characters"),
-  phone_number: z.string().regex(/^\+?[1-9]\d{1,14}$/, "Invalid phone number format"),
+  phone_number: z.string()
+    .regex(/^[\+]?[(]?[0-9]{1,4}[)]?[-\s./0-9]*$/, "Invalid phone number format")
+    .refine((val) => val.replace(/\D/g, '').length >= 10, "Phone number must have at least 10 digits"),
   company_name: z.string().max(200, "Company name too long").optional().or(z.literal("")),
   company_address: z.string().min(1, "Address is required").max(500, "Address too long"),
   business_type: z.string().min(1, "Business type is required"),
@@ -13,7 +15,10 @@ export const customerApplicationSchema = z.object({
   bank_name: z.string().min(1, "Bank name is required").max(100),
   insurance_company: z.string().min(1, "Insurance company is required").max(100),
   secondary_contact_name: z.string().max(100).optional(),
-  secondary_contact_phone: z.string().regex(/^\+?[1-9]\d{1,14}$/, "Invalid phone number").optional().or(z.literal("")),
+  secondary_contact_phone: z.string()
+    .regex(/^[\+]?[(]?[0-9]{1,4}[)]?[-\s./0-9]*$/, "Invalid phone number")
+    .refine((val) => val.replace(/\D/g, '').length >= 10, "Phone number must have at least 10 digits")
+    .optional().or(z.literal("")),
   secondary_contact_relationship: z.string().max(50).optional(),
   message: z.string().max(2000, "Message must be less than 2000 characters").optional(),
 });
@@ -46,7 +51,9 @@ export const fullSignupSchema = z.object({
     .regex(/[0-9]/, "Password must contain at least one number"),
   firstName: z.string().min(1, "First name is required").max(50),
   lastName: z.string().min(1, "Last name is required").max(50),
-  phone: z.string().regex(/^\+?[1-9]\d{1,14}$/, "Invalid phone number format"),
+  phone: z.string()
+    .regex(/^[\+]?[(]?[0-9]{1,4}[)]?[-\s./0-9]*$/, "Invalid phone number format")
+    .refine((val) => val.replace(/\D/g, '').length >= 10, "Phone number must have at least 10 digits"),
 });
 
 // File Upload Validation
