@@ -44,23 +44,24 @@ interface LeaseToOwnInfo {
 }
 
 export default function Rentals() {
-  const { user } = useAuth();
+  const { user, isImpersonating, impersonatedUser } = useAuth();
+  const currentEmail = isImpersonating && impersonatedUser ? impersonatedUser.email : user?.email;
   const [loading, setLoading] = useState(true);
   const [subscriptionItems, setSubscriptionItems] = useState<SubscriptionItemData[]>([]);
   const [billingPaid, setBillingPaid] = useState<Record<string, number>>({});
 
   useEffect(() => {
     fetchRentals();
-  }, [user]);
+  }, [currentEmail]);
 
   const fetchRentals = async () => {
-    if (!user?.email) return;
+    if (!currentEmail) return;
 
     try {
       const { data: customer } = await supabase
         .from("customers")
         .select("id")
-        .eq("email", user.email)
+        .ilike("email", currentEmail)
         .maybeSingle();
 
       if (!customer) {

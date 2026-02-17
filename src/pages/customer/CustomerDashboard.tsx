@@ -194,15 +194,17 @@ export default function CustomerDashboard() {
     }
   };
 
+  const currentEmail = isImpersonating && impersonatedUser ? impersonatedUser.email : user?.email;
+
   const fetchSubscriptionStatus = async () => {
-    if (!user?.email) return;
+    if (!currentEmail) return;
 
     try {
       // Find customer by email
       const { data: customer } = await supabase
         .from("customers")
         .select("id")
-        .eq("email", user.email)
+        .ilike("email", currentEmail)
         .maybeSingle();
 
       if (!customer) {
@@ -224,14 +226,14 @@ export default function CustomerDashboard() {
   };
 
   const fetchTrailers = async () => {
-    if (!user?.email) return;
+    if (!currentEmail) return;
 
     try {
       // First find the customer record by email (since customers.id ≠ profiles.id)
       const { data: customer } = await supabase
         .from("customers")
         .select("id")
-        .eq("email", user.email)
+        .ilike("email", currentEmail)
         .maybeSingle();
 
       if (!customer) {
