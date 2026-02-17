@@ -781,7 +781,14 @@ export default function Customers() {
                           className="cursor-pointer hover:bg-muted/50"
                           onClick={() => { setSelectedCustomer(customer); setDialogOpen(true); }}
                         >
-                          <TableCell className="font-medium">{customer.full_name}</TableCell>
+                          <TableCell className="font-medium">
+                            {customer.full_name === 'Customer' 
+                              ? (customer.company_name || customer.email || 'Customer')
+                              : customer.full_name}
+                            {customer.full_name === 'Customer' && (
+                              <span className="ml-2 text-xs text-muted-foreground">(name missing)</span>
+                            )}
+                          </TableCell>
                           <TableCell>
                             <div className="flex items-center gap-2">
                               <Progress 
