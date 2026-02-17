@@ -113,9 +113,9 @@ export default function AdminDashboard() {
           .limit(5),
         supabase
           .from("customer_applications")
-          .select("id, status, created_at, user_id")
-          .order("created_at", { ascending: false })
-          .limit(3),
+          .select("id, status, created_at, updated_at, user_id")
+          .order("updated_at", { ascending: false })
+          .limit(5),
         supabase
           .from("profiles")
           .select("id, first_name, last_name, company_name, email"),
@@ -140,15 +140,15 @@ export default function AdminDashboard() {
         amount: string;
         status: string;
         time: string;
+        timestamp: number;
       }> = [];
 
       tollsResult.data?.forEach(toll => {
         // customer_id in tolls references profiles.id
         const profile = profilesMap.get(toll.customer_id);
         const customer = customersMap.get(toll.customer_id);
-        const customerName = profile?.company_name || customer?.company_name ||
-          [profile?.first_name, profile?.last_name].filter(Boolean).join(" ") ||
-          customer?.full_name || profile?.email || "Unknown";
+        const fullName = [profile?.first_name, profile?.last_name].filter(Boolean).join(" ");
+        const customerName = fullName || customer?.full_name || profile?.company_name || customer?.company_name || profile?.email || "Unknown";
         const tollDetail = toll.toll_authority || toll.toll_location || "Toll";
         activities.push({
           type: "toll",
@@ -157,24 +157,29 @@ export default function AdminDashboard() {
           amount: `$${Number(toll.amount).toFixed(2)}`,
           status: toll.status,
           time: formatDistanceToNow(new Date(toll.created_at), { addSuffix: true }),
+          timestamp: new Date(toll.created_at).getTime(),
         });
       });
 
       applicationsResult.data?.forEach(app => {
         const profile = profilesMap.get(app.user_id);
-        const customerName = profile?.company_name || 
-          [profile?.first_name, profile?.last_name].filter(Boolean).join(" ") || 
-          "New Applicant";
+        const fullName = [profile?.first_name, profile?.last_name].filter(Boolean).join(" ");
+        const customerName = fullName 
+          ? (profile?.company_name ? `${fullName} - ${profile.company_name}` : fullName)
+          : profile?.company_name || profile?.email || "New Applicant";
+        const appTime = (app as any).updated_at || app.created_at;
         activities.push({
           type: "application",
           customer: customerName,
-          detail: "New application",
+          detail: "Application",
           amount: `Application`,
           status: app.status,
-          time: formatDistanceToNow(new Date(app.created_at), { addSuffix: true }),
+          time: formatDistanceToNow(new Date(appTime), { addSuffix: true }),
+          timestamp: new Date(appTime).getTime(),
         });
       });
 
+      activities.sort((a, b) => b.timestamp - a.timestamp);
       return activities.slice(0, 6);
     },
   });
