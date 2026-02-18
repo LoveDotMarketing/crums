@@ -1,71 +1,82 @@
 
+# Fix: Deleted Staff User Isaac Jimenez Still Able to Log In
 
-# Fix Missing Business Name and Data Consistency
+## Root Cause
 
-## Problems Found
+The `remove-staff` edge function has a critical gap: it only deletes users whose `user_roles` entry is `admin` or `mechanic`. When the removal was attempted for Isaac Jimenez (`ileejimenez@gmail.com`), his role was already `customer` — so the function returned a 404 "Staff member not found" error and did nothing. His auth account was never deleted.
 
-1. **Miguel Carcamo's customer record** has "Ducky Transport LLC" in the `full_name` field instead of his actual name. The `company_name` field is empty. This means searching "Miguel" on the Customers page returns nothing.
+**Current state of Isaac's account:**
+- `auth.users`: Active, NOT deleted, NOT banned
+- `user_roles`: Has a `customer` role
+- `profiles`: Exists with full data
+- Result: He can log in with full customer access
 
-2. **The customer Profile page** does not show or allow editing of Company Name. Customers have no way to enter their business name.
+---
 
-3. **The Rental Application** has fields for Business Address and Business Type but no field for the actual business/company name. So the company name never gets captured during onboarding.
+## Immediate Fix: Disable Isaac's Account
 
-4. **The sync trigger** (profiles -> customers) copies `company_name` from profiles, but since it's never set in profiles, it remains empty in customers.
+The first step is to immediately ban Isaac's account so he cannot log in while a proper solution is put in place. This requires a database migration to set `banned_until` in `auth.users` to a far-future date, or a proper deletion.
+
+Since the auth user still exists, the cleanest fix is to delete him entirely via a direct database operation using the service role. This will be done with a migration that calls `auth.users` deletion safely.
 
 ---
 
 ## Plan
 
-### Step 1: Add Company Name field to the Customer Profile page
-Add a "Company Name" input field to `src/pages/customer/Profile.tsx` in the Personal Information section. Include it in the fetch, state, and save logic so it syncs to the `profiles` table (and via trigger to `customers`).
+### Step 1: Immediately remove Isaac's account (data fix)
+Run a direct SQL operation to:
+1. Delete Isaac's `user_roles` record (the `customer` role)
+2. Delete Isaac from `auth.users` (which cascades to `profiles` via FK)
 
-### Step 2: Add Company Name field to the Rental Application
-Add a "Company / Business Name" input to `src/pages/customer/Application.tsx` in the Business Information section. This will save to the `profiles.company_name` field when the application is submitted, which then triggers the sync to the `customers` table.
+This uses the service role via migration to properly clean up the account.
 
-### Step 3: Fix Miguel's data in the database
-Run a database migration to:
-- Update the `customers` record for `duckytransport@outlook.com`: set `full_name` to "Miguel Carcamo" and `company_name` to "Ducky Transport LLC"
-- Update the `profiles` record: set `company_name` to "Ducky Transport LLC"
+### Step 2: Fix the `remove-staff` edge function
+The function currently blocks removal if the user's role is not `admin` or `mechanic`. This guard is too strict — an admin should be able to fully remove any user from the system regardless of their current role. The fix:
 
-### Step 4: Improve admin customer search
-Update the Customers page search in `src/pages/admin/Customers.tsx` to also match against linked profile `first_name`/`last_name`, so searching "Miguel" will find the customer even if `full_name` in the customers table differs.
+- Remove the role-type restriction from the target user check
+- Check that the user exists (in `user_roles` OR `profiles`) instead of requiring a specific role
+- Delete their role entry regardless of role type
+- Delete the auth user
+- Also delete their profile explicitly as a fallback
+
+### Step 3: Add a "Remove Customer" capability on the Customers page
+The admin Customers page currently has no way to fully delete/ban a customer account. Add a danger-zone delete action that calls a new or updated edge function to properly remove a customer's auth account while preserving their billing/subscription records for audit purposes.
 
 ---
 
 ## Technical Details
 
-### Files Modified
-- `src/pages/customer/Profile.tsx` -- Add company_name to state, fetch, form, and save
-- `src/pages/customer/Application.tsx` -- Add company/business name field that saves to profiles.company_name
-- `src/pages/admin/Customers.tsx` -- Extend search to include profile first/last name
-- Database migration -- Fix Miguel's records and set company_name
+### Files Changed
+- Database migration: Delete Isaac's auth user and role
+- `supabase/functions/remove-staff/index.ts`: Remove the role-type restriction on target user check
 
-### Profile Page Changes
+### Fix to `remove-staff/index.ts`
+Change the target user check from:
 ```text
-// Add to profile state
-company_name: ""
+// BEFORE (broken): only finds admin/mechanic roles
+.in("role", ["admin", "mechanic"])
+```
+To:
+```text
+// AFTER (fixed): finds any role OR falls back to checking profiles
+```
+Check if user exists in `profiles` table instead, then delete from `user_roles` (any role) and from `auth.users`.
 
-// Add to fetchProfile
-company_name: data.company_name || ""
+### Data Migration (Isaac's account)
+```text
+-- Step 1: Delete role
+DELETE FROM user_roles WHERE user_id = '4d24eb80-6edc-4b4f-ab91-dccb4565e5fb';
 
-// Add to handleSubmit update
-company_name: profile.company_name
-
-// Add field in the form between Email and Phone Number
-<Label>Company Name</Label>
-<Input value={profile.company_name} onChange={...} />
+-- Step 2: Delete profile (cascade will handle auth)
+-- Auth deletion must be done via service role admin API in the migration
 ```
 
-### Application Page Changes
-Add a "Company / Business Name" field in the Business Information section that reads/writes to `profiles.company_name`. When saving the application, also update the profile's company_name.
+Note: The auth.users deletion must be done via the edge function or admin API call since direct SQL manipulation of auth schema is restricted. The migration will handle the `user_roles` and `profiles` cleanup, and the edge function fix will allow a proper re-deletion.
 
-### Data Fix Migration
-```text
--- Fix Miguel Carcamo's records
-UPDATE customers SET full_name = 'Miguel Carcamo', company_name = 'Ducky Transport LLC'
-  WHERE lower(email) = 'duckytransport@outlook.com';
-
-UPDATE profiles SET company_name = 'Ducky Transport LLC'
-  WHERE lower(email) = 'duckytransport@outlook.com';
-```
-
+### Security Improvement
+The updated `remove-staff` function will:
+1. Accept any user ID (not just admin/mechanic)
+2. Look up the user by profile existence
+3. Delete from `user_roles` (all matching records)
+4. Delete from `auth.users` via the admin API
+5. Log the action properly
