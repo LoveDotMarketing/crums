@@ -319,6 +319,56 @@ export default function Billing() {
     endDate: string | null;
   } | null>(null);
 
+  // Upload lease agreement dialog state
+  const [uploadAgreementDialogOpen, setUploadAgreementDialogOpen] = useState(false);
+  const [selectedSubscriptionForUpload, setSelectedSubscriptionForUpload] = useState<{
+    id: string;
+    customerName: string;
+    contractStartDate: string | null;
+  } | null>(null);
+  const [agreementFile, setAgreementFile] = useState<File | null>(null);
+  const [agreementContractDate, setAgreementContractDate] = useState("");
+  const [isUploadingAgreement, setIsUploadingAgreement] = useState(false);
+
+  // Upload lease agreement handler
+  const handleUploadAgreement = async () => {
+    if (!selectedSubscriptionForUpload || !agreementFile) {
+      toast.error("Please select a file to upload");
+      return;
+    }
+    setIsUploadingAgreement(true);
+    try {
+      const filePath = `lease-agreements/${selectedSubscriptionForUpload.id}/lease-agreement.pdf`;
+      const { error: uploadError } = await supabase.storage
+        .from("customer-documents")
+        .upload(filePath, agreementFile, { upsert: true, contentType: "application/pdf" });
+
+      if (uploadError) throw uploadError;
+
+      const updateData: Record<string, string> = { lease_agreement_url: filePath };
+      if (agreementContractDate) updateData.contract_start_date = agreementContractDate;
+
+      const { error: updateError } = await supabase
+        .from("customer_subscriptions")
+        .update(updateData)
+        .eq("id", selectedSubscriptionForUpload.id);
+
+      if (updateError) throw updateError;
+
+      toast.success("Lease agreement uploaded successfully");
+      queryClient.invalidateQueries({ queryKey: ["customer-subscriptions"] });
+      setUploadAgreementDialogOpen(false);
+      setAgreementFile(null);
+      setAgreementContractDate("");
+      setSelectedSubscriptionForUpload(null);
+    } catch (error) {
+      console.error("Upload error:", error);
+      toast.error("Failed to upload agreement: " + (error instanceof Error ? error.message : "Unknown error"));
+    } finally {
+      setIsUploadingAgreement(false);
+    }
+  };
+
   // Manage subscription (pause/resume/cancel)
   const handleManageSubscription = async (subscriptionId: string, action: "pause" | "resume" | "cancel") => {
     setIsManaging(true);
@@ -1338,6 +1388,23 @@ export default function Billing() {
                                           <Pencil className="h-4 w-4 mr-2" />
                                           Edit Contract Dates
                                         </DropdownMenuItem>
+                                        {sub.subscription_type === "lease_to_own" && (
+                                          <DropdownMenuItem
+                                            onClick={() => {
+                                              setSelectedSubscriptionForUpload({
+                                                id: sub.id,
+                                                customerName: sub.customers?.full_name || "Unknown",
+                                                contractStartDate: null,
+                                              });
+                                              setAgreementContractDate("");
+                                              setAgreementFile(null);
+                                              setUploadAgreementDialogOpen(true);
+                                            }}
+                                          >
+                                            <FileCheck className="h-4 w-4 mr-2" />
+                                            Upload Agreement
+                                          </DropdownMenuItem>
+                                        )}
                                         <DropdownMenuSeparator />
                                         {isReadyToActivate && (
                                           <>
@@ -2632,9 +2699,73 @@ export default function Billing() {
               onOpenChange={setEditDatesDialogOpen}
               subscription={selectedSubscriptionForDates}
             />
+
+            {/* Upload Lease Agreement Dialog */}
+            <Dialog open={uploadAgreementDialogOpen} onOpenChange={setUploadAgreementDialogOpen}>
+              <DialogContent className="max-w-md">
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2">
+                    <FileCheck className="h-5 w-5 text-primary" />
+                    Upload Lease Agreement
+                  </DialogTitle>
+                  <DialogDescription>
+                    Upload a signed lease-to-own agreement PDF for{" "}
+                    <strong>{selectedSubscriptionForUpload?.customerName}</strong>. 
+                    Optionally set the backdated contract start date.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4 py-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="agreement-file">Agreement PDF <span className="text-destructive">*</span></Label>
+                    <Input
+                      id="agreement-file"
+                      type="file"
+                      accept=".pdf,application/pdf"
+                      onChange={(e) => setAgreementFile(e.target.files?.[0] || null)}
+                    />
+                    {agreementFile && (
+                      <p className="text-xs text-muted-foreground">
+                        Selected: {agreementFile.name} ({(agreementFile.size / 1024).toFixed(0)} KB)
+                      </p>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="contract-start-date">Contract Start Date (backdated)</Label>
+                    <Input
+                      id="contract-start-date"
+                      type="date"
+                      value={agreementContractDate}
+                      onChange={(e) => setAgreementContractDate(e.target.value)}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Set this to the original contract date if backdating. Leave blank to keep the current date.
+                    </p>
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setUploadAgreementDialogOpen(false)} disabled={isUploadingAgreement}>
+                    Cancel
+                  </Button>
+                  <Button onClick={handleUploadAgreement} disabled={isUploadingAgreement || !agreementFile}>
+                    {isUploadingAgreement ? (
+                      <>
+                        <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                        Uploading...
+                      </>
+                    ) : (
+                      <>
+                        <FileCheck className="h-4 w-4 mr-2" />
+                        Upload Agreement
+                      </>
+                    )}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </main>
         </div>
       </div>
     </SidebarProvider>
   );
 }
+
