@@ -25,7 +25,8 @@ import {
   ArrowUp,
   ArrowDown,
   Eye,
-  CreditCard
+  CreditCard,
+  Download
 } from "lucide-react";
 import {
   Table,
@@ -185,7 +186,7 @@ export default function Customers() {
       // Fetch applications for profile completion calculation and ACH status
       const { data: applications } = await supabase
         .from('customer_applications')
-        .select('user_id, trailer_type, drivers_license_url, drivers_license_back_url, insurance_docs_url, dot_number_url, stripe_payment_method_id');
+        .select('user_id, trailer_type, drivers_license_url, drivers_license_back_url, insurance_docs_url, dot_number_url, stripe_payment_method_id, company_address, business_type, truck_vin, insurance_company, secondary_contact_name, secondary_contact_phone, secondary_contact_relationship, payment_setup_status, status');
       
       // Map data to customers
       return filteredData.map((customer: Customer) => {
@@ -278,6 +279,18 @@ export default function Customers() {
           ach_linked: achLinked,
           profile_first_name: customerProfile?.first_name || null,
           profile_last_name: customerProfile?.last_name || null,
+          profile_home_address: customerProfile?.home_address || null,
+          app_company_address: customerApplication?.company_address || null,
+          app_business_type: customerApplication?.business_type || null,
+          app_truck_vin: customerApplication?.truck_vin || null,
+          app_insurance_company: customerApplication?.insurance_company || null,
+          app_secondary_contact_name: customerApplication?.secondary_contact_name || null,
+          app_secondary_contact_phone: customerApplication?.secondary_contact_phone || null,
+          app_secondary_contact_relationship: customerApplication?.secondary_contact_relationship || null,
+          app_payment_setup_status: customerApplication?.payment_setup_status || null,
+          app_dot_number_url: customerApplication?.dot_number_url || null,
+          app_trailer_type: customerApplication?.trailer_type || null,
+          app_status: customerApplication?.status || null,
         };
       });
     }
@@ -364,6 +377,75 @@ export default function Customers() {
       });
     },
   });
+
+  const handleExportCSV = () => {
+    const escapeCSV = (val: any) => {
+      if (val === null || val === undefined) return '';
+      const str = String(val);
+      if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+        return `"${str.replace(/"/g, '""')}"`;
+      }
+      return str;
+    };
+
+    const headers = [
+      'Account Number', 'Full Name', 'First Name', 'Last Name',
+      'Email', 'Phone', 'Company Name', 'City', 'State', 'ZIP',
+      'Home Address', 'Company Address', 'Business Type', 'DOT Number (URL)',
+      'Truck VIN', 'Trailer Type', 'Insurance Company',
+      'Secondary Contact Name', 'Secondary Contact Phone', 'Secondary Contact Relationship',
+      'Application Status', 'ACH Linked', 'Payment Setup Status',
+      'Trailers Assigned', 'Trailer Numbers', 'Outstanding Tolls ($)',
+      'Referral Code', 'Referrals Sent', 'Credits Earned ($)', 'Was Referred',
+      'Customer Status', 'Payment Type', 'Created At'
+    ];
+
+    const rows = sortedCustomers.map((c: any) => [
+      escapeCSV(c.account_number),
+      escapeCSV(c.full_name),
+      escapeCSV(c.profile_first_name),
+      escapeCSV(c.profile_last_name),
+      escapeCSV(c.email),
+      escapeCSV(c.phone),
+      escapeCSV(c.company_name),
+      escapeCSV(c.city),
+      escapeCSV(c.state),
+      escapeCSV(c.zip),
+      escapeCSV(c.profile_home_address),
+      escapeCSV(c.app_company_address),
+      escapeCSV(c.app_business_type),
+      escapeCSV(c.app_dot_number_url),
+      escapeCSV(c.app_truck_vin),
+      escapeCSV(c.app_trailer_type),
+      escapeCSV(c.app_insurance_company),
+      escapeCSV(c.app_secondary_contact_name),
+      escapeCSV(c.app_secondary_contact_phone),
+      escapeCSV(c.app_secondary_contact_relationship),
+      escapeCSV(c.app_status),
+      escapeCSV(c.ach_linked ? 'Yes' : 'No'),
+      escapeCSV(c.app_payment_setup_status),
+      escapeCSV(c.trailers_count || 0),
+      escapeCSV((c.trailers || []).map((t: TrailerInfo) => t.trailer_number || t.vin).join('; ')),
+      escapeCSV((c.outstanding_tolls || 0).toFixed(2)),
+      escapeCSV(c.referral_code),
+      escapeCSV(c.referrals_sent || 0),
+      escapeCSV((c.credits_earned || 0).toFixed(2)),
+      escapeCSV(c.was_referred ? 'Yes' : 'No'),
+      escapeCSV(c.status),
+      escapeCSV(c.payment_type),
+      escapeCSV(c.created_at ? new Date(c.created_at).toLocaleDateString() : ''),
+    ].join(','));
+
+    const csvContent = [headers.join(','), ...rows].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    const date = new Date().toISOString().split('T')[0];
+    link.href = url;
+    link.download = `customers-export-${date}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
 
   const handleDeleteCustomer = () => {
     if (customerToDelete) {
@@ -573,10 +655,16 @@ export default function Customers() {
             <SidebarTrigger />
             <div className="flex-1 flex items-center justify-between ml-4">
               <h1 className="text-2xl font-bold text-foreground">Customer Management</h1>
-              <Button onClick={() => { setSelectedCustomer(null); setDialogOpen(true); }}>
-                <Plus className="h-4 w-4 mr-2" />
-                Add Customer
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button variant="outline" onClick={handleExportCSV}>
+                  <Download className="h-4 w-4 mr-2" />
+                  Download Customers
+                </Button>
+                <Button onClick={() => { setSelectedCustomer(null); setDialogOpen(true); }}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Customer
+                </Button>
+              </div>
             </div>
           </header>
 
