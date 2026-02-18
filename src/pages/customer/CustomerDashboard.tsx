@@ -147,8 +147,7 @@ export default function CustomerDashboard() {
     }
   };
 
-
-    if (!currentUserId) return;
+  const checkApplicationStatus = async () => {
 
     try {
       const { data, error } = await supabase
@@ -676,3 +675,4 @@ export default function CustomerDashboard() {
     </div>
   );
 }
+
