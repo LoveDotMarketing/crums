@@ -145,6 +145,9 @@ export default function Application() {
   const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const autoSaveToDb = useCallback(async () => {
     if (!currentUserId) return;
+    // Guard: skip auto-save if phone is empty (required NOT NULL field)
+    // prevents an INSERT with a missing required field before the user has typed it
+    if (!profile.phone || !profile.phone.trim()) return;
     try {
       // Only save profile fields that have values
       const profileUpdate: Record<string, any> = {};
@@ -390,6 +393,18 @@ export default function Application() {
         }
         
         applicationData.ssn = encryptData.encrypted;
+      }
+
+      // Session refresh guard: ensure auth session is valid before the upsert
+      // This prevents "new row violates RLS policy" errors from expired sessions
+      let { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData.session) {
+        const { data: refreshData } = await supabase.auth.refreshSession();
+        if (!refreshData.session) {
+          toast.error("Your session expired. Please refresh the page and try again.");
+          setSaving(false);
+          return;
+        }
       }
 
       // Always upsert to prevent unique constraint errors
