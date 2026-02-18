@@ -11,7 +11,7 @@ const logStep = (step: string, details?: Record<string, unknown>) => {
   console.log(`[RETRY-PAYMENT] ${step}`, details ? JSON.stringify(details) : "");
 };
 
-const BASE_URL = "https://crums.lovable.app";
+const BASE_URL = "https://crumsleasing.com";
 
 // Send email notification to customer about payment retry
 const sendRetryNotification = async (

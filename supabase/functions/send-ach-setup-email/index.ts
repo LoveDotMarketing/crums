@@ -72,7 +72,7 @@ serve(async (req) => {
         throw new Error("Could not find admin profile");
       }
 
-      const setupUrl = "https://crums.lovable.app/dashboard/customer/payment-setup";
+      const setupUrl = "https://crumsleasing.com/dashboard/customer/payment-setup";
 
       // Send test email via SendGrid
       const emailResponse = await fetch("https://api.sendgrid.com/v3/mail/send", {
@@ -234,7 +234,7 @@ serve(async (req) => {
     }
 
     // Generate the payment setup URL - always use production domain
-    const setupUrl = "https://crums.lovable.app/dashboard/customer/payment-setup";
+    const setupUrl = "https://crumsleasing.com/dashboard/customer/payment-setup";
 
     // Send email via SendGrid
     const emailResponse = await fetch("https://api.sendgrid.com/v3/mail/send", {
