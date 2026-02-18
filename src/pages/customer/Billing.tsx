@@ -51,7 +51,7 @@ const CustomerBilling = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("customer_applications")
-        .select("billing_anchor_day")
+        .select("billing_anchor_day, preferred_billing_cycle")
         .maybeSingle();
       if (error) return null;
       return data;
@@ -147,6 +147,16 @@ const CustomerBilling = () => {
     }).format(amount);
   };
 
+  const getEffectiveBillingLabel = (item: any) => {
+    const cycle = item.billing_cycle || subscription?.billing_cycle;
+    const anchor = item.billing_anchor_day;
+    if (cycle === "weekly") return "Every Friday";
+    if (cycle === "semimonthly") return "1st & 15th";
+    if (cycle === "monthly" && anchor === 15) return "15th of month";
+    if (cycle === "monthly" && anchor === 1) return "1st of month";
+    return cycle || "Monthly";
+  };
+
   const totalMonthlyRate = subscriptionItems?.reduce(
     (sum, item) => sum + Number(item.monthly_rate),
     0
@@ -230,17 +240,26 @@ const CustomerBilling = () => {
               </Card>
 
               {/* Payment Due Date Card */}
-              {application?.billing_anchor_day && (
+              {(application?.billing_anchor_day || (application as any)?.preferred_billing_cycle === "weekly") && (
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium">Payment Due Date</CardTitle>
                     <Calendar className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">
-                      {application.billing_anchor_day === 1 ? "1st" : "15th"}
-                    </div>
-                    <p className="text-xs text-muted-foreground">of each month</p>
+                    {(application as any)?.preferred_billing_cycle === "weekly" || application?.billing_anchor_day === 5 ? (
+                      <>
+                        <div className="text-2xl font-bold">Every Friday</div>
+                        <p className="text-xs text-muted-foreground">weekly billing</p>
+                      </>
+                    ) : (
+                      <>
+                        <div className="text-2xl font-bold">
+                          {application?.billing_anchor_day === 1 ? "1st" : "15th"}
+                        </div>
+                        <p className="text-xs text-muted-foreground">of each month</p>
+                      </>
+                    )}
                   </CardContent>
                 </Card>
               )}
@@ -317,31 +336,37 @@ const CustomerBilling = () => {
               <CardContent>
                 {subscriptionItems && subscriptionItems.length > 0 ? (
                   <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Trailer #</TableHead>
-                        <TableHead>Type</TableHead>
-                        <TableHead>Start Date</TableHead>
-                        <TableHead className="text-right">Rate</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {subscriptionItems.map((item) => (
-                        <TableRow key={item.id}>
-                          <TableCell className="font-medium">
-                            {(item.trailers as { trailer_number: string } | null)?.trailer_number || "—"}
-                          </TableCell>
-                          <TableCell className="capitalize">
-                            {(item.trailers as { type: string } | null)?.type?.replace("_", " ") || "—"}
-                          </TableCell>
-                          <TableCell>
-                            {format(new Date(item.start_date), "MMM d, yyyy")}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            {formatCurrency(Number(item.monthly_rate))}
-                          </TableCell>
-                        </TableRow>
-                      ))}
+                     <TableHeader>
+                       <TableRow>
+                         <TableHead>Trailer #</TableHead>
+                         <TableHead>Type</TableHead>
+                         <TableHead>Billing Schedule</TableHead>
+                         <TableHead>Start Date</TableHead>
+                         <TableHead className="text-right">Rate</TableHead>
+                       </TableRow>
+                     </TableHeader>
+                     <TableBody>
+                       {subscriptionItems.map((item) => (
+                         <TableRow key={item.id}>
+                           <TableCell className="font-medium">
+                             {(item.trailers as { trailer_number: string } | null)?.trailer_number || "—"}
+                           </TableCell>
+                           <TableCell className="capitalize">
+                             {(item.trailers as { type: string } | null)?.type?.replace("_", " ") || "—"}
+                           </TableCell>
+                           <TableCell>
+                             <span className="text-sm text-muted-foreground">
+                               {getEffectiveBillingLabel(item)}
+                             </span>
+                           </TableCell>
+                           <TableCell>
+                             {format(new Date(item.start_date), "MMM d, yyyy")}
+                           </TableCell>
+                           <TableCell className="text-right">
+                             {formatCurrency(Number(item.monthly_rate))}
+                           </TableCell>
+                         </TableRow>
+                       ))}
                     </TableBody>
                   </Table>
                 ) : (

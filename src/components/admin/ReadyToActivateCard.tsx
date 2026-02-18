@@ -20,6 +20,7 @@ interface ReadyToActivateCustomer {
   id: string;
   user_id: string;
   billing_anchor_day: number | null;
+  preferred_billing_cycle: string | null;
   payment_setup_status: string | null;
   updated_at: string;
   profiles: {
@@ -45,6 +46,7 @@ export function ReadyToActivateCard() {
           id,
           user_id,
           billing_anchor_day,
+          preferred_billing_cycle,
           payment_setup_status,
           updated_at,
           profiles!customer_applications_user_id_fkey (
@@ -178,7 +180,12 @@ export function ReadyToActivateCard() {
                     </div>
                   </TableCell>
                   <TableCell>
-                    {customer.billing_anchor_day ? (
+                    {customer.preferred_billing_cycle === "weekly" || customer.billing_anchor_day === 5 ? (
+                      <Badge variant="outline" className="font-normal">
+                        <Calendar className="h-3 w-3 mr-1" />
+                        Every Friday (Weekly)
+                      </Badge>
+                    ) : customer.billing_anchor_day ? (
                       <Badge variant="outline" className="font-normal">
                         <Calendar className="h-3 w-3 mr-1" />
                         {customer.billing_anchor_day === 1 ? "1st" : "15th"} of the month
@@ -211,6 +218,7 @@ export function ReadyToActivateCard() {
           customerId={selectedCustomer.user_id}
           customerName={`${selectedCustomer.profiles?.first_name || ""} ${selectedCustomer.profiles?.last_name || ""}`.trim() || "Customer"}
           currentAnchorDay={selectedCustomer.billing_anchor_day}
+          currentPreferredCycle={selectedCustomer.preferred_billing_cycle}
           applicationId={selectedCustomer.id}
         />
       )}

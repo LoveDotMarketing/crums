@@ -258,6 +258,7 @@ export type Database = {
           payment_setup_sent_at: string | null
           payment_setup_status: string | null
           phone_number: string
+          preferred_billing_cycle: string | null
           reviewed_at: string | null
           reviewed_by: string | null
           secondary_contact_name: string | null
@@ -291,6 +292,7 @@ export type Database = {
           payment_setup_sent_at?: string | null
           payment_setup_status?: string | null
           phone_number: string
+          preferred_billing_cycle?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
           secondary_contact_name?: string | null
@@ -324,6 +326,7 @@ export type Database = {
           payment_setup_sent_at?: string | null
           payment_setup_status?: string | null
           phone_number?: string
+          preferred_billing_cycle?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
           secondary_contact_name?: string | null
@@ -1776,6 +1779,8 @@ export type Database = {
       }
       subscription_items: {
         Row: {
+          billing_anchor_day: number | null
+          billing_cycle: string | null
           created_at: string
           end_date: string | null
           id: string
@@ -1791,6 +1796,8 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          billing_anchor_day?: number | null
+          billing_cycle?: string | null
           created_at?: string
           end_date?: string | null
           id?: string
@@ -1806,6 +1813,8 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          billing_anchor_day?: number | null
+          billing_cycle?: string | null
           created_at?: string
           end_date?: string | null
           id?: string
