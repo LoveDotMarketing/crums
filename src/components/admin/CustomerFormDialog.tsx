@@ -104,6 +104,8 @@ interface TrailerInfo {
   rental_rate: number | null;
   rental_frequency: string | null;
   lease_to_own: boolean | null;
+  contract_start_date?: string | null;
+  end_date?: string | null;
 }
 
 const formatSubscriptionType = (type: string | null): string => {
@@ -171,12 +173,12 @@ export function CustomerFormDialog({ open, onOpenChange, customer }: CustomerFor
     queryFn: async () => {
       if (!customer?.id) return [];
       
-      // Get trailers through subscription_items to include lease_to_own
+      // Get trailers through subscription_items to include lease_to_own and contract dates
       const { data: subItems, error: subError } = await supabase
         .from('subscription_items')
         .select(`
           lease_to_own,
-          subscription:customer_subscriptions!inner(customer_id),
+          subscription:customer_subscriptions!inner(customer_id, contract_start_date, end_date),
           trailer:trailers(id, vin, trailer_number, type, rental_rate, rental_frequency)
         `)
         .eq('subscription.customer_id', customer.id)
@@ -189,6 +191,8 @@ export function CustomerFormDialog({ open, onOpenChange, customer }: CustomerFor
         .map(item => ({
           ...(item.trailer as any),
           lease_to_own: item.lease_to_own,
+          contract_start_date: (item.subscription as any)?.contract_start_date || null,
+          end_date: (item.subscription as any)?.end_date || null,
         }));
       
       // Also get directly assigned trailers not in subscription_items
@@ -708,7 +712,7 @@ export function CustomerFormDialog({ open, onOpenChange, customer }: CustomerFor
                             )}
                           </div>
                         ))}
-                        <div className="pt-2 border-t mt-3">
+                        <div className="pt-2 border-t mt-3 space-y-1">
                           <div className="flex justify-between text-sm">
                             <span className="text-muted-foreground">Total Monthly Revenue:</span>
                             <span className="font-semibold">
@@ -721,6 +725,20 @@ export function CustomerFormDialog({ open, onOpenChange, customer }: CustomerFor
                               }, 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </span>
                           </div>
+                          {(() => {
+                            const startDate = customerTrailers.find(t => t.contract_start_date)?.contract_start_date;
+                            const endDate = customerTrailers.find(t => t.end_date !== undefined)?.end_date;
+                            if (!startDate) return null;
+                            const fmt = (d: string) => new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' }).format(new Date(d));
+                            return (
+                              <div className="flex justify-between text-sm">
+                                <span className="text-muted-foreground">Contract Period:</span>
+                                <span className="font-medium">
+                                  {fmt(startDate)} → {endDate ? fmt(endDate) : 'Ongoing'}
+                                </span>
+                              </div>
+                            );
+                          })()}
                         </div>
                       </div>
                     ) : (
