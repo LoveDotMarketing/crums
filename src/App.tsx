@@ -129,6 +129,7 @@ const PaymentSetup = lazy(() => import("./pages/customer/PaymentSetup"));
 const TrailerCheckout = lazy(() => import("./pages/customer/TrailerCheckout"));
 const CheckoutComplete = lazy(() => import("./pages/customer/CheckoutComplete"));
 const CustomerBilling = lazy(() => import("./pages/customer/Billing"));
+const LeaseToOwn = lazy(() => import("./pages/customer/LeaseToOwn"));
 
 // Mechanic pages
 const MechanicDashboard = lazy(() => import("./pages/mechanic/MechanicDashboard"));
@@ -465,6 +466,14 @@ const App = () => (
               element={
                 <ProtectedRoute requiredRole="customer">
                   <CustomerBilling />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/dashboard/customer/lease-to-own" 
+              element={
+                <ProtectedRoute requiredRole="customer">
+                  <LeaseToOwn />
                 </ProtectedRoute>
               } 
             />

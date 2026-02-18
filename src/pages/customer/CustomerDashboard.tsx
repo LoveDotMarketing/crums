@@ -3,7 +3,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Truck, AlertCircle, CheckCircle, Loader2, Bell, Phone, ExternalLink, Mail, ClipboardCheck, CreditCard, AlertTriangle } from "lucide-react";
+import { Truck, AlertCircle, CheckCircle, Loader2, Bell, Phone, ExternalLink, Mail, ClipboardCheck, CreditCard, AlertTriangle, KeyRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
@@ -55,6 +55,7 @@ export default function CustomerDashboard() {
   const [loading, setLoading] = useState(true);
   const [markingPaid, setMarkingPaid] = useState<string | null>(null);
   const [profileData, setProfileData] = useState<{ first_name: string | null; last_name: string | null; company_name: string | null } | null>(null);
+  const [hasLeaseToOwn, setHasLeaseToOwn] = useState(false);
 
   // Use effectiveUserId for queries when impersonating
   const currentUserId = effectiveUserId;
@@ -67,6 +68,7 @@ export default function CustomerDashboard() {
       fetchPendingCheckouts();
       fetchSubscriptionStatus();
       fetchProfile();
+      checkLeaseToOwnSubscription();
 
       // Set up real-time subscription for tolls
       const tollChannel = supabase
@@ -122,7 +124,30 @@ export default function CustomerDashboard() {
     }
   };
 
-  const checkApplicationStatus = async () => {
+  const checkLeaseToOwnSubscription = async () => {
+    const email = isImpersonating && impersonatedUser ? impersonatedUser.email : user?.email;
+    if (!email) return;
+    try {
+      const { data: customer } = await supabase
+        .from("customers")
+        .select("id")
+        .ilike("email", email)
+        .maybeSingle();
+      if (!customer) return;
+      const { data: sub } = await supabase
+        .from("customer_subscriptions")
+        .select("id")
+        .eq("customer_id", customer.id)
+        .eq("subscription_type", "lease_to_own")
+        .in("status", ["active", "paused"])
+        .maybeSingle();
+      setHasLeaseToOwn(!!sub);
+    } catch (error) {
+      console.error("Error checking lease-to-own:", error);
+    }
+  };
+
+
     if (!currentUserId) return;
 
     try {
@@ -448,6 +473,28 @@ export default function CustomerDashboard() {
                       </Link>
                     </div>
                   ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Lease to Own Quick Link */}
+          {hasLeaseToOwn && (
+            <Card className="mb-8 border-primary/20 bg-primary/5">
+              <CardContent className="py-4">
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <KeyRound className="h-6 w-6 text-primary flex-shrink-0" />
+                    <div>
+                      <p className="font-semibold text-foreground">Lease-to-Own Agreement Active</p>
+                      <p className="text-sm text-muted-foreground">View your payment schedule, remaining balance, and agreement documents</p>
+                    </div>
+                  </div>
+                  <Link to="/dashboard/customer/lease-to-own">
+                    <Button size="sm" variant="outline" className="whitespace-nowrap">
+                      View Details
+                    </Button>
+                  </Link>
                 </div>
               </CardContent>
             </Card>

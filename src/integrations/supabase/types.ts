@@ -427,6 +427,7 @@ export type Database = {
           grace_period_end: string | null
           grace_period_start: string | null
           id: string
+          lease_agreement_url: string | null
           next_billing_date: string | null
           status: string
           stripe_customer_id: string | null
@@ -451,6 +452,7 @@ export type Database = {
           grace_period_end?: string | null
           grace_period_start?: string | null
           id?: string
+          lease_agreement_url?: string | null
           next_billing_date?: string | null
           status?: string
           stripe_customer_id?: string | null
@@ -475,6 +477,7 @@ export type Database = {
           grace_period_end?: string | null
           grace_period_start?: string | null
           id?: string
+          lease_agreement_url?: string | null
           next_billing_date?: string | null
           status?: string
           stripe_customer_id?: string | null
