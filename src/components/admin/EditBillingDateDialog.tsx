@@ -15,12 +15,17 @@ import { Calendar, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
+type BillingPreference = 
+  | { cycle: "monthly"; anchorDay: 1 | 15 }
+  | { cycle: "weekly"; anchorDay: 5 };
+
 interface EditBillingDateDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   customerId: string;
   customerName: string;
   currentAnchorDay: number | null;
+  currentPreferredCycle?: string | null;
   applicationId: string;
 }
 
@@ -30,18 +35,38 @@ export function EditBillingDateDialog({
   customerId,
   customerName,
   currentAnchorDay,
+  currentPreferredCycle,
   applicationId,
 }: EditBillingDateDialogProps) {
   const queryClient = useQueryClient();
-  const [billingAnchorDay, setBillingAnchorDay] = useState<1 | 15>(
-    currentAnchorDay === 15 ? 15 : 1
-  );
+
+  const getInitialPreference = (): BillingPreference => {
+    if (currentPreferredCycle === "weekly" || currentAnchorDay === 5) {
+      return { cycle: "weekly", anchorDay: 5 };
+    }
+    if (currentAnchorDay === 15) return { cycle: "monthly", anchorDay: 15 };
+    return { cycle: "monthly", anchorDay: 1 };
+  };
+
+  const [preference, setPreference] = useState<BillingPreference>(getInitialPreference);
+
+  const radioValue =
+    preference.cycle === "weekly" ? "weekly" : preference.anchorDay.toString();
+
+  const handleRadioChange = (val: string) => {
+    if (val === "weekly") setPreference({ cycle: "weekly", anchorDay: 5 });
+    else if (val === "1") setPreference({ cycle: "monthly", anchorDay: 1 });
+    else setPreference({ cycle: "monthly", anchorDay: 15 });
+  };
 
   const updateMutation = useMutation({
-    mutationFn: async (anchorDay: number) => {
+    mutationFn: async () => {
       const { error } = await supabase
         .from("customer_applications")
-        .update({ billing_anchor_day: anchorDay })
+        .update({
+          billing_anchor_day: preference.anchorDay,
+          preferred_billing_cycle: preference.cycle,
+        })
         .eq("id", applicationId);
 
       if (error) throw error;
@@ -57,13 +82,18 @@ export function EditBillingDateDialog({
     },
   });
 
-  const handleSave = () => {
-    updateMutation.mutate(billingAnchorDay);
-  };
+  const currentLabel =
+    currentPreferredCycle === "weekly" || currentAnchorDay === 5
+      ? "Every Friday (Weekly)"
+      : currentAnchorDay === 15
+      ? "15th of the month"
+      : currentAnchorDay === 1
+      ? "1st of the month"
+      : null;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Calendar className="h-5 w-5" />
@@ -78,44 +108,47 @@ export function EditBillingDateDialog({
           <div className="space-y-3">
             <Label className="font-medium">Payment Due Date</Label>
             <RadioGroup
-              value={billingAnchorDay.toString()}
-              onValueChange={(val) => setBillingAnchorDay(val === "1" ? 1 : 15)}
-              className="grid grid-cols-2 gap-4"
+              value={radioValue}
+              onValueChange={handleRadioChange}
+              className="grid grid-cols-3 gap-3"
             >
               <div>
-                <RadioGroupItem
-                  value="1"
-                  id="edit-anchor-1"
-                  className="peer sr-only"
-                />
+                <RadioGroupItem value="1" id="edit-anchor-1" className="peer sr-only" />
                 <Label
                   htmlFor="edit-anchor-1"
                   className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer"
                 >
                   <span className="text-2xl font-bold">1st</span>
-                  <span className="text-sm text-muted-foreground">of the month</span>
+                  <span className="text-sm text-muted-foreground text-center">of the month</span>
                 </Label>
               </div>
               <div>
-                <RadioGroupItem
-                  value="15"
-                  id="edit-anchor-15"
-                  className="peer sr-only"
-                />
+                <RadioGroupItem value="15" id="edit-anchor-15" className="peer sr-only" />
                 <Label
                   htmlFor="edit-anchor-15"
                   className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer"
                 >
                   <span className="text-2xl font-bold">15th</span>
-                  <span className="text-sm text-muted-foreground">of the month</span>
+                  <span className="text-sm text-muted-foreground text-center">of the month</span>
+                </Label>
+              </div>
+              <div>
+                <RadioGroupItem value="weekly" id="edit-anchor-weekly" className="peer sr-only" />
+                <Label
+                  htmlFor="edit-anchor-weekly"
+                  className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer"
+                >
+                  <span className="text-lg font-bold">Every</span>
+                  <span className="text-lg font-bold">Friday</span>
+                  <span className="text-sm text-muted-foreground text-center">weekly</span>
                 </Label>
               </div>
             </RadioGroup>
           </div>
 
-          {currentAnchorDay && (
+          {currentLabel && (
             <p className="text-sm text-muted-foreground">
-              Current setting: {currentAnchorDay === 1 ? "1st" : "15th"} of the month
+              Current setting: <span className="font-medium">{currentLabel}</span>
             </p>
           )}
         </div>
@@ -124,9 +157,9 @@ export function EditBillingDateDialog({
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          <Button 
-            onClick={handleSave} 
-            disabled={updateMutation.isPending || billingAnchorDay === currentAnchorDay}
+          <Button
+            onClick={() => updateMutation.mutate()}
+            disabled={updateMutation.isPending}
           >
             {updateMutation.isPending ? (
               <>

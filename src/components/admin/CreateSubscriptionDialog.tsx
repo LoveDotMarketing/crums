@@ -66,6 +66,7 @@ interface SelectedTrailer {
   year: number | null;
   customRate: number;
   leaseToOwn: boolean;
+  billingSchedule: "default" | "monthly-1" | "monthly-15" | "weekly-friday";
 }
 
 interface Discount {
@@ -200,6 +201,16 @@ export function CreateSubscriptionDialog({ onSuccess }: CreateSubscriptionDialog
       }, {} as Record<string, boolean>);
 
       // Call edge function to create subscription in Stripe and local DB
+      const trailerBillingSchedules = selectedTrailers.reduce((acc, t) => {
+        if (t.billingSchedule !== "default") {
+          acc[t.id] = {
+            billing_cycle: t.billingSchedule === "weekly-friday" ? "weekly" : "monthly",
+            billing_anchor_day: t.billingSchedule === "weekly-friday" ? 5 : t.billingSchedule === "monthly-15" ? 15 : 1,
+          };
+        }
+        return acc;
+      }, {} as Record<string, { billing_cycle: string; billing_anchor_day: number }>);
+
       const { data, error } = await supabase.functions.invoke("create-subscription", {
         body: {
           customerId: selectedCustomerId,
@@ -212,6 +223,7 @@ export function CreateSubscriptionDialog({ onSuccess }: CreateSubscriptionDialog
             return acc;
           }, {} as Record<string, number>),
           leaseToOwnFlags,
+          trailerBillingSchedules,
           endDate: endDate ? format(endDate, "yyyy-MM-dd") : undefined,
           subscriptionType,
           leaseToOwnTotal: subscriptionType === "lease_to_own" && leaseToOwnTotal > 0 ? leaseToOwnTotal : undefined
@@ -281,7 +293,8 @@ export function CreateSubscriptionDialog({ onSuccess }: CreateSubscriptionDialog
           type: trailer.type,
           year: trailer.year,
           customRate: trailer.rental_rate || getDefaultRentalRate(trailer.type),
-          leaseToOwn: false
+          leaseToOwn: false,
+          billingSchedule: "default",
         }
       ]);
     } else {
@@ -318,6 +331,21 @@ export function CreateSubscriptionDialog({ onSuccess }: CreateSubscriptionDialog
     setSelectedTrailers(prev =>
       prev.map(t => t.id === trailerId ? { ...t, customRate: rate } : t)
     );
+  };
+
+  const handleBillingScheduleChange = (trailerId: string, schedule: SelectedTrailer["billingSchedule"]) => {
+    setSelectedTrailers(prev =>
+      prev.map(t => t.id === trailerId ? { ...t, billingSchedule: schedule } : t)
+    );
+  };
+
+  const getBillingScheduleLabel = (schedule: SelectedTrailer["billingSchedule"]) => {
+    switch (schedule) {
+      case "monthly-1": return "1st of month";
+      case "monthly-15": return "15th of month";
+      case "weekly-friday": return "Every Friday";
+      default: return "Subscription default";
+    }
   };
 
   const totalMonthlyRate = selectedTrailers.reduce((sum, t) => sum + t.customRate, 0);
@@ -615,80 +643,97 @@ export function CreateSubscriptionDialog({ onSuccess }: CreateSubscriptionDialog
               </div>
             ) : availableTrailers && availableTrailers.length > 0 ? (
               <div className="border rounded-lg">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-12"></TableHead>
-                      <TableHead>VIN</TableHead>
-                      <TableHead>Type</TableHead>
-                      <TableHead>Length</TableHead>
-                      <TableHead>Year</TableHead>
-                      <TableHead>Default Rate</TableHead>
-                      <TableHead>Custom Rate</TableHead>
-                      <TableHead className="text-center">Lease to Own</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {availableTrailers.map(trailer => {
-                      const isSelected = isTrailerSelected(trailer.id);
-                      const selectedTrailer = selectedTrailers.find(t => t.id === trailer.id);
-                      
-                      return (
-                        <TableRow key={trailer.id} className={isSelected ? "bg-muted/50" : ""}>
-                          <TableCell>
-                            <Checkbox
-                              checked={isSelected}
-                              onCheckedChange={(checked) => handleTrailerToggle(trailer, !!checked)}
-                            />
-                          </TableCell>
-                          <TableCell className="font-medium font-mono text-xs">
-                            <div className="flex items-center gap-2">
-                              <Truck className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                              <span className="truncate max-w-[180px]" title={trailer.vin || "—"}>
-                                {trailer.vin || "—"}
-                              </span>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant="outline">{trailer.type}</Badge>
-                          </TableCell>
-                          <TableCell>
-                            {trailer.type === "Flat Bed" ? "48'" : "53'"}
-                          </TableCell>
-                          <TableCell>{trailer.year || "—"}</TableCell>
-                          <TableCell className="text-muted-foreground">
-                            ${trailer.rental_rate?.toLocaleString() || 0}/mo
-                          </TableCell>
-                          <TableCell>
-                            {isSelected ? (
-                              <div className="flex items-center gap-1">
-                                <DollarSign className="h-4 w-4 text-muted-foreground" />
-                                <Input
-                                  type="number"
-                                  min="0"
-                                  step="50"
-                                  className="w-24 h-8"
-                                  value={selectedTrailer?.customRate || 0}
-                                  onChange={(e) => handleRateChange(trailer.id, Number(e.target.value))}
-                                />
-                              </div>
-                            ) : (
-                              <span className="text-muted-foreground">—</span>
-                            )}
-                          </TableCell>
-                          <TableCell className="text-center">
-                            {isSelected ? (
-                              <Checkbox
-                                checked={selectedTrailer?.leaseToOwn || false}
-                                onCheckedChange={(checked) => handleLeaseToOwnToggle(trailer.id, !!checked)}
-                              />
-                            ) : (
-                              <span className="text-muted-foreground">—</span>
-                            )}
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
+                  <Table>
+                   <TableHeader>
+                     <TableRow>
+                       <TableHead className="w-12"></TableHead>
+                       <TableHead>VIN</TableHead>
+                       <TableHead>Type</TableHead>
+                       <TableHead>Year</TableHead>
+                       <TableHead>Default Rate</TableHead>
+                       <TableHead>Custom Rate</TableHead>
+                       <TableHead>Billing Schedule</TableHead>
+                       <TableHead className="text-center">LTO</TableHead>
+                     </TableRow>
+                   </TableHeader>
+                   <TableBody>
+                     {availableTrailers.map(trailer => {
+                       const isSelected = isTrailerSelected(trailer.id);
+                       const selectedTrailer = selectedTrailers.find(t => t.id === trailer.id);
+                       
+                       return (
+                         <TableRow key={trailer.id} className={isSelected ? "bg-muted/50" : ""}>
+                           <TableCell>
+                             <Checkbox
+                               checked={isSelected}
+                               onCheckedChange={(checked) => handleTrailerToggle(trailer, !!checked)}
+                             />
+                           </TableCell>
+                           <TableCell className="font-medium font-mono text-xs">
+                             <div className="flex items-center gap-2">
+                               <Truck className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                               <span className="truncate max-w-[140px]" title={trailer.vin || "—"}>
+                                 {trailer.vin || "—"}
+                               </span>
+                             </div>
+                           </TableCell>
+                           <TableCell>
+                             <Badge variant="outline">{trailer.type}</Badge>
+                           </TableCell>
+                           <TableCell>{trailer.year || "—"}</TableCell>
+                           <TableCell className="text-muted-foreground">
+                             ${trailer.rental_rate?.toLocaleString() || 0}/mo
+                           </TableCell>
+                           <TableCell>
+                             {isSelected ? (
+                               <div className="flex items-center gap-1">
+                                 <DollarSign className="h-4 w-4 text-muted-foreground" />
+                                 <Input
+                                   type="number"
+                                   min="0"
+                                   step="50"
+                                   className="w-24 h-8"
+                                   value={selectedTrailer?.customRate || 0}
+                                   onChange={(e) => handleRateChange(trailer.id, Number(e.target.value))}
+                                 />
+                               </div>
+                             ) : (
+                               <span className="text-muted-foreground">—</span>
+                             )}
+                           </TableCell>
+                           <TableCell>
+                             {isSelected ? (
+                               <Select
+                                 value={selectedTrailer?.billingSchedule || "default"}
+                                 onValueChange={(v) => handleBillingScheduleChange(trailer.id, v as SelectedTrailer["billingSchedule"])}
+                               >
+                                 <SelectTrigger className="h-8 w-40">
+                                   <SelectValue />
+                                 </SelectTrigger>
+                                 <SelectContent>
+                                   <SelectItem value="default">Sub. default</SelectItem>
+                                   <SelectItem value="monthly-1">Monthly – 1st</SelectItem>
+                                   <SelectItem value="monthly-15">Monthly – 15th</SelectItem>
+                                   <SelectItem value="weekly-friday">Weekly – Friday</SelectItem>
+                                 </SelectContent>
+                               </Select>
+                             ) : (
+                               <span className="text-muted-foreground">—</span>
+                             )}
+                           </TableCell>
+                           <TableCell className="text-center">
+                             {isSelected ? (
+                               <Checkbox
+                                 checked={selectedTrailer?.leaseToOwn || false}
+                                 onCheckedChange={(checked) => handleLeaseToOwnToggle(trailer.id, !!checked)}
+                               />
+                             ) : (
+                               <span className="text-muted-foreground">—</span>
+                             )}
+                           </TableCell>
+                         </TableRow>
+                       );
+                     })}
                   </TableBody>
                 </Table>
               </div>

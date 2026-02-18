@@ -23,6 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 interface ProfileData {
   first_name: string;
@@ -55,6 +56,8 @@ interface ApplicationData {
   drivers_license_back_url: string | null;
   insurance_docs_url: string | null;
   status: string;
+  billing_anchor_day: number | null;
+  preferred_billing_cycle: string | null;
 }
 
 const TRAILER_TYPES = [
@@ -98,6 +101,8 @@ export default function Application() {
     drivers_license_back_url: null,
     insurance_docs_url: null,
     status: "new",
+    billing_anchor_day: null,
+    preferred_billing_cycle: null,
   });
 
   const APP_STORAGE_KEY = 'crums_application_form';
@@ -170,6 +175,8 @@ export default function Application() {
         secondary_contact_name: sanitizeInput(application.secondary_contact_name),
         secondary_contact_phone: sanitizeInput(application.secondary_contact_phone),
         secondary_contact_relationship: sanitizeInput(application.secondary_contact_relationship),
+        billing_anchor_day: application.billing_anchor_day,
+        preferred_billing_cycle: application.preferred_billing_cycle,
       };
       await supabase.from("customer_applications").upsert(appUpdate as any, { onConflict: 'user_id' });
     } catch (error) {
@@ -251,6 +258,8 @@ export default function Application() {
           drivers_license_back_url: appData.drivers_license_back_url || prev.drivers_license_back_url || null,
           insurance_docs_url: appData.insurance_docs_url || prev.insurance_docs_url || null,
           status: appData.status,
+          billing_anchor_day: (appData as any).billing_anchor_day ?? prev.billing_anchor_day ?? null,
+          preferred_billing_cycle: (appData as any).preferred_billing_cycle ?? prev.preferred_billing_cycle ?? null,
         }));
       }
     } catch (error) {
@@ -353,6 +362,8 @@ export default function Application() {
         drivers_license_back_url: application.drivers_license_back_url,
         insurance_docs_url: application.insurance_docs_url,
         status: calculateProgress() === 100 ? "pending_review" : "new",
+        billing_anchor_day: application.billing_anchor_day,
+        preferred_billing_cycle: application.preferred_billing_cycle,
       };
 
       // Only update SSN if it's not masked - encrypt before saving
@@ -712,6 +723,72 @@ export default function Application() {
                     </div>
                   ))}
                 </div>
+              </CardContent>
+            </Card>
+
+            {/* Billing Preference */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Billing Preference</CardTitle>
+                <CardDescription>Choose when you'd like your payments due</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <RadioGroup
+                  value={
+                    application.preferred_billing_cycle === "weekly"
+                      ? "weekly"
+                      : application.billing_anchor_day === 15
+                      ? "15"
+                      : application.billing_anchor_day === 1
+                      ? "1"
+                      : ""
+                  }
+                  onValueChange={(val) => {
+                    if (val === "weekly") {
+                      setApplication({ ...application, preferred_billing_cycle: "weekly", billing_anchor_day: 5 });
+                    } else if (val === "1") {
+                      setApplication({ ...application, preferred_billing_cycle: "monthly", billing_anchor_day: 1 });
+                    } else if (val === "15") {
+                      setApplication({ ...application, preferred_billing_cycle: "monthly", billing_anchor_day: 15 });
+                    }
+                  }}
+                  className="grid grid-cols-3 gap-3"
+                >
+                  <div>
+                    <RadioGroupItem value="1" id="billing-1st" className="peer sr-only" />
+                    <Label
+                      htmlFor="billing-1st"
+                      className="flex flex-col items-center justify-center rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer"
+                    >
+                      <span className="text-2xl font-bold">1st</span>
+                      <span className="text-sm text-muted-foreground text-center">of the month</span>
+                    </Label>
+                  </div>
+                  <div>
+                    <RadioGroupItem value="15" id="billing-15th" className="peer sr-only" />
+                    <Label
+                      htmlFor="billing-15th"
+                      className="flex flex-col items-center justify-center rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer"
+                    >
+                      <span className="text-2xl font-bold">15th</span>
+                      <span className="text-sm text-muted-foreground text-center">of the month</span>
+                    </Label>
+                  </div>
+                  <div>
+                    <RadioGroupItem value="weekly" id="billing-weekly" className="peer sr-only" />
+                    <Label
+                      htmlFor="billing-weekly"
+                      className="flex flex-col items-center justify-center rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer"
+                    >
+                      <span className="text-lg font-bold leading-tight">Every</span>
+                      <span className="text-lg font-bold leading-tight">Friday</span>
+                      <span className="text-sm text-muted-foreground text-center">weekly</span>
+                    </Label>
+                  </div>
+                </RadioGroup>
+                <p className="text-xs text-muted-foreground">
+                  This is your preferred payment schedule. Your account manager may confirm or adjust this when setting up your subscription.
+                </p>
               </CardContent>
             </Card>
 
