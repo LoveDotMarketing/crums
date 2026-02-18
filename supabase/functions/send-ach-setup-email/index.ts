@@ -184,10 +184,6 @@ serve(async (req) => {
       throw new Error("Application not found");
     }
 
-    if (application.status !== "approved") {
-      throw new Error("Application must be approved before sending ACH setup email");
-    }
-
     if (application.payment_setup_status === "completed") {
       throw new Error("Payment setup is already completed");
     }
