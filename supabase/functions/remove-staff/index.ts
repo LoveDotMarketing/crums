@@ -62,7 +62,7 @@ serve(async (req) => {
     if (roleError || !callerRole) {
       console.error("Caller is not an admin:", roleError);
       return new Response(
-        JSON.stringify({ error: "Only administrators can remove staff" }),
+        JSON.stringify({ error: "Only administrators can remove users" }),
         { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -77,7 +77,7 @@ serve(async (req) => {
       );
     }
 
-    console.log("Attempting to remove staff member:", userId);
+    console.log("Attempting to remove user:", userId);
 
     // Prevent self-removal
     if (userId === callerId) {
@@ -88,52 +88,65 @@ serve(async (req) => {
       );
     }
 
-    // Check that target user exists and has a staff role
-    const { data: targetRole, error: targetRoleError } = await adminClient
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", userId)
-      .in("role", ["admin", "mechanic"])
-      .single();
+    // FIXED: Check that the target user exists in profiles (any role)
+    // Previously this only checked for admin/mechanic roles which caused the bug
+    const { data: targetProfile, error: targetProfileError } = await adminClient
+      .from("profiles")
+      .select("id, email")
+      .eq("id", userId)
+      .maybeSingle();
 
-    if (targetRoleError || !targetRole) {
-      console.error("Target user not found or not a staff member:", targetRoleError);
+    if (targetProfileError || !targetProfile) {
+      console.log("Target user not found in profiles, attempting auth-only deletion");
+      // Still try to delete from auth in case profile was already cleaned up
+      const { error: authOnlyError } = await adminClient.auth.admin.deleteUser(userId);
+      if (authOnlyError) {
+        console.error("User not found in auth either:", authOnlyError);
+        return new Response(
+          JSON.stringify({ error: "User not found" }),
+          { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
       return new Response(
-        JSON.stringify({ error: "Staff member not found" }),
-        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({ success: true, message: "User auth account deleted" }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Remove the user's role from user_roles table
+    console.log("Found target user:", targetProfile.email);
+
+    // Delete ALL user role entries (regardless of role type)
     const { error: deleteRoleError } = await adminClient
       .from("user_roles")
       .delete()
       .eq("user_id", userId);
 
     if (deleteRoleError) {
-      console.error("Failed to delete user role:", deleteRoleError);
-      return new Response(
-        JSON.stringify({ error: "Failed to remove staff role" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      console.error("Failed to delete user roles:", deleteRoleError);
+      // Non-fatal, continue with auth deletion
+    } else {
+      console.log("Successfully removed all roles for user:", userId);
     }
 
-    console.log("Successfully removed role for user:", userId);
-
-    // Delete the user from auth
+    // Delete the user from auth (this cascades to profiles via FK)
     const { error: deleteUserError } = await adminClient.auth.admin.deleteUser(userId);
 
     if (deleteUserError) {
       console.error("Failed to delete user from auth:", deleteUserError);
-      // Role was already removed, so we'll continue but log the error
-    } else {
-      console.log("Successfully deleted user from auth:", userId);
+      // Try to delete profile explicitly as fallback
+      await adminClient.from("profiles").delete().eq("id", userId);
+      return new Response(
+        JSON.stringify({ error: "Failed to delete user auth account: " + deleteUserError.message }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
+
+    console.log("Successfully deleted user from auth:", userId);
 
     return new Response(
       JSON.stringify({ 
         success: true, 
-        message: "Staff member removed successfully" 
+        message: "User removed successfully" 
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
