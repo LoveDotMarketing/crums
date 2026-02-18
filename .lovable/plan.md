@@ -1,82 +1,43 @@
 
-# Add "Download Customers" CSV Export to Customer Management Page
+# Fix Two Issues from Event History
 
-## What's Being Added
+## Issues Identified
 
-A **Download Customers** button placed next to the existing **Add Customer** button in the page header. Clicking it immediately generates and downloads a CSV file containing the full customer profile data for all customers currently visible (respecting the active search/filter) — or all customers if no filter is active.
+### Issue 1 — allisaacsdev@gmail.com: "Application save failed: new row violates row-level security policy"
 
-## Data Included in the CSV Export
+**Root Cause:** When `allisaacsdev@gmail.com` submitted their application at 22:59, the form's `handleSubmit` attempted a `upsert` with `onConflict: 'user_id'`. The failure with "new row violates row-level security policy" on an INSERT operation means `auth.uid()` did not match the `user_id` being sent — this happens when the Supabase auth session has expired or refreshed mid-flow, causing `auth.uid()` to return null or a stale value at the moment of the database call.
 
-The export will combine data already loaded on the page from three sources — `customers`, `profiles`, and `customer_applications` — since these are all fetched together in the existing `useQuery`. The exported columns will be:
+This is a transient session timing issue. The user succeeded on their next two attempts (23:00 and 23:02), confirming the session stabilized. The fix is to add a **session refresh guard** in the `handleSubmit` function — refresh the session before the critical upsert, and surface a clearer error message if the session is missing, prompting the user to re-login rather than silently failing.
 
-| Column | Source |
-|---|---|
-| Account Number | customers |
-| Full Name | customers |
-| First Name | profiles |
-| Last Name | profiles |
-| Email | customers |
-| Phone | customers |
-| Company Name | customers |
-| City | customers |
-| State | customers |
-| ZIP | customers |
-| Home Address | profiles |
-| Company Address | customer_applications |
-| Business Type | customer_applications |
-| DOT Number (URL) | customer_applications |
-| Truck VIN | customer_applications |
-| Trailer Type | customer_applications |
-| Insurance Company | customer_applications |
-| Secondary Contact Name | customer_applications |
-| Secondary Contact Phone | customer_applications |
-| Secondary Contact Relationship | customer_applications |
-| Application Status | customer_applications |
-| ACH Linked | computed |
-| Payment Setup Status | customer_applications |
-| Trailers Assigned | computed count |
-| Trailer Numbers | computed (comma joined) |
-| Outstanding Tolls ($) | computed |
-| Referral Code | referral_codes |
-| Referrals Sent | computed |
-| Credits Earned ($) | computed |
-| Was Referred | computed |
-| Customer Status | customers |
-| Payment Type | customers |
-| Created At | customers |
+**Secondary hardening:** The auto-save in `Application.tsx` (line 181) does a `upsert` without `status` — on a row that might not exist yet. This could cause a race condition where the auto-save fires before the signup flow has created the application row, resulting in an INSERT that hits the NOT NULL constraint on `phone_number` (since `profile.phone` could be empty). We'll add a guard to skip auto-save if `profile.phone` is empty.
 
-## Technical Implementation
+### Issue 2 — randygray238@gmail.com: "Signup failed: User already registered"
 
-### What needs to change
+**Root Cause:** Randy Gray successfully signed up on **Feb 17 at 5:16 PM**, then tried to sign up again on **Feb 18 at 7:48 AM** — about 14 hours later. The second attempt failed because the email was already registered. This is expected behavior from Supabase Auth. However, the error message shown to the user ("User already registered") is technical and unhelpful. The fix is to **detect this specific error** in the signup flow and show a friendly message directing the user to the login page.
 
-**File: `src/pages/admin/Customers.tsx`** — two additions:
+## What Will Be Changed
 
-1. **Extend the existing `useQuery` data fetch** to also pull the extra application fields needed for the CSV that aren't currently fetched: `company_address`, `business_type`, `truck_vin`, `insurance_company`, `secondary_contact_name`, `secondary_contact_phone`, `secondary_contact_relationship`, `payment_setup_status`, `dot_number_url`. These get stored per-customer via the existing map. Profile's `home_address` is already being selected.
+### Fix 1 — `src/pages/customer/Application.tsx`
 
-2. **Add `handleExportCSV` function** — a pure client-side function that:
-   - Takes `sortedCustomers` (the currently filtered/sorted list) as its data source — so if a filter is active it exports only matching customers; if no filter, all customers
-   - Builds CSV rows by mapping over each customer
-   - Handles commas and quotes in fields using standard CSV escaping
-   - Creates a `Blob`, generates a temporary download URL, triggers a `<a>` click, and revokes the URL
-   - Names the file `customers-export-YYYY-MM-DD.csv`
+**a) Session refresh guard in `handleSubmit`:** Before the upsert, call `supabase.auth.getSession()` and if the session is missing or expired, call `supabase.auth.refreshSession()`. If still no session, show a user-friendly toast: "Your session expired. Please refresh and try again." and return early — preventing the RLS violation from ever firing.
 
-3. **Add `Download` icon import** from `lucide-react`
+**b) Auto-save guard:** In `autoSaveToDb`, add an early return if `profile.phone` is empty (the required NOT NULL field), preventing the auto-save from attempting an INSERT with an invalid row.
 
-4. **Add the button** in the header next to "Add Customer":
-   ```
-   [Download Customers]  [+ Add Customer]
-   ```
-   Button uses `variant="outline"` with a `Download` icon — visually secondary to the primary Add action.
+### Fix 2 — `src/pages/GetStarted.tsx`
 
-### No backend changes needed
-All the data is already being fetched on page load. The CSV is generated entirely in the browser — no new edge function, no new database query, no migrations.
+In the `handleQuickStart` function's error handler (around line 285-290), intercept the specific error message `"User already registered"` and replace the displayed toast with a helpful message:
 
-### Scope: Export follows current filter/sort
-- If the admin has filtered to "Active" status or searched for a specific name, the CSV will export only those matching rows — matching what they see on screen.
-- The button label will say **"Download Customers"** when no filter is active, making it clear it exports everything visible.
+> "It looks like you already have an account. Please sign in instead."
+
+...with a link/action directing them to `/login`. This turns a confusing technical error into clear guidance.
 
 ## Files Changed
 
 | File | Change |
 |---|---|
-| `src/pages/admin/Customers.tsx` | Add `handleExportCSV` function, extend application fields in data map, add Download button in header |
+| `src/pages/customer/Application.tsx` | Add session refresh guard before upsert in `handleSubmit`; add phone guard in `autoSaveToDb` |
+| `src/pages/GetStarted.tsx` | Detect "User already registered" error and show friendly login redirect message |
+
+## No Database Changes Needed
+
+Both issues are application-level — no RLS policies need to change, no migrations are required. The RLS policies are correctly written; the issues are timing/UX problems in the client code.
