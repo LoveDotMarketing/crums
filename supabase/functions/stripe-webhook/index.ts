@@ -748,7 +748,7 @@ async function sendPaymentReceiptEmail(
     <p style="margin: 0;">
       <strong>CRUMS Leasing</strong><br>
       <a href="mailto:sales@crumsleasing.com" style="color: #0066cc;">sales@crumsleasing.com</a> | 
-      <a href="https://crums.lovable.app" style="color: #0066cc;">crums.lovable.app</a>
+      <a href="https://crumsleasing.com" style="color: #0066cc;">crumsleasing.com</a>
     </p>
   </div>
 </body>

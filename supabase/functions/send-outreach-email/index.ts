@@ -25,7 +25,7 @@ interface EmailRequest {
 }
 
 const SENDGRID_API_KEY = Deno.env.get("SENDGRID_API_KEY");
-const BASE_URL = "https://crums.lovable.app";
+const BASE_URL = "https://crumsleasing.com";
 
 // Replace template variables with actual customer data
 const replaceTemplateVariables = (
