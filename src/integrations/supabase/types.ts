@@ -429,6 +429,7 @@ export type Database = {
           id: string
           lease_agreement_url: string | null
           next_billing_date: string | null
+          partner_id: string | null
           status: string
           stripe_customer_id: string | null
           stripe_subscription_id: string | null
@@ -454,6 +455,7 @@ export type Database = {
           id?: string
           lease_agreement_url?: string | null
           next_billing_date?: string | null
+          partner_id?: string | null
           status?: string
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
@@ -479,6 +481,7 @@ export type Database = {
           id?: string
           lease_agreement_url?: string | null
           next_billing_date?: string | null
+          partner_id?: string | null
           status?: string
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
@@ -493,6 +496,13 @@ export type Database = {
             columns: ["customer_id"]
             isOneToOne: true
             referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_subscriptions_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "partners"
             referencedColumns: ["id"]
           },
         ]
@@ -1331,6 +1341,118 @@ export type Database = {
           setting_value?: string
           updated_at?: string
           updated_by?: string | null
+        }
+        Relationships: []
+      }
+      partner_commissions: {
+        Row: {
+          billing_history_id: string | null
+          billing_period_end: string | null
+          billing_period_start: string | null
+          commission_amount: number
+          commission_rate: number
+          created_at: string | null
+          id: string
+          notes: string | null
+          paid_at: string | null
+          partner_id: string
+          status: string
+          subscription_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          billing_history_id?: string | null
+          billing_period_end?: string | null
+          billing_period_start?: string | null
+          commission_amount: number
+          commission_rate: number
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          paid_at?: string | null
+          partner_id: string
+          status?: string
+          subscription_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          billing_history_id?: string | null
+          billing_period_end?: string | null
+          billing_period_start?: string | null
+          commission_amount?: number
+          commission_rate?: number
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          paid_at?: string | null
+          partner_id?: string
+          status?: string
+          subscription_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partner_commissions_billing_history_id_fkey"
+            columns: ["billing_history_id"]
+            isOneToOne: false
+            referencedRelation: "billing_history"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partner_commissions_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "partners"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partner_commissions_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "customer_subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      partners: {
+        Row: {
+          commission_rate: number
+          company_name: string | null
+          created_at: string | null
+          email: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          notes: string | null
+          phone: string | null
+          referral_code: string
+          updated_at: string | null
+        }
+        Insert: {
+          commission_rate?: number
+          company_name?: string | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          notes?: string | null
+          phone?: string | null
+          referral_code: string
+          updated_at?: string | null
+        }
+        Update: {
+          commission_rate?: number
+          company_name?: string | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          referral_code?: string
+          updated_at?: string | null
         }
         Relationships: []
       }
