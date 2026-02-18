@@ -228,6 +228,76 @@ export default function PaymentSetup() {
           </p>
         </div>
 
+        {/* Application Status Banner — only show before payment is complete */}
+        {paymentStatus && !hasPaymentMethod && paymentStatus.applicationStatus && (
+          <Card className="mb-6">
+            <CardContent className="pt-5 pb-5">
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-4">Your Onboarding Progress</p>
+
+              {/* Step Tracker */}
+              <div className="relative flex items-start justify-between">
+                {/* Progress connector line */}
+                <div className="absolute top-5 left-5 right-5 h-0.5 bg-border" />
+
+                {/* Step 1: Application Submitted */}
+                {(() => {
+                  const appStatus = paymentStatus.applicationStatus;
+                  const step1Complete = ["pending_review", "approved", "rejected"].includes(appStatus!);
+                  const step1Active = appStatus === "new";
+                  const step2Complete = ["approved", "rejected"].includes(appStatus!);
+                  const step2Active = appStatus === "pending_review";
+                  const step3Complete = appStatus === "approved";
+                  const step3Active = false;
+                  const isRejected = appStatus === "rejected";
+
+                  return (
+                    <>
+                      <div className="relative flex flex-col items-center text-center z-10 flex-1">
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 bg-background ${step1Complete ? "border-primary bg-primary text-primary-foreground" : step1Active ? "border-primary text-primary" : "border-border text-muted-foreground"}`}>
+                          {step1Complete ? <CheckCircle2 className="h-4 w-4" /> : <FileText className="h-4 w-4" />}
+                        </div>
+                        <span className={`mt-2 text-xs font-medium ${step1Complete || step1Active ? "text-foreground" : "text-muted-foreground"}`}>Application Submitted</span>
+                      </div>
+
+                      <div className="relative flex flex-col items-center text-center z-10 flex-1">
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 bg-background ${step2Complete ? "border-primary bg-primary text-primary-foreground" : step2Active ? "border-primary text-primary" : "border-border text-muted-foreground"}`}>
+                          {step2Complete ? <CheckCircle2 className="h-4 w-4" /> : <Clock className="h-4 w-4" />}
+                        </div>
+                        <span className={`mt-2 text-xs font-medium ${step2Complete || step2Active ? "text-foreground" : "text-muted-foreground"}`}>Under Review</span>
+                      </div>
+
+                      <div className="relative flex flex-col items-center text-center z-10 flex-1">
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 bg-background ${isRejected ? "border-destructive bg-destructive text-destructive-foreground" : step3Complete ? "border-primary bg-primary text-primary-foreground" : step3Active ? "border-primary text-primary" : "border-border text-muted-foreground"}`}>
+                          {isRejected ? <AlertCircle className="h-4 w-4" /> : step3Complete ? <CheckCircle2 className="h-4 w-4" /> : <CheckCircle2 className="h-4 w-4" />}
+                        </div>
+                        <span className={`mt-2 text-xs font-medium ${isRejected ? "text-destructive" : step3Complete ? "text-foreground" : "text-muted-foreground"}`}>
+                          {isRejected ? "Rejected" : "Approved"}
+                        </span>
+                      </div>
+                    </>
+                  );
+                })()}
+              </div>
+
+              {/* Contextual Message */}
+              <div className="mt-5 pt-4 border-t border-border">
+                {paymentStatus.applicationStatus === "new" && (
+                  <p className="text-sm text-muted-foreground">Your application is still being prepared. Our team will begin reviewing it shortly.</p>
+                )}
+                {paymentStatus.applicationStatus === "pending_review" && (
+                  <p className="text-sm text-muted-foreground">Our team is reviewing your application. This typically takes 1–2 business days. You can complete payment setup now — <span className="font-medium text-foreground">no charges will occur until a trailer is assigned.</span></p>
+                )}
+                {paymentStatus.applicationStatus === "approved" && (
+                  <p className="text-sm text-muted-foreground">Your application is approved! Complete bank linking below to finish onboarding.</p>
+                )}
+                {paymentStatus.applicationStatus === "rejected" && (
+                  <p className="text-sm text-destructive">Your application was not approved. Please call <span className="font-medium">(888) 570-4564</span> for details.</p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
 
         {/* Current Payment Method - Already Connected */}
         {hasPaymentMethod && paymentStatus?.paymentMethod && (
