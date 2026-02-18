@@ -108,6 +108,27 @@ export const getReferralErrorMessage = (error: string): { message: string; varia
  * @param email - The email of the user signing up
  * @returns ProcessReferralResult with success status, message, and toast variant
  */
+/**
+ * Checks if a code belongs to a partner (not a customer referral code).
+ * Returns the partner id if found, null otherwise.
+ */
+export const checkPartnerCode = async (code: string): Promise<string | null> => {
+  const { data } = await supabase
+    .from("partners")
+    .select("id")
+    .eq("referral_code", code.toUpperCase().trim())
+    .eq("is_active", true)
+    .maybeSingle();
+  return data?.id || null;
+};
+
+/**
+ * Processes a referral code during signup.
+ * Checks partner codes first, then customer referral codes.
+ * @param referralCode - The referral code entered by the user
+ * @param email - The email of the user signing up
+ * @returns ProcessReferralResult with success status, message, and toast variant
+ */
 export const processReferralCode = async (
   referralCode: string,
   email: string
@@ -118,7 +139,23 @@ export const processReferralCode = async (
     return null; // No code provided, nothing to process
   }
 
-  // Validate format before making RPC call (fail fast)
+  // Check if this is a partner code first (partner codes don't follow CRUMS-XXXXXX format)
+  const partnerId = await checkPartnerCode(normalizedCode);
+  if (partnerId) {
+    // Partner code — store partner_id on subscription when it's created
+    // We store it in sessionStorage so the subscription creation flow can pick it up
+    if (typeof window !== "undefined") {
+      sessionStorage.setItem("pending_partner_id", partnerId);
+      sessionStorage.setItem("pending_partner_code", normalizedCode);
+    }
+    return {
+      success: true,
+      message: `Partner code ${normalizedCode} recognized! Your account will be linked to this partner.`,
+      variant: "default",
+    };
+  }
+
+  // Validate customer referral code format before making RPC call (fail fast)
   const validation = validateReferralCode(normalizedCode);
   if (!validation.valid) {
     return {
@@ -173,3 +210,4 @@ export const processReferralCode = async (
     return null; // Non-critical, don't block signup flow
   }
 };
+

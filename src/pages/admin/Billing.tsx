@@ -64,7 +64,8 @@ import {
   Pencil,
   Webhook,
   KeyRound,
-  Warehouse
+  Warehouse,
+  Handshake
 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
@@ -309,6 +310,16 @@ export default function Billing() {
     customerName: string;
     items: SubscriptionItem[];
   } | null>(null);
+
+  // Assign partner dialog state
+  const [assignPartnerDialogOpen, setAssignPartnerDialogOpen] = useState(false);
+  const [selectedSubscriptionForPartner, setSelectedSubscriptionForPartner] = useState<{
+    id: string;
+    customerName: string;
+    currentPartnerId: string | null;
+  } | null>(null);
+  const [selectedPartnerId, setSelectedPartnerId] = useState<string>("");
+  const [isAssigningPartner, setIsAssigningPartner] = useState(false);
 
   // Edit dates dialog state
   const [editDatesDialogOpen, setEditDatesDialogOpen] = useState(false);
@@ -602,9 +613,45 @@ export default function Billing() {
       return (data || []).map(sub => ({
         ...sub,
         subscription_type: sub.subscription_type as SubscriptionType | null
-      })) as CustomerSubscription[];
+      })) as (CustomerSubscription & { partner_id: string | null })[];
     }
   });
+
+  // Fetch partners for the assign partner dialog
+  const { data: partners } = useQuery({
+    queryKey: ["partners"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("partners")
+        .select("id, name, company_name, referral_code, commission_rate, is_active")
+        .eq("is_active", true)
+        .order("name");
+      if (error) throw error;
+      return data as { id: string; name: string; company_name: string | null; referral_code: string; commission_rate: number; is_active: boolean }[];
+    }
+  });
+
+  // Assign partner to subscription
+  const handleAssignPartner = async () => {
+    if (!selectedSubscriptionForPartner) return;
+    setIsAssigningPartner(true);
+    try {
+      const { error } = await supabase
+        .from("customer_subscriptions")
+        .update({ partner_id: selectedPartnerId || null })
+        .eq("id", selectedSubscriptionForPartner.id);
+      if (error) throw error;
+      await queryClient.invalidateQueries({ queryKey: ["customer-subscriptions"] });
+      toast.success(selectedPartnerId ? "Partner assigned successfully" : "Partner removed from subscription");
+      setAssignPartnerDialogOpen(false);
+      setSelectedSubscriptionForPartner(null);
+      setSelectedPartnerId("");
+    } catch (error) {
+      toast.error("Failed to assign partner: " + (error instanceof Error ? error.message : "Unknown error"));
+    } finally {
+      setIsAssigningPartner(false);
+    }
+  };
 
   // Fetch subscription items
   const { data: subscriptionItems } = useQuery({
@@ -1387,6 +1434,23 @@ export default function Billing() {
                                         >
                                           <Pencil className="h-4 w-4 mr-2" />
                                           Edit Contract Dates
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem
+                                          onClick={() => {
+                                            setSelectedSubscriptionForPartner({
+                                              id: sub.id,
+                                              customerName: sub.customers?.full_name || "Unknown",
+                                              currentPartnerId: (sub as any).partner_id || null,
+                                            });
+                                            setSelectedPartnerId((sub as any).partner_id || "");
+                                            setAssignPartnerDialogOpen(true);
+                                          }}
+                                        >
+                                          <Handshake className="h-4 w-4 mr-2" />
+                                          Assign Partner
+                                          {(sub as any).partner_id && (
+                                            <Badge variant="secondary" className="ml-auto text-xs">Assigned</Badge>
+                                          )}
                                         </DropdownMenuItem>
                                         {sub.subscription_type === "lease_to_own" && (
                                           <DropdownMenuItem
@@ -2758,6 +2822,61 @@ export default function Billing() {
                         Upload Agreement
                       </>
                     )}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+
+            {/* Assign Partner Dialog */}
+            <Dialog open={assignPartnerDialogOpen} onOpenChange={setAssignPartnerDialogOpen}>
+              <DialogContent className="max-w-md">
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2">
+                    <Handshake className="h-5 w-5" />
+                    Assign Partner
+                  </DialogTitle>
+                  <DialogDescription>
+                    Link {selectedSubscriptionForPartner?.customerName}'s subscription to a business partner for commission tracking.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4 py-2">
+                  {partners && partners.length > 0 ? (
+                    <div className="space-y-2">
+                      <Label>Select Partner</Label>
+                      <button
+                        className={`w-full text-left px-3 py-2 rounded border text-sm transition-colors ${!selectedPartnerId ? "border-primary bg-primary/5" : "hover:bg-muted"}`}
+                        onClick={() => setSelectedPartnerId("")}
+                      >
+                        <span className="text-muted-foreground">— No partner (remove assignment)</span>
+                      </button>
+                      {partners.map((partner) => (
+                        <button
+                          key={partner.id}
+                          className={`w-full text-left px-3 py-2 rounded border text-sm transition-colors ${selectedPartnerId === partner.id ? "border-primary bg-primary/5" : "hover:bg-muted"}`}
+                          onClick={() => setSelectedPartnerId(partner.id)}
+                        >
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="font-medium">{partner.name}</p>
+                              {partner.company_name && <p className="text-muted-foreground text-xs">{partner.company_name}</p>}
+                            </div>
+                            <div className="text-right">
+                              <code className="text-xs bg-muted px-1.5 py-0.5 rounded">{partner.referral_code}</code>
+                              <p className="text-xs text-muted-foreground mt-0.5">{(partner.commission_rate * 100).toFixed(0)}% commission</p>
+                            </div>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground py-4 text-center">No active partners. Add partners in Referrals → Partners tab.</p>
+                  )}
+                </div>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setAssignPartnerDialogOpen(false)}>Cancel</Button>
+                  <Button onClick={handleAssignPartner} disabled={isAssigningPartner}>
+                    {isAssigningPartner ? <RefreshCw className="h-4 w-4 mr-2 animate-spin" /> : null}
+                    {selectedPartnerId ? "Assign Partner" : "Remove Partner"}
                   </Button>
                 </DialogFooter>
               </DialogContent>
