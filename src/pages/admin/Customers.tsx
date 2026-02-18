@@ -316,7 +316,31 @@ export default function Customers() {
       // 8. Unassign trailers (set customer_id to null, don't delete trailers)
       await supabase.from('trailers').update({ customer_id: null }).eq('customer_id', customerId);
       
-      // 9. Finally, delete the customer
+      // 9. Find the auth user ID via profile (by customer email)
+      const customer = customers.find((c: any) => c.id === customerId);
+      if (customer?.email) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('id')
+          .ilike('email', customer.email)
+          .maybeSingle();
+        
+        if (profile?.id) {
+          // Revoke auth account so they can no longer log in
+          const { data: { session } } = await supabase.auth.getSession();
+          if (session?.access_token) {
+            try {
+              await supabase.functions.invoke('remove-staff', {
+                body: { userId: profile.id },
+              });
+            } catch (authErr) {
+              console.warn('Auth revocation failed (non-fatal):', authErr);
+            }
+          }
+        }
+      }
+      
+      // 10. Finally, delete the customer record
       const { error } = await supabase
         .from('customers')
         .delete()
@@ -954,7 +978,7 @@ export default function Customers() {
             <AlertDialogDescription>
               Are you sure you want to permanently delete{" "}
               <strong>{customerToDelete?.full_name}</strong> ({customerToDelete?.account_number})?
-              This action cannot be undone and will remove all associated data.
+              This will remove their account and revoke their ability to log in. This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
