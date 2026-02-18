@@ -1,149 +1,153 @@
 
-# Add Weekly Payment Option (Every Friday) + Per-Trailer Billing Schedule
+# Lease-to-Own Customer Portal Enhancement
 
-## What's Being Changed
+## Current State
 
-Right now the system supports 4 billing cycles (weekly, biweekly, semimonthly, monthly) but **weekly doesn't anchor to Friday specifically**, and customers with multiple trailers cannot split them across different billing dates (e.g., Ground Link wanting some trailers billed on the 1st and others on the 15th). This plan adds per-trailer billing schedule flexibility.
+The customer portal has a basic Lease-to-Own balance tracker on the "My Rentals" page, but it's minimal and has several gaps:
+
+- The balance calculation is unreliable (finds "any" subscription's billing total rather than the specific subscription)
+- No contract end date or payoff date is displayed
+- No payment schedule breakdown (how many payments remain, payment amount, etc.)
+- No dedicated "Lease-to-Own" page or section — it's buried in the Rentals page
+- No document storage for the lease-to-own agreement (the contract)
+- No mention of the customer's responsibilities (DOT inspections, taxes) specific to lease-to-own
+- Admin has no way to upload/attach the signed lease-to-own agreement document for a customer to view
 
 ---
 
-## The Core Problem
+## What We're Building
 
-The current data model links one billing schedule to the entire **subscription**. There is no concept of per-trailer billing dates or per-trailer billing cycle. To support "2 trailers on the 1st, 3 trailers on the 15th," we need to add billing schedule fields at the **subscription item** (trailer) level.
+A dedicated **Lease-to-Own** section in the customer portal with:
+
+1. **Full payment breakdown** — total buyout price, amount paid, remaining balance, monthly payment, projected payoff date based on contract start + payment count
+2. **Ownership timeline** — visual progress bar with the contract start date and estimated ownership date
+3. **Payment schedule table** — a month-by-month breakdown showing all payments made and expected future payments through payoff
+4. **Lease-to-Own responsibilities section** — a clear, styled notice explaining the customer's obligations (DOT inspections, property taxes, insurance requirements specific to lease-to-own)
+5. **Document section** — shows the signed lease-to-own agreement as a downloadable PDF if one has been uploaded by admin
+6. **Admin: ability to upload/attach lease agreement document** — on the Billing admin page, admins can upload a PDF agreement per subscription and set the correct backdated contract start date
 
 ---
 
 ## Plan
 
-### Step 1: Database Migration
+### Step 1: Database — Add `lease_agreement_url` to `customer_subscriptions`
 
-Add two columns to `subscription_items` to allow per-trailer billing overrides:
+Add a column to store the uploaded lease-to-own agreement document URL. This is a nullable text column that stores a storage path.
 
-- `billing_cycle` — overrides the subscription-level cycle for this specific trailer (nullable; falls back to subscription's cycle when null)
-- `billing_anchor_day` — the day-of-month anchor (1, 15, etc.) or day-of-week for weekly (stored as integer, e.g., 5 = Friday)
+Also add a storage policy for the existing `customer-documents` bucket to allow admins to upload and customers to download their own subscription documents.
 
-This is additive and backward-compatible — existing items will have NULL values and continue to use the subscription-level settings.
+### Step 2: Create a New Customer Page — `/dashboard/customer/lease-to-own`
 
-Also update the `billing_cycle` enum to confirm `weekly` is present (it is — confirmed: weekly, biweekly, semimonthly, monthly already exist in the enum).
+Create `src/pages/customer/LeaseToOwn.tsx` with:
 
-No new enum values are needed. "Due every Friday" is `billing_cycle = 'weekly'` with `billing_anchor_day = 5` (Friday = day 5).
+**Hero Section:**
+- Prominent "Lease-to-Own Agreement" heading
+- Badge showing "On Track to Ownership" or "Active Agreement"
 
-### Step 2: Update `CreateSubscriptionDialog` — Per-Trailer Billing
+**Three Summary Cards:**
+- Total Buyout Price
+- Amount Paid (from successful billing history)
+- Remaining Balance
 
-Add per-trailer billing controls directly in the trailer selection table. When a trailer is selected, show two additional columns in that trailer's row:
+**Ownership Progress:**
+- Visual progress bar (like current one but more detailed)
+- Contract start date → Estimated ownership date
+- "X payments remaining at $Y/mo"
+- Estimated payoff date calculated from: remaining balance ÷ monthly rate = months remaining → add to today
 
-- **Billing Cycle** dropdown: Monthly / 1st & 15th / Weekly (Friday) — if left as "Use Subscription Default," the item inherits the subscription-level setting
-- **Billing Date** dropdown: Only shows when "Monthly" is selected → 1st or 15th. Auto-set to "Every Friday" for weekly.
+**Payment Schedule Table:**
+- Pull from `billing_history` (succeeded payments)
+- Show date, amount, running total, and remaining balance for each payment
+- Below paid history, show projected future payments (next N payments at monthly rate)
 
-This allows Ground Link to select 5 trailers and set some to "1st of month" and others to "15th of month."
+**Responsibilities Section:**
+- Styled alert/info card explaining:
+  - As a lease-to-own customer, you are responsible for annual DOT inspections
+  - Property taxes on the trailer may be your responsibility (check with your state)
+  - You must maintain adequate insurance coverage throughout the term
+  - Contact us at the end of the agreement to initiate the title transfer process
 
-The subscription summary section will be updated to show a breakdown by billing schedule.
+**Documents Section:**
+- If `lease_agreement_url` is set on the subscription: show a "Download Lease Agreement" button
+- If not set: show a "Contact us to receive your signed lease agreement" message
 
-### Step 3: Update `EditSubscriptionDatesDialog` (existing admin dialog)
+### Step 3: Add Route + Nav Item
 
-Currently only lets admins change subscription-level billing anchor. Update it to also let admins change billing per trailer item, showing each active trailer with its own billing cycle/date picker.
+- Add route `/dashboard/customer/lease-to-own` in `App.tsx`
+- Add "Lease to Own" nav item to `CustomerNav.tsx` — but only show it when the customer has an active lease-to-own subscription (conditionally rendered based on subscription type)
 
-### Step 4: Update `EditBillingDateDialog`
+### Step 4: Fix the Balance Calculation on Rentals Page
 
-Currently only shows 1st / 15th options. Add a third option: "Every Friday (Weekly)" with the correct visual card styling matching the existing 1st/15th cards. Store weekly preference as `billing_anchor_day = 5` (Friday) combined with `billing_cycle` preference noted in a new `preferred_billing_cycle` column on `customer_applications`.
+The current `getLeaseToOwnInfo` function has a bug — it finds "any" subscription ID from `billingPaid` instead of finding the correct one for that specific item. Fix this by:
+- Fetching the subscription ID properly in the query (include `subscription_id` in the items query)
+- Mapping billing totals by the correct subscription ID
 
-### Step 5: Update Customer Application Page
+### Step 5: Admin — Upload Lease Agreement Document
 
-The application page asks for billing preference (1st or 15th). Update it to offer three choices:
-- 1st of the month
-- 15th of the month  
-- Every Friday (Weekly)
+In the admin Billing page, for subscriptions with `subscription_type = 'lease_to_own'`, add an "Upload Agreement" button in the subscription detail/actions area. This opens a dialog with:
+- File upload input (PDF only)
+- Contract start date field (to allow backdating)
+- On save: uploads to `customer-documents` bucket, stores path in `lease_agreement_url`, updates `contract_start_date`
 
-When weekly is selected, store `billing_anchor_day = 5` and a new `preferred_billing_cycle = 'weekly'` field on `customer_applications`.
+### Step 6: Dashboard Quick Link
 
-### Step 6: Update Customer Billing Page Display
-
-Update the "Payment Due Date" card to correctly display:
-- "1st of each month"
-- "15th of each month"
-- "Every Friday"
-
-Also update the Leased Trailers table to show a "Billing" column displaying each trailer's effective billing schedule (per-item if set, subscription default otherwise).
-
-### Step 7: Update Admin Billing Page Summary
-
-The `ReadyToActivateCard` currently shows "1st" or "15th" — update the display to also handle "Every Friday (Weekly)."
+On the Customer Dashboard, if the customer has a lease-to-own subscription, show a highlighted card/banner pointing them to the Lease-to-Own page.
 
 ---
 
 ## Technical Details
 
-### Database Changes (Migration)
+### Database Migration
 
 ```sql
--- Add per-trailer billing fields to subscription_items
-ALTER TABLE public.subscription_items
-  ADD COLUMN IF NOT EXISTS billing_cycle text NULL,
-  ADD COLUMN IF NOT EXISTS billing_anchor_day integer NULL;
+-- Add lease agreement URL to customer_subscriptions
+ALTER TABLE public.customer_subscriptions
+  ADD COLUMN IF NOT EXISTS lease_agreement_url text NULL;
 
-COMMENT ON COLUMN public.subscription_items.billing_cycle IS 
-  'Per-trailer billing cycle override. NULL = inherit from parent subscription.';
-COMMENT ON COLUMN public.subscription_items.billing_anchor_day IS 
-  'Anchor day: 1 or 15 for monthly, 5 (Friday) for weekly. NULL = inherit from parent subscription.';
-
--- Add preferred_billing_cycle to customer_applications
-ALTER TABLE public.customer_applications
-  ADD COLUMN IF NOT EXISTS preferred_billing_cycle text NULL;
-
-COMMENT ON COLUMN public.customer_applications.preferred_billing_cycle IS 
-  'weekly, semimonthly, monthly — customer preference captured during application';
+COMMENT ON COLUMN public.customer_subscriptions.lease_agreement_url IS
+  'Storage path for the signed lease-to-own agreement document';
 ```
 
-### Files Modified
+### Files Modified / Created
 
-- `supabase/migrations/[new].sql` — Schema changes above
-- `src/components/admin/CreateSubscriptionDialog.tsx` — Add per-trailer billing columns in the trailer table
-- `src/components/admin/EditBillingDateDialog.tsx` — Add weekly/Friday option as third card choice
-- `src/components/admin/EditSubscriptionDatesDialog.tsx` — Show per-trailer billing overrides
-- `src/pages/customer/Application.tsx` — Add "Every Friday" as billing preference option
-- `src/pages/customer/Billing.tsx` — Show per-trailer billing, update "Every Friday" display
-- `src/components/admin/ReadyToActivateCard.tsx` — Update billing date display for weekly
+| File | Change |
+|---|---|
+| `supabase/migrations/[new].sql` | Add `lease_agreement_url` column |
+| `src/pages/customer/LeaseToOwn.tsx` | NEW — Full lease-to-own portal page |
+| `src/components/customer/CustomerNav.tsx` | Add conditional "Lease to Own" nav item |
+| `src/App.tsx` | Add route for new page |
+| `src/pages/customer/Rentals.tsx` | Fix balance calculation bug |
+| `src/pages/customer/CustomerDashboard.tsx` | Add lease-to-own highlight card |
+| `src/pages/admin/Billing.tsx` | Add Upload Agreement button for lease-to-own subscriptions |
 
-### Per-Trailer Billing UI in CreateSubscriptionDialog
-
-When a trailer is selected in the table, two new columns appear in that trailer's row:
-
-```
-| ✓ | VIN | Type | Year | Default Rate | Custom Rate | Lease to Own | Billing Cycle | Billing Date |
-|   |     |      |      |              |             |              | [dropdown]    | [dropdown]   |
-```
-
-Billing Cycle options per trailer:
-- `(default)` — inherit from subscription
-- `Monthly - 1st` → sets billing_cycle=monthly, billing_anchor_day=1
-- `Monthly - 15th` → sets billing_cycle=monthly, billing_anchor_day=15  
-- `Weekly - Friday` → sets billing_cycle=weekly, billing_anchor_day=5
-
-### Subscription Summary Update
-
-The summary box at the bottom will break trailers into billing groups:
-
-```
-Billing Summary:
-  • 2 trailers — Monthly (1st): $1,400/mo
-  • 3 trailers — Monthly (15th): $2,100/mo
-  • 1 trailer — Weekly (Friday): $175/wk
-```
-
-### Billing Page Display Logic
+### Payoff Date Calculation Logic
 
 ```typescript
-const getEffectiveBillingLabel = (item, subscription) => {
-  const cycle = item.billing_cycle || subscription.billing_cycle;
-  const anchor = item.billing_anchor_day;
-  if (cycle === 'weekly') return 'Every Friday';
-  if (cycle === 'semimonthly') return '1st & 15th';
-  if (cycle === 'monthly' && anchor === 15) return '15th of month';
-  if (cycle === 'monthly' && anchor === 1) return '1st of month';
-  return cycle;
-};
+// months_remaining = Math.ceil(remaining / monthly_rate)
+// estimated_payoff = addMonths(contract_start_date, total_payments_expected)
+// or simpler: addMonths(today, months_remaining)
+
+const monthsRemaining = Math.ceil(remaining / monthlyRate);
+const estimatedPayoff = addMonths(new Date(), monthsRemaining);
 ```
 
-### Stripe Integration Note
+### Nav Conditional Rendering
 
-The per-trailer billing dates will be stored in the database for admin reference and display purposes. The actual Stripe billing cycle is set at the subscription level when activated. For customers with split billing (some trailers on 1st, some on 15th), the admin will create **two separate Stripe subscriptions** — the data model supports this since each trailer's billing schedule is tracked on the `subscription_item`. The admin UI will visually group trailers by billing schedule to make this easy to communicate to the billing team.
+The "Lease to Own" nav item will only appear if the customer has an active `lease_to_own` subscription type. The `CustomerNav` will accept an optional `showLeaseToOwn` prop, or fetch the subscription type itself via a lightweight query.
+
+### Document Upload (Admin)
+
+The document will be uploaded to the `customer-documents` bucket with path:
+`lease-agreements/{subscription_id}/lease-agreement.pdf`
+
+The RLS on `customer-documents` already allows authenticated users to read files. We'll ensure the path is scoped to the subscription so customers can only access their own document via a signed URL generated server-side or using the direct storage path with the customer's auth session.
+
+### Do It Moving — Practical Note
+
+Once this is built, the admin can:
+1. Go to Billing → find Do It Moving's subscription
+2. Set the `subscription_type` to `lease_to_own` if not already set
+3. Set the `contract_start_date` to the backdated date from the original (lost) contract
+4. Upload the new signed PDF agreement
+5. Set `lease_to_own_total` on the subscription item (the buyout price)
+6. The customer portal will immediately reflect the correct balance and payoff date
