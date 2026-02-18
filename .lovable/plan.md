@@ -1,61 +1,82 @@
 
-# Add Application Status Indicator to Payment Setup Page
+# Add "Download Customers" CSV Export to Customer Management Page
 
-## What Exists Today
+## What's Being Added
 
-The `PaymentSetup.tsx` page already fetches `applicationStatus` and `paymentSetupStatus` from the `check-payment-status` edge function — it's stored in `paymentStatus.applicationStatus` — but nothing on the page ever displays it to the customer. The customer lands on the payment setup page with no visible context about where they are in the overall onboarding process.
+A **Download Customers** button placed next to the existing **Add Customer** button in the page header. Clicking it immediately generates and downloads a CSV file containing the full customer profile data for all customers currently visible (respecting the active search/filter) — or all customers if no filter is active.
 
-## What Will Be Added
+## Data Included in the CSV Export
 
-A compact **"Your Onboarding Progress"** status banner placed directly below the page heading, before all existing content. It will show a 3-step mini-tracker:
+The export will combine data already loaded on the page from three sources — `customers`, `profiles`, and `customer_applications` — since these are all fetched together in the existing `useQuery`. The exported columns will be:
 
-```text
-[✓] Application Submitted  →  [ ] Under Review  →  [ ] Approved
-```
+| Column | Source |
+|---|---|
+| Account Number | customers |
+| Full Name | customers |
+| First Name | profiles |
+| Last Name | profiles |
+| Email | customers |
+| Phone | customers |
+| Company Name | customers |
+| City | customers |
+| State | customers |
+| ZIP | customers |
+| Home Address | profiles |
+| Company Address | customer_applications |
+| Business Type | customer_applications |
+| DOT Number (URL) | customer_applications |
+| Truck VIN | customer_applications |
+| Trailer Type | customer_applications |
+| Insurance Company | customer_applications |
+| Secondary Contact Name | customer_applications |
+| Secondary Contact Phone | customer_applications |
+| Secondary Contact Relationship | customer_applications |
+| Application Status | customer_applications |
+| ACH Linked | computed |
+| Payment Setup Status | customer_applications |
+| Trailers Assigned | computed count |
+| Trailer Numbers | computed (comma joined) |
+| Outstanding Tolls ($) | computed |
+| Referral Code | referral_codes |
+| Referrals Sent | computed |
+| Credits Earned ($) | computed |
+| Was Referred | computed |
+| Customer Status | customers |
+| Payment Type | customers |
+| Created At | customers |
 
-The steps shown are:
-1. Application Submitted
-2. Under Review
-3. Approved
+## Technical Implementation
 
-The step states adapt to the actual `applicationStatus` value from the database:
+### What needs to change
 
-| Status value | Step 1 | Step 2 | Step 3 |
-|---|---|---|---|
-| `new` | Active | Pending | Pending |
-| `pending_review` | Complete | Active | Pending |
-| `approved` | Complete | Complete | Complete (green) |
-| `rejected` | Complete | Complete | Red — Rejected |
+**File: `src/pages/admin/Customers.tsx`** — two additions:
 
-A short contextual message below the tracker will explain what the current status means, e.g.:
-- `new` → "Your application is still being prepared. Our team will begin reviewing it shortly."
-- `pending_review` → "Our team is reviewing your application. This typically takes 1-2 business days. You can complete payment setup now — no charges will occur until a trailer is assigned."
-- `approved` → "Your application is approved! Complete bank linking below to finish onboarding."
-- `rejected` → "Your application was not approved. Please call (888) 570-4564 for details."
+1. **Extend the existing `useQuery` data fetch** to also pull the extra application fields needed for the CSV that aren't currently fetched: `company_address`, `business_type`, `truck_vin`, `insurance_company`, `secondary_contact_name`, `secondary_contact_phone`, `secondary_contact_relationship`, `payment_setup_status`, `dot_number_url`. These get stored per-customer via the existing map. Profile's `home_address` is already being selected.
 
-## Why This Is the Right Approach
+2. **Add `handleExportCSV` function** — a pure client-side function that:
+   - Takes `sortedCustomers` (the currently filtered/sorted list) as its data source — so if a filter is active it exports only matching customers; if no filter, all customers
+   - Builds CSV rows by mapping over each customer
+   - Handles commas and quotes in fields using standard CSV escaping
+   - Creates a `Blob`, generates a temporary download URL, triggers a `<a>` click, and revokes the URL
+   - Names the file `customers-export-YYYY-MM-DD.csv`
 
-- Customers who are still in `pending_review` (like the Trinity Freight customer) now clearly understand their application is in review and payment setup can proceed independently — reducing confusion.
-- The message for `pending_review` explicitly reassures that completing payment setup now is fine, reinforcing the "no charges today" message already on the page.
-- No new data fetching is needed — `paymentStatus.applicationStatus` is already available in component state.
-- The banner is compact and doesn't add visual clutter to the existing page layout.
+3. **Add `Download` icon import** from `lucide-react`
 
-## Technical Details
+4. **Add the button** in the header next to "Add Customer":
+   ```
+   [Download Customers]  [+ Add Customer]
+   ```
+   Button uses `variant="outline"` with a `Download` icon — visually secondary to the primary Add action.
 
-**File modified:** `src/pages/customer/PaymentSetup.tsx` only.
+### No backend changes needed
+All the data is already being fetched on page load. The CSV is generated entirely in the browser — no new edge function, no new database query, no migrations.
 
-**Location in file:** Insert the new JSX block at line ~229, immediately after the existing `<div className="mb-6">` heading block and before the green "Payment Method Active" card or the main setup flow.
-
-**No backend changes needed** — `applicationStatus` is already returned by `check-payment-status`.
-
-**Implementation:**
-- Inline JSX inside `PaymentSetup.tsx` — no new component file needed given the simple, single-use nature.
-- Uses existing imported icons: `FileText`, `Clock`, `CheckCircle2`, `AlertCircle` (all already imported).
-- Uses existing `cn` utility and existing UI components already in scope (`Card`, `CardContent`, `Badge`).
-- The tracker only renders when `paymentStatus` is not null and `!hasPaymentMethod` — if payment is already complete, the status banner is hidden (not relevant once onboarding is done).
+### Scope: Export follows current filter/sort
+- If the admin has filtered to "Active" status or searched for a specific name, the CSV will export only those matching rows — matching what they see on screen.
+- The button label will say **"Download Customers"** when no filter is active, making it clear it exports everything visible.
 
 ## Files Changed
 
 | File | Change |
 |---|---|
-| `src/pages/customer/PaymentSetup.tsx` | Add application status tracker banner below the page heading |
+| `src/pages/admin/Customers.tsx` | Add `handleExportCSV` function, extend application fields in data map, add Download button in header |
