@@ -1,73 +1,71 @@
 
-# Fix Customer Data Accuracy Across All Customer Pages
+
+# Fix Missing Business Name and Data Consistency
 
 ## Problems Found
 
-### 1. Billing Page Shows Wrong Customer's Data (During Impersonation)
-The Billing page (`customer/Billing.tsx`) queries `customer_subscriptions` with `.maybeSingle()` and **no customer filter** -- it relies entirely on RLS. When an admin uses "View As", the admin's RLS policy returns ALL subscriptions, so `.maybeSingle()` picks a random customer's subscription. This is why trailers 130035 and 248088 at $1,000/mo appeared for Trinity.
+1. **Miguel Carcamo's customer record** has "Ducky Transport LLC" in the `full_name` field instead of his actual name. The `company_name` field is empty. This means searching "Miguel" on the Customers page returns nothing.
 
-### 2. Dashboard and Rentals Use Admin's Email During Impersonation
-- `CustomerDashboard.tsx` uses `user.email` (the admin's email) for `fetchSubscriptionStatus()` and `fetchTrailers()` instead of the impersonated customer's email
-- `Rentals.tsx` uses `user?.email` for its data fetch instead of the impersonated customer's email
-- The Profile page already handles this correctly with `currentEmail`
+2. **The customer Profile page** does not show or allow editing of Company Name. Customers have no way to enter their business name.
 
-### 3. Case-Sensitive Email Lookups
-All customer pages use `.eq('email', ...)` which is case-sensitive. If the customers table has `Trinityfreightllc@gmail.com` but the profiles table has `trinityfreightllc@gmail.com`, queries fail silently and return no data.
+3. **The Rental Application** has fields for Business Address and Business Type but no field for the actual business/company name. So the company name never gets captured during onboarding.
 
-### 4. RLS Policies Use Case-Sensitive Email Joins
-Multiple RLS policies (on `customer_subscriptions`, `billing_history`, `trailers`, etc.) join `profiles.email = customers.email` which is case-sensitive. This means customers with mixed-case emails may be silently denied access to their own data.
+4. **The sync trigger** (profiles -> customers) copies `company_name` from profiles, but since it's never set in profiles, it remains empty in customers.
 
 ---
 
 ## Plan
 
-### Step 1: Fix Billing Page Data Source
-Update `customer/Billing.tsx` to follow the same pattern as Profile page:
-- First look up the customer record by email (using the impersonated email when applicable)
-- Then filter `customer_subscriptions` by `customer_id`
-- This prevents showing another customer's subscription data
+### Step 1: Add Company Name field to the Customer Profile page
+Add a "Company Name" input field to `src/pages/customer/Profile.tsx` in the Personal Information section. Include it in the fetch, state, and save logic so it syncs to the `profiles` table (and via trigger to `customers`).
 
-### Step 2: Fix Dashboard Email References
-Update `CustomerDashboard.tsx`:
-- Add `currentEmail` variable (impersonated email or user email)
-- Change `fetchSubscriptionStatus()` and `fetchTrailers()` to use `currentEmail` instead of `user.email`
+### Step 2: Add Company Name field to the Rental Application
+Add a "Company / Business Name" input to `src/pages/customer/Application.tsx` in the Business Information section. This will save to the `profiles.company_name` field when the application is submitted, which then triggers the sync to the `customers` table.
 
-### Step 3: Fix Rentals Page Email Reference
-Update `Rentals.tsx`:
-- Add impersonation awareness using `useAuth()` destructuring
-- Use the impersonated customer's email instead of `user?.email`
+### Step 3: Fix Miguel's data in the database
+Run a database migration to:
+- Update the `customers` record for `duckytransport@outlook.com`: set `full_name` to "Miguel Carcamo" and `company_name` to "Ducky Transport LLC"
+- Update the `profiles` record: set `company_name` to "Ducky Transport LLC"
 
-### Step 4: Case-Insensitive Email Queries
-Change all `.eq('email', ...)` customer lookups to `.ilike('email', ...)` across:
-- `customer/Billing.tsx`
-- `customer/CustomerDashboard.tsx`
-- `customer/Profile.tsx`
-- `customer/Rentals.tsx`
-
-### Step 5: Fix RLS Policies (Database Migration)
-Update RLS policies that join `profiles.email = customers.email` to use `lower(p.email) = lower(c.email)` on these tables:
-- `customer_subscriptions`
-- `billing_history`
-- `trailers`
-- `trailer_checkout_agreements`
-- `dot_inspections`
+### Step 4: Improve admin customer search
+Update the Customers page search in `src/pages/admin/Customers.tsx` to also match against linked profile `first_name`/`last_name`, so searching "Miguel" will find the customer even if `full_name` in the customers table differs.
 
 ---
 
 ## Technical Details
 
 ### Files Modified
-- `src/pages/customer/Billing.tsx` -- Add customer lookup, filter by customer_id, use impersonated email
-- `src/pages/customer/CustomerDashboard.tsx` -- Use `currentEmail` for subscription/trailer queries
-- `src/pages/customer/Rentals.tsx` -- Add impersonation awareness, use correct email
-- `src/pages/customer/Profile.tsx` -- Switch `.eq` to `.ilike` for email lookup
-- New database migration -- Update RLS policies for case-insensitive email matching
+- `src/pages/customer/Profile.tsx` -- Add company_name to state, fetch, form, and save
+- `src/pages/customer/Application.tsx` -- Add company/business name field that saves to profiles.company_name
+- `src/pages/admin/Customers.tsx` -- Extend search to include profile first/last name
+- Database migration -- Fix Miguel's records and set company_name
 
-### Pattern to Follow (from Profile.tsx)
+### Profile Page Changes
 ```text
-const currentEmail = isImpersonating && impersonatedUser 
-  ? impersonatedUser.email 
-  : user?.email;
+// Add to profile state
+company_name: ""
 
-// Then use currentEmail with .ilike() for customer lookups
+// Add to fetchProfile
+company_name: data.company_name || ""
+
+// Add to handleSubmit update
+company_name: profile.company_name
+
+// Add field in the form between Email and Phone Number
+<Label>Company Name</Label>
+<Input value={profile.company_name} onChange={...} />
 ```
+
+### Application Page Changes
+Add a "Company / Business Name" field in the Business Information section that reads/writes to `profiles.company_name`. When saving the application, also update the profile's company_name.
+
+### Data Fix Migration
+```text
+-- Fix Miguel Carcamo's records
+UPDATE customers SET full_name = 'Miguel Carcamo', company_name = 'Ducky Transport LLC'
+  WHERE lower(email) = 'duckytransport@outlook.com';
+
+UPDATE profiles SET company_name = 'Ducky Transport LLC'
+  WHERE lower(email) = 'duckytransport@outlook.com';
+```
+
