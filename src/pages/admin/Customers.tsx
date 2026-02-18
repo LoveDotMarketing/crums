@@ -1005,17 +1005,27 @@ export default function Customers() {
                                   <span className="sr-only">Actions</span>
                                 </Button>
                               </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuItem
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setSelectedCustomer(customer);
-                                    setDialogOpen(true);
-                                  }}
-                                >
-                                  <Pencil className="h-4 w-4 mr-2" />
-                                  Edit Customer
-                                </DropdownMenuItem>
+                               <DropdownMenuContent align="end">
+                                 <DropdownMenuItem
+                                   onClick={(e) => {
+                                     e.stopPropagation();
+                                     navigate(`/dashboard/admin/customers/${customer.id}`);
+                                   }}
+                                 >
+                                   <Eye className="h-4 w-4 mr-2" />
+                                   View Details
+                                 </DropdownMenuItem>
+                                 <DropdownMenuSeparator />
+                                 <DropdownMenuItem
+                                   onClick={(e) => {
+                                     e.stopPropagation();
+                                     setSelectedCustomer(customer);
+                                     setDialogOpen(true);
+                                   }}
+                                 >
+                                   <Pencil className="h-4 w-4 mr-2" />
+                                   Edit Customer
+                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem
                                   onClick={(e) => {
