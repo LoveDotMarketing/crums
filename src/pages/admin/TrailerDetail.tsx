@@ -113,6 +113,8 @@ export default function TrailerDetail() {
   const [editAgreementType, setEditAgreementType] = useState<AgreementType | null>(null);
   const [subscriptionId, setSubscriptionId] = useState<string | null>(null);
   const [subscriptionItemId, setSubscriptionItemId] = useState<string | null>(null);
+  const [contractStartDate, setContractStartDate] = useState<string | null>(null);
+  const [contractEndDate, setContractEndDate] = useState<string | null>(null);
 
   useEffect(() => {
     if (trailerId) {
@@ -152,21 +154,25 @@ export default function TrailerDetail() {
         setSubscriptionItemId(subItem.id);
         setSubscriptionId(subItem.subscription_id);
 
-        // Fetch subscription type
+        // Fetch subscription type and contract dates
         const { data: sub } = await supabase
           .from("customer_subscriptions")
-          .select("subscription_type")
+          .select("subscription_type, contract_start_date, end_date")
           .eq("id", subItem.subscription_id)
           .maybeSingle();
 
         const type = (sub?.subscription_type as AgreementType) || 'standard_lease';
         setAgreementType(type);
         setEditAgreementType(type);
+        setContractStartDate(sub?.contract_start_date || null);
+        setContractEndDate(sub?.end_date || null);
       } else {
         setAgreementType(null);
         setEditAgreementType(null);
         setSubscriptionId(null);
         setSubscriptionItemId(null);
+        setContractStartDate(null);
+        setContractEndDate(null);
       }
     } catch (error) {
       console.error("Error fetching agreement type:", error);
@@ -715,6 +721,30 @@ export default function TrailerDetail() {
                       )}
                     </div>
                   </div>
+
+                  {/* Contract Dates — shown only when a subscription exists */}
+                  {agreementType && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 pt-4 border-t">
+                      <div className="space-y-1">
+                        <Label className="text-xs text-muted-foreground uppercase tracking-wide">Contract Start</Label>
+                        <p className="text-sm">
+                          {contractStartDate
+                            ? new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' }).format(new Date(contractStartDate))
+                            : <span className="text-muted-foreground">Not set</span>
+                          }
+                        </p>
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs text-muted-foreground uppercase tracking-wide">Contract End</Label>
+                        <p className="text-sm">
+                          {contractEndDate
+                            ? new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' }).format(new Date(contractEndDate))
+                            : <span className="text-muted-foreground">Ongoing</span>
+                          }
+                        </p>
+                      </div>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
 
