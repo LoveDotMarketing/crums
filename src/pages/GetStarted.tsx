@@ -285,7 +285,20 @@ export default function GetStarted() {
       if (signUpError) {
         trackSignupFailed(signUpError.message || 'unknown_error');
         logSignupFailed(email, signUpError.message || 'unknown_error');
-        toast({ title: "Error", description: signUpError.message, variant: "destructive" });
+        // Friendly message for already-registered users
+        if (signUpError.message?.toLowerCase().includes("user already registered") || signUpError.message?.toLowerCase().includes("already registered")) {
+          toast({
+            title: "Account already exists",
+            description: "It looks like you already have an account. Please sign in instead.",
+            action: (
+              <a href="/login" className="underline font-medium text-sm whitespace-nowrap">
+                Go to Login
+              </a>
+            ),
+          });
+        } else {
+          toast({ title: "Error", description: signUpError.message, variant: "destructive" });
+        }
         setIsLoading(false);
         return;
       }
