@@ -69,7 +69,7 @@ export default function Profile() {
         return JSON.parse(saved);
       } catch { /* ignore */ }
     }
-    return { first_name: "", last_name: "", phone: "", email: "" };
+    return { first_name: "", last_name: "", phone: "", email: "", company_name: "" };
   });
 
   // Save profile edits to localStorage
@@ -204,6 +204,7 @@ export default function Profile() {
           last_name: data.last_name || prev.last_name || "",
           phone: data.phone || prev.phone || "",
           email: data.email || prev.email || "",
+          company_name: data.company_name || prev.company_name || "",
         }));
       }
     } catch (error) {
@@ -226,6 +227,7 @@ export default function Profile() {
           first_name: profile.first_name,
           last_name: profile.last_name,
           phone: profile.phone,
+          company_name: profile.company_name,
         })
         .eq("id", currentUserId);
 
@@ -538,6 +540,16 @@ export default function Profile() {
                       <p className="text-xs text-muted-foreground">
                         Email cannot be changed here
                       </p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="company_name">Company Name</Label>
+                      <Input
+                        id="company_name"
+                        value={profile.company_name}
+                        onChange={(e) => setProfile({ ...profile, company_name: e.target.value })}
+                        placeholder="Ducky Transport LLC"
+                      />
                     </div>
 
                     <div className="space-y-2">

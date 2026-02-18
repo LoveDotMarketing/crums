@@ -180,7 +180,7 @@ export default function Customers() {
       // Fetch profiles for profile completion calculation
       const { data: profiles } = await supabase
         .from('profiles')
-        .select('id, email, first_name, last_name, phone, home_address');
+        .select('id, email, first_name, last_name, phone, home_address, company_name');
 
       // Fetch applications for profile completion calculation and ACH status
       const { data: applications } = await supabase
@@ -276,6 +276,8 @@ export default function Customers() {
           application_completion: applicationCompletion,
           has_application: !!customerApplication,
           ach_linked: achLinked,
+          profile_first_name: customerProfile?.first_name || null,
+          profile_last_name: customerProfile?.last_name || null,
         };
       });
     }
@@ -401,12 +403,16 @@ export default function Customers() {
       : <ArrowDown className="h-4 w-4 ml-1" />;
   };
 
-  const filteredCustomers = customers.filter((customer) => {
+  const filteredCustomers = customers.filter((customer: any) => {
+    const q = searchQuery.toLowerCase();
+    const profileFullName = [customer.profile_first_name, customer.profile_last_name]
+      .filter(Boolean).join(" ").toLowerCase();
     const matchesSearch = 
-      customer.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (customer.email?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false) ||
-      (customer.company_name?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false) ||
-      customer.account_number.toLowerCase().includes(searchQuery.toLowerCase());
+      customer.full_name.toLowerCase().includes(q) ||
+      (customer.email?.toLowerCase().includes(q) ?? false) ||
+      (customer.company_name?.toLowerCase().includes(q) ?? false) ||
+      customer.account_number.toLowerCase().includes(q) ||
+      profileFullName.includes(q);
     
     const matchesStatus = statusFilter === "all" || customer.status === statusFilter;
     

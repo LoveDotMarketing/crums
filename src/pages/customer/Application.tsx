@@ -36,6 +36,7 @@ interface ProfileData {
 interface ApplicationData {
   id?: string;
   phone_number: string;
+  company_name: string;
   company_address: string;
   business_type: string;
   truck_vin: string;
@@ -78,6 +79,7 @@ export default function Application() {
   
   const [application, setApplication] = useState<ApplicationData>({
     phone_number: "",
+    company_name: "",
     company_address: "",
     business_type: "",
     truck_vin: "",
@@ -146,6 +148,7 @@ export default function Application() {
       if (profile.phone) profileUpdate.phone = sanitizeInput(profile.phone);
       if (profile.date_of_birth) profileUpdate.date_of_birth = profile.date_of_birth;
       if (profile.home_address) profileUpdate.home_address = sanitizeInput(profile.home_address);
+      if (application.company_name) profileUpdate.company_name = sanitizeInput(application.company_name);
 
       if (Object.keys(profileUpdate).length > 0) {
         await supabase.from("profiles").update(profileUpdate).eq("id", currentUserId);
@@ -195,7 +198,7 @@ export default function Application() {
       // Fetch profile data
       const { data: profileData, error: profileError } = await supabase
         .from("profiles")
-        .select("first_name, last_name, email, phone, date_of_birth, home_address")
+        .select("first_name, last_name, email, phone, date_of_birth, home_address, company_name")
         .eq("id", currentUserId)
         .single();
 
@@ -210,6 +213,10 @@ export default function Application() {
           date_of_birth: profileData.date_of_birth || prev.date_of_birth || "",
           home_address: profileData.home_address || prev.home_address || "",
         }));
+        // Load company_name from profile into application state
+        if (profileData.company_name) {
+          setApplication(prev => ({ ...prev, company_name: profileData.company_name || prev.company_name }));
+        }
       }
 
       // Fetch application data
@@ -225,6 +232,7 @@ export default function Application() {
         setApplication(prev => ({
           id: appData.id,
           phone_number: appData.phone_number || prev.phone_number || "",
+          company_name: prev.company_name || "",
           company_address: appData.company_address || prev.company_address || "",
           business_type: appData.business_type || prev.business_type || "",
           truck_vin: appData.truck_vin || prev.truck_vin || "",
@@ -318,6 +326,7 @@ export default function Application() {
           phone: sanitizeInput(profile.phone),
           date_of_birth: profile.date_of_birth || null,
           home_address: sanitizeInput(profile.home_address),
+          company_name: sanitizeInput(application.company_name) || null,
         })
         .eq("id", currentUserId);
 
@@ -519,6 +528,15 @@ export default function Application() {
                 <CardDescription>Your trucking business details</CardDescription>
               </CardHeader>
               <CardContent className="grid gap-4 md:grid-cols-2">
+                <div className="md:col-span-2">
+                  <Label htmlFor="companyName">Company / Business Name</Label>
+                  <Input
+                    id="companyName"
+                    value={application.company_name}
+                    onChange={(e) => setApplication({ ...application, company_name: e.target.value })}
+                    placeholder="Ducky Transport LLC"
+                  />
+                </div>
                 <div>
                   <Label htmlFor="companyAddress">Business Address</Label>
                   <Input
