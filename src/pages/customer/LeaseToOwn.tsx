@@ -30,8 +30,10 @@ import {
   CheckCircle2,
   DollarSign,
   Clock,
+  ClipboardCheck,
+  XCircle,
 } from "lucide-react";
-import { format, addMonths } from "date-fns";
+import { format, addMonths, addYears, differenceInDays, isAfter, isBefore } from "date-fns";
 
 interface LeaseSubscription {
   id: string;
@@ -64,6 +66,15 @@ interface BillingPayment {
   status: string;
 }
 
+interface DotInspection {
+  id: string;
+  trailer_id: string;
+  inspection_date: string;
+  status: string | null;
+  trailer_number: string;
+  inspector_name: string | null;
+}
+
 export default function LeaseToOwn() {
   const { user, isImpersonating, impersonatedUser } = useAuth();
   const currentEmail = isImpersonating && impersonatedUser ? impersonatedUser.email : user?.email;
@@ -73,6 +84,7 @@ export default function LeaseToOwn() {
   const [items, setItems] = useState<SubscriptionItem[]>([]);
   const [payments, setPayments] = useState<BillingPayment[]>([]);
   const [downloadingAgreement, setDownloadingAgreement] = useState(false);
+  const [dotInspections, setDotInspections] = useState<DotInspection[]>([]);
 
   useEffect(() => {
     fetchLeaseData();
@@ -131,6 +143,30 @@ export default function LeaseToOwn() {
         .order("paid_at", { ascending: true });
 
       setPayments(billingData || []);
+
+      // Get DOT inspections for trailers in this subscription
+      const trailerIds = (subItems || [])
+        .map((si: SubscriptionItem) => si.trailer ? (si as any).trailer_id : null)
+        .filter(Boolean);
+
+      // Fetch trailer IDs directly from subscription_items
+      const { data: siWithTrailers } = await supabase
+        .from("subscription_items")
+        .select("trailer_id")
+        .eq("subscription_id", sub.id)
+        .in("status", ["active", "paused"]);
+
+      const tids = (siWithTrailers || []).map((si: { trailer_id: string }) => si.trailer_id).filter(Boolean);
+
+      if (tids.length > 0) {
+        const { data: inspections } = await supabase
+          .from("dot_inspections")
+          .select("id, trailer_id, inspection_date, status, trailer_number, inspector_name")
+          .in("trailer_id", tids)
+          .order("inspection_date", { ascending: false });
+
+        setDotInspections((inspections || []) as DotInspection[]);
+      }
     } catch (err) {
       console.error("Error fetching lease data:", err);
       toast.error("Failed to load lease-to-own data");
@@ -415,6 +451,158 @@ export default function LeaseToOwn() {
                   )}
                 </TableBody>
               </Table>
+            </CardContent>
+          </Card>
+
+          {/* DOT Inspection Tracker */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <ClipboardCheck className="h-5 w-5 text-primary" />
+                Annual DOT Inspection Status
+              </CardTitle>
+              <CardDescription>
+                As a lease-to-own customer, you are responsible for scheduling and paying for annual DOT inspections.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {items.length === 0 ? (
+                <p className="text-muted-foreground text-sm">No trailers found on this agreement.</p>
+              ) : (
+                <div className="space-y-4">
+                  {items.map(item => {
+                    const trailerInspections = dotInspections.filter(
+                      d => d.trailer_number === item.trailer?.trailer_number
+                    );
+                    const latestInspection = trailerInspections[0] ?? null;
+                    const lastInspectionDate = latestInspection
+                      ? new Date(latestInspection.inspection_date)
+                      : null;
+                    const nextDueDate = lastInspectionDate
+                      ? addYears(lastInspectionDate, 1)
+                      : null;
+                    const today = new Date();
+                    const daysUntilDue = nextDueDate ? differenceInDays(nextDueDate, today) : null;
+                    const isOverdue = nextDueDate ? isBefore(nextDueDate, today) : false;
+                    const isDueSoon = !isOverdue && daysUntilDue !== null && daysUntilDue <= 60;
+                    const isCurrent = !isOverdue && !isDueSoon && nextDueDate !== null;
+                    const neverInspected = !latestInspection;
+
+                    let statusBadge;
+                    if (neverInspected) {
+                      statusBadge = (
+                        <Badge variant="outline" className="gap-1 border-destructive/50 text-destructive">
+                          <XCircle className="h-3 w-3" /> No Inspection on File
+                        </Badge>
+                      );
+                    } else if (isOverdue) {
+                      statusBadge = (
+                        <Badge variant="destructive" className="gap-1">
+                          <AlertTriangle className="h-3 w-3" /> Overdue
+                        </Badge>
+                      );
+                    } else if (isDueSoon) {
+                      statusBadge = (
+                        <Badge variant="outline" className="gap-1 border-destructive/40 text-destructive/80">
+                          <Clock className="h-3 w-3" /> Due Soon
+                        </Badge>
+                      );
+                    } else {
+                      statusBadge = (
+                        <Badge variant="secondary" className="gap-1 border border-border">
+                          <CheckCircle2 className="h-3 w-3 text-primary" /> Current
+                        </Badge>
+                      );
+                    }
+
+                    return (
+                      <div key={item.id} className="rounded-lg border border-border p-4 space-y-3">
+                        <div className="flex items-start justify-between gap-3 flex-wrap">
+                          <div>
+                            <p className="font-semibold text-foreground">
+                              Trailer #{item.trailer?.trailer_number || "—"}
+                            </p>
+                            <p className="text-sm text-muted-foreground">
+                              {item.trailer?.type}{item.trailer?.year ? ` · ${item.trailer.year}` : ""}
+                              {item.trailer?.vin ? ` · VIN: ${item.trailer.vin}` : ""}
+                            </p>
+                          </div>
+                          {statusBadge}
+                        </div>
+
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-sm">
+                          <div>
+                            <p className="text-xs text-muted-foreground uppercase tracking-wide">Last Inspection</p>
+                            <p className="font-medium text-foreground mt-0.5">
+                              {lastInspectionDate
+                                ? format(lastInspectionDate, "MMM d, yyyy")
+                                : "None on record"}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-muted-foreground uppercase tracking-wide">Next Due</p>
+                            <p className={`font-medium mt-0.5 ${isOverdue ? "text-destructive" : isDueSoon ? "text-destructive/70" : "text-foreground"}`}>
+                              {nextDueDate ? format(nextDueDate, "MMM d, yyyy") : "—"}
+                              {daysUntilDue !== null && !isOverdue && (
+                                <span className="text-xs text-muted-foreground ml-1">
+                                  (in {daysUntilDue}d)
+                                </span>
+                              )}
+                              {isOverdue && nextDueDate && (
+                                <span className="text-xs ml-1">
+                                  ({Math.abs(differenceInDays(nextDueDate, today))}d overdue)
+                                </span>
+                              )}
+                            </p>
+                          </div>
+                          {latestInspection?.inspector_name && (
+                            <div>
+                              <p className="text-xs text-muted-foreground uppercase tracking-wide">Inspector</p>
+                              <p className="font-medium text-foreground mt-0.5">{latestInspection.inspector_name}</p>
+                            </div>
+                          )}
+                        </div>
+
+                        {(isOverdue || neverInspected) && (
+                          <div className="flex items-start gap-2 rounded-md bg-destructive/10 border border-destructive/20 p-3 text-sm text-destructive">
+                            <AlertTriangle className="h-4 w-4 flex-shrink-0 mt-0.5" />
+                            <span>
+                              {neverInspected
+                                ? "No DOT inspection is on file for this trailer. Please schedule an annual DOT inspection as required by your lease-to-own agreement."
+                                : "This trailer's DOT inspection is overdue. Please schedule an inspection immediately to remain in compliance with your agreement."}
+                            </span>
+                          </div>
+                        )}
+
+                        {isDueSoon && (
+                          <div className="flex items-start gap-2 rounded-md bg-destructive/5 border border-destructive/20 p-3 text-sm text-destructive/80">
+                            <Clock className="h-4 w-4 flex-shrink-0 mt-0.5" />
+                            <span>
+                              Your annual DOT inspection is due within {daysUntilDue} days. Schedule it soon to stay current.
+                            </span>
+                          </div>
+                        )}
+
+                        {trailerInspections.length > 1 && (
+                          <details className="text-sm">
+                            <summary className="cursor-pointer text-muted-foreground hover:text-foreground">
+                              View inspection history ({trailerInspections.length} total)
+                            </summary>
+                            <div className="mt-2 space-y-1 pl-1">
+                              {trailerInspections.map(insp => (
+                                <div key={insp.id} className="flex items-center justify-between text-xs text-muted-foreground border-b border-border pb-1">
+                                  <span>{format(new Date(insp.inspection_date), "MMM d, yyyy")}</span>
+                                  <span className="capitalize">{insp.status || "completed"}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </details>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </CardContent>
           </Card>
 
