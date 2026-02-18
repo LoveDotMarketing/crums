@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { CustomerFormDialog } from "@/components/admin/CustomerFormDialog";
+import { CustomerStatementsPanel } from "@/components/admin/CustomerStatementsPanel";
 import { 
   Users, 
   Plus, 
@@ -26,7 +27,8 @@ import {
   ArrowDown,
   Eye,
   CreditCard,
-  Download
+  Download,
+  FileText
 } from "lucide-react";
 import {
   Table,
@@ -116,6 +118,7 @@ export default function Customers() {
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [sortColumn, setSortColumn] = useState<string>("full_name");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
+  const [statementsPanelCustomer, setStatementsPanelCustomer] = useState<{ id: string; name: string } | null>(null);
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -1013,6 +1016,16 @@ export default function Customers() {
                                   <Pencil className="h-4 w-4 mr-2" />
                                   Edit Customer
                                 </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setStatementsPanelCustomer({ id: customer.id, name: customer.full_name });
+                                  }}
+                                >
+                                  <FileText className="h-4 w-4 mr-2" />
+                                  Statements
+                                </DropdownMenuItem>
                                 {customer.email && (
                                   <>
                                     <DropdownMenuSeparator />
@@ -1057,6 +1070,15 @@ export default function Customers() {
         onOpenChange={setDialogOpen}
         customer={selectedCustomer}
       />
+
+      {statementsPanelCustomer && (
+        <CustomerStatementsPanel
+          open={!!statementsPanelCustomer}
+          onOpenChange={(open) => !open && setStatementsPanelCustomer(null)}
+          customerId={statementsPanelCustomer.id}
+          customerName={statementsPanelCustomer.name}
+        />
+      )}
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={!!customerToDelete} onOpenChange={(open) => !open && setCustomerToDelete(null)}>
