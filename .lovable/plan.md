@@ -1,93 +1,78 @@
 
-
-# Comprehensive Workflow Audit: All Issues Found
+# Final System Audit: Remaining Issues
 
 ## Summary
 
-After a thorough review of every customer-facing and admin-facing flow -- signup, login, application, document upload, ACH setup, subscription creation, and billing management -- I found **1 critical systemic bug** affecting 16 edge functions and **1 logic bug** that blocks split billing.
+After reviewing every edge function, the customer signup/application/ACH flow, admin subscription management, and the Stripe webhook handler, the system is in good shape. The CORS fixes and split-billing logic from previous rounds are working correctly. I found **2 remaining issues** -- one that will cause crashes when split billing is active, and one minor inconsistency.
 
 ---
 
-## Issue 1: CORS Headers Missing on 16 Edge Functions (CRITICAL)
+## Issue 1: Stripe Webhook Crashes on Split-Billing Customers (HIGH)
 
-**Impact: Will cause silent failures across admin and customer workflows**
+**Where:** `supabase/functions/stripe-webhook/index.ts`, lines 337-341 and 422-427
 
-The same CORS bug we fixed on `ssn-crypto`, `create-subscription`, and `activate-subscription` exists on **16 more edge functions** that are called from the browser. The Supabase JS client sends headers like `x-supabase-client-platform` that the browser's CORS preflight rejects when they're not listed in `Access-Control-Allow-Headers`.
-
-### Functions that WILL fail when called from the browser:
-
-**Admin-facing (breaks admin dashboard operations):**
-| Function | Used In | What Breaks |
-|---|---|---|
-| `manage-subscription` | Billing page | Pause/resume/cancel subscriptions |
-| `modify-subscription` | ManageTrailersDialog | Add/remove/swap trailers on subscriptions |
-| `process-billing` | Billing page | Manual billing sync |
-| `sync-payments` | Billing page | Manual payment sync |
-| `process-payment-failures` | Billing page | Dunning management |
-| `retry-payment` | Billing page | Retry failed payments |
-| `get-cron-history` | Billing page | View cron job history |
-| `invite-staff` | Staff page | Invite new staff members |
-| `remove-staff` | Staff page | Remove staff |
-| `update-staff-role` | Staff page | Change staff roles |
-| `send-application-status-email` | Applications page | Notify customers of approval/rejection |
-| `send-outreach-email` | Outreach page | Send marketing emails |
-| `process-outreach-automation` | Outreach page | Run automated outreach |
-| `indexnow-submit` | SitemapGenerator, IndexNow | Submit URLs to search engines |
-| `sync-development-changelog` | DevelopmentTab | Sync changelog |
-
-**Customer/public-facing:**
-| Function | Used In | What Breaks |
-|---|---|---|
-| `linkedin-capi` | GetStarted, Contact, Login | LinkedIn conversion tracking (non-critical but noisy errors) |
-| `update-outreach-status` | Login, ResetPassword, Unsubscribe | Password-set tracking, unsubscribe flow |
-| `send-contact-email` | Contact page | Public contact form submissions |
-| `send-rental-request-email` | Rental request flow | Rental inquiry submissions |
-| `chat-proxy` | ChatBot component | AI chatbot |
-
-### Functions already fixed (no change needed):
-`ssn-crypto`, `create-subscription`, `activate-subscription`, `check-payment-status`, `create-ach-setup`, `confirm-ach-setup`, `send-ach-setup-email`, `charge-toll`, `_shared/auth.ts`
-
-### Fix:
-Update the `corsHeaders` in all 20 affected functions to include the full Supabase client headers:
-```
-authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version
-```
-
----
-
-## Issue 2: create-subscription Blocks Multiple Subscriptions Per Customer
-
-**Impact: Prevents split billing (e.g., Ground Link's $2,250 on 1st + $1,650 on 15th)**
-
-In `create-subscription/index.ts` (lines 87-91), the function queries for existing subscriptions using `.maybeSingle()`:
+**Problem:** The webhook has two fallback paths that look up subscriptions by `customer_id` when the primary `stripe_subscription_id` lookup fails. These use `.maybeSingle()`:
 
 ```typescript
-const { data: existingSubscription } = await supabaseClient
+const { data: custSub } = await supabase
   .from("customer_subscriptions")
-  .select("id, status, stripe_subscription_id")
-  .eq("customer_id", customerId)
-  .maybeSingle();  // ERROR if multiple rows exist
+  .select("id, customer_id")
+  .eq("customer_id", customer.id)
+  .in("status", ["active", "pending"])
+  .maybeSingle();  // CRASHES if 2+ active subscriptions
 ```
 
-`.maybeSingle()` throws a Postgres error if there are multiple rows. So once a customer has their first active subscription, attempting to create a second one (for split billing on a different date) will crash with a database error before even reaching the business logic.
+Once Ground Link LLC (or any customer) has two subscriptions for split billing, `.maybeSingle()` will throw a Postgres error because there are multiple matching rows. This would cause payment-succeeded and payment-failed webhooks to fail silently, meaning payments won't be recorded and failure notifications won't be sent.
 
-### Fix:
-Change `.maybeSingle()` to a query that checks for any active/pending/paused subscription, then allow additional subscriptions if needed. The check should look for conflicts on the same trailers rather than blocking all new subscriptions for the customer.
+**Fix:** Change `.maybeSingle()` to `.limit(1).maybeSingle()` (or `.order('created_at', { ascending: false }).limit(1).maybeSingle()`) in both fallback locations. This ensures we pick the most recent subscription rather than crashing. The primary lookup path (by `stripe_subscription_id`) is unaffected since that field is unique.
 
 ---
 
-## What Passed Review (No Issues)
+## Issue 2: twilio-call-logs Has Old CORS Headers (LOW)
 
-- **Signup flow (GetStarted.tsx):** Session retry, localStorage persistence, upsert conflict handling, "already registered" redirect -- all solid
-- **Login flow (Login.tsx):** Rate limiting, lockout, incomplete profile redirect -- working correctly
-- **Application form (Application.tsx):** Auto-save with debounce, session refresh before submit, merge-not-overwrite pattern -- correct
-- **Document uploads:** File validation, storage bucket upload, path-based storage -- working
-- **ACH setup (PaymentSetup.tsx):** Stripe Financial Connections, error handling for cancellation/timeouts, network error detection -- robust
-- **ACH edge functions:** `create-ach-setup`, `confirm-ach-setup`, `check-payment-status` -- all have correct CORS headers and proper auth
-- **Application Status Tracker:** Correct 4-step progression, handles rejected state, payment setup status tracking -- clean
-- **Customer Dashboard:** Real-time toll/trailer updates, subscription status checks, pending checkout queue -- all functional
-- **Stripe webhook handler:** Has `stripe-signature` in allowed headers -- correct for webhook verification
-- **RLS policies:** All tables have appropriate access control
+**Where:** `supabase/functions/twilio-call-logs/index.ts`, line 5
+
+**Problem:** Still uses the minimal CORS header set:
+```
+'authorization, x-client-info, apikey, content-type'
+```
+
+This function IS called from the browser (admin CallLogs page), but currently via `fetch()` with only `Authorization` and `Content-Type` -- which are in the minimal list. So it works today, but if the code is ever refactored to use `supabase.functions.invoke()`, it will break. Should be updated for consistency.
+
+**Fix:** Update to the full CORS header set.
+
+---
+
+## What Passed Final Review
+
+| Area | Status | Notes |
+|---|---|---|
+| Signup (GetStarted.tsx) | OK | Session retry, localStorage persistence, upsert, referral codes |
+| Login (Login.tsx) | OK | Rate limiting with SECURITY DEFINER functions, lockout, incomplete profile redirect |
+| Application (Application.tsx) | OK | Auto-save debounce, session refresh guard, SSN encryption via ssn-crypto |
+| Document uploads | OK | File validation, storage bucket paths, signed URLs |
+| ACH setup (PaymentSetup.tsx) | OK | Stripe Financial Connections, cancellation/timeout handling |
+| create-ach-setup | OK | Full CORS, proper auth, Stripe customer creation |
+| confirm-ach-setup | OK | Full CORS, billing anchor persistence |
+| check-payment-status | OK | Full CORS, auto-reconciles missing payment method records |
+| ssn-crypto | OK | Full CORS, AES-256-GCM encryption, admin-only decryption |
+| create-subscription | OK | Full CORS, split-billing support (trailer conflict check, not customer block) |
+| activate-subscription | OK | Full CORS, ACH charge initiation |
+| manage-subscription | OK | Full CORS, pause/resume/cancel |
+| modify-subscription | OK | Full CORS, trailer add/remove/swap |
+| process-billing | OK | Full CORS, cron scheduled daily 6am UTC |
+| sync-payments | OK | Full CORS, cron scheduled daily 7am UTC |
+| process-payment-failures | OK | Full CORS, dunning management |
+| stripe-webhook | Partial | Primary path OK, fallback has split-billing crash risk |
+| send-contact-email | OK | Full CORS, spam detection, rate limiting |
+| send-rental-request-email | OK | Full CORS |
+| send-ach-setup-email | OK | Full CORS, admin-only |
+| send-application-status-email | OK | Full CORS |
+| chat-proxy | OK | Full CORS, auth + rate limiting |
+| All agent-* functions | OK | Use shared auth.ts with full CORS |
+| RLS policies | OK | All tables have appropriate access control |
+| Login rate limiting | OK | SECURITY DEFINER functions bypass RLS correctly |
+| config.toml | OK | Customer-facing functions use verify_jwt=false with in-code auth |
 
 ---
 
@@ -95,27 +80,7 @@ Change `.maybeSingle()` to a query that checks for any active/pending/paused sub
 
 | File | Change |
 |---|---|
-| `supabase/functions/manage-subscription/index.ts` | Update CORS headers |
-| `supabase/functions/modify-subscription/index.ts` | Update CORS headers |
-| `supabase/functions/process-billing/index.ts` | Update CORS headers |
-| `supabase/functions/sync-payments/index.ts` | Update CORS headers |
-| `supabase/functions/process-payment-failures/index.ts` | Update CORS headers |
-| `supabase/functions/retry-payment/index.ts` | Update CORS headers |
-| `supabase/functions/get-cron-history/index.ts` | Update CORS headers |
-| `supabase/functions/invite-staff/index.ts` | Update CORS headers |
-| `supabase/functions/remove-staff/index.ts` | Update CORS headers |
-| `supabase/functions/update-staff-role/index.ts` | Update CORS headers |
-| `supabase/functions/send-application-status-email/index.ts` | Update CORS headers |
-| `supabase/functions/send-outreach-email/index.ts` | Update CORS headers |
-| `supabase/functions/process-outreach-automation/index.ts` | Update CORS headers |
-| `supabase/functions/indexnow-submit/index.ts` | Update CORS headers |
-| `supabase/functions/sync-development-changelog/index.ts` | Update CORS headers |
-| `supabase/functions/linkedin-capi/index.ts` | Update CORS headers |
-| `supabase/functions/update-outreach-status/index.ts` | Update CORS headers |
-| `supabase/functions/send-contact-email/index.ts` | Update CORS headers |
-| `supabase/functions/send-rental-request-email/index.ts` | Update CORS headers |
-| `supabase/functions/chat-proxy/index.ts` | Update CORS headers |
-| `supabase/functions/create-subscription/index.ts` | Fix `.maybeSingle()` to support multiple subscriptions per customer |
+| `supabase/functions/stripe-webhook/index.ts` | Add `.limit(1)` before `.maybeSingle()` on two customer-id fallback queries (lines ~337-341 and ~422-427) to prevent crash when customer has multiple active subscriptions |
+| `supabase/functions/twilio-call-logs/index.ts` | Update CORS headers to include full Supabase client headers for consistency |
 
-All 21 files need a single-line CORS header update. The subscription fix requires a small logic change to the duplicate-check query.
-
+Both changes are minimal, backward-compatible, and zero-risk.
