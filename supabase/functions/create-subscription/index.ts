@@ -83,28 +83,43 @@ serve(async (req) => {
       throw new Error("Missing required fields: customerId, trailerIds, billingCycle");
     }
 
-    // Check for existing subscription for this customer (any status)
-    const { data: existingSubscription } = await supabaseClient
+    // Check for existing subscriptions for this customer
+    const { data: existingSubscriptions } = await supabaseClient
       .from("customer_subscriptions")
-      .select("id, status, stripe_subscription_id")
-      .eq("customer_id", customerId)
-      .maybeSingle();
+      .select("id, status, stripe_subscription_id, subscription_items(trailer_id)")
+      .eq("customer_id", customerId);
 
-    // If there's an active/pending/paused subscription, block creation
-    if (existingSubscription && ["active", "pending", "paused"].includes(existingSubscription.status)) {
-      logStep("Customer already has active subscription", { 
-        existingId: existingSubscription.id, 
-        status: existingSubscription.status 
+    // Check if any requested trailers are already on an active/pending/paused subscription
+    const activeSubscriptions = (existingSubscriptions || []).filter(
+      s => ["active", "pending", "paused"].includes(s.status)
+    );
+    
+    if (activeSubscriptions.length > 0) {
+      const assignedTrailerIds = new Set(
+        activeSubscriptions.flatMap(s => 
+          (s.subscription_items || []).map((item: { trailer_id: string }) => item.trailer_id)
+        )
+      );
+      const conflictingTrailers = trailerIds.filter(id => assignedTrailerIds.has(id));
+      
+      if (conflictingTrailers.length > 0) {
+        throw new Error(`Trailer(s) are already assigned to an active subscription. Remove them from the existing subscription first.`);
+      }
+      
+      logStep("Customer has existing active subscriptions, creating additional for split billing", {
+        existingCount: activeSubscriptions.length
       });
-      throw new Error(`Customer already has an ${existingSubscription.status} subscription (ID: ${existingSubscription.id}). Please cancel or manage the existing subscription first.`);
     }
     
-    // If there's a canceled subscription, we'll reuse that row
-    const reuseExistingRow = existingSubscription && existingSubscription.status === "canceled";
+    // Look for a canceled subscription to reuse
+    const canceledSubscription = (existingSubscriptions || []).find(s => s.status === "canceled");
+    // Only reuse if there are no active subscriptions (to avoid confusion)
+    const reuseExistingRow = canceledSubscription && activeSubscriptions.length === 0;
+    const existingSubscription = reuseExistingRow ? canceledSubscription : null;
     if (reuseExistingRow) {
-      logStep("Found canceled subscription, will reuse row", { existingId: existingSubscription.id });
+      logStep("Found canceled subscription, will reuse row", { existingId: canceledSubscription!.id });
     } else {
-      logStep("No existing subscription found, will create new row");
+      logStep("Will create new subscription row");
     }
 
     // Check if any of the requested trailers are already rented
