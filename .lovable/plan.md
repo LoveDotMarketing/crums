@@ -1,126 +1,90 @@
 
-# Phase 1: Statements & Tax Records — Historical Statement Upload + Stripe Billing History View
 
-## Overview
+# Fix: Ground Link LLC ACH Not Processing on the 15th
 
-This adds three things:
-1. A new **`customer_statements`** database table to store historical billing records
-2. An **admin upload UI** on the Customers page (per-customer statement panel) so admins can upload PDF statements and manually enter past billing records
-3. A **"Statements & Tax Records" section** at the bottom of the customer-facing Billing page (`/dashboard/customer/billing`) showing all their statements with download links
+## Root Cause Analysis
 
-No QuickBooks integration is included — that is Phase 2.
+After investigating Ground Link LLC's account (`dispatch@groundlinkllc.com`, Stripe customer `cus_TxKhmRWcgLA6kJ`), I found **two issues** preventing billing:
 
----
+### Issue 1: No Subscription Was Ever Created
+- ACH bank account is linked (payment method `pm_1SzQ4ILjIwiEGQIhYPnohAWv` attached)
+- 8 trailers are assigned and marked as "rented"
+- **But there are zero Stripe subscriptions** and zero `customer_subscriptions` records in the database
+- Without a subscription, there is nothing to charge -- the system has no billing instructions for this customer
 
-## Database Changes
+### Issue 2: No Automated Billing Cron Job
+The `process-billing` edge function exists but is **not scheduled as a cron job**. Current cron jobs are:
+- Outreach automation (hourly)
+- Toll reminders (daily 9am)
+- Dunning process (daily 9am)
+- Changelog sync (weekly)
 
-### New table: `customer_statements`
+Even once subscriptions are created, billing sync will only run when an admin manually triggers it -- there is no automatic daily check.
+
+## Customer's Billing Structure
+The customer notes specify a **split payment schedule**:
+- 1st of month: $2,250.00
+- 15th of month: $1,650.00
+- Total: $3,900.00/month
+
+Per the existing architecture, this requires **two separate Stripe subscriptions** -- one anchored to the 1st and one anchored to the 15th, each covering a different group of trailers.
+
+## What Will Be Fixed (Code Changes)
+
+### 1. Add `process-billing` Cron Job
+Create a database migration to schedule `process-billing` to run daily at 6:00 AM UTC. This ensures Stripe subscription statuses and invoices are automatically synced to the local database every day.
 
 ```sql
-CREATE TABLE public.customer_statements (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  customer_id uuid NOT NULL REFERENCES public.customers(id) ON DELETE CASCADE,
-  statement_date date NOT NULL,
-  period_start date,
-  period_end date,
-  amount numeric NOT NULL DEFAULT 0,
-  description text NOT NULL,
-  source text NOT NULL DEFAULT 'manual',  -- 'manual' | 'stripe' | 'quickbooks'
-  file_url text,      -- storage path in customer-documents bucket
-  notes text,
-  created_by uuid,    -- admin who created/uploaded
-  created_at timestamptz NOT NULL DEFAULT now(),
-  updated_at timestamptz NOT NULL DEFAULT now()
+SELECT cron.schedule(
+  'process-billing-daily',
+  '0 6 * * *',
+  $$SELECT net.http_post(
+    url := '<supabase-url>/functions/v1/process-billing',
+    headers := jsonb_build_object(
+      'Authorization', 'Bearer <cron-secret>',
+      'Content-Type', 'application/json'
+    ),
+    body := '{}'::jsonb
+  );$$
 );
 ```
 
-**RLS Policies:**
-- Admins: full CRUD (`has_role(auth.uid(), 'admin')`)
-- Customers: SELECT only — their own records via `customer_id IN (SELECT c.id FROM customers c JOIN profiles p ON lower(p.email) = lower(c.email) WHERE p.id = auth.uid())`
+### 2. Add `sync-payments` Cron Job
+Similarly, `sync-payments` should also run daily to keep payment records current.
 
----
+```sql
+SELECT cron.schedule(
+  'sync-payments-daily',
+  '0 7 * * *',
+  $$SELECT net.http_post(
+    url := '<supabase-url>/functions/v1/sync-payments',
+    headers := jsonb_build_object(
+      'Authorization', 'Bearer <cron-secret>',
+      'Content-Type', 'application/json'
+    ),
+    body := '{}'::jsonb
+  );$$
+);
+```
+
+## What the Admin Needs to Do (Not a Code Fix)
+
+The admin must **create the subscriptions** for Ground Link LLC through the admin Billing dashboard:
+
+1. Go to Admin > Billing > Create Subscription
+2. **Subscription 1 (1st of month - $2,250):** Select the appropriate trailers, set billing cycle to monthly, set anchor day to 1
+3. **Subscription 2 (15th of month - $1,650):** Select the remaining trailers, set billing cycle to monthly, set anchor day to 15
+4. After each subscription is created (status will be "incomplete/pending"), click the **"Activate"** button to trigger the first charge using the linked ACH payment method
+
+Once subscriptions exist and are activated, the new daily cron jobs will keep everything synced automatically.
 
 ## Files Changed
 
 | File | Change |
 |---|---|
-| Migration | Create `customer_statements` table + RLS |
-| `src/pages/admin/Customers.tsx` | Add "Statements" section per customer in the expanded row/panel |
-| `src/components/admin/CustomerStatementsPanel.tsx` | NEW — admin UI for uploading PDFs and manually adding statement records per customer |
-| `src/pages/customer/Billing.tsx` | Add "Statements & Tax Records" card at the bottom |
+| New migration | Add `process-billing-daily` and `sync-payments-daily` cron jobs |
 
----
+## No Other Code Changes Needed
 
-## Admin UI — CustomerStatementsPanel Component
+The ACH setup flow, `create-subscription`, `activate-subscription`, and `process-billing` functions are all working correctly. The issue is purely that no subscription was created for this customer, and the automated billing sync was never scheduled.
 
-A new component `src/components/admin/CustomerStatementsPanel.tsx` that admins can open per customer. It will be launched from the Customers page via a **"Statements"** button in the customer row's action menu (next to the existing Edit/View actions).
-
-The panel is a **Dialog** containing:
-
-**Tab 1 — View Statements:** A table of all `customer_statements` for the selected customer, showing:
-- Date
-- Description  
-- Period (if set)
-- Amount
-- Source badge (Manual / Stripe)
-- Download PDF button (if `file_url` is set — generates a fresh signed URL from the `customer-documents` bucket)
-- Delete button
-
-**Tab 2 — Add Statement:** A form to manually enter a new record:
-- Description (text, required)
-- Statement Date (date picker, required)
-- Amount (number, required)
-- Period Start / Period End (optional date range, for tax purposes)
-- Notes (optional textarea)
-- PDF Upload (file input, optional — uploads to `customer-documents/statements/{customerId}/{filename}`)
-
-On save, it inserts a row into `customer_statements` with `source = 'manual'`.
-
----
-
-## Admin Customers Page Change
-
-In `src/pages/admin/Customers.tsx`, add a **"Statements"** item to the existing `DropdownMenu` action menu for each customer row. Clicking it opens `CustomerStatementsPanel` as a dialog, passing the `customerId` and `customerName`.
-
----
-
-## Customer Billing Page Change
-
-In `src/pages/customer/Billing.tsx`, add a new **"Statements & Tax Records"** card at the bottom of the page. It:
-
-1. Fetches `customer_statements` for the current customer using their `customerRecord?.id`
-2. Shows a table with columns: Date, Description, Period, Amount, Download
-3. Shows a **tax year filter** (dropdown: "All", "2025", "2024", "2023") — filters by `statement_date` year
-4. Shows an empty state with a friendly message if no statements exist yet: "No statements on file yet. Contact us if you need past records for tax purposes."
-5. The Download button for PDF statements generates a signed URL from Supabase storage on click
-
-The query key is `["customer-statements", customerRecord?.id]` and only runs when `customerRecord?.id` is set.
-
-The section is shown **regardless** of whether the customer has an active subscription — useful for customers who may have ended their lease but need tax records.
-
----
-
-## Storage
-
-PDF statements are uploaded to the existing **`customer-documents`** private bucket under the path:
-```
-statements/{customerId}/{timestamp}-{filename}
-```
-
-Signed URLs are generated on-demand (60-minute expiry) using the existing pattern from the document storage architecture — no long-lived URLs stored.
-
----
-
-## What is NOT included (Phase 2)
-
-- QuickBooks OAuth integration
-- Customer name matching tool
-- Automatic import from QuickBooks
-
----
-
-## Technical Notes
-
-- The `customer_statements` table uses `customer_id` (UUID from `customers` table), consistent with the existing pattern
-- Admin storage uploads use the service role via edge function — but since the existing `customer-documents` bucket already accepts admin uploads via the client (as seen in the lease agreement upload in `admin/Billing.tsx`), the same direct upload pattern will be used
-- The customer RLS SELECT policy mirrors the pattern used in `billing_history` and `customer_subscriptions`
