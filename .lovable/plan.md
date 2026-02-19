@@ -1,90 +1,85 @@
 
 
-# Fix: Ground Link LLC ACH Not Processing on the 15th
+# Customer Flow Audit: Issues Found and Fixes
 
-## Root Cause Analysis
+## Summary
 
-After investigating Ground Link LLC's account (`dispatch@groundlinkllc.com`, Stripe customer `cus_TxKhmRWcgLA6kJ`), I found **two issues** preventing billing:
+After reviewing the complete signup, application, ACH setup, and billing flows, I found **3 concrete bugs** that will cause failures for customers, plus **1 preventative fix** to avoid future breakage.
 
-### Issue 1: No Subscription Was Ever Created
-- ACH bank account is linked (payment method `pm_1SzQ4ILjIwiEGQIhYPnohAWv` attached)
-- 8 trailers are assigned and marked as "rented"
-- **But there are zero Stripe subscriptions** and zero `customer_subscriptions` records in the database
-- Without a subscription, there is nothing to charge -- the system has no billing instructions for this customer
+---
 
-### Issue 2: No Automated Billing Cron Job
-The `process-billing` edge function exists but is **not scheduled as a cron job**. Current cron jobs are:
-- Outreach automation (hourly)
-- Toll reminders (daily 9am)
-- Dunning process (daily 9am)
-- Changelog sync (weekly)
+## Issue 1: SSN Encryption Will Fail (CORS Headers Missing)
 
-Even once subscriptions are created, billing sync will only run when an admin manually triggers it -- there is no automatic daily check.
+**Severity: HIGH -- will block application submission when customers enter SSN**
 
-## Customer's Billing Structure
-The customer notes specify a **split payment schedule**:
-- 1st of month: $2,250.00
-- 15th of month: $1,650.00
-- Total: $3,900.00/month
-
-Per the existing architecture, this requires **two separate Stripe subscriptions** -- one anchored to the 1st and one anchored to the 15th, each covering a different group of trailers.
-
-## What Will Be Fixed (Code Changes)
-
-### 1. Add `process-billing` Cron Job
-Create a database migration to schedule `process-billing` to run daily at 6:00 AM UTC. This ensures Stripe subscription statuses and invoices are automatically synced to the local database every day.
-
-```sql
-SELECT cron.schedule(
-  'process-billing-daily',
-  '0 6 * * *',
-  $$SELECT net.http_post(
-    url := '<supabase-url>/functions/v1/process-billing',
-    headers := jsonb_build_object(
-      'Authorization', 'Bearer <cron-secret>',
-      'Content-Type', 'application/json'
-    ),
-    body := '{}'::jsonb
-  );$$
-);
+The `ssn-crypto` edge function uses minimal CORS headers:
+```
+'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type'
 ```
 
-### 2. Add `sync-payments` Cron Job
-Similarly, `sync-payments` should also run daily to keep payment records current.
+But `supabase.functions.invoke()` sends additional headers (`x-supabase-client-platform`, `x-supabase-client-platform-version`, etc.). The browser's CORS preflight will reject these, causing the SSN encryption call to fail silently, which then blocks the entire application submission.
 
-```sql
-SELECT cron.schedule(
-  'sync-payments-daily',
-  '0 7 * * *',
-  $$SELECT net.http_post(
-    url := '<supabase-url>/functions/v1/sync-payments',
-    headers := jsonb_build_object(
-      'Authorization', 'Bearer <cron-secret>',
-      'Content-Type', 'application/json'
-    ),
-    body := '{}'::jsonb
-  );$$
-);
-```
+**Fix:** Update `ssn-crypto` CORS headers to include the full set.
 
-## What the Admin Needs to Do (Not a Code Fix)
+---
 
-The admin must **create the subscriptions** for Ground Link LLC through the admin Billing dashboard:
+## Issue 2: Subscription Creation Will Fail (CORS Headers Missing)
 
-1. Go to Admin > Billing > Create Subscription
-2. **Subscription 1 (1st of month - $2,250):** Select the appropriate trailers, set billing cycle to monthly, set anchor day to 1
-3. **Subscription 2 (15th of month - $1,650):** Select the remaining trailers, set billing cycle to monthly, set anchor day to 15
-4. After each subscription is created (status will be "incomplete/pending"), click the **"Activate"** button to trigger the first charge using the linked ACH payment method
+**Severity: HIGH -- blocks admin from creating subscriptions for customers**
 
-Once subscriptions exist and are activated, the new daily cron jobs will keep everything synced automatically.
+The `create-subscription` edge function has the same minimal CORS headers. When an admin tries to create a subscription for a customer (like Ground Link LLC), the CORS preflight will fail.
 
-## Files Changed
+**Fix:** Update `create-subscription` CORS headers.
+
+---
+
+## Issue 3: Subscription Activation Will Fail (CORS Headers Missing)
+
+**Severity: HIGH -- blocks admin from activating subscriptions**
+
+The `activate-subscription` edge function also has minimal CORS headers. This prevents the admin from clicking "Activate" to charge the first invoice after ACH is linked.
+
+**Fix:** Update `activate-subscription` CORS headers.
+
+---
+
+## Issue 4: `verify_jwt = true` on Customer-Facing Functions (Preventative)
+
+**Severity: MEDIUM -- will break if signing-keys are enabled**
+
+Several customer-facing functions use the deprecated `verify_jwt = true` in `config.toml`:
+- `create-ach-setup`
+- `check-payment-status`
+- `confirm-ach-setup`
+- `ssn-crypto`
+- `send-application-status-email`
+
+These currently work, but the recommended pattern is `verify_jwt = false` with in-code JWT validation. Since these functions already validate auth in their code (via `supabase.auth.getUser(token)`), switching to `verify_jwt = false` is safe and prevents future breakage.
+
+**Fix:** Set `verify_jwt = false` for these functions in `config.toml`. No code changes needed since they already validate auth internally.
+
+---
+
+## What Passed Review (No Issues Found)
+
+- **Signup flow (GetStarted.tsx):** Session retry logic, localStorage persistence, upsert conflict handling, "already registered" redirect -- all solid.
+- **Login flow (Login.tsx):** Rate limiting, lockout, incomplete profile redirect, application record creation -- all working.
+- **Application form (Application.tsx):** Auto-save with debounce, session refresh before upsert, merge-not-overwrite pattern -- all correct.
+- **ACH setup (PaymentSetup.tsx):** Stripe Financial Connections flow, error handling for cancellation/timeouts, network error detection -- all good.
+- **ACH edge functions:** `create-ach-setup`, `confirm-ach-setup`, `check-payment-status` all have correct CORS headers and proper auth.
+- **RLS policies:** `customer_applications` allows INSERT/UPDATE/SELECT by owner. `profiles` allows UPDATE/SELECT by owner. `user_roles` allows SELECT by owner. All correct.
+- **Race conditions:** The `getSessionWithRetry` helper handles mobile network latency. Upserts with `onConflict: 'user_id'` prevent duplicate records. Session refresh guard before application submit prevents expired-session RLS errors.
+
+---
+
+## Technical Changes
 
 | File | Change |
 |---|---|
-| New migration | Add `process-billing-daily` and `sync-payments-daily` cron jobs |
+| `supabase/functions/ssn-crypto/index.ts` | Update CORS headers to include full Supabase client headers |
+| `supabase/functions/create-subscription/index.ts` | Update CORS headers to include full Supabase client headers |
+| `supabase/functions/activate-subscription/index.ts` | Update CORS headers to include full Supabase client headers |
+| `supabase/config.toml` | Set `verify_jwt = false` for `ssn-crypto`, `create-ach-setup`, `check-payment-status`, `confirm-ach-setup`, `send-ach-setup-email`, `send-application-status-email` |
 
-## No Other Code Changes Needed
-
-The ACH setup flow, `create-subscription`, `activate-subscription`, and `process-billing` functions are all working correctly. The issue is purely that no subscription was created for this customer, and the automated billing sync was never scheduled.
+All changes are backward-compatible. The auth validation already exists in the function code itself, so removing the gateway-level JWT check simply prevents a potential double-rejection scenario.
 
