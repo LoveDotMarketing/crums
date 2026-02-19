@@ -6,7 +6,7 @@ verify_jwt = false
 
 # Email sending - requires admin authentication
 [functions.send-application-status-email]
-verify_jwt = true
+verify_jwt = false
 
 # Chat proxy - handles auth internally with rate limiting
 [functions.chat-proxy]
@@ -57,9 +57,9 @@ verify_jwt = false
 [functions.invite-staff]
 verify_jwt = true
 
-# SSN encryption/decryption - requires admin authentication
+# SSN encryption/decryption - auth validated in code
 [functions.ssn-crypto]
-verify_jwt = true
+verify_jwt = false
 
 # Staff removal - requires admin authentication
 [functions.remove-staff]
@@ -79,19 +79,19 @@ verify_jwt = false
 
 # ACH Payment Setup - requires customer authentication
 [functions.create-ach-setup]
-verify_jwt = true
+verify_jwt = false
 
 # Check payment status - requires customer authentication
 [functions.check-payment-status]
-verify_jwt = true
+verify_jwt = false
 
 # Confirm ACH setup - requires customer authentication
 [functions.confirm-ach-setup]
-verify_jwt = true
+verify_jwt = false
 
 # Send ACH setup email - requires admin authentication
 [functions.send-ach-setup-email]
-verify_jwt = true
+verify_jwt = false
 
 # IndexNow URL submission - requires admin authentication (handled in code)
 [functions.indexnow-submit]
