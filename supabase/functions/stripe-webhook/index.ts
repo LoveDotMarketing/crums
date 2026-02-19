@@ -338,6 +338,8 @@ async function handlePaymentSucceeded(
             .select("id, customer_id")
             .eq("customer_id", customer.id)
             .in("status", ["active", "pending"])
+            .order("created_at", { ascending: false })
+            .limit(1)
             .maybeSingle();
           
           if (custSub) {
@@ -424,6 +426,8 @@ async function handlePaymentSucceeded(
               .select("id, customer_id")
               .eq("customer_id", customer.id)
               .in("status", ["active", "pending"])
+              .order("created_at", { ascending: false })
+              .limit(1)
               .maybeSingle();
             
             if (custSub) {
