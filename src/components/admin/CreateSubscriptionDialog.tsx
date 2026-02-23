@@ -129,43 +129,38 @@ export function CreateSubscriptionDialog({ onSuccess }: CreateSubscriptionDialog
     enabled: !!selectedCustomerId && isOpen,
   });
 
-  // Fetch customers without active subscriptions
+  // Fetch all active customers (no subscription filter — supports split billing)
   const { data: customers, isLoading: loadingCustomers } = useQuery({
     queryKey: ["customers-for-subscription"],
     queryFn: async () => {
-      // Get customers
-      const { data: allCustomers, error: customersError } = await supabase
+      const { data, error } = await supabase
         .from("customers")
         .select("id, full_name, email, company_name")
         .eq("status", "active")
         .order("full_name");
 
-      if (customersError) throw customersError;
-
-      // Get existing subscriptions to filter out customers who already have one
-      const { data: existingSubs } = await supabase
-        .from("customer_subscriptions")
-        .select("customer_id")
-        .in("status", ["active", "pending"]);
-
-      const existingCustomerIds = new Set(existingSubs?.map(s => s.customer_id) || []);
-      
-      return (allCustomers || []).filter(c => !existingCustomerIds.has(c.id)) as Customer[];
+      if (error) throw error;
+      return (data || []) as Customer[];
     },
     enabled: isOpen
   });
 
-  // Fetch available trailers
+  // Fetch available trailers + trailers already assigned to selected customer
   const { data: availableTrailers, isLoading: loadingTrailers } = useQuery({
-    queryKey: ["available-trailers-for-subscription"],
+    queryKey: ["available-trailers-for-subscription", selectedCustomerId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from("trailers")
-        .select("id, trailer_number, vin, type, year, rental_rate")
-        .eq("status", "available")
-        .is("customer_id", null)
-        .order("trailer_number");
+        .select("id, trailer_number, vin, type, year, rental_rate");
 
+      if (selectedCustomerId) {
+        // Show globally available trailers OR trailers assigned to this customer
+        query = query.or(`and(status.eq.available,customer_id.is.null),customer_id.eq.${selectedCustomerId}`);
+      } else {
+        query = query.eq("status", "available").is("customer_id", null);
+      }
+
+      const { data, error } = await query.order("trailer_number");
       if (error) throw error;
       return data as AvailableTrailer[];
     },
