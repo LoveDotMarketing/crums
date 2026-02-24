@@ -343,7 +343,7 @@ const Reviews = () => {
               Learn More About CRUMS Leasing
             </h2>
             <div className="flex flex-wrap justify-center gap-4">
-              <Link to="/services/trailer-leasing" className="text-primary hover:underline font-medium">
+              <Link to="/dry-van-trailer-leasing" className="text-primary hover:underline font-medium">
                 Trailer leasing services
               </Link>
               <span className="text-muted-foreground">•</span>

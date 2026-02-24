@@ -683,7 +683,7 @@ const DryVanTrailers = () => {
               </Button>
             </Link>
             <Button asChild size="lg" className="bg-background text-primary hover:bg-background/90">
-              <Link to="/services/trailer-leasing">View All Leasing Options</Link>
+              <Link to="/dry-van-trailer-leasing">View All Leasing Options</Link>
             </Button>
           </div>
         </div>

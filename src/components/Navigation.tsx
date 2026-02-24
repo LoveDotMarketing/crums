@@ -42,12 +42,38 @@ export const Navigation = () => {
                       <li>
                         <NavigationMenuLink asChild>
                           <Link
-                            to="/services/trailer-leasing"
+                            to="/dry-van-trailer-leasing"
                             className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
                           >
-                            <div className="text-sm font-medium leading-none">Trailer Leasing</div>
+                            <div className="text-sm font-medium leading-none">Dry Van Leasing</div>
                             <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
-                              Long-term equipment leasing solutions
+                              53' dry van trailer leasing solutions
+                            </p>
+                          </Link>
+                        </NavigationMenuLink>
+                      </li>
+                      <li>
+                        <NavigationMenuLink asChild>
+                          <Link
+                            to="/flatbed-trailer-leasing"
+                            className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+                          >
+                            <div className="text-sm font-medium leading-none">Flatbed Leasing</div>
+                            <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+                              Open deck flatbed trailer leasing
+                            </p>
+                          </Link>
+                        </NavigationMenuLink>
+                      </li>
+                      <li>
+                        <NavigationMenuLink asChild>
+                          <Link
+                            to="/semi-trailer-leasing"
+                            className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+                          >
+                            <div className="text-sm font-medium leading-none">Semi Trailer Leasing</div>
+                            <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+                              Long-term semi trailer leasing
                             </p>
                           </Link>
                         </NavigationMenuLink>
@@ -267,11 +293,25 @@ export const Navigation = () => {
           <div className="lg:hidden py-4 border-t border-border max-h-[calc(100vh-5rem)] overflow-y-auto">
             <div className="flex flex-col space-y-4 pb-4">
               <Link
-                to="/services/trailer-leasing"
+                to="/dry-van-trailer-leasing"
                 className="text-sm font-medium text-foreground hover:text-primary"
                 onClick={() => setMobileMenuOpen(false)}
               >
-                Trailer Leasing
+                Dry Van Leasing
+              </Link>
+              <Link
+                to="/flatbed-trailer-leasing"
+                className="text-sm font-medium text-foreground hover:text-primary"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Flatbed Leasing
+              </Link>
+              <Link
+                to="/semi-trailer-leasing"
+                className="text-sm font-medium text-foreground hover:text-primary"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Semi Trailer Leasing
               </Link>
               <Link
                 to="/services/trailer-rentals"

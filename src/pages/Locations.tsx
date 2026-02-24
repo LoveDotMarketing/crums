@@ -308,7 +308,7 @@ const Locations = () => {
           <div className="max-w-3xl mx-auto text-center">
             <p className="text-muted-foreground">
               Explore our{" "}
-              <Link to="/services/trailer-leasing" className="text-primary hover:underline font-semibold">
+              <Link to="/dry-van-trailer-leasing" className="text-primary hover:underline font-semibold">
                 trailer leasing options
               </Link>{" "}
               or check out{" "}
