@@ -64,6 +64,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Start impersonation
   const startImpersonation = async (targetUser: ImpersonatedUser) => {
+    // Only admins can impersonate
+    if (userRole !== 'admin') {
+      console.error('[auth] Impersonation attempted by non-admin user');
+      toast.error('Unauthorized: Only administrators can use this feature.');
+      return;
+    }
+
     // Log impersonation start event with target user details
     if (user && user.email) {
       try {
