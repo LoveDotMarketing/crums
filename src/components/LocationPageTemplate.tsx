@@ -147,8 +147,8 @@ export const LocationPageTemplate = ({ location }: LocationPageTemplateProps) =>
 
   // Trailer types offered
   const trailerTypes = [
-    { name: "53' Dry Van Trailers", desc: "Our most popular option for general freight", link: "/dry-van-trailers" },
-    { name: "Flatbed Trailers", desc: "For oversized and construction materials", link: "/flatbed-trailers" }
+    { name: "53' Dry Van Trailers", desc: "Our most popular option for general freight", link: "/dry-van-trailers", leaseLink: "/dry-van-trailer-leasing" },
+    { name: "Flatbed Trailers", desc: "For oversized and construction materials", link: "/flatbed-trailers", leaseLink: "/flatbed-trailer-leasing" }
   ];
 
   return (
@@ -361,12 +361,20 @@ export const LocationPageTemplate = ({ location }: LocationPageTemplateProps) =>
                   <Truck className="h-10 w-10 text-primary mb-4" />
                   <h3 className="text-xl font-bold mb-2 text-foreground">{trailer.name}</h3>
                   <p className="text-muted-foreground mb-4">{trailer.desc}</p>
-                  <Link 
-                    to={trailer.link}
-                    className="text-primary hover:underline font-medium inline-flex items-center"
-                  >
-                    Learn More <ArrowRight className="ml-1 h-4 w-4" />
-                  </Link>
+                  <div className="flex flex-col gap-2">
+                    <Link 
+                      to={trailer.leaseLink}
+                      className="text-primary hover:underline font-semibold inline-flex items-center"
+                    >
+                      Lease This Trailer <ArrowRight className="ml-1 h-4 w-4" />
+                    </Link>
+                    <Link 
+                      to={trailer.link}
+                      className="text-muted-foreground hover:text-primary hover:underline text-sm inline-flex items-center"
+                    >
+                      View Specifications
+                    </Link>
+                  </div>
                 </CardContent>
               </Card>
             ))}
@@ -461,7 +469,35 @@ export const LocationPageTemplate = ({ location }: LocationPageTemplateProps) =>
           <h2 className="text-2xl font-bold mb-8 text-center text-foreground">
             Resources for {location.city} Carriers
           </h2>
-          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+            <Card className="border-2 hover:border-primary/50 transition-colors">
+              <CardContent className="p-6">
+                <h3 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2">
+                  <Truck className="h-5 w-5 text-primary" />
+                  Leasing Options
+                </h3>
+                <ul className="space-y-3">
+                  <li>
+                    <Link to="/dry-van-trailer-leasing" className="text-primary hover:underline font-medium">
+                      Dry Van Trailer Leasing
+                    </Link>
+                    <p className="text-sm text-muted-foreground">53' dry vans with flexible terms</p>
+                  </li>
+                  <li>
+                    <Link to="/flatbed-trailer-leasing" className="text-primary hover:underline font-medium">
+                      Flatbed Trailer Leasing
+                    </Link>
+                    <p className="text-sm text-muted-foreground">48' and 53' flatbeds available</p>
+                  </li>
+                  <li>
+                    <Link to="/semi-trailer-leasing" className="text-primary hover:underline font-medium">
+                      Semi Trailer Leasing
+                    </Link>
+                    <p className="text-sm text-muted-foreground">All trailer types and terms</p>
+                  </li>
+                </ul>
+              </CardContent>
+            </Card>
             <Card className="border-2 hover:border-primary/50 transition-colors">
               <CardContent className="p-6">
                 <h3 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2">
@@ -482,7 +518,7 @@ export const LocationPageTemplate = ({ location }: LocationPageTemplateProps) =>
                     <p className="text-sm text-muted-foreground">Compare costs of leasing vs purchasing</p>
                   </li>
                   <li>
-                    <Link to="/resources/tools/profit-per-load" className="text-primary hover:underline font-medium">
+                    <Link to="/resources/tools/profit-calculator" className="text-primary hover:underline font-medium">
                       Profit Per Load Calculator
                     </Link>
                     <p className="text-sm text-muted-foreground">Analyze profitability by haul</p>

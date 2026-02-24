@@ -500,14 +500,18 @@ const IFTACalculator = () => {
                 <CardContent className="pt-6 text-center">
                   <h3 className="text-xl font-bold mb-3 text-foreground">Simplify Your Operations</h3>
                   <p className="text-muted-foreground mb-4">
-                    Focus on driving, not paperwork. With{" "}
-                    <Link to="/services/trailer-leasing" className="text-primary hover:underline font-semibold">
-                      affordable trailer leasing from CRUMS
-                    </Link>, 
-                    you get predictable payments and reliable equipment.
+                    Focus on driving, not paperwork. With affordable{" "}
+                    <Link to="/dry-van-trailer-leasing" className="text-primary hover:underline font-semibold">
+                      dry van
+                    </Link>{" "}
+                    and{" "}
+                    <Link to="/flatbed-trailer-leasing" className="text-primary hover:underline font-semibold">
+                      flatbed trailer leasing
+                    </Link>{" "}
+                    from CRUMS, you get predictable payments and reliable equipment.
                   </p>
                   <Button asChild variant="outline">
-                    <Link to="/contact">Explore Leasing Options</Link>
+                    <Link to="/semi-trailer-leasing">Explore All Leasing Options</Link>
                   </Button>
                 </CardContent>
               </Card>

@@ -365,8 +365,8 @@ const WhyLeasingDryVan = () => {
                       </Link>
                     </Button>
                     <Button asChild variant="outline" size="lg">
-                      <Link to="/services/trailer-leasing">
-                        Learn About Our Leasing Options
+                      <Link to="/dry-van-trailer-leasing">
+                        Explore Dry Van Leasing
                       </Link>
                     </Button>
                   </div>

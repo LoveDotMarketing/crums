@@ -387,14 +387,23 @@ const PerDiemCalculator = () => {
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-3xl font-bold mb-4">Maximize Your Trucking Business</h2>
           <p className="text-xl mb-8 max-w-2xl mx-auto text-primary-foreground/90">
-            Lower your costs with flexible trailer leasing from CRUMS. Keep more money in your pocket.
+            Lower your costs with flexible trailer leasing from CRUMS. Explore{" "}
+            <Link to="/dry-van-trailer-leasing" className="text-primary-foreground underline font-semibold">dry van</Link>{" "}
+            and{" "}
+            <Link to="/flatbed-trailer-leasing" className="text-primary-foreground underline font-semibold">flatbed</Link>{" "}
+            leasing options to keep more money in your pocket.
           </p>
-          <Link to="/get-started">
-            <Button size="lg" className="bg-secondary hover:bg-secondary/90">
-              Get a Lease Quote
-              <ArrowRight className="ml-2 h-5 w-5" />
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button asChild size="lg" className="bg-secondary hover:bg-secondary/90">
+              <Link to="/dry-van-trailer-leasing">
+                Dry Van Leasing
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </Link>
             </Button>
-          </Link>
+            <Button asChild size="lg" variant="outline" className="bg-transparent border-primary-foreground text-primary-foreground hover:bg-primary-foreground/10">
+              <Link to="/flatbed-trailer-leasing">Flatbed Leasing</Link>
+            </Button>
+          </div>
         </div>
       </section>
 
