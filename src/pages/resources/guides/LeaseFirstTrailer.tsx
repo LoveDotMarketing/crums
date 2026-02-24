@@ -390,9 +390,14 @@ const LeaseFirstTrailer = () => {
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
                   <Button asChild size="lg">
-                    <Link to="/get-started">
-                      Get a Quote
+                    <Link to="/dry-van-trailer-leasing">
+                      Lease a Dry Van Trailer
                       <ArrowRight className="h-4 w-4 ml-2" />
+                    </Link>
+                  </Button>
+                  <Button asChild variant="outline" size="lg">
+                    <Link to="/flatbed-trailer-leasing">
+                      Lease a Flatbed Trailer
                     </Link>
                   </Button>
                   <Button asChild variant="outline" size="lg">

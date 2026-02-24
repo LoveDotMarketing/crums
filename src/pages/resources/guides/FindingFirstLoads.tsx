@@ -515,7 +515,7 @@ const FindingFirstLoads = () => {
             <div className="bg-primary text-primary-foreground rounded-lg p-8">
               <h2 className="text-2xl font-bold mb-4">What's Next?</h2>
               <p className="text-primary-foreground/90 mb-6">
-                You know how to find loads — but what about your equipment? Leasing a trailer gives you flexibility without the huge upfront cost. The next guide explains why leasing makes sense for new drivers and what to look for in a lease provider.
+                You know how to find loads — but what about your equipment? <Link to="/dry-van-trailer-leasing" className="underline font-medium">Leasing a dry van trailer</Link> gives you flexibility without the huge upfront cost. The next guide explains why leasing makes sense for new drivers and what to look for in a lease provider.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
                 <Button asChild variant="secondary" size="lg">

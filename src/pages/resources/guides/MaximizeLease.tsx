@@ -336,7 +336,10 @@ const MaximizeLease = () => {
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Button asChild size="lg" variant="secondary">
-                  <Link to="/get-started">Start Your Lease</Link>
+                  <Link to="/dry-van-trailer-leasing">Lease a Dry Van</Link>
+                </Button>
+                <Button asChild size="lg" variant="secondary">
+                  <Link to="/flatbed-trailer-leasing">Lease a Flatbed</Link>
                 </Button>
                 <Button asChild size="lg" variant="outline" className="border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10">
                   <Link to="/contact">Contact Us</Link>

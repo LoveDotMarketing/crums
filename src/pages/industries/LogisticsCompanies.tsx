@@ -106,12 +106,16 @@ const LogisticsCompanies = () => {
               <Card className="border-2 hover:border-primary/50 transition-colors">
                 <CardContent className="p-6 text-center">
                   <Truck className="h-8 w-8 text-primary mx-auto mb-3" />
-                  <h3 className="font-bold text-foreground mb-2">Dry Van & Flatbed Trailers</h3>
+                  <h3 className="font-bold text-foreground mb-2">Dry Van & Flatbed Leasing</h3>
                   <p className="text-sm text-muted-foreground mb-4">
-                    Multiple trailer types for diverse customer needs.
+                    Lease dry vans and flatbeds for diverse customer needs.
                   </p>
-                  <Link to="/dry-van-trailers" className="text-primary hover:underline font-medium text-sm">
-                    View Trailers →
+                  <Link to="/dry-van-trailer-leasing" className="text-primary hover:underline font-medium text-sm">
+                    Dry Van Leasing →
+                  </Link>
+                  <span className="mx-2 text-muted-foreground">|</span>
+                  <Link to="/flatbed-trailer-leasing" className="text-primary hover:underline font-medium text-sm">
+                    Flatbed Leasing →
                   </Link>
                 </CardContent>
               </Card>

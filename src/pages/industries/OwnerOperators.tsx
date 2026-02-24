@@ -49,7 +49,7 @@ const OwnerOperators = () => {
                 <Link to="/get-started" onClick={() => trackCtaClick('Apply Now', 'industry_owner_operators', '/get-started')}>Apply Now <ArrowRight className="ml-2 h-4 w-4" /></Link>
               </Button>
               <Button asChild variant="outline" size="lg" className="border-primary-foreground text-primary-foreground bg-transparent hover:bg-primary-foreground/10">
-                <Link to="/trailer-leasing">View Lease Options</Link>
+                <Link to="/dry-van-trailer-leasing">View Lease Options</Link>
               </Button>
             </div>
           </div>
@@ -107,12 +107,12 @@ const OwnerOperators = () => {
               <Card className="border-2 hover:border-primary/50 transition-colors">
                 <CardContent className="p-6 text-center">
                   <Truck className="h-8 w-8 text-primary mx-auto mb-3" />
-                  <h3 className="font-bold text-foreground mb-2">Dry Van Trailers</h3>
+                  <h3 className="font-bold text-foreground mb-2">Dry Van Trailer Leasing</h3>
                   <p className="text-sm text-muted-foreground mb-4">
                     Our most popular option for owner operators hauling general freight.
                   </p>
-                  <Link to="/dry-van-trailers" className="text-primary hover:underline font-medium text-sm">
-                    View Dry Vans →
+                  <Link to="/dry-van-trailer-leasing" className="text-primary hover:underline font-medium text-sm">
+                    Lease a Dry Van →
                   </Link>
                 </CardContent>
               </Card>
