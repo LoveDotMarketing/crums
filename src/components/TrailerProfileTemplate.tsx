@@ -414,12 +414,12 @@ export const TrailerProfileTemplate = ({ data }: TrailerProfileTemplateProps) =>
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
               </Link>
-              <Link to="/services/trailer-leasing">
+              <Link to="/dry-van-trailer-leasing">
                 <Button 
                   size="lg" 
                   variant="outline" 
                   className="bg-transparent border-2 border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary text-lg px-8 py-6"
-                  onClick={() => trackCtaClick('View Leasing Options', `trailer_${data.unitNumber}`, '/services/trailer-leasing')}
+                  onClick={() => trackCtaClick('View Leasing Options', `trailer_${data.unitNumber}`, '/dry-van-trailer-leasing')}
                 >
                   View Leasing Options
                 </Button>

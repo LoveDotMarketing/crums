@@ -430,7 +430,7 @@ const Contact = () => {
                   <h3 className="font-semibold text-foreground mb-4">Explore Our Services</h3>
                   <ul className="space-y-3">
                     <li>
-                      <Link to="/services/trailer-leasing" className="text-primary hover:underline">
+                      <Link to="/dry-van-trailer-leasing" className="text-primary hover:underline">
                         53-foot dry van trailer leasing
                       </Link>
                     </li>

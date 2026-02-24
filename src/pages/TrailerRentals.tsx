@@ -219,7 +219,7 @@ const TrailerRentals = () => {
           <div className="max-w-3xl mx-auto text-center">
             <p className="text-lg text-muted-foreground mb-6">
               Looking for a longer commitment? Explore our{" "}
-              <Link to="/services/trailer-leasing" className="text-primary hover:underline font-semibold">
+              <Link to="/dry-van-trailer-leasing" className="text-primary hover:underline font-semibold">
                 long-term trailer leasing programs
               </Link>{" "}
               starting at 12 months with predictable monthly payments. Managing a larger operation? Our{" "}

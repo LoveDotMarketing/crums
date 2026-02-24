@@ -90,11 +90,6 @@ export const Footer = () => {
             </Link>
             <ul className="space-y-2 text-sm">
               <li>
-                <Link to="/services/trailer-leasing" className="hover:text-secondary transition-colors">
-                  Trailer Leasing
-                </Link>
-              </li>
-              <li>
                 <Link to="/dry-van-trailer-leasing" className="hover:text-secondary transition-colors">
                   Dry Van Leasing
                 </Link>

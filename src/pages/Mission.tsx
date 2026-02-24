@@ -282,7 +282,7 @@ const Mission = () => {
             </p>
             <p className="text-muted-foreground mb-6">
               Ready to experience these values firsthand? Explore our{" "}
-              <Link to="/services/trailer-leasing" onClick={() => trackCtaClick('trailer leasing services', 'mission', '/services/trailer-leasing')} className="text-secondary hover:underline font-semibold">
+              <Link to="/dry-van-trailer-leasing" onClick={() => trackCtaClick('trailer leasing services', 'mission', '/dry-van-trailer-leasing')} className="text-secondary hover:underline font-semibold">
                 trailer leasing services
               </Link>{" "}
               or browse{" "}

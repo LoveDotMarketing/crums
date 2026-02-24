@@ -270,7 +270,7 @@ const FleetSolutions = () => {
           <div className="max-w-3xl mx-auto text-center">
             <p className="text-lg text-muted-foreground mb-6">
               Building your fleet? Start with{" "}
-              <Link to="/services/trailer-leasing" className="text-primary hover:underline font-semibold">
+              <Link to="/dry-van-trailer-leasing" className="text-primary hover:underline font-semibold">
                 individual trailer leasing
               </Link>{" "}
               for long-term needs with predictable payments, or{" "}

@@ -270,7 +270,7 @@ const About = () => {
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-5xl mx-auto">
-            <Link to="/services/trailer-leasing" className="group">
+            <Link to="/dry-van-trailer-leasing" className="group">
               <Card className="h-full border-2 hover:border-primary transition-colors">
                 <CardContent className="p-6 text-center">
                   <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">
