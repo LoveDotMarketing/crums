@@ -1,0 +1,1 @@
+DROP POLICY "Authenticated users can create referrals" ON public.referrals;
