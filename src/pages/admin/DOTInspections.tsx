@@ -198,6 +198,22 @@ export default function DOTInspections() {
     setDetailDialogOpen(true);
   };
 
+  const escapeHtml = (text: string | null | undefined): string => {
+    if (!text) return '';
+    const map: Record<string, string> = {
+      '&': '&amp;', '<': '&lt;', '>': '&gt;',
+      '"': '&quot;', "'": '&#039;'
+    };
+    return text.replace(/[&<>"']/g, (c) => map[c]);
+  };
+
+  const sanitizeImgSrc = (src: string | null | undefined): string => {
+    if (!src) return '';
+    if (src.startsWith('data:image/')) return src;
+    if (src.includes('supabase') && src.includes('storage')) return src;
+    return escapeHtml(src);
+  };
+
   const handleDownloadPDF = (inspection: DOTInspection) => {
     // Open a new window with print-friendly inspection report
     const printWindow = window.open("", "_blank");
@@ -217,7 +233,7 @@ export default function DOTInspections() {
       <!DOCTYPE html>
       <html>
       <head>
-        <title>DOT Inspection Report - ${inspection.trailer_number}</title>
+        <title>DOT Inspection Report - ${escapeHtml(inspection.trailer_number)}</title>
         <style>
           * { margin: 0; padding: 0; box-sizing: border-box; }
           body { font-family: Arial, sans-serif; padding: 40px; max-width: 800px; margin: 0 auto; }
@@ -253,19 +269,19 @@ export default function DOTInspections() {
           <div class="grid">
             <div class="field">
               <div class="field-label">Trailer Number</div>
-              <div class="field-value">${inspection.trailer_number}</div>
+              <div class="field-value">${escapeHtml(inspection.trailer_number)}</div>
             </div>
             <div class="field">
               <div class="field-label">VIN</div>
-              <div class="field-value">${inspection.vin || "N/A"}</div>
+              <div class="field-value">${escapeHtml(inspection.vin) || "N/A"}</div>
             </div>
             <div class="field">
               <div class="field-label">License Plate</div>
-              <div class="field-value">${inspection.license_plate || "N/A"}</div>
+              <div class="field-value">${escapeHtml(inspection.license_plate) || "N/A"}</div>
             </div>
             <div class="field">
               <div class="field-label">Trailer Type</div>
-              <div class="field-value">${inspection.trailer_type || "N/A"}</div>
+              <div class="field-value">${escapeHtml(inspection.trailer_type) || "N/A"}</div>
             </div>
           </div>
         </div>
@@ -279,11 +295,11 @@ export default function DOTInspections() {
             </div>
             <div class="field">
               <div class="field-label">Inspector</div>
-              <div class="field-value">${inspection.inspector_name || "Unknown"}</div>
+              <div class="field-value">${escapeHtml(inspection.inspector_name) || "Unknown"}</div>
             </div>
             <div class="field">
               <div class="field-label">Status</div>
-              <div class="field-value">${inspection.customer_acknowledged ? "Customer Signed" : inspection.status}</div>
+              <div class="field-value">${inspection.customer_acknowledged ? "Customer Signed" : escapeHtml(inspection.status)}</div>
             </div>
             <div class="field">
               <div class="field-label">Customer Acknowledged</div>
@@ -310,15 +326,15 @@ export default function DOTInspections() {
           <div class="grid">
             <div class="field">
               <div class="field-label">Customer Name</div>
-              <div class="field-value">${inspection.customer_name}</div>
+              <div class="field-value">${escapeHtml(inspection.customer_name)}</div>
             </div>
             <div class="field">
               <div class="field-label">Company</div>
-              <div class="field-value">${inspection.customer_company_name || "N/A"}</div>
+              <div class="field-value">${escapeHtml(inspection.customer_company_name) || "N/A"}</div>
             </div>
             <div class="field">
               <div class="field-label">Signer Name</div>
-              <div class="field-value">${inspection.customer_signer_name || "N/A"}</div>
+              <div class="field-value">${escapeHtml(inspection.customer_signer_name) || "N/A"}</div>
             </div>
           </div>
         </div>
@@ -326,11 +342,11 @@ export default function DOTInspections() {
 
         <div class="signatures">
           <div class="signature-box">
-            ${inspection.inspector_signature ? `<img src="${inspection.inspector_signature}" alt="Inspector Signature" />` : "<p>No signature</p>"}
+            ${inspection.inspector_signature ? `<img src="${sanitizeImgSrc(inspection.inspector_signature)}" alt="Inspector Signature" />` : "<p>No signature</p>"}
             <div class="signature-label">Inspector Signature</div>
           </div>
           <div class="signature-box">
-            ${inspection.customer_signature ? `<img src="${inspection.customer_signature}" alt="Customer Signature" />` : "<p>Pending customer signature</p>"}
+            ${inspection.customer_signature ? `<img src="${sanitizeImgSrc(inspection.customer_signature)}" alt="Customer Signature" />` : "<p>Pending customer signature</p>"}
             <div class="signature-label">Customer Signature</div>
           </div>
         </div>
