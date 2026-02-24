@@ -213,14 +213,18 @@ const FuelCostCalculator = () => {
               <CardContent className="pt-6 text-center">
                 <h3 className="text-xl font-bold mb-3 text-foreground">Plan Better with Predictable Costs</h3>
                 <p className="text-muted-foreground mb-4">
-                  Combine fuel savings with{" "}
-                  <Link to="/services/trailer-leasing" className="text-primary hover:underline font-semibold">
-                    predictable trailer lease payments
+                  Combine fuel savings with predictable lease payments. Explore{" "}
+                  <Link to="/dry-van-trailer-leasing" className="text-primary hover:underline font-semibold">
+                    dry van trailer leasing
                   </Link>{" "}
-                  from CRUMS Leasing. Know your expenses and budget with confidence.
+                  or{" "}
+                  <Link to="/flatbed-trailer-leasing" className="text-primary hover:underline font-semibold">
+                    flatbed trailer leasing
+                  </Link>{" "}
+                  from CRUMS Leasing and budget with confidence.
                 </p>
                 <Button asChild variant="outline">
-                  <Link to="/contact">Get a Leasing Quote</Link>
+                  <Link to="/semi-trailer-leasing">View All Leasing Options</Link>
                 </Button>
               </CardContent>
             </Card>

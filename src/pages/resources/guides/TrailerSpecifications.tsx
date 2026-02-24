@@ -444,7 +444,7 @@ const TrailerSpecifications = () => {
                 </Link>
               </Button>
               <Button asChild size="lg" variant="outline" className="bg-transparent border-primary-foreground text-primary-foreground hover:bg-primary-foreground/10">
-                <Link to="/services/trailer-leasing">View All Trailers</Link>
+                <Link to="/semi-trailer-leasing">View Leasing Options</Link>
               </Button>
             </div>
           </section>

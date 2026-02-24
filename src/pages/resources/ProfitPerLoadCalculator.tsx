@@ -498,15 +498,24 @@ const ProfitPerLoadCalculator = () => {
             <CardContent className="pt-6 text-center">
               <h3 className="text-xl font-bold mb-3 text-foreground">Maximize Your Profits</h3>
               <p className="text-muted-foreground mb-4">
-                Increase your margins with{" "}
-                <Link to="/services/trailer-leasing" className="text-primary hover:underline font-semibold">
-                  quality trailer equipment from CRUMS Leasing
-                </Link>. 
-                Our well-maintained trailers help reduce downtime and keep you earning.
+                Increase your margins with quality trailer equipment from CRUMS Leasing. Explore{" "}
+                <Link to="/dry-van-trailer-leasing" className="text-primary hover:underline font-semibold">
+                  dry van trailer leasing
+                </Link>{" "}
+                or{" "}
+                <Link to="/flatbed-trailer-leasing" className="text-primary hover:underline font-semibold">
+                  flatbed trailer leasing
+                </Link>{" "}
+                — well-maintained trailers that reduce downtime and keep you earning.
               </p>
-              <Button asChild variant="outline">
-                <Link to="/contact">Get Equipment Information</Link>
-              </Button>
+              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                <Button asChild variant="outline">
+                  <Link to="/dry-van-trailer-leasing">Dry Van Leasing</Link>
+                </Button>
+                <Button asChild variant="outline">
+                  <Link to="/flatbed-trailer-leasing">Flatbed Leasing</Link>
+                </Button>
+              </div>
             </CardContent>
           </Card>
         </div>

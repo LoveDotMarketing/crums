@@ -475,15 +475,24 @@ const CostPerMileCalculator = () => {
               Looking to Reduce Your Costs?
             </h2>
             <p className="text-muted-foreground mb-6 max-w-2xl mx-auto">
-              Lower your cost per mile with{" "}
-              <Link to="/services/trailer-leasing" className="text-primary hover:underline font-semibold">
-                competitive trailer lease rates
+              Lower your cost per mile with predictable trailer lease payments from CRUMS Leasing. Explore our{" "}
+              <Link to="/dry-van-trailer-leasing" className="text-primary hover:underline font-semibold">
+                dry van trailer leasing
               </Link>{" "}
-              from CRUMS Leasing. Our flexible terms and predictable payments help you budget better.
+              or{" "}
+              <Link to="/flatbed-trailer-leasing" className="text-primary hover:underline font-semibold">
+                flatbed trailer leasing
+              </Link>{" "}
+              options with flexible terms.
             </p>
-            <Button asChild size="lg">
-              <Link to="/contact">Request a Trailer Leasing Quote</Link>
-            </Button>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Button asChild size="lg">
+                <Link to="/dry-van-trailer-leasing">Dry Van Leasing</Link>
+              </Button>
+              <Button asChild size="lg" variant="outline">
+                <Link to="/flatbed-trailer-leasing">Flatbed Leasing</Link>
+              </Button>
+            </div>
           </div>
         </section>
       </main>

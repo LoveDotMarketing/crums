@@ -431,8 +431,14 @@ const ChoosingTrailer = () => {
                     </p>
                     <div className="flex flex-col sm:flex-row gap-3 justify-center md:justify-start">
                       <Button asChild variant="secondary" size="lg">
-                        <Link to="/services/trailer-leasing">
-                          Explore Trailer Leasing
+                        <Link to="/dry-van-trailer-leasing">
+                          Dry Van Leasing
+                          <ArrowRight className="h-4 w-4 ml-2" />
+                        </Link>
+                      </Button>
+                      <Button asChild variant="secondary" size="lg">
+                        <Link to="/flatbed-trailer-leasing">
+                          Flatbed Leasing
                           <ArrowRight className="h-4 w-4 ml-2" />
                         </Link>
                       </Button>
@@ -512,7 +518,11 @@ const ChoosingTrailer = () => {
                       At CRUMS Leasing, we're more than a leasing company — we're your partner on the road to success. Our people-first approach means we take the time to understand your hauling needs and match you with the right equipment.
                     </p>
                     <p className="text-muted-foreground">
-                      Whether you're an owner-operator just starting out or an established carrier expanding your fleet, we offer <Link to="/services/trailer-leasing" className="text-primary hover:underline font-medium">flexible trailer leasing</Link> and <Link to="/services/trailer-rentals" className="text-primary hover:underline font-medium">short-term rentals</Link> to fit your business model. Follow the CRUMS home — where integrity, family, and opportunity come together.
+                      Whether you're an owner-operator just starting out or an established carrier expanding your fleet, we offer{" "}
+                      <Link to="/dry-van-trailer-leasing" className="text-primary hover:underline font-medium">dry van trailer leasing</Link>,{" "}
+                      <Link to="/flatbed-trailer-leasing" className="text-primary hover:underline font-medium">flatbed trailer leasing</Link>, and{" "}
+                      <Link to="/services/trailer-rentals" className="text-primary hover:underline font-medium">short-term rentals</Link>{" "}
+                      to fit your business model. Follow the CRUMS home — where integrity, family, and opportunity come together.
                     </p>
                   </div>
                 </div>
