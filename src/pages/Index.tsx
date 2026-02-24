@@ -259,9 +259,21 @@ const Index = () => {
               </h3>
               <ul className="space-y-2">
                 <li>
-                  <Link to="/services/trailer-leasing" className="text-foreground hover:text-primary font-medium flex items-center gap-2">
+                  <Link to="/dry-van-trailer-leasing" className="text-foreground hover:text-primary font-medium flex items-center gap-2">
                     <Truck className="h-4 w-4 text-primary" />
-                    Trailer Leasing
+                    Dry Van Leasing
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/flatbed-trailer-leasing" className="text-foreground hover:text-primary font-medium flex items-center gap-2">
+                    <Truck className="h-4 w-4 text-primary" />
+                    Flatbed Leasing
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/semi-trailer-leasing" className="text-foreground hover:text-primary font-medium flex items-center gap-2">
+                    <Truck className="h-4 w-4 text-primary" />
+                    Semi Trailer Leasing
                   </Link>
                 </li>
                 <li>
@@ -293,6 +305,21 @@ const Index = () => {
                 <li>
                   <Link to="/flatbed-trailers" className="text-foreground hover:text-primary font-medium">
                     Flatbed Trailers
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/dry-van-trailer-leasing" className="text-foreground hover:text-primary font-medium">
+                    Dry Van Trailer Leasing
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/flatbed-trailer-leasing" className="text-foreground hover:text-primary font-medium">
+                    Flatbed Trailer Leasing
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/semi-trailer-leasing" className="text-foreground hover:text-primary font-medium">
+                    Semi Trailer Leasing
                   </Link>
                 </li>
               </ul>
