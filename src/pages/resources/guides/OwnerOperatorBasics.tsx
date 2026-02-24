@@ -521,9 +521,14 @@ const OwnerOperatorBasics = () => {
               </div>
               <div className="flex flex-col sm:flex-row gap-4">
                 <Button asChild variant="secondary" size="lg">
-                  <Link to="/get-started">
-                    Ready to Lease a Trailer?
+                  <Link to="/dry-van-trailer-leasing">
+                    Lease a Dry Van Trailer
                     <ArrowRight className="h-4 w-4 ml-2" />
+                  </Link>
+                </Button>
+                <Button asChild variant="secondary" size="lg">
+                  <Link to="/semi-trailer-leasing">
+                    Semi Trailer Leasing
                   </Link>
                 </Button>
                 <Button asChild variant="outline" size="lg" className="bg-transparent border-primary-foreground text-primary-foreground hover:bg-primary-foreground/10">

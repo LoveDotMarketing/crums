@@ -106,12 +106,16 @@ const FleetLeasing = () => {
               <Card className="border-2 hover:border-primary/50 transition-colors">
                 <CardContent className="p-6 text-center">
                   <Box className="h-8 w-8 text-primary mx-auto mb-3" />
-                  <h3 className="font-bold text-foreground mb-2">All Trailer Types</h3>
+                  <h3 className="font-bold text-foreground mb-2">Fleet Trailer Leasing</h3>
                   <p className="text-sm text-muted-foreground mb-4">
                     Dry vans and flatbeds for your fleet.
                   </p>
-                  <Link to="/services/trailer-leasing" className="text-primary hover:underline font-medium text-sm">
-                    View Options →
+                  <Link to="/dry-van-trailer-leasing" className="text-primary hover:underline font-medium text-sm">
+                    Dry Van Leasing →
+                  </Link>
+                  <span className="mx-2 text-muted-foreground">|</span>
+                  <Link to="/flatbed-trailer-leasing" className="text-primary hover:underline font-medium text-sm">
+                    Flatbed Leasing →
                   </Link>
                 </CardContent>
               </Card>

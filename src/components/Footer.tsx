@@ -95,6 +95,21 @@ export const Footer = () => {
                 </Link>
               </li>
               <li>
+                <Link to="/dry-van-trailer-leasing" className="hover:text-secondary transition-colors">
+                  Dry Van Leasing
+                </Link>
+              </li>
+              <li>
+                <Link to="/flatbed-trailer-leasing" className="hover:text-secondary transition-colors">
+                  Flatbed Leasing
+                </Link>
+              </li>
+              <li>
+                <Link to="/semi-trailer-leasing" className="hover:text-secondary transition-colors">
+                  Semi Trailer Leasing
+                </Link>
+              </li>
+              <li>
                 <Link to="/services/trailer-rentals" className="hover:text-secondary transition-colors">
                   Trailer Rentals
                 </Link>
