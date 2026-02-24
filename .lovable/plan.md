@@ -1,28 +1,48 @@
 
 
-# Fix: Show Customer's Assigned Trailers in Create Subscription Dialog
+# Fix: Edge Function Rejects Customer's Already-Assigned Trailers
 
-## What's Wrong
+## Problem
 
-The Create Subscription dialog currently only shows trailers with `status = "available"` and `customer_id = null`. Ground Link LLC has 8 trailers already assigned to them (status "rented", customer_id set), but they appear nowhere in the dialog -- so you only see 3 unrelated available trailers.
+The Create Subscription dialog now correctly shows Ground Link LLC's 8 trailers. However, when the admin submits, the `create-subscription` edge function will reject them because it checks `is_rented = true` and throws an error: *"Trailer(s) are already rented. Please select available trailers."*
 
-Additionally, the customer dropdown filters OUT any customer who already has a subscription. Since we now support split billing (multiple subscriptions per customer), this filter is too aggressive. A customer with one active subscription should still appear if you need to create a second billing schedule.
+Ground Link's trailers are already marked `is_rented: true` and `customer_id` is set -- they were physically assigned but never had a subscription created. The edge function needs to allow trailers that are already assigned to the **same customer** being subscribed.
 
-## Changes
+## Root Cause
 
-### 1. Update trailer query to include customer's assigned trailers
-**File:** `src/components/admin/CreateSubscriptionDialog.tsx` (lines 158-173)
+`supabase/functions/create-subscription/index.ts`, lines 125-136:
 
-Change the trailer query so that when a customer is selected, it fetches:
-- Globally available trailers (status = "available", no customer) -- as today
-- Trailers already assigned to the selected customer (any status) -- NEW
+```text
+Check: trailers WHERE id IN (trailerIds) AND is_rented = true
+If any found -> throw error (blocks submission)
+```
 
-The query key will include `selectedCustomerId` so it re-fetches when the customer changes. Uses Supabase `.or()` filter to combine both conditions.
+This check makes no distinction between trailers rented by *another* customer vs trailers already assigned to *this* customer.
 
-### 2. Update customer dropdown to show ALL active customers
-**File:** `src/components/admin/CreateSubscriptionDialog.tsx` (lines 132-156)
+## Fix
 
-Remove the filter that excludes customers with existing subscriptions. All active customers should be selectable since split billing requires creating multiple subscriptions for the same customer.
+Update the rented-trailer check (lines 125-136) to **exclude trailers already assigned to the target customer**. The logic becomes:
 
-Both changes are in a single file with no backend modifications needed.
+- Fetch trailers that are `is_rented = true` AND in the requested list
+- Filter out any that already have `customer_id = customerId` (the customer we're creating the subscription for)
+- Only throw an error if there are trailers rented by a *different* customer
+
+This is a single change in `supabase/functions/create-subscription/index.ts`. No frontend changes needed.
+
+## Technical Details
+
+| File | Change |
+|---|---|
+| `supabase/functions/create-subscription/index.ts` (lines 125-136) | After fetching rented trailers, filter out those where `customer_id` matches the target `customerId`. Only error if remaining trailers (rented by others) exist. |
+
+The updated logic:
+
+```text
+1. Query trailers WHERE id IN (trailerIds) AND is_rented = true
+2. Filter results: remove trailers where customer_id == customerId
+3. If filtered list is non-empty -> error (trailers rented by someone else)
+4. If filtered list is empty -> allow (trailers belong to this customer already)
+```
+
+After creating the subscription, the existing code at line 442-446 already sets `is_rented: true` and `customer_id`, so trailers that were already assigned won't be double-updated (idempotent).
 
