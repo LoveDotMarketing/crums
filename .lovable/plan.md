@@ -1,68 +1,102 @@
 
 
-# XSS Vulnerability Remediation
+# Authentication and Authorization Audit Results
 
-## Finding
+## Summary
 
-One real XSS vulnerability exists in the codebase. The rest of the application is safe thanks to React's built-in escaping and the existing DOMPurify usage in the Outreach page.
+The authentication and authorization system is well-architected. After a thorough review, **no critical vulnerabilities were found**. Below is the detailed audit of each area, with one minor hardening improvement proposed.
 
-## Vulnerability: DOT Inspection Print Window
+---
 
-**File:** `src/pages/admin/DOTInspections.tsx` (lines 216-346)
+## 1. Client-Side Authentication Logic -- SECURE
 
-**Risk:** The `handleDownloadPDF` function builds a full HTML document using template literals and `document.write()`. It interpolates approximately 15 database fields directly into the HTML without escaping:
+**Finding:** Authentication is fully handled server-side via JWT-based sessions.
 
-- `inspection.trailer_number`
-- `inspection.vin`
-- `inspection.license_plate`
-- `inspection.trailer_type`
-- `inspection.inspector_name`
-- `inspection.customer_name`
-- `inspection.customer_company_name`
-- `inspection.customer_signer_name`
-- `inspection.notes`
-- `inspection.status`
-- `inspection.inspector_signature` (used in an `img src`)
-- `inspection.customer_signature` (used in an `img src`)
+- `signIn` calls `supabase.auth.signInWithPassword()` -- password validation happens on the server
+- `signUp` calls `supabase.auth.signUp()` -- account creation is server-side
+- Role assignment uses `set_user_role()` SECURITY DEFINER function, which restricts self-assignment to the `customer` role only -- admin/mechanic roles cannot be self-assigned
+- Role fetching reads from `user_roles` table with proper RLS policies
+- `ProtectedRoute` component gates route access based on server-fetched roles, not client-side storage
+- Password reset uses `supabase.auth.updateUser()` with a recovery session validated server-side
 
-If any field contained `<script>alert('xss')</script>` or a malicious `onerror` handler in an img src, it would execute in the print window context.
+**Verdict:** No issues found.
 
-**Severity:** Medium -- this is an admin-only page and the data comes from the database (not directly from anonymous users), but a compromised database record or a malicious mechanic input could exploit it.
+---
 
-## Fix
+## 2. Rate Limiting on Login -- IMPLEMENTED
 
-Add an `escapeHtml` utility function and apply it to every interpolated database value in the `document.write()` template. This is the same pattern already used in the `send-rental-request-email` edge function.
+**Finding:** Brute-force protection is already in place.
 
-### Changes
+- `check_login_attempt()` SECURITY DEFINER function checks if a login is allowed before attempting authentication
+- `record_failed_login()` SECURITY DEFINER function tracks failures and locks accounts after 5 attempts for 15 minutes
+- `reset_login_attempts()` clears the counter on successful login
+- The `login_attempts` table has admin-only RLS (SELECT/DELETE), with SECURITY DEFINER functions bypassing RLS for enforcement
+- The Login UI properly disables the submit button and displays lockout alerts
+
+**Minor observation:** `checkLoginAllowed` fails open on database errors (returns `allowed: true`). This is a common pragmatic pattern -- failing closed would lock out all users during a database outage. This is an acceptable tradeoff.
+
+**Verdict:** No issues found.
+
+---
+
+## 3. Impersonation Vulnerabilities -- SECURE BY DESIGN
+
+**Finding:** The impersonation system is a client-side UI convenience, not a security mechanism.
+
+How it works:
+- Admin clicks "View As" on a customer/mechanic record
+- React state (`impersonatedUser`) is set with the target user's info
+- The admin's JWT remains unchanged -- `auth.uid()` always returns the real admin ID
+- RLS policies on all tables grant admin full access via `has_role(auth.uid(), 'admin')`, so admins already have legitimate access to all data
+- Edge functions that handle sensitive operations (ACH bank linking, payments) validate the JWT directly, which correctly identifies the admin -- not the impersonated user. These operations are properly disabled during impersonation in the UI.
+- Impersonation start/stop events are logged to `user_activity_logs` with full audit trail (target user ID, email, role)
+- Only admin pages (`Customers.tsx`, `Staff.tsx`, `Mechanics.tsx`, `CustomerDetail.tsx`) expose the impersonation button
+
+**Verdict:** No vulnerabilities. The system cannot be exploited to bypass RLS or perform unauthorized actions because the actual auth token is never changed.
+
+---
+
+## 4. One Hardening Improvement (Low Priority)
+
+**Issue:** The `startImpersonation` function does not verify the caller's role before setting impersonation state. While only admin pages render the "View As" button, the function itself in `useAuth.tsx` could theoretically be called from any component.
+
+**Proposed fix:** Add a guard at the top of `startImpersonation` that checks `userRole === 'admin'` before proceeding.
+
+### Change
 
 | File | Change |
 |---|---|
-| `src/pages/admin/DOTInspections.tsx` | Add `escapeHtml` helper function; wrap all ~15 interpolated database values with `escapeHtml()` calls inside the `handleDownloadPDF` function |
+| `src/hooks/useAuth.tsx` (line 66) | Add admin role guard at start of `startImpersonation` function |
 
-### Implementation Detail
-
-1. Add an `escapeHtml` function at the top of the file (or import from a shared util):
+The change is a single guard clause:
 
 ```typescript
-function escapeHtml(text: string | null | undefined): string {
-  if (!text) return '';
-  const map: Record<string, string> = {
-    '&': '&amp;', '<': '&lt;', '>': '&gt;',
-    '"': '&quot;', "'": '&#039;'
-  };
-  return text.replace(/[&<>"']/g, (c) => map[c]);
-}
+const startImpersonation = async (targetUser: ImpersonatedUser) => {
+  // Only admins can impersonate
+  if (userRole !== 'admin') {
+    console.error('[auth] Impersonation attempted by non-admin user');
+    toast.error('Unauthorized: Only administrators can use this feature.');
+    return;
+  }
+  // ... rest of existing code
+};
 ```
 
-2. Wrap every interpolation: `${inspection.trailer_number}` becomes `${escapeHtml(inspection.trailer_number)}`
+This is defense-in-depth. Even without this guard, impersonation cannot bypass server-side security because the JWT is never changed.
 
-3. For signature `img src` attributes, validate that the value is a data URI or known Supabase storage URL before embedding, and escape the attribute value.
+---
 
-### What Was Already Safe (No Changes Needed)
+## Overall Assessment
 
-- **Outreach.tsx** -- already uses `DOMPurify.sanitize()`
-- **chart.tsx** -- `dangerouslySetInnerHTML` only with internal CSS, no user input
-- **ChatBot.tsx** -- React JSX auto-escapes `{msg.content}`
-- **All other components** -- standard React rendering with auto-escaping
-- **Edge functions** -- `send-rental-request-email` already has its own `escapeHtml`
+| Area | Status |
+|---|---|
+| Password auth handled server-side | Secure |
+| Role assignment restricted | Secure |
+| Protected routes use server-fetched roles | Secure |
+| No roles in localStorage/cookies | Secure |
+| Login rate limiting (5 attempts / 15 min lockout) | Implemented |
+| Impersonation audit logging | Implemented |
+| Impersonation cannot bypass RLS | Secure |
+| Edge functions validate real JWT | Secure |
+| Impersonation client-side guard | Needs minor hardening |
 
