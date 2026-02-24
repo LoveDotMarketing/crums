@@ -129,12 +129,14 @@ serve(async (req) => {
       .in("id", trailerIds)
       .eq("is_rented", true);
 
-    if (rentedTrailers && rentedTrailers.length > 0) {
-      const rentedNumbers = rentedTrailers.map(t => t.trailer_number).join(", ");
-      logStep("Some trailers are already rented", { rentedTrailers });
-      throw new Error(`Trailer(s) ${rentedNumbers} are already rented. Please select available trailers.`);
+    // Filter out trailers already assigned to THIS customer — only block trailers rented by someone else
+    const rentedByOthers = (rentedTrailers || []).filter(t => t.customer_id !== customerId);
+    if (rentedByOthers.length > 0) {
+      const rentedNumbers = rentedByOthers.map(t => t.trailer_number).join(", ");
+      logStep("Some trailers are rented by other customers", { rentedByOthers });
+      throw new Error(`Trailer(s) ${rentedNumbers} are already rented by another customer. Please select available trailers.`);
     }
-    logStep("All requested trailers are available");
+    logStep("All requested trailers are available or already assigned to this customer");
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
 
