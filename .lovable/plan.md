@@ -1,45 +1,36 @@
 
+# Add Leasing Hub Links to the Homepage
 
-# Add 48' Dry Van Trailer Dimensions Section
-
-## What We're Doing
-
-Adding a dedicated, detailed 48-foot dry van trailer dimensions section to the `/dry-van-trailers` page to capture search queries like "48 dry van dimensions", "48 foot trailer dimensions", and "48 ft dry van specs" that are appearing in both Google and Bing data.
+## Problem
+The homepage currently links to generic service pages and informational trailer spec pages, but has no links to the new high-intent commercial leasing hubs (`/dry-van-trailer-leasing`, `/flatbed-trailer-leasing`, `/semi-trailer-leasing`). These are the money pages the entire SEO strategy funnels toward.
 
 ## Changes
 
-### 1. Update the SEO meta (lines 118-121)
+### File: `src/pages/Index.tsx`
 
-Update the page title and description to include "48'" alongside "53'" so Google sees both sizes in the snippet:
-- **Title:** `53' & 48' Dry Van Trailer Dimensions & Leasing | CRUMS`
-- **Description:** `53' and 48' dry van interior dimensions, cubic feet, and pallet positions. 53'L x 8'6"W x 9'H (3,489 cu ft) | 48'L x 8'6"W x 9'H (3,165 cu ft). Lease from CRUMS - flexible terms.`
+**1. Update the "Trailer Types" cluster (lines 282-299)**
 
-### 2. Expand the 48' card in "Available Configurations" (lines 249-281)
+Add the three leasing hub links below the existing spec page links, so users see both dimensions/specs and leasing options:
 
-Add the missing spec details to the existing 48' card to match the 53' card's level of detail:
-- Interior dimensions in both feet/inches and metric
-- Cargo capacity: ~3,165 cubic feet
-- Pallet positions: 24 standard pallets (48x40)
-- Payload capacity: up to 44,000 lbs
-- Door opening: 94" W x 102" H
+- Dry Van Trailer Leasing --> `/dry-van-trailer-leasing`
+- Flatbed Trailer Leasing --> `/flatbed-trailer-leasing`
+- Semi Trailer Leasing --> `/semi-trailer-leasing`
 
-### 3. Add a new "48' Dry Van Trailer Dimensions" deep-dive section
+**2. Update the "Services" cluster (lines 256-279)**
 
-Insert a new section after the "Available Configurations" section with:
-- An H2 heading: "48' Dry Van Trailer Dimensions & Specifications"
-- A detailed HTML table comparing interior/exterior dimensions, weight, cubic footage, and pallet capacity
-- A short paragraph explaining when to choose a 48' over a 53' (state length laws, urban delivery, lighter loads)
-- Internal link to the leasing page with anchor text "Lease a 48-foot dry van trailer"
+Replace the generic `/services/trailer-leasing` link with the specific hub, or add the three leasing hubs as sub-links beneath the existing "Trailer Leasing" entry to pass more link equity to the money pages.
 
-### 4. Add FAQ schema entries for 48' queries
+Updated structure:
+- Dry Van Leasing --> `/dry-van-trailer-leasing`
+- Flatbed Leasing --> `/flatbed-trailer-leasing`
+- Semi Trailer Leasing --> `/semi-trailer-leasing`
+- Trailer Rentals (keep as-is)
+- Fleet Solutions (keep as-is)
 
-Add two new FAQ items to the structured data and visible FAQ section:
-- "What are the dimensions of a 48-foot dry van trailer?" -- full interior/exterior specs
-- "How many pallets fit in a 48 foot trailer?" -- 24 pallets with explanation
+This mirrors the footer structure that was already updated in the previous round.
 
-### File Summary
+### Summary
 
 | File | Change |
 |---|---|
-| `src/pages/DryVanTrailers.tsx` | Update meta title/description to include 48'; expand 48' config card with full specs; add dedicated 48' dimensions section with comparison table; add 2 new FAQ entries to schema and visible section |
-
+| `src/pages/Index.tsx` | Replace generic trailer leasing link in Services cluster with 3 specific hub links; add leasing links to Trailer Types cluster |
