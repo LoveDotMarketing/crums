@@ -115,8 +115,8 @@ const DryVanTrailers = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <SEO
-        title="Dry Van Trailer Leasing | 53' & 48' Trailers - Dimensions & Specs"
-        description="Lease 53-foot and 48-foot dry van trailers from CRUMS. 3,489 cubic feet capacity, swing or roll-up doors, logistic posts. Flexible terms starting at 12 months."
+        title="53' Dry Van Trailer Dimensions & Leasing"
+        description="53' dry van interior dimensions: 53'L x 8'6&quot;W x 9'H (3,489 cu ft). Lease dry van trailers from CRUMS — flexible terms, no credit check, swing or roll-up doors."
         canonical="https://crumsleasing.com/dry-van-trailers"
         structuredData={combinedSchema}
       />

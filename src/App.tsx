@@ -24,6 +24,9 @@ const TrailerRentals = lazy(() => import("./pages/TrailerRentals"));
 const FleetSolutions = lazy(() => import("./pages/FleetSolutions"));
 const DryVanTrailers = lazy(() => import("./pages/DryVanTrailers"));
 const FlatbedTrailers = lazy(() => import("./pages/FlatbedTrailers"));
+const DryVanTrailerLeasing = lazy(() => import("./pages/DryVanTrailerLeasing"));
+const FlatbedTrailerLeasing = lazy(() => import("./pages/FlatbedTrailerLeasing"));
+const SemiTrailerLeasing = lazy(() => import("./pages/SemiTrailerLeasing"));
 const TrailerProfile56171 = lazy(() => import("./pages/TrailerProfile56171"));
 const Locations = lazy(() => import("./pages/Locations"));
 const CityLocationPage = lazy(() => import("./pages/locations/CityLocationPage"));
@@ -190,6 +193,9 @@ const App = () => (
             <Route path="/services/fleet-solutions" element={<FleetSolutions />} />
             <Route path="/dry-van-trailers" element={<DryVanTrailers />} />
             <Route path="/flatbed-trailers" element={<FlatbedTrailers />} />
+            <Route path="/dry-van-trailer-leasing" element={<DryVanTrailerLeasing />} />
+            <Route path="/flatbed-trailer-leasing" element={<FlatbedTrailerLeasing />} />
+            <Route path="/semi-trailer-leasing" element={<SemiTrailerLeasing />} />
             {/* Redirect old refrigerated trailers page */}
             <Route path="/refrigerated-trailers" element={<Navigate to="/services/trailer-leasing" replace />} />
             <Route path="/commercial-dry-van-trailer-for-lease-56171" element={<TrailerProfile56171 />} />
