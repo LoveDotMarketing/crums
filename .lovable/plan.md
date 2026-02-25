@@ -1,102 +1,46 @@
 
 
-# Authentication and Authorization Audit Results
+# Enable Manual Bank Account Entry in ACH Setup
 
-## Summary
+## Root Cause
 
-The authentication and authorization system is well-architected. After a thorough review, **no critical vulnerabilities were found**. Below is the detailed audit of each area, with one minor hardening improvement proposed.
+The current `create-ach-setup` edge function creates a SetupIntent with `financial_connections` configured, but does **not** enable the `manual_entry` option. Stripe's Financial Connections modal only shows the bank search/login flow by default. Customers whose bank is not listed in Financial Connections have no fallback to manually enter their routing and account numbers.
 
----
+This is a **code change**, not a Stripe Dashboard setting. The `manual_entry` mode is controlled via the SetupIntent API parameters.
 
-## 1. Client-Side Authentication Logic -- SECURE
+## Fix
 
-**Finding:** Authentication is fully handled server-side via JWT-based sessions.
-
-- `signIn` calls `supabase.auth.signInWithPassword()` -- password validation happens on the server
-- `signUp` calls `supabase.auth.signUp()` -- account creation is server-side
-- Role assignment uses `set_user_role()` SECURITY DEFINER function, which restricts self-assignment to the `customer` role only -- admin/mechanic roles cannot be self-assigned
-- Role fetching reads from `user_roles` table with proper RLS policies
-- `ProtectedRoute` component gates route access based on server-fetched roles, not client-side storage
-- Password reset uses `supabase.auth.updateUser()` with a recovery session validated server-side
-
-**Verdict:** No issues found.
-
----
-
-## 2. Rate Limiting on Login -- IMPLEMENTED
-
-**Finding:** Brute-force protection is already in place.
-
-- `check_login_attempt()` SECURITY DEFINER function checks if a login is allowed before attempting authentication
-- `record_failed_login()` SECURITY DEFINER function tracks failures and locks accounts after 5 attempts for 15 minutes
-- `reset_login_attempts()` clears the counter on successful login
-- The `login_attempts` table has admin-only RLS (SELECT/DELETE), with SECURITY DEFINER functions bypassing RLS for enforcement
-- The Login UI properly disables the submit button and displays lockout alerts
-
-**Minor observation:** `checkLoginAllowed` fails open on database errors (returns `allowed: true`). This is a common pragmatic pattern -- failing closed would lock out all users during a database outage. This is an acceptable tradeoff.
-
-**Verdict:** No issues found.
-
----
-
-## 3. Impersonation Vulnerabilities -- SECURE BY DESIGN
-
-**Finding:** The impersonation system is a client-side UI convenience, not a security mechanism.
-
-How it works:
-- Admin clicks "View As" on a customer/mechanic record
-- React state (`impersonatedUser`) is set with the target user's info
-- The admin's JWT remains unchanged -- `auth.uid()` always returns the real admin ID
-- RLS policies on all tables grant admin full access via `has_role(auth.uid(), 'admin')`, so admins already have legitimate access to all data
-- Edge functions that handle sensitive operations (ACH bank linking, payments) validate the JWT directly, which correctly identifies the admin -- not the impersonated user. These operations are properly disabled during impersonation in the UI.
-- Impersonation start/stop events are logged to `user_activity_logs` with full audit trail (target user ID, email, role)
-- Only admin pages (`Customers.tsx`, `Staff.tsx`, `Mechanics.tsx`, `CustomerDetail.tsx`) expose the impersonation button
-
-**Verdict:** No vulnerabilities. The system cannot be exploited to bypass RLS or perform unauthorized actions because the actual auth token is never changed.
-
----
-
-## 4. One Hardening Improvement (Low Priority)
-
-**Issue:** The `startImpersonation` function does not verify the caller's role before setting impersonation state. While only admin pages render the "View As" button, the function itself in `useAuth.tsx` could theoretically be called from any component.
-
-**Proposed fix:** Add a guard at the top of `startImpersonation` that checks `userRole === 'admin'` before proceeding.
+Add `manual_entry: { mode: "automatic" }` to the `financial_connections` configuration in the SetupIntent creation. This tells Stripe to show a "Enter manually" link at the bottom of the Financial Connections modal as a fallback when the customer's bank isn't found.
 
 ### Change
 
 | File | Change |
 |---|---|
-| `src/hooks/useAuth.tsx` (line 66) | Add admin role guard at start of `startImpersonation` function |
+| `supabase/functions/create-ach-setup/index.ts` (lines 106-112) | Add `manual_entry` to the `financial_connections` config |
 
-The change is a single guard clause:
+The updated SetupIntent creation will look like:
 
 ```typescript
-const startImpersonation = async (targetUser: ImpersonatedUser) => {
-  // Only admins can impersonate
-  if (userRole !== 'admin') {
-    console.error('[auth] Impersonation attempted by non-admin user');
-    toast.error('Unauthorized: Only administrators can use this feature.');
-    return;
-  }
-  // ... rest of existing code
-};
+payment_method_options: {
+  us_bank_account: {
+    financial_connections: {
+      permissions: ["payment_method", "balances"],
+      manual_entry: { mode: "automatic" },
+    },
+    verification_method: "automatic",
+  },
+},
 ```
 
-This is defense-in-depth. Even without this guard, impersonation cannot bypass server-side security because the JWT is never changed.
+### How It Works
 
----
+- With `manual_entry.mode: "automatic"`, Stripe shows a "Link account manually" option in the Financial Connections UI
+- When selected, the customer enters their routing number and account number directly
+- Stripe then verifies the account via microdeposits (two small deposits the customer confirms later)
+- The `verification_method: "automatic"` already in place handles this -- it falls back to microdeposits when instant verification isn't available
 
-## Overall Assessment
+### No Other Changes Needed
 
-| Area | Status |
-|---|---|
-| Password auth handled server-side | Secure |
-| Role assignment restricted | Secure |
-| Protected routes use server-fetched roles | Secure |
-| No roles in localStorage/cookies | Secure |
-| Login rate limiting (5 attempts / 15 min lockout) | Implemented |
-| Impersonation audit logging | Implemented |
-| Impersonation cannot bypass RLS | Secure |
-| Edge functions validate real JWT | Secure |
-| Impersonation client-side guard | Needs minor hardening |
+- The client-side code in `PaymentSetup.tsx` already handles the `requires_action` status (line 181-184), which is the expected state after microdeposit-based verification
+- The `confirm-ach-setup` edge function already handles all terminal states correctly
 
