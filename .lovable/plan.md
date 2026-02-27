@@ -1,28 +1,17 @@
 
 
-# Add One-Time Charge Feature
+# Change Customer Row Click to Navigate to Detail Page
 
-Create a reusable "Charge Customer" capability that lets admins apply ad-hoc one-time charges (missed payments, fees, adjustments) to any customer with an existing Stripe/ACH setup.
+## Problem
+Clicking a customer row on the Customers list page opens the "Edit Customer" dialog instead of navigating to the detail page. The user wants direct navigation on click.
 
 ## Changes
 
-### 1. New Edge Function: `supabase/functions/charge-customer/index.ts`
-- Accepts: `customer_id`, `amount`, `description` (free text)
-- Looks up `stripe_customer_id` from `customer_subscriptions` (same pattern as `charge-toll`)
-- Creates a Stripe Invoice Item → Invoice → Finalizes → Auto-charges ACH
-- Returns invoice ID, payment intent ID, and status
-- Auth: JWT-verified, admin role required
+### File: `src/pages/admin/Customers.tsx`
 
-### 2. New Dialog Component: `src/components/admin/ChargeCustomerDialog.tsx`
-- Trigger: "Charge" button (with DollarSign icon)
-- Fields: Amount (number input), Description/Reason (text input with common presets like "Missed Payment", "Late Fee - $150", "ACH Decline Fee - $100", or custom)
-- On submit: calls `supabase.functions.invoke('charge-customer')`
-- Shows success/error toast with invoice details
+1. **Line 903**: Change the `onClick` handler on `<TableRow>` from opening the dialog to navigating to the customer detail page:
+   - Replace: `onClick={() => { setSelectedCustomer(customer); setDialogOpen(true); }}`
+   - With: `onClick={() => navigate(`/dashboard/admin/customers/${customer.id}`)}`
 
-### 3. Add Charge Button to Admin UI
-- **Customer Detail page** (`CustomerDetail.tsx`): Add a "Charge" button in the billing/subscription tab area
-- **Billing page** (`Billing.tsx`): Add charge action in the subscription row actions dropdown
-
-### 4. Config: `supabase/config.toml`
-- Add `[functions.charge-customer]` with `verify_jwt = false` (validate in code)
+2. **Keep the Edit option** in the actions dropdown menu (the `...` menu) so admins can still edit customer details from the list if needed.
 
