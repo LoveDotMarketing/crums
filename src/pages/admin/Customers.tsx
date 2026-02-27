@@ -900,7 +900,7 @@ export default function Customers() {
                         <TableRow 
                           key={customer.id} 
                           className="cursor-pointer hover:bg-muted/50"
-                          onClick={() => { setSelectedCustomer(customer); setDialogOpen(true); }}
+                          onClick={() => navigate(`/dashboard/admin/customers/${customer.id}`)}
                         >
                           <TableCell className="font-medium">
                             {customer.full_name === 'Customer' 
