@@ -1,51 +1,32 @@
 
 
-# Fix: Subscribe Legacy-Assigned Trailers Without Releasing Them
+# Add Manual Billing Anchor Date Selection to Create Subscription Dialog
 
-## Problem Diagnosis
+## Problem
+The dialog shows the customer's preferred payment date as read-only info. Admins need to manually select a billing anchor date (e.g., 1st or 15th) because different trailers within the same customer may need different billing dates. The preference is informational but the actual anchor should be admin-controlled.
 
-The `create-subscription` edge function and the `CreateSubscriptionDialog` already support subscribing trailers that are assigned to the same customer. The trailer picker query (line 158 of `CreateSubscriptionDialog.tsx`) shows trailers where `customer_id` matches the selected customer:
+## Changes
 
-```
-or(`and(status.eq.available,customer_id.is.null),customer_id.eq.${selectedCustomerId}`)
-```
+### File: `src/components/admin/CreateSubscriptionDialog.tsx`
 
-And the edge function (lines 132-138) explicitly allows `is_rented: true` trailers if `customer_id` matches.
+1. **Add a `billingAnchorDay` state** (number, default from customer preference when available, otherwise 1).
 
-**The most likely cause is that the legacy-migrated trailers have `assigned_to` set but NOT `customer_id`.** The `assigned_to` column holds a user UUID, while `customer_id` holds the customer table UUID. If the 26 trailers only have `assigned_to` populated, they won't appear in the subscription dialog for that customer.
+2. **Replace the read-only preference info box** (lines 404-422) with an interactive section that:
+   - Still shows the customer's preferred date as a hint
+   - Adds a `Select` dropdown or radio buttons for the admin to pick the billing anchor day (common options: 1st, 15th, or custom day 1-28)
+   - Auto-sets to customer preference when a customer is selected, but allows override
 
-## Recommended Fix
+3. **Pass `billingAnchorDay` to the edge function** in the mutation body (line 209-226), so the `create-subscription` function uses the admin-selected anchor instead of only relying on the customer application preference.
 
-Rather than releasing and re-assigning 26 trailers, update the trailer picker query to also include trailers where `assigned_to` matches the customer's auth user ID. This requires one change:
+4. **Update `useEffect`** to sync `billingAnchorDay` state when `customerApplication` data loads (set it to their preference as default, admin can override).
 
-### 1. Update `CreateSubscriptionDialog.tsx` trailer query
+### File: `supabase/functions/create-subscription/index.ts`
 
-Modify the `availableTrailers` query to also match trailers by `assigned_to` (the auth user UUID linked to the customer). When a customer is selected, look up their profile to get the auth `user_id`, then include trailers where either `customer_id` or `assigned_to` matches.
+5. **Accept `billingAnchorDay`** from the request body and use it as the Stripe subscription's `billing_cycle_anchor` or `billing_anchor_config` parameter, overriding any customer application lookup.
 
-**Alternative (simpler, one-time):** If these 26 trailers simply need their `customer_id` column populated to match the customers table, a single SQL UPDATE can backfill `customer_id` from the `assigned_to` relationship. This avoids any code changes and makes the existing flow work immediately for all 26 trailers.
-
-### Recommended approach: One-time data backfill
-
-Run a migration that sets `customer_id` on trailers where `assigned_to` is set but `customer_id` is null, by joining through profiles and customers tables:
-
-```sql
-UPDATE trailers t
-SET customer_id = c.id
-FROM profiles p
-JOIN customers c ON lower(c.email) = lower(p.email)
-WHERE t.assigned_to = p.id
-  AND t.customer_id IS NULL
-  AND t.is_rented = true;
-```
-
-This links the 26 legacy trailers to their correct customer records without releasing or re-assigning anything. After this, the Create Subscription dialog will show them when Ground Link (or any legacy customer) is selected.
-
-### Changes Summary
-
-| Step | What | Why |
-|---|---|---|
-| 1 | Run SQL backfill to populate `customer_id` from `assigned_to` | Makes legacy trailers visible in the subscription dialog |
-| 2 | Verify in the Create Subscription dialog that Ground Link's 26 trailers appear | Confirm the fix works |
-
-No code changes needed -- just a one-time data migration.
+## UX Flow
+- Admin selects customer → preference auto-populates anchor day selector
+- Admin can override to any day (1-28)
+- Per-trailer billing schedule overrides (1st, 15th, weekly) remain independent and work as before for split-billing scenarios
+- The subscription-level anchor sets the default; per-trailer overrides create separate Stripe subscriptions as needed
 
