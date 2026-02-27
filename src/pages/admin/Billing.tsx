@@ -99,6 +99,7 @@ import { CreateSubscriptionDialog } from "@/components/admin/CreateSubscriptionD
 import { ManageTrailersDialog } from "@/components/admin/ManageTrailersDialog";
 import { EditSubscriptionDatesDialog } from "@/components/admin/EditSubscriptionDatesDialog";
 import { ReadyToActivateCard } from "@/components/admin/ReadyToActivateCard";
+import { ChargeCustomerDialog } from "@/components/admin/ChargeCustomerDialog";
 
 type BillingCycle = "weekly" | "biweekly" | "semimonthly" | "monthly";
 type SubscriptionType = "standard_lease" | "rent_for_storage" | "lease_to_own" | "repayment_plan";
@@ -1500,6 +1501,17 @@ export default function Billing() {
                                               <Truck className="h-4 w-4 mr-2" />
                                               Manage Trailers
                                             </DropdownMenuItem>
+                                            <ChargeCustomerDialog
+                                              customerId={sub.customer_id}
+                                              customerName={sub.customers?.full_name || "Unknown"}
+                                              onSuccess={() => queryClient.invalidateQueries({ queryKey: ["billing-history"] })}
+                                              trigger={
+                                                <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                                                  <DollarSign className="h-4 w-4 mr-2" />
+                                                  One-Time Charge
+                                                </DropdownMenuItem>
+                                              }
+                                            />
                                             <DropdownMenuSeparator />
                                             <DropdownMenuItem
                                               onClick={() => setConfirmAction({
