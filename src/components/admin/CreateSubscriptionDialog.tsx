@@ -92,6 +92,7 @@ export function CreateSubscriptionDialog({ onSuccess }: CreateSubscriptionDialog
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
   const [subscriptionType, setSubscriptionType] = useState<SubscriptionType>("standard_lease");
   const [leaseToOwnTotal, setLeaseToOwnTotal] = useState<number>(0);
+  const [billingAnchorDay, setBillingAnchorDay] = useState<number>(1);
 
   // Fetch customer's billing anchor preference
   const { data: customerApplication } = useQuery({
@@ -128,6 +129,15 @@ export function CreateSubscriptionDialog({ onSuccess }: CreateSubscriptionDialog
     },
     enabled: !!selectedCustomerId && isOpen,
   });
+
+  // Sync billing anchor day from customer preference when loaded
+  useEffect(() => {
+    if (customerApplication?.billing_anchor_day) {
+      setBillingAnchorDay(customerApplication.billing_anchor_day);
+    } else {
+      setBillingAnchorDay(1);
+    }
+  }, [customerApplication]);
 
   // Fetch all active customers (no subscription filter — supports split billing)
   const { data: customers, isLoading: loadingCustomers } = useQuery({
@@ -221,6 +231,7 @@ export function CreateSubscriptionDialog({ onSuccess }: CreateSubscriptionDialog
           trailerBillingSchedules,
           endDate: endDate ? format(endDate, "yyyy-MM-dd") : undefined,
           subscriptionType,
+          billingAnchorDay,
           leaseToOwnTotal: subscriptionType === "lease_to_own" && leaseToOwnTotal > 0 ? leaseToOwnTotal : undefined
         }
       });
@@ -263,6 +274,7 @@ export function CreateSubscriptionDialog({ onSuccess }: CreateSubscriptionDialog
     setEndDate(undefined);
     setSubscriptionType("standard_lease");
     setLeaseToOwnTotal(0);
+    setBillingAnchorDay(1);
   };
 
   // Get type-based default rental rate
@@ -401,23 +413,35 @@ export function CreateSubscriptionDialog({ onSuccess }: CreateSubscriptionDialog
             )}
           </div>
 
-          {/* Customer Billing Preference Info */}
+          {/* Billing Anchor Day Selection */}
           {selectedCustomerId && (
-            <div className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg border">
-              <Info className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
-              <div className="text-sm">
-                <span className="font-medium text-foreground">Customer's Preferred Payment Date: </span>
-                {customerApplication?.billing_anchor_day ? (
-                  <span className="text-primary font-semibold">
-                    {customerApplication.billing_anchor_day === 1 ? "1st" : "15th"} of the month
-                  </span>
-                ) : (
-                  <span className="text-muted-foreground">No preference set</span>
-                )}
-                <p className="text-xs text-muted-foreground mt-1">
-                  This preference will be used for the Stripe billing cycle anchor.
-                </p>
-              </div>
+            <div className="space-y-3">
+              <Label>Billing Anchor Day</Label>
+              {customerApplication?.billing_anchor_day && (
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <Info className="h-3 w-3" />
+                  Customer preference: {customerApplication.billing_anchor_day === 1 ? "1st" : `${customerApplication.billing_anchor_day}th`} of the month
+                </div>
+              )}
+              <Select
+                value={billingAnchorDay.toString()}
+                onValueChange={(v) => setBillingAnchorDay(Number(v))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select billing day" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="1">1st of the month</SelectItem>
+                  <SelectItem value="15">15th of the month</SelectItem>
+                  <SelectItem value="5">5th of the month</SelectItem>
+                  <SelectItem value="10">10th of the month</SelectItem>
+                  <SelectItem value="20">20th of the month</SelectItem>
+                  <SelectItem value="25">25th of the month</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                Sets the Stripe billing cycle anchor. Use different anchor days for split billing across multiple subscriptions.
+              </p>
             </div>
           )}
 
