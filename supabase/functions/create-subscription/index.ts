@@ -14,7 +14,7 @@ const logStep = (step: string, details?: Record<string, unknown>) => {
 
 // Helper function to calculate next anchor date for billing cycle
 function calculateNextAnchorDate(anchorDay: number | null): number | undefined {
-  if (!anchorDay || (anchorDay !== 1 && anchorDay !== 15)) return undefined;
+  if (!anchorDay || anchorDay < 1 || anchorDay > 28) return undefined;
   
   const now = new Date();
   const targetDate = new Date(now.getFullYear(), now.getMonth(), anchorDay);
@@ -38,6 +38,7 @@ interface SubscriptionRequest {
   endDate?: string; // Optional end date for fixed-term leases (YYYY-MM-DD)
   subscriptionType?: "standard_lease" | "rent_for_storage" | "lease_to_own" | "repayment_plan";
   leaseToOwnTotal?: number; // Total buyout price for lease-to-own agreements
+  billingAnchorDay?: number; // Admin-selected billing anchor day (1-28)
 }
 
 serve(async (req) => {
@@ -77,7 +78,7 @@ serve(async (req) => {
     logStep("Admin verified", { adminId: userData.user.id });
 
     const body: SubscriptionRequest = await req.json();
-    const { customerId, trailerIds, billingCycle, depositAmount, discountId, customRates, leaseToOwnFlags, endDate, subscriptionType, leaseToOwnTotal } = body;
+    const { customerId, trailerIds, billingCycle, depositAmount, discountId, customRates, leaseToOwnFlags, endDate, subscriptionType, leaseToOwnTotal, billingAnchorDay } = body;
 
     if (!customerId || !trailerIds?.length || !billingCycle) {
       throw new Error("Missing required fields: customerId, trailerIds, billingCycle");
@@ -150,22 +151,26 @@ serve(async (req) => {
     if (custError || !customer) throw new Error("Customer not found");
     logStep("Customer found", { customerId, email: customer.email });
 
-    // Get customer's application to fetch billing anchor preference
-    const { data: customerApplication } = await supabaseClient
-      .from("customer_applications")
-      .select("billing_anchor_day, user_id")
-      .eq("user_id", (
-        // First we need to find the user_id from profile matching customer email
-        await supabaseClient
-          .from("profiles")
-          .select("id")
-          .eq("email", customer.email)
-          .maybeSingle()
-      ).data?.id || "")
-      .maybeSingle();
+    // Use admin-provided billing anchor day, falling back to customer application preference
+    let anchorDay = billingAnchorDay || null;
+    if (!anchorDay) {
+      const { data: customerApplication } = await supabaseClient
+        .from("customer_applications")
+        .select("billing_anchor_day, user_id")
+        .eq("user_id", (
+          await supabaseClient
+            .from("profiles")
+            .select("id")
+            .eq("email", customer.email)
+            .maybeSingle()
+        ).data?.id || "")
+        .maybeSingle();
+      anchorDay = customerApplication?.billing_anchor_day || null;
+    }
     
-    logStep("Customer billing preference", { 
-      anchorDay: customerApplication?.billing_anchor_day 
+    logStep("Billing anchor day", { 
+      adminProvided: billingAnchorDay,
+      resolved: anchorDay
     });
 
     // Get trailers with rental rates
@@ -307,7 +312,14 @@ serve(async (req) => {
       },
     };
 
-    // Add deposit as one-time invoice item on the first invoice (charged with first period rent)
+    // Set billing cycle anchor if anchor day is specified
+    const anchorTimestamp = calculateNextAnchorDate(anchorDay);
+    if (anchorTimestamp) {
+      subscriptionParams.billing_cycle_anchor = anchorTimestamp;
+      subscriptionParams.proration_behavior = "none";
+      logStep("Setting billing cycle anchor", { anchorDay, anchorTimestamp });
+    }
+
     if (depositInvoiceItem) {
       subscriptionParams.add_invoice_items = [depositInvoiceItem];
       logStep("Adding deposit to first invoice", { depositAmount });
