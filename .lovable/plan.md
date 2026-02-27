@@ -1,107 +1,51 @@
 
 
-# Billing Workflow Audit: End-to-End Review
+# Fix: Subscribe Legacy-Assigned Trailers Without Releasing Them
 
-## Workflow Summary
+## Problem Diagnosis
 
-The complete workflow from subscription creation to payment confirmation is well-connected and functional. Here is the step-by-step trace with findings:
+The `create-subscription` edge function and the `CreateSubscriptionDialog` already support subscribing trailers that are assigned to the same customer. The trailer picker query (line 158 of `CreateSubscriptionDialog.tsx`) shows trailers where `customer_id` matches the selected customer:
 
----
+```
+or(`and(status.eq.available,customer_id.is.null),customer_id.eq.${selectedCustomerId}`)
+```
 
-## Step-by-Step Workflow Trace
+And the edge function (lines 132-138) explicitly allows `is_rented: true` trailers if `customer_id` matches.
 
-### 1. Customer ACH Setup (PaymentSetup.tsx)
-- Customer visits `/dashboard/customer/payment-setup`
-- Calls `create-ach-setup` edge function → creates Stripe SetupIntent with `manual_entry: { mode: "automatic" }` (recently fixed)
-- Stripe Financial Connections modal opens; customer links bank or enters routing/account manually
-- On success, calls `confirm-ach-setup` → saves `stripe_payment_method_id`, `payment_setup_status: "completed"`, and `billing_anchor_day` to `customer_applications`
-- **Status: Connected and working**
+**The most likely cause is that the legacy-migrated trailers have `assigned_to` set but NOT `customer_id`.** The `assigned_to` column holds a user UUID, while `customer_id` holds the customer table UUID. If the 26 trailers only have `assigned_to` populated, they won't appear in the subscription dialog for that customer.
 
-### 2. Admin Sees "Ready to Activate" (ReadyToActivateCard.tsx)
-- Queries `customer_applications` where `payment_setup_status = "completed"` AND `status = "approved"`
-- Filters out customers who already have active/pending subscriptions
-- Shows customer name, ACH completion date, and preferred billing date
-- Admin can edit billing anchor day before creating subscription
-- **Status: Connected and working**
+## Recommended Fix
 
-### 3. Admin Creates Subscription (CreateSubscriptionDialog.tsx → create-subscription edge function)
-- Admin selects customer, trailers, billing cycle, deposit, subscription type
-- Fetches customer's `billing_anchor_day` preference and displays it
-- Calls `create-subscription` edge function which:
-  - Verifies admin auth
-  - Validates trailers are available (allows trailers already assigned to this customer)
-  - Creates Stripe prices per trailer
-  - Creates Stripe subscription with `payment_behavior: "default_incomplete"`
-  - Creates deposit as one-time invoice item on first invoice
-  - Creates `customer_subscriptions` record (status maps to "pending" for incomplete)
-  - Creates `subscription_items` per trailer
-  - Marks trailers as `is_rented: true` and sets `customer_id`
-  - Logs event via `logSubscriptionCreated`
-- **Status: Connected and working**
+Rather than releasing and re-assigning 26 trailers, update the trailer picker query to also include trailers where `assigned_to` matches the customer's auth user ID. This requires one change:
 
-### 4. Admin Activates Subscription (activate-subscription edge function)
-- Admin clicks "Activate" on pending subscriptions in the Billing dashboard
-- Edge function:
-  - Verifies admin auth
-  - Retrieves Stripe subscription (must be "incomplete")
-  - Finds customer's ACH payment method
-  - Sets it as default payment method on Stripe customer
-  - Calls `stripe.invoices.pay()` to charge deposit + first period
-  - Updates local subscription status to "active"
-- **Status: Connected and working**
+### 1. Update `CreateSubscriptionDialog.tsx` trailer query
 
-### 5. Stripe Webhook Processing (stripe-webhook edge function)
-- **`invoice.paid`**: Updates `billing_history`, resets grace period, sends payment receipt email via SendGrid
-- **`invoice.payment_failed`**: Creates `payment_failures` record, sets grace period (7 days), sends Day 0 notification email
-- **`customer.subscription.updated`**: Syncs status to local DB using status map
-- **`customer.subscription.deleted`**: Cancels locally, releases trailers, resolves pending failures
-- **Status: Connected and working**
+Modify the `availableTrailers` query to also match trailers by `assigned_to` (the auth user UUID linked to the customer). When a customer is selected, look up their profile to get the auth `user_id`, then include trailers where either `customer_id` or `assigned_to` matches.
 
-### 6. Confirmation Emails
-- **ACH Setup Email** (`send-ach-setup-email`): Admin-triggered, sends branded HTML email to customer with link to `/dashboard/customer/payment-setup`. Has test mode.
-- **Payment Receipt** (in `stripe-webhook`): Sent on `invoice.paid` via `send-outreach-email` with branded HTML including amount, invoice number, billing period, and invoice link.
-- **Payment Failed** (in `stripe-webhook`): Sent on `invoice.payment_failed` with failure reason, grace period end date.
-- **Status: All connected and working**
+**Alternative (simpler, one-time):** If these 26 trailers simply need their `customer_id` column populated to match the customers table, a single SQL UPDATE can backfill `customer_id` from the `assigned_to` relationship. This avoids any code changes and makes the existing flow work immediately for all 26 trailers.
 
-### 7. Admin Dashboard KPIs (AdminDashboard.tsx)
-- **Fleet Stats**: Counts total, available, rented, maintenance trailers
-- **Customer Stats**: Total, active, new this month
-- **Toll Stats**: Outstanding amount, collected this month, pending/overdue counts
-- Subscription creation updates trailer `is_rented` → reflected in fleet stats
-- **Status: Connected and working**
+### Recommended approach: One-time data backfill
 
-### 8. Event Logging
-- `logSubscriptionCreated` fires after successful subscription creation in the dialog
-- Other events: `logPaymentSetupStarted`, `logPaymentSetupFailed`, `logBillingRetried`
-- All logged to `app_event_logs` table, viewable in admin Logs dashboard
-- **Status: Connected and working**
+Run a migration that sets `customer_id` on trailers where `assigned_to` is set but `customer_id` is null, by joining through profiles and customers tables:
 
----
+```sql
+UPDATE trailers t
+SET customer_id = c.id
+FROM profiles p
+JOIN customers c ON lower(c.email) = lower(p.email)
+WHERE t.assigned_to = p.id
+  AND t.customer_id IS NULL
+  AND t.is_rented = true;
+```
 
-## Findings
+This links the 26 legacy trailers to their correct customer records without releasing or re-assigning anything. After this, the Create Subscription dialog will show them when Ground Link (or any legacy customer) is selected.
 
-### No Issues Found
+### Changes Summary
 
-The entire billing workflow is properly connected end-to-end:
-
-| Step | Component | Status |
+| Step | What | Why |
 |---|---|---|
-| Customer ACH setup | `create-ach-setup` + `confirm-ach-setup` + `PaymentSetup.tsx` | Working |
-| Manual entry fallback | `manual_entry: { mode: "automatic" }` | Recently fixed |
-| Ready to Activate indicator | `ReadyToActivateCard.tsx` | Working |
-| Subscription creation | `CreateSubscriptionDialog.tsx` + `create-subscription` | Working |
-| Subscription activation | `activate-subscription` | Working |
-| Payment webhooks | `stripe-webhook` (paid, failed, updated, deleted) | Working |
-| Receipt emails | `sendPaymentReceiptEmail` in webhook | Working |
-| Failed payment emails | `sendPaymentFailedEmail` in webhook | Working |
-| ACH setup email | `send-ach-setup-email` | Working |
-| Trailer status updates | `is_rented` flag + `customer_id` set on creation | Working |
-| Dashboard KPI refresh | Fleet stats query reads `is_rented` | Working |
-| Event audit trail | `logSubscriptionCreated` + `app_event_logs` | Working |
-| Dunning management | `process-payment-failures` + grace periods | Working |
-| Payment sync | `process-billing` + `sync-payments` cron jobs | Working |
+| 1 | Run SQL backfill to populate `customer_id` from `assigned_to` | Makes legacy trailers visible in the subscription dialog |
+| 2 | Verify in the Create Subscription dialog that Ground Link's 26 trailers appear | Confirm the fix works |
 
-### Summary
-
-No code changes are needed. The billing workflow is fully connected from customer ACH onboarding through admin subscription creation, activation, Stripe webhook processing, email notifications, and dashboard metric updates.
+No code changes needed -- just a one-time data migration.
 
