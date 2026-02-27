@@ -2,47 +2,47 @@
 
 ## Problem
 
-Ground Link LLC has 8 trailers on a single Stripe subscription anchored to the 1st. Five of those trailers (903637, 606948, 156175, 166370, 156004) should bill on the **15th**. The remaining 3 should stay on the **1st**.
+The Customer Detail page has two issues preventing correct subscription display:
 
-The root cause is that the `create-subscription` edge function receives `trailerBillingSchedules` from the UI but **ignores it entirely** — it creates one Stripe subscription with a single anchor for all trailers.
+1. **Single-subscription query**: The subscription query uses `.maybeSingle()` (line 128), so it only fetches **one** subscription per customer. Ground Link will need two subscriptions (1st and 15th), and the page can't show both.
+
+2. **Missing database data**: Both subscriptions have `next_billing_date = NULL` and Fisneur Jean's subscription item has `billing_anchor_day = NULL`. These need to be populated from Stripe's `current_period_end`.
+
+3. **Subscription items query chains off single subscription**: The `subscriptionItems` and `billingHistory` queries only reference the single `subscription?.id`, missing items from other subscriptions.
 
 ## Plan
 
-### 1. Fix Ground Link's existing subscription (immediate data fix)
-- Use Stripe tools to identify the 5 trailers (by trailer number) and their Stripe subscription item IDs on `sub_1T5ZS1LjIwiEGQIhaRTuOx5P`
-- Remove those 5 items from the current subscription via `update_subscription`
-- Create a **new** Stripe subscription for the same customer anchored to the **15th** with those 5 trailers
-- Update the database: create a new `customer_subscriptions` row for the 15th-anchored subscription, move the 5 `subscription_items` to it, and populate `billing_anchor_day` on all items
+### 1. Update database records with correct billing data
+- Set `next_billing_date = 2026-03-01` for both existing subscriptions (matches Stripe `current_period_end`)
+- Set `billing_anchor_day = 1` on Fisneur Jean's subscription item (trailer 446780)
 
-### 2. Update `create-subscription` edge function to auto-split by billing date
-- Add `trailerBillingSchedules` to the `SubscriptionRequest` interface
-- Group trailers by their resolved anchor day (per-trailer override from `trailerBillingSchedules`, falling back to the global `billingAnchorDay`)
-- For each unique anchor day group, create a separate Stripe subscription with the correct `billing_cycle_anchor`
-- Create separate `customer_subscriptions` rows per group
-- Populate `billing_cycle` and `billing_anchor_day` on each `subscription_items` insert
+### 2. Refactor CustomerDetail.tsx to support multiple subscriptions
+- Change subscription query from `.maybeSingle()` to fetch **all** subscriptions for the customer
+- Change `subscriptionItems` query to fetch items across **all** subscription IDs
+- Change `billingHistory` query to fetch billing across **all** subscription IDs
+- Update the Subscription tab to render each subscription as its own overview card with its trailers grouped underneath
+- Show billing anchor day per subscription in the overview (e.g., "Bills on the 1st" / "Bills on the 15th")
+- Update the summary card trailer count to sum across all subscriptions
+- Update the Charge button to work when any subscription has a `stripe_customer_id`
 
-### 3. Update `subscription_items` inserts to store billing metadata
-- In the subscription items creation loop, read from the `trailerBillingSchedules` map for each trailer
-- Set `billing_cycle` and `billing_anchor_day` columns so the database accurately reflects each trailer's schedule
+### 3. Update Subscription tab UI layout
+- Loop over each subscription, rendering a Subscription Overview card + its trailers table
+- Each overview card shows: type, billing cycle, next billing date, billing anchor day, contract start, end date, deposit, status
+- Trailers table remains the same but is scoped to each subscription's items
 
 ### Technical Details
 
-**Edge function grouping logic** (in `create-subscription/index.ts`):
-```text
-trailerBillingSchedules = { trailerId -> { billing_cycle, billing_anchor_day } }
-
-Group trailers:
-  For each trailer:
-    anchorDay = trailerBillingSchedules[id]?.billing_anchor_day ?? billingAnchorDay ?? null
-  
-  groups = Map<anchorDay, trailer[]>
-
-For each group:
-  - Create Stripe prices
-  - Create Stripe subscription with billing_cycle_anchor for that group's anchor day
-  - Insert customer_subscriptions row
-  - Insert subscription_items with billing_anchor_day populated
+**Database updates** (via insert tool):
+```sql
+UPDATE customer_subscriptions SET next_billing_date = '2026-03-01' WHERE id IN ('c232ab1a-...', 'bb64e771-...');
+UPDATE subscription_items SET billing_anchor_day = 1 WHERE id = '43bd075b-...';
 ```
 
-**Data fix for Ground Link**: Will use Stripe tools + database insert tool to split the subscription and update records.
+**CustomerDetail.tsx changes**:
+- Line 121-133: Change query to `.select("*").eq("customer_id", customerId!)` returning array instead of `.maybeSingle()`
+- Line 136-148: Query subscription_items using `.in("subscription_id", subscriptionIds)` 
+- Line 151-164: Query billing_history using `.in("subscription_id", subscriptionIds)`
+- Line 277: Update trailer count to use total items across all subs
+- Line 312: Update charge button to check any subscription's stripe_customer_id
+- Lines 480-598: Refactor subscription tab to map over subscriptions array, each with its own overview + filtered trailers table
 
