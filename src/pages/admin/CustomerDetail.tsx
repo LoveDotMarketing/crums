@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/table";
 import { CustomerFormDialog } from "@/components/admin/CustomerFormDialog";
 import { CustomerStatementsPanel } from "@/components/admin/CustomerStatementsPanel";
+import { ChargeCustomerDialog } from "@/components/admin/ChargeCustomerDialog";
 import { format } from "date-fns";
 import {
   ArrowLeft,
@@ -40,6 +41,7 @@ import {
   Pencil,
   Eye,
   Plus,
+  DollarSign,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
@@ -307,6 +309,13 @@ export default function CustomerDetail() {
                 <Pencil className="h-4 w-4 mr-2" />
                 Edit
               </Button>
+              {subscription?.stripe_customer_id && (
+                <ChargeCustomerDialog
+                  customerId={customerId!}
+                  customerName={customer.full_name}
+                  onSuccess={() => queryClient.invalidateQueries({ queryKey: ["admin-customer-billing"] })}
+                />
+              )}
               <Button size="sm" onClick={() => setStatementsOpen(true)}>
                 <Plus className="h-4 w-4 mr-2" />
                 Add Statement

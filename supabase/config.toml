@@ -136,3 +136,7 @@ verify_jwt = false
 # Twilio call recording proxy - admin only (auth handled in code)
 [functions.twilio-call-recording]
 verify_jwt = false
+
+# One-time customer charge - admin only (auth handled in code)
+[functions.charge-customer]
+verify_jwt = false
