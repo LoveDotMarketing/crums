@@ -35,13 +35,15 @@ serve(async (req) => {
     global: { headers: { Authorization: authHeader } },
   });
 
-  const { data: authData, error: authError } = await supabaseClient.auth.getUser(token);
-  if (authError || !authData?.user) {
+  const { data: claimsData, error: claimsError } = await supabaseClient.auth.getClaims(token);
+  if (claimsError || !claimsData?.claims) {
     return new Response(JSON.stringify({ error: "Invalid token" }), {
       status: 401,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
+
+  const authData = { user: { id: claimsData.claims.sub } };
 
   const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
