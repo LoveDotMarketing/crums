@@ -117,50 +117,52 @@ export default function CustomerDetail() {
     enabled: !!profile?.id,
   });
 
-  // ── Subscription ──────────────────────────────────────────────────────────
-  const { data: subscription } = useQuery({
-    queryKey: ["admin-customer-subscription", customerId],
+  // ── Subscriptions (all for this customer) ─────────────────────────────────
+  const { data: subscriptions = [] } = useQuery({
+    queryKey: ["admin-customer-subscriptions", customerId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("customer_subscriptions")
         .select("*")
         .eq("customer_id", customerId!)
-        .maybeSingle();
-      if (error) return null;
-      return data;
+        .order("created_at", { ascending: true });
+      if (error) return [];
+      return data || [];
     },
     enabled: !!customerId,
   });
 
+  const subscriptionIds = subscriptions.map((s) => s.id);
+
   // ── Subscription items + trailers ─────────────────────────────────────────
   const { data: subscriptionItems = [] } = useQuery({
-    queryKey: ["admin-customer-sub-items", subscription?.id],
+    queryKey: ["admin-customer-sub-items", subscriptionIds],
     queryFn: async () => {
-      if (!subscription?.id) return [];
+      if (subscriptionIds.length === 0) return [];
       const { data, error } = await supabase
         .from("subscription_items")
         .select(`*, trailers:trailer_id (trailer_number, type, vin, status)`)
-        .eq("subscription_id", subscription.id);
+        .in("subscription_id", subscriptionIds);
       if (error) throw error;
       return data || [];
     },
-    enabled: !!subscription?.id,
+    enabled: subscriptionIds.length > 0,
   });
 
   // ── Billing history ───────────────────────────────────────────────────────
   const { data: billingHistory = [] } = useQuery({
-    queryKey: ["admin-customer-billing", subscription?.id],
+    queryKey: ["admin-customer-billing", subscriptionIds],
     queryFn: async () => {
-      if (!subscription?.id) return [];
+      if (subscriptionIds.length === 0) return [];
       const { data, error } = await supabase
         .from("billing_history")
         .select("*")
-        .eq("subscription_id", subscription.id)
+        .in("subscription_id", subscriptionIds)
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data || [];
     },
-    enabled: !!subscription?.id,
+    enabled: subscriptionIds.length > 0,
   });
 
   // ── Statements ────────────────────────────────────────────────────────────
@@ -309,7 +311,7 @@ export default function CustomerDetail() {
                 <Pencil className="h-4 w-4 mr-2" />
                 Edit
               </Button>
-              {subscription?.stripe_customer_id && (
+              {subscriptions.some((s) => s.stripe_customer_id) && (
                 <ChargeCustomerDialog
                   customerId={customerId!}
                   customerName={customer.full_name}
@@ -478,7 +480,7 @@ export default function CustomerDetail() {
 
               {/* ══ SUBSCRIPTION TAB ══════════════════════════════════════════ */}
               <TabsContent value="subscription">
-                {!subscription ? (
+                {subscriptions.length === 0 ? (
                   <Card>
                     <CardContent className="flex flex-col items-center justify-center py-12 gap-3">
                       <Truck className="h-10 w-10 text-muted-foreground" />
@@ -486,115 +488,136 @@ export default function CustomerDetail() {
                     </CardContent>
                   </Card>
                 ) : (
-                  <div className="space-y-6">
-                    {/* Subscription overview */}
-                    <Card>
-                      <CardHeader>
-                        <CardTitle className="text-base flex items-center justify-between">
-                          Subscription Overview
-                          <Badge
-                            variant={subscription.status === "active" ? "default" : "secondary"}
-                            className="capitalize"
-                          >
-                            {subscription.status}
-                          </Badge>
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className="grid gap-4 sm:grid-cols-3 text-sm">
-                        <div>
-                          <p className="text-xs text-muted-foreground mb-1">Type</p>
-                          <p className="capitalize">{(subscription.subscription_type || "—").replace(/_/g, " ")}</p>
-                        </div>
-                        <div>
-                          <p className="text-xs text-muted-foreground mb-1">Billing Cycle</p>
-                          <p className="capitalize">{subscription.billing_cycle}</p>
-                        </div>
-                        <div>
-                          <p className="text-xs text-muted-foreground mb-1">Next Billing</p>
-                          <p>
-                            {subscription.next_billing_date
-                              ? format(new Date(subscription.next_billing_date), "MMM d, yyyy")
-                              : "—"}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="text-xs text-muted-foreground mb-1">Contract Start</p>
-                          <p>
-                            {subscription.contract_start_date
-                              ? format(new Date(subscription.contract_start_date), "MMM d, yyyy")
-                              : "—"}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="text-xs text-muted-foreground mb-1">End Date</p>
-                          <p>
-                            {subscription.end_date
-                              ? format(new Date(subscription.end_date), "MMM d, yyyy")
-                              : "—"}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="text-xs text-muted-foreground mb-1">Deposit</p>
-                          <p>
-                            {subscription.deposit_amount ? formatCurrency(Number(subscription.deposit_amount)) : "—"}
-                            {subscription.deposit_paid && (
-                              <span className="ml-2 text-green-600 text-xs">✓ Paid</span>
-                            )}
-                          </p>
-                        </div>
-                      </CardContent>
-                    </Card>
+                  <div className="space-y-8">
+                    {subscriptions.map((sub) => {
+                      const subItems = subscriptionItems.filter((item: any) => item.subscription_id === sub.id);
+                      const anchorDay = subItems.length > 0 ? subItems[0].billing_anchor_day : null;
+                      return (
+                        <div key={sub.id} className="space-y-4">
+                          {/* Subscription overview */}
+                          <Card>
+                            <CardHeader>
+                              <CardTitle className="text-base flex items-center justify-between">
+                                <span>
+                                  Subscription Overview
+                                  {anchorDay && (
+                                    <span className="ml-2 text-sm font-normal text-muted-foreground">
+                                      — Bills on the {anchorDay}{anchorDay === 1 ? "st" : anchorDay === 2 ? "nd" : anchorDay === 3 ? "rd" : "th"}
+                                    </span>
+                                  )}
+                                </span>
+                                <Badge
+                                  variant={sub.status === "active" ? "default" : "secondary"}
+                                  className="capitalize"
+                                >
+                                  {sub.status}
+                                </Badge>
+                              </CardTitle>
+                            </CardHeader>
+                            <CardContent className="grid gap-4 sm:grid-cols-3 text-sm">
+                              <div>
+                                <p className="text-xs text-muted-foreground mb-1">Type</p>
+                                <p className="capitalize">{(sub.subscription_type || "—").replace(/_/g, " ")}</p>
+                              </div>
+                              <div>
+                                <p className="text-xs text-muted-foreground mb-1">Billing Cycle</p>
+                                <p className="capitalize">{sub.billing_cycle}</p>
+                              </div>
+                              <div>
+                                <p className="text-xs text-muted-foreground mb-1">Next Billing</p>
+                                <p>
+                                  {sub.next_billing_date
+                                    ? format(new Date(sub.next_billing_date), "MMM d, yyyy")
+                                    : "—"}
+                                </p>
+                              </div>
+                              <div>
+                                <p className="text-xs text-muted-foreground mb-1">Contract Start</p>
+                                <p>
+                                  {sub.contract_start_date
+                                    ? format(new Date(sub.contract_start_date), "MMM d, yyyy")
+                                    : "—"}
+                                </p>
+                              </div>
+                              <div>
+                                <p className="text-xs text-muted-foreground mb-1">End Date</p>
+                                <p>
+                                  {sub.end_date
+                                    ? format(new Date(sub.end_date), "MMM d, yyyy")
+                                    : "—"}
+                                </p>
+                              </div>
+                              <div>
+                                <p className="text-xs text-muted-foreground mb-1">Deposit</p>
+                                <p>
+                                  {sub.deposit_amount ? formatCurrency(Number(sub.deposit_amount)) : "—"}
+                                  {sub.deposit_paid && (
+                                    <span className="ml-2 text-xs text-green-600">✓ Paid</span>
+                                  )}
+                                </p>
+                              </div>
+                            </CardContent>
+                          </Card>
 
-                    {/* Trailers on subscription */}
-                    <Card>
-                      <CardHeader>
-                        <CardTitle className="text-base">Trailers on Subscription</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        {subscriptionItems.length === 0 ? (
-                          <p className="text-muted-foreground text-sm">No trailers assigned.</p>
-                        ) : (
-                          <Table>
-                            <TableHeader>
-                              <TableRow>
-                                <TableHead>Trailer #</TableHead>
-                                <TableHead>Type</TableHead>
-                                <TableHead>VIN</TableHead>
-                                <TableHead>Billing Cycle</TableHead>
-                                <TableHead className="text-right">Rate</TableHead>
-                                <TableHead>Status</TableHead>
-                              </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                              {subscriptionItems.map((item: any) => (
-                                <TableRow key={item.id}>
-                                  <TableCell className="font-medium">
-                                    {item.trailers?.trailer_number || "—"}
-                                  </TableCell>
-                                  <TableCell className="text-muted-foreground capitalize">
-                                    {item.trailers?.type || "—"}
-                                  </TableCell>
-                                  <TableCell className="font-mono text-xs text-muted-foreground">
-                                    {item.trailers?.vin || "—"}
-                                  </TableCell>
-                                  <TableCell className="capitalize">
-                                    {item.billing_cycle || subscription.billing_cycle}
-                                  </TableCell>
-                                  <TableCell className="text-right font-medium">
-                                    {item.rate_amount ? formatCurrency(Number(item.rate_amount)) : "—"}
-                                  </TableCell>
-                                  <TableCell>
-                                    <Badge variant={item.status === "active" ? "default" : "secondary"} className="text-xs capitalize">
-                                      {item.status}
-                                    </Badge>
-                                  </TableCell>
-                                </TableRow>
-                              ))}
-                            </TableBody>
-                          </Table>
-                        )}
-                      </CardContent>
-                    </Card>
+                          {/* Trailers on this subscription */}
+                          <Card>
+                            <CardHeader>
+                              <CardTitle className="text-base">
+                                Trailers ({subItems.length})
+                              </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                              {subItems.length === 0 ? (
+                                <p className="text-muted-foreground text-sm">No trailers assigned.</p>
+                              ) : (
+                                <Table>
+                                  <TableHeader>
+                                    <TableRow>
+                                      <TableHead>Trailer #</TableHead>
+                                      <TableHead>Type</TableHead>
+                                      <TableHead>VIN</TableHead>
+                                      <TableHead>Billing Cycle</TableHead>
+                                      <TableHead>Anchor Day</TableHead>
+                                      <TableHead className="text-right">Rate</TableHead>
+                                      <TableHead>Status</TableHead>
+                                    </TableRow>
+                                  </TableHeader>
+                                  <TableBody>
+                                    {subItems.map((item: any) => (
+                                      <TableRow key={item.id}>
+                                        <TableCell className="font-medium">
+                                          {item.trailers?.trailer_number || "—"}
+                                        </TableCell>
+                                        <TableCell className="text-muted-foreground capitalize">
+                                          {item.trailers?.type || "—"}
+                                        </TableCell>
+                                        <TableCell className="font-mono text-xs text-muted-foreground">
+                                          {item.trailers?.vin || "—"}
+                                        </TableCell>
+                                        <TableCell className="capitalize">
+                                          {item.billing_cycle || sub.billing_cycle}
+                                        </TableCell>
+                                        <TableCell>
+                                          {item.billing_anchor_day ? `${item.billing_anchor_day}${item.billing_anchor_day === 1 ? "st" : item.billing_anchor_day === 2 ? "nd" : item.billing_anchor_day === 3 ? "rd" : "th"}` : "—"}
+                                        </TableCell>
+                                        <TableCell className="text-right font-medium">
+                                          {item.monthly_rate ? formatCurrency(Number(item.monthly_rate)) : "—"}
+                                        </TableCell>
+                                        <TableCell>
+                                          <Badge variant={item.status === "active" ? "default" : "secondary"} className="text-xs capitalize">
+                                            {item.status}
+                                          </Badge>
+                                        </TableCell>
+                                      </TableRow>
+                                    ))}
+                                  </TableBody>
+                                </Table>
+                              )}
+                            </CardContent>
+                          </Card>
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
               </TabsContent>
@@ -606,7 +629,7 @@ export default function CustomerDetail() {
                     <CardTitle className="text-base">Billing History</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    {!subscription ? (
+                    {subscriptions.length === 0 ? (
                       <p className="text-muted-foreground text-sm">No subscription linked — no billing history available.</p>
                     ) : billingHistory.length === 0 ? (
                       <p className="text-muted-foreground text-sm">No billing records yet.</p>
@@ -809,17 +832,18 @@ export default function CustomerDetail() {
                     )}
 
                     {/* Lease Agreement */}
-                    {subscription?.lease_agreement_url && (
+                    {subscriptions.some((s) => s.lease_agreement_url) && (
                       <div className="mt-6">
                         <p className="text-sm font-medium text-muted-foreground mb-3">Lease Agreement</p>
-                        <div className="flex items-center justify-between py-3 px-4 rounded-lg border border-border bg-card">
+                        {subscriptions.filter((s) => s.lease_agreement_url).map((sub) => (
+                        <div key={sub.id} className="flex items-center justify-between py-3 px-4 rounded-lg border border-border bg-card mb-2">
                           <div className="flex items-center gap-3">
                             <FileText className="h-5 w-5 text-muted-foreground" />
                             <div>
                               <p className="text-sm font-medium">Lease Agreement</p>
-                              {subscription.docusign_completed_at && (
+                              {sub.docusign_completed_at && (
                                 <p className="text-xs text-green-600">
-                                  Signed {format(new Date(subscription.docusign_completed_at), "MMM d, yyyy")}
+                                  Signed {format(new Date(sub.docusign_completed_at), "MMM d, yyyy")}
                                 </p>
                               )}
                             </div>
@@ -828,11 +852,11 @@ export default function CustomerDetail() {
                             variant="outline"
                             size="sm"
                             onClick={async () => {
-                              setDownloadingDocId("lease");
+                              setDownloadingDocId("lease-" + sub.id);
                               try {
                                 const { data, error } = await supabase.storage
                                   .from("customer-documents")
-                                  .createSignedUrl(subscription.lease_agreement_url!, 3600);
+                                  .createSignedUrl(sub.lease_agreement_url!, 3600);
                                 if (error) throw error;
                                 window.open(data.signedUrl, "_blank");
                               } catch (err: any) {
@@ -841,9 +865,9 @@ export default function CustomerDetail() {
                                 setDownloadingDocId(null);
                               }
                             }}
-                            disabled={downloadingDocId === "lease"}
+                            disabled={downloadingDocId === "lease-" + sub.id}
                           >
-                            {downloadingDocId === "lease" ? (
+                            {downloadingDocId === "lease-" + sub.id ? (
                               <Loader2 className="h-4 w-4 animate-spin" />
                             ) : (
                               <>
@@ -853,6 +877,7 @@ export default function CustomerDetail() {
                             )}
                           </Button>
                         </div>
+                        ))}
                       </div>
                     )}
                   </CardContent>
