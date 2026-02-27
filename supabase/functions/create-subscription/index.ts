@@ -27,6 +27,11 @@ function calculateNextAnchorDate(anchorDay: number | null): number | undefined {
   return Math.floor(targetDate.getTime() / 1000);
 }
 
+interface TrailerBillingSchedule {
+  billing_cycle?: string;
+  billing_anchor_day?: number;
+}
+
 interface SubscriptionRequest {
   customerId: string; // Our internal customer ID
   trailerIds: string[];
@@ -39,6 +44,7 @@ interface SubscriptionRequest {
   subscriptionType?: "standard_lease" | "rent_for_storage" | "lease_to_own" | "repayment_plan";
   leaseToOwnTotal?: number; // Total buyout price for lease-to-own agreements
   billingAnchorDay?: number; // Admin-selected billing anchor day (1-28)
+  trailerBillingSchedules?: Record<string, TrailerBillingSchedule>; // per-trailer billing overrides
 }
 
 serve(async (req) => {
@@ -78,7 +84,7 @@ serve(async (req) => {
     logStep("Admin verified", { adminId: userData.user.id });
 
     const body: SubscriptionRequest = await req.json();
-    const { customerId, trailerIds, billingCycle, depositAmount, discountId, customRates, leaseToOwnFlags, endDate, subscriptionType, leaseToOwnTotal, billingAnchorDay } = body;
+    const { customerId, trailerIds, billingCycle, depositAmount, discountId, customRates, leaseToOwnFlags, endDate, subscriptionType, leaseToOwnTotal, billingAnchorDay, trailerBillingSchedules } = body;
 
     if (!customerId || !trailerIds?.length || !billingCycle) {
       throw new Error("Missing required fields: customerId, trailerIds, billingCycle");
@@ -111,17 +117,6 @@ serve(async (req) => {
         existingCount: activeSubscriptions.length
       });
     }
-    
-    // Look for a canceled subscription to reuse
-    const canceledSubscription = (existingSubscriptions || []).find(s => s.status === "canceled");
-    // Only reuse if there are no active subscriptions (to avoid confusion)
-    const reuseExistingRow = canceledSubscription && activeSubscriptions.length === 0;
-    const existingSubscription = reuseExistingRow ? canceledSubscription : null;
-    if (reuseExistingRow) {
-      logStep("Found canceled subscription, will reuse row", { existingId: canceledSubscription!.id });
-    } else {
-      logStep("Will create new subscription row");
-    }
 
     // Check if any of the requested trailers are already rented
     const { data: rentedTrailers } = await supabaseClient
@@ -151,9 +146,9 @@ serve(async (req) => {
     if (custError || !customer) throw new Error("Customer not found");
     logStep("Customer found", { customerId, email: customer.email });
 
-    // Use admin-provided billing anchor day, falling back to customer application preference
-    let anchorDay = billingAnchorDay || null;
-    if (!anchorDay) {
+    // Resolve global anchor day from admin input or customer application
+    let globalAnchorDay = billingAnchorDay || null;
+    if (!globalAnchorDay) {
       const { data: customerApplication } = await supabaseClient
         .from("customer_applications")
         .select("billing_anchor_day, user_id")
@@ -165,12 +160,12 @@ serve(async (req) => {
             .maybeSingle()
         ).data?.id || "")
         .maybeSingle();
-      anchorDay = customerApplication?.billing_anchor_day || null;
+      globalAnchorDay = customerApplication?.billing_anchor_day || null;
     }
     
-    logStep("Billing anchor day", { 
+    logStep("Global billing anchor day", { 
       adminProvided: billingAnchorDay,
-      resolved: anchorDay
+      resolved: globalAnchorDay
     });
 
     // Get trailers with rental rates
@@ -200,12 +195,11 @@ serve(async (req) => {
       logStep("Created new Stripe customer", { stripeCustomerId });
     }
 
-    // Calculate billing interval for recurring charges after initial payment
-    // Note: semimonthly (twice monthly) uses biweekly as Stripe approximation
+    // Calculate billing interval
     const intervalMap = {
       weekly: { interval: "week" as const, interval_count: 1 },
       biweekly: { interval: "week" as const, interval_count: 2 },
-      semimonthly: { interval: "week" as const, interval_count: 2 }, // ~twice monthly
+      semimonthly: { interval: "week" as const, interval_count: 2 },
       monthly: { interval: "month" as const, interval_count: 1 },
     };
     const billingInterval = intervalMap[billingCycle];
@@ -221,7 +215,6 @@ serve(async (req) => {
         .single();
 
       if (discount) {
-        // Create or find Stripe coupon
         const couponParams: Stripe.CouponCreateParams = {
           duration: "forever",
           metadata: { internal_discount_id: discountId },
@@ -242,242 +235,279 @@ serve(async (req) => {
     // Get type-based default rental rate
     const getDefaultRate = (trailerType: string): number => {
       const type = trailerType?.toLowerCase() || "";
-      if (type.includes("flat") || type.includes("flatbed")) {
-        return 750;
-      }
-      if (type.includes("refrigerated") || type.includes("reefer")) {
-        return 850;
-      }
-      // Dry Van default
+      if (type.includes("flat") || type.includes("flatbed")) return 750;
+      if (type.includes("refrigerated") || type.includes("reefer")) return 850;
       return 700;
     };
 
-    // Create subscription items (prices) for each trailer
-    const subscriptionItems: Stripe.SubscriptionCreateParams.Item[] = [];
-
+    // ==========================================
+    // GROUP TRAILERS BY BILLING ANCHOR DAY
+    // ==========================================
+    // Each trailer resolves its anchor day from:
+    //   1. trailerBillingSchedules[id]?.billing_anchor_day (per-trailer override)
+    //   2. globalAnchorDay (admin-selected or application default)
+    //   3. null (no anchor = Stripe default)
+    const anchorGroups = new Map<string, typeof trailers>();
+    
     for (const trailer of trailers) {
-      // Use custom rate if provided, otherwise fall back to trailer's rate or type-based default
-      const rate = customRates?.[trailer.id] ?? trailer.rental_rate ?? getDefaultRate(trailer.type);
-
-      // Create a price for this trailer
-      const price = await stripe.prices.create({
-        unit_amount: Math.round(rate * 100),
-        currency: "usd",
-        recurring: billingInterval,
-        product_data: {
-          name: `Trailer ${trailer.trailer_number} Lease`,
-          metadata: { trailer_id: trailer.id },
-        },
-      });
-
-      subscriptionItems.push({ price: price.id });
-      logStep("Created price for trailer", { trailerId: trailer.id, priceId: price.id, rate, isCustomRate: !!customRates?.[trailer.id] });
-    }
-
-    // Create one-time deposit price if deposit amount is provided
-    let depositInvoiceItem: Stripe.SubscriptionCreateParams.AddInvoiceItem | null = null;
-    if (depositAmount && depositAmount > 0) {
-      // Create a one-time price for the security deposit
-      const depositPrice = await stripe.prices.create({
-        unit_amount: Math.round(depositAmount * 100),
-        currency: "usd",
-        product_data: {
-          name: "Security Deposit",
-          metadata: { 
-            type: "security_deposit",
-            internal_customer_id: customerId,
-          },
-        },
-      });
+      const perTrailerSchedule = trailerBillingSchedules?.[trailer.id];
+      const resolvedAnchor = perTrailerSchedule?.billing_anchor_day ?? globalAnchorDay ?? null;
+      const groupKey = resolvedAnchor !== null ? String(resolvedAnchor) : "default";
       
-      depositInvoiceItem = { price: depositPrice.id };
-      logStep("Created deposit price", { depositAmount, priceId: depositPrice.id });
+      if (!anchorGroups.has(groupKey)) {
+        anchorGroups.set(groupKey, []);
+      }
+      anchorGroups.get(groupKey)!.push(trailer);
     }
 
-    // NEW BILLING FLOW: Charge deposit + first period's rent IMMEDIATELY
-    // No trial period, no delayed anchor - customer pays upfront
-    // Subsequent recurring charges happen based on billing cycle
-
-    // Create the subscription - charges deposit + first period immediately
-    const subscriptionParams: Stripe.SubscriptionCreateParams = {
-      customer: stripeCustomerId,
-      items: subscriptionItems,
-      payment_behavior: "default_incomplete",
-      payment_settings: { save_default_payment_method: "on_subscription" },
-      expand: ["latest_invoice.payment_intent"],
-      metadata: { 
-        internal_customer_id: customerId,
-        deposit_amount: depositAmount?.toString() || "0",
-        billing_cycle: billingCycle,
-      },
-    };
-
-    // Set billing cycle anchor if anchor day is specified
-    const anchorTimestamp = calculateNextAnchorDate(anchorDay);
-    if (anchorTimestamp) {
-      subscriptionParams.billing_cycle_anchor = anchorTimestamp;
-      subscriptionParams.proration_behavior = "none";
-      logStep("Setting billing cycle anchor", { anchorDay, anchorTimestamp });
-    }
-
-    if (depositInvoiceItem) {
-      subscriptionParams.add_invoice_items = [depositInvoiceItem];
-      logStep("Adding deposit to first invoice", { depositAmount });
-    }
-
-    if (coupon) {
-      subscriptionParams.discounts = [{ coupon: coupon.id }];
-    }
-
-    const subscription = await stripe.subscriptions.create(subscriptionParams);
-    
-    // Calculate what was charged on first invoice
-    const firstPeriodRent = trailers.reduce((sum, trailer) => {
-      const rate = customRates?.[trailer.id] ?? trailer.rental_rate ?? getDefaultRate(trailer.type);
-      return sum + rate;
-    }, 0);
-    
-    logStep("Created Stripe subscription with upfront charges", { 
-      subscriptionId: subscription.id,
-      hasDeposit: !!depositInvoiceItem,
-      depositAmount: depositAmount || 0,
-      firstPeriodRent,
-      totalFirstInvoice: (depositAmount || 0) + firstPeriodRent,
-      nextRecurringCharge: billingCycle
+    logStep("Grouped trailers by anchor day", { 
+      groups: Array.from(anchorGroups.entries()).map(([key, t]) => ({
+        anchorDay: key,
+        trailerCount: t.length,
+        trailers: t.map(tr => tr.trailer_number)
+      }))
     });
 
-    // Create customer_subscription record
-    // Handle next_billing_date - subscription.current_period_end may be null for incomplete subscriptions
-    let nextBillingDate: string | null = null;
-    if (subscription.current_period_end) {
-      nextBillingDate = new Date(subscription.current_period_end * 1000).toISOString();
-    }
-    logStep("Calculated next billing date", { periodEnd: subscription.current_period_end, nextBillingDate });
-
-    // Map Stripe status to our allowed values: pending, active, paused, canceled
-    // CRITICAL: Use "canceled" (single L) to match database constraint
+    // Determine subscription type
+    const subType = subscriptionType || "standard_lease";
+    
+    // Map Stripe status to our allowed values
     const statusMap: Record<string, string> = {
       incomplete: "pending",
       incomplete_expired: "canceled",
       trialing: "active",
       active: "active",
-      past_due: "active", // Still active but needs attention
+      past_due: "active",
       canceled: "canceled",
       unpaid: "paused",
       paused: "paused",
     };
-    const mappedStatus = statusMap[subscription.status] ?? "pending";
-    logStep("Mapping subscription status", { stripeStatus: subscription.status, mappedStatus });
 
-    // Create or update customer_subscription record
-    let custSub;
-    let subError;
-    
-    // Determine the subscription type to store (defaults to standard_lease)
-    const subType = subscriptionType || "standard_lease";
-    logStep("Setting subscription type", { subscriptionType: subType });
-    
-    if (reuseExistingRow && existingSubscription) {
-      // Update the existing canceled subscription row
-      const { data, error } = await supabaseClient
-        .from("customer_subscriptions")
-        .update({
-          stripe_subscription_id: subscription.id,
-          stripe_customer_id: stripeCustomerId,
-          billing_cycle: billingCycle,
-          deposit_amount: depositAmount || null,
-          deposit_paid: false,
-          status: mappedStatus,
-          next_billing_date: nextBillingDate,
-          end_date: endDate || null,
-          subscription_type: subType,
-        })
-        .eq("id", existingSubscription.id)
-        .select()
-        .single();
-      custSub = data;
-      subError = error;
-      logStep("Updated existing subscription record", { id: custSub?.id, endDate, subscriptionType: subType });
-    } else {
-      // Insert a new subscription row
-      const { data, error } = await supabaseClient
-        .from("customer_subscriptions")
-        .insert({
-          customer_id: customerId,
-          stripe_subscription_id: subscription.id,
-          stripe_customer_id: stripeCustomerId,
-          billing_cycle: billingCycle,
-          deposit_amount: depositAmount || null,
-          deposit_paid: false,
-          status: mappedStatus,
-          next_billing_date: nextBillingDate,
-          end_date: endDate || null,
-          subscription_type: subType,
-        })
-        .select()
-        .single();
-      custSub = data;
-      subError = error;
-      logStep("Created new subscription record", { id: custSub?.id, endDate, subscriptionType: subType });
-    }
+    // Track all created subscription IDs for the response
+    const createdSubscriptions: Array<{ subscriptionId: string; stripeSubscriptionId: string; status: string; anchorDay: string }> = [];
+    let primarySubscriptionId = "";
+    let primaryStripeSubscriptionId = "";
+    let primaryStatus = "";
 
-    if (subError) throw new Error(`Failed to create/update subscription record: ${subError.message}`);
+    // Look for a canceled subscription to reuse (only for the FIRST group)
+    const canceledSubscription = (existingSubscriptions || []).find(s => s.status === "canceled");
+    const reuseExistingRow = canceledSubscription && activeSubscriptions.length === 0;
+    let isFirstGroup = true;
 
-    // Create subscription_items for each trailer
-    for (let i = 0; i < trailers.length; i++) {
-      const trailer = trailers[i];
-      const stripeItem = subscription.items.data[i];
-      const rate = customRates?.[trailer.id] ?? trailer.rental_rate ?? getDefaultRate(trailer.type);
-      // For lease_to_own subscription type, override individual flags
-      const isLeaseToOwn = subscriptionType === "lease_to_own" ? true : (leaseToOwnFlags?.[trailer.id] ?? false);
+    // ==========================================
+    // CREATE A STRIPE SUBSCRIPTION PER GROUP
+    // ==========================================
+    for (const [groupKey, groupTrailers] of anchorGroups) {
+      const anchorDay = groupKey === "default" ? null : parseInt(groupKey, 10);
+      
+      logStep(`Processing anchor group`, { anchorDay: groupKey, trailerCount: groupTrailers.length });
 
-      // For lease-to-own, use the subscription end_date as ownership transfer date
-      const ownershipTransferDate = isLeaseToOwn && endDate ? endDate : null;
-
-      await supabaseClient
-        .from("subscription_items")
-        .insert({
-          subscription_id: custSub.id,
-          trailer_id: trailer.id,
-          monthly_rate: rate,
-          stripe_subscription_item_id: stripeItem?.id || null,
-          status: "active",
-          lease_to_own: isLeaseToOwn,
-          ownership_transfer_date: ownershipTransferDate,
-          lease_to_own_total: isLeaseToOwn && leaseToOwnTotal ? leaseToOwnTotal : null,
+      // Create Stripe prices for this group's trailers
+      const subscriptionItems: Stripe.SubscriptionCreateParams.Item[] = [];
+      for (const trailer of groupTrailers) {
+        const rate = customRates?.[trailer.id] ?? trailer.rental_rate ?? getDefaultRate(trailer.type);
+        const price = await stripe.prices.create({
+          unit_amount: Math.round(rate * 100),
+          currency: "usd",
+          recurring: billingInterval,
+          product_data: {
+            name: `Trailer ${trailer.trailer_number} Lease`,
+            metadata: { trailer_id: trailer.id },
+          },
         });
+        subscriptionItems.push({ price: price.id });
+        logStep("Created price for trailer", { trailerId: trailer.id, priceId: price.id, rate, group: groupKey });
+      }
 
-      logStep("Created subscription item", { 
-        trailerId: trailer.id, 
-        leaseToOwn: isLeaseToOwn, 
-        ownershipTransferDate 
+      // Only add deposit to the first group's subscription
+      let depositInvoiceItem: Stripe.SubscriptionCreateParams.AddInvoiceItem | null = null;
+      if (isFirstGroup && depositAmount && depositAmount > 0) {
+        const depositPrice = await stripe.prices.create({
+          unit_amount: Math.round(depositAmount * 100),
+          currency: "usd",
+          product_data: {
+            name: "Security Deposit",
+            metadata: { type: "security_deposit", internal_customer_id: customerId },
+          },
+        });
+        depositInvoiceItem = { price: depositPrice.id };
+        logStep("Created deposit price", { depositAmount, priceId: depositPrice.id });
+      }
+
+      // Build Stripe subscription params
+      const subscriptionParams: Stripe.SubscriptionCreateParams = {
+        customer: stripeCustomerId,
+        items: subscriptionItems,
+        payment_behavior: "default_incomplete",
+        payment_settings: { save_default_payment_method: "on_subscription" },
+        expand: ["latest_invoice.payment_intent"],
+        metadata: { 
+          internal_customer_id: customerId,
+          deposit_amount: isFirstGroup ? (depositAmount?.toString() || "0") : "0",
+          billing_cycle: billingCycle,
+          billing_anchor_day: anchorDay?.toString() || "none",
+        },
+      };
+
+      // Set billing cycle anchor
+      const anchorTimestamp = calculateNextAnchorDate(anchorDay);
+      if (anchorTimestamp) {
+        subscriptionParams.billing_cycle_anchor = anchorTimestamp;
+        subscriptionParams.proration_behavior = "none";
+        logStep("Setting billing cycle anchor", { anchorDay, anchorTimestamp, group: groupKey });
+      }
+
+      if (depositInvoiceItem) {
+        subscriptionParams.add_invoice_items = [depositInvoiceItem];
+      }
+
+      if (coupon) {
+        subscriptionParams.discounts = [{ coupon: coupon.id }];
+      }
+
+      const subscription = await stripe.subscriptions.create(subscriptionParams);
+      logStep("Created Stripe subscription", { 
+        subscriptionId: subscription.id, group: groupKey, anchorDay,
+        trailerCount: groupTrailers.length
       });
 
-      // Update trailer to mark as rented
-      await supabaseClient
-        .from("trailers")
-        .update({ is_rented: true, customer_id: customerId })
-        .eq("id", trailer.id);
-    }
-    logStep("Created subscription items", { count: trailers.length });
+      // Calculate next billing date
+      let nextBillingDate: string | null = null;
+      if (subscription.current_period_end) {
+        nextBillingDate = new Date(subscription.current_period_end * 1000).toISOString();
+      }
 
-    // Track discount if applied
-    if (discountId && custSub) {
-      await supabaseClient
-        .from("applied_discounts")
-        .insert({
-          subscription_id: custSub.id,
-          discount_id: discountId,
+      const mappedStatus = statusMap[subscription.status] ?? "pending";
+
+      // Create or update customer_subscription record
+      let custSub;
+      let subError;
+
+      if (isFirstGroup && reuseExistingRow && canceledSubscription) {
+        const { data, error } = await supabaseClient
+          .from("customer_subscriptions")
+          .update({
+            stripe_subscription_id: subscription.id,
+            stripe_customer_id: stripeCustomerId,
+            billing_cycle: billingCycle,
+            deposit_amount: depositAmount || null,
+            deposit_paid: false,
+            status: mappedStatus,
+            next_billing_date: nextBillingDate,
+            end_date: endDate || null,
+            subscription_type: subType,
+          })
+          .eq("id", canceledSubscription.id)
+          .select()
+          .single();
+        custSub = data;
+        subError = error;
+        logStep("Updated existing subscription record", { id: custSub?.id, group: groupKey });
+      } else {
+        const { data, error } = await supabaseClient
+          .from("customer_subscriptions")
+          .insert({
+            customer_id: customerId,
+            stripe_subscription_id: subscription.id,
+            stripe_customer_id: stripeCustomerId,
+            billing_cycle: billingCycle,
+            deposit_amount: isFirstGroup ? (depositAmount || null) : null,
+            deposit_paid: false,
+            status: mappedStatus,
+            next_billing_date: nextBillingDate,
+            end_date: endDate || null,
+            subscription_type: subType,
+          })
+          .select()
+          .single();
+        custSub = data;
+        subError = error;
+        logStep("Created new subscription record", { id: custSub?.id, group: groupKey });
+      }
+
+      if (subError) throw new Error(`Failed to create subscription record for group ${groupKey}: ${subError.message}`);
+
+      // Create subscription_items for each trailer in this group
+      for (let i = 0; i < groupTrailers.length; i++) {
+        const trailer = groupTrailers[i];
+        const stripeItem = subscription.items.data[i];
+        const rate = customRates?.[trailer.id] ?? trailer.rental_rate ?? getDefaultRate(trailer.type);
+        const isLeaseToOwn = subscriptionType === "lease_to_own" ? true : (leaseToOwnFlags?.[trailer.id] ?? false);
+        const ownershipTransferDate = isLeaseToOwn && endDate ? endDate : null;
+        
+        // Resolve per-trailer billing metadata
+        const perTrailerSchedule = trailerBillingSchedules?.[trailer.id];
+        const resolvedBillingCycle = perTrailerSchedule?.billing_cycle || billingCycle;
+        const resolvedAnchorDay = perTrailerSchedule?.billing_anchor_day ?? anchorDay ?? null;
+
+        await supabaseClient
+          .from("subscription_items")
+          .insert({
+            subscription_id: custSub.id,
+            trailer_id: trailer.id,
+            monthly_rate: rate,
+            stripe_subscription_item_id: stripeItem?.id || null,
+            status: "active",
+            lease_to_own: isLeaseToOwn,
+            ownership_transfer_date: ownershipTransferDate,
+            lease_to_own_total: isLeaseToOwn && leaseToOwnTotal ? leaseToOwnTotal : null,
+            billing_cycle: resolvedBillingCycle,
+            billing_anchor_day: resolvedAnchorDay,
+          });
+
+        logStep("Created subscription item", { 
+          trailerId: trailer.id, trailerNumber: trailer.trailer_number,
+          billingCycle: resolvedBillingCycle, anchorDay: resolvedAnchorDay,
+          group: groupKey
         });
-      logStep("Applied discount to subscription");
+
+        // Update trailer to mark as rented
+        await supabaseClient
+          .from("trailers")
+          .update({ is_rented: true, customer_id: customerId })
+          .eq("id", trailer.id);
+      }
+
+      // Track discount if applied (only on first group)
+      if (isFirstGroup && discountId && custSub) {
+        await supabaseClient
+          .from("applied_discounts")
+          .insert({
+            subscription_id: custSub.id,
+            discount_id: discountId,
+          });
+        logStep("Applied discount to subscription");
+      }
+
+      createdSubscriptions.push({
+        subscriptionId: custSub.id,
+        stripeSubscriptionId: subscription.id,
+        status: subscription.status,
+        anchorDay: groupKey,
+      });
+
+      if (isFirstGroup) {
+        primarySubscriptionId = custSub.id;
+        primaryStripeSubscriptionId = subscription.id;
+        primaryStatus = subscription.status;
+      }
+
+      isFirstGroup = false;
     }
+
+    logStep("All subscription groups created", { 
+      totalGroups: anchorGroups.size,
+      subscriptions: createdSubscriptions 
+    });
 
     return new Response(
       JSON.stringify({
         success: true,
-        subscriptionId: custSub.id,
-        stripeSubscriptionId: subscription.id,
-        status: subscription.status,
+        subscriptionId: primarySubscriptionId,
+        stripeSubscriptionId: primaryStripeSubscriptionId,
+        status: primaryStatus,
+        // Include all created subscriptions for multi-group scenarios
+        allSubscriptions: createdSubscriptions.length > 1 ? createdSubscriptions : undefined,
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
