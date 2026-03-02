@@ -115,12 +115,12 @@ export default function CustomerDetail() {
           .maybeSingle();
         if (!error && data) return data;
       }
-      // Fallback: customer record ID as placeholder user_id
+      // Fallback: lookup by customer_id column
       if (customerId) {
         const { data, error } = await supabase
           .from("customer_applications")
           .select("*")
-          .eq("user_id", customerId)
+          .eq("customer_id", customerId)
           .maybeSingle();
         if (!error && data) return data;
       }

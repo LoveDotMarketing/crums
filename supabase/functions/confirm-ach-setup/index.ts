@@ -84,12 +84,11 @@ serve(async (req) => {
       throw new Error("No payment method found on SetupIntent");
     }
 
-    // Get the user's application (lookupUserId may be a profile id OR a customer record id)
-    const { data: application, error: appError } = await supabaseClient
-      .from("customer_applications")
-      .select("id")
-      .eq("user_id", lookupUserId)
-      .single();
+    // Get the user's application - use customer_id for customer path, user_id otherwise
+    const appQuery = customerId
+      ? supabaseClient.from("customer_applications").select("id").eq("customer_id", customerId).single()
+      : supabaseClient.from("customer_applications").select("id").eq("user_id", lookupUserId).single();
+    const { data: application, error: appError } = await appQuery;
 
     if (appError || !application) {
       throw new Error("Application not found");
