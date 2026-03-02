@@ -1,53 +1,59 @@
 
 
-## Plan
+## Problem
 
-Show the real Stripe payment status on the "Processing" button instead of a generic label, so admins can distinguish between "Pending" (Jean — ACH initiated) and "Incomplete" (Ground Link — payment not yet attempted).
+Ground Link shows "Pending" in the UI but Stripe shows "Incomplete". This happens because `activate-subscription` set the local status to "active" and created a `billing_history` record with "processing" status, but the Stripe subscription never transitioned out of "incomplete" (payment didn't initiate successfully). The `processingLabel` logic sees the billing_history record and shows "Pending" instead of "Incomplete".
 
-### 1. Determine the display label from billing_history status
+After a sync, `sync-payments` would update Ground Link's `sub.status` from "active" back to "pending" (Stripe "incomplete" maps to "pending"), but the UI would then show "Activate" again instead of "Incomplete".
 
-In `src/pages/admin/Billing.tsx`, when `isProcessing` is true, find the most recent billing_history record for that subscription and use its status as the button label.
+## Fix (2 changes)
 
-For subscriptions with no billing_history record but still in `activatedIds` (just activated this session), fall back to "Processing".
+### 1. Update `processingLabel` to detect failed activations (`src/pages/admin/Billing.tsx`, ~lines 1316-1347)
 
-For subscriptions where `sub.status === "active"` but Stripe shows incomplete (no billing_history record and not in `activatedIds`), show the raw local subscription status or "Incomplete".
+Add logic to detect when a subscription was previously activated but Stripe still shows incomplete:
 
-**Change around lines 1316-1323:**
+- If `sub.status === "pending"` AND has `stripe_subscription_id` AND billing_history records exist (activation was attempted) → show "Incomplete" button instead of "Activate"
+- If `sub.status === "active"` AND billing_history has processing/pending records → continue showing "Pending" or "Processing"
+
 ```typescript
-// Get the most recent billing_history entry for this subscription
-const latestPaymentRecord = billingHistory
-  ?.filter(bh => bh.subscription_id === sub.id)
-  ?.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())?.[0];
+// Check if activation was previously attempted (billing_history exists)
+const hasAttemptedActivation = billingHistory?.some(
+  bh => bh.subscription_id === sub.id
+);
 
-const hasProcessingPayment = latestPaymentRecord && 
-  (latestPaymentRecord.status === "processing" || latestPaymentRecord.status === "pending");
+// Detect incomplete: pending status with prior activation attempt
+const isIncomplete = (sub.status === "pending" && sub.stripe_subscription_id && hasAttemptedActivation) ||
+  (sub.status === "active" && sub.stripe_subscription_id && 
+   !hasSuccessfulPayment && !hasProcessingPayment);
 
 const isProcessing = activatedIds.has(sub.id) || 
-  (sub.status === "active" && hasProcessingPayment && !hasSuccessfulPayment);
+  (sub.status === "active" && hasProcessingPayment && !hasSuccessfulPayment) ||
+  isIncomplete;
 
-// Determine the Stripe-aligned label
-const processingLabel = latestPaymentRecord?.status === "pending" ? "Pending"
-  : latestPaymentRecord?.status === "processing" ? "Processing"
+const processingLabel = latestPaymentRecord?.status === "pending" && sub.status === "active" ? "Pending"
+  : latestPaymentRecord?.status === "processing" && sub.status === "active" ? "Processing"
   : activatedIds.has(sub.id) ? "Processing"
-  : (sub.status === "active" && !hasSuccessfulPayment && !hasProcessingPayment) ? "Incomplete"
+  : isIncomplete ? "Incomplete"
   : "Processing";
 ```
 
-### 2. Also detect "Incomplete" state (no billing_history, active locally but never charged)
+This ensures:
+- **Jean** (sub.status = "active", billing_history = "pending") → shows **"Pending"**
+- **Ground Link** after sync (sub.status = "pending", has billing_history) → shows **"Incomplete"**
+- **Ground Link** before sync (sub.status = "active", no processing billing_history if sync updated it to failed) → shows **"Incomplete"**
 
-Expand `isProcessing` to also cover the case where subscription is active locally but has no billing history at all (Ground Link's case — Stripe shows "incomplete"). This means:
-- `sub.status === "active"` AND no successful payment AND no processing/pending payment AND has a `stripe_subscription_id`
+### 2. Exclude incomplete subscriptions from `isReadyToActivate`
 
-Update `isProcessing` and `isReadyToActivate` accordingly, and show "Incomplete" as the label for these.
+Update `isReadyToActivate` to not show "Activate" for previously-attempted subscriptions that are incomplete — those should show the "Incomplete" indicator instead:
 
-### 3. Update button text (lines 1438-1447)
-
-Replace the hardcoded "Processing" text with the dynamic `processingLabel`:
-```tsx
-<RefreshCw className="h-3 w-3 animate-spin mr-1" />
-{processingLabel}
+```typescript
+const isReadyToActivate = !isProcessing && sub.stripe_subscription_id && 
+  sub.stripe_customer_id && !hasAttemptedActivation && (
+    sub.status === "pending" || 
+    (sub.status === "active" && !hasSuccessfulPayment)
+  );
 ```
 
 ### Files to change
-- **`src/pages/admin/Billing.tsx`** — Dynamic status label based on billing_history status, detect incomplete state
+- **`src/pages/admin/Billing.tsx`** — Detect failed activations and show "Incomplete" label
 
