@@ -17,8 +17,16 @@ import {
   CheckCircle,
   Clock,
   Loader2,
-  CreditCard
+  CreditCard,
+  Landmark,
+  XCircle
 } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import {
   Table,
   TableBody,
@@ -53,6 +61,7 @@ export default function Tolls() {
   const [isLoading, setIsLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [chargingTollId, setChargingTollId] = useState<string | null>(null);
+  const [achStatusMap, setAchStatusMap] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     setCustomerFilter(customerIdFromUrl);
@@ -85,7 +94,22 @@ export default function Tolls() {
       toast.error("Failed to load tolls");
       console.error(error);
     } else {
-      setTolls((data as unknown as Toll[]) || []);
+      const tollData = (data as unknown as Toll[]) || [];
+      setTolls(tollData);
+      // Fetch ACH status for all unique customers
+      const customerIds = [...new Set(tollData.map(t => t.customer_id))];
+      if (customerIds.length > 0) {
+        const { data: apps } = await supabase
+          .from("customer_applications")
+          .select("user_id, stripe_payment_method_id")
+          .in("user_id", customerIds);
+        const map: Record<string, boolean> = {};
+        customerIds.forEach(id => { map[id] = false; });
+        apps?.forEach(a => {
+          if (a.stripe_payment_method_id) map[a.user_id] = true;
+        });
+        setAchStatusMap(map);
+      }
     }
     setIsLoading(false);
   };
@@ -354,7 +378,25 @@ export default function Tolls() {
                           <TableCell className="font-medium">
                             {new Date(toll.toll_date).toLocaleDateString()}
                           </TableCell>
-                          <TableCell>{getCustomerName(toll)}</TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-1.5">
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    {achStatusMap[toll.customer_id] ? (
+                                      <Landmark className="h-4 w-4 text-green-600 shrink-0" />
+                                    ) : (
+                                      <XCircle className="h-4 w-4 text-destructive shrink-0" />
+                                    )}
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    {achStatusMap[toll.customer_id] ? "ACH linked — chargeable" : "No ACH on file"}
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                              {getCustomerName(toll)}
+                            </div>
+                          </TableCell>
                           <TableCell>
                             {toll.trailers?.trailer_number ? (
                               <Badge variant="outline">{toll.trailers.trailer_number}</Badge>
