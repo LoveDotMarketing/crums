@@ -155,9 +155,26 @@ export function CreateSubscriptionDialog({ onSuccess }: CreateSubscriptionDialog
     enabled: isOpen
   });
 
+  // Fetch trailer IDs already on active/pending/paused subscriptions for the selected customer
+  const { data: subscribedTrailerIds } = useQuery({
+    queryKey: ["subscribed-trailer-ids", selectedCustomerId],
+    queryFn: async () => {
+      if (!selectedCustomerId) return [];
+      const { data, error } = await supabase
+        .from("subscription_items")
+        .select("trailer_id, customer_subscriptions!inner(customer_id, status)")
+        .eq("customer_subscriptions.customer_id", selectedCustomerId)
+        .in("customer_subscriptions.status", ["active", "pending", "paused"]);
+
+      if (error) throw error;
+      return (data || []).map(item => item.trailer_id);
+    },
+    enabled: isOpen && !!selectedCustomerId
+  });
+
   // Fetch available trailers + trailers already assigned to selected customer
   const { data: availableTrailers, isLoading: loadingTrailers } = useQuery({
-    queryKey: ["available-trailers-for-subscription", selectedCustomerId],
+    queryKey: ["available-trailers-for-subscription", selectedCustomerId, subscribedTrailerIds],
     queryFn: async () => {
       let query = supabase
         .from("trailers")
@@ -172,7 +189,14 @@ export function CreateSubscriptionDialog({ onSuccess }: CreateSubscriptionDialog
 
       const { data, error } = await query.order("trailer_number");
       if (error) throw error;
-      return data as AvailableTrailer[];
+      
+      // Filter out trailers already on an active/pending/paused subscription
+      const excludeIds = new Set(subscribedTrailerIds || []);
+      const filtered = excludeIds.size > 0
+        ? (data || []).filter(t => !excludeIds.has(t.id))
+        : (data || []);
+      
+      return filtered as AvailableTrailer[];
     },
     enabled: isOpen
   });
