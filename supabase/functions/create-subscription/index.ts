@@ -146,6 +146,30 @@ serve(async (req) => {
     if (custError || !customer) throw new Error("Customer not found");
     logStep("Customer found", { customerId, email: customer.email });
 
+    // Server-side ACH guard: verify customer has a payment method before creating subscription
+    if (customer.email) {
+      const { data: profileData } = await supabaseClient
+        .from("profiles")
+        .select("id")
+        .eq("email", customer.email)
+        .maybeSingle();
+      
+      if (profileData?.id) {
+        const { data: appData } = await supabaseClient
+          .from("customer_applications")
+          .select("stripe_payment_method_id")
+          .eq("user_id", profileData.id)
+          .maybeSingle();
+        
+        if (!appData?.stripe_payment_method_id) {
+          throw new Error("Customer has no ACH payment method linked. Set up ACH on their profile first.");
+        }
+        logStep("ACH payment method verified", { userId: profileData.id });
+      } else {
+        logStep("WARNING: No profile found for customer, skipping ACH guard", { email: customer.email });
+      }
+    }
+
     // Resolve global anchor day from admin input or customer application
     let globalAnchorDay = billingAnchorDay || null;
     if (!globalAnchorDay) {

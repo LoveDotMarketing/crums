@@ -199,6 +199,30 @@ export function CreateSubscriptionDialog({ onSuccess }: CreateSubscriptionDialog
       if (!selectedCustomerId) throw new Error("Please select a customer");
       if (selectedTrailers.length === 0) throw new Error("Please select at least one trailer");
 
+      // ACH guard: Check if customer has a payment method linked
+      const customer = customers?.find(c => c.id === selectedCustomerId);
+      if (customer?.email) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("id")
+          .eq("email", customer.email)
+          .maybeSingle();
+        
+        if (profile?.id) {
+          const { data: application } = await supabase
+            .from("customer_applications")
+            .select("stripe_payment_method_id")
+            .eq("user_id", profile.id)
+            .maybeSingle();
+          
+          if (!application?.stripe_payment_method_id) {
+            throw new Error("Customer has no ACH payment method linked. Set up ACH on their profile first.");
+          }
+        } else {
+          throw new Error("Customer has no linked account. Set up their profile and ACH payment method first.");
+        }
+      }
+
       // For lease_to_own subscription type, all trailers should be marked as lease to own
       const leaseToOwnFlags = selectedTrailers.reduce((acc, t) => {
         acc[t.id] = subscriptionType === "lease_to_own" ? true : t.leaseToOwn;

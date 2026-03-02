@@ -1306,11 +1306,23 @@ export default function Billing() {
                               i => i.subscription_id === sub.id && i.status === "active"
                             ).length || 0;
                             
+                            // Check if subscription has any successful billing history
+                            const hasSuccessfulPayment = billingHistory?.some(
+                              bh => bh.subscription_id === sub.id && bh.status === "succeeded"
+                            );
+                            
                             // Check if subscription is ready to activate
                             // (pending status with Stripe IDs means customer completed setup)
-                            const isReadyToActivate = sub.status === "pending" && 
-                              sub.stripe_subscription_id && 
-                              sub.stripe_customer_id;
+                            // OR active locally but Stripe never successfully charged (no billing history)
+                            const isReadyToActivate = sub.stripe_subscription_id && 
+                              sub.stripe_customer_id && (
+                                sub.status === "pending" || 
+                                (sub.status === "active" && !hasSuccessfulPayment)
+                              );
+                            
+                            // Show warning badge for active subs with no successful payments
+                            const hasPaymentWarning = sub.status === "active" && 
+                              sub.stripe_subscription_id && !hasSuccessfulPayment;
                             
                             return (
                               <TableRow key={sub.id}>
@@ -1388,6 +1400,22 @@ export default function Billing() {
                                           <TooltipContent>
                                             <p>Customer has completed payment setup.</p>
                                             <p className="text-muted-foreground">Click Activate to charge the initial invoice.</p>
+                                          </TooltipContent>
+                                        </Tooltip>
+                                      </TooltipProvider>
+                                    )}
+                                    {hasPaymentWarning && !isReadyToActivate && (
+                                      <TooltipProvider>
+                                        <Tooltip>
+                                          <TooltipTrigger asChild>
+                                            <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950 dark:text-amber-400 dark:border-amber-800">
+                                              <AlertTriangle className="h-3 w-3 mr-1" />
+                                              No Payment
+                                            </Badge>
+                                          </TooltipTrigger>
+                                          <TooltipContent>
+                                            <p>This subscription is active but has no successful payments.</p>
+                                            <p className="text-muted-foreground">Stripe may not have a payment method on file.</p>
                                           </TooltipContent>
                                         </Tooltip>
                                       </TooltipProvider>
@@ -1471,10 +1499,11 @@ export default function Billing() {
                                           </DropdownMenuItem>
                                         )}
                                         <DropdownMenuSeparator />
-                                        {isReadyToActivate && (
+                                        {sub.stripe_subscription_id && sub.stripe_customer_id && (
                                           <>
                                             <DropdownMenuItem
                                               onClick={() => handleActivateSubscription(sub.id, sub.customers?.full_name || "Unknown")}
+                                              disabled={isActivating === sub.id}
                                             >
                                               <Zap className="h-4 w-4 mr-2" />
                                               Activate Subscription
