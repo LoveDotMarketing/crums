@@ -1313,14 +1313,29 @@ export default function Billing() {
                               bh => bh.subscription_id === sub.id && bh.status === "succeeded"
                             );
                             
-                            // Check if subscription has a processing payment (ACH pending)
-                            const hasProcessingPayment = billingHistory?.some(
-                              bh => bh.subscription_id === sub.id && (bh.status === "processing" || bh.status === "pending")
-                            );
+                            // Get the most recent billing_history entry for this subscription
+                            const latestPaymentRecord = billingHistory
+                              ?.filter(bh => bh.subscription_id === sub.id)
+                              ?.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())?.[0];
+
+                            const hasProcessingPayment = latestPaymentRecord && 
+                              (latestPaymentRecord.status === "processing" || latestPaymentRecord.status === "pending");
                             
-                            // Determine if this subscription is in processing state
+                            // Detect incomplete state: active locally but no billing history at all
+                            const isIncomplete = sub.status === "active" && sub.stripe_subscription_id && 
+                              !hasSuccessfulPayment && !hasProcessingPayment;
+
+                            // Determine if this subscription is in processing/incomplete state
                             const isProcessing = activatedIds.has(sub.id) || 
-                              (sub.status === "active" && hasProcessingPayment && !hasSuccessfulPayment);
+                              (sub.status === "active" && hasProcessingPayment && !hasSuccessfulPayment) ||
+                              isIncomplete;
+
+                            // Determine the Stripe-aligned label
+                            const processingLabel = latestPaymentRecord?.status === "pending" ? "Pending"
+                              : latestPaymentRecord?.status === "processing" ? "Processing"
+                              : activatedIds.has(sub.id) ? "Processing"
+                              : isIncomplete ? "Incomplete"
+                              : "Processing";
                             
                             // Check if subscription is ready to activate
                             // (pending status with Stripe IDs means customer completed setup)
@@ -1443,7 +1458,7 @@ export default function Billing() {
                                         className="h-8 cursor-not-allowed"
                                       >
                                         <RefreshCw className="h-3 w-3 animate-spin mr-1" />
-                                        Processing
+                                        {processingLabel}
                                       </Button>
                                     ) : isReadyToActivate ? (
                                       <Button
