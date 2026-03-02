@@ -1,53 +1,43 @@
 
 
-## Plan: Enable ACH setup for customers without auth accounts
+## Fix: ACH setup for customers without auth accounts
 
-Currently, admin ACH setup requires a linked auth account (`profile`). Imported customers who never logged in have no auth record, blocking admins from linking their bank account. This plan removes that dependency.
-
-### Problem
-
-- `AdminAchSetupDialog` requires `targetUserId` (an auth user UUID)
-- `create-ach-setup` edge function looks up `profiles` table by that UUID
-- `confirm-ach-setup` stores the payment method on `customer_applications` keyed by `user_id`
-- Imported customers have a `customers` record but no `profiles` or `customer_applications` row
+### Root Cause
+The `customer_applications.user_id` column has a foreign key constraint to `profiles(id)`. When an admin tries to set up ACH for an imported customer (no auth account), the edge function attempts to insert a `customer_applications` row using the `customers.id` as `user_id`. This fails because that UUID does not exist in the `profiles` table.
 
 ### Solution
-
-Allow ACH setup using the **customer record ID** directly (from the `customers` table), bypassing the auth user requirement entirely.
+Add a nullable `customer_id` column to `customer_applications` that references the `customers` table. For imported customers without auth accounts, store the link via `customer_id` instead of `user_id`.
 
 ### Changes
 
-**1. `src/components/admin/AdminAchSetupDialog.tsx`**
-- Add an optional `customerEmail` prop alongside `targetUserId` (which becomes optional)
-- Add a new optional `customerId` prop (the `customers` table UUID)
-- Pass `customerId` and `customerEmail` to the edge function when no auth user exists
+**1. Database migration**
+- Add `customer_id UUID NULLABLE REFERENCES customers(id)` to `customer_applications`
+- Create a unique index on `customer_id` (when not null)
 
-**2. `src/pages/admin/CustomerDetail.tsx`**
-- Remove the `{profile && ...}` guard around `AdminAchSetupDialog`
-- Always render the dialog, passing `targetUserId` (if profile exists), plus `customerId` and `customerEmail` from the customer record
-- Remove the "No auth account" fallback text
+**2. `supabase/functions/create-ach-setup/index.ts`**
+- In the customer-record path (no auth user): insert with `customer_id` instead of `user_id`
+- Set `user_id` to the admin's own user id as a placeholder (since `user_id` is NOT NULL with FK to profiles), OR query by `customer_id` first
+- Actually, better approach: make `user_id` nullable in the migration, then insert with `customer_id` only and leave `user_id` null
 
-**3. `supabase/functions/create-ach-setup/index.ts`**
-- Accept optional `customerId` and `customerEmail` in the request body (in addition to existing `targetUserId`)
-- When `targetUserId` is absent but `customerId`/`customerEmail` are provided:
-  - Skip profile lookup
-  - Use email/name from the `customers` table directly
-  - Create or find Stripe customer using that data
-  - Create/find `customer_applications` row keyed by `customerId` (store in a new-style lookup or use a sentinel approach)
-- The existing `targetUserId` path remains unchanged
+**3. `supabase/functions/confirm-ach-setup/index.ts`**
+- When `customerId` is provided, look up `customer_applications` by `customer_id` instead of `user_id`
 
-**4. `supabase/functions/confirm-ach-setup/index.ts`**
-- Accept optional `customerId` as alternative to `targetUserId`
-- When `customerId` is provided without `targetUserId`, look up `customer_applications` by customer record instead of `user_id`
+**4. `src/pages/admin/CustomerDetail.tsx`**
+- Update application query fallback to query by `customer_id` column instead of `user_id`
 
 ### Technical detail
 
-For customers without auth accounts, the `customer_applications` row will use the **customer table UUID** in the `user_id` column as a placeholder. This keeps the existing schema intact — when the customer eventually creates an account, the admin can re-link or the system can migrate the record. The Stripe customer is created using email/name from the `customers` table.
+The migration will:
+1. Add `customer_id UUID REFERENCES customers(id)` column
+2. Alter `user_id` to be nullable (so rows can exist for non-auth customers)
+3. Drop the NOT NULL constraint on `user_id`
 
-```text
-With auth account:        customer.email → profiles.id → customer_applications.user_id
-Without auth account:     customer.email → customer.id → customer_applications.user_id (placeholder)
+Edge function insert for customer-record path changes from:
 ```
-
-The `create-ach-setup` function distinguishes the two paths based on which parameters are provided. Admin role verification remains required for both paths.
+INSERT { user_id: customerId, ... }  // fails FK
+```
+to:
+```
+INSERT { customer_id: customerId, user_id: null, ... }  // works
+```
 
