@@ -104,18 +104,29 @@ export default function CustomerDetail() {
 
   // ── Application ───────────────────────────────────────────────────────────
   const { data: application } = useQuery({
-    queryKey: ["admin-customer-application", profile?.id],
+    queryKey: ["admin-customer-application", profile?.id, customerId],
     queryFn: async () => {
-      if (!profile?.id) return null;
-      const { data, error } = await supabase
-        .from("customer_applications")
-        .select("*")
-        .eq("user_id", profile.id)
-        .maybeSingle();
-      if (error) return null;
-      return data;
+      // Try profile-based lookup first
+      if (profile?.id) {
+        const { data, error } = await supabase
+          .from("customer_applications")
+          .select("*")
+          .eq("user_id", profile.id)
+          .maybeSingle();
+        if (!error && data) return data;
+      }
+      // Fallback: customer record ID as placeholder user_id
+      if (customerId) {
+        const { data, error } = await supabase
+          .from("customer_applications")
+          .select("*")
+          .eq("user_id", customerId)
+          .maybeSingle();
+        if (!error && data) return data;
+      }
+      return null;
     },
-    enabled: !!profile?.id,
+    enabled: !!profile?.id || !!customerId,
   });
 
   // ── Subscriptions (all for this customer) ─────────────────────────────────
@@ -445,15 +456,12 @@ export default function CustomerDetail() {
                         ) : (
                           <Badge variant="outline" className="text-xs text-muted-foreground">Not Linked</Badge>
                         )}
-                        {profile && (
-                          <AdminAchSetupDialog
-                            targetUserId={profile.id}
-                            customerName={customer.full_name}
-                          />
-                        )}
-                        {!profile && (
-                          <span className="text-xs text-muted-foreground">No auth account</span>
-                        )}
+                        <AdminAchSetupDialog
+                          targetUserId={profile?.id}
+                          customerId={customerId}
+                          customerEmail={customer.email || undefined}
+                          customerName={customer.full_name}
+                        />
                       </div>
                       {customer.notes && (
                         <div className="pt-2 border-t border-border">

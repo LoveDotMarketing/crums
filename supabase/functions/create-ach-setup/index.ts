@@ -45,11 +45,12 @@ serve(async (req) => {
 
     // Check for admin acting on behalf of a customer
     const body = await req.json().catch(() => ({}));
-    const { targetUserId } = body;
+    const { targetUserId, customerId, customerEmail } = body;
     let lookupUserId = user.id;
+    let useCustomerPath = false;
 
-    if (targetUserId) {
-      logStep("Admin mode requested", { targetUserId });
+    if (targetUserId || customerId) {
+      logStep("Admin mode requested", { targetUserId, customerId });
       // Verify caller is admin
       const { data: adminRole } = await supabaseClient
         .from("user_roles")
@@ -62,23 +63,61 @@ serve(async (req) => {
         throw new Error("Admin access required to set up ACH for another user");
       }
       logStep("Admin role verified");
-      lookupUserId = targetUserId;
+
+      if (targetUserId) {
+        lookupUserId = targetUserId;
+      } else if (customerId) {
+        useCustomerPath = true;
+        lookupUserId = customerId; // Will be used as placeholder user_id
+      }
     }
 
-    // Get the target user's profile for email/name
-    const { data: targetProfile } = await supabaseClient
-      .from("profiles")
-      .select("id, email, first_name, last_name, phone, company_name")
-      .eq("id", lookupUserId)
-      .single();
+    const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
 
-    if (!targetProfile) {
-      throw new Error("Profile not found for the target user");
+    let targetEmail: string;
+    let targetName: string | undefined;
+    let targetPhone: string | undefined;
+    let targetCompany: string | undefined;
+
+    if (useCustomerPath) {
+      // ── Customer-record path (no auth account) ──
+      const { data: customerRecord } = await supabaseClient
+        .from("customers")
+        .select("id, email, full_name, phone, company_name")
+        .eq("id", customerId)
+        .single();
+
+      if (!customerRecord) {
+        throw new Error("Customer record not found");
+      }
+      if (!customerRecord.email && !customerEmail) {
+        throw new Error("Customer has no email on file. Please add an email first.");
+      }
+
+      targetEmail = customerRecord.email || customerEmail;
+      targetName = customerRecord.full_name || undefined;
+      targetPhone = customerRecord.phone || undefined;
+      targetCompany = customerRecord.company_name || undefined;
+      logStep("Using customer record path", { customerId, email: targetEmail });
+    } else {
+      // ── Profile path (auth account exists) ──
+      const { data: targetProfile } = await supabaseClient
+        .from("profiles")
+        .select("id, email, first_name, last_name, phone, company_name")
+        .eq("id", lookupUserId)
+        .single();
+
+      if (!targetProfile) {
+        throw new Error("Profile not found for the target user");
+      }
+
+      targetEmail = targetProfile.email;
+      targetName = `${targetProfile.first_name || ''} ${targetProfile.last_name || ''}`.trim() || undefined;
+      targetPhone = targetProfile.phone || undefined;
+      targetCompany = targetProfile.company_name || undefined;
     }
 
-    const targetEmail = targetProfile.email;
-
-    // Get the user's application to find their customer info (or auto-create one)
+    // Get or create customer_applications row
     let { data: application } = await supabaseClient
       .from("customer_applications")
       .select("id, stripe_customer_id, status")
@@ -91,7 +130,7 @@ serve(async (req) => {
         .from("customer_applications")
         .insert({
           user_id: lookupUserId,
-          phone_number: targetProfile.phone || "N/A",
+          phone_number: targetPhone || "N/A",
           status: "pending_review",
         })
         .select("id, stripe_customer_id, status")
@@ -106,42 +145,41 @@ serve(async (req) => {
       logStep("Application found", { applicationId: application.id, status: application.status });
     }
 
-    const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
-
     // Find or create Stripe customer
-    let customerId = application.stripe_customer_id;
+    let customerId_stripe = application.stripe_customer_id;
     
-    if (!customerId) {
+    if (!customerId_stripe) {
       logStep("No existing Stripe customer, searching by email");
       const customers = await stripe.customers.list({ email: targetEmail, limit: 1 });
       
       if (customers.data.length > 0) {
-        customerId = customers.data[0].id;
-        logStep("Found existing Stripe customer", { customerId });
+        customerId_stripe = customers.data[0].id;
+        logStep("Found existing Stripe customer", { customerId: customerId_stripe });
       } else {
         const customer = await stripe.customers.create({
           email: targetEmail,
-          name: `${targetProfile.first_name || ''} ${targetProfile.last_name || ''}`.trim() || undefined,
-          phone: targetProfile.phone || undefined,
+          name: targetName,
+          phone: targetPhone,
           metadata: {
             supabase_user_id: lookupUserId,
-            company_name: targetProfile.company_name || '',
+            company_name: targetCompany || '',
+            ...(useCustomerPath ? { customer_record_id: customerId } : {}),
           },
         });
-        customerId = customer.id;
-        logStep("Created new Stripe customer", { customerId });
+        customerId_stripe = customer.id;
+        logStep("Created new Stripe customer", { customerId: customerId_stripe });
       }
 
       // Save customer ID to application
       await supabaseClient
         .from("customer_applications")
-        .update({ stripe_customer_id: customerId })
+        .update({ stripe_customer_id: customerId_stripe })
         .eq("id", application.id);
     }
 
     // Create SetupIntent for ACH Direct Debit with Financial Connections
     const setupIntent = await stripe.setupIntents.create({
-      customer: customerId,
+      customer: customerId_stripe,
       payment_method_types: ["us_bank_account"],
       payment_method_options: {
         us_bank_account: {
@@ -155,7 +193,8 @@ serve(async (req) => {
       metadata: {
         supabase_user_id: lookupUserId,
         application_id: application.id,
-        ...(targetUserId ? { initiated_by_admin: user.id } : {}),
+        initiated_by_admin: user.id,
+        ...(useCustomerPath ? { customer_record_path: "true" } : {}),
       },
     });
 
@@ -168,7 +207,7 @@ serve(async (req) => {
       JSON.stringify({
         clientSecret: setupIntent.client_secret,
         setupIntentId: setupIntent.id,
-        customerId: customerId,
+        customerId: customerId_stripe,
         publishableKey: stripePublishableKey,
       }),
       {

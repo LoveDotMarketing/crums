@@ -15,11 +15,13 @@ import { useToast } from "@/hooks/use-toast";
 import { CreditCard, Loader2 } from "lucide-react";
 
 interface AdminAchSetupDialogProps {
-  targetUserId: string;
+  targetUserId?: string;
+  customerId?: string;
+  customerEmail?: string;
   customerName: string;
 }
 
-export function AdminAchSetupDialog({ targetUserId, customerName }: AdminAchSetupDialogProps) {
+export function AdminAchSetupDialog({ targetUserId, customerId, customerEmail, customerName }: AdminAchSetupDialogProps) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState<"idle" | "connecting" | "confirming">("idle");
@@ -36,7 +38,7 @@ export function AdminAchSetupDialog({ targetUserId, customerName }: AdminAchSetu
       if (sessionError || !sessionData.session) throw new Error("Not authenticated");
 
       const { data: setupData, error: setupError } = await supabase.functions.invoke("create-ach-setup", {
-        body: { targetUserId },
+        body: { targetUserId, customerId, customerEmail },
       });
 
       if (setupError) throw new Error(setupError.message || "Failed to create ACH setup");
@@ -81,7 +83,7 @@ export function AdminAchSetupDialog({ targetUserId, customerName }: AdminAchSetu
 
       // 4. Call confirm-ach-setup
       const { data: confirmData, error: confirmFnError } = await supabase.functions.invoke("confirm-ach-setup", {
-        body: { setupIntentId, targetUserId },
+        body: { setupIntentId, targetUserId, customerId },
       });
 
       if (confirmFnError) throw new Error(confirmFnError.message || "Failed to confirm ACH setup");
