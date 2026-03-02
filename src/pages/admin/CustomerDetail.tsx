@@ -45,6 +45,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { AdminAchSetupDialog } from "@/components/admin/AdminAchSetupDialog";
 
 const formatCurrency = (amount: number) =>
   new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(amount);
@@ -464,7 +465,15 @@ export default function CustomerDetail() {
                                 Linked
                               </Badge>
                             ) : (
-                              <Badge variant="outline" className="text-xs text-muted-foreground">Not Linked</Badge>
+                              <>
+                                <Badge variant="outline" className="text-xs text-muted-foreground">Not Linked</Badge>
+                                {profile && (
+                                  <AdminAchSetupDialog
+                                    targetUserId={profile.id}
+                                    customerName={customer.full_name}
+                                  />
+                                )}
+                              </>
                             )}
                           </div>
                           <div className="flex items-center gap-2">

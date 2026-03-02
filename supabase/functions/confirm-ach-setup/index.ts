@@ -42,9 +42,28 @@ serve(async (req) => {
     logStep("User authenticated", { userId: user.id, email: user.email });
 
     // Get request body
-    const { setupIntentId, paymentMethodId, billingAnchorDay } = await req.json();
+    const { setupIntentId, paymentMethodId, billingAnchorDay, targetUserId } = await req.json();
     if (!setupIntentId) throw new Error("setupIntentId is required");
-    logStep("Received request", { setupIntentId, billingAnchorDay });
+    logStep("Received request", { setupIntentId, billingAnchorDay, targetUserId });
+
+    let lookupUserId = user.id;
+
+    if (targetUserId) {
+      logStep("Admin mode requested", { targetUserId });
+      // Verify caller is admin
+      const { data: adminRole } = await supabaseClient
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", user.id)
+        .eq("role", "admin")
+        .maybeSingle();
+
+      if (!adminRole) {
+        throw new Error("Admin access required to confirm ACH for another user");
+      }
+      logStep("Admin role verified");
+      lookupUserId = targetUserId;
+    }
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
 
@@ -69,7 +88,7 @@ serve(async (req) => {
     const { data: application, error: appError } = await supabaseClient
       .from("customer_applications")
       .select("id")
-      .eq("user_id", user.id)
+      .eq("user_id", lookupUserId)
       .single();
 
     if (appError || !application) {
