@@ -190,6 +190,25 @@ serve(async (req) => {
       newStatus: paidInvoice.status
     });
 
+    // Create billing_history record so UI shows "Processing" immediately
+    const { error: bhError } = await supabaseClient.from("billing_history").insert({
+      subscription_id: subscriptionId,
+      amount: paidInvoice.amount_due / 100,
+      net_amount: paidInvoice.amount_paid / 100,
+      status: "processing",
+      stripe_payment_intent_id: typeof paidInvoice.payment_intent === "string" 
+        ? paidInvoice.payment_intent 
+        : paidInvoice.payment_intent?.id ?? null,
+      stripe_invoice_id: paidInvoice.id,
+      payment_method: "ach",
+    });
+
+    if (bhError) {
+      logStep("Warning: Failed to insert billing_history", { error: bhError.message });
+    } else {
+      logStep("billing_history record created with processing status");
+    }
+
     // Update local subscription status to active
     const { error: updateError } = await supabaseClient
       .from("customer_subscriptions")
