@@ -42,14 +42,14 @@ serve(async (req) => {
     logStep("User authenticated", { userId: user.id, email: user.email });
 
     // Get request body
-    const { setupIntentId, paymentMethodId, billingAnchorDay, targetUserId } = await req.json();
+    const { setupIntentId, paymentMethodId, billingAnchorDay, targetUserId, customerId } = await req.json();
     if (!setupIntentId) throw new Error("setupIntentId is required");
-    logStep("Received request", { setupIntentId, billingAnchorDay, targetUserId });
+    logStep("Received request", { setupIntentId, billingAnchorDay, targetUserId, customerId });
 
     let lookupUserId = user.id;
 
-    if (targetUserId) {
-      logStep("Admin mode requested", { targetUserId });
+    if (targetUserId || customerId) {
+      logStep("Admin mode requested", { targetUserId, customerId });
       // Verify caller is admin
       const { data: adminRole } = await supabaseClient
         .from("user_roles")
@@ -62,7 +62,7 @@ serve(async (req) => {
         throw new Error("Admin access required to confirm ACH for another user");
       }
       logStep("Admin role verified");
-      lookupUserId = targetUserId;
+      lookupUserId = targetUserId || customerId;
     }
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
@@ -84,7 +84,7 @@ serve(async (req) => {
       throw new Error("No payment method found on SetupIntent");
     }
 
-    // Get the user's application
+    // Get the user's application (lookupUserId may be a profile id OR a customer record id)
     const { data: application, error: appError } = await supabaseClient
       .from("customer_applications")
       .select("id")
