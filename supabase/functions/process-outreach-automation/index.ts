@@ -32,44 +32,53 @@ Deno.serve(async (req) => {
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
   const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+  const cronSecret = Deno.env.get("CRON_SECRET");
   const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-  // Verify admin authentication
+  // Dual auth: CRON_SECRET for cron jobs, admin JWT for manual calls
   const authHeader = req.headers.get("authorization");
-  if (!authHeader) {
-    console.log("[Automation] No authorization header");
-    return new Response(
-      JSON.stringify({ error: "Missing authorization header" }),
-      { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
-  }
+  const isCronCall = authHeader === `Bearer ${cronSecret}`;
+  let callerLabel = "cron";
 
-  // Get user from JWT
-  const token = authHeader.replace("Bearer ", "");
-  const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-  
-  if (authError || !user) {
-    console.log("[Automation] Invalid token:", authError?.message);
-    return new Response(
-      JSON.stringify({ error: "Invalid authorization token" }),
-      { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
-  }
+  if (!isCronCall) {
+    // Verify admin JWT
+    if (!authHeader) {
+      console.log("[Automation] No authorization header");
+      return new Response(
+        JSON.stringify({ error: "Missing authorization header" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
-  // Check if user has admin role
-  const { data: roleData } = await supabase
-    .from("user_roles")
-    .select("role")
-    .eq("user_id", user.id)
-    .eq("role", "admin")
-    .single();
+    const token = authHeader.replace("Bearer ", "");
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
 
-  if (!roleData) {
-    console.log("[Automation] User is not admin:", user.id);
-    return new Response(
-      JSON.stringify({ error: "Admin access required" }),
-      { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    if (authError || !user) {
+      console.log("[Automation] Invalid token:", authError?.message);
+      return new Response(
+        JSON.stringify({ error: "Invalid authorization token" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Check if user has admin role
+    const { data: roleData } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", user.id)
+      .eq("role", "admin")
+      .single();
+
+    if (!roleData) {
+      console.log("[Automation] User is not admin:", user.id);
+      return new Response(
+        JSON.stringify({ error: "Admin access required" }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    callerLabel = user.email || user.id;
+  } else {
+    console.log("[Automation] Authorized via CRON_SECRET");
   }
 
   // Parse request body for dry_run flag
@@ -81,7 +90,7 @@ Deno.serve(async (req) => {
     // No body or invalid JSON, proceed with default (not dry run)
   }
 
-  console.log(`[Automation] Admin ${user.email} starting outreach automation (dry_run: ${dryRun})`);
+  console.log(`[Automation] ${callerLabel} starting outreach automation (dry_run: ${dryRun})`);
 
   try {
     // Fetch all settings

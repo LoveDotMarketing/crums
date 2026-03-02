@@ -44,9 +44,9 @@ verify_jwt = false
 [functions.send-outreach-email]
 verify_jwt = false
 
-# Outreach automation - requires admin authentication
+# Outreach automation - dual auth: CRON_SECRET for cron, admin JWT for manual
 [functions.process-outreach-automation]
-verify_jwt = true
+verify_jwt = false
 
 # Outreach status updates - mixed auth (handled internally)
 # Public: unsubscribe/resubscribe; Authenticated: password_set/profile_completed
