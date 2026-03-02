@@ -1,40 +1,65 @@
 
 
-## Problem
+## Problem Analysis
 
-The "Set Up ACH" button is only visible inside the Application Info card, nested within the `{application && ...}` block (line 440). For customers without an application record (like Charlie Drago in the screenshot), the entire ACH section is hidden — showing only "No application on file."
+The Stripe dashboard shows both payments as **"Incomplete"** with **no payment method** attached. Here's the chain of events:
 
-The data dependency chain is: `customer.email` → `profiles` lookup → `customer_applications` lookup. If any link breaks (no profile match, no application), the ACH button disappears.
+1. Subscriptions were created via `create-subscription` with `payment_behavior: "default_incomplete"` (line 341)
+2. Stripe created invoices but could not charge because **no ACH bank account was linked** to these Stripe customers
+3. The webhook `customer.subscription.updated` fired with status `past_due`
+4. The `process-billing` edge function maps `past_due` → `active` in the local database
+5. The admin billing UI only shows the "Activate" button when local status is `pending`, so it's now hidden
+6. Result: subscriptions appear "Active" locally but Stripe cannot collect payment
+
+Two fixes needed: **resolve the current incomplete payments** and **prevent this from happening again**.
 
 ## Plan
 
-### 1. Move ACH status out of the Application block
+### 1. Fix the Activate button visibility
 
-Add a standalone ACH status row to the **Customer Info** card (left column, lines 391-430) so it always appears regardless of application status. This ensures every customer profile shows ACH status and the setup button.
+In `src/pages/admin/Billing.tsx` (around line 1311), update `isReadyToActivate` to also trigger for subscriptions that are locally "active" but have no billing history (meaning Stripe never successfully charged). This surfaces the Activate button for the two broken subscriptions.
 
-The ACH row will:
-- Show "Linked" badge if `application?.stripe_payment_method_id` exists
-- Show "Not Linked" badge + "Set Up ACH" button if profile exists but no payment method
-- Show "No profile linked" message if no auth profile is found (ACH requires a profile to associate with Stripe)
+Additionally, add a dropdown menu item "Activate Subscription" for **all** subscription statuses (not just pending), so admins can manually trigger invoice payment at any time.
 
-### 2. Keep the ACH row in Application Info as well (optional removal)
+### 2. Add ACH guard to subscription creation
 
-Remove the duplicate ACH status from the Application Info card (lines 460-478) to avoid confusion — the single source of truth will be the Customer Info card.
+In `src/pages/admin/Billing.tsx`, inside the Create Subscription dialog submission handler, check if the selected customer has a payment method on their Stripe customer before creating the subscription. If not, show a toast error: "Customer has no ACH payment method linked. Set up ACH on their profile first."
 
-### 3. Handle edge case: customer has profile but no application
+This check will be done by querying `customer_applications` for the selected customer's `stripe_payment_method_id`, which is set when ACH setup completes via `confirm-ach-setup`.
 
-The `create-ach-setup` edge function requires a `customer_applications` record to store `stripe_customer_id`. For customers without an application, we need to either:
-- **Option A**: Auto-create a minimal application record when admin initiates ACH setup (status: `pending_review`)
-- **Option B**: Show a message like "Application required before ACH setup" with a prompt
+### 3. Fix status mapping to preserve `past_due` visibility
 
-**Recommended: Option A** — the edge function already creates a Stripe customer and needs somewhere to store the `stripe_customer_id`. A minimal application record is the cleanest path.
+In `supabase/functions/process-billing/index.ts` (line 90) and `supabase/functions/create-subscription/index.ts` (line 280), change the `incomplete` status mapping from `"pending"` to keep it distinguishable. More importantly, add a `"past_due"` value to the database enum so admins can see when Stripe is failing to collect. Alternatively, surface a warning badge on the subscription row when Stripe status is `past_due` or `incomplete`.
 
-### 4. Confirm subscription flow compatibility
-
-No changes needed to `create-subscription` or `activate-subscription`. Both pull payment methods from Stripe directly. Once ACH is linked via the admin dialog, the subscription activation flow works identically regardless of who initiated the setup.
+Since adding a new enum value requires a migration, the simpler approach: keep `past_due` → `active` mapping but add a visual indicator. Query `billing_history` for the subscription — if the latest entry has `status: "failed"` or there are no entries at all despite the subscription being "active", show an amber warning badge.
 
 ### Files to change
 
-- **`src/pages/admin/CustomerDetail.tsx`** — Move ACH row to Customer Info card, remove from Application Info card
-- **`supabase/functions/create-ach-setup/index.ts`** — Handle missing application by auto-creating a minimal record when admin initiates
+- **`src/pages/admin/Billing.tsx`** — Expand `isReadyToActivate` logic; add ACH guard on subscription creation
+- **`supabase/functions/create-subscription/index.ts`** — Add server-side check for payment method before creating Stripe subscription (defensive)
+
+### Technical Details
+
+The `isReadyToActivate` check (line 1311) changes from:
+```
+status === "pending" && stripe_subscription_id && stripe_customer_id
+```
+to also include:
+```
+status === "active" && stripe_subscription_id && no successful billing_history entries exist for this subscription
+```
+
+The ACH guard on the Create Subscription form will check:
+```typescript
+const application = await supabase
+  .from("customer_applications")
+  .select("stripe_payment_method_id")
+  .eq("user_id", profileId)
+  .maybeSingle();
+
+if (!application?.stripe_payment_method_id) {
+  toast.error("Set up ACH on the customer's profile first");
+  return;
+}
+```
 
