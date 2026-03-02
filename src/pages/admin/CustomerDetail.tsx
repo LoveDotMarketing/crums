@@ -442,16 +442,17 @@ export default function CustomerDetail() {
                             <CheckCircle2 className="h-3 w-3 mr-1" />
                             Linked
                           </Badge>
-                        ) : profile ? (
-                          <>
-                            <Badge variant="outline" className="text-xs text-muted-foreground">Not Linked</Badge>
-                            <AdminAchSetupDialog
-                              targetUserId={profile.id}
-                              customerName={customer.full_name}
-                            />
-                          </>
                         ) : (
-                          <span className="text-xs text-muted-foreground">No account linked</span>
+                          <Badge variant="outline" className="text-xs text-muted-foreground">Not Linked</Badge>
+                        )}
+                        {profile && (
+                          <AdminAchSetupDialog
+                            targetUserId={profile.id}
+                            customerName={customer.full_name}
+                          />
+                        )}
+                        {!profile && (
+                          <span className="text-xs text-muted-foreground">No auth account</span>
                         )}
                       </div>
                       {customer.notes && (
