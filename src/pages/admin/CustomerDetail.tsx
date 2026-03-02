@@ -150,6 +150,21 @@ export default function CustomerDetail() {
     enabled: subscriptionIds.length > 0,
   });
 
+  // ── All assigned trailers (via trailers.customer_id) ──────────────────────
+  const { data: assignedTrailers = [] } = useQuery({
+    queryKey: ["admin-customer-assigned-trailers", customerId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("trailers")
+        .select("id, trailer_number, type, vin, status, make, model, year")
+        .eq("customer_id", customerId!)
+        .order("trailer_number", { ascending: true });
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!customerId,
+  });
+
   // ── Billing history ───────────────────────────────────────────────────────
   const { data: billingHistory = [] } = useQuery({
     queryKey: ["admin-customer-billing", subscriptionIds],
@@ -346,7 +361,7 @@ export default function CustomerDetail() {
               <Card>
                 <CardContent className="pt-5 pb-4">
                   <p className="text-xs text-muted-foreground mb-1">Trailers</p>
-                  <p className="font-semibold">{subscriptionItems.length}</p>
+                  <p className="font-semibold">{assignedTrailers.length || subscriptionItems.length}</p>
                 </CardContent>
               </Card>
               <Card>
@@ -627,6 +642,47 @@ export default function CustomerDetail() {
                         </div>
                       );
                     })}
+
+                    {/* All Assigned Trailers (from trailers table) */}
+                    {assignedTrailers.length > 0 && (
+                      <Card>
+                        <CardHeader>
+                          <CardTitle className="text-base">
+                            All Assigned Trailers ({assignedTrailers.length})
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <Table>
+                            <TableHeader>
+                              <TableRow>
+                                <TableHead>Trailer #</TableHead>
+                                <TableHead>Type</TableHead>
+                                <TableHead>Make / Model</TableHead>
+                                <TableHead>Year</TableHead>
+                                <TableHead>VIN</TableHead>
+                                <TableHead>Status</TableHead>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                              {assignedTrailers.map((t: any) => (
+                                <TableRow key={t.id} className="cursor-pointer" onClick={() => navigate(`/dashboard/admin/fleet/${t.id}`)}>
+                                  <TableCell className="font-medium">{t.trailer_number}</TableCell>
+                                  <TableCell className="text-muted-foreground capitalize">{t.type}</TableCell>
+                                  <TableCell className="text-muted-foreground">{[t.make, t.model].filter(Boolean).join(" ") || "—"}</TableCell>
+                                  <TableCell className="text-muted-foreground">{t.year || "—"}</TableCell>
+                                  <TableCell className="font-mono text-xs text-muted-foreground">{t.vin || "—"}</TableCell>
+                                  <TableCell>
+                                    <Badge variant={t.status === "leased" ? "default" : "secondary"} className="text-xs capitalize">
+                                      {t.status}
+                                    </Badge>
+                                  </TableCell>
+                                </TableRow>
+                              ))}
+                            </TableBody>
+                          </Table>
+                        </CardContent>
+                      </Card>
+                    )}
                   </div>
                 )}
               </TabsContent>
