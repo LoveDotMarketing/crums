@@ -1313,12 +1313,20 @@ export default function Billing() {
                               bh => bh.subscription_id === sub.id && bh.status === "succeeded"
                             );
                             
+                            // Check if subscription has a processing payment (ACH pending)
+                            const hasProcessingPayment = billingHistory?.some(
+                              bh => bh.subscription_id === sub.id && bh.status === "processing"
+                            );
+                            
+                            // Determine if this subscription is in processing state
+                            const isProcessing = activatedIds.has(sub.id) || 
+                              (sub.status === "active" && hasProcessingPayment && !hasSuccessfulPayment);
+                            
                             // Check if subscription is ready to activate
                             // (pending status with Stripe IDs means customer completed setup)
                             // OR active locally but Stripe never successfully charged (no billing history)
-                            const isReadyToActivate = sub.stripe_subscription_id && 
-                              sub.stripe_customer_id && 
-                              !activatedIds.has(sub.id) && (
+                            const isReadyToActivate = !isProcessing && sub.stripe_subscription_id && 
+                              sub.stripe_customer_id && (
                                 sub.status === "pending" || 
                                 (sub.status === "active" && !hasSuccessfulPayment)
                               );
@@ -1427,7 +1435,17 @@ export default function Billing() {
                                 </TableCell>
                                 <TableCell>
                                   <div className="flex items-center gap-1">
-                                    {isReadyToActivate && (
+                                    {isProcessing ? (
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        disabled
+                                        className="h-8 cursor-not-allowed"
+                                      >
+                                        <RefreshCw className="h-3 w-3 animate-spin mr-1" />
+                                        Processing
+                                      </Button>
+                                    ) : isReadyToActivate ? (
                                       <Button
                                         size="sm"
                                         variant="default"
@@ -1444,7 +1462,7 @@ export default function Billing() {
                                           </>
                                         )}
                                       </Button>
-                                    )}
+                                    ) : null}
                                     <DropdownMenu>
                                       <DropdownMenuTrigger asChild>
                                         <Button variant="ghost" size="icon" disabled={isManaging || isActivating === sub.id}>
