@@ -2,58 +2,86 @@
 
 ## Problem
 
-Ground Link shows "Pending" in the UI but Stripe shows "Incomplete". This happens because `activate-subscription` set the local status to "active" and created a `billing_history` record with "processing" status, but the Stripe subscription never transitioned out of "incomplete" (payment didn't initiate successfully). The `processingLabel` logic sees the billing_history record and shows "Pending" instead of "Incomplete".
+Both Ground Link and Jean show **"Active"** status with a **"Pending"** button. The user wants Ground Link to show:
+1. **Status column**: "Pending" (not "Active")  
+2. **Actions column**: "Activate" button (not "Pending" spinner)
 
-After a sync, `sync-payments` would update Ground Link's `sub.status` from "active" back to "pending" (Stripe "incomplete" maps to "pending"), but the UI would then show "Activate" again instead of "Incomplete".
+**Root cause**: The `activate-subscription` edge function sets the local `customer_subscriptions.status` to `"active"` immediately, even when the Stripe payment didn't actually succeed. Both subscriptions are `past_due` in Stripe, meaning the payment attempt failed or is still pending. The billing_history records created during activation have `status: "pending"`, which makes the UI show a "Pending" spinner instead of an "Activate" button.
 
-## Fix (2 changes)
+**Database state right now:**
+- Ground Link: local status = `active`, Stripe status = `past_due`, billing_history = `pending`
+- Jean: local status = `active`, Stripe status = `past_due`, billing_history = `pending`
 
-### 1. Update `processingLabel` to detect failed activations (`src/pages/admin/Billing.tsx`, ~lines 1316-1347)
+## Fix (2 parts)
 
-Add logic to detect when a subscription was previously activated but Stripe still shows incomplete:
+### 1. Fix `activate-subscription` edge function — don't set status to "active" prematurely
 
-- If `sub.status === "pending"` AND has `stripe_subscription_id` AND billing_history records exist (activation was attempted) → show "Incomplete" button instead of "Activate"
-- If `sub.status === "active"` AND billing_history has processing/pending records → continue showing "Pending" or "Processing"
+**File**: `supabase/functions/activate-subscription/index.ts`
+
+After calling `stripe.invoices.pay()`, re-check the Stripe subscription status before updating the local status. Only set to `"active"` if Stripe confirms it. If Stripe still shows `incomplete` or `past_due`, keep the local status as `"pending"`.
 
 ```typescript
-// Check if activation was previously attempted (billing_history exists)
-const hasAttemptedActivation = billingHistory?.some(
-  bh => bh.subscription_id === sub.id
-);
+// After paying, re-retrieve subscription to check actual status
+const updatedStripeSub = await stripe.subscriptions.retrieve(subscription.stripe_subscription_id);
+const localStatus = updatedStripeSub.status === "active" ? "active" : "pending";
 
-// Detect incomplete: pending status with prior activation attempt
-const isIncomplete = (sub.status === "pending" && sub.stripe_subscription_id && hasAttemptedActivation) ||
-  (sub.status === "active" && sub.stripe_subscription_id && 
-   !hasSuccessfulPayment && !hasProcessingPayment);
-
-const isProcessing = activatedIds.has(sub.id) || 
-  (sub.status === "active" && hasProcessingPayment && !hasSuccessfulPayment) ||
-  isIncomplete;
-
-const processingLabel = latestPaymentRecord?.status === "pending" && sub.status === "active" ? "Pending"
-  : latestPaymentRecord?.status === "processing" && sub.status === "active" ? "Processing"
-  : activatedIds.has(sub.id) ? "Processing"
-  : isIncomplete ? "Incomplete"
-  : "Processing";
+await supabaseClient
+  .from("customer_subscriptions")
+  .update({
+    status: localStatus,
+    next_billing_date: ...
+  })
+  .eq("id", subscriptionId);
 ```
 
-This ensures:
-- **Jean** (sub.status = "active", billing_history = "pending") → shows **"Pending"**
-- **Ground Link** after sync (sub.status = "pending", has billing_history) → shows **"Incomplete"**
-- **Ground Link** before sync (sub.status = "active", no processing billing_history if sync updated it to failed) → shows **"Incomplete"**
+### 2. Fix the billing UI logic — show "Activate" for pending subs with failed prior attempts
 
-### 2. Exclude incomplete subscriptions from `isReadyToActivate`
+**File**: `src/pages/admin/Billing.tsx` (lines ~1316-1353)
 
-Update `isReadyToActivate` to not show "Activate" for previously-attempted subscriptions that are incomplete — those should show the "Incomplete" indicator instead:
+Update the status/action logic:
+- If `sub.status === "pending"` and has `stripe_subscription_id` and `stripe_customer_id` → show **"Activate"** button (regardless of prior attempts — they should be retryable)
+- Remove `!hasAttemptedActivation` from `isReadyToActivate` so that previously-failed activations can be retried
+- The status badge already handles `"pending"` correctly via `getStatusBadge()`
+
+### 3. Fix existing data — update Ground Link's local status back to "pending"
+
+Run a database migration to correct Ground Link's status from `"active"` to `"pending"`, since Stripe shows `past_due` (payment hasn't cleared).
+
+```sql
+UPDATE customer_subscriptions 
+SET status = 'pending' 
+WHERE id = 'c232ab1a-9fdc-438f-ae70-93aba3000803';
+```
+
+### 4. Update sync functions to map `past_due` more carefully
+
+**Files**: `sync-payments`, `process-billing`, `stripe-webhook`
+
+Currently `past_due` maps to `"active"`. Change it to only map to `"active"` if there has been at least one successful payment (meaning it was active before and is now past_due on renewal). For first-time subscriptions that never had a successful payment, `past_due` should map to `"pending"`.
+
+This is a targeted change in the `statusMap` logic — instead of a static map, check billing history:
 
 ```typescript
-const isReadyToActivate = !isProcessing && sub.stripe_subscription_id && 
-  sub.stripe_customer_id && !hasAttemptedActivation && (
-    sub.status === "pending" || 
-    (sub.status === "active" && !hasSuccessfulPayment)
-  );
+// In statusMap, change past_due handling:
+let mappedStatus;
+if (stripeSub.status === "past_due") {
+  // Check if subscription ever had a successful payment
+  const { data: successPayments } = await supabaseClient
+    .from("billing_history")
+    .select("id")
+    .eq("subscription_id", sub.id)
+    .eq("status", "succeeded")
+    .limit(1);
+  mappedStatus = successPayments?.length ? "active" : "pending";
+} else {
+  mappedStatus = statusMap[stripeSub.status] ?? sub.status ?? "pending";
+}
 ```
 
 ### Files to change
-- **`src/pages/admin/Billing.tsx`** — Detect failed activations and show "Incomplete" label
+- `supabase/functions/activate-subscription/index.ts` — Don't set "active" until Stripe confirms
+- `src/pages/admin/Billing.tsx` — Allow re-activation of pending subs with prior attempts  
+- `supabase/functions/sync-payments/index.ts` — Smart `past_due` mapping
+- `supabase/functions/process-billing/index.ts` — Smart `past_due` mapping
+- Database migration — Fix Ground Link's status to "pending"
 
