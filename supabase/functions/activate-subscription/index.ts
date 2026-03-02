@@ -209,13 +209,18 @@ serve(async (req) => {
       logStep("billing_history record created with processing status");
     }
 
-    // Update local subscription status to active
+    // Re-check Stripe subscription status after payment attempt
+    const updatedStripeSub = await stripe.subscriptions.retrieve(subscription.stripe_subscription_id);
+    const localStatus = updatedStripeSub.status === "active" ? "active" : "pending";
+    logStep("Post-payment Stripe status check", { stripeStatus: updatedStripeSub.status, localStatus });
+
+    // Update local subscription status based on actual Stripe status
     const { error: updateError } = await supabaseClient
       .from("customer_subscriptions")
       .update({
-        status: "active",
-        next_billing_date: stripeSubscription.current_period_end 
-          ? new Date(stripeSubscription.current_period_end * 1000).toISOString()
+        status: localStatus,
+        next_billing_date: updatedStripeSub.current_period_end 
+          ? new Date(updatedStripeSub.current_period_end * 1000).toISOString()
           : null
       })
       .eq("id", subscriptionId);
