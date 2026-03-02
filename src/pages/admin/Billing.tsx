@@ -286,6 +286,7 @@ export default function Billing() {
   
   // Activate subscription state
   const [isActivating, setIsActivating] = useState<string | null>(null);
+  const [activatedIds, setActivatedIds] = useState<Set<string>>(new Set());
   
   // Payment failures filter/sort state
   const [failuresSearch, setFailuresSearch] = useState("");
@@ -578,6 +579,7 @@ export default function Billing() {
 
       if (data.success) {
         toast.success(data.message || `Subscription activated for ${customerName}`);
+        setActivatedIds(prev => new Set(prev).add(subscriptionId));
         await Promise.all([
           queryClient.invalidateQueries({ queryKey: ["customer-subscriptions"] }),
           queryClient.invalidateQueries({ queryKey: ["subscription-items"] }),
@@ -1315,7 +1317,8 @@ export default function Billing() {
                             // (pending status with Stripe IDs means customer completed setup)
                             // OR active locally but Stripe never successfully charged (no billing history)
                             const isReadyToActivate = sub.stripe_subscription_id && 
-                              sub.stripe_customer_id && (
+                              sub.stripe_customer_id && 
+                              !activatedIds.has(sub.id) && (
                                 sub.status === "pending" || 
                                 (sub.status === "active" && !hasSuccessfulPayment)
                               );
