@@ -1321,9 +1321,16 @@ export default function Billing() {
                             const hasProcessingPayment = latestPaymentRecord && 
                               (latestPaymentRecord.status === "processing" || latestPaymentRecord.status === "pending");
                             
-                            // Detect incomplete state: active locally but no billing history at all
-                            const isIncomplete = sub.status === "active" && sub.stripe_subscription_id && 
-                              !hasSuccessfulPayment && !hasProcessingPayment;
+                            // Check if activation was previously attempted (billing_history exists)
+                            const hasAttemptedActivation = billingHistory?.some(
+                              bh => bh.subscription_id === sub.id
+                            );
+
+                            // Detect incomplete: pending status with prior activation attempt, 
+                            // OR active locally but no successful/processing payment
+                            const isIncomplete = (sub.status === "pending" && sub.stripe_subscription_id && hasAttemptedActivation) ||
+                              (sub.status === "active" && sub.stripe_subscription_id && 
+                               !hasSuccessfulPayment && !hasProcessingPayment);
 
                             // Determine if this subscription is in processing/incomplete state
                             const isProcessing = activatedIds.has(sub.id) || 
@@ -1331,17 +1338,16 @@ export default function Billing() {
                               isIncomplete;
 
                             // Determine the Stripe-aligned label
-                            const processingLabel = latestPaymentRecord?.status === "pending" ? "Pending"
-                              : latestPaymentRecord?.status === "processing" ? "Processing"
+                            const processingLabel = latestPaymentRecord?.status === "pending" && sub.status === "active" ? "Pending"
+                              : latestPaymentRecord?.status === "processing" && sub.status === "active" ? "Processing"
                               : activatedIds.has(sub.id) ? "Processing"
                               : isIncomplete ? "Incomplete"
                               : "Processing";
                             
                             // Check if subscription is ready to activate
-                            // (pending status with Stripe IDs means customer completed setup)
-                            // OR active locally but Stripe never successfully charged (no billing history)
+                            // Exclude previously-attempted activations that are now incomplete
                             const isReadyToActivate = !isProcessing && sub.stripe_subscription_id && 
-                              sub.stripe_customer_id && (
+                              sub.stripe_customer_id && !hasAttemptedActivation && (
                                 sub.status === "pending" || 
                                 (sub.status === "active" && !hasSuccessfulPayment)
                               );
