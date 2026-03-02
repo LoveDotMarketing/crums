@@ -1542,25 +1542,27 @@ export default function Billing() {
                                             <DropdownMenuSeparator />
                                           </>
                                         )}
+                                        {(sub.status === "active" || sub.status === "pending") && (
+                                          <DropdownMenuItem
+                                            onClick={() => {
+                                              const items = subscriptionItems?.filter(
+                                                i => i.subscription_id === sub.id
+                                              ) || [];
+                                              setSelectedSubscriptionForTrailers({
+                                                subscriptionId: sub.id,
+                                                customerId: sub.customer_id,
+                                                customerName: sub.customers?.full_name || "Unknown",
+                                                items: items,
+                                              });
+                                              setManageTrailersDialogOpen(true);
+                                            }}
+                                          >
+                                            <Truck className="h-4 w-4 mr-2" />
+                                            Manage Trailers
+                                          </DropdownMenuItem>
+                                        )}
                                         {sub.status === "active" && (
                                           <>
-                                            <DropdownMenuItem
-                                              onClick={() => {
-                                                const items = subscriptionItems?.filter(
-                                                  i => i.subscription_id === sub.id
-                                                ) || [];
-                                                setSelectedSubscriptionForTrailers({
-                                                  subscriptionId: sub.id,
-                                                  customerId: sub.customer_id,
-                                                  customerName: sub.customers?.full_name || "Unknown",
-                                                  items: items,
-                                                });
-                                                setManageTrailersDialogOpen(true);
-                                              }}
-                                            >
-                                              <Truck className="h-4 w-4 mr-2" />
-                                              Manage Trailers
-                                            </DropdownMenuItem>
                                             <ChargeCustomerDialog
                                               customerId={sub.customer_id}
                                               customerName={sub.customers?.full_name || "Unknown"}
