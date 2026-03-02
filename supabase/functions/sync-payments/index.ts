@@ -203,12 +203,24 @@ serve(async (req) => {
               incomplete_expired: "canceled",
               trialing: "active",
               active: "active",
-              past_due: "active", // Still active but needs attention
               canceled: "canceled",
               unpaid: "paused",
               paused: "paused",
             };
-            const mappedStatus = statusMap[stripeSub.status] ?? sub.status ?? "pending";
+            
+            // Smart past_due mapping: only map to "active" if there's been a successful payment
+            let mappedStatus: string;
+            if (stripeSub.status === "past_due") {
+              const { data: successPayments } = await supabaseClient
+                .from("billing_history")
+                .select("id")
+                .eq("subscription_id", sub.id)
+                .eq("status", "succeeded")
+                .limit(1);
+              mappedStatus = successPayments?.length ? "active" : "pending";
+            } else {
+              mappedStatus = statusMap[stripeSub.status] ?? sub.status ?? "pending";
+            }
             logStep("Mapping subscription status", { stripeStatus: stripeSub.status, mappedStatus, currentStatus: sub.status });
             
             await supabaseClient

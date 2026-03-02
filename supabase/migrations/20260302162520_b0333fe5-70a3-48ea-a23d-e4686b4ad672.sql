@@ -1,0 +1,1 @@
+UPDATE customer_subscriptions SET status = 'pending' WHERE id = 'c232ab1a-9fdc-438f-ae70-93aba3000803';
