@@ -1,0 +1,1 @@
+ALTER TABLE public.customer_subscriptions DROP CONSTRAINT customer_subscriptions_customer_id_key;
