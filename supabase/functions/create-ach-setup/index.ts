@@ -43,11 +43,46 @@ serve(async (req) => {
     if (!user?.email) throw new Error("User not authenticated or email not available");
     logStep("User authenticated", { userId: user.id, email: user.email });
 
+    // Check for admin acting on behalf of a customer
+    const body = await req.json().catch(() => ({}));
+    const { targetUserId } = body;
+    let lookupUserId = user.id;
+
+    if (targetUserId) {
+      logStep("Admin mode requested", { targetUserId });
+      // Verify caller is admin
+      const { data: adminRole } = await supabaseClient
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", user.id)
+        .eq("role", "admin")
+        .maybeSingle();
+
+      if (!adminRole) {
+        throw new Error("Admin access required to set up ACH for another user");
+      }
+      logStep("Admin role verified");
+      lookupUserId = targetUserId;
+    }
+
+    // Get the target user's profile for email/name
+    const { data: targetProfile } = await supabaseClient
+      .from("profiles")
+      .select("id, email, first_name, last_name, phone, company_name")
+      .eq("id", lookupUserId)
+      .single();
+
+    if (!targetProfile) {
+      throw new Error("Profile not found for the target user");
+    }
+
+    const targetEmail = targetProfile.email;
+
     // Get the user's application to find their customer info
     const { data: application, error: appError } = await supabaseClient
       .from("customer_applications")
       .select("id, stripe_customer_id, status")
-      .eq("user_id", user.id)
+      .eq("user_id", lookupUserId)
       .single();
 
     if (appError) {
@@ -64,26 +99,19 @@ serve(async (req) => {
     
     if (!customerId) {
       logStep("No existing Stripe customer, searching by email");
-      const customers = await stripe.customers.list({ email: user.email, limit: 1 });
+      const customers = await stripe.customers.list({ email: targetEmail, limit: 1 });
       
       if (customers.data.length > 0) {
         customerId = customers.data[0].id;
         logStep("Found existing Stripe customer", { customerId });
       } else {
-        // Get profile info for customer creation
-        const { data: profile } = await supabaseClient
-          .from("profiles")
-          .select("first_name, last_name, phone, company_name")
-          .eq("id", user.id)
-          .single();
-
         const customer = await stripe.customers.create({
-          email: user.email,
-          name: profile ? `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || undefined : undefined,
-          phone: profile?.phone || undefined,
+          email: targetEmail,
+          name: `${targetProfile.first_name || ''} ${targetProfile.last_name || ''}`.trim() || undefined,
+          phone: targetProfile.phone || undefined,
           metadata: {
-            supabase_user_id: user.id,
-            company_name: profile?.company_name || '',
+            supabase_user_id: lookupUserId,
+            company_name: targetProfile.company_name || '',
           },
         });
         customerId = customer.id;
@@ -98,8 +126,6 @@ serve(async (req) => {
     }
 
     // Create SetupIntent for ACH Direct Debit with Financial Connections
-    // Note: When customer is specified, attach_to_self should NOT be set
-    // The payment method will automatically attach to the customer
     const setupIntent = await stripe.setupIntents.create({
       customer: customerId,
       payment_method_types: ["us_bank_account"],
@@ -113,8 +139,9 @@ serve(async (req) => {
         },
       },
       metadata: {
-        supabase_user_id: user.id,
+        supabase_user_id: lookupUserId,
         application_id: application.id,
+        ...(targetUserId ? { initiated_by_admin: user.id } : {}),
       },
     });
 
