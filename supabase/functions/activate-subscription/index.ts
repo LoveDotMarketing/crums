@@ -98,28 +98,36 @@ serve(async (req) => {
       latestInvoice: stripeSubscription.latest_invoice
     });
 
-    if (stripeSubscription.status !== "incomplete") {
-      throw new Error(`Subscription is not in incomplete status (current: ${stripeSubscription.status})`);
+    if (!["incomplete", "past_due"].includes(stripeSubscription.status)) {
+      throw new Error(`Subscription is not in incomplete or past_due status (current: ${stripeSubscription.status})`);
     }
 
     // Get the latest invoice
-    const invoiceId = typeof stripeSubscription.latest_invoice === "string" 
+    let invoiceId = typeof stripeSubscription.latest_invoice === "string" 
       ? stripeSubscription.latest_invoice 
       : stripeSubscription.latest_invoice?.id;
 
-    if (!invoiceId) {
-      throw new Error("No invoice found for this subscription");
-    }
-
-    const invoice = await stripe.invoices.retrieve(invoiceId);
-    logStep("Retrieved invoice", { 
-      invoiceId: invoice.id,
-      invoiceStatus: invoice.status,
-      amountDue: invoice.amount_due
+    let invoice = invoiceId ? await stripe.invoices.retrieve(invoiceId) : null;
+    logStep("Retrieved latest invoice", { 
+      invoiceId: invoice?.id,
+      invoiceStatus: invoice?.status,
+      amountDue: invoice?.amount_due
     });
 
-    if (invoice.status !== "open") {
-      throw new Error(`Invoice is not open (current: ${invoice.status})`);
+    // For past_due, the latest invoice may not be open — find the first open one
+    if (!invoice || invoice.status !== "open") {
+      const openInvoices = await stripe.invoices.list({
+        subscription: subscription.stripe_subscription_id,
+        status: "open",
+        limit: 1,
+      });
+      if (openInvoices.data.length > 0) {
+        invoice = openInvoices.data[0];
+        invoiceId = invoice.id;
+        logStep("Found open invoice via list", { invoiceId, amountDue: invoice.amount_due });
+      } else {
+        throw new Error("No open invoice found for this subscription");
+      }
     }
 
     // Check if customer has a payment method
