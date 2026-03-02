@@ -1315,7 +1315,7 @@ export default function Billing() {
                             
                             // Check if subscription has a processing payment (ACH pending)
                             const hasProcessingPayment = billingHistory?.some(
-                              bh => bh.subscription_id === sub.id && bh.status === "processing"
+                              bh => bh.subscription_id === sub.id && (bh.status === "processing" || bh.status === "pending")
                             );
                             
                             // Determine if this subscription is in processing state
