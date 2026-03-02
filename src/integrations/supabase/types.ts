@@ -245,6 +245,7 @@ export type Database = {
           business_type: string | null
           company_address: string | null
           created_at: string
+          customer_id: string | null
           date_needed: string | null
           dot_number_url: string | null
           drivers_license_back_url: string | null
@@ -271,7 +272,7 @@ export type Database = {
           trailer_type: string | null
           truck_vin: string | null
           updated_at: string
-          user_id: string
+          user_id: string | null
         }
         Insert: {
           admin_notes?: string | null
@@ -279,6 +280,7 @@ export type Database = {
           business_type?: string | null
           company_address?: string | null
           created_at?: string
+          customer_id?: string | null
           date_needed?: string | null
           dot_number_url?: string | null
           drivers_license_back_url?: string | null
@@ -305,7 +307,7 @@ export type Database = {
           trailer_type?: string | null
           truck_vin?: string | null
           updated_at?: string
-          user_id: string
+          user_id?: string | null
         }
         Update: {
           admin_notes?: string | null
@@ -313,6 +315,7 @@ export type Database = {
           business_type?: string | null
           company_address?: string | null
           created_at?: string
+          customer_id?: string | null
           date_needed?: string | null
           dot_number_url?: string | null
           drivers_license_back_url?: string | null
@@ -339,9 +342,16 @@ export type Database = {
           trailer_type?: string | null
           truck_vin?: string | null
           updated_at?: string
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "customer_applications_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "customer_applications_reviewed_by_fkey"
             columns: ["reviewed_by"]

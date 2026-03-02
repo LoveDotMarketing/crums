@@ -118,21 +118,34 @@ serve(async (req) => {
     }
 
     // Get or create customer_applications row
-    let { data: application } = await supabaseClient
-      .from("customer_applications")
-      .select("id, stripe_customer_id, status")
-      .eq("user_id", lookupUserId)
-      .maybeSingle();
+    let { data: application } = useCustomerPath
+      ? await supabaseClient
+          .from("customer_applications")
+          .select("id, stripe_customer_id, status")
+          .eq("customer_id", customerId)
+          .maybeSingle()
+      : await supabaseClient
+          .from("customer_applications")
+          .select("id, stripe_customer_id, status")
+          .eq("user_id", lookupUserId)
+          .maybeSingle();
 
     if (!application) {
       logStep("No application found, auto-creating minimal record");
+      const insertPayload = useCustomerPath
+        ? {
+            customer_id: customerId,
+            phone_number: targetPhone || "N/A",
+            status: "pending_review",
+          }
+        : {
+            user_id: lookupUserId,
+            phone_number: targetPhone || "N/A",
+            status: "pending_review",
+          };
       const { data: newApp, error: createAppError } = await supabaseClient
         .from("customer_applications")
-        .insert({
-          user_id: lookupUserId,
-          phone_number: targetPhone || "N/A",
-          status: "pending_review",
-        })
+        .insert(insertPayload)
         .select("id, stripe_customer_id, status")
         .single();
       if (createAppError) {
