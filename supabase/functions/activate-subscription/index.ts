@@ -98,6 +98,19 @@ serve(async (req) => {
       latestInvoice: stripeSubscription.latest_invoice
     });
 
+    // If already active, return success without double-charging
+    if (stripeSubscription.status === "active") {
+      logStep("Subscription already active, skipping payment");
+      return new Response(
+        JSON.stringify({
+          success: true,
+          message: `Subscription is already active for ${subscription.customers?.full_name || "customer"}`,
+          alreadyActive: true
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
+      );
+    }
+
     if (!["incomplete", "past_due"].includes(stripeSubscription.status)) {
       throw new Error(`Subscription is not in incomplete or past_due status (current: ${stripeSubscription.status})`);
     }
@@ -154,8 +167,22 @@ serve(async (req) => {
     });
     logStep("Set default payment method on customer");
 
+    // Re-check invoice status right before paying to prevent double-charge
+    const freshInvoice = await stripe.invoices.retrieve(invoiceId!);
+    if (freshInvoice.status !== "open") {
+      logStep("Invoice no longer open, skipping payment", { status: freshInvoice.status });
+      return new Response(
+        JSON.stringify({
+          success: true,
+          message: "Payment already initiated — no additional charge was made",
+          alreadyActive: true
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
+      );
+    }
+
     // Pay the invoice with the payment method
-    const paidInvoice = await stripe.invoices.pay(invoiceId, {
+    const paidInvoice = await stripe.invoices.pay(invoiceId!, {
       payment_method: paymentMethodId,
     });
     logStep("Invoice payment initiated", { 
