@@ -1,18 +1,24 @@
 
 
-## Fix: Allow multiple subscriptions per customer
+## Problem
 
-### Root Cause
-The `customer_subscriptions` table has a `UNIQUE (customer_id)` constraint. When trying to create a second subscription for Ground Link (who already has one pending subscription), the insert fails with `duplicate key value violates unique constraint "customer_subscriptions_customer_id_key"`.
+Ground Link has 8 trailers assigned, but 3 are already on a pending subscription. The Create Subscription dialog shows all 8 as selectable because they're all assigned to the customer. The admin has no way to tell which ones are already subscribed — so they select all 8, and the edge function rejects it because 3 overlap.
 
-The system architecture explicitly supports multiple subscriptions per customer for split billing, so this constraint is incorrect.
+## Solution
 
-### Change
+Filter out trailers that are already on an active/pending/paused subscription from the available trailer list in the Create Subscription dialog.
 
-**Database migration**: Drop the unique constraint on `customer_id`:
-```sql
-ALTER TABLE public.customer_subscriptions DROP CONSTRAINT customer_subscriptions_customer_id_key;
-```
+### Change: `src/components/admin/CreateSubscriptionDialog.tsx`
 
-That's the only change needed. The edge function already created the Stripe subscription successfully (sub_1T6fdu...) — it just failed to save the local record. After removing the constraint, the admin can retry the subscription creation for the 5 trailers.
+1. **Add a query** to fetch existing subscription items for the selected customer:
+   - Query `subscription_items` joined with `customer_subscriptions` where `customer_id = selectedCustomerId` and `status IN ('active', 'pending', 'paused')`
+   - Collect the set of `trailer_id`s already subscribed
+
+2. **Filter the trailer list** (around line 168): After fetching available trailers, exclude any whose `id` is in the already-subscribed set. Alternatively, mark them with a "Subscribed" badge and make them unselectable.
+
+**Approach**: Filter them out entirely so the admin only sees trailers that can actually be added. This is the simplest and least error-prone approach.
+
+### Technical Detail
+
+In the `availableTrailers` query (lines 159-178), after fetching results, filter out trailers whose IDs appear in any active/pending/paused subscription's `subscription_items`. This requires a secondary query or a post-fetch filter using the existing subscriptions data.
 
