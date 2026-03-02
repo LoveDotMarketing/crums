@@ -1,32 +1,53 @@
 
 
-## Problem
+## Plan
 
-After activating Ground Link's subscription, the edge function sets the local status to "active" and pays the Stripe invoice. But:
+Show the real Stripe payment status on the "Processing" button instead of a generic label, so admins can distinguish between "Pending" (Jean — ACH initiated) and "Incomplete" (Ground Link — payment not yet attempted).
 
-1. In Stripe, the subscription status remains **"incomplete"** (not "pending") because ACH hasn't cleared yet
-2. No `billing_history` record is created at activation time -- that only happens when the `sync-payments` cron runs daily at 7am UTC
-3. After a page refresh, the in-memory `activatedIds` set is lost, so the "Processing" button disappears and "Activate" reappears (because: active status + no billing history = `isReadyToActivate`)
+### 1. Determine the display label from billing_history status
 
-## Fix: Create billing_history record at activation time
+In `src/pages/admin/Billing.tsx`, when `isProcessing` is true, find the most recent billing_history record for that subscription and use its status as the button label.
 
-In `supabase/functions/activate-subscription/index.ts`, after successfully calling `stripe.invoices.pay()`, insert a `billing_history` record with status `"processing"`. This persists the processing state in the database so it survives page refreshes and the UI correctly shows "Processing" without relying on the cron job.
+For subscriptions with no billing_history record but still in `activatedIds` (just activated this session), fall back to "Processing".
 
+For subscriptions where `sub.status === "active"` but Stripe shows incomplete (no billing_history record and not in `activatedIds`), show the raw local subscription status or "Incomplete".
+
+**Change around lines 1316-1323:**
 ```typescript
-// After stripe.invoices.pay() succeeds:
-await supabaseClient.from("billing_history").insert({
-  subscription_id: subscriptionId,
-  amount: paidInvoice.amount_due / 100,
-  net_amount: paidInvoice.amount_paid / 100,
-  status: "processing",
-  stripe_payment_intent_id: paidInvoice.payment_intent,
-  stripe_invoice_id: paidInvoice.id,
-  payment_method: "ach",
-});
+// Get the most recent billing_history entry for this subscription
+const latestPaymentRecord = billingHistory
+  ?.filter(bh => bh.subscription_id === sub.id)
+  ?.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())?.[0];
+
+const hasProcessingPayment = latestPaymentRecord && 
+  (latestPaymentRecord.status === "processing" || latestPaymentRecord.status === "pending");
+
+const isProcessing = activatedIds.has(sub.id) || 
+  (sub.status === "active" && hasProcessingPayment && !hasSuccessfulPayment);
+
+// Determine the Stripe-aligned label
+const processingLabel = latestPaymentRecord?.status === "pending" ? "Pending"
+  : latestPaymentRecord?.status === "processing" ? "Processing"
+  : activatedIds.has(sub.id) ? "Processing"
+  : (sub.status === "active" && !hasSuccessfulPayment && !hasProcessingPayment) ? "Incomplete"
+  : "Processing";
 ```
 
-The existing `sync-payments` cron will later update this record's status to `"succeeded"` once the ACH clears, which will automatically remove the "Processing" indicator since `hasSuccessfulPayment` will become true.
+### 2. Also detect "Incomplete" state (no billing_history, active locally but never charged)
+
+Expand `isProcessing` to also cover the case where subscription is active locally but has no billing history at all (Ground Link's case — Stripe shows "incomplete"). This means:
+- `sub.status === "active"` AND no successful payment AND no processing/pending payment AND has a `stripe_subscription_id`
+
+Update `isProcessing` and `isReadyToActivate` accordingly, and show "Incomplete" as the label for these.
+
+### 3. Update button text (lines 1438-1447)
+
+Replace the hardcoded "Processing" text with the dynamic `processingLabel`:
+```tsx
+<RefreshCw className="h-3 w-3 animate-spin mr-1" />
+{processingLabel}
+```
 
 ### Files to change
-- **`supabase/functions/activate-subscription/index.ts`** -- Insert a `billing_history` record with `"processing"` status after invoice payment
+- **`src/pages/admin/Billing.tsx`** — Dynamic status label based on billing_history status, detect incomplete state
 
