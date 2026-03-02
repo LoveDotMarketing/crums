@@ -78,19 +78,33 @@ serve(async (req) => {
 
     const targetEmail = targetProfile.email;
 
-    // Get the user's application to find their customer info
-    const { data: application, error: appError } = await supabaseClient
+    // Get the user's application to find their customer info (or auto-create one)
+    let { data: application } = await supabaseClient
       .from("customer_applications")
       .select("id, stripe_customer_id, status")
       .eq("user_id", lookupUserId)
-      .single();
+      .maybeSingle();
 
-    if (appError) {
-      logStep("Error fetching application", { error: appError.message });
-      throw new Error("No application found for this user");
+    if (!application) {
+      logStep("No application found, auto-creating minimal record");
+      const { data: newApp, error: createAppError } = await supabaseClient
+        .from("customer_applications")
+        .insert({
+          user_id: lookupUserId,
+          phone_number: targetProfile.phone || "N/A",
+          status: "pending_review",
+        })
+        .select("id, stripe_customer_id, status")
+        .single();
+      if (createAppError) {
+        logStep("Error creating application", { error: createAppError.message });
+        throw new Error("Failed to create application record for ACH setup");
+      }
+      application = newApp;
+      logStep("Auto-created application", { applicationId: application.id });
+    } else {
+      logStep("Application found", { applicationId: application.id, status: application.status });
     }
-
-    logStep("Application found", { applicationId: application.id, status: application.status });
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
 
