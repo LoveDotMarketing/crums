@@ -420,6 +420,25 @@ export default function CustomerDetail() {
                       {customer.payment_type && (
                         <InfoRow icon={<CreditCard className="h-4 w-4" />} label="Payment Type" value={customer.payment_type} />
                       )}
+                      <div className="flex items-center gap-2 pt-1">
+                        <span className="text-muted-foreground w-28">ACH Status</span>
+                        {application?.stripe_payment_method_id ? (
+                          <Badge variant="default" className="text-xs">
+                            <CheckCircle2 className="h-3 w-3 mr-1" />
+                            Linked
+                          </Badge>
+                        ) : profile ? (
+                          <>
+                            <Badge variant="outline" className="text-xs text-muted-foreground">Not Linked</Badge>
+                            <AdminAchSetupDialog
+                              targetUserId={profile.id}
+                              customerName={customer.full_name}
+                            />
+                          </>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">No account linked</span>
+                        )}
+                      </div>
                       {customer.notes && (
                         <div className="pt-2 border-t border-border">
                           <p className="text-xs text-muted-foreground mb-1">Notes</p>
@@ -457,25 +476,6 @@ export default function CustomerDetail() {
                           {application.secondary_contact_name && (
                             <InfoRow icon={<User className="h-4 w-4" />} label="Secondary Contact" value={`${application.secondary_contact_name} (${application.secondary_contact_relationship || "—"}) ${application.secondary_contact_phone || ""}`} />
                           )}
-                          <div className="flex items-center gap-2 pt-1">
-                            <span className="text-muted-foreground w-28">ACH Status</span>
-                            {application.stripe_payment_method_id ? (
-                              <Badge variant="default" className="text-xs">
-                                <CheckCircle2 className="h-3 w-3 mr-1" />
-                                Linked
-                              </Badge>
-                            ) : (
-                              <>
-                                <Badge variant="outline" className="text-xs text-muted-foreground">Not Linked</Badge>
-                                {profile && (
-                                  <AdminAchSetupDialog
-                                    targetUserId={profile.id}
-                                    customerName={customer.full_name}
-                                  />
-                                )}
-                              </>
-                            )}
-                          </div>
                           <div className="flex items-center gap-2">
                             <span className="text-muted-foreground w-28">App Status</span>
                             <Badge variant="secondary" className="text-xs capitalize">{application.status}</Badge>
