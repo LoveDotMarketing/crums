@@ -38,6 +38,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { ScheduleReleaseDialog } from "@/components/admin/ScheduleReleaseDialog";
 import { ScheduleDropoffDialog } from "@/components/admin/ScheduleDropoffDialog";
+import { decodeVin } from "@/lib/vinDecoder";
 
 interface Trailer {
   id: string;
@@ -78,6 +79,7 @@ export default function Fleet() {
   const [loading, setLoading] = useState(true);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [decodingVin, setDecodingVin] = useState(false);
   const [companyId, setCompanyId] = useState<string>("");
   const [sortColumn, setSortColumn] = useState<keyof Trailer | null>(null);
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
@@ -538,12 +540,41 @@ export default function Fleet() {
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="vin">VIN</Label>
-                      <Input
-                        id="vin"
-                        value={newTrailer.vin}
-                        onChange={(e) => setNewTrailer({ ...newTrailer, vin: e.target.value })}
-                        placeholder="1UYVS25387A123456"
-                      />
+                      <div className="flex gap-2">
+                        <Input
+                          id="vin"
+                          value={newTrailer.vin}
+                          onChange={(e) => setNewTrailer({ ...newTrailer, vin: e.target.value })}
+                          placeholder="1UYVS25387A123456"
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="shrink-0"
+                          disabled={!newTrailer.vin || newTrailer.vin.trim().length !== 17 || decodingVin}
+                          onClick={async () => {
+                            setDecodingVin(true);
+                            try {
+                              const decoded = await decodeVin(newTrailer.vin);
+                              setNewTrailer(prev => ({
+                                ...prev,
+                                ...(decoded.make ? { make: decoded.make } : {}),
+                                ...(decoded.model ? { model: decoded.model } : {}),
+                                ...(decoded.year ? { year: decoded.year } : {}),
+                                ...(decoded.type ? { type: decoded.type } : {}),
+                              }));
+                              toast.success("VIN decoded successfully");
+                            } catch (err: any) {
+                              toast.error(err.message || "Failed to decode VIN");
+                            } finally {
+                              setDecodingVin(false);
+                            }
+                          }}
+                        >
+                          {decodingVin ? <Loader2 className="h-4 w-4 animate-spin" /> : "Decode"}
+                        </Button>
+                      </div>
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="license_plate">License Plate</Label>

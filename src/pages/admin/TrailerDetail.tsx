@@ -42,6 +42,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { decodeVin } from "@/lib/vinDecoder";
 
 interface Trailer {
   id: string;
@@ -108,6 +109,7 @@ export default function TrailerDetail() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [decodingVin, setDecodingVin] = useState(false);
   const [formData, setFormData] = useState<Partial<Trailer>>({});
   const [agreementType, setAgreementType] = useState<AgreementType | null>(null);
   const [editAgreementType, setEditAgreementType] = useState<AgreementType | null>(null);
@@ -502,10 +504,39 @@ export default function TrailerDetail() {
                     <div className="space-y-2">
                       <Label>VIN</Label>
                       {isEditing ? (
-                        <Input
-                          value={formData.vin || ""}
-                          onChange={(e) => setFormData({ ...formData, vin: e.target.value })}
-                        />
+                        <div className="flex gap-2">
+                          <Input
+                            value={formData.vin || ""}
+                            onChange={(e) => setFormData({ ...formData, vin: e.target.value })}
+                          />
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="shrink-0"
+                            disabled={!formData.vin || formData.vin.trim().length !== 17 || decodingVin}
+                            onClick={async () => {
+                              setDecodingVin(true);
+                              try {
+                                const decoded = await decodeVin(formData.vin!);
+                                setFormData(prev => ({
+                                  ...prev,
+                                  ...(decoded.make ? { make: decoded.make } : {}),
+                                  ...(decoded.model ? { model: decoded.model } : {}),
+                                  ...(decoded.year ? { year: decoded.year } : {}),
+                                  ...(decoded.type ? { type: decoded.type } : {}),
+                                }));
+                                toast.success("VIN decoded successfully");
+                              } catch (err: any) {
+                                toast.error(err.message || "Failed to decode VIN");
+                              } finally {
+                                setDecodingVin(false);
+                              }
+                            }}
+                          >
+                            {decodingVin ? <Loader2 className="h-4 w-4 animate-spin" /> : "Decode"}
+                          </Button>
+                        </div>
                       ) : (
                         <p className="text-sm font-mono">{trailer.vin || "-"}</p>
                       )}
