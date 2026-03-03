@@ -886,6 +886,8 @@ export default function Fleet() {
                         <SortableHeader column="vin">VIN</SortableHeader>
                         <SortableHeader column="type">Type</SortableHeader>
                         <SortableHeader column="year">Year</SortableHeader>
+                        <SortableHeader column="make">Make</SortableHeader>
+                        <TableHead>Material</TableHead>
                         <TableHead>Monthly Price</TableHead>
                         <TableHead>Lessee</TableHead>
                         <SortableHeader column="status">Status</SortableHeader>
@@ -910,6 +912,8 @@ export default function Fleet() {
                             </TableCell>
                             <TableCell>{trailer.type}</TableCell>
                             <TableCell>{trailer.year}</TableCell>
+                            <TableCell>{trailer.make || "-"}</TableCell>
+                            <TableCell>{trailer.body_material || "-"}</TableCell>
                             <TableCell className="font-medium text-primary">
                               {getMonthlyPriceRange(trailer)}
                             </TableCell>
