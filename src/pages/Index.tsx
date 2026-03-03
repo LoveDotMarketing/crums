@@ -119,7 +119,7 @@ const Index = () => {
 
       <main className="flex-grow">
       {/* Hero Section */}
-      <section className="relative h-[600px] lg:h-[700px] flex items-center justify-center overflow-hidden">
+      <section className="relative h-[680px] md:h-[600px] lg:h-[700px] flex items-center justify-center overflow-hidden">
         <img 
           src="/images/hero-truck.webp" 
           alt="CRUMS Leasing semi-truck on highway" 
