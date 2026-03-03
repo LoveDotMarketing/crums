@@ -255,3 +255,25 @@ export const seasonalDemandServiceSchema = {
   "areaServed": { "@type": "Country", "name": "United States" },
   "audience": { "@type": "Audience", "audienceType": "Seasonal Shippers" }
 };
+
+export const leaseToOwnServiceSchema = {
+  "@context": "https://schema.org",
+  "@type": "Service",
+  "serviceType": "Lease to Own Trailer Program",
+  "provider": { "@type": "Organization", "name": "CRUMS Leasing" },
+  "name": "Lease to Own Trailer Program",
+  "description": "Build equity with every monthly payment and work toward full trailer ownership. A flexible path for carriers who want to own their equipment without a large upfront purchase.",
+  "areaServed": { "@type": "Country", "name": "United States" },
+  "audience": { "@type": "Audience", "audienceType": "Owner Operators" }
+};
+
+export const rentForStorageServiceSchema = {
+  "@context": "https://schema.org",
+  "@type": "Service",
+  "serviceType": "Trailer Rental for Storage",
+  "provider": { "@type": "Organization", "name": "CRUMS Leasing" },
+  "name": "Rent a Trailer for Storage",
+  "description": "Use a dry van trailer as secure, weather-protected on-site storage. Ideal for seasonal inventory overflow, extra warehouse space, or mobile storage solutions.",
+  "areaServed": { "@type": "Country", "name": "United States" },
+  "audience": { "@type": "Audience", "audienceType": "Businesses Needing Storage" }
+};

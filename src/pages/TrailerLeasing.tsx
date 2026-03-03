@@ -290,12 +290,53 @@ const TrailerLeasing = () => {
         </div>
       </section>
 
-      {/* Related Services */}
-      <section className="py-12 bg-background">
+      {/* Alternative Options */}
+      <section className="py-16 bg-background">
         <div className="container mx-auto px-4">
-          <h2 className="text-xl font-bold text-center mb-6 text-foreground">
-            Explore More Services
+          <h2 className="text-2xl md:text-3xl font-bold text-center mb-4 text-foreground">
+            More Ways to Work With Us
           </h2>
+          <p className="text-center text-muted-foreground mb-10 max-w-2xl mx-auto">
+            Not sure if a standard lease is the right fit? We offer additional arrangements to match your needs.
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto mb-10">
+            <Card className="border-2 hover:border-primary/50 hover:shadow-lg transition-all">
+              <CardContent className="p-8">
+                <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+                  <TrendingUp className="h-6 w-6 text-primary" />
+                </div>
+                <h3 className="text-xl font-bold text-foreground mb-2">Lease to Own</h3>
+                <p className="text-muted-foreground mb-4">
+                  Build equity with every payment and work toward full ownership of your trailer. A great path for carriers who want to own their equipment without a large upfront purchase.
+                </p>
+                <Link to="/contact" className="text-primary hover:underline font-semibold inline-flex items-center">
+                  Ask About Lease to Own
+                  <ArrowRight className="h-4 w-4 ml-1" />
+                </Link>
+              </CardContent>
+            </Card>
+            <Card className="border-2 hover:border-secondary/50 hover:shadow-lg transition-all">
+              <CardContent className="p-8">
+                <div className="h-12 w-12 rounded-full bg-secondary/10 flex items-center justify-center mb-4">
+                  <Shield className="h-6 w-6 text-secondary" />
+                </div>
+                <h3 className="text-xl font-bold text-foreground mb-2">Rent for Storage</h3>
+                <p className="text-muted-foreground mb-4">
+                  Need extra space? Rent a dry van trailer as secure, weather-protected on-site storage. Ideal for seasonal inventory, overflow, or mobile storage needs.
+                </p>
+                <Link to="/contact" className="text-secondary hover:underline font-semibold inline-flex items-center">
+                  Ask About Storage Rentals
+                  <ArrowRight className="h-4 w-4 ml-1" />
+                </Link>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </section>
+
+      {/* Related Services */}
+      <section className="py-12 bg-muted/30">
+        <div className="container mx-auto px-4">
           <div className="max-w-3xl mx-auto text-center">
             <p className="text-muted-foreground mb-4">
               Need something different? Check out our{" "}
