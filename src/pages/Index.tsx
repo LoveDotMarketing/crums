@@ -78,6 +78,14 @@ const Index = () => {
     {
       question: "What are the benefits of leasing vs. buying a trailer?",
       answer: "Leasing offers lower upfront costs, predictable monthly payments, access to well-maintained equipment, and flexibility to scale your fleet without the capital investment of purchasing. It also eliminates maintenance headaches and depreciation concerns."
+    },
+    {
+      question: "Do you offer a lease-to-own option?",
+      answer: "Yes! Our lease-to-own program lets you build equity with every monthly payment and work toward full trailer ownership. It's a great option for carriers who want the flexibility of leasing now with the goal of owning their equipment long-term. Contact us to learn more."
+    },
+    {
+      question: "Can I rent a trailer just for storage?",
+      answer: "Absolutely. Our rent-for-storage program lets you use a dry van trailer as secure, weather-protected on-site storage. It's ideal for businesses that need extra warehouse space, seasonal inventory overflow, or a mobile storage solution. Reach out for availability and rates."
     }
   ];
 
@@ -1207,6 +1215,60 @@ const Index = () => {
                 </Button>
               </Link>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* More Ways to Work With Us */}
+      <section className="py-16 bg-background border-b content-deferred">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-10">
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-3">
+              More Ways to Work With Us
+            </h2>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              Beyond standard leasing and rentals, we offer flexible arrangements to fit how you operate.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+            <Card className="border-2 hover:border-primary/50 hover:shadow-lg transition-all">
+              <CardContent className="p-8">
+                <div className="h-14 w-14 rounded-lg bg-primary/10 flex items-center justify-center mb-5">
+                  <DollarSign className="h-7 w-7 text-primary" />
+                </div>
+                <h3 className="text-2xl font-bold text-foreground mb-3">Lease to Own</h3>
+                <p className="text-muted-foreground mb-5 leading-relaxed">
+                  Build equity with every monthly payment and work toward full trailer ownership — no large upfront purchase required.
+                </p>
+                <Link
+                  to="/contact"
+                  className="inline-flex items-center text-primary font-semibold hover:underline"
+                  onClick={() => trackCtaClick('Lease to Own CTA', 'home', '/contact')}
+                >
+                  Ask About Lease to Own
+                  <ArrowRight className="h-4 w-4 ml-2" />
+                </Link>
+              </CardContent>
+            </Card>
+            <Card className="border-2 hover:border-secondary/50 hover:shadow-lg transition-all">
+              <CardContent className="p-8">
+                <div className="h-14 w-14 rounded-lg bg-secondary/10 flex items-center justify-center mb-5">
+                  <Briefcase className="h-7 w-7 text-secondary" />
+                </div>
+                <h3 className="text-2xl font-bold text-foreground mb-3">Rent for Storage</h3>
+                <p className="text-muted-foreground mb-5 leading-relaxed">
+                  Use a dry van trailer as secure, weather-protected on-site storage — perfect for seasonal inventory, overflow, or mobile warehousing.
+                </p>
+                <Link
+                  to="/contact"
+                  className="inline-flex items-center text-secondary font-semibold hover:underline"
+                  onClick={() => trackCtaClick('Rent for Storage CTA', 'home', '/contact')}
+                >
+                  Ask About Storage Rentals
+                  <ArrowRight className="h-4 w-4 ml-2" />
+                </Link>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </section>

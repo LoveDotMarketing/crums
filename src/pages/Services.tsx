@@ -3,7 +3,7 @@ import { Footer } from "@/components/Footer";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { SEO } from "@/components/SEO";
 import { Link } from "react-router-dom";
-import { ArrowRight, Truck, Calendar, Users, Box, Layers, Play } from "lucide-react";
+import { ArrowRight, Truck, Calendar, Users, Box, Layers, Play, Key, Warehouse } from "lucide-react";
 import { generateBreadcrumbSchema } from "@/lib/structuredData";
 import whyChooseThumb from "@/assets/why-choose-crums-video-thumb.png";
 import { trackCtaClick, trackEvent } from "@/lib/analytics";
@@ -28,6 +28,18 @@ const services = [
     description: "Comprehensive fleet management",
     href: "/services/fleet-solutions",
     icon: Users,
+  },
+  {
+    title: "Lease to Own",
+    description: "Build equity with every payment toward trailer ownership",
+    href: "/contact",
+    icon: Key,
+  },
+  {
+    title: "Rent for Storage",
+    description: "Use a trailer as secure, flexible on-site storage",
+    href: "/contact",
+    icon: Warehouse,
   },
 ];
 
@@ -96,6 +108,22 @@ const Services = () => {
             "@type": "Service",
             "name": "Fleet Solutions",
             "description": "Comprehensive fleet management"
+          }
+        },
+        {
+          "@type": "Offer",
+          "itemOffered": {
+            "@type": "Service",
+            "name": "Lease to Own",
+            "description": "Build equity with every payment toward trailer ownership"
+          }
+        },
+        {
+          "@type": "Offer",
+          "itemOffered": {
+            "@type": "Service",
+            "name": "Rent for Storage",
+            "description": "Use a trailer as secure, flexible on-site storage"
           }
         }
       ]
