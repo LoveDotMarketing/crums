@@ -1,29 +1,28 @@
 
 
-## Create Big Bird Transportation Partner Profile
+## Review: Public-Facing Offering Mentions
 
-### What Already Exists
-The partner referral infrastructure is fully built — the `partners` table, `partner_commissions` table, and the admin Referrals → Partners tab all exist and are functional. No code changes are needed.
+### Current State
 
-### Data Insert
+| Offering | Mentioned on Public Pages? | Details |
+|----------|---------------------------|---------|
+| **Trailer Leasing** | Yes — extensively | Homepage, Services, Dry Van Leasing, Flatbed Leasing, Semi Trailer Leasing, Fleet Solutions, industry pages, FAQs |
+| **Rent for Storage** | **No** — only in admin/customer dashboards | Zero mentions on any public marketing page |
+| **Lease to Own** | **No** — only in admin/customer dashboards | Zero mentions on any public marketing page |
 
-Insert one record into the `partners` table:
+### What Needs to Happen
 
-| Field | Value |
-|-------|-------|
-| name | Big Bird Transportation |
-| company_name | Big Bird Inc |
-| email | mercy@bigbirdinc.co |
-| referral_code | BIGBIRD |
-| commission_rate | 0.15 (15%) |
-| notes | 15% commission for 12 months on referred customer contracts. Commission applies to initial contract period only. |
-| is_active | true |
+Both **Rent for Storage** and **Lease to Own** are fully built in the backend and customer portal but are completely invisible to prospects on the public site. They should be surfaced on key conversion pages.
 
-### Result
-- Partner will appear in **Admin → Referrals → Partners** tab immediately
-- Referral code `BIGBIRD` will be active and usable for lead tracking
-- Commissions can be logged against this partner from the admin panel
-- The existing partner detail view shows their commission history, owed/paid totals, and linked subscriptions
+### Plan
 
-No code changes required.
+1. **Services page** (`src/pages/Services.tsx`) — Add "Lease to Own" and "Rent for Storage" as two new service cards alongside the existing Trailer Leasing, Trailer Rentals, and Fleet Solutions cards
+
+2. **Homepage** (`src/pages/Index.tsx`) — Add a "More Ways to Work With Us" section (or similar) near the bottom with brief descriptions and links for Lease to Own and Rent for Storage
+
+3. **Trailer Leasing page** (`src/pages/TrailerLeasing.tsx`) — Add a section mentioning both options as alternative arrangements available through CRUMS
+
+4. **FAQ updates** — Add 1-2 FAQ entries on the homepage covering "Do you offer lease-to-own?" and "Can I rent a trailer for storage?"
+
+5. **Structured data** — Add service schema entries for both offerings
 
