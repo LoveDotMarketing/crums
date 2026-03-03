@@ -23,7 +23,7 @@ interface SubscriptionItemData {
     status: string;
     subscription_type: string | null;
   };
-  trailer: {
+    trailer: {
     id: string;
     trailer_number: string;
     type: string;
@@ -32,6 +32,8 @@ interface SubscriptionItemData {
     status: string;
     year: number | null;
     vin: string | null;
+    axle_count: number | null;
+    body_material: string | null;
   } | null;
 }
 
@@ -93,7 +95,9 @@ export default function Rentals() {
             model,
             status,
             year,
-            vin
+            vin,
+            axle_count,
+            body_material
           )
         `)
         .eq("subscription.customer_id", customer.id)
@@ -279,6 +283,18 @@ export default function Rentals() {
                           <div className="flex items-center gap-2 text-sm">
                             <Calendar className="h-4 w-4 text-muted-foreground" />
                             <span>{trailer.year}</span>
+                          </div>
+                        )}
+                        {trailer.axle_count && (
+                          <div className="flex items-center gap-2 text-sm">
+                            <Truck className="h-4 w-4 text-muted-foreground" />
+                            <span>{trailer.axle_count} Axle{trailer.axle_count > 1 ? "s" : ""}</span>
+                          </div>
+                        )}
+                        {trailer.body_material && (
+                          <div className="flex items-center gap-2 text-sm">
+                            <FileText className="h-4 w-4 text-muted-foreground" />
+                            <span>{trailer.body_material}</span>
                           </div>
                         )}
                         <div className="flex items-center gap-2 text-sm">
