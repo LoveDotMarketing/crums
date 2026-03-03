@@ -23,6 +23,7 @@ const TrailerLeasing = lazy(() => import("./pages/TrailerLeasing"));
 const TrailerRentals = lazy(() => import("./pages/TrailerRentals"));
 const FleetSolutions = lazy(() => import("./pages/FleetSolutions"));
 const LeaseToOwnPage = lazy(() => import("./pages/LeaseToOwn"));
+const RentForStorage = lazy(() => import("./pages/RentForStorage"));
 const DryVanTrailers = lazy(() => import("./pages/DryVanTrailers"));
 const FlatbedTrailers = lazy(() => import("./pages/FlatbedTrailers"));
 const DryVanTrailerLeasing = lazy(() => import("./pages/DryVanTrailerLeasing"));
@@ -194,6 +195,7 @@ const App = () => (
             <Route path="/services/trailer-rentals" element={<TrailerRentals />} />
             <Route path="/services/fleet-solutions" element={<FleetSolutions />} />
             <Route path="/services/lease-to-own" element={<LeaseToOwnPage />} />
+            <Route path="/services/rent-for-storage" element={<RentForStorage />} />
             <Route path="/dry-van-trailers" element={<DryVanTrailers />} />
             <Route path="/flatbed-trailers" element={<FlatbedTrailers />} />
             <Route path="/dry-van-trailer-leasing" element={<DryVanTrailerLeasing />} />
