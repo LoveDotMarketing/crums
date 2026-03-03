@@ -90,6 +90,8 @@ export default function Fleet() {
   const [isScheduleDialogOpen, setIsScheduleDialogOpen] = useState(false);
   const [scheduleDropoffTrailer, setScheduleDropoffTrailer] = useState<Trailer | null>(null);
   const [isDropoffDialogOpen, setIsDropoffDialogOpen] = useState(false);
+  const [bulkDecoding, setBulkDecoding] = useState(false);
+  const [bulkProgress, setBulkProgress] = useState({ current: 0, total: 0, updated: 0, skipped: 0, failed: 0 });
   
   const [newTrailer, setNewTrailer] = useState({
     trailer_number: "",
@@ -289,6 +291,54 @@ export default function Fleet() {
     }
   };
 
+  const trailersNeedingDecode = trailers.filter(t => 
+    t.vin && t.vin.length === 17 && (!t.make || !t.model || !t.year || !t.type || !t.axle_count || !t.body_material)
+  );
+
+  const handleBulkDecode = async () => {
+    if (trailersNeedingDecode.length === 0) return;
+    setBulkDecoding(true);
+    const progress = { current: 0, total: trailersNeedingDecode.length, updated: 0, skipped: 0, failed: 0 };
+    setBulkProgress(progress);
+
+    for (const trailer of trailersNeedingDecode) {
+      progress.current++;
+      setBulkProgress({ ...progress });
+
+      try {
+        const decoded = await decodeVin(trailer.vin!);
+        const updates: Record<string, any> = {};
+
+        if (!trailer.make && decoded.make) updates.make = decoded.make;
+        if (!trailer.model && decoded.model) updates.model = decoded.model;
+        if (!trailer.year && decoded.year) updates.year = decoded.year;
+        if (!trailer.type && decoded.type) updates.type = decoded.type;
+        if (!trailer.axle_count && decoded.axle_count) updates.axle_count = decoded.axle_count;
+        if (!trailer.body_material && decoded.body_material) updates.body_material = decoded.body_material;
+
+        if (Object.keys(updates).length === 0) {
+          progress.skipped++;
+          continue;
+        }
+
+        const { error } = await supabase
+          .from("trailers")
+          .update(updates)
+          .eq("id", trailer.id);
+
+        if (error) throw error;
+        progress.updated++;
+      } catch (err) {
+        console.error(`Failed to decode VIN for trailer ${trailer.trailer_number}:`, err);
+        progress.failed++;
+      }
+    }
+
+    setBulkDecoding(false);
+    toast.success(`Bulk decode complete: ${progress.updated} updated, ${progress.skipped} skipped, ${progress.failed} failed`);
+    fetchCompanyAndTrailers();
+  };
+
   const handleSort = (column: keyof Trailer) => {
     if (sortColumn === column) {
       setSortDirection(sortDirection === "asc" ? "desc" : "asc");
@@ -457,13 +507,29 @@ export default function Fleet() {
             <SidebarTrigger />
             <div className="flex-1 flex items-center justify-between ml-4">
               <h1 className="text-2xl font-bold text-foreground">Fleet Management</h1>
-              <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Trailer
+              <div className="flex items-center gap-2">
+                {trailersNeedingDecode.length > 0 && (
+                  <Button variant="outline" onClick={handleBulkDecode} disabled={bulkDecoding}>
+                    {bulkDecoding ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Decoding {bulkProgress.current}/{bulkProgress.total}...
+                      </>
+                    ) : (
+                      <>
+                        <ClipboardList className="h-4 w-4 mr-2" />
+                        Bulk Decode VINs ({trailersNeedingDecode.length})
+                      </>
+                    )}
                   </Button>
-                </DialogTrigger>
+                )}
+                <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Trailer
+                    </Button>
+                  </DialogTrigger>
                 <DialogContent className="max-w-2xl">
                   <DialogHeader>
                     <DialogTitle>Add New Trailer</DialogTitle>
@@ -641,6 +707,7 @@ export default function Fleet() {
                   </DialogFooter>
                 </DialogContent>
               </Dialog>
+              </div>
             </div>
           </header>
 
