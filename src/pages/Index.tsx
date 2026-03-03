@@ -157,7 +157,7 @@ const Index = () => {
               <Button
                 size="lg"
                 variant="outline"
-                className="bg-transparent border-2 border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary text-lg px-8 py-6"
+                className="bg-primary-foreground border-2 border-primary-foreground text-primary hover:bg-transparent hover:text-primary-foreground text-lg px-8 py-6"
                 onClick={() => trackPhoneClick('hero')}
               >
                 <Phone className="mr-2 h-5 w-5" />
