@@ -2,28 +2,31 @@
 
 ## Add 10 Customer Billing Statements
 
-### Customer Matching (PDF → Database)
+### Customer Matching
 
-| # | PDF File | Customer Name | Customer ID | Total Amount | Period |
-|---|----------|--------------|-------------|-------------|--------|
-| 1 | AMA-United-Transport-Randy-Gray | AMA United Transport | `e76ccd9a` | $4,600.00 | Jul–Dec 2025 |
-| 2 | AZP-Trucking-Mohammadi-Abdul-Khaliq | Mohammadi Abdul Khaliq | `e0b4b14f` | $2,400.00 | Nov–Dec 2025 |
-| 3 | Black-Eagle-Transportation-Victoria-Hernandez | VICTORIA Hernandez | `e0d1df48` | $6,875.00 | May–Dec 2025 |
-| 4 | BMS-Shakiya-Harrison | BMS Logistics LLC | `806bcfe9` | $3,217.40 | May–Nov 2025 |
-| 5 | DeGreat-Dynasty-LLC-Dewayne-DeGreat | Dewayne DeGreat | `78334079` | $50,330.85 | Feb–Apr 2025 |
-| 6 | Do-It-Moving-Rodrick-Darnell-McGill | Roderick McGill | `20085873` | $5,750.00 | Jul–Dec 2025 |
-| 7 | Ducky-Kiara-Carcamo | Miguel Carcamo (Ducky Transport) | `bda76180` | $5,600.00 | May–Dec 2025 |
-| 8 | Fisneur-Jean-Florida-DL | Fisneur Jean | `911d288a` | $12,300.00 | Jan–Dec 2025 |
-| 9 | Hope-Light-Express-Helen-Mang | Hope Light Express- Helen Mang | `65cf6271` | $7,100.00 | Jun–Nov 2025 |
-| 10 | Luis-VillaReal | Luis Villareal | `53f2c6ca` | $4,000.00 | Apr–Jul 2025 |
+| # | PDF | Customer | ID | Amount | Period |
+|---|-----|----------|----|--------|--------|
+| 1 | Monarch-Trophy-Studio | **No match found in database** | — | $1,050.00 | Dec 2025 |
+| 2 | MTED-Robert-Tsankov | MTED Transportation | `d8735e0b` | $13,950.00 | Jul–Dec 2025 |
+| 3 | Multi-Trucking-Laxley-Hinds | Multi Trucking LLC | `ec0eb838` | $1,600.00 | Jul–Aug 2025 |
+| 4 | Osundo | Osundo Justus | `ac19f4e5` | $6,300.00 | May–Nov 2025 |
+| 5 | Panjshire-Express-Eisa-Karami | Panjshire Express LLC | `6cfa5ddf` | $5,575.00 | May–Dec 2025 |
+| 6 | Porter-Transportation | Gerald Porter (Porter Transportation Services LLC) | `d41cab5d` | $8,000.00 | May–Nov 2025 |
+| 7 | RJ-R-Robert | Robert RJ&R | `33a8a24e` | $11,048.00 | Apr–Nov 2025 |
+| 8 | SS-Critical-Transport | Stanley Barrnhisel (S&S Critical Transport LLC) | `d9a135fc` | $1,500.00 | Sep 2025 |
+| 9 | STENSON-DAVIS | Stenson Davis | `ea287dd5` | $7,060.00 | Jan–May 2025 |
+| 10 | Tracy-Trucking | Tracy Trucking | `8558e3cd` | $15,300.00 | May–Dec 2025 |
 
-All statement dates are **2026-02-06**.
+### Issue: Monarch Trophy Studio
 
-### Steps (same pattern as Ground Link)
+"Monarch Trophy Studio" does not exist as a customer in the database. I can either skip it or create the customer record first. Please let me know how to proceed for that one.
 
-1. **Copy all 10 PDFs** to `public/documents/` as temporary project files
-2. **Upload all 10 PDFs** to the `customer-documents` storage bucket under each customer's `statements/{customer_id}/` path
-3. **Insert 10 `customer_statements` records** via data insert — each with description "Download 2025 Billing Statement PDF", the extracted amounts, date ranges, and `file_url` pointing to the storage path
+### Steps (same as previous batch)
 
-No code changes needed — the existing Statements page and admin panel already display and download these records.
+1. **Copy all 10 PDFs** to `public/documents/` temporarily
+2. **Upload all 10 PDFs** to `customer-documents` storage bucket under `statements/{customer_id}/2025-billing-statement.pdf`
+3. **Insert 9 `customer_statements` records** (excluding Monarch unless instructed) with description "Download 2025 Billing Statement PDF", statement date 2026-02-06, and extracted amounts/periods
+4. **Delete temp files** from `public/documents/`
+
+No code changes needed.
 
