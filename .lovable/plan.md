@@ -1,24 +1,26 @@
 
 
-## Problem
+## What's Off
 
-Ground Link has 8 trailers assigned, but 3 are already on a pending subscription. The Create Subscription dialog shows all 8 as selectable because they're all assigned to the customer. The admin has no way to tell which ones are already subscribed — so they select all 8, and the edge function rejects it because 3 overlap.
+Looking at the Payment History screenshot and the database, there are **two problems**:
 
-## Solution
+### Problem 1: Duplicate billing_history for Ground Link's $2,300
+Two records reference the **same Stripe invoice** (`in_1T5zmQLjIwiEGQIh`):
+- A "Processing" row — created by the Activate button
+- A "Pending" row (with period Feb 26–Feb 28) — created by the daily `process-billing` cron
 
-Filter out trailers that are already on an active/pending/paused subscription from the available trailer list in the Create Subscription dialog.
+The cron didn't check whether a billing_history record already existed for that invoice before inserting a new one.
 
-### Change: `src/components/admin/CreateSubscriptionDialog.tsx`
+### Problem 2: Net amount shows $0.00
+The `activate-subscription` function sets `net_amount: paidInvoice.amount_paid / 100`. Since ACH hasn't cleared yet at the time of initiation, Stripe reports `amount_paid = 0`. The net should default to the invoice amount and get corrected by `sync-payments` once the ACH clears.
 
-1. **Add a query** to fetch existing subscription items for the selected customer:
-   - Query `subscription_items` joined with `customer_subscriptions` where `customer_id = selectedCustomerId` and `status IN ('active', 'pending', 'paused')`
-   - Collect the set of `trailer_id`s already subscribed
+---
 
-2. **Filter the trailer list** (around line 168): After fetching available trailers, exclude any whose `id` is in the already-subscribed set. Alternatively, mark them with a "Subscribed" badge and make them unselectable.
+### Fix Plan
 
-**Approach**: Filter them out entirely so the admin only sees trailers that can actually be added. This is the simplest and least error-prone approach.
+**1. `activate-subscription` edge function** — Set `net_amount` to `amount_due / 100` instead of `amount_paid / 100` so it shows the expected charge amount while processing.
 
-### Technical Detail
+**2. `process-billing` edge function** — Add a check: before inserting a new `billing_history` record, query for an existing record with the same `stripe_invoice_id`. If one exists, skip the insert to prevent duplicates.
 
-In the `availableTrailers` query (lines 159-178), after fetching results, filter out trailers whose IDs appear in any active/pending/paused subscription's `subscription_items`. This requires a secondary query or a post-fetch filter using the existing subscriptions data.
+**3. Clean up the duplicate** — Delete the extra "Pending" billing_history row (`id: 30487e96...`) that duplicates the same Stripe invoice.
 
