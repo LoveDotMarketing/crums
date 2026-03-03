@@ -54,6 +54,8 @@ interface SubscriptionItem {
     type: string;
     year: number | null;
     vin: string | null;
+    axle_count: number | null;
+    body_material: string | null;
   } | null;
 }
 
@@ -127,7 +129,7 @@ export default function LeaseToOwn() {
           monthly_rate,
           lease_to_own_total,
           lease_to_own,
-          trailer:trailers(trailer_number, type, year, vin)
+          trailer:trailers(trailer_number, type, year, vin, axle_count, body_material)
         `)
         .eq("subscription_id", sub.id)
         .in("status", ["active", "paused"]);
@@ -524,6 +526,8 @@ export default function LeaseToOwn() {
                             </p>
                             <p className="text-sm text-muted-foreground">
                               {item.trailer?.type}{item.trailer?.year ? ` · ${item.trailer.year}` : ""}
+                              {item.trailer?.axle_count ? ` · ${item.trailer.axle_count} Axle` : ""}
+                              {item.trailer?.body_material ? ` · ${item.trailer.body_material}` : ""}
                               {item.trailer?.vin ? ` · VIN: ${item.trailer.vin}` : ""}
                             </p>
                           </div>
