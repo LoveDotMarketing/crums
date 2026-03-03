@@ -1,28 +1,15 @@
 
 
-## Bulk VIN Decode for Fleet
+## Show Decoded Fields on Fleet Table
 
-Add a "Bulk Decode VINs" button to the Fleet page that iterates through all trailers with a VIN but missing make/model/year/axle_count/body_material data, decodes each via NHTSA, and updates the database records.
+The bulk decode updated trailers with make, model, axle count, and body material data. The admin TrailerDetail page already displays all these fields. However, the Fleet table currently only shows: VIN, Type, Year, Monthly Price, Lessee, Status, Purchase Price, Maintenance, Income, ROI.
 
-### Implementation
+### Changes to `src/pages/admin/Fleet.tsx`
 
-**1. Add bulk decode function to `src/pages/admin/Fleet.tsx`**
-- New state: `bulkDecoding` (boolean), `bulkProgress` (object with `current`, `total`, `updated`, `skipped`, `failed` counts)
-- Function `handleBulkDecode`:
-  - Filters trailers that have a VIN and are missing any of: make, model, year, type, axle_count, body_material
-  - Loops through each, calls `decodeVin(vin)`, builds an update object with only the fields that are currently null/empty and have valid decoded values
-  - Updates each trailer record via Supabase
-  - Shows a progress toast during processing and a summary toast on completion
-- Add a "Bulk Decode VINs" button near the existing "Add Trailer" button in the toolbar area
-- Show a progress indicator (e.g. "Decoding 3/12...") while running
+Add **Make** and **Body Material** columns to the Fleet table between the existing Year and Monthly Price columns:
 
-**2. UI placement**
-- Button with a `Loader2` spinner icon while active, disabled during processing
-- Only visible when there are trailers with VINs that have missing data
+- Add `<SortableHeader column="make">Make</SortableHeader>` and `<TableHead>Material</TableHead>` to the table header
+- Add corresponding `<TableCell>` entries showing `trailer.make || "-"` and `trailer.body_material || "-"`
 
-### Technical notes
-- Uses the existing `decodeVin` utility from `src/lib/vinDecoder.ts`
-- Sequential API calls (not parallel) to avoid rate-limiting the free NHTSA API
-- Only overwrites null/empty fields — never replaces existing data
-- Refreshes fleet data after completion
+This keeps the table informative without being too wide (axle count is a minor detail best left on the detail page).
 
