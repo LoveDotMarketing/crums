@@ -165,6 +165,17 @@ const Index = () => {
               </Button>
             </a>
           </div>
+          <div className="flex flex-wrap gap-3 justify-center mt-6">
+            <Link to="/trailer-leasing" className="bg-primary-foreground/15 hover:bg-primary-foreground/25 border border-primary-foreground/30 text-primary-foreground rounded-full px-5 py-2 text-sm font-medium transition-colors">
+              Trailer Leasing
+            </Link>
+            <Link to="/services/lease-to-own" className="bg-primary-foreground/15 hover:bg-primary-foreground/25 border border-primary-foreground/30 text-primary-foreground rounded-full px-5 py-2 text-sm font-medium transition-colors">
+              Lease to Own
+            </Link>
+            <Link to="/services/rent-for-storage" className="bg-primary-foreground/15 hover:bg-primary-foreground/25 border border-primary-foreground/30 text-primary-foreground rounded-full px-5 py-2 text-sm font-medium transition-colors">
+              Rent for Storage
+            </Link>
+          </div>
         </div>
       </section>
 
