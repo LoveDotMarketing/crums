@@ -1,40 +1,65 @@
 
 
-## What's Wrong
+## Plan: Upload Ground Link's 2025 Billing Statement
 
-**Bug: "No Active Subscription" for Ground Link** — The subscription query on line 48 uses `.maybeSingle()`, but Ground Link has **2 subscriptions**. When Supabase returns multiple rows, `.maybeSingle()` errors out, so the entire billing page shows "No Active Subscription."
+### What needs to happen
 
-**Statements hidden behind subscription** — The Statements section (line 476) is inside the `subscription ? ... : "No Active Subscription"` conditional block. If the subscription query fails, customers can't see their statements either.
+1. **Copy the PDF** into the project and upload it to the `customer-documents` storage bucket under `statements/31b4ef87-fad0-4e0b-901b-286bf5e0a182/` path.
 
----
+2. **Insert a `customer_statements` record** for Ground Link (customer ID `31b4ef87-fad0-4e0b-901b-286bf5e0a182`) with:
+   - `description`: "Download 2025 Billing Statement PDF"
+   - `statement_date`: 2026-02-06 (date on the PDF)
+   - `period_start`: 2025-07-01
+   - `period_end`: 2025-12-17
+   - `amount`: 29288.37 (total from statement)
+   - `source`: "manual"
+   - `file_url`: the storage path
 
-## Fix Plan
+### Visibility
 
-### 1. Support multiple subscriptions
-Change the query from `.maybeSingle()` to fetch **all** subscriptions for the customer. Update the UI to show each subscription as its own section with its trailers, billing history, and status cards.
+Both roles already have access:
+- **Admin**: The `CustomerStatementsPanel` component already shows statements with download buttons for any customer.
+- **Customer**: The `StatementsCard` on the billing page already renders statements with a "PDF" download button. RLS policy on `customer_statements` already allows customers to SELECT their own records. Storage RLS on `customer-documents` needs to be verified to ensure customers can read their own files.
 
-### 2. Move Statements outside the subscription conditional
-The Statements & Tax Records section already exists (line 476) but is trapped inside the `subscription` conditional. Move it **outside** so it always renders when the customer record exists, regardless of subscription status. Add a dedicated "Statements" tab to the customer nav.
+### Technical steps
 
-### 3. Add Statements tab to CustomerNav
-Add a "Statements" link in `CustomerNav.tsx` pointing to `/dashboard/customer/statements` (or keep it as a tab on the billing page — since the statements section already exists, adding a separate tab in the nav makes it more discoverable).
+1. Copy the uploaded PDF to a temporary location, then use a migration to upload it to storage via the edge function or directly insert the storage path.
+2. Actually — simpler approach: Copy the PDF to `public/documents/` so it's always accessible, and set `file_url` to the public path. But this bypasses the private bucket strategy.
+3. **Best approach**: Upload the PDF to the `customer-documents` bucket programmatically. Since we can't upload binary files via SQL migrations, we'll:
+   - Copy the PDF to `public/documents/ground-link-2025-statement.pdf` temporarily
+   - Insert the `customer_statements` record via SQL migration with `file_url` pointing to the storage path
+   - Actually upload the file to storage using the admin panel's existing "Add Statement" feature
 
----
+**Revised simplest approach**: 
+- Insert the `customer_statements` DB record via migration with `file_url = NULL` initially
+- Then use the existing admin Statements panel to upload the actual PDF file (replace the record or add the PDF)
 
-## Technical Details
+**Even simpler**: Since the admin Statements panel already has full upload functionality, just:
+1. Insert a DB record via migration with the correct metadata
+2. Copy the PDF to the project as a public file at `public/documents/ground-link-2025-statement.pdf`  
+3. Store `file_url` as a public URL path instead of a storage path — but this breaks the signed URL download logic
 
-**File: `src/pages/customer/Billing.tsx`**
-- Change subscription query: `.maybeSingle()` → no limit, fetch all, return array
-- Rename `subscription` → `subscriptions` (array)
-- Update all downstream queries (subscription_items, billing_history, applied_discounts) to work across multiple subscription IDs using `.in("subscription_id", subIds)`
-- Restructure the UI: loop over subscriptions, show each one with its trailers/payments
-- Move the Statements card **outside** the `!subscription` conditional so it renders based on `customerRecord?.id`
+**Final approach — cleanest**:
+1. Copy PDF into project
+2. Write a small edge function or use existing tooling to upload it to `customer-documents` bucket  
+3. Insert the `customer_statements` record pointing to the storage path
 
-**File: `src/components/customer/CustomerNav.tsx`**
-- Add "Statements" nav item
+Actually, the most practical path given our tools:
 
-**File: `src/App.tsx`** (if needed)
-- Add route for `/dashboard/customer/statements` if making it a separate page, OR keep it on the billing page (simpler)
+1. **SQL migration**: Insert the `customer_statements` record with `file_url` set to `statements/31b4ef87-fad0-4e0b-901b-286bf5e0a182/2025-billing-statement.pdf`
+2. **Manually upload** the PDF via the admin Statements panel (already built) — OR we can write a quick edge function to handle the upload
 
-The simpler approach: keep statements on the billing page but move the section outside the conditional, and add a "Statements" entry to the CustomerNav that links to `/dashboard/customer/billing#statements` or simply to the billing page with a scroll anchor.
+Let me check if there's a storage RLS policy allowing customers to download from `customer-documents`.
+
+### Storage access check needed
+
+The `customer-documents` bucket is private. We need to verify customers can create signed URLs for their own files. If not, we need to add a storage RLS policy.
+
+### Summary
+
+1. **Insert DB record** via SQL migration into `customer_statements` for Ground Link with description "Download 2025 Billing Statement PDF"
+2. **Verify/add storage RLS** so customers can read their own statement files from the `customer-documents` bucket
+3. **Upload the PDF** — use the existing admin Statements panel UI to attach the file, OR instruct user to use it
+
+No code changes needed — the UI already shows statements for both admin and customer views. We just need the data + file in place.
 
