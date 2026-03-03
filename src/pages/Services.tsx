@@ -32,7 +32,7 @@ const services = [
   {
     title: "Lease to Own",
     description: "Build equity with every payment toward trailer ownership",
-    href: "/contact",
+    href: "/services/lease-to-own",
     icon: Key,
   },
   {
