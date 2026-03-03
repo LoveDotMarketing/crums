@@ -1,28 +1,29 @@
 
 
-## Add Service Bubbles Below Hero CTAs
+## VIN Decoder for Admin Fleet Page
 
-Add three pill/bubble-style links below the "Free Quote" and phone buttons in the hero section, linking to each service page.
+Add a "Decode VIN" button next to the VIN input field in both the Add Trailer dialog (Fleet.tsx) and the Edit Trailer form (TrailerDetail.tsx). When clicked, it calls the free NHTSA vPIC API to auto-fill make, model, year, and type.
 
-### Changes
+### Implementation
 
-**`src/pages/Index.tsx`** (lines ~167-168)
+**1. Create a shared VIN decoder utility** (`src/lib/vinDecoder.ts`)
+- Function `decodeVin(vin: string)` that calls `https://vpic.nhtsa.dot.gov/api/vehicles/decodevinvalues/{vin}?format=json`
+- Parses relevant fields: Make, Model, ModelYear, BodyClass
+- Maps BodyClass to trailer types (e.g., "Van" → "Dry Van")
+- Returns `{ make, model, year, type }` or throws on invalid VIN
 
-Insert after the CTA button flex container (after line 167's closing `</div>`), before the closing `</div>` of the hero content:
+**2. Update Add Trailer dialog in `src/pages/admin/Fleet.tsx`** (lines 539-546)
+- Add a "Decode" button next to the VIN input
+- On click, call `decodeVin`, then auto-fill `make`, `model`, `year`, and `type` fields in `newTrailer` state
+- Show loading spinner during fetch, toast on error
 
-```tsx
-<div className="flex flex-wrap gap-3 justify-center mt-6">
-  <Link to="/trailer-leasing" className="bg-primary-foreground/15 hover:bg-primary-foreground/25 border border-primary-foreground/30 text-primary-foreground rounded-full px-5 py-2 text-sm font-medium transition-colors">
-    Trailer Leasing
-  </Link>
-  <Link to="/services/lease-to-own" className="bg-primary-foreground/15 hover:bg-primary-foreground/25 border border-primary-foreground/30 text-primary-foreground rounded-full px-5 py-2 text-sm font-medium transition-colors">
-    Lease to Own
-  </Link>
-  <Link to="/services/rent-for-storage" className="bg-primary-foreground/15 hover:bg-primary-foreground/25 border border-primary-foreground/30 text-primary-foreground rounded-full px-5 py-2 text-sm font-medium transition-colors">
-    Rent for Storage
-  </Link>
-</div>
-```
+**3. Update Edit Trailer form in `src/pages/admin/TrailerDetail.tsx`** (lines 502-511)
+- Add a "Decode" button next to the VIN input (only visible in edit mode)
+- On click, call `decodeVin`, then auto-fill `make`, `model`, `year`, and `type` in `formData` state
+- Same loading/error handling
 
-Three translucent pill-shaped links, positioned directly beneath the existing hero buttons, matching the hero's color scheme.
+### Notes
+- NHTSA API is free and requires no API key
+- Called client-side directly (public API, no CORS issues)
+- Only auto-fills fields that return valid data; does not overwrite if NHTSA returns empty
 
