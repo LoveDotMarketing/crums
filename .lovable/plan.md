@@ -1,20 +1,29 @@
 
 
-## Add 2 Customer Billing Statements
+## Create Big Bird Transportation Partner Profile
 
-### Customer Matching
+### What Already Exists
+The partner referral infrastructure is fully built — the `partners` table, `partner_commissions` table, and the admin Referrals → Partners tab all exist and are functional. No code changes are needed.
 
-| # | PDF | Customer | ID | Amount | Period |
-|---|-----|----------|----|--------|--------|
-| 1 | Trailer-Interchange-Jean-Wilder-Thelusma | Jean widler Thelusma | `8cbafc4c-2aeb-4406-9c2e-ab1a0366eb71` | $7,000.00 | May–Dec 2025 |
-| 2 | Trinity-Freight-LLC-James-E-Guthrie | James E. Guthrie | `95f5ca11-8d03-42ca-98db-2d2fa0f495c0` | $2,250.00 | Sep–Nov 2025 |
+### Data Insert
 
-### Steps
+Insert one record into the `partners` table:
 
-1. Copy both PDFs to `public/documents/` temporarily
-2. Upload to `customer-documents` bucket under `statements/{customer_id}/2025-billing-statement.pdf`
-3. Insert 2 `customer_statements` records with statement date 2026-02-06, description "Download 2025 Billing Statement PDF", and the amounts/periods above
-4. Delete temp files
+| Field | Value |
+|-------|-------|
+| name | Big Bird Transportation |
+| company_name | Big Bird Inc |
+| email | mercy@bigbirdinc.co |
+| referral_code | BIGBIRD |
+| commission_rate | 0.15 (15%) |
+| notes | 15% commission for 12 months on referred customer contracts. Commission applies to initial contract period only. |
+| is_active | true |
 
-No code changes needed.
+### Result
+- Partner will appear in **Admin → Referrals → Partners** tab immediately
+- Referral code `BIGBIRD` will be active and usable for lead tracking
+- Commissions can be logged against this partner from the admin panel
+- The existing partner detail view shows their commission history, owed/paid totals, and linked subscriptions
+
+No code changes required.
 
