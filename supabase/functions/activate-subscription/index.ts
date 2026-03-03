@@ -194,7 +194,7 @@ serve(async (req) => {
     const { error: bhError } = await supabaseClient.from("billing_history").insert({
       subscription_id: subscriptionId,
       amount: paidInvoice.amount_due / 100,
-      net_amount: paidInvoice.amount_paid / 100,
+      net_amount: paidInvoice.amount_due / 100,
       status: "processing",
       stripe_payment_intent_id: typeof paidInvoice.payment_intent === "string" 
         ? paidInvoice.payment_intent 

@@ -141,14 +141,18 @@ serve(async (req) => {
         });
 
         for (const invoice of invoices.data) {
-          // Check if we already have this invoice
+          // Check if we already have this invoice (e.g. inserted by activate-subscription)
           const { data: existing } = await supabaseClient
             .from("billing_history")
             .select("id")
             .eq("stripe_invoice_id", invoice.id)
-            .single();
+            .maybeSingle();
 
-          if (!existing) {
+          if (existing) {
+            logStep("Skipping duplicate invoice", { invoiceId: invoice.id });
+            continue;
+          }
+
             // Map Stripe status to our payment_status enum
             let paymentStatus: "pending" | "processing" | "succeeded" | "failed" | "refunded" = "pending";
             if (invoice.status === "paid") paymentStatus = "succeeded";
@@ -174,7 +178,6 @@ serve(async (req) => {
               });
 
             logStep("Synced invoice to billing_history", { invoiceId: invoice.id });
-          }
         }
 
         results.processed++;
