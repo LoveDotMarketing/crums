@@ -74,7 +74,7 @@ export function CustomerNav({ showLeaseToOwn }: CustomerNavProps = {}) {
     },
     { 
       title: "Statements", 
-      href: "/dashboard/customer/billing#statements", 
+      href: "/dashboard/customer/statements", 
       icon: FileText 
     },
   ];
@@ -85,9 +85,7 @@ export function CustomerNav({ showLeaseToOwn }: CustomerNavProps = {}) {
         <div className="flex space-x-1 overflow-x-auto">
           {navItems.map((item) => {
             const Icon = item.icon;
-            const isActive = item.href.includes('#')
-              ? location.pathname + location.hash === item.href
-              : location.pathname === item.href;
+            const isActive = location.pathname === item.href;
             
             return (
               <Link
