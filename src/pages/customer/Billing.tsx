@@ -37,20 +37,23 @@ const CustomerBilling = () => {
     enabled: !!currentEmail,
   });
 
-  const { data: subscription, isLoading: subLoading } = useQuery({
-    queryKey: ["customer-subscription", customerRecord?.id],
+  // Fetch ALL subscriptions for this customer (supports multi-sub customers)
+  const { data: subscriptions, isLoading: subLoading } = useQuery({
+    queryKey: ["customer-subscriptions", customerRecord?.id],
     queryFn: async () => {
-      if (!customerRecord?.id) return null;
+      if (!customerRecord?.id) return [];
       const { data, error } = await supabase
         .from("customer_subscriptions")
         .select("*")
         .eq("customer_id", customerRecord.id)
-        .maybeSingle();
+        .order("created_at", { ascending: false });
       if (error) throw error;
-      return data;
+      return data || [];
     },
     enabled: !!customerRecord?.id,
   });
+
+  const subIds = subscriptions?.map((s) => s.id) || [];
 
   // Fetch customer's billing anchor preference from application
   const { data: application } = useQuery({
@@ -65,56 +68,56 @@ const CustomerBilling = () => {
     },
   });
 
-  const { data: subscriptionItems, isLoading: itemsLoading } = useQuery({
-    queryKey: ["customer-subscription-items", subscription?.id],
+  const { data: allSubscriptionItems, isLoading: itemsLoading } = useQuery({
+    queryKey: ["customer-subscription-items", subIds],
     queryFn: async () => {
-      if (!subscription?.id) return [];
+      if (subIds.length === 0) return [];
       const { data, error } = await supabase
         .from("subscription_items")
         .select(`
           *,
           trailers:trailer_id (trailer_number, type)
         `)
-        .eq("subscription_id", subscription.id)
+        .in("subscription_id", subIds)
         .eq("status", "active");
       if (error) throw error;
-      return data;
+      return data || [];
     },
-    enabled: !!subscription?.id,
+    enabled: subIds.length > 0,
   });
 
-  // Fetch applied discounts
-  const { data: appliedDiscounts } = useQuery({
-    queryKey: ["customer-applied-discounts", subscription?.id],
+  // Fetch applied discounts across all subscriptions
+  const { data: allAppliedDiscounts } = useQuery({
+    queryKey: ["customer-applied-discounts", subIds],
     queryFn: async () => {
-      if (!subscription?.id) return [];
+      if (subIds.length === 0) return [];
       const { data, error } = await supabase
         .from("applied_discounts")
         .select(`
           *,
           discounts:discount_id (name, type, value, is_active)
         `)
-        .eq("subscription_id", subscription.id);
+        .in("subscription_id", subIds);
       if (error) throw error;
-      return data;
+      return data || [];
     },
-    enabled: !!subscription?.id,
+    enabled: subIds.length > 0,
   });
 
-  const { data: billingHistory, isLoading: historyLoading } = useQuery({
-    queryKey: ["customer-billing-history", subscription?.id],
+  const { data: allBillingHistory, isLoading: historyLoading } = useQuery({
+    queryKey: ["customer-billing-history", subIds],
     queryFn: async () => {
-      if (!subscription?.id) return [];
+      if (subIds.length === 0) return [];
       const { data, error } = await supabase
         .from("billing_history")
         .select("*")
-        .eq("subscription_id", subscription.id)
+        .in("subscription_id", subIds)
         .order("created_at", { ascending: false })
-        .limit(20);
+        .limit(50);
       if (error) throw error;
-      return data;
+      return data || [];
     },
-    enabled: !!subscription?.id,
+    enabled: subIds.length > 0,
   });
 
   // Fetch statements for this customer
@@ -173,6 +176,7 @@ const CustomerBilling = () => {
     const variants: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
       succeeded: "default",
       pending: "secondary",
+      processing: "secondary",
       failed: "destructive",
       refunded: "outline",
     };
@@ -190,8 +194,18 @@ const CustomerBilling = () => {
     }).format(amount);
   };
 
-  const getEffectiveBillingLabel = (item: any) => {
-    const cycle = item.billing_cycle || subscription?.billing_cycle;
+  const getSubscriptionTypeLabel = (type: string | null) => {
+    const labels: Record<string, string> = {
+      standard_lease: "Standard Lease",
+      lease_to_own: "Lease to Own",
+      rent_for_storage: "Rent for Storage",
+      repayment_plan: "Repayment Plan",
+    };
+    return labels[type || ""] || "Lease";
+  };
+
+  const getEffectiveBillingLabel = (item: any, sub: any) => {
+    const cycle = item.billing_cycle || sub?.billing_cycle;
     const anchor = item.billing_anchor_day;
     if (cycle === "weekly") return "Every Friday";
     if (cycle === "semimonthly") return "1st & 15th";
@@ -200,12 +214,8 @@ const CustomerBilling = () => {
     return cycle || "Monthly";
   };
 
-  const totalMonthlyRate = subscriptionItems?.reduce(
-    (sum, item) => sum + Number(item.monthly_rate),
-    0
-  ) || 0;
-
   const isLoading = subLoading || itemsLoading || historyLoading;
+  const hasSubscriptions = subscriptions && subscriptions.length > 0;
 
   return (
     <div className="min-h-screen bg-background">
@@ -228,344 +238,391 @@ const CustomerBilling = () => {
             </div>
             <Skeleton className="h-64" />
           </div>
-        ) : !subscription ? (
-          <Card>
-            <CardContent className="flex flex-col items-center justify-center py-12">
-              <CreditCard className="h-12 w-12 text-muted-foreground mb-4" />
-              <h3 className="text-lg font-semibold mb-2">No Active Subscription</h3>
-              <p className="text-muted-foreground text-center max-w-sm">
-                You don't have an active subscription yet. Contact us to set up your trailer lease.
-              </p>
-            </CardContent>
-          </Card>
+        ) : !hasSubscriptions ? (
+          <div className="space-y-6">
+            <Card>
+              <CardContent className="flex flex-col items-center justify-center py-12">
+                <CreditCard className="h-12 w-12 text-muted-foreground mb-4" />
+                <h3 className="text-lg font-semibold mb-2">No Active Subscription</h3>
+                <p className="text-muted-foreground text-center max-w-sm">
+                  You don't have an active subscription yet. Contact us to set up your trailer lease.
+                </p>
+              </CardContent>
+            </Card>
+
+            {/* Statements always visible if customer exists */}
+            {customerRecord?.id && (
+              <StatementsCard
+                filteredStatements={filteredStatements}
+                yearFilter={yearFilter}
+                setYearFilter={setYearFilter}
+                handleStatementDownload={handleStatementDownload}
+                downloadingId={downloadingId}
+                formatCurrency={formatCurrency}
+              />
+            )}
+          </div>
         ) : (
           <div className="space-y-6">
-            {/* Stats Cards */}
-            <div className="grid gap-4 md:grid-cols-3">
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Subscription Status</CardTitle>
-                  <CreditCard className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  {getStatusBadge(subscription.status)}
-                  <p className="text-xs text-muted-foreground mt-2 capitalize">
-                    {subscription.billing_cycle} billing
-                  </p>
-                </CardContent>
-              </Card>
+            {/* Render each subscription */}
+            {subscriptions.map((sub) => {
+              const items = allSubscriptionItems?.filter((i) => i.subscription_id === sub.id) || [];
+              const discounts = allAppliedDiscounts?.filter((d) => d.subscription_id === sub.id) || [];
+              const history = allBillingHistory?.filter((h) => h.subscription_id === sub.id) || [];
+              const totalRate = items.reduce((sum, item) => sum + Number(item.monthly_rate), 0);
 
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Next Billing Date</CardTitle>
-                  <Calendar className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">
-                    {subscription.next_billing_date
-                      ? format(new Date(subscription.next_billing_date), "MMM d, yyyy")
-                      : "—"}
-                  </div>
-                </CardContent>
-              </Card>
+              return (
+                <div key={sub.id} className="space-y-4">
+                  {/* Subscription header when multiple */}
+                  {subscriptions.length > 1 && (
+                    <div className="flex items-center gap-3 pt-2">
+                      <h2 className="text-xl font-semibold">{getSubscriptionTypeLabel(sub.subscription_type)}</h2>
+                      {getStatusBadge(sub.status)}
+                      <span className="text-sm text-muted-foreground">
+                        {items.length} trailer{items.length !== 1 ? "s" : ""}
+                      </span>
+                    </div>
+                  )}
 
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Current Rate</CardTitle>
-                  <DollarSign className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{formatCurrency(totalMonthlyRate)}</div>
-                  <p className="text-xs text-muted-foreground">
-                    per {subscription.billing_cycle === "monthly" ? "month" : subscription.billing_cycle === "biweekly" ? "2 weeks" : "week"}
-                  </p>
-                </CardContent>
-              </Card>
+                  {/* Stats Cards */}
+                  <div className="grid gap-4 md:grid-cols-3">
+                    <Card>
+                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Subscription Status</CardTitle>
+                        <CreditCard className="h-4 w-4 text-muted-foreground" />
+                      </CardHeader>
+                      <CardContent>
+                        {getStatusBadge(sub.status)}
+                        <p className="text-xs text-muted-foreground mt-2 capitalize">
+                          {sub.billing_cycle} billing
+                        </p>
+                      </CardContent>
+                    </Card>
 
-              {/* Payment Due Date Card */}
-              {(application?.billing_anchor_day || (application as any)?.preferred_billing_cycle === "weekly") && (
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Payment Due Date</CardTitle>
-                    <Calendar className="h-4 w-4 text-muted-foreground" />
-                  </CardHeader>
-                  <CardContent>
-                    {(application as any)?.preferred_billing_cycle === "weekly" || application?.billing_anchor_day === 5 ? (
-                      <>
-                        <div className="text-2xl font-bold">Every Friday</div>
-                        <p className="text-xs text-muted-foreground">weekly billing</p>
-                      </>
-                    ) : (
-                      <>
+                    <Card>
+                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Next Billing Date</CardTitle>
+                        <Calendar className="h-4 w-4 text-muted-foreground" />
+                      </CardHeader>
+                      <CardContent>
                         <div className="text-2xl font-bold">
-                          {application?.billing_anchor_day === 1 ? "1st" : "15th"}
+                          {sub.next_billing_date
+                            ? format(new Date(sub.next_billing_date), "MMM d, yyyy")
+                            : "—"}
                         </div>
-                        <p className="text-xs text-muted-foreground">of each month</p>
-                      </>
-                    )}
-                  </CardContent>
-                </Card>
-              )}
-            </div>
+                      </CardContent>
+                    </Card>
 
-            {/* Deposit Status */}
-            {subscription.deposit_amount && subscription.deposit_amount > 0 && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Security Deposit</CardTitle>
-                </CardHeader>
-                <CardContent className="flex items-center gap-4">
-                  <div className="flex items-center gap-2">
-                    {subscription.deposit_paid ? (
-                      <CheckCircle2 className="h-5 w-5 text-primary" />
-                    ) : (
-                      <Clock className="h-5 w-5 text-muted-foreground" />
-                    )}
-                    <span className="font-medium">
-                      {formatCurrency(Number(subscription.deposit_amount))}
-                    </span>
+                    <Card>
+                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Current Rate</CardTitle>
+                        <DollarSign className="h-4 w-4 text-muted-foreground" />
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-2xl font-bold">{formatCurrency(totalRate)}</div>
+                        <p className="text-xs text-muted-foreground">
+                          per {sub.billing_cycle === "monthly" ? "month" : sub.billing_cycle === "biweekly" ? "2 weeks" : "week"}
+                        </p>
+                      </CardContent>
+                    </Card>
                   </div>
-                  <Badge variant={subscription.deposit_paid ? "default" : "secondary"}>
-                    {subscription.deposit_paid ? "Paid" : "Pending"}
-                  </Badge>
-                </CardContent>
-              </Card>
-            )}
 
-            {/* Active Discounts */}
-            {appliedDiscounts && appliedDiscounts.length > 0 && (
-              <Card className="border-primary/30 bg-primary/5">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-lg">
-                    <span>🎖️</span>
-                    Active Discounts
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    {appliedDiscounts.map((ad) => {
-                      const discount = ad.discounts as { name: string; type: string; value: number; is_active: boolean } | null;
-                      if (!discount || !discount.is_active) return null;
-                      return (
-                        <div key={ad.id} className="flex items-center justify-between p-3 bg-background rounded-lg">
-                          <div className="flex items-center gap-3">
-                            <Badge variant="default" className="bg-primary">
-                              {discount.type === 'percentage' ? `${discount.value}% OFF` : formatCurrency(Number(discount.value))}
-                            </Badge>
-                            <span className="font-medium">{discount.name}</span>
-                          </div>
-                          <span className="text-sm text-muted-foreground">
-                            Applied {format(new Date(ad.applied_at), "MMM d, yyyy")}
+                  {/* Deposit Status */}
+                  {sub.deposit_amount && Number(sub.deposit_amount) > 0 && (
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-lg">Security Deposit</CardTitle>
+                      </CardHeader>
+                      <CardContent className="flex items-center gap-4">
+                        <div className="flex items-center gap-2">
+                          {sub.deposit_paid ? (
+                            <CheckCircle2 className="h-5 w-5 text-primary" />
+                          ) : (
+                            <Clock className="h-5 w-5 text-muted-foreground" />
+                          )}
+                          <span className="font-medium">
+                            {formatCurrency(Number(sub.deposit_amount))}
                           </span>
                         </div>
-                      );
-                    })}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
+                        <Badge variant={sub.deposit_paid ? "default" : "secondary"}>
+                          {sub.deposit_paid ? "Paid" : "Pending"}
+                        </Badge>
+                      </CardContent>
+                    </Card>
+                  )}
 
-            {/* Leased Trailers */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Truck className="h-5 w-5" />
-                  Leased Trailers
-                </CardTitle>
-                <CardDescription>
-                  Trailers included in your subscription
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {subscriptionItems && subscriptionItems.length > 0 ? (
-                  <Table>
-                     <TableHeader>
-                       <TableRow>
-                         <TableHead>Trailer #</TableHead>
-                         <TableHead>Type</TableHead>
-                         <TableHead>Billing Schedule</TableHead>
-                         <TableHead>Start Date</TableHead>
-                         <TableHead className="text-right">Rate</TableHead>
-                       </TableRow>
-                     </TableHeader>
-                     <TableBody>
-                       {subscriptionItems.map((item) => (
-                         <TableRow key={item.id}>
-                           <TableCell className="font-medium">
-                             {(item.trailers as { trailer_number: string } | null)?.trailer_number || "—"}
-                           </TableCell>
-                           <TableCell className="capitalize">
-                             {(item.trailers as { type: string } | null)?.type?.replace("_", " ") || "—"}
-                           </TableCell>
-                           <TableCell>
-                             <span className="text-sm text-muted-foreground">
-                               {getEffectiveBillingLabel(item)}
-                             </span>
-                           </TableCell>
-                           <TableCell>
-                             {format(new Date(item.start_date), "MMM d, yyyy")}
-                           </TableCell>
-                           <TableCell className="text-right">
-                             {formatCurrency(Number(item.monthly_rate))}
-                           </TableCell>
-                         </TableRow>
-                       ))}
-                    </TableBody>
-                  </Table>
-                ) : (
-                  <p className="text-muted-foreground text-center py-4">
-                    No trailers in this subscription
-                  </p>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Payment History */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Payment History</CardTitle>
-                <CardDescription>Your recent payments and invoices</CardDescription>
-              </CardHeader>
-              <CardContent>
-                {billingHistory && billingHistory.length > 0 ? (
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Date</TableHead>
-                        <TableHead>Period</TableHead>
-                        <TableHead>Amount</TableHead>
-                        <TableHead>Status</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {billingHistory.map((payment) => (
-                        <TableRow key={payment.id}>
-                          <TableCell>
-                            {format(new Date(payment.created_at), "MMM d, yyyy")}
-                          </TableCell>
-                          <TableCell>
-                            {payment.billing_period_start && payment.billing_period_end
-                              ? `${format(new Date(payment.billing_period_start), "MMM d")} - ${format(new Date(payment.billing_period_end), "MMM d")}`
-                              : "—"}
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex flex-col">
-                              <span className="font-medium">
-                                {formatCurrency(Number(payment.net_amount))}
-                              </span>
-                              {Number(payment.discount_amount) > 0 && (
-                                <span className="text-xs text-muted-foreground">
-                                  -{formatCurrency(Number(payment.discount_amount))} discount
+                  {/* Active Discounts */}
+                  {discounts.length > 0 && (
+                    <Card className="border-primary/30 bg-primary/5">
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2 text-lg">
+                          <span>🎖️</span>
+                          Active Discounts
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-3">
+                          {discounts.map((ad) => {
+                            const discount = ad.discounts as { name: string; type: string; value: number; is_active: boolean } | null;
+                            if (!discount || !discount.is_active) return null;
+                            return (
+                              <div key={ad.id} className="flex items-center justify-between p-3 bg-background rounded-lg">
+                                <div className="flex items-center gap-3">
+                                  <Badge variant="default" className="bg-primary">
+                                    {discount.type === 'percentage' ? `${discount.value}% OFF` : formatCurrency(Number(discount.value))}
+                                  </Badge>
+                                  <span className="font-medium">{discount.name}</span>
+                                </div>
+                                <span className="text-sm text-muted-foreground">
+                                  Applied {format(new Date(ad.applied_at), "MMM d, yyyy")}
                                 </span>
-                              )}
-                            </div>
-                          </TableCell>
-                          <TableCell>{getPaymentStatusBadge(payment.status)}</TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                ) : (
-                  <p className="text-muted-foreground text-center py-8">
-                    No payment history yet
-                  </p>
-                )}
-              </CardContent>
-            </Card>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
 
-            {/* Statements & Tax Records — always shown if customer record exists */}
-            <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle className="flex items-center gap-2">
-                      <FileText className="h-5 w-5" />
-                      Statements &amp; Tax Records
-                    </CardTitle>
-                    <CardDescription>
-                      Your billing statements for tax and accounting purposes
-                    </CardDescription>
-                  </div>
-                  <Select value={yearFilter} onValueChange={setYearFilter}>
-                    <SelectTrigger className="w-32">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Years</SelectItem>
-                      <SelectItem value="2026">2026</SelectItem>
-                      <SelectItem value="2025">2025</SelectItem>
-                      <SelectItem value="2024">2024</SelectItem>
-                      <SelectItem value="2023">2023</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  {/* Leased Trailers */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Truck className="h-5 w-5" />
+                        Leased Trailers
+                      </CardTitle>
+                      <CardDescription>
+                        Trailers included in this subscription
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      {items.length > 0 ? (
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>Trailer #</TableHead>
+                              <TableHead>Type</TableHead>
+                              <TableHead>Billing Schedule</TableHead>
+                              <TableHead>Start Date</TableHead>
+                              <TableHead className="text-right">Rate</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {items.map((item) => (
+                              <TableRow key={item.id}>
+                                <TableCell className="font-medium">
+                                  {(item.trailers as { trailer_number: string } | null)?.trailer_number || "—"}
+                                </TableCell>
+                                <TableCell className="capitalize">
+                                  {(item.trailers as { type: string } | null)?.type?.replace("_", " ") || "—"}
+                                </TableCell>
+                                <TableCell>
+                                  <span className="text-sm text-muted-foreground">
+                                    {getEffectiveBillingLabel(item, sub)}
+                                  </span>
+                                </TableCell>
+                                <TableCell>
+                                  {format(new Date(item.start_date), "MMM d, yyyy")}
+                                </TableCell>
+                                <TableCell className="text-right">
+                                  {formatCurrency(Number(item.monthly_rate))}
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      ) : (
+                        <p className="text-muted-foreground text-center py-4">
+                          No trailers in this subscription
+                        </p>
+                      )}
+                    </CardContent>
+                  </Card>
+
+                  {/* Payment History */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Payment History</CardTitle>
+                      <CardDescription>Recent payments and invoices</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      {history.length > 0 ? (
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>Date</TableHead>
+                              <TableHead>Period</TableHead>
+                              <TableHead>Amount</TableHead>
+                              <TableHead>Status</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {history.map((payment) => (
+                              <TableRow key={payment.id}>
+                                <TableCell>
+                                  {format(new Date(payment.created_at), "MMM d, yyyy")}
+                                </TableCell>
+                                <TableCell>
+                                  {payment.billing_period_start && payment.billing_period_end
+                                    ? `${format(new Date(payment.billing_period_start), "MMM d")} - ${format(new Date(payment.billing_period_end), "MMM d")}`
+                                    : "—"}
+                                </TableCell>
+                                <TableCell>
+                                  <div className="flex flex-col">
+                                    <span className="font-medium">
+                                      {formatCurrency(Number(payment.net_amount))}
+                                    </span>
+                                    {Number(payment.discount_amount) > 0 && (
+                                      <span className="text-xs text-muted-foreground">
+                                        -{formatCurrency(Number(payment.discount_amount))} discount
+                                      </span>
+                                    )}
+                                  </div>
+                                </TableCell>
+                                <TableCell>{getPaymentStatusBadge(payment.status)}</TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      ) : (
+                        <p className="text-muted-foreground text-center py-8">
+                          No payment history yet
+                        </p>
+                      )}
+                    </CardContent>
+                  </Card>
+
+                  {/* Divider between subscriptions */}
+                  {subscriptions.length > 1 && sub.id !== subscriptions[subscriptions.length - 1].id && (
+                    <hr className="border-border" />
+                  )}
                 </div>
-              </CardHeader>
-              <CardContent>
-                {filteredStatements.length > 0 ? (
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Date</TableHead>
-                        <TableHead>Description</TableHead>
-                        <TableHead>Period</TableHead>
-                        <TableHead className="text-right">Amount</TableHead>
-                        <TableHead className="text-right">Download</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredStatements.map((s: any) => (
-                        <TableRow key={s.id}>
-                          <TableCell className="whitespace-nowrap text-sm">
-                            {format(new Date(s.statement_date), "MMM d, yyyy")}
-                          </TableCell>
-                          <TableCell className="text-sm">{s.description}</TableCell>
-                          <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
-                            {s.period_start && s.period_end
-                              ? `${format(new Date(s.period_start), "MMM d")} – ${format(new Date(s.period_end), "MMM d, yyyy")}`
-                              : "—"}
-                          </TableCell>
-                          <TableCell className="text-right font-medium whitespace-nowrap">
-                            {formatCurrency(Number(s.amount))}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            {s.file_url ? (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleStatementDownload(s)}
-                                disabled={downloadingId === s.id}
-                              >
-                                {downloadingId === s.id ? (
-                                  <Loader2 className="h-4 w-4 animate-spin" />
-                                ) : (
-                                  <Download className="h-4 w-4 mr-1" />
-                                )}
-                                PDF
-                              </Button>
-                            ) : (
-                              <span className="text-muted-foreground text-sm">—</span>
-                            )}
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                ) : (
-                  <div className="flex flex-col items-center justify-center py-10 text-center gap-2">
-                    <FileText className="h-8 w-8 text-muted-foreground" />
-                    <p className="text-muted-foreground">
-                      No statements on file yet.{" "}
-                      <span className="text-foreground">Contact us</span> if you need past records for tax purposes.
-                    </p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+              );
+            })}
+
+            {/* Statements — always visible when customer exists */}
+            {customerRecord?.id && (
+              <StatementsCard
+                filteredStatements={filteredStatements}
+                yearFilter={yearFilter}
+                setYearFilter={setYearFilter}
+                handleStatementDownload={handleStatementDownload}
+                downloadingId={downloadingId}
+                formatCurrency={formatCurrency}
+              />
+            )}
           </div>
         )}
       </div>
     </div>
   );
 };
+
+// Extracted Statements card component
+function StatementsCard({
+  filteredStatements,
+  yearFilter,
+  setYearFilter,
+  handleStatementDownload,
+  downloadingId,
+  formatCurrency,
+}: {
+  filteredStatements: any[];
+  yearFilter: string;
+  setYearFilter: (v: string) => void;
+  handleStatementDownload: (s: any) => void;
+  downloadingId: string | null;
+  formatCurrency: (n: number) => string;
+}) {
+  return (
+    <Card id="statements">
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5" />
+              Statements &amp; Tax Records
+            </CardTitle>
+            <CardDescription>
+              Your billing statements for tax and accounting purposes
+            </CardDescription>
+          </div>
+          <Select value={yearFilter} onValueChange={setYearFilter}>
+            <SelectTrigger className="w-32">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Years</SelectItem>
+              <SelectItem value="2026">2026</SelectItem>
+              <SelectItem value="2025">2025</SelectItem>
+              <SelectItem value="2024">2024</SelectItem>
+              <SelectItem value="2023">2023</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </CardHeader>
+      <CardContent>
+        {filteredStatements.length > 0 ? (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Date</TableHead>
+                <TableHead>Description</TableHead>
+                <TableHead>Period</TableHead>
+                <TableHead className="text-right">Amount</TableHead>
+                <TableHead className="text-right">Download</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredStatements.map((s: any) => (
+                <TableRow key={s.id}>
+                  <TableCell className="whitespace-nowrap text-sm">
+                    {format(new Date(s.statement_date), "MMM d, yyyy")}
+                  </TableCell>
+                  <TableCell className="text-sm">{s.description}</TableCell>
+                  <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
+                    {s.period_start && s.period_end
+                      ? `${format(new Date(s.period_start), "MMM d")} – ${format(new Date(s.period_end), "MMM d, yyyy")}`
+                      : "—"}
+                  </TableCell>
+                  <TableCell className="text-right font-medium whitespace-nowrap">
+                    {formatCurrency(Number(s.amount))}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    {s.file_url ? (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleStatementDownload(s)}
+                        disabled={downloadingId === s.id}
+                      >
+                        {downloadingId === s.id ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Download className="h-4 w-4 mr-1" />
+                        )}
+                        PDF
+                      </Button>
+                    ) : (
+                      <span className="text-muted-foreground text-sm">—</span>
+                    )}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        ) : (
+          <div className="flex flex-col items-center justify-center py-10 text-center gap-2">
+            <FileText className="h-8 w-8 text-muted-foreground" />
+            <p className="text-muted-foreground">
+              No statements on file yet.{" "}
+              <span className="text-foreground">Contact us</span> if you need past records for tax purposes.
+            </p>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
 
 export default CustomerBilling;
