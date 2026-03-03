@@ -38,7 +38,7 @@ const services = [
   {
     title: "Rent for Storage",
     description: "Use a trailer as secure, flexible on-site storage",
-    href: "/contact",
+    href: "/services/rent-for-storage",
     icon: Warehouse,
   },
 ];
