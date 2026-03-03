@@ -3,6 +3,8 @@ export interface VinDecodedResult {
   model: string | null;
   year: number | null;
   type: string | null;
+  axle_count: number | null;
+  body_material: string | null;
 }
 
 function mapBodyClassToType(bodyClass: string): string | null {
@@ -12,6 +14,24 @@ function mapBodyClassToType(bodyClass: string): string | null {
   if (lower.includes("flatbed") || lower.includes("platform")) return "Flatbed";
   if (lower.includes("refrigerated") || lower.includes("reefer")) return "Refrigerated";
   return null;
+}
+
+function extractBodyMaterial(result: any): string | null {
+  const fields = [
+    result.OtherBodyInfo,
+    result.BodyClass,
+    result.Note,
+  ].filter(Boolean);
+  
+  const combined = fields.join(" ").toLowerCase();
+  const materials: string[] = [];
+  
+  if (combined.includes("aluminum")) materials.push("Aluminum");
+  if (combined.includes("steel")) materials.push("Steel");
+  if (combined.includes("fiberglass")) materials.push("Fiberglass");
+  if (combined.includes("composite")) materials.push("Composite");
+  
+  return materials.length > 0 ? materials.join("/") : null;
 }
 
 export async function decodeVin(vin: string): Promise<VinDecodedResult> {
@@ -40,11 +60,18 @@ export async function decodeVin(vin: string): Promise<VinDecodedResult> {
   const yearStr = result.ModelYear;
   const year = yearStr ? parseInt(yearStr, 10) : null;
   const type = mapBodyClassToType(result.BodyClass || "");
+  
+  const axlesStr = result.Axles;
+  const axle_count = axlesStr ? parseInt(axlesStr, 10) : null;
+  
+  const body_material = extractBodyMaterial(result);
 
   return {
     make: make || null,
     model: model || null,
     year: year && !isNaN(year) ? year : null,
     type,
+    axle_count: axle_count && !isNaN(axle_count) ? axle_count : null,
+    body_material,
   };
 }

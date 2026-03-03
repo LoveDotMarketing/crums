@@ -61,6 +61,8 @@ interface Trailer {
   vin: string | null;
   license_plate: string | null;
   company_id: string;
+  axle_count: number | null;
+  body_material: string | null;
 }
 
 interface Customer {
@@ -100,6 +102,8 @@ export default function Fleet() {
     vin: "",
     license_plate: "",
     gps_box_number: "",
+    axle_count: "",
+    body_material: "",
   });
 
   useEffect(() => {
@@ -240,6 +244,8 @@ export default function Fleet() {
           rental_income: 0,
           rental_rate: getDefaultRentalRate(newTrailer.type),
           rental_frequency: "monthly",
+          axle_count: newTrailer.axle_count ? parseInt(newTrailer.axle_count) : null,
+          body_material: newTrailer.body_material || null,
         });
 
       if (error) throw error;
@@ -257,6 +263,8 @@ export default function Fleet() {
         vin: "",
         license_plate: "",
         gps_box_number: "",
+        axle_count: "",
+        body_material: "",
       });
     } catch (error) {
       console.error("Error adding trailer:", error);
@@ -563,6 +571,8 @@ export default function Fleet() {
                                 ...(decoded.model ? { model: decoded.model } : {}),
                                 ...(decoded.year ? { year: decoded.year } : {}),
                                 ...(decoded.type ? { type: decoded.type } : {}),
+                                ...(decoded.axle_count ? { axle_count: String(decoded.axle_count) } : {}),
+                                ...(decoded.body_material ? { body_material: decoded.body_material } : {}),
                               }));
                               toast.success("VIN decoded successfully");
                             } catch (err: any) {
@@ -592,6 +602,25 @@ export default function Fleet() {
                         value={newTrailer.gps_box_number}
                         onChange={(e) => setNewTrailer({ ...newTrailer, gps_box_number: e.target.value })}
                         placeholder="GPS-001"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="axle_count">Axle Count</Label>
+                      <Input
+                        id="axle_count"
+                        type="number"
+                        value={newTrailer.axle_count}
+                        onChange={(e) => setNewTrailer({ ...newTrailer, axle_count: e.target.value })}
+                        placeholder="2"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="body_material">Body Material</Label>
+                      <Input
+                        id="body_material"
+                        value={newTrailer.body_material}
+                        onChange={(e) => setNewTrailer({ ...newTrailer, body_material: e.target.value })}
+                        placeholder="Aluminum/Steel"
                       />
                     </div>
                   </div>
