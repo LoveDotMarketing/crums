@@ -1,32 +1,28 @@
 
 
-## Add Axle Count and Body Material to Trailers
+## Bulk VIN Decode for Fleet
 
-Add two new columns to the `trailers` table (`axle_count` and `body_material`), update the VIN decoder to extract these fields from NHTSA, and display/edit them on both the Fleet and TrailerDetail pages.
+Add a "Bulk Decode VINs" button to the Fleet page that iterates through all trailers with a VIN but missing make/model/year/axle_count/body_material data, decodes each via NHTSA, and updates the database records.
 
-### 1. Database Migration
-Add two columns to `public.trailers`:
-```sql
-ALTER TABLE public.trailers ADD COLUMN axle_count integer;
-ALTER TABLE public.trailers ADD COLUMN body_material text;
-```
-Then update trailer #034038 with the known values:
-```sql
-UPDATE public.trailers SET axle_count = 2, body_material = 'Aluminum/Steel' WHERE id = '66fc68b1-7f42-4a87-af0e-03909b813c29';
-```
+### Implementation
 
-### 2. Update VIN Decoder (`src/lib/vinDecoder.ts`)
-- Add `axle_count` and `body_material` to `VinDecodedResult`
-- Parse `Axles` (as integer) and combine `BodyClass` material info or use NHTSA fields like `OtherBodyInfo` for material
-- Return these in the decoded result
+**1. Add bulk decode function to `src/pages/admin/Fleet.tsx`**
+- New state: `bulkDecoding` (boolean), `bulkProgress` (object with `current`, `total`, `updated`, `skipped`, `failed` counts)
+- Function `handleBulkDecode`:
+  - Filters trailers that have a VIN and are missing any of: make, model, year, type, axle_count, body_material
+  - Loops through each, calls `decodeVin(vin)`, builds an update object with only the fields that are currently null/empty and have valid decoded values
+  - Updates each trailer record via Supabase
+  - Shows a progress toast during processing and a summary toast on completion
+- Add a "Bulk Decode VINs" button near the existing "Add Trailer" button in the toolbar area
+- Show a progress indicator (e.g. "Decoding 3/12...") while running
 
-### 3. Update TrailerDetail page (`src/pages/admin/TrailerDetail.tsx`)
-- Add `axle_count` and `body_material` to the `Trailer` interface and `formData`
-- Add display/edit fields in the specifications section
-- Auto-fill from VIN decode
+**2. UI placement**
+- Button with a `Loader2` spinner icon while active, disabled during processing
+- Only visible when there are trailers with VINs that have missing data
 
-### 4. Update Fleet page (`src/pages/admin/Fleet.tsx`)
-- Add `axle_count` and `body_material` to the `Trailer` interface and `newTrailer` state
-- Add input fields in the Add Trailer dialog
-- Auto-fill from VIN decode
+### Technical notes
+- Uses the existing `decodeVin` utility from `src/lib/vinDecoder.ts`
+- Sequential API calls (not parallel) to avoid rate-limiting the free NHTSA API
+- Only overwrites null/empty fields — never replaces existing data
+- Refreshes fleet data after completion
 
