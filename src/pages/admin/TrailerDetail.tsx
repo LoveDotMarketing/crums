@@ -70,6 +70,8 @@ interface Trailer {
   updated_at: string;
   rental_rate: number | null;
   rental_frequency: string | null;
+  axle_count: number | null;
+  body_material: string | null;
 }
 
 interface Customer {
@@ -248,6 +250,8 @@ export default function TrailerDetail() {
           rental_rate: formData.rental_rate,
           rental_frequency: formData.rental_frequency,
           notes: formData.notes,
+          axle_count: formData.axle_count || null,
+          body_material: formData.body_material || null,
         })
         .eq("id", trailer.id);
 
@@ -525,6 +529,8 @@ export default function TrailerDetail() {
                                   ...(decoded.model ? { model: decoded.model } : {}),
                                   ...(decoded.year ? { year: decoded.year } : {}),
                                   ...(decoded.type ? { type: decoded.type } : {}),
+                                  ...(decoded.axle_count ? { axle_count: decoded.axle_count } : {}),
+                                  ...(decoded.body_material ? { body_material: decoded.body_material } : {}),
                                 }));
                                 toast.success("VIN decoded successfully");
                               } catch (err: any) {
@@ -601,6 +607,33 @@ export default function TrailerDetail() {
                         />
                       ) : (
                         <p className="text-lg">{trailer.year || "-"}</p>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Axle Count</Label>
+                      {isEditing ? (
+                        <Input
+                          type="number"
+                          value={formData.axle_count || ""}
+                          onChange={(e) => setFormData({ ...formData, axle_count: parseInt(e.target.value) || null })}
+                          placeholder="2"
+                        />
+                      ) : (
+                        <p className="text-lg">{trailer.axle_count || "-"}</p>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Body Material</Label>
+                      {isEditing ? (
+                        <Input
+                          value={formData.body_material || ""}
+                          onChange={(e) => setFormData({ ...formData, body_material: e.target.value })}
+                          placeholder="Aluminum/Steel"
+                        />
+                      ) : (
+                        <p className="text-lg">{trailer.body_material || "-"}</p>
                       )}
                     </div>
 

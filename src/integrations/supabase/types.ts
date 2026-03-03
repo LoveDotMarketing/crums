@@ -2463,6 +2463,8 @@ export type Database = {
       trailers: {
         Row: {
           assigned_to: string | null
+          axle_count: number | null
+          body_material: string | null
           company_id: string
           created_at: string
           customer_id: string | null
@@ -2491,6 +2493,8 @@ export type Database = {
         }
         Insert: {
           assigned_to?: string | null
+          axle_count?: number | null
+          body_material?: string | null
           company_id: string
           created_at?: string
           customer_id?: string | null
@@ -2519,6 +2523,8 @@ export type Database = {
         }
         Update: {
           assigned_to?: string | null
+          axle_count?: number | null
+          body_material?: string | null
           company_id?: string
           created_at?: string
           customer_id?: string | null
