@@ -1,29 +1,32 @@
 
 
-## VIN Decoder for Admin Fleet Page
+## Add Axle Count and Body Material to Trailers
 
-Add a "Decode VIN" button next to the VIN input field in both the Add Trailer dialog (Fleet.tsx) and the Edit Trailer form (TrailerDetail.tsx). When clicked, it calls the free NHTSA vPIC API to auto-fill make, model, year, and type.
+Add two new columns to the `trailers` table (`axle_count` and `body_material`), update the VIN decoder to extract these fields from NHTSA, and display/edit them on both the Fleet and TrailerDetail pages.
 
-### Implementation
+### 1. Database Migration
+Add two columns to `public.trailers`:
+```sql
+ALTER TABLE public.trailers ADD COLUMN axle_count integer;
+ALTER TABLE public.trailers ADD COLUMN body_material text;
+```
+Then update trailer #034038 with the known values:
+```sql
+UPDATE public.trailers SET axle_count = 2, body_material = 'Aluminum/Steel' WHERE id = '66fc68b1-7f42-4a87-af0e-03909b813c29';
+```
 
-**1. Create a shared VIN decoder utility** (`src/lib/vinDecoder.ts`)
-- Function `decodeVin(vin: string)` that calls `https://vpic.nhtsa.dot.gov/api/vehicles/decodevinvalues/{vin}?format=json`
-- Parses relevant fields: Make, Model, ModelYear, BodyClass
-- Maps BodyClass to trailer types (e.g., "Van" → "Dry Van")
-- Returns `{ make, model, year, type }` or throws on invalid VIN
+### 2. Update VIN Decoder (`src/lib/vinDecoder.ts`)
+- Add `axle_count` and `body_material` to `VinDecodedResult`
+- Parse `Axles` (as integer) and combine `BodyClass` material info or use NHTSA fields like `OtherBodyInfo` for material
+- Return these in the decoded result
 
-**2. Update Add Trailer dialog in `src/pages/admin/Fleet.tsx`** (lines 539-546)
-- Add a "Decode" button next to the VIN input
-- On click, call `decodeVin`, then auto-fill `make`, `model`, `year`, and `type` fields in `newTrailer` state
-- Show loading spinner during fetch, toast on error
+### 3. Update TrailerDetail page (`src/pages/admin/TrailerDetail.tsx`)
+- Add `axle_count` and `body_material` to the `Trailer` interface and `formData`
+- Add display/edit fields in the specifications section
+- Auto-fill from VIN decode
 
-**3. Update Edit Trailer form in `src/pages/admin/TrailerDetail.tsx`** (lines 502-511)
-- Add a "Decode" button next to the VIN input (only visible in edit mode)
-- On click, call `decodeVin`, then auto-fill `make`, `model`, `year`, and `type` in `formData` state
-- Same loading/error handling
-
-### Notes
-- NHTSA API is free and requires no API key
-- Called client-side directly (public API, no CORS issues)
-- Only auto-fills fields that return valid data; does not overwrite if NHTSA returns empty
+### 4. Update Fleet page (`src/pages/admin/Fleet.tsx`)
+- Add `axle_count` and `body_material` to the `Trailer` interface and `newTrailer` state
+- Add input fields in the Add Trailer dialog
+- Auto-fill from VIN decode
 
