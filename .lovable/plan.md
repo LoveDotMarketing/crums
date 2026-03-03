@@ -1,28 +1,28 @@
 
 
-## Review: Public-Facing Offering Mentions
+## Add Service Bubbles Below Hero CTAs
 
-### Current State
+Add three pill/bubble-style links below the "Free Quote" and phone buttons in the hero section, linking to each service page.
 
-| Offering | Mentioned on Public Pages? | Details |
-|----------|---------------------------|---------|
-| **Trailer Leasing** | Yes — extensively | Homepage, Services, Dry Van Leasing, Flatbed Leasing, Semi Trailer Leasing, Fleet Solutions, industry pages, FAQs |
-| **Rent for Storage** | **No** — only in admin/customer dashboards | Zero mentions on any public marketing page |
-| **Lease to Own** | **No** — only in admin/customer dashboards | Zero mentions on any public marketing page |
+### Changes
 
-### What Needs to Happen
+**`src/pages/Index.tsx`** (lines ~167-168)
 
-Both **Rent for Storage** and **Lease to Own** are fully built in the backend and customer portal but are completely invisible to prospects on the public site. They should be surfaced on key conversion pages.
+Insert after the CTA button flex container (after line 167's closing `</div>`), before the closing `</div>` of the hero content:
 
-### Plan
+```tsx
+<div className="flex flex-wrap gap-3 justify-center mt-6">
+  <Link to="/trailer-leasing" className="bg-primary-foreground/15 hover:bg-primary-foreground/25 border border-primary-foreground/30 text-primary-foreground rounded-full px-5 py-2 text-sm font-medium transition-colors">
+    Trailer Leasing
+  </Link>
+  <Link to="/services/lease-to-own" className="bg-primary-foreground/15 hover:bg-primary-foreground/25 border border-primary-foreground/30 text-primary-foreground rounded-full px-5 py-2 text-sm font-medium transition-colors">
+    Lease to Own
+  </Link>
+  <Link to="/services/rent-for-storage" className="bg-primary-foreground/15 hover:bg-primary-foreground/25 border border-primary-foreground/30 text-primary-foreground rounded-full px-5 py-2 text-sm font-medium transition-colors">
+    Rent for Storage
+  </Link>
+</div>
+```
 
-1. **Services page** (`src/pages/Services.tsx`) — Add "Lease to Own" and "Rent for Storage" as two new service cards alongside the existing Trailer Leasing, Trailer Rentals, and Fleet Solutions cards
-
-2. **Homepage** (`src/pages/Index.tsx`) — Add a "More Ways to Work With Us" section (or similar) near the bottom with brief descriptions and links for Lease to Own and Rent for Storage
-
-3. **Trailer Leasing page** (`src/pages/TrailerLeasing.tsx`) — Add a section mentioning both options as alternative arrangements available through CRUMS
-
-4. **FAQ updates** — Add 1-2 FAQ entries on the homepage covering "Do you offer lease-to-own?" and "Can I rent a trailer for storage?"
-
-5. **Structured data** — Add service schema entries for both offerings
+Three translucent pill-shaped links, positioned directly beneath the existing hero buttons, matching the hero's color scheme.
 
