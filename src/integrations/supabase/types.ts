@@ -2467,13 +2467,20 @@ export type Database = {
           body_material: string | null
           company_id: string
           created_at: string
+          crossmember_spacing: string | null
           customer_id: string | null
+          door_type: string | null
+          empty_weight: number | null
+          floor_thickness: string | null
           gps_box_number: string | null
           gps_latitude: number | null
           gps_longitude: number | null
+          has_side_skirts: boolean | null
           id: string
+          inside_width: string | null
           is_rented: boolean | null
           last_location_update: string | null
+          last_pm_date: string | null
           license_plate: string | null
           make: string | null
           model: string | null
@@ -2482,7 +2489,13 @@ export type Database = {
           rental_frequency: string | null
           rental_income: number | null
           rental_rate: number | null
+          roof_type: string | null
+          side_post_spacing: string | null
+          side_skirt_type: string | null
           status: string
+          suspension_type: string | null
+          tire_tread_condition: string | null
+          tire_type: string | null
           total_maintenance_cost: number | null
           trailer_number: string
           type: string
@@ -2497,13 +2510,20 @@ export type Database = {
           body_material?: string | null
           company_id: string
           created_at?: string
+          crossmember_spacing?: string | null
           customer_id?: string | null
+          door_type?: string | null
+          empty_weight?: number | null
+          floor_thickness?: string | null
           gps_box_number?: string | null
           gps_latitude?: number | null
           gps_longitude?: number | null
+          has_side_skirts?: boolean | null
           id?: string
+          inside_width?: string | null
           is_rented?: boolean | null
           last_location_update?: string | null
+          last_pm_date?: string | null
           license_plate?: string | null
           make?: string | null
           model?: string | null
@@ -2512,7 +2532,13 @@ export type Database = {
           rental_frequency?: string | null
           rental_income?: number | null
           rental_rate?: number | null
+          roof_type?: string | null
+          side_post_spacing?: string | null
+          side_skirt_type?: string | null
           status?: string
+          suspension_type?: string | null
+          tire_tread_condition?: string | null
+          tire_type?: string | null
           total_maintenance_cost?: number | null
           trailer_number: string
           type: string
@@ -2527,13 +2553,20 @@ export type Database = {
           body_material?: string | null
           company_id?: string
           created_at?: string
+          crossmember_spacing?: string | null
           customer_id?: string | null
+          door_type?: string | null
+          empty_weight?: number | null
+          floor_thickness?: string | null
           gps_box_number?: string | null
           gps_latitude?: number | null
           gps_longitude?: number | null
+          has_side_skirts?: boolean | null
           id?: string
+          inside_width?: string | null
           is_rented?: boolean | null
           last_location_update?: string | null
+          last_pm_date?: string | null
           license_plate?: string | null
           make?: string | null
           model?: string | null
@@ -2542,7 +2575,13 @@ export type Database = {
           rental_frequency?: string | null
           rental_income?: number | null
           rental_rate?: number | null
+          roof_type?: string | null
+          side_post_spacing?: string | null
+          side_skirt_type?: string | null
           status?: string
+          suspension_type?: string | null
+          tire_tread_condition?: string | null
+          tire_type?: string | null
           total_maintenance_cost?: number | null
           trailer_number?: string
           type?: string

@@ -5,6 +5,7 @@ export interface VinDecodedResult {
   type: string | null;
   axle_count: number | null;
   body_material: string | null;
+  suspension_type: string | null;
 }
 
 function mapBodyClassToType(bodyClass: string): string | null {
@@ -32,6 +33,13 @@ function extractBodyMaterial(result: any): string | null {
   if (combined.includes("composite")) materials.push("Composite");
   
   return materials.length > 0 ? materials.join("/") : null;
+}
+
+function extractSuspensionType(result: any): string | null {
+  const springType = (result.SpringType || "").toLowerCase();
+  if (springType.includes("air")) return "air_ride";
+  if (springType.includes("spring") || springType.includes("leaf")) return "spring";
+  return null;
 }
 
 export async function decodeVin(vin: string): Promise<VinDecodedResult> {
@@ -65,6 +73,7 @@ export async function decodeVin(vin: string): Promise<VinDecodedResult> {
   const axle_count = axlesStr ? parseInt(axlesStr, 10) : null;
   
   const body_material = extractBodyMaterial(result);
+  const suspension_type = extractSuspensionType(result);
 
   return {
     make: make || null,
@@ -73,5 +82,6 @@ export async function decodeVin(vin: string): Promise<VinDecodedResult> {
     type,
     axle_count: axle_count && !isNaN(axle_count) ? axle_count : null,
     body_material,
+    suspension_type,
   };
 }
