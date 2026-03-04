@@ -11,7 +11,15 @@ import { InspectionChecklist, ChecklistItem } from "@/components/mechanic/Inspec
 import { InspectionPhotoUpload } from "@/components/mechanic/InspectionPhotoUpload";
 import { SignatureCapture } from "@/components/mechanic/SignatureCapture";
 import { SEO } from "@/components/SEO";
-import { ArrowLeft, ArrowRight, Check, Loader2, ClipboardCheck } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Loader2, ClipboardCheck, AlertTriangle } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { toast } from "sonner";
 
 const STEPS = [
@@ -137,6 +145,7 @@ export default function DOTInspectionForm() {
   } | null>(null);
   const [formData, setFormData] = useState<InspectionData>(initialData);
   const [photos, setPhotos] = useState<Record<string, { id: string; photo_url: string }[]>>({});
+  const [showMissingPhotoDialog, setShowMissingPhotoDialog] = useState(false);
 
   useEffect(() => {
     if (!trailerId) {
@@ -326,13 +335,18 @@ export default function DOTInspectionForm() {
       return;
     }
 
-    // Validate required license plate photo
+    // Warn if license plate photo is missing, but allow proceeding
     const hasLicensePlatePhoto = photos.license_plate && photos.license_plate.length > 0;
     if (!hasLicensePlatePhoto) {
-      toast.error("Photo of rear view with license plate is required");
+      setShowMissingPhotoDialog(true);
       return;
     }
 
+    await submitInspection();
+  };
+
+  const submitInspection = async () => {
+    setShowMissingPhotoDialog(false);
     setSaving(true);
     try {
       // Update inspection status
@@ -745,6 +759,13 @@ export default function DOTInspectionForm() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
+                {/* Warning banner if no license plate photo yet */}
+                {!(photos.license_plate && photos.license_plate.length > 0) && (
+                  <div className="flex items-center gap-2 p-3 rounded-lg border border-yellow-500/50 bg-yellow-500/10 text-yellow-700 dark:text-yellow-400">
+                    <AlertTriangle className="h-5 w-5 shrink-0" />
+                    <p className="text-sm">License plate photo is missing. You can still complete the inspection, but it is strongly recommended.</p>
+                  </div>
+                )}
                 <div className="p-4 border rounded-lg bg-muted/50">
                   <h4 className="font-medium mb-2">Trailer Information</h4>
                   <div className="grid grid-cols-2 gap-2 text-sm">
@@ -796,7 +817,7 @@ export default function DOTInspectionForm() {
                   <InspectionPhotoUpload
                     inspectionId={inspectionId}
                     category="license_plate"
-                    label="License Plate Photo (Required)"
+                    label="License Plate Photo (Recommended)"
                     existingPhotos={photos.license_plate}
                     onPhotoUploaded={(url) => handlePhotoUploaded("license_plate", url)}
                     onPhotoDeleted={(id) => handlePhotoDeleted("license_plate", id)}
@@ -832,6 +853,30 @@ export default function DOTInspectionForm() {
             )}
           </div>
         </main>
+
+        {/* Missing license plate photo confirmation dialog */}
+        <Dialog open={showMissingPhotoDialog} onOpenChange={setShowMissingPhotoDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <AlertTriangle className="h-5 w-5 text-yellow-500" />
+                License Plate Photo Missing
+              </DialogTitle>
+              <DialogDescription>
+                No license plate photo has been uploaded for this inspection. It is strongly recommended to include one. Do you want to continue without it?
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter className="gap-2">
+              <Button variant="outline" onClick={() => setShowMissingPhotoDialog(false)}>
+                Go Back & Add Photo
+              </Button>
+              <Button variant="destructive" onClick={submitInspection} disabled={saving}>
+                {saving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
+                Complete Without Photo
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </>
   );
