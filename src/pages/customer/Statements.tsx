@@ -133,12 +133,10 @@ const CustomerStatements = () => {
             <h1 className="text-3xl font-bold tracking-tight">Statements & Tax Records</h1>
             <p className="text-muted-foreground mt-1">Your billing history for tax and accounting purposes</p>
           </div>
-          {filteredStatements.length > 0 && (
-            <Button variant="outline" size="sm" onClick={handleCsvExport}>
-              <Download className="h-4 w-4 mr-2" />
-              Export CSV
-            </Button>
-          )}
+          <Button variant="outline" size="sm" onClick={handleCsvExport} disabled={filteredStatements.length === 0}>
+            <Download className="h-4 w-4 mr-2" />
+            Export CSV
+          </Button>
         </div>
 
         {/* Summary Cards */}
