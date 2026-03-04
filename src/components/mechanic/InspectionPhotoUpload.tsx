@@ -16,6 +16,73 @@ interface InspectionPhotoUploadProps {
   className?: string;
 }
 
+/**
+ * Compress an image file if it exceeds 2000px on its longest side.
+ * Returns a JPEG blob wrapped as a File, capped at 80% quality.
+ */
+async function compressImage(file: File): Promise<File> {
+  // Skip non-image or SVG files
+  if (!file.type.startsWith("image/") || file.type === "image/svg+xml") {
+    return file;
+  }
+
+  return new Promise((resolve) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+
+      const MAX = 2000;
+      let { width, height } = img;
+
+      // If already small enough, return original
+      if (width <= MAX && height <= MAX) {
+        resolve(file);
+        return;
+      }
+
+      // Scale down
+      if (width > height) {
+        height = Math.round((height * MAX) / width);
+        width = MAX;
+      } else {
+        width = Math.round((width * MAX) / height);
+        height = MAX;
+      }
+
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) {
+        resolve(file);
+        return;
+      }
+      ctx.drawImage(img, 0, 0, width, height);
+
+      canvas.toBlob(
+        (blob) => {
+          if (!blob) {
+            resolve(file);
+            return;
+          }
+          resolve(new File([blob], file.name.replace(/\.\w+$/, ".jpg"), { type: "image/jpeg" }));
+        },
+        "image/jpeg",
+        0.8
+      );
+    };
+
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      resolve(file); // Fallback to original on error
+    };
+
+    img.src = url;
+  });
+}
+
 export function InspectionPhotoUpload({
   inspectionId,
   category,
@@ -45,55 +112,64 @@ export function InspectionPhotoUpload({
     }
 
     setUploading(true);
-    const fileExt = file.name.split(".").pop();
-    const fileName = `${inspectionId}/${category}/${Date.now()}.${fileExt}`;
 
-    // Retry logic: attempt up to 2 times
-    for (let attempt = 1; attempt <= 2; attempt++) {
-      try {
-        const { error: uploadError } = await supabase.storage
-          .from("dot-inspection-photos")
-          .upload(fileName, file);
+    try {
+      // Compress before upload to prevent memory crashes on mobile
+      const compressed = await compressImage(file);
 
-        if (uploadError) {
-          console.error(`Storage upload error (attempt ${attempt}):`, uploadError);
-          if (attempt === 2) {
-            toast.error(`Storage upload failed: ${uploadError.message}`);
+      const fileExt = compressed.name.split(".").pop() || "jpg";
+      const fileName = `${inspectionId}/${category}/${Date.now()}.${fileExt}`;
+
+      // Retry logic: attempt up to 3 times
+      for (let attempt = 1; attempt <= 3; attempt++) {
+        try {
+          const { error: uploadError } = await supabase.storage
+            .from("dot-inspection-photos")
+            .upload(fileName, compressed);
+
+          if (uploadError) {
+            console.error(`Storage upload error (attempt ${attempt}):`, uploadError);
+            if (attempt === 3) {
+              toast.error(`Storage upload failed: ${uploadError.message}`);
+              break;
+            }
+            await new Promise(r => setTimeout(r, 1500));
+            continue;
+          }
+
+          const { data: { publicUrl } } = supabase.storage
+            .from("dot-inspection-photos")
+            .getPublicUrl(fileName);
+
+          const { error: dbError } = await supabase
+            .from("dot_inspection_photos")
+            .insert({
+              inspection_id: inspectionId,
+              category,
+              photo_url: publicUrl
+            });
+
+          if (dbError) {
+            console.error("Database insert error:", dbError);
+            toast.error(`Failed to save photo record: ${dbError.message}`);
             break;
           }
-          await new Promise(r => setTimeout(r, 1500));
-          continue;
-        }
 
-        const { data: { publicUrl } } = supabase.storage
-          .from("dot-inspection-photos")
-          .getPublicUrl(fileName);
-
-        const { error: dbError } = await supabase
-          .from("dot_inspection_photos")
-          .insert({
-            inspection_id: inspectionId,
-            category,
-            photo_url: publicUrl
-          });
-
-        if (dbError) {
-          console.error("Database insert error:", dbError);
-          toast.error(`Failed to save photo record: ${dbError.message}`);
+          onPhotoUploaded(publicUrl);
+          toast.success("Photo uploaded successfully");
           break;
-        }
-
-        onPhotoUploaded(publicUrl);
-        toast.success("Photo uploaded successfully");
-        break;
-      } catch (error: any) {
-        console.error(`Photo upload error (attempt ${attempt}):`, error);
-        if (attempt === 2) {
-          toast.error(`Upload failed: ${error?.message || "Unknown error. Please check your connection and try again."}`);
-        } else {
-          await new Promise(r => setTimeout(r, 1500));
+        } catch (error: any) {
+          console.error(`Photo upload error (attempt ${attempt}):`, error);
+          if (attempt === 3) {
+            toast.error(`Upload failed: ${error?.message || "Unknown error. Please check your connection and try again."}`);
+          } else {
+            await new Promise(r => setTimeout(r, 1500));
+          }
         }
       }
+    } catch (compressionError) {
+      console.error("Image compression error:", compressionError);
+      toast.error("Failed to process image. Please try a different photo.");
     }
 
     setUploading(false);
@@ -121,7 +197,6 @@ export function InspectionPhotoUpload({
   };
 
   const hasPhotos = existingPhotos.length > 0;
-
   const showRequiredWarning = required && !hasPhotos;
 
   return (
@@ -164,37 +239,36 @@ export function InspectionPhotoUpload({
           </div>
         )}
 
-        {/* Upload button */}
-      <div>
-        <input
-          type="file"
-          accept="image/*"
-          capture="environment"
-          onChange={handleFileChange}
-          className="hidden"
-          id={`photo-${category}`}
-          disabled={uploading}
-        />
-        <label htmlFor={`photo-${category}`}>
-          <Button
-            type="button"
-            variant={showRequiredWarning ? "destructive" : hasPhotos ? "outline" : "secondary"}
-            size="sm"
+        {/* Upload button — no capture attribute so OS shows camera + gallery picker */}
+        <div>
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleFileChange}
+            className="hidden"
+            id={`photo-${category}`}
             disabled={uploading}
-            className="cursor-pointer"
-            asChild
-          >
-            <span>
-              {uploading ? (
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              ) : (
-                <Camera className="h-4 w-4 mr-2" />
-              )}
-              {uploading ? "Uploading..." : showRequiredWarning ? "Take Required Photo" : hasPhotos ? "Add Another" : "Take Photo"}
-            </span>
-          </Button>
-        </label>
-      </div>
+          />
+          <label htmlFor={`photo-${category}`}>
+            <Button
+              type="button"
+              variant={showRequiredWarning ? "destructive" : hasPhotos ? "outline" : "secondary"}
+              size="sm"
+              disabled={uploading}
+              className="cursor-pointer"
+              asChild
+            >
+              <span>
+                {uploading ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <Camera className="h-4 w-4 mr-2" />
+                )}
+                {uploading ? "Uploading..." : showRequiredWarning ? "Take Required Photo" : hasPhotos ? "Add Another" : "Take Photo or Choose from Gallery"}
+              </span>
+            </Button>
+          </label>
+        </div>
       </div>
     </div>
   );
