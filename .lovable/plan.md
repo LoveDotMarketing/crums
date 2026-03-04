@@ -1,70 +1,67 @@
 
 
-## Revamp Customer Statements Page — Line Items with Rich Filtering & CSV Export
+## Import Combined Customer Statement Data
 
-### Overview
+### What the PDF contains
+23 customers with individual invoice line items. Each line has: Date, Invoice #, Amount, Received, Balance. Customers are identified by name and sometimes company name.
 
-Replace the current PDF-download-oriented Statements page with an on-page billing ledger. Each `customer_statements` row becomes a visible line item (date, description, amount) displayed newest-to-oldest. PDF upload/download flow is removed. A CSV export compiles the filtered view. Rich date-range presets let customers slice their billing history.
+### Plan
 
-### Database Changes
+#### 1. Create an admin bulk-import edge function
+A new edge function `import-customer-statements` that:
+- Accepts a JSON array of `{ customer_name, company_name, date, invoice_number, amount, received, balance, description }` objects
+- For each entry, looks up the customer by `full_name` (case-insensitive ILIKE match) in the `customers` table
+- Skips entries where the customer can't be matched (returns a list of unmatched names)
+- For matched customers, upserts into `customer_statements` using invoice number + customer_id as a dedup key to handle overlapping data
+- Sets `description` to `"Invoice #XXXX"`, `source` to `"invoice"`, `statement_date` to the invoice date, `amount` to the invoiced amount
+- Stores received/balance info in the `notes` field (e.g., `"Received: $750.00 | Balance: $0.00"`)
 
-**No schema changes needed.** The existing `customer_statements` table already has: `statement_date`, `description`, `amount`, `period_start`, `period_end`, `source`, `notes`. We reuse it as-is — each row = one line item.
+#### 2. Prepare the parsed data as a migration script
+Rather than an edge function, a simpler approach: create a **database migration** that directly inserts all ~200+ line items. The migration will:
+- Use a CTE or temp mapping of customer names to customer IDs via `SELECT id FROM customers WHERE lower(full_name) ILIKE ...`
+- Insert each invoice line item into `customer_statements`
+- Use `ON CONFLICT` or a pre-check to avoid duplicating rows if some data was already entered manually
+- Delete any old PDF-based statement records that have a `file_url` set (the ones being replaced)
 
-After the UI is built, you'll provide 2 documents (PDF + spreadsheet). I'll parse the data and insert rows into `customer_statements` for each customer, replacing the old single-PDF-per-statement records.
+#### 3. Customer name → ID matching
+The PDF uses these customer names (I'll need to match against `customers.full_name`):
+- DeGreat Dynasty LLC (Dewayne DeGreat)
+- Eisa Karami / Panjshire Express LLC
+- Gerald Joseph Porter / Porter Transportation Services
+- Helen Mang / Hope Light Express
+- James E Guthrie / Trinity Freight LLC
+- Jean Wilder Thelusma
+- Kiara Galo Miguel Carcamo
+- Laxley Hinds / Multi-Trucking
+- Luis VillaReal
+- Mohammadi Abdul Khaliq / AZP Trucking
+- Monarch Trophy Studio
+- Osundo
+- Randy Gray / AMA United Transport
+- Robert / RJ & R
+- Robert Tsankov
+- Rodrick Darnell McGill / Do It Moving
+- Shakiya Harrison / BMS
+- Singh Narenderjeet / Ground Link
+- Stanley Tee Barnhisel / S&S Critical Transport LLC
+- Stenson Davis
+- Tracy Trucking
+- Victoria Hernandez / Black Eagle Transportation
 
-### Changes to `src/pages/customer/Statements.tsx`
+**Before writing the migration**, I'll query the `customers` table to get exact `full_name` values and IDs so the matching is precise.
 
-**Remove:**
-- PDF download button column and `handleStatementDownload` function
-- `downloadingId` state
-- Storage signed URL logic
+#### 4. Clean up old PDF statements
+The migration will also `DELETE FROM customer_statements WHERE file_url IS NOT NULL` for the affected customers, removing the legacy PDF-based records.
 
-**Add:**
+### Steps
+1. Query existing customers to build the name→ID map
+2. Write a single SQL migration inserting all line items from the PDF
+3. Delete old file_url-based statement records in the same migration
+4. Verify the customer-facing Statements page shows the new line items
 
-1. **Date range filter presets** (Select dropdown replacing the year-only filter):
-   - All Time
-   - Current Year (2026)
-   - Last Year (2025)
-   - Last 30 Days
-   - Last 90 Days
-   - Custom Range (shows two date pickers for start/end)
-
-2. **Summary cards row** above the table:
-   - Total charges for filtered period
-   - Number of line items
-   - Date range displayed
-
-3. **Enhanced table columns:**
-   - Date (statement_date, sorted newest first)
-   - Description
-   - Period (period_start – period_end if present)
-   - Source (badge: manual / stripe)
-   - Amount (right-aligned, currency formatted)
-   - Notes (shown as tooltip or small text)
-
-4. **CSV Export button** in the header:
-   - Compiles the currently filtered line items
-   - Columns: Date, Description, Period Start, Period End, Amount, Source, Notes
-   - Downloads as `statements-{customerName}-{dateRange}.csv`
-
-5. **Running total footer row** showing the sum of filtered amounts
-
-### Changes to `src/components/admin/CustomerStatementsPanel.tsx`
-
-**Update the "Add Statement" tab:**
-- Remove the PDF file upload field (`pdfFile` state, file input, storage upload logic)
-- Keep the manual entry form (description, date, amount, period, notes) — this is how you'll continue adding line items going forward
-
-**Update the "View Statements" tab:**
-- Remove the download button column for PDFs
-- Add a CSV export button at the top
-- Keep the delete functionality
-
-### Data Migration Plan (after UI is ready)
-
-Once you provide the 2 documents, I will:
-1. Parse the line items from each format
-2. Delete the old single-amount PDF statement records for affected customers
-3. Insert individual line-item rows into `customer_statements` (one per charge/payment)
-4. Remove orphaned PDF files from the `customer-documents` storage bucket
+### Technical notes
+- The `customer_statements` table already has all needed columns: `statement_date`, `description`, `amount`, `source`, `notes`
+- No schema changes needed
+- The customer-facing Statements page built in the previous step will display these automatically
+- Overlap handling: if some invoices were already entered, we'll use invoice number in the description as a natural dedup check
 
