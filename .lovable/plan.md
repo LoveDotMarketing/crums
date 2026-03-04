@@ -1,41 +1,61 @@
 
 
-## Import Fisneur Jean's Billing Statements from PDF
+## Add Extended Trailer Spec Fields
 
-The PDF contains billing data for Fisneur Jean (and likely other customers) that was not included in the first import. The customer record exists but has zero statement rows.
+### What the VIN/NHTSA API can provide
+The NHTSA vPIC API returns limited trailer data. Of the 12 requested specs, **only suspension type has a slim chance** via the `SpringType` field, but it's unreliable for trailers. Everything else requires manual entry by the fleet manager.
 
-### Changes
+**VIN-decodable (already captured):** Make, Model, Year, Type, Axle Count, Body Material
+**NOT VIN-decodable (all new fields below):** Door Type, Suspension, Empty Weight, Last PM Date, Inside Width, Side Post Spacing, Crossmember Spacing, Side Skirts, Tire Type/Tread, Floor Thickness, Roof Type
 
-#### 1. Data Import (database insert, no schema changes needed)
+Pictures before/after pickup are already handled by the mechanic portal's inspection photo system.
 
-From the screenshot, Fisneur Jean's entries to insert into `customer_statements`:
+### 1. Database Migration — Add columns to `trailers` table
 
-| Date       | Invoice | Amount    | Description              |
-|------------|---------|-----------|--------------------------|
-| 01/17/2025 | 1234    | $2,400.00 | Invoice #1234            |
-| 02/17/2025 | 1244    | $900.00   | Invoice #1244            |
-| 03/12/2025 | 1237    | $900.00   | Invoice #1237            |
-| 03/17/2025 | 1245    | $900.00   | Invoice #1245            |
-| 06/16/2025 | 1285    | $900.00   | Invoice #1285            |
-| 07/07/2025 | 1306    | $900.00   | Invoice #1306            |
-| 07/16/2025 | 1316    | $900.00   | Invoice #1316            |
-| 08/15/2025 | 1344    | $900.00   | Invoice #1344            |
-| 09/15/2025 | 1375    | $900.00   | Invoice #1375            |
-| 10/15/2025 | 1407    | $900.00   | Invoice #1407            |
-| 11/15/2025 | 1427    | $900.00   | Invoice #1427 (unpaid)   |
-| 12/15/2025 | 1452    | $900.00   | Invoice #1452 (unpaid)   |
-| 01/15/2026 | 1472    | $900.00   | Invoice #1472 (unpaid)   |
-| 02/15/2026 | 1485    | $900.00   | Invoice #1485 (unpaid)   |
+```sql
+ALTER TABLE public.trailers
+  ADD COLUMN door_type text,              -- 'swing' or 'roll'
+  ADD COLUMN suspension_type text,        -- 'air_ride' or 'spring'
+  ADD COLUMN empty_weight integer,        -- lbs
+  ADD COLUMN last_pm_date date,           -- most recent preventive maintenance
+  ADD COLUMN inside_width text,           -- e.g. "101.5 in"
+  ADD COLUMN side_post_spacing text,      -- e.g. "12 in", "24 in", "E-Track 2 rows"
+  ADD COLUMN crossmember_spacing text,    -- e.g. "12 in"
+  ADD COLUMN has_side_skirts boolean DEFAULT false,
+  ADD COLUMN side_skirt_type text,        -- e.g. "Full length", "Partial"
+  ADD COLUMN tire_type text,             -- e.g. "Goodyear G316"
+  ADD COLUMN tire_tread_condition text,  -- e.g. "New", "Good", "Fair"
+  ADD COLUMN floor_thickness text,       -- e.g. "1-1/8 in hardwood"
+  ADD COLUMN roof_type text;             -- e.g. "Aluminum", "Translucent"
+```
 
-- **customer_id**: `911d288a-fed6-41e7-805c-7c8544b353b3`
-- **source**: `invoice`
-- **Notes**: Mark invoices with $0 received as having a note like "Balance due: $900.00"
+### 2. Update `TrailerDetail.tsx` — Add new fields to the edit form
 
-#### 2. Parse remaining customers from PDF
+Add a new "Specifications" card below the existing Trailer Details card with all 13 new fields, organized in a grid. Each field follows the existing read/edit pattern (display text in view mode, Input/Select in edit mode).
 
-Since the PDF parsing failed, I'll need you to confirm: does this PDF contain **additional customers beyond Fisneur Jean** that also need importing? If so, I can attempt parsing again or you can share screenshots of each customer's section.
+Group the fields logically:
+- **Structure**: Door Type (select: Swing/Roll), Suspension (select: Air Ride/Spring), Roof Type, Floor Thickness, Inside Width
+- **Load Securement**: Side Post Spacing, Crossmember Spacing
+- **Exterior**: Side Skirts (checkbox + type text), Empty Weight
+- **Tires**: Tire Type, Tread Condition
+- **Maintenance**: Last PM Date (date input)
 
-#### 3. No code changes needed
+### 3. Update `handleSave` — Include new fields in the update payload
 
-The Statements page and admin panel already support displaying, filtering, and exporting this data — it's purely a data import task.
+Add all 13 new columns to the `.update()` call in `handleSave`.
+
+### 4. Update the `Trailer` interface — Add new field types
+
+Add all new fields to the local `Trailer` interface in `TrailerDetail.tsx`.
+
+### 5. Update VIN decoder — Try to extract suspension from NHTSA
+
+Enhance `vinDecoder.ts` to check the `SpringType` field from NHTSA and map it to `suspension_type` (`air_ride` or `spring`). This is best-effort; most trailer VINs won't return it.
+
+### Summary
+- **11 new columns** on the `trailers` table (all nullable, no data loss)
+- **1 new Specifications card** on the trailer detail page
+- **VIN decoder enhancement** for suspension (best-effort)
+- No RLS changes needed (existing admin policies cover new columns)
+- Pictures before/after are already handled by the existing inspection system
 
