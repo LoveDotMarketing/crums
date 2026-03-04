@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -10,16 +10,22 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter,
 } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
-import { format } from "date-fns";
-import { Trash2, Loader2, FileText, Plus, Download, Save } from "lucide-react";
+import { format, subDays, startOfYear, endOfYear } from "date-fns";
+import { Trash2, Loader2, FileText, Plus, Download, Save, CalendarIcon, DollarSign, Hash } from "lucide-react";
+import { cn } from "@/lib/utils";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+
+type DatePreset = "all" | "current_year" | "last_year" | "last_30" | "last_90" | "custom";
 
 interface CustomerStatementsPanelProps {
   open: boolean;
@@ -49,6 +55,9 @@ export function CustomerStatementsPanel({
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState("view");
   const [statementToDelete, setStatementToDelete] = useState<Statement | null>(null);
+  const [preset, setPreset] = useState<DatePreset>("all");
+  const [customStart, setCustomStart] = useState<Date | undefined>();
+  const [customEnd, setCustomEnd] = useState<Date | undefined>();
 
   // Form state
   const [description, setDescription] = useState("");
@@ -72,6 +81,39 @@ export function CustomerStatementsPanel({
     },
     enabled: open && !!customerId,
   });
+
+  const dateRange = useMemo(() => {
+    const now = new Date();
+    switch (preset) {
+      case "current_year":
+        return { start: startOfYear(now), end: now };
+      case "last_year":
+        return { start: startOfYear(new Date(now.getFullYear() - 1, 0, 1)), end: endOfYear(new Date(now.getFullYear() - 1, 0, 1)) };
+      case "last_30":
+        return { start: subDays(now, 30), end: now };
+      case "last_90":
+        return { start: subDays(now, 90), end: now };
+      case "custom":
+        return { start: customStart, end: customEnd };
+      default:
+        return { start: undefined, end: undefined };
+    }
+  }, [preset, customStart, customEnd]);
+
+  const filteredStatements = useMemo(() => {
+    if (!dateRange.start && !dateRange.end) return statements;
+    return statements.filter((s) => {
+      const d = new Date(s.statement_date);
+      if (dateRange.start && d < dateRange.start) return false;
+      if (dateRange.end && d > dateRange.end) return false;
+      return true;
+    });
+  }, [statements, dateRange]);
+
+  const totalAmount = useMemo(
+    () => filteredStatements.reduce((s, st) => s + Number(st.amount), 0),
+    [filteredStatements]
+  );
 
   const deleteMutation = useMutation({
     mutationFn: async (statement: Statement) => {
@@ -134,11 +176,9 @@ export function CustomerStatementsPanel({
   const formatCurrency = (v: number) =>
     new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(v);
 
-  const totalAmount = statements.reduce((s, st) => s + Number(st.amount), 0);
-
   const handleCsvExport = () => {
     const headers = ["Date", "Description", "Period Start", "Period End", "Amount", "Source", "Notes"];
-    const rows = statements.map((s) => [
+    const rows = filteredStatements.map((s) => [
       s.statement_date,
       `"${(s.description || "").replace(/"/g, '""')}"`,
       s.period_start || "",
@@ -150,10 +190,11 @@ export function CustomerStatementsPanel({
     const csv = [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
     const blob = new Blob([csv], { type: "text/csv" });
     const safeName = customerName.replace(/\s+/g, "-");
+    const rangeSuffix = preset === "all" ? "all-time" : preset.replace("_", "-");
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `statements-${safeName}.csv`;
+    a.download = `statements-${safeName}-${rangeSuffix}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -176,90 +217,151 @@ export function CustomerStatementsPanel({
             </TabsList>
 
             {/* ── View Statements ── */}
-            <TabsContent value="view" className="mt-4">
+            <TabsContent value="view" className="mt-4 space-y-4">
+              {/* Filters row */}
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <Select value={preset} onValueChange={(v) => setPreset(v as DatePreset)}>
+                    <SelectTrigger className="w-40">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Time</SelectItem>
+                      <SelectItem value="current_year">Current Year</SelectItem>
+                      <SelectItem value="last_year">Last Year</SelectItem>
+                      <SelectItem value="last_30">Last 30 Days</SelectItem>
+                      <SelectItem value="last_90">Last 90 Days</SelectItem>
+                      <SelectItem value="custom">Custom Range</SelectItem>
+                    </SelectContent>
+                  </Select>
+
+                  {preset === "custom" && (
+                    <>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button variant="outline" size="sm" className={cn("w-36 justify-start text-left font-normal", !customStart && "text-muted-foreground")}>
+                            <CalendarIcon className="h-4 w-4 mr-1" />
+                            {customStart ? format(customStart, "MMM d, yyyy") : "Start"}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar mode="single" selected={customStart} onSelect={setCustomStart} className={cn("p-3 pointer-events-auto")} />
+                        </PopoverContent>
+                      </Popover>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button variant="outline" size="sm" className={cn("w-36 justify-start text-left font-normal", !customEnd && "text-muted-foreground")}>
+                            <CalendarIcon className="h-4 w-4 mr-1" />
+                            {customEnd ? format(customEnd, "MMM d, yyyy") : "End"}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar mode="single" selected={customEnd} onSelect={setCustomEnd} className={cn("p-3 pointer-events-auto")} />
+                        </PopoverContent>
+                      </Popover>
+                    </>
+                  )}
+                </div>
+
+                <Button variant="outline" size="sm" onClick={handleCsvExport} disabled={filteredStatements.length === 0}>
+                  <Download className="h-4 w-4 mr-2" />
+                  Export CSV
+                </Button>
+              </div>
+
+              {/* Summary chips */}
+              <div className="flex items-center gap-4 text-sm">
+                <div className="flex items-center gap-1.5 text-muted-foreground">
+                  <DollarSign className="h-4 w-4" />
+                  <span className="font-medium text-foreground">{formatCurrency(totalAmount)}</span>
+                </div>
+                <div className="flex items-center gap-1.5 text-muted-foreground">
+                  <Hash className="h-4 w-4" />
+                  <span className="font-medium text-foreground">{filteredStatements.length}</span> items
+                </div>
+              </div>
+
               {isLoading ? (
                 <div className="flex items-center justify-center py-12">
                   <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
                 </div>
-              ) : statements.length === 0 ? (
+              ) : filteredStatements.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-12 text-center gap-3">
                   <FileText className="h-10 w-10 text-muted-foreground" />
-                  <p className="text-muted-foreground">No statements on file for this customer.</p>
-                  <Button variant="outline" size="sm" onClick={() => setActiveTab("add")}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add First Statement
-                  </Button>
+                  <p className="text-muted-foreground">
+                    {statements.length === 0
+                      ? "No statements on file for this customer."
+                      : "No statements found for this date range."}
+                  </p>
+                  {statements.length === 0 && (
+                    <Button variant="outline" size="sm" onClick={() => setActiveTab("add")}>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add First Statement
+                    </Button>
+                  )}
                 </div>
               ) : (
-                <>
-                  <div className="flex justify-end mb-3">
-                    <Button variant="outline" size="sm" onClick={handleCsvExport}>
-                      <Download className="h-4 w-4 mr-2" />
-                      Export CSV
-                    </Button>
-                  </div>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Date</TableHead>
-                        <TableHead>Description</TableHead>
-                        <TableHead>Period</TableHead>
-                        <TableHead className="text-right">Amount</TableHead>
-                        <TableHead>Source</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {statements.map((s) => (
-                        <TableRow key={s.id}>
-                          <TableCell className="whitespace-nowrap text-sm">
-                            {format(new Date(s.statement_date), "MMM d, yyyy")}
-                          </TableCell>
-                          <TableCell className="text-sm">
-                            <div>{s.description}</div>
-                            {s.notes && (
-                              <div className="text-xs text-muted-foreground mt-0.5">{s.notes}</div>
-                            )}
-                          </TableCell>
-                          <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
-                            {s.period_start && s.period_end
-                              ? `${format(new Date(s.period_start), "MMM d")} – ${format(new Date(s.period_end), "MMM d, yyyy")}`
-                              : "—"}
-                          </TableCell>
-                          <TableCell className="text-right font-medium whitespace-nowrap">
-                            {formatCurrency(Number(s.amount))}
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant={s.source === "stripe" ? "default" : "secondary"} className="text-xs capitalize">
-                              {s.source}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center justify-end">
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8 text-destructive hover:text-destructive"
-                                onClick={() => setStatementToDelete(s)}
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                    <TableFooter>
-                      <TableRow>
-                        <TableCell colSpan={3} className="font-semibold">Total</TableCell>
-                        <TableCell className="text-right font-semibold whitespace-nowrap">
-                          {formatCurrency(totalAmount)}
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Description</TableHead>
+                      <TableHead>Period</TableHead>
+                      <TableHead className="text-right">Amount</TableHead>
+                      <TableHead>Source</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredStatements.map((s) => (
+                      <TableRow key={s.id}>
+                        <TableCell className="whitespace-nowrap text-sm">
+                          {format(new Date(s.statement_date), "MMM d, yyyy")}
                         </TableCell>
-                        <TableCell colSpan={2} />
+                        <TableCell className="text-sm">
+                          <div>{s.description}</div>
+                          {s.notes && (
+                            <div className="text-xs text-muted-foreground mt-0.5">{s.notes}</div>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
+                          {s.period_start && s.period_end
+                            ? `${format(new Date(s.period_start), "MMM d")} – ${format(new Date(s.period_end), "MMM d, yyyy")}`
+                            : "—"}
+                        </TableCell>
+                        <TableCell className="text-right font-medium whitespace-nowrap">
+                          {formatCurrency(Number(s.amount))}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={s.source === "stripe" ? "default" : "secondary"} className="text-xs capitalize">
+                            {s.source}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center justify-end">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-destructive hover:text-destructive"
+                              onClick={() => setStatementToDelete(s)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
                       </TableRow>
-                    </TableFooter>
-                  </Table>
-                </>
+                    ))}
+                  </TableBody>
+                  <TableFooter>
+                    <TableRow>
+                      <TableCell colSpan={3} className="font-semibold">Total</TableCell>
+                      <TableCell className="text-right font-semibold whitespace-nowrap">
+                        {formatCurrency(totalAmount)}
+                      </TableCell>
+                      <TableCell colSpan={2} />
+                    </TableRow>
+                  </TableFooter>
+                </Table>
               )}
             </TabsContent>
 
