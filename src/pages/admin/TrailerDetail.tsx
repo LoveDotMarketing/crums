@@ -72,6 +72,19 @@ interface Trailer {
   rental_frequency: string | null;
   axle_count: number | null;
   body_material: string | null;
+  door_type: string | null;
+  suspension_type: string | null;
+  empty_weight: number | null;
+  last_pm_date: string | null;
+  inside_width: string | null;
+  side_post_spacing: string | null;
+  crossmember_spacing: string | null;
+  has_side_skirts: boolean | null;
+  side_skirt_type: string | null;
+  tire_type: string | null;
+  tire_tread_condition: string | null;
+  floor_thickness: string | null;
+  roof_type: string | null;
 }
 
 interface Customer {
@@ -252,6 +265,19 @@ export default function TrailerDetail() {
           notes: formData.notes,
           axle_count: formData.axle_count || null,
           body_material: formData.body_material || null,
+          door_type: formData.door_type || null,
+          suspension_type: formData.suspension_type || null,
+          empty_weight: formData.empty_weight || null,
+          last_pm_date: formData.last_pm_date || null,
+          inside_width: formData.inside_width || null,
+          side_post_spacing: formData.side_post_spacing || null,
+          crossmember_spacing: formData.crossmember_spacing || null,
+          has_side_skirts: formData.has_side_skirts ?? false,
+          side_skirt_type: formData.side_skirt_type || null,
+          tire_type: formData.tire_type || null,
+          tire_tread_condition: formData.tire_tread_condition || null,
+          floor_thickness: formData.floor_thickness || null,
+          roof_type: formData.roof_type || null,
         })
         .eq("id", trailer.id);
 
@@ -531,6 +557,7 @@ export default function TrailerDetail() {
                                   ...(decoded.type ? { type: decoded.type } : {}),
                                   ...(decoded.axle_count ? { axle_count: decoded.axle_count } : {}),
                                   ...(decoded.body_material ? { body_material: decoded.body_material } : {}),
+                                  ...(decoded.suspension_type ? { suspension_type: decoded.suspension_type } : {}),
                                 }));
                                 toast.success("VIN decoded successfully");
                               } catch (err: any) {
@@ -669,6 +696,225 @@ export default function TrailerDetail() {
                         />
                       ) : (
                         <p className="text-muted-foreground">{trailer.notes || "No notes"}</p>
+                      )}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Specifications Card */}
+              <Card className="lg:col-span-2">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Wrench className="h-5 w-5" />
+                    Specifications
+                  </CardTitle>
+                  <CardDescription>Detailed trailer specifications for sales team</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    {/* Door Type */}
+                    <div className="space-y-2">
+                      <Label>Door Type</Label>
+                      {isEditing ? (
+                        <Select
+                          value={formData.door_type || ""}
+                          onValueChange={(value) => setFormData({ ...formData, door_type: value || null })}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="swing">Swing</SelectItem>
+                            <SelectItem value="roll">Roll-Up</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        <p className="text-lg capitalize">{trailer.door_type || "-"}</p>
+                      )}
+                    </div>
+
+                    {/* Suspension */}
+                    <div className="space-y-2">
+                      <Label>Suspension</Label>
+                      {isEditing ? (
+                        <Select
+                          value={formData.suspension_type || ""}
+                          onValueChange={(value) => setFormData({ ...formData, suspension_type: value || null })}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="air_ride">Air Ride</SelectItem>
+                            <SelectItem value="spring">Spring</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        <p className="text-lg">{trailer.suspension_type === 'air_ride' ? 'Air Ride' : trailer.suspension_type === 'spring' ? 'Spring' : '-'}</p>
+                      )}
+                    </div>
+
+                    {/* Roof Type */}
+                    <div className="space-y-2">
+                      <Label>Roof Type</Label>
+                      {isEditing ? (
+                        <Input
+                          value={formData.roof_type || ""}
+                          onChange={(e) => setFormData({ ...formData, roof_type: e.target.value })}
+                          placeholder="Aluminum, Translucent..."
+                        />
+                      ) : (
+                        <p className="text-lg">{trailer.roof_type || "-"}</p>
+                      )}
+                    </div>
+
+                    {/* Floor Thickness */}
+                    <div className="space-y-2">
+                      <Label>Floor Thickness</Label>
+                      {isEditing ? (
+                        <Input
+                          value={formData.floor_thickness || ""}
+                          onChange={(e) => setFormData({ ...formData, floor_thickness: e.target.value })}
+                          placeholder='1-1/8" hardwood'
+                        />
+                      ) : (
+                        <p className="text-lg">{trailer.floor_thickness || "-"}</p>
+                      )}
+                    </div>
+
+                    {/* Inside Width */}
+                    <div className="space-y-2">
+                      <Label>Inside Width</Label>
+                      {isEditing ? (
+                        <Input
+                          value={formData.inside_width || ""}
+                          onChange={(e) => setFormData({ ...formData, inside_width: e.target.value })}
+                          placeholder='101.5"'
+                        />
+                      ) : (
+                        <p className="text-lg">{trailer.inside_width || "-"}</p>
+                      )}
+                    </div>
+
+                    {/* Empty Weight */}
+                    <div className="space-y-2">
+                      <Label>Empty Weight (lbs)</Label>
+                      {isEditing ? (
+                        <Input
+                          type="number"
+                          value={formData.empty_weight || ""}
+                          onChange={(e) => setFormData({ ...formData, empty_weight: parseInt(e.target.value) || null })}
+                          placeholder="14,000"
+                        />
+                      ) : (
+                        <p className="text-lg">{trailer.empty_weight ? `${trailer.empty_weight.toLocaleString()} lbs` : "-"}</p>
+                      )}
+                    </div>
+
+                    {/* Side Post Spacing */}
+                    <div className="space-y-2">
+                      <Label>Side Post Spacing</Label>
+                      {isEditing ? (
+                        <Input
+                          value={formData.side_post_spacing || ""}
+                          onChange={(e) => setFormData({ ...formData, side_post_spacing: e.target.value })}
+                          placeholder='12", E-Track 2 rows...'
+                        />
+                      ) : (
+                        <p className="text-lg">{trailer.side_post_spacing || "-"}</p>
+                      )}
+                    </div>
+
+                    {/* Crossmember Spacing */}
+                    <div className="space-y-2">
+                      <Label>Crossmember Spacing</Label>
+                      {isEditing ? (
+                        <Input
+                          value={formData.crossmember_spacing || ""}
+                          onChange={(e) => setFormData({ ...formData, crossmember_spacing: e.target.value })}
+                          placeholder='12"'
+                        />
+                      ) : (
+                        <p className="text-lg">{trailer.crossmember_spacing || "-"}</p>
+                      )}
+                    </div>
+
+                    {/* Side Skirts */}
+                    <div className="space-y-2">
+                      <Label>Side Skirts</Label>
+                      {isEditing ? (
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="checkbox"
+                              checked={formData.has_side_skirts || false}
+                              onChange={(e) => setFormData({ ...formData, has_side_skirts: e.target.checked, side_skirt_type: e.target.checked ? formData.side_skirt_type : null })}
+                              className="h-4 w-4 rounded border-primary"
+                            />
+                            <span className="text-sm">Has side skirts</span>
+                          </div>
+                          {formData.has_side_skirts && (
+                            <Input
+                              value={formData.side_skirt_type || ""}
+                              onChange={(e) => setFormData({ ...formData, side_skirt_type: e.target.value })}
+                              placeholder="Full length, Partial..."
+                            />
+                          )}
+                        </div>
+                      ) : (
+                        <p className="text-lg">{trailer.has_side_skirts ? (trailer.side_skirt_type || "Yes") : "No"}</p>
+                      )}
+                    </div>
+
+                    {/* Tire Type */}
+                    <div className="space-y-2">
+                      <Label>Tire Type</Label>
+                      {isEditing ? (
+                        <Input
+                          value={formData.tire_type || ""}
+                          onChange={(e) => setFormData({ ...formData, tire_type: e.target.value })}
+                          placeholder="Goodyear G316"
+                        />
+                      ) : (
+                        <p className="text-lg">{trailer.tire_type || "-"}</p>
+                      )}
+                    </div>
+
+                    {/* Tread Condition */}
+                    <div className="space-y-2">
+                      <Label>Tread Condition</Label>
+                      {isEditing ? (
+                        <Select
+                          value={formData.tire_tread_condition || ""}
+                          onValueChange={(value) => setFormData({ ...formData, tire_tread_condition: value || null })}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="New">New</SelectItem>
+                            <SelectItem value="Good">Good</SelectItem>
+                            <SelectItem value="Fair">Fair</SelectItem>
+                            <SelectItem value="Poor">Poor</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        <p className="text-lg">{trailer.tire_tread_condition || "-"}</p>
+                      )}
+                    </div>
+
+                    {/* Last PM Date */}
+                    <div className="space-y-2">
+                      <Label>Last PM Date</Label>
+                      {isEditing ? (
+                        <Input
+                          type="date"
+                          value={formData.last_pm_date || ""}
+                          onChange={(e) => setFormData({ ...formData, last_pm_date: e.target.value || null })}
+                        />
+                      ) : (
+                        <p className="text-lg">{trailer.last_pm_date ? new Date(trailer.last_pm_date + 'T00:00:00').toLocaleDateString() : "-"}</p>
                       )}
                     </div>
                   </div>
