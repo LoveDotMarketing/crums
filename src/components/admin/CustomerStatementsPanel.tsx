@@ -2,10 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
+  Dialog, DialogContent, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -14,25 +11,14 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter,
 } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
-import { Download, Trash2, Loader2, FileText, Plus, Upload } from "lucide-react";
+import { Trash2, Loader2, FileText, Plus, Download, Save } from "lucide-react";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
 interface CustomerStatementsPanelProps {
@@ -57,16 +43,12 @@ interface Statement {
 }
 
 export function CustomerStatementsPanel({
-  open,
-  onOpenChange,
-  customerId,
-  customerName,
+  open, onOpenChange, customerId, customerName,
 }: CustomerStatementsPanelProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState("view");
   const [statementToDelete, setStatementToDelete] = useState<Statement | null>(null);
-  const [downloadingId, setDownloadingId] = useState<string | null>(null);
 
   // Form state
   const [description, setDescription] = useState("");
@@ -75,8 +57,7 @@ export function CustomerStatementsPanel({
   const [periodStart, setPeriodStart] = useState("");
   const [periodEnd, setPeriodEnd] = useState("");
   const [notes, setNotes] = useState("");
-  const [pdfFile, setPdfFile] = useState<File | null>(null);
-  const [uploading, setUploading] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   const { data: statements = [], isLoading } = useQuery({
     queryKey: ["customer-statements", customerId],
@@ -94,11 +75,8 @@ export function CustomerStatementsPanel({
 
   const deleteMutation = useMutation({
     mutationFn: async (statement: Statement) => {
-      // Delete file from storage if it exists
       if (statement.file_url) {
-        await supabase.storage
-          .from("customer-documents")
-          .remove([statement.file_url]);
+        await supabase.storage.from("customer-documents").remove([statement.file_url]);
       }
       const { error } = await (supabase as any)
         .from("customer_statements")
@@ -116,62 +94,18 @@ export function CustomerStatementsPanel({
     },
   });
 
-  const handleDownload = async (statement: Statement) => {
-    if (!statement.file_url) return;
-    setDownloadingId(statement.id);
-    try {
-      const { data, error } = await supabase.storage
-        .from("customer-documents")
-        .createSignedUrl(statement.file_url, 3600);
-      if (error) throw error;
-      window.open(data.signedUrl, "_blank");
-    } catch (err: any) {
-      toast({ title: "Error generating download link", description: err.message, variant: "destructive" });
-    } finally {
-      setDownloadingId(null);
-    }
-  };
-
   const resetForm = () => {
-    setDescription("");
-    setStatementDate("");
-    setAmount("");
-    setPeriodStart("");
-    setPeriodEnd("");
-    setNotes("");
-    setPdfFile(null);
+    setDescription(""); setStatementDate(""); setAmount("");
+    setPeriodStart(""); setPeriodEnd(""); setNotes("");
   };
 
   const handleSave = async () => {
-    if (!description.trim()) {
-      toast({ title: "Description is required", variant: "destructive" });
-      return;
-    }
-    if (!statementDate) {
-      toast({ title: "Statement date is required", variant: "destructive" });
-      return;
-    }
-    if (!amount || isNaN(Number(amount))) {
-      toast({ title: "Valid amount is required", variant: "destructive" });
-      return;
-    }
+    if (!description.trim()) { toast({ title: "Description is required", variant: "destructive" }); return; }
+    if (!statementDate) { toast({ title: "Statement date is required", variant: "destructive" }); return; }
+    if (!amount || isNaN(Number(amount))) { toast({ title: "Valid amount is required", variant: "destructive" }); return; }
 
-    setUploading(true);
+    setSaving(true);
     try {
-      let fileUrl: string | null = null;
-
-      // Upload PDF if provided
-      if (pdfFile) {
-        const timestamp = Date.now();
-        const sanitized = pdfFile.name.replace(/[^a-zA-Z0-9._-]/g, "_");
-        const storagePath = `statements/${customerId}/${timestamp}-${sanitized}`;
-        const { error: uploadError } = await supabase.storage
-          .from("customer-documents")
-          .upload(storagePath, pdfFile, { upsert: false });
-        if (uploadError) throw uploadError;
-        fileUrl = storagePath;
-      }
-
       const { error } = await (supabase as any)
         .from("customer_statements")
         .insert({
@@ -182,10 +116,8 @@ export function CustomerStatementsPanel({
           amount: Number(amount),
           description: description.trim(),
           source: "manual",
-          file_url: fileUrl,
           notes: notes.trim() || null,
         });
-
       if (error) throw error;
 
       toast({ title: "Statement added successfully" });
@@ -195,12 +127,36 @@ export function CustomerStatementsPanel({
     } catch (err: any) {
       toast({ title: "Error saving statement", description: err.message, variant: "destructive" });
     } finally {
-      setUploading(false);
+      setSaving(false);
     }
   };
 
-  const formatCurrency = (amount: number) =>
-    new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(amount);
+  const formatCurrency = (v: number) =>
+    new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(v);
+
+  const totalAmount = statements.reduce((s, st) => s + Number(st.amount), 0);
+
+  const handleCsvExport = () => {
+    const headers = ["Date", "Description", "Period Start", "Period End", "Amount", "Source", "Notes"];
+    const rows = statements.map((s) => [
+      s.statement_date,
+      `"${(s.description || "").replace(/"/g, '""')}"`,
+      s.period_start || "",
+      s.period_end || "",
+      Number(s.amount).toFixed(2),
+      s.source || "",
+      `"${(s.notes || "").replace(/"/g, '""')}"`,
+    ]);
+    const csv = [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const safeName = customerName.replace(/\s+/g, "-");
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `statements-${safeName}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
   return (
     <>
@@ -235,73 +191,75 @@ export function CustomerStatementsPanel({
                   </Button>
                 </div>
               ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Date</TableHead>
-                      <TableHead>Description</TableHead>
-                      <TableHead>Period</TableHead>
-                      <TableHead className="text-right">Amount</TableHead>
-                      <TableHead>Source</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {statements.map((s) => (
-                      <TableRow key={s.id}>
-                        <TableCell className="whitespace-nowrap text-sm">
-                          {format(new Date(s.statement_date), "MMM d, yyyy")}
-                        </TableCell>
-                        <TableCell className="text-sm">
-                          <div>{s.description}</div>
-                          {s.notes && (
-                            <div className="text-xs text-muted-foreground mt-0.5">{s.notes}</div>
-                          )}
-                        </TableCell>
-                        <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
-                          {s.period_start && s.period_end
-                            ? `${format(new Date(s.period_start), "MMM d")} – ${format(new Date(s.period_end), "MMM d, yyyy")}`
-                            : "—"}
-                        </TableCell>
-                        <TableCell className="text-right font-medium whitespace-nowrap">
-                          {formatCurrency(Number(s.amount))}
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={s.source === "stripe" ? "default" : "secondary"} className="text-xs capitalize">
-                            {s.source}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center justify-end gap-1">
-                            {s.file_url && (
+                <>
+                  <div className="flex justify-end mb-3">
+                    <Button variant="outline" size="sm" onClick={handleCsvExport}>
+                      <Download className="h-4 w-4 mr-2" />
+                      Export CSV
+                    </Button>
+                  </div>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Date</TableHead>
+                        <TableHead>Description</TableHead>
+                        <TableHead>Period</TableHead>
+                        <TableHead className="text-right">Amount</TableHead>
+                        <TableHead>Source</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {statements.map((s) => (
+                        <TableRow key={s.id}>
+                          <TableCell className="whitespace-nowrap text-sm">
+                            {format(new Date(s.statement_date), "MMM d, yyyy")}
+                          </TableCell>
+                          <TableCell className="text-sm">
+                            <div>{s.description}</div>
+                            {s.notes && (
+                              <div className="text-xs text-muted-foreground mt-0.5">{s.notes}</div>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
+                            {s.period_start && s.period_end
+                              ? `${format(new Date(s.period_start), "MMM d")} – ${format(new Date(s.period_end), "MMM d, yyyy")}`
+                              : "—"}
+                          </TableCell>
+                          <TableCell className="text-right font-medium whitespace-nowrap">
+                            {formatCurrency(Number(s.amount))}
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={s.source === "stripe" ? "default" : "secondary"} className="text-xs capitalize">
+                              {s.source}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center justify-end">
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                className="h-8 w-8"
-                                onClick={() => handleDownload(s)}
-                                disabled={downloadingId === s.id}
+                                className="h-8 w-8 text-destructive hover:text-destructive"
+                                onClick={() => setStatementToDelete(s)}
                               >
-                                {downloadingId === s.id ? (
-                                  <Loader2 className="h-4 w-4 animate-spin" />
-                                ) : (
-                                  <Download className="h-4 w-4" />
-                                )}
+                                <Trash2 className="h-4 w-4" />
                               </Button>
-                            )}
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8 text-destructive hover:text-destructive"
-                              onClick={() => setStatementToDelete(s)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                    <TableFooter>
+                      <TableRow>
+                        <TableCell colSpan={3} className="font-semibold">Total</TableCell>
+                        <TableCell className="text-right font-semibold whitespace-nowrap">
+                          {formatCurrency(totalAmount)}
                         </TableCell>
+                        <TableCell colSpan={2} />
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableFooter>
+                  </Table>
+                </>
               )}
             </TabsContent>
 
@@ -309,110 +267,44 @@ export function CustomerStatementsPanel({
             <TabsContent value="add" className="mt-4">
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="description">
-                    Description <span className="text-destructive">*</span>
-                  </Label>
-                  <Input
-                    id="description"
-                    placeholder="e.g. Monthly lease statement — January 2025"
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                  />
+                  <Label htmlFor="description">Description <span className="text-destructive">*</span></Label>
+                  <Input id="description" placeholder="e.g. Monthly lease — January 2025" value={description} onChange={(e) => setDescription(e.target.value)} />
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="statement-date">
-                      Statement Date <span className="text-destructive">*</span>
-                    </Label>
-                    <Input
-                      id="statement-date"
-                      type="date"
-                      value={statementDate}
-                      onChange={(e) => setStatementDate(e.target.value)}
-                    />
+                    <Label htmlFor="statement-date">Statement Date <span className="text-destructive">*</span></Label>
+                    <Input id="statement-date" type="date" value={statementDate} onChange={(e) => setStatementDate(e.target.value)} />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="amount">
-                      Amount <span className="text-destructive">*</span>
-                    </Label>
-                    <Input
-                      id="amount"
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      placeholder="0.00"
-                      value={amount}
-                      onChange={(e) => setAmount(e.target.value)}
-                    />
+                    <Label htmlFor="amount">Amount <span className="text-destructive">*</span></Label>
+                    <Input id="amount" type="number" min="0" step="0.01" placeholder="0.00" value={amount} onChange={(e) => setAmount(e.target.value)} />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="period-start">Period Start (optional)</Label>
-                    <Input
-                      id="period-start"
-                      type="date"
-                      value={periodStart}
-                      onChange={(e) => setPeriodStart(e.target.value)}
-                    />
+                    <Input id="period-start" type="date" value={periodStart} onChange={(e) => setPeriodStart(e.target.value)} />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="period-end">Period End (optional)</Label>
-                    <Input
-                      id="period-end"
-                      type="date"
-                      value={periodEnd}
-                      onChange={(e) => setPeriodEnd(e.target.value)}
-                    />
+                    <Input id="period-end" type="date" value={periodEnd} onChange={(e) => setPeriodEnd(e.target.value)} />
                   </div>
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="notes">Notes (optional)</Label>
-                  <Textarea
-                    id="notes"
-                    placeholder="Any additional notes for this statement..."
-                    rows={2}
-                    value={notes}
-                    onChange={(e) => setNotes(e.target.value)}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="pdf-upload">PDF Statement (optional)</Label>
-                  <div className="flex items-center gap-3">
-                    <Input
-                      id="pdf-upload"
-                      type="file"
-                      accept=".pdf"
-                      onChange={(e) => setPdfFile(e.target.files?.[0] || null)}
-                      className="flex-1"
-                    />
-                    {pdfFile && (
-                      <span className="text-xs text-muted-foreground whitespace-nowrap">
-                        {pdfFile.name}
-                      </span>
-                    )}
-                  </div>
+                  <Textarea id="notes" placeholder="Any additional notes..." rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} />
                 </div>
 
                 <div className="flex justify-end gap-2 pt-2">
-                  <Button variant="outline" onClick={resetForm} disabled={uploading}>
-                    Reset
-                  </Button>
-                  <Button onClick={handleSave} disabled={uploading}>
-                    {uploading ? (
-                      <>
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        Saving...
-                      </>
+                  <Button variant="outline" onClick={resetForm} disabled={saving}>Reset</Button>
+                  <Button onClick={handleSave} disabled={saving}>
+                    {saving ? (
+                      <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Saving...</>
                     ) : (
-                      <>
-                        <Upload className="h-4 w-4 mr-2" />
-                        Save Statement
-                      </>
+                      <><Save className="h-4 w-4 mr-2" />Save Statement</>
                     )}
                   </Button>
                 </div>
@@ -422,18 +314,12 @@ export function CustomerStatementsPanel({
         </DialogContent>
       </Dialog>
 
-      {/* Delete confirmation */}
-      <AlertDialog
-        open={!!statementToDelete}
-        onOpenChange={(open) => !open && setStatementToDelete(null)}
-      >
+      <AlertDialog open={!!statementToDelete} onOpenChange={(open) => !open && setStatementToDelete(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Statement</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete "{statementToDelete?.description}"?{" "}
-              {statementToDelete?.file_url && "The PDF file will also be removed. "}
-              This action cannot be undone.
+              Are you sure you want to delete "{statementToDelete?.description}"? This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
