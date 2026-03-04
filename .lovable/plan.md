@@ -1,67 +1,57 @@
 
 
-## Import Combined Customer Statement Data
+## Fix DOT Inspection Photo Upload Crashes
 
-### What the PDF contains
-23 customers with individual invoice line items. Each line has: Date, Invoice #, Amount, Received, Balance. Customers are identified by name and sometimes company name.
+The mechanic reports the inspection form crashes when taking/uploading photos (especially the license plate photo). Based on investigation:
 
-### Plan
+**Root cause analysis:**
+- The `InspectionPhotoUpload` component currently uses `capture="environment"` on the file input, which forces the camera to open on mobile. On some devices/browsers this causes crashes, especially with poor connectivity or memory pressure.
+- The `id` attribute for each file input uses `photo-${category}` — but when multiple upload components share a page (e.g., doors + landing_gear on step 5), all IDs are unique per category so that's fine.
+- The real issue is likely the forced `capture="environment"` attribute combined with mobile browser limitations.
 
-#### 1. Create an admin bulk-import edge function
-A new edge function `import-customer-statements` that:
-- Accepts a JSON array of `{ customer_name, company_name, date, invoice_number, amount, received, balance, description }` objects
-- For each entry, looks up the customer by `full_name` (case-insensitive ILIKE match) in the `customers` table
-- Skips entries where the customer can't be matched (returns a list of unmatched names)
-- For matched customers, upserts into `customer_statements` using invoice number + customer_id as a dedup key to handle overlapping data
-- Sets `description` to `"Invoice #XXXX"`, `source` to `"invoice"`, `statement_date` to the invoice date, `amount` to the invoiced amount
-- Stores received/balance info in the `notes` field (e.g., `"Received: $750.00 | Balance: $0.00"`)
+**Two requests from the mechanic (via Ambrosia):**
+1. Allow uploading existing photos from the gallery instead of only camera capture
+2. Stop crashing during photo upload
 
-#### 2. Prepare the parsed data as a migration script
-Rather than an edge function, a simpler approach: create a **database migration** that directly inserts all ~200+ line items. The migration will:
-- Use a CTE or temp mapping of customer names to customer IDs via `SELECT id FROM customers WHERE lower(full_name) ILIKE ...`
-- Insert each invoice line item into `customer_statements`
-- Use `ON CONFLICT` or a pre-check to avoid duplicating rows if some data was already entered manually
-- Delete any old PDF-based statement records that have a `file_url` set (the ones being replaced)
+### Changes
 
-#### 3. Customer name → ID matching
-The PDF uses these customer names (I'll need to match against `customers.full_name`):
-- DeGreat Dynasty LLC (Dewayne DeGreat)
-- Eisa Karami / Panjshire Express LLC
-- Gerald Joseph Porter / Porter Transportation Services
-- Helen Mang / Hope Light Express
-- James E Guthrie / Trinity Freight LLC
-- Jean Wilder Thelusma
-- Kiara Galo Miguel Carcamo
-- Laxley Hinds / Multi-Trucking
-- Luis VillaReal
-- Mohammadi Abdul Khaliq / AZP Trucking
-- Monarch Trophy Studio
-- Osundo
-- Randy Gray / AMA United Transport
-- Robert / RJ & R
-- Robert Tsankov
-- Rodrick Darnell McGill / Do It Moving
-- Shakiya Harrison / BMS
-- Singh Narenderjeet / Ground Link
-- Stanley Tee Barnhisel / S&S Critical Transport LLC
-- Stenson Davis
-- Tracy Trucking
-- Victoria Hernandez / Black Eagle Transportation
+#### 1. `src/components/mechanic/InspectionPhotoUpload.tsx`
 
-**Before writing the migration**, I'll query the `customers` table to get exact `full_name` values and IDs so the matching is precise.
+**Fix the crash — remove forced camera capture and add gallery option:**
+- Remove `capture="environment"` from the file input so the device shows a picker (camera OR gallery)
+- Add a second button "Upload from Gallery" that uses a separate file input without `capture` at all (for devices where the combined picker still defaults to camera)
+- Actually, simplest fix: just remove the `capture` attribute entirely. On mobile this gives a system prompt: "Take Photo" or "Choose from Library" — solving both issues at once.
 
-#### 4. Clean up old PDF statements
-The migration will also `DELETE FROM customer_statements WHERE file_url IS NOT NULL` for the affected customers, removing the legacy PDF-based records.
+**Add resilience:**
+- Wrap the entire upload handler in a try/catch that prevents the component from unmounting on error
+- Add image compression before upload: resize images >2000px wide to reduce upload size and prevent memory crashes on mobile
+- Increase retry attempts from 2 to 3
+- Add a loading overlay on the photo preview area during upload
 
-### Steps
-1. Query existing customers to build the name→ID map
-2. Write a single SQL migration inserting all line items from the PDF
-3. Delete old file_url-based statement records in the same migration
-4. Verify the customer-facing Statements page shows the new line items
+#### 2. `src/pages/mechanic/DOTInspectionForm.tsx`
 
-### Technical notes
-- The `customer_statements` table already has all needed columns: `statement_date`, `description`, `amount`, `source`, `notes`
-- No schema changes needed
-- The customer-facing Statements page built in the previous step will display these automatically
-- Overlap handling: if some invoices were already entered, we'll use invoice number in the description as a natural dedup check
+**Change license plate photo from hard block to warning:**
+- In `handleComplete`, instead of returning early when no license plate photo exists, show a confirmation dialog warning that the photo is missing but allow proceeding
+- Add a visual warning banner on step 8 if no license plate photo has been taken yet
+
+### Technical details
+
+**Image compression** (new utility or inline):
+```typescript
+// Resize image if >2000px on longest side, compress to 80% JPEG
+const compressImage = (file: File): Promise<File> => { ... }
+```
+
+This uses a canvas element to resize before upload — prevents memory crashes on lower-end mobile devices trying to upload 4000px+ photos directly.
+
+**File input change:**
+```html
+<!-- Before -->
+<input type="file" accept="image/*" capture="environment" ... />
+
+<!-- After -->
+<input type="file" accept="image/*" ... />
+```
+
+Removing `capture` lets the OS present both camera and gallery options natively.
 
