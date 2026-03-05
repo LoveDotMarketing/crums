@@ -79,9 +79,11 @@ interface Discount {
 
 interface CreateSubscriptionDialogProps {
   onSuccess?: () => void;
+  mode?: "dialog" | "inline";
+  onCancel?: () => void;
 }
 
-export function CreateSubscriptionDialog({ onSuccess }: CreateSubscriptionDialogProps) {
+export function CreateSubscriptionDialog({ onSuccess, mode = "dialog", onCancel }: CreateSubscriptionDialogProps) {
   const queryClient = useQueryClient();
   const [isOpen, setIsOpen] = useState(false);
   const [selectedCustomerId, setSelectedCustomerId] = useState<string>("");
@@ -112,7 +114,7 @@ export function CreateSubscriptionDialog({ onSuccess }: CreateSubscriptionDialog
       const { data: profile } = await supabase
         .from("profiles")
         .select("id")
-        .eq("email", customer.email)
+        .ilike("email", customer.email)
         .maybeSingle();
       
       if (!profile?.id) return null;
@@ -127,7 +129,7 @@ export function CreateSubscriptionDialog({ onSuccess }: CreateSubscriptionDialog
       if (error) return null;
       return data;
     },
-    enabled: !!selectedCustomerId && isOpen,
+    enabled: !!selectedCustomerId && (isOpen || mode === "inline"),
   });
 
   // Sync billing anchor day from customer preference when loaded
@@ -152,7 +154,7 @@ export function CreateSubscriptionDialog({ onSuccess }: CreateSubscriptionDialog
       if (error) throw error;
       return (data || []) as Customer[];
     },
-    enabled: isOpen
+    enabled: isOpen || mode === "inline"
   });
 
   // Fetch trailer IDs already on active/pending/paused subscriptions for the selected customer
@@ -169,7 +171,7 @@ export function CreateSubscriptionDialog({ onSuccess }: CreateSubscriptionDialog
       if (error) throw error;
       return (data || []).map(item => item.trailer_id);
     },
-    enabled: isOpen && !!selectedCustomerId
+    enabled: (isOpen || mode === "inline") && !!selectedCustomerId
   });
 
   // Fetch available trailers + trailers already assigned to selected customer
@@ -198,7 +200,7 @@ export function CreateSubscriptionDialog({ onSuccess }: CreateSubscriptionDialog
       
       return filtered as AvailableTrailer[];
     },
-    enabled: isOpen
+    enabled: isOpen || mode === "inline"
   });
 
   // Fetch active discounts
@@ -214,7 +216,7 @@ export function CreateSubscriptionDialog({ onSuccess }: CreateSubscriptionDialog
       if (error) throw error;
       return data as Discount[];
     },
-    enabled: isOpen
+    enabled: isOpen || mode === "inline"
   });
 
   // Create subscription mutation
@@ -228,11 +230,11 @@ export function CreateSubscriptionDialog({ onSuccess }: CreateSubscriptionDialog
       if (customer?.email) {
         let hasPaymentMethod = false;
 
-        // Path 1: profile → user_id → customer_applications
+        // Path 1: profile → user_id → customer_applications (case-insensitive)
         const { data: profile } = await supabase
           .from("profiles")
           .select("id")
-          .eq("email", customer.email)
+          .ilike("email", customer.email)
           .maybeSingle();
         
         if (profile?.id) {
@@ -321,10 +323,15 @@ export function CreateSubscriptionDialog({ onSuccess }: CreateSubscriptionDialog
         subscriptionType
       );
       
-      setIsOpen(false);
-      resetForm();
-      toast.success("Subscription created successfully");
-      onSuccess?.();
+      if (mode === "inline") {
+        resetForm();
+        onSuccess?.();
+      } else {
+        setIsOpen(false);
+        resetForm();
+        toast.success("Subscription created successfully");
+        onSuccess?.();
+      }
     },
     onError: (error) => {
       toast.error("Failed to create subscription: " + error.message);
@@ -433,25 +440,8 @@ export function CreateSubscriptionDialog({ onSuccess }: CreateSubscriptionDialog
   const isTrailerSelected = (trailerId: string) => 
     selectedTrailers.some(t => t.id === trailerId);
 
-  return (
-    <Dialog open={isOpen} onOpenChange={(open) => {
-      setIsOpen(open);
-      if (!open) resetForm();
-    }}>
-      <DialogTrigger asChild>
-        <Button>
-          <Plus className="h-4 w-4 mr-2" />
-          Create Subscription
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Create New Subscription</DialogTitle>
-          <DialogDescription>
-            Set up a new billing subscription for a customer with custom trailer rates.
-          </DialogDescription>
-        </DialogHeader>
-
+  // Shared form body
+  const formBody = (
         <div className="space-y-6 py-4">
           {/* Customer Selection */}
           <div className="space-y-2">
@@ -890,24 +880,76 @@ export function CreateSubscriptionDialog({ onSuccess }: CreateSubscriptionDialog
             </div>
           )}
         </div>
+  );
 
+  const formActions = (
+    <div className="flex justify-end gap-2">
+      <Button variant="outline" onClick={() => {
+        if (mode === "inline") {
+          resetForm();
+          onCancel?.();
+        } else {
+          setIsOpen(false);
+        }
+      }}>
+        Cancel
+      </Button>
+      <Button
+        onClick={() => createSubscriptionMutation.mutate()}
+        disabled={!selectedCustomerId || selectedTrailers.length === 0 || createSubscriptionMutation.isPending}
+      >
+        {createSubscriptionMutation.isPending ? (
+          <>
+            <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+            Creating...
+          </>
+        ) : (
+          "Create Subscription"
+        )}
+      </Button>
+    </div>
+  );
+
+  // Inline mode: render directly on page
+  if (mode === "inline") {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h2 className="text-lg font-semibold">Create New Subscription</h2>
+          <p className="text-sm text-muted-foreground">
+            Set up a new billing subscription for a customer with custom trailer rates.
+          </p>
+        </div>
+        {formBody}
+        <div className="sticky bottom-0 bg-background border-t pt-4 pb-2">
+          {formActions}
+        </div>
+      </div>
+    );
+  }
+
+  // Dialog mode (default)
+  return (
+    <Dialog open={isOpen} onOpenChange={(open) => {
+      setIsOpen(open);
+      if (!open) resetForm();
+    }}>
+      <DialogTrigger asChild>
+        <Button>
+          <Plus className="h-4 w-4 mr-2" />
+          Create Subscription
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Create New Subscription</DialogTitle>
+          <DialogDescription>
+            Set up a new billing subscription for a customer with custom trailer rates.
+          </DialogDescription>
+        </DialogHeader>
+        {formBody}
         <DialogFooter>
-          <Button variant="outline" onClick={() => setIsOpen(false)}>
-            Cancel
-          </Button>
-          <Button
-            onClick={() => createSubscriptionMutation.mutate()}
-            disabled={!selectedCustomerId || selectedTrailers.length === 0 || createSubscriptionMutation.isPending}
-          >
-            {createSubscriptionMutation.isPending ? (
-              <>
-                <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                Creating...
-              </>
-            ) : (
-              "Create Subscription"
-            )}
-          </Button>
+          {formActions}
         </DialogFooter>
       </DialogContent>
     </Dialog>
