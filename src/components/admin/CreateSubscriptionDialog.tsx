@@ -226,6 +226,9 @@ export function CreateSubscriptionDialog({ onSuccess }: CreateSubscriptionDialog
       // ACH guard: Check if customer has a payment method linked
       const customer = customers?.find(c => c.id === selectedCustomerId);
       if (customer?.email) {
+        let hasPaymentMethod = false;
+
+        // Path 1: profile → user_id → customer_applications
         const { data: profile } = await supabase
           .from("profiles")
           .select("id")
@@ -239,11 +242,26 @@ export function CreateSubscriptionDialog({ onSuccess }: CreateSubscriptionDialog
             .eq("user_id", profile.id)
             .maybeSingle();
           
-          if (!application?.stripe_payment_method_id) {
-            throw new Error("Customer has no ACH payment method linked. Set up ACH on their profile first.");
+          if (application?.stripe_payment_method_id) {
+            hasPaymentMethod = true;
           }
-        } else {
-          throw new Error("Customer has no linked account. Set up their profile and ACH payment method first.");
+        }
+
+        // Path 2 (fallback): customer_id → customer_applications (admin-led ACH setup)
+        if (!hasPaymentMethod) {
+          const { data: appByCustomerId } = await supabase
+            .from("customer_applications")
+            .select("stripe_payment_method_id")
+            .eq("customer_id", selectedCustomerId)
+            .maybeSingle();
+
+          if (appByCustomerId?.stripe_payment_method_id) {
+            hasPaymentMethod = true;
+          }
+        }
+
+        if (!hasPaymentMethod) {
+          throw new Error("Customer has no ACH payment method linked. Set up ACH on their profile first.");
         }
       }
 
