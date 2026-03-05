@@ -1,43 +1,37 @@
 
 
-## Clickable Subscription Rows → Edit Subscription Detail View
+## Root Cause Analysis
 
-### Current State
-- Subscription rows in the Billing table are not clickable
-- Editing is limited to: contract dates (via dropdown), manage trailers (via dropdown), partner assignment (via dropdown)
-- Fields like deposit amount, billing cycle, subscription type, deposit paid status, and notes are not editable after creation
+The Stripe subscription for Abdul went straight to `active` with **zero invoices and zero charges**. Here's why:
 
-### Plan
+1. `create-subscription` uses `payment_behavior: "default_incomplete"` + `billing_cycle_anchor` (April 1st) + `proration_behavior: "none"`
+2. With no proration and a future anchor date, Stripe generates **no initial invoice** — there's nothing to charge now
+3. The deposit was added via `add_invoice_items`, but that only attaches to the **next** invoice (April 1st), not an immediate one
+4. Since there's no invoice, Stripe marks the subscription `active` immediately
+5. When admin clicks "Activate", the function sees `status: active` and returns "already active, skipping payment" — deposit never charges
 
-**1. Create a new `EditSubscriptionPanel` component**
-- File: `src/components/admin/EditSubscriptionPanel.tsx`
-- Full inline form (similar to the new Create Subscription tab approach) that loads when a subscription row is clicked
-- Editable fields:
-  - Subscription type (radio cards, same as create flow)
-  - Billing cycle (monthly/weekly/biweekly/semimonthly)
-  - Contract start date & end date (date pickers)
-  - Deposit amount & deposit paid toggle
-  - Notes/internal memo (textarea)
-  - Status display (read-only, managed via actions)
-- Shows the subscription's trailer list (read-only, with link to Manage Trailers)
-- Save button updates `customer_subscriptions` row via Supabase
-- Cancel button returns to subscription list
+This is confirmed by Stripe data: `sub_1T7gfiLjIwiEGQIhGj7Zxb1v` is `active`, customer `cus_U5sQ2ohTsvdzXt` has 0 invoices, 0 payment intents, 0 charges.
 
-**2. Update Billing page to show edit panel on row click**
-- File: `src/pages/admin/Billing.tsx`
-- Add state: `selectedSubscriptionId`
-- Make `TableRow` clickable with `onClick` → set selected ID and switch to a new `"edit-subscription"` tab
-- Pass subscription data to `EditSubscriptionPanel`
-- On save/cancel, clear selection and return to subscriptions tab
-- Keep the existing dropdown menu actions (they still work independently)
+## Fix
 
-**3. Make rows visually clickable**
-- Add `cursor-pointer hover:bg-muted/50` to subscription `TableRow`s
-- Prevent row click when clicking the dropdown menu actions (stopPropagation)
+### 1. `create-subscription` edge function — charge deposit immediately as a standalone invoice
 
-### Files to create/update
-- **Create**: `src/components/admin/EditSubscriptionPanel.tsx`
-- **Update**: `src/pages/admin/Billing.tsx` (add tab, row click handler, state)
+After creating the Stripe subscription, if the subscription went straight to `active` (no open invoice) and `depositAmount > 0`:
+- Create a standalone invoice item on the customer for the deposit
+- Create, finalize, and auto-charge a separate invoice immediately
+- Update `deposit_paid` and `deposit_paid_at` in the database
+- This ensures the deposit is collected on subscription creation day, independent of the billing anchor
+
+### 2. `activate-subscription` edge function — handle deposit-only activation
+
+When the subscription is already `active` but `deposit_paid = false` and `deposit_amount > 0`:
+- Instead of returning "already active, skipping", create a standalone deposit invoice and charge it
+- Update deposit status in the database on success
+- This covers cases where the deposit wasn't charged during creation (e.g., existing subscriptions)
+
+### Files to update
+- `supabase/functions/create-subscription/index.ts` — add post-creation deposit invoice logic (~lines 411-420)
+- `supabase/functions/activate-subscription/index.ts` — add deposit charging for already-active subscriptions (~lines 102-112)
 
 No database changes needed.
 
