@@ -411,8 +411,54 @@ serve(async (req) => {
       const subscription = await stripe.subscriptions.create(subscriptionParams);
       logStep("Created Stripe subscription", { 
         subscriptionId: subscription.id, group: groupKey, anchorDay,
-        trailerCount: groupTrailers.length
+        trailerCount: groupTrailers.length,
+        stripeStatus: subscription.status,
+        latestInvoice: typeof subscription.latest_invoice === "string" ? subscription.latest_invoice : subscription.latest_invoice?.id,
       });
+
+      // ==========================================
+      // FIX: Charge deposit immediately if subscription went straight to active with no invoice
+      // This happens when billing_cycle_anchor is in the future with proration_behavior: "none"
+      // ==========================================
+      let depositChargedDuringCreation = false;
+      if (isFirstGroup && depositAmount && depositAmount > 0 && subscription.status === "active") {
+        const latestInvoice = typeof subscription.latest_invoice === "object" ? subscription.latest_invoice : null;
+        const hasOpenInvoice = latestInvoice && latestInvoice.status === "open";
+        
+        if (!hasOpenInvoice) {
+          logStep("Subscription active with no open invoice — charging deposit as standalone invoice");
+          
+          try {
+            // Create standalone invoice item for the deposit
+            await stripe.invoiceItems.create({
+              customer: stripeCustomerId,
+              amount: Math.round(depositAmount * 100),
+              currency: "usd",
+              description: "Security Deposit",
+            });
+
+            const depositInvoice = await stripe.invoices.create({
+              customer: stripeCustomerId,
+              auto_advance: false,
+              metadata: { type: "security_deposit", subscription_id: subscription.id },
+            });
+
+            const finalizedInvoice = await stripe.invoices.finalizeInvoice(depositInvoice.id);
+            logStep("Finalized standalone deposit invoice", { invoiceId: finalizedInvoice.id, amountDue: finalizedInvoice.amount_due });
+
+            // Attempt to pay — will use customer's default payment method
+            const paidInvoice = await stripe.invoices.pay(finalizedInvoice.id);
+            logStep("Standalone deposit invoice payment initiated", { invoiceId: paidInvoice.id, status: paidInvoice.status });
+
+            depositChargedDuringCreation = true;
+          } catch (depositError) {
+            // Don't fail the entire subscription creation if deposit charge fails
+            // Admin can retry via Activate button
+            const msg = depositError instanceof Error ? depositError.message : String(depositError);
+            logStep("WARNING: Failed to charge deposit during creation, admin can retry via Activate", { error: msg });
+          }
+        }
+      }
 
       // Calculate next billing date
       let nextBillingDate: string | null = null;
@@ -434,7 +480,8 @@ serve(async (req) => {
             stripe_customer_id: stripeCustomerId,
             billing_cycle: billingCycle,
             deposit_amount: depositAmount || null,
-            deposit_paid: false,
+            deposit_paid: depositChargedDuringCreation,
+            deposit_paid_at: depositChargedDuringCreation ? new Date().toISOString() : null,
             status: mappedStatus,
             next_billing_date: nextBillingDate,
             end_date: endDate || null,
@@ -455,7 +502,8 @@ serve(async (req) => {
             stripe_customer_id: stripeCustomerId,
             billing_cycle: billingCycle,
             deposit_amount: isFirstGroup ? (depositAmount || null) : null,
-            deposit_paid: false,
+            deposit_paid: isFirstGroup ? depositChargedDuringCreation : false,
+            deposit_paid_at: (isFirstGroup && depositChargedDuringCreation) ? new Date().toISOString() : null,
             status: mappedStatus,
             next_billing_date: nextBillingDate,
             end_date: endDate || null,

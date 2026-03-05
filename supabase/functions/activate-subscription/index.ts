@@ -98,9 +98,90 @@ serve(async (req) => {
       latestInvoice: stripeSubscription.latest_invoice
     });
 
-    // If already active, return success without double-charging
+    // If already active, check if deposit still needs to be charged
     if (stripeSubscription.status === "active") {
-      logStep("Subscription already active, skipping payment");
+      const depositAmount = subscription.deposit_amount || 0;
+      const depositPaid = subscription.deposit_paid || false;
+
+      if (!depositPaid && depositAmount > 0) {
+        logStep("Subscription active but deposit unpaid, charging deposit now", { depositAmount });
+
+        // Verify customer has a payment method
+        const paymentMethods = await stripe.paymentMethods.list({
+          customer: subscription.stripe_customer_id,
+          type: "us_bank_account",
+        });
+
+        if (paymentMethods.data.length === 0) {
+          throw new Error("Customer has no payment method attached. They need to complete ACH setup first.");
+        }
+
+        const paymentMethodId = paymentMethods.data[0].id;
+
+        // Set default payment method
+        await stripe.customers.update(subscription.stripe_customer_id, {
+          invoice_settings: { default_payment_method: paymentMethodId },
+        });
+
+        // Create standalone deposit invoice
+        await stripe.invoiceItems.create({
+          customer: subscription.stripe_customer_id,
+          amount: Math.round(depositAmount * 100),
+          currency: "usd",
+          description: "Security Deposit",
+        });
+
+        const depositInvoice = await stripe.invoices.create({
+          customer: subscription.stripe_customer_id,
+          auto_advance: false,
+          metadata: { type: "security_deposit", subscription_id: subscription.stripe_subscription_id },
+        });
+
+        const finalizedInvoice = await stripe.invoices.finalizeInvoice(depositInvoice.id);
+        logStep("Finalized deposit invoice", { invoiceId: finalizedInvoice.id, amountDue: finalizedInvoice.amount_due });
+
+        const paidInvoice = await stripe.invoices.pay(finalizedInvoice.id, {
+          payment_method: paymentMethodId,
+        });
+        logStep("Deposit invoice payment initiated", { invoiceId: paidInvoice.id, status: paidInvoice.status });
+
+        // Update deposit status in database
+        await supabaseClient
+          .from("customer_subscriptions")
+          .update({
+            deposit_paid: true,
+            deposit_paid_at: new Date().toISOString(),
+            status: "active",
+          })
+          .eq("id", subscriptionId);
+
+        // Create billing_history record for deposit
+        await supabaseClient.from("billing_history").insert({
+          subscription_id: subscriptionId,
+          amount: depositAmount,
+          net_amount: depositAmount,
+          status: "processing",
+          stripe_payment_intent_id: typeof paidInvoice.payment_intent === "string"
+            ? paidInvoice.payment_intent
+            : paidInvoice.payment_intent?.id ?? null,
+          stripe_invoice_id: paidInvoice.id,
+          payment_method: "ach",
+        });
+
+        logStep("Deposit charged successfully");
+
+        return new Response(
+          JSON.stringify({
+            success: true,
+            message: `Security deposit of $${depositAmount} charged for ${subscription.customers?.full_name || "customer"}`,
+            depositCharged: true,
+            amountCharged: depositAmount,
+          }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
+        );
+      }
+
+      logStep("Subscription already active and deposit already paid, skipping");
       return new Response(
         JSON.stringify({
           success: true,
