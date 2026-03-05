@@ -1,37 +1,59 @@
 
 
-## Root Cause Analysis
+## Problem
 
-The Stripe subscription for Abdul went straight to `active` with **zero invoices and zero charges**. Here's why:
+The "Activate" button appears on subscriptions that already have payments processing in Stripe. Two issues:
 
-1. `create-subscription` uses `payment_behavior: "default_incomplete"` + `billing_cycle_anchor` (April 1st) + `proration_behavior: "none"`
-2. With no proration and a future anchor date, Stripe generates **no initial invoice** — there's nothing to charge now
-3. The deposit was added via `add_invoice_items`, but that only attaches to the **next** invoice (April 1st), not an immediate one
-4. Since there's no invoice, Stripe marks the subscription `active` immediately
-5. When admin clicks "Activate", the function sees `status: active` and returns "already active, skipping payment" — deposit never charges
+1. **`pending` subscriptions always show "Activate"** (line 1392) — even if a deposit payment is already in-flight. The condition doesn't check for existing processing/pending billing_history records.
 
-This is confirmed by Stripe data: `sub_1T7gfiLjIwiEGQIhGj7Zxb1v` is `active`, customer `cus_U5sQ2ohTsvdzXt` has 0 invoices, 0 payment intents, 0 charges.
+2. **`active` subscriptions with no `succeeded` payment show "Activate"** (line 1393) — but the `isProcessing` guard (line 1378) should prevent this IF a billing_history record exists. If the activate function ran but the billing_history insert failed or wasn't created, the guard fails.
+
+Both Ground Link subscriptions and potentially others are affected.
 
 ## Fix
 
-### 1. `create-subscription` edge function — charge deposit immediately as a standalone invoice
+### 1. Update `isReadyToActivate` logic in `src/pages/admin/Billing.tsx` (~lines 1387-1394)
 
-After creating the Stripe subscription, if the subscription went straight to `active` (no open invoice) and `depositAmount > 0`:
-- Create a standalone invoice item on the customer for the deposit
-- Create, finalize, and auto-charge a separate invoice immediately
-- Update `deposit_paid` and `deposit_paid_at` in the database
-- This ensures the deposit is collected on subscription creation day, independent of the billing anchor
+Add a check: if the subscription already has a `processing` or `pending` billing_history record, it should NOT show "Activate" — regardless of status. The existing `isProcessing` variable already captures this for `active` subs, but `pending` subs bypass it entirely.
 
-### 2. `activate-subscription` edge function — handle deposit-only activation
+Change:
+```typescript
+const isReadyToActivate = !isProcessing && sub.stripe_subscription_id && 
+  sub.stripe_customer_id && (
+    sub.status === "pending" || 
+    (sub.status === "active" && !hasSuccessfulPayment)
+  );
+```
 
-When the subscription is already `active` but `deposit_paid = false` and `deposit_amount > 0`:
-- Instead of returning "already active, skipping", create a standalone deposit invoice and charge it
-- Update deposit status in the database on success
-- This covers cases where the deposit wasn't charged during creation (e.g., existing subscriptions)
+To:
+```typescript
+const isReadyToActivate = !isProcessing && sub.stripe_subscription_id && 
+  sub.stripe_customer_id && !hasProcessingPayment && (
+    sub.status === "pending" || 
+    (sub.status === "active" && !hasSuccessfulPayment)
+  );
+```
+
+Adding `!hasProcessingPayment` ensures that if a payment is already pending/processing for ANY subscription status, the Activate button is hidden and the Processing/Pending label shows instead.
+
+### 2. Update `isProcessing` to also cover `pending` status subs with in-flight payments (~line 1378)
+
+Change:
+```typescript
+const isProcessing = activatedIds.has(sub.id) || 
+  (sub.status === "active" && hasProcessingPayment && !hasSuccessfulPayment);
+```
+
+To:
+```typescript
+const isProcessing = activatedIds.has(sub.id) || 
+  (hasProcessingPayment && !hasSuccessfulPayment);
+```
+
+This removes the `sub.status === "active"` gate so that `pending` subs with processing payments also show the processing label instead of the Activate button.
 
 ### Files to update
-- `supabase/functions/create-subscription/index.ts` — add post-creation deposit invoice logic (~lines 411-420)
-- `supabase/functions/activate-subscription/index.ts` — add deposit charging for already-active subscriptions (~lines 102-112)
+- `src/pages/admin/Billing.tsx` — two small condition changes (~4 lines total)
 
-No database changes needed.
+No backend or database changes needed.
 
