@@ -147,7 +147,10 @@ serve(async (req) => {
     logStep("Customer found", { customerId, email: customer.email });
 
     // Server-side ACH guard: verify customer has a payment method before creating subscription
+    let hasPaymentMethod = false;
+
     if (customer.email) {
+      // Path 1: profile → user_id → customer_applications
       const { data: profileData } = await supabaseClient
         .from("profiles")
         .select("id")
@@ -161,13 +164,29 @@ serve(async (req) => {
           .eq("user_id", profileData.id)
           .maybeSingle();
         
-        if (!appData?.stripe_payment_method_id) {
-          throw new Error("Customer has no ACH payment method linked. Set up ACH on their profile first.");
+        if (appData?.stripe_payment_method_id) {
+          hasPaymentMethod = true;
+          logStep("ACH payment method verified via profile path", { userId: profileData.id });
         }
-        logStep("ACH payment method verified", { userId: profileData.id });
-      } else {
-        logStep("WARNING: No profile found for customer, skipping ACH guard", { email: customer.email });
       }
+    }
+
+    // Path 2 (fallback): customer_id → customer_applications (admin-led ACH setup)
+    if (!hasPaymentMethod) {
+      const { data: appByCustomerId } = await supabaseClient
+        .from("customer_applications")
+        .select("stripe_payment_method_id")
+        .eq("customer_id", customerId)
+        .maybeSingle();
+
+      if (appByCustomerId?.stripe_payment_method_id) {
+        hasPaymentMethod = true;
+        logStep("ACH payment method verified via customer_id path", { customerId });
+      }
+    }
+
+    if (!hasPaymentMethod) {
+      throw new Error("Customer has no ACH payment method linked. Set up ACH on their profile first.");
     }
 
     // Resolve global anchor day from admin input or customer application
