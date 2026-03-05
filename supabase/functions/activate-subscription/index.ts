@@ -12,6 +12,109 @@ const logStep = (step: string, details?: Record<string, unknown>) => {
   console.log(`[ACTIVATE-SUBSCRIPTION] ${step}${detailsStr}`);
 };
 
+const resolveAchPaymentMethodId = async ({
+  stripe,
+  supabaseClient,
+  stripeCustomerId,
+  localCustomerId,
+  customerEmail,
+}: {
+  stripe: Stripe;
+  supabaseClient: ReturnType<typeof createClient>;
+  stripeCustomerId: string;
+  localCustomerId: string;
+  customerEmail?: string | null;
+}) => {
+  // 1) Prefer payment methods already attached to the Stripe customer on the subscription
+  const existingMethods = await stripe.paymentMethods.list({
+    customer: stripeCustomerId,
+    type: "us_bank_account",
+    limit: 1,
+  });
+
+  if (existingMethods.data.length > 0) {
+    const paymentMethodId = existingMethods.data[0].id;
+    logStep("Found ACH payment method on subscription customer", { paymentMethodId });
+    return paymentMethodId;
+  }
+
+  // 2) Fallback to stored ACH setup in customer_applications
+  let storedPmId: string | null = null;
+
+  const { data: appByCustomerRows, error: appByCustomerError } = await supabaseClient
+    .from("customer_applications")
+    .select("stripe_payment_method_id")
+    .eq("customer_id", localCustomerId)
+    .not("stripe_payment_method_id", "is", null)
+    .order("updated_at", { ascending: false })
+    .limit(1);
+
+  if (appByCustomerError) {
+    logStep("Warning: failed customer_id payment method lookup", { error: appByCustomerError.message, localCustomerId });
+  }
+
+  storedPmId = appByCustomerRows?.[0]?.stripe_payment_method_id ?? null;
+
+  if (!storedPmId && customerEmail) {
+    const { data: profileRows, error: profileError } = await supabaseClient
+      .from("profiles")
+      .select("id")
+      .ilike("email", customerEmail)
+      .limit(1);
+
+    if (profileError) {
+      logStep("Warning: failed profile lookup for ACH fallback", { error: profileError.message, customerEmail });
+    }
+
+    const profileId = profileRows?.[0]?.id;
+
+    if (profileId) {
+      const { data: appByUserRows, error: appByUserError } = await supabaseClient
+        .from("customer_applications")
+        .select("stripe_payment_method_id")
+        .eq("user_id", profileId)
+        .not("stripe_payment_method_id", "is", null)
+        .order("updated_at", { ascending: false })
+        .limit(1);
+
+      if (appByUserError) {
+        logStep("Warning: failed user_id payment method lookup", { error: appByUserError.message, profileId });
+      }
+
+      storedPmId = appByUserRows?.[0]?.stripe_payment_method_id ?? null;
+    }
+  }
+
+  // 3) Last fallback: find ACH method on any Stripe customer with same email
+  if (!storedPmId && customerEmail) {
+    const sameEmailCustomers = await stripe.customers.list({ email: customerEmail, limit: 10 });
+
+    for (const candidateCustomer of sameEmailCustomers.data) {
+      if (candidateCustomer.id === stripeCustomerId) continue;
+      const candidateMethods = await stripe.paymentMethods.list({
+        customer: candidateCustomer.id,
+        type: "us_bank_account",
+        limit: 1,
+      });
+      if (candidateMethods.data.length > 0) {
+        storedPmId = candidateMethods.data[0].id;
+        logStep("Recovered ACH method from same-email Stripe customer", {
+          paymentMethodId: storedPmId,
+          fromStripeCustomerId: candidateCustomer.id,
+        });
+        break;
+      }
+    }
+  }
+
+  if (!storedPmId) {
+    throw new Error("Customer has no payment method attached. They need to complete ACH setup first.");
+  }
+
+  logStep("Recovered stored ACH payment method from application", { paymentMethodId: storedPmId });
+  return storedPmId;
+};
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -106,33 +209,48 @@ serve(async (req) => {
       if (!depositPaid && depositAmount > 0) {
         logStep("Subscription active but deposit unpaid, charging deposit now", { depositAmount });
 
-        // Verify customer has a payment method
-        const paymentMethods = await stripe.paymentMethods.list({
-          customer: subscription.stripe_customer_id,
-          type: "us_bank_account",
+        const paymentMethodId = await resolveAchPaymentMethodId({
+          stripe,
+          supabaseClient,
+          stripeCustomerId: subscription.stripe_customer_id,
+          localCustomerId: subscription.customer_id,
+          customerEmail: subscription.customers?.email,
         });
 
-        if (paymentMethods.data.length === 0) {
-          throw new Error("Customer has no payment method attached. They need to complete ACH setup first.");
+        const resolvedPm = await stripe.paymentMethods.retrieve(paymentMethodId);
+        const paymentMethodCustomerId = typeof resolvedPm.customer === "string"
+          ? resolvedPm.customer
+          : resolvedPm.customer?.id ?? null;
+
+        if (!paymentMethodCustomerId) {
+          throw new Error("Customer ACH payment method is no longer attached. Please resend ACH setup and have the customer reconnect their bank account, then retry activation.");
         }
 
-        const paymentMethodId = paymentMethods.data[0].id;
+        const chargeCustomerId = paymentMethodCustomerId;
 
-        // Set default payment method
-        await stripe.customers.update(subscription.stripe_customer_id, {
+        if (chargeCustomerId !== subscription.stripe_customer_id) {
+          logStep("Charging deposit on alternate Stripe customer tied to ACH setup", {
+            chargeCustomerId,
+            subscriptionStripeCustomerId: subscription.stripe_customer_id,
+            paymentMethodId,
+          });
+        }
+
+        // Set default payment method on the customer being charged
+        await stripe.customers.update(chargeCustomerId, {
           invoice_settings: { default_payment_method: paymentMethodId },
         });
 
         // Create standalone deposit invoice
         await stripe.invoiceItems.create({
-          customer: subscription.stripe_customer_id,
+          customer: chargeCustomerId,
           amount: Math.round(depositAmount * 100),
           currency: "usd",
           description: "Security Deposit",
         });
 
         const depositInvoice = await stripe.invoices.create({
-          customer: subscription.stripe_customer_id,
+          customer: chargeCustomerId,
           auto_advance: false,
           metadata: { type: "security_deposit", subscription_id: subscription.stripe_subscription_id },
         });
@@ -224,21 +342,28 @@ serve(async (req) => {
       }
     }
 
-    // Check if customer has a payment method
-    const paymentMethods = await stripe.paymentMethods.list({
-      customer: subscription.stripe_customer_id,
-      type: "us_bank_account",
+    const paymentMethodId = await resolveAchPaymentMethodId({
+      stripe,
+      supabaseClient,
+      stripeCustomerId: subscription.stripe_customer_id,
+      localCustomerId: subscription.customer_id,
+      customerEmail: subscription.customers?.email,
     });
 
-    if (paymentMethods.data.length === 0) {
-      throw new Error("Customer has no payment method attached. They need to complete ACH setup first.");
+    const resolvedPm = await stripe.paymentMethods.retrieve(paymentMethodId);
+    const paymentMethodCustomerId = typeof resolvedPm.customer === "string"
+      ? resolvedPm.customer
+      : resolvedPm.customer?.id ?? null;
+
+    if (!paymentMethodCustomerId) {
+      throw new Error("Customer ACH payment method is no longer attached. Please resend ACH setup and have the customer reconnect their bank account, then retry activation.");
     }
-    
-    const paymentMethodId = paymentMethods.data[0].id;
-    logStep("Payment method verified", { 
-      paymentMethodCount: paymentMethods.data.length,
-      paymentMethodId 
-    });
+
+    if (paymentMethodCustomerId !== subscription.stripe_customer_id) {
+      throw new Error("Customer ACH payment method belongs to a different billing profile. Please re-run ACH setup for this customer and try activation again.");
+    }
+
+    logStep("Payment method verified", { paymentMethodId, paymentMethodCustomerId });
 
     // Set the payment method as default on the customer for future invoices
     await stripe.customers.update(subscription.stripe_customer_id, {
