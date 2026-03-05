@@ -132,12 +132,37 @@ serve(async (req) => {
 
     // Get the user's application - use customer_id for customer path, user_id otherwise
     const appQuery = customerId
-      ? supabaseClient.from("customer_applications").select("id").eq("customer_id", customerId).single()
-      : supabaseClient.from("customer_applications").select("id").eq("user_id", lookupUserId).single();
+      ? supabaseClient.from("customer_applications").select("id, customer_id, user_id").eq("customer_id", customerId).single()
+      : supabaseClient.from("customer_applications").select("id, customer_id, user_id").eq("user_id", lookupUserId).single();
     const { data: application, error: appError } = await appQuery;
 
     if (appError || !application) {
       throw new Error("Application not found");
+    }
+
+    // Auto-link customer_id on the application if missing (prevents future lookup failures)
+    if (!application.customer_id && application.user_id) {
+      const { data: profileData } = await supabaseClient
+        .from("profiles")
+        .select("email")
+        .eq("id", application.user_id)
+        .maybeSingle();
+      
+      if (profileData?.email) {
+        const { data: customerData } = await supabaseClient
+          .from("customers")
+          .select("id")
+          .ilike("email", profileData.email)
+          .maybeSingle();
+        
+        if (customerData?.id) {
+          await supabaseClient
+            .from("customer_applications")
+            .update({ customer_id: customerData.id })
+            .eq("id", application.id);
+          logStep("Auto-linked customer_id on application", { applicationId: application.id, customerId: customerData.id });
+        }
+      }
     }
 
     // Update the application with the payment method and billing anchor preference
