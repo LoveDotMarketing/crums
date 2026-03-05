@@ -429,6 +429,58 @@ serve(async (req) => {
           logStep("Subscription active with no open invoice — charging deposit as standalone invoice");
           
           try {
+            // Resolve and attach the customer's ACH payment method before charging
+            const achMethods = await stripe.paymentMethods.list({
+              customer: stripeCustomerId,
+              type: "us_bank_account",
+              limit: 1,
+            });
+
+            let depositPaymentMethodId: string | null = achMethods.data[0]?.id ?? null;
+
+            // If no ACH method on this Stripe customer, find it from the application record
+            if (!depositPaymentMethodId && customer.email) {
+              const { data: profileData } = await supabaseClient
+                .from("profiles")
+                .select("id")
+                .ilike("email", customer.email)
+                .maybeSingle();
+              
+              if (profileData?.id) {
+                const { data: appData } = await supabaseClient
+                  .from("customer_applications")
+                  .select("stripe_payment_method_id")
+                  .eq("user_id", profileData.id)
+                  .not("stripe_payment_method_id", "is", null)
+                  .maybeSingle();
+                
+                if (appData?.stripe_payment_method_id) {
+                  // Try to attach the stored PM to this Stripe customer
+                  try {
+                    const storedPm = await stripe.paymentMethods.retrieve(appData.stripe_payment_method_id);
+                    const pmCustomer = typeof storedPm.customer === "string" ? storedPm.customer : storedPm.customer?.id ?? null;
+                    if (!pmCustomer) {
+                      await stripe.paymentMethods.attach(appData.stripe_payment_method_id, { customer: stripeCustomerId });
+                    } else if (pmCustomer !== stripeCustomerId) {
+                      await stripe.paymentMethods.detach(appData.stripe_payment_method_id);
+                      await stripe.paymentMethods.attach(appData.stripe_payment_method_id, { customer: stripeCustomerId });
+                    }
+                    depositPaymentMethodId = appData.stripe_payment_method_id;
+                    logStep("Attached stored ACH method to Stripe customer for deposit", { pmId: depositPaymentMethodId });
+                  } catch (attachErr: any) {
+                    logStep("Warning: could not attach stored PM for deposit", { error: attachErr.message });
+                  }
+                }
+              }
+            }
+
+            if (depositPaymentMethodId) {
+              await stripe.customers.update(stripeCustomerId, {
+                invoice_settings: { default_payment_method: depositPaymentMethodId },
+              });
+              logStep("Set default payment method for deposit invoice", { depositPaymentMethodId });
+            }
+
             // Create standalone invoice item for the deposit
             await stripe.invoiceItems.create({
               customer: stripeCustomerId,
@@ -446,8 +498,10 @@ serve(async (req) => {
             const finalizedInvoice = await stripe.invoices.finalizeInvoice(depositInvoice.id);
             logStep("Finalized standalone deposit invoice", { invoiceId: finalizedInvoice.id, amountDue: finalizedInvoice.amount_due });
 
-            // Attempt to pay — will use customer's default payment method
-            const paidInvoice = await stripe.invoices.pay(finalizedInvoice.id);
+            // Pay with the specific payment method if available, otherwise let Stripe use default
+            const payParams: any = {};
+            if (depositPaymentMethodId) payParams.payment_method = depositPaymentMethodId;
+            const paidInvoice = await stripe.invoices.pay(finalizedInvoice.id, payParams);
             logStep("Standalone deposit invoice payment initiated", { invoiceId: paidInvoice.id, status: paidInvoice.status });
 
             depositChargedDuringCreation = true;

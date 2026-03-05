@@ -84,6 +84,52 @@ serve(async (req) => {
       throw new Error("No payment method found on SetupIntent");
     }
 
+    // Ensure the payment method is attached to any existing Stripe customer for this user
+    // This prevents detached PM issues when activating subscriptions later
+    try {
+      const pmDetails = await stripe.paymentMethods.retrieve(pmId as string);
+      const pmCustomer = typeof pmDetails.customer === "string" ? pmDetails.customer : pmDetails.customer?.id ?? null;
+      
+      // Determine the correct email to look up the Stripe customer
+      // In admin mode, we need the customer's email, not the admin's
+      let lookupEmail = user.email!;
+      if (customerId) {
+        const { data: custData } = await supabaseClient
+          .from("customers")
+          .select("email")
+          .eq("id", customerId)
+          .maybeSingle();
+        if (custData?.email) lookupEmail = custData.email;
+      } else if (targetUserId && targetUserId !== user.id) {
+        const { data: profileData } = await supabaseClient
+          .from("profiles")
+          .select("email")
+          .eq("id", targetUserId)
+          .maybeSingle();
+        if (profileData?.email) lookupEmail = profileData.email;
+      }
+      
+      if (!pmCustomer) {
+        // PM is detached — find a Stripe customer to attach it to
+        const existingCustomers = await stripe.customers.list({ email: lookupEmail, limit: 1 });
+        if (existingCustomers.data.length > 0) {
+          await stripe.paymentMethods.attach(pmId as string, { customer: existingCustomers.data[0].id });
+          await stripe.customers.update(existingCustomers.data[0].id, {
+            invoice_settings: { default_payment_method: pmId as string },
+          });
+          logStep("Attached PM to existing Stripe customer", { pmId, stripeCustomerId: existingCustomers.data[0].id, email: lookupEmail });
+        }
+      } else {
+        // PM is attached — set as default payment method
+        await stripe.customers.update(pmCustomer, {
+          invoice_settings: { default_payment_method: pmId as string },
+        });
+        logStep("Set PM as default on Stripe customer", { pmId, stripeCustomerId: pmCustomer });
+      }
+    } catch (attachErr: any) {
+      logStep("Warning: could not ensure PM attachment", { error: attachErr.message, pmId });
+    }
+
     // Get the user's application - use customer_id for customer path, user_id otherwise
     const appQuery = customerId
       ? supabaseClient.from("customer_applications").select("id").eq("customer_id", customerId).single()

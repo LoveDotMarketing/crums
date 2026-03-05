@@ -218,12 +218,21 @@ serve(async (req) => {
         });
 
         const resolvedPm = await stripe.paymentMethods.retrieve(paymentMethodId);
-        const paymentMethodCustomerId = typeof resolvedPm.customer === "string"
+        let paymentMethodCustomerId = typeof resolvedPm.customer === "string"
           ? resolvedPm.customer
           : resolvedPm.customer?.id ?? null;
 
+        // If the payment method is detached, re-attach it to the subscription's Stripe customer
         if (!paymentMethodCustomerId) {
-          throw new Error("Customer ACH payment method is no longer attached. Please resend ACH setup and have the customer reconnect their bank account, then retry activation.");
+          logStep("Payment method is detached, re-attaching to subscription customer", { paymentMethodId, targetCustomer: subscription.stripe_customer_id });
+          try {
+            await stripe.paymentMethods.attach(paymentMethodId, { customer: subscription.stripe_customer_id });
+            paymentMethodCustomerId = subscription.stripe_customer_id;
+            logStep("Successfully re-attached payment method");
+          } catch (attachErr: any) {
+            logStep("Failed to re-attach payment method", { error: attachErr.message });
+            throw new Error("Customer ACH payment method could not be re-attached. Please resend ACH setup and have the customer reconnect their bank account, then retry activation.");
+          }
         }
 
         const chargeCustomerId = paymentMethodCustomerId;
@@ -351,16 +360,35 @@ serve(async (req) => {
     });
 
     const resolvedPm = await stripe.paymentMethods.retrieve(paymentMethodId);
-    const paymentMethodCustomerId = typeof resolvedPm.customer === "string"
+    let paymentMethodCustomerId = typeof resolvedPm.customer === "string"
       ? resolvedPm.customer
       : resolvedPm.customer?.id ?? null;
 
+    // If the payment method is detached, re-attach it to the subscription's Stripe customer
     if (!paymentMethodCustomerId) {
-      throw new Error("Customer ACH payment method is no longer attached. Please resend ACH setup and have the customer reconnect their bank account, then retry activation.");
+      logStep("Payment method is detached, re-attaching to subscription customer", { paymentMethodId, targetCustomer: subscription.stripe_customer_id });
+      try {
+        await stripe.paymentMethods.attach(paymentMethodId, { customer: subscription.stripe_customer_id });
+        paymentMethodCustomerId = subscription.stripe_customer_id;
+        logStep("Successfully re-attached payment method");
+      } catch (attachErr: any) {
+        logStep("Failed to re-attach payment method", { error: attachErr.message });
+        throw new Error("Customer ACH payment method could not be re-attached. Please resend ACH setup and have the customer reconnect their bank account, then retry activation.");
+      }
     }
 
+    // If PM is attached to a different Stripe customer, detach and re-attach to the subscription customer
     if (paymentMethodCustomerId !== subscription.stripe_customer_id) {
-      throw new Error("Customer ACH payment method belongs to a different billing profile. Please re-run ACH setup for this customer and try activation again.");
+      logStep("Payment method on different customer, re-attaching", { from: paymentMethodCustomerId, to: subscription.stripe_customer_id });
+      try {
+        await stripe.paymentMethods.detach(paymentMethodId);
+        await stripe.paymentMethods.attach(paymentMethodId, { customer: subscription.stripe_customer_id });
+        paymentMethodCustomerId = subscription.stripe_customer_id;
+        logStep("Successfully moved payment method to subscription customer");
+      } catch (moveErr: any) {
+        logStep("Failed to move payment method", { error: moveErr.message });
+        throw new Error("Customer ACH payment method belongs to a different billing profile and could not be moved. Please re-run ACH setup for this customer.");
+      }
     }
 
     logStep("Payment method verified", { paymentMethodId, paymentMethodCustomerId });
