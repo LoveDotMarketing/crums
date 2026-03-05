@@ -218,7 +218,7 @@ export default function Support() {
       const { data: customerProfile } = await supabase
         .from("profiles")
         .select("id")
-        .eq("email", customer.email)
+        .ilike("email", customer.email)
         .single();
       
       const userId = customerProfile?.id || user.id;

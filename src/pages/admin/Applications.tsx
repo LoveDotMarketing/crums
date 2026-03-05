@@ -440,7 +440,7 @@ export default function Applications() {
       const { data: customerData, error: customerError } = await supabase
         .from("customers")
         .select("id")
-        .eq("email", selectedApplication.profiles?.email)
+        .ilike("email", selectedApplication.profiles?.email || "")
         .maybeSingle();
 
       if (customerError) throw customerError;
