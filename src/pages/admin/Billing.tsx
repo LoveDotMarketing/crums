@@ -1376,11 +1376,11 @@ export default function Billing() {
                             // Determine if this subscription is in processing state
                             // Only show processing for active subs with pending/processing payments
                             const isProcessing = activatedIds.has(sub.id) || 
-                              (sub.status === "active" && hasProcessingPayment && !hasSuccessfulPayment);
+                              (hasProcessingPayment && !hasSuccessfulPayment);
 
                             // Determine the Stripe-aligned label
-                            const processingLabel = latestPaymentRecord?.status === "pending" && sub.status === "active" ? "Pending"
-                              : latestPaymentRecord?.status === "processing" && sub.status === "active" ? "Processing"
+                            const processingLabel = latestPaymentRecord?.status === "pending" ? "Pending"
+                              : latestPaymentRecord?.status === "processing" ? "Processing"
                               : activatedIds.has(sub.id) ? "Processing"
                               : "Processing";
                             
@@ -1388,7 +1388,7 @@ export default function Billing() {
                             // Pending subs with Stripe IDs are ready (even if previously attempted)
                             // Active subs with no successful payment also qualify
                             const isReadyToActivate = !isProcessing && sub.stripe_subscription_id && 
-                              sub.stripe_customer_id && (
+                              sub.stripe_customer_id && !hasProcessingPayment && (
                                 sub.status === "pending" || 
                                 (sub.status === "active" && !hasSuccessfulPayment)
                               );
