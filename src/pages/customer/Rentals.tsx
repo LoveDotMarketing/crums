@@ -260,7 +260,13 @@ export default function Rentals() {
                             </CardDescription>
                           </div>
                           <Badge variant="default" className={isLeaseToOwn ? "bg-primary" : "bg-primary"}>
-                            {isLeaseToOwn ? "Lease to Own" : "Leased"}
+                            {isLeaseToOwn
+                              ? "Lease to Own"
+                              : item.subscription?.subscription_type === "6_month_lease"
+                                ? "6 Mo Lease"
+                                : item.subscription?.subscription_type === "rent_for_storage"
+                                  ? "Storage"
+                                  : "12 Mo Lease"}
                           </Badge>
                         </div>
                       </CardHeader>

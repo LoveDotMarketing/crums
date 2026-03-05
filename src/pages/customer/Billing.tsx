@@ -245,6 +245,8 @@ const CustomerBilling = () => {
                       <CardContent>
                         {getStatusBadge(sub.status)}
                         <p className="text-xs text-muted-foreground mt-2 capitalize">
+                          {getSubscriptionTypeLabel(sub.subscription_type)}
+                          {" · "}
                           {sub.billing_cycle} billing
                         </p>
                       </CardContent>
