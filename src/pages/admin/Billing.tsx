@@ -100,6 +100,7 @@ import { ManageTrailersDialog } from "@/components/admin/ManageTrailersDialog";
 import { EditSubscriptionDatesDialog } from "@/components/admin/EditSubscriptionDatesDialog";
 import { ReadyToActivateCard } from "@/components/admin/ReadyToActivateCard";
 import { ChargeCustomerDialog } from "@/components/admin/ChargeCustomerDialog";
+import { EditSubscriptionPanel } from "@/components/admin/EditSubscriptionPanel";
 
 type BillingCycle = "weekly" | "biweekly" | "semimonthly" | "monthly";
 type SubscriptionType = "standard_lease" | "6_month_lease" | "rent_for_storage" | "lease_to_own" | "repayment_plan";
@@ -255,6 +256,7 @@ interface StripeWebhookLog {
 export default function Billing() {
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState("subscriptions");
+  const [selectedSubscriptionId, setSelectedSubscriptionId] = useState<string | null>(null);
   const [isDiscountDialogOpen, setIsDiscountDialogOpen] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const [isRunningDunning, setIsRunningDunning] = useState(false);
@@ -1245,6 +1247,12 @@ export default function Billing() {
                   <Plus className="h-4 w-4 mr-1" />
                   New Subscription
                 </TabsTrigger>
+                {selectedSubscriptionId && (
+                  <TabsTrigger value="edit-subscription">
+                    <Pencil className="h-4 w-4 mr-1" />
+                    Edit Subscription
+                  </TabsTrigger>
+                )}
                 <TabsTrigger value="failures" className="relative">
                   Payment Failures
                   {unresolvedFailures > 0 && (
@@ -1286,6 +1294,29 @@ export default function Billing() {
                     />
                   </CardContent>
                 </Card>
+              </TabsContent>
+
+              {/* Edit Subscription Tab (inline panel) */}
+              <TabsContent value="edit-subscription">
+                {selectedSubscriptionId && (
+                  <Card>
+                    <CardContent className="pt-6">
+                      <EditSubscriptionPanel
+                        subscriptionId={selectedSubscriptionId}
+                        onSave={() => {
+                          queryClient.invalidateQueries({ queryKey: ["customer-subscriptions"] });
+                          queryClient.invalidateQueries({ queryKey: ["subscription-items"] });
+                          setSelectedSubscriptionId(null);
+                          setActiveTab("subscriptions");
+                        }}
+                        onCancel={() => {
+                          setSelectedSubscriptionId(null);
+                          setActiveTab("subscriptions");
+                        }}
+                      />
+                    </CardContent>
+                  </Card>
+                )}
               </TabsContent>
 
               {/* Subscriptions Tab */}
@@ -1367,7 +1398,7 @@ export default function Billing() {
                               sub.stripe_subscription_id && !hasSuccessfulPayment;
                             
                             return (
-                              <TableRow key={sub.id}>
+                              <TableRow key={sub.id} className="cursor-pointer hover:bg-muted/50" onClick={() => { setSelectedSubscriptionId(sub.id); setActiveTab("edit-subscription"); }}>
                               <TableCell>
                                   <div>
                                     <p className="font-medium">
@@ -1464,7 +1495,7 @@ export default function Billing() {
                                     )}
                                   </div>
                                 </TableCell>
-                                <TableCell>
+                                <TableCell onClick={(e) => e.stopPropagation()}>
                                   <div className="flex items-center gap-1">
                                     {isProcessing ? (
                                       <Button
