@@ -40,7 +40,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { logSubscriptionCreated } from "@/lib/eventLogger";
 
 type BillingCycle = "weekly" | "biweekly" | "semimonthly" | "monthly";
-type SubscriptionType = "standard_lease" | "rent_for_storage" | "lease_to_own" | "repayment_plan";
+type SubscriptionType = "standard_lease" | "6_month_lease" | "rent_for_storage" | "lease_to_own" | "repayment_plan";
 
 interface Customer {
   id: string;
@@ -368,10 +368,17 @@ export function CreateSubscriptionDialog({ onSuccess }: CreateSubscriptionDialog
     setSubscriptionType(value);
     
     // Auto-set end date for standard lease (12 months)
-    if (value === "standard_lease" && !endDate) {
+    if (value === "standard_lease") {
       const twelveMonthsFromNow = new Date();
       twelveMonthsFromNow.setMonth(twelveMonthsFromNow.getMonth() + 12);
       setEndDate(twelveMonthsFromNow);
+    }
+    
+    // Auto-set end date for 6-month lease
+    if (value === "6_month_lease") {
+      const sixMonthsFromNow = new Date();
+      sixMonthsFromNow.setMonth(sixMonthsFromNow.getMonth() + 6);
+      setEndDate(sixMonthsFromNow);
     }
     
     // If lease to own, mark all trailers as lease to own
@@ -513,6 +520,22 @@ export function CreateSubscriptionDialog({ onSuccess }: CreateSubscriptionDialog
                   </div>
                   <p className="text-sm text-muted-foreground font-normal mt-0.5">
                     Minimum 12-month commitment with recurring billing
+                  </p>
+                </Label>
+              </div>
+
+              <div className={cn(
+                "flex items-start space-x-3 p-3 rounded-lg border cursor-pointer hover:bg-muted/50 transition-colors",
+                subscriptionType === "6_month_lease" && "border-green-500 bg-green-500/5"
+              )}>
+                <RadioGroupItem value="6_month_lease" id="6_month_lease" className="mt-1" />
+                <Label htmlFor="6_month_lease" className="flex-1 cursor-pointer">
+                  <div className="flex items-center gap-2 font-medium">
+                    <FileText className="h-4 w-4 text-green-500" />
+                    6 Month Lease
+                  </div>
+                  <p className="text-sm text-muted-foreground font-normal mt-0.5">
+                    Short-term 6-month commitment with recurring billing
                   </p>
                 </Label>
               </div>

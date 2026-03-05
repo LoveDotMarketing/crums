@@ -41,7 +41,7 @@ interface SubscriptionRequest {
   customRates?: Record<string, number>; // trailerId -> custom rate override
   leaseToOwnFlags?: Record<string, boolean>; // trailerId -> lease to own flag
   endDate?: string; // Optional end date for fixed-term leases (YYYY-MM-DD)
-  subscriptionType?: "standard_lease" | "rent_for_storage" | "lease_to_own" | "repayment_plan";
+  subscriptionType?: "standard_lease" | "6_month_lease" | "rent_for_storage" | "lease_to_own" | "repayment_plan";
   leaseToOwnTotal?: number; // Total buyout price for lease-to-own agreements
   billingAnchorDay?: number; // Admin-selected billing anchor day (1-28)
   trailerBillingSchedules?: Record<string, TrailerBillingSchedule>; // per-trailer billing overrides
