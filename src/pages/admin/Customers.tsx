@@ -230,7 +230,7 @@ export default function Customers() {
         }
 
         // Calculate profile completion based on customers table fields (what admins see in Edit dialog)
-        const customerProfile = profiles?.find(p => p.email === customer.email);
+        const customerProfile = profiles?.find(p => p.email?.toLowerCase() === customer.email?.toLowerCase());
         const customerApplication = customerProfile 
           ? applications?.find(a => a.user_id === customerProfile.id)
           : null;
