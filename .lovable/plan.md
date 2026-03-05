@@ -2,58 +2,31 @@
 
 ## Problem
 
-The "Activate" button appears on subscriptions that already have payments processing in Stripe. Two issues:
-
-1. **`pending` subscriptions always show "Activate"** (line 1392) — even if a deposit payment is already in-flight. The condition doesn't check for existing processing/pending billing_history records.
-
-2. **`active` subscriptions with no `succeeded` payment show "Activate"** (line 1393) — but the `isProcessing` guard (line 1378) should prevent this IF a billing_history record exists. If the activate function ran but the billing_history insert failed or wasn't created, the guard fails.
-
-Both Ground Link subscriptions and potentially others are affected.
+Abdul's `customer_applications` record shows `payment_setup_status = 'completed'` and has a `stripe_payment_method_id` (`pm_1T7dwSLjIwiEGQIhzU647O3c`) that is dead/detached in Stripe. The UI shows "ACH ✓" and hides the "Send ACH Setup" button, so there's no way to re-do the setup.
 
 ## Fix
 
-### 1. Update `isReadyToActivate` logic in `src/pages/admin/Billing.tsx` (~lines 1387-1394)
+### 1. Database: Reset Abdul's ACH status
 
-Add a check: if the subscription already has a `processing` or `pending` billing_history record, it should NOT show "Activate" — regardless of status. The existing `isProcessing` variable already captures this for `active` subs, but `pending` subs bypass it entirely.
+Run a migration to clear the broken payment method and reset status so the ACH setup flow can be re-initiated:
 
-Change:
-```typescript
-const isReadyToActivate = !isProcessing && sub.stripe_subscription_id && 
-  sub.stripe_customer_id && (
-    sub.status === "pending" || 
-    (sub.status === "active" && !hasSuccessfulPayment)
-  );
+```sql
+UPDATE customer_applications
+SET payment_setup_status = 'pending',
+    stripe_payment_method_id = NULL
+WHERE id = '25b5046d-d4b2-405c-bf78-ba3e2b71039f';
 ```
 
-To:
-```typescript
-const isReadyToActivate = !isProcessing && sub.stripe_subscription_id && 
-  sub.stripe_customer_id && !hasProcessingPayment && (
-    sub.status === "pending" || 
-    (sub.status === "active" && !hasSuccessfulPayment)
-  );
-```
+### 2. UI: Add a "Reset ACH" option for admins
 
-Adding `!hasProcessingPayment` ensures that if a payment is already pending/processing for ANY subscription status, the Activate button is hidden and the Processing/Pending label shows instead.
+In `src/pages/admin/Applications.tsx`, update the ACH badge area (~line 773) so that when `payment_setup_status === "completed"`, instead of only showing the static "ACH ✓" badge, also show a small reset button that sets `payment_setup_status` back to `pending` and clears `stripe_payment_method_id`. This prevents needing manual database edits in the future.
 
-### 2. Update `isProcessing` to also cover `pending` status subs with in-flight payments (~line 1378)
-
-Change:
-```typescript
-const isProcessing = activatedIds.has(sub.id) || 
-  (sub.status === "active" && hasProcessingPayment && !hasSuccessfulPayment);
-```
-
-To:
-```typescript
-const isProcessing = activatedIds.has(sub.id) || 
-  (hasProcessingPayment && !hasSuccessfulPayment);
-```
-
-This removes the `sub.status === "active"` gate so that `pending` subs with processing payments also show the processing label instead of the Activate button.
+The reset button will:
+- Update `customer_applications` setting `payment_setup_status = 'pending'` and `stripe_payment_method_id = null`
+- Refresh the applications list
+- Show a toast confirmation
 
 ### Files to update
-- `src/pages/admin/Billing.tsx` — two small condition changes (~4 lines total)
-
-No backend or database changes needed.
+- **Database migration** — one UPDATE statement for Abdul's record
+- `src/pages/admin/Applications.tsx` — add reset ACH button next to the "ACH ✓" badge (~5 lines)
 
