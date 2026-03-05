@@ -1,53 +1,35 @@
 
 
-## Add 6-Month Lease Subscription Option
+## Flow Review: 6-Month Lease Subscription — All Clear
 
-### 1. Database Migration — Add enum value
+I reviewed every touchpoint for the `6_month_lease` subscription type from creation to display. **Everything is correctly wired. No issues found.**
 
-```sql
-ALTER TYPE public.subscription_type ADD VALUE '6_month_lease';
-```
+### Verified Touchpoints
 
-This adds the new value to the existing `subscription_type` enum used by the `customer_subscriptions` table.
+| Step | File | Status |
+|------|------|--------|
+| **Database enum** | Migration added `6_month_lease` to `subscription_type` | Done |
+| **Edge function type** | `create-subscription/index.ts` line 44 | Includes `6_month_lease` |
+| **Admin: Create dialog type** | `CreateSubscriptionDialog.tsx` line 43 | Type union updated |
+| **Admin: Radio card UI** | `CreateSubscriptionDialog.tsx` lines 527-541 | Green-themed card present |
+| **Admin: Auto end-date** | `CreateSubscriptionDialog.tsx` lines 378-382 | Sets 6 months from now |
+| **Admin: Billing label** | `Billing.tsx` line 1085 | `"6 Mo Lease"` with calendar icon |
+| **Admin: Customer form label** | `CustomerFormDialog.tsx` line 114 | `"6 Month Lease"` |
+| **Customer: Billing label** | `customer/Billing.tsx` line 160 | `"6 Month Lease"` |
+| **Customer: Billing card** | `customer/Billing.tsx` line 248 | Shows type label with billing cycle |
+| **Customer: Rentals badge** | `customer/Rentals.tsx` lines 265-266 | `"6 Mo Lease"` badge |
+| **Subscription payload** | `CreateSubscriptionDialog.tsx` line 281 | `subscriptionType` passed to edge function |
+| **Edge function passthrough** | `create-subscription/index.ts` | Type stored in DB as-is |
 
-### 2. Update TypeScript type aliases (3 files)
+### Flow Summary
 
-Add `"6_month_lease"` to the `SubscriptionType` union in:
-- `src/components/admin/CreateSubscriptionDialog.tsx` (line 43)
-- `src/pages/admin/Billing.tsx` (line 105)
-- `src/pages/customer/Profile.tsx` (line 41)
+1. Admin opens Create Subscription dialog → selects "6 Month Lease" radio card (green)
+2. End date auto-sets to 6 months from today
+3. Admin selects customer, trailers, rates → submits
+4. Edge function creates Stripe subscription and stores `6_month_lease` in `customer_subscriptions.subscription_type`
+5. Admin Billing page shows "6 Mo Lease" badge
+6. Customer Billing page shows "6 Month Lease · monthly billing"
+7. Customer Rentals page shows "6 Mo Lease" badge on trailer cards
 
-### 3. Add radio option in CreateSubscriptionDialog
-
-Insert a new radio card between "Standard 12 Month Lease" and "Rent for Storage" with:
-- Label: **6 Month Lease**
-- Description: "Short-term 6-month commitment with recurring billing"
-- Icon: `FileText` (matches standard lease styling)
-
-### 4. Auto-set end date for 6-month lease
-
-Update `handleSubscriptionTypeChange` so selecting `6_month_lease` auto-sets end date to 6 months from now (similar to how `standard_lease` sets 12 months).
-
-### 5. Update label/display mappings (4 locations)
-
-| File | Function/Location |
-|------|-------------------|
-| `src/pages/admin/Billing.tsx` | `getSubscriptionTypeLabel` — add `6_month_lease` entry |
-| `src/pages/customer/Billing.tsx` | `getSubscriptionTypeLabel` — add `6_month_lease: "6 Month Lease"` |
-| `src/components/admin/CustomerFormDialog.tsx` | `formatSubscriptionType` — add case + badge color (green variant) |
-| `src/pages/admin/CustomerDetail.tsx` | Already uses `.replace(/_/g, " ")` — works automatically |
-
-### 6. Update edge function type
-
-Add `"6_month_lease"` to the `subscriptionType` union in `supabase/functions/create-subscription/index.ts` (line 44). No logic changes needed — the edge function passes the type through to the database.
-
-### 7. Customer Rentals page
-
-The `Rentals.tsx` page uses `subscription_type` as a plain string, so it will work without changes. The "Leased" badge label will display correctly.
-
-### Summary
-- 1 database migration (enum addition)
-- 6 files updated with the new type value and labels
-- Auto-sets 6-month end date when selected
-- No breaking changes — purely additive
+**No gaps or broken paths detected.** The implementation is complete and consistent across all surfaces.
 
