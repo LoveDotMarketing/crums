@@ -29,7 +29,8 @@ import {
   CreditCard,
   Send,
   Truck,
-  Trash2
+  Trash2,
+  RotateCcw
 } from "lucide-react";
 import {
   Table,
@@ -771,7 +772,29 @@ export default function Applications() {
                                 </Button>
                               )}
                               {app.payment_setup_status === "completed" && (
-                                <Badge variant="outline" className="ml-1 text-xs">ACH ✓</Badge>
+                                <>
+                                  <Badge variant="outline" className="ml-1 text-xs">ACH ✓</Badge>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="ml-1 h-6 px-1.5 text-xs text-muted-foreground hover:text-destructive"
+                                    title="Reset ACH setup (clear broken payment method)"
+                                    onClick={async () => {
+                                      const { error } = await supabase
+                                        .from("customer_applications")
+                                        .update({ payment_setup_status: "pending", stripe_payment_method_id: null })
+                                        .eq("id", app.id);
+                                      if (error) {
+                                        toast({ title: "Error", description: error.message, variant: "destructive" });
+                                      } else {
+                                        toast({ title: "ACH Reset", description: "Payment setup status reset to pending." });
+                                        queryClient.invalidateQueries({ queryKey: ["admin-applications"] });
+                                      }
+                                    }}
+                                  >
+                                    <RotateCcw className="h-3 w-3" />
+                                  </Button>
+                                </>
                               )}
                               <Button
                                 variant="ghost"
