@@ -150,11 +150,11 @@ serve(async (req) => {
     let hasPaymentMethod = false;
 
     if (customer.email) {
-      // Path 1: profile → user_id → customer_applications
+      // Path 1: profile → user_id → customer_applications (case-insensitive)
       const { data: profileData } = await supabaseClient
         .from("profiles")
         .select("id")
-        .eq("email", customer.email)
+        .ilike("email", customer.email)
         .maybeSingle();
       
       if (profileData?.id) {

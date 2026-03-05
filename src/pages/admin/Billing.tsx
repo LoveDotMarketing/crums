@@ -1241,6 +1241,10 @@ export default function Billing() {
             <Tabs value={activeTab} onValueChange={setActiveTab}>
               <TabsList className="mb-6">
                 <TabsTrigger value="subscriptions">Subscriptions</TabsTrigger>
+                <TabsTrigger value="create-subscription">
+                  <Plus className="h-4 w-4 mr-1" />
+                  New Subscription
+                </TabsTrigger>
                 <TabsTrigger value="failures" className="relative">
                   Payment Failures
                   {unresolvedFailures > 0 && (
@@ -1266,6 +1270,24 @@ export default function Billing() {
                 </TabsTrigger>
               </TabsList>
 
+              {/* Create Subscription Tab (inline full-page form) */}
+              <TabsContent value="create-subscription">
+                <Card>
+                  <CardContent className="pt-6">
+                    <CreateSubscriptionDialog
+                      mode="inline"
+                      onSuccess={() => {
+                        queryClient.invalidateQueries({ queryKey: ["customer-subscriptions"] });
+                        queryClient.invalidateQueries({ queryKey: ["subscription-items"] });
+                        toast.success("Subscription created successfully");
+                        setActiveTab("subscriptions");
+                      }}
+                      onCancel={() => setActiveTab("subscriptions")}
+                    />
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
               {/* Subscriptions Tab */}
               <TabsContent value="subscriptions">
                 <Card>
@@ -1276,12 +1298,10 @@ export default function Billing() {
                         Manage billing cycles, deposits, and trailer assignments
                       </CardDescription>
                     </div>
-                    <CreateSubscriptionDialog 
-                      onSuccess={() => {
-                        queryClient.invalidateQueries({ queryKey: ["customer-subscriptions"] });
-                        queryClient.invalidateQueries({ queryKey: ["subscription-items"] });
-                      }}
-                    />
+                    <Button onClick={() => setActiveTab("create-subscription")}>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Create Subscription
+                    </Button>
                   </CardHeader>
                   <CardContent>
                     {loadingSubscriptions ? (
