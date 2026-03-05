@@ -156,7 +156,7 @@ export default function Customers() {
       
       // Filter out admin/mechanic customers by email
       const filteredData = (data || []).filter(
-        (c: Customer) => !c.email || !excludeEmails.includes(c.email)
+        (c: Customer) => !c.email || !excludeEmails.some(e => e.toLowerCase() === c.email?.toLowerCase())
       );
       
       // Fetch trailers with VINs for each customer
