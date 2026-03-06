@@ -124,12 +124,11 @@ serve(async (req) => {
       const trailerIds = subscription.subscription_items.map((item: { trailer_id: string }) => item.trailer_id);
       
       if (trailerIds.length > 0) {
-        // Update subscription items to ended - use "canceled" (single L) for consistency
-        const endStatus = action === "cancel" ? "canceled" : "paused";
+        // Update subscription items to ended - constraint only allows 'active', 'ended', 'pending'
         await supabaseClient
           .from("subscription_items")
           .update({ 
-            status: endStatus,
+            status: "ended",
             end_date: new Date().toISOString()
           })
           .eq("subscription_id", subscriptionId);
