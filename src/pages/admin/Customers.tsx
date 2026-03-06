@@ -163,7 +163,8 @@ export default function Customers() {
       const { data: trailers } = await supabase
         .from('trailers')
         .select('customer_id, vin, trailer_number')
-        .not('customer_id', 'is', null);
+        .not('customer_id', 'is', null)
+        .neq('status', 'archived');
       
       // Fetch pending tolls
       const { data: tolls } = await supabase

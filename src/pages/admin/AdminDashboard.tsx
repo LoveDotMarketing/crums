@@ -44,7 +44,8 @@ export default function AdminDashboard() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("trailers")
-        .select("id, status, is_rented");
+        .select("id, status, is_rented")
+        .neq("status", "archived");
       if (error) throw error;
       const total = data?.length || 0;
       const available = data?.filter(t => t.status === "available" && !t.is_rented).length || 0;

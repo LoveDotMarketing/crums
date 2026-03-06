@@ -34,6 +34,8 @@ serve(async (req) => {
     }
     if (status) {
       query = query.eq("status", status);
+    } else {
+      query = query.neq("status", "archived");
     }
     if (trailer_number) {
       query = query.ilike("trailer_number", `%${trailer_number}%`);
