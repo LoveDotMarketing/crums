@@ -169,6 +169,7 @@ export default function CustomerDetail() {
         .from("trailers")
         .select("id, trailer_number, type, vin, status, make, model, year")
         .eq("customer_id", customerId!)
+        .neq("status", "archived")
         .order("trailer_number", { ascending: true });
       if (error) throw error;
       return data || [];
