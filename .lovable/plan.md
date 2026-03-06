@@ -2,31 +2,83 @@
 
 ## Problem
 
-Abdul's `customer_applications` record shows `payment_setup_status = 'completed'` and has a `stripe_payment_method_id` (`pm_1T7dwSLjIwiEGQIhzU647O3c`) that is dead/detached in Stripe. The UI shows "ACH ✓" and hides the "Send ACH Setup" button, so there's no way to re-do the setup.
+Two invoices have settled (paid) in Stripe but the admin billing dashboard shows stale data:
+
+| Invoice | Stripe Status | DB `billing_history` Status | Customer |
+|---|---|---|---|
+| `in_1T5zmQLjIwiEGQIhxNr7ou13` | **paid** ($2,300) | `processing` | Ground Link |
+| `in_1T60BzLjIwiEGQIh8dhk2eJY` | **paid** ($900) | `pending` | Fisneur |
+
+Additionally, all 4 subscriptions have `next_billing_date: null` and `deposit_paid: false`.
+
+**Root cause**: Both edge functions have blind spots:
+1. **`process-billing`** finds existing records by `stripe_invoice_id` but **skips them entirely** — it never updates their status when an invoice transitions from open → paid.
+2. **`sync-payments`** looks up records by `stripe_payment_intent_id`, but the existing records were created by `process-billing` without a `stripe_payment_intent_id` (null). So it can't find them, and tries to create duplicates (which may silently fail or create orphan records).
+3. The **Refresh Sync button** calls both functions, but neither one actually updates existing stale records — so nothing changes.
+
+There's also a missing subscription: Stripe has `sub_1T6fduLjIwiEGQIhq7hxoreX` (Ground Link, active) that doesn't exist in the database at all.
 
 ## Fix
 
-### 1. Database: Reset Abdul's ACH status
+### 1. Fix `process-billing` to update existing billing records (~line 106-130)
 
-Run a migration to clear the broken payment method and reset status so the ACH setup flow can be re-initiated:
+When it finds an existing record by `stripe_invoice_id`, instead of skipping with `continue`, it should **update the status** if the Stripe invoice status has changed:
 
-```sql
-UPDATE customer_applications
-SET payment_setup_status = 'pending',
-    stripe_payment_method_id = NULL
-WHERE id = '25b5046d-d4b2-405c-bf78-ba3e2b71039f';
+```typescript
+if (existing) {
+  // Update status if invoice status changed
+  const { error: updateError } = await supabaseClient
+    .from("billing_history")
+    .update({
+      status: paymentStatus,
+      paid_at: paymentStatus === "succeeded" && invoice.status_transitions?.paid_at
+        ? new Date(invoice.status_transitions.paid_at * 1000).toISOString() : existing.paid_at,
+      stripe_payment_intent_id: typeof invoice.payment_intent === 'string' 
+        ? invoice.payment_intent : invoice.payment_intent?.id,
+      net_amount: invoice.amount_paid / 100,
+    })
+    .eq("id", existing.id);
+  continue;
+}
 ```
 
-### 2. UI: Add a "Reset ACH" option for admins
+### 2. Fix `sync-payments` to also match by `stripe_invoice_id` (~line 101-130)
 
-In `src/pages/admin/Applications.tsx`, update the ACH badge area (~line 773) so that when `payment_setup_status === "completed"`, instead of only showing the static "ACH ✓" badge, also show a small reset button that sets `payment_setup_status` back to `pending` and clears `stripe_payment_method_id`. This prevents needing manual database edits in the future.
+When looking up existing payment records, fall back to `stripe_invoice_id` if `stripe_payment_intent_id` lookup returns nothing:
 
-The reset button will:
-- Update `customer_applications` setting `payment_setup_status = 'pending'` and `stripe_payment_method_id = null`
-- Refresh the applications list
-- Show a toast confirmation
+```typescript
+// Try by payment_intent_id first, then by invoice_id
+let existingPayment = null;
+const { data: byPI } = await supabaseClient
+  .from("billing_history")
+  .select("id, status, paid_at")
+  .eq("stripe_payment_intent_id", pi.id)
+  .maybeSingle();
+
+existingPayment = byPI;
+
+if (!existingPayment && pi.invoice) {
+  const { data: byInv } = await supabaseClient
+    .from("billing_history")
+    .select("id, status, paid_at")
+    .eq("stripe_invoice_id", pi.invoice as string)
+    .maybeSingle();
+  existingPayment = byInv;
+}
+```
+
+Also update the `stripe_payment_intent_id` on the record when it's found by invoice ID so future lookups work.
+
+### 3. Fix stale data immediately
+
+Run a data update to correct the two billing_history records and subscription next_billing_dates using the insert tool (UPDATE statements).
+
+### 4. Fix `process-billing` existing record query
+
+Change `select("id")` to `select("id, status, paid_at")` so we have the data needed for comparison.
 
 ### Files to update
-- **Database migration** — one UPDATE statement for Abdul's record
-- `src/pages/admin/Applications.tsx` — add reset ACH button next to the "ACH ✓" badge (~5 lines)
+- `supabase/functions/process-billing/index.ts` — update existing records instead of skipping (~15 lines changed)
+- `supabase/functions/sync-payments/index.ts` — add invoice_id fallback lookup (~15 lines changed)
+- **Data fix** — UPDATE billing_history statuses and subscription next_billing_dates
 
