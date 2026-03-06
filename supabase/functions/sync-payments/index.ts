@@ -99,12 +99,34 @@ serve(async (req) => {
         });
 
         for (const pi of paymentIntents.data) {
-          // Check if this payment is already recorded
-          const { data: existingPayment } = await supabaseClient
+          // Check if this payment is already recorded - try by PI id first, then by invoice id
+          let existingPayment: { id: string; status: string } | null = null;
+          
+          const { data: byPI } = await supabaseClient
             .from("billing_history")
             .select("id, status")
             .eq("stripe_payment_intent_id", pi.id)
-            .single();
+            .maybeSingle();
+          
+          existingPayment = byPI;
+          
+          if (!existingPayment && pi.invoice) {
+            const { data: byInv } = await supabaseClient
+              .from("billing_history")
+              .select("id, status")
+              .eq("stripe_invoice_id", pi.invoice as string)
+              .maybeSingle();
+            existingPayment = byInv;
+            
+            // Backfill the payment_intent_id so future lookups work
+            if (byInv) {
+              await supabaseClient
+                .from("billing_history")
+                .update({ stripe_payment_intent_id: pi.id })
+                .eq("id", byInv.id);
+              logStep("Backfilled stripe_payment_intent_id", { id: byInv.id, piId: pi.id });
+            }
+          }
 
           // Map Stripe status to our enum
           let paymentStatus: "pending" | "processing" | "succeeded" | "failed" | "refunded" = "pending";

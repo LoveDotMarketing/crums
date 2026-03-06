@@ -144,12 +144,30 @@ serve(async (req) => {
           // Check if we already have this invoice (e.g. inserted by activate-subscription)
           const { data: existing } = await supabaseClient
             .from("billing_history")
-            .select("id")
+            .select("id, status, paid_at")
             .eq("stripe_invoice_id", invoice.id)
             .maybeSingle();
 
           if (existing) {
-            logStep("Skipping duplicate invoice", { invoiceId: invoice.id });
+            // Update status if it changed (e.g. pending/processing → succeeded)
+            if (existing.status !== paymentStatus) {
+              await supabaseClient
+                .from("billing_history")
+                .update({
+                  status: paymentStatus,
+                  paid_at: paymentStatus === "succeeded" && invoice.status_transitions?.paid_at
+                    ? new Date(invoice.status_transitions.paid_at * 1000).toISOString()
+                    : existing.paid_at,
+                  stripe_payment_intent_id: typeof invoice.payment_intent === 'string'
+                    ? invoice.payment_intent : invoice.payment_intent?.id,
+                  net_amount: invoice.amount_paid / 100,
+                  updated_at: new Date().toISOString(),
+                })
+                .eq("id", existing.id);
+              logStep("Updated existing invoice status", { invoiceId: invoice.id, oldStatus: existing.status, newStatus: paymentStatus });
+            } else {
+              logStep("Skipping unchanged invoice", { invoiceId: invoice.id });
+            }
             continue;
           }
 
