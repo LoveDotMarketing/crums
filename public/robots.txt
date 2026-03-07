@@ -12,6 +12,7 @@ Allow: /
 
 User-agent: *
 Allow: /
+Disallow: /lp/
 
 Sitemap: https://crumsleasing.com/sitemap-index.xml
 Sitemap: https://crumsleasing.com/sitemap.xml
