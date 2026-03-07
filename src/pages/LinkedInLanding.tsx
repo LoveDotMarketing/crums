@@ -8,8 +8,8 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { trackFormSubmission, trackConversion, trackFormStart } from "@/lib/analytics";
-import { trackLinkedInQuoteRequest } from "@/lib/linkedinAnalytics";
+import { trackFormStart } from "@/lib/analytics";
+import { getLeadSourceData } from "@/lib/leadSourceTracking";
 import { getLeadSourceData } from "@/lib/leadSourceTracking";
 import {
   Phone,
