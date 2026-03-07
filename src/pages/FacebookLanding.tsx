@@ -47,6 +47,10 @@ const FacebookLanding = () => {
 
   useEffect(() => {
     trackPageView("/lp/facebook", "Facebook Landing Page");
+    fireMetaCapi({
+      eventName: 'ViewContent',
+      sourceUrl: window.location.href,
+    });
   }, []);
 
   const [formData, setFormData] = useState({
