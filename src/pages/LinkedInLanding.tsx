@@ -293,13 +293,13 @@ const LinkedInLanding = () => {
                       <form onSubmit={handleSubmit} className="space-y-4">
                         {/* Honeypot — hidden from humans */}
                         <div className="absolute -left-[9999px]" aria-hidden="true">
-                          <input
+                           <input
                             type="text"
-                            id="website"
-                            name="website"
+                            id="address2"
+                            name="address2"
                             tabIndex={-1}
-                            autoComplete="off"
-                            value={formData.website}
+                            autoComplete="nope"
+                            value={formData.address2}
                             onChange={handleInputChange}
                           />
                         </div>
