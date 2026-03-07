@@ -1,32 +1,18 @@
 
 
-## Problem
+## Add Facebook Meta Pixel (ID: `1555487965511323`)
 
-Abdul's `customer_applications` record shows `payment_setup_status = 'completed'` and has a `stripe_payment_method_id` (`pm_1T7dwSLjIwiEGQIhzU647O3c`) that is dead/detached in Stripe. The UI shows "ACH ✓" and hides the "Send ACH Setup" button, so there's no way to re-do the setup.
+Follow the same deferred-loading pattern used for GA4 and LinkedIn.
 
-## Fix
+### Changes
 
-### 1. Database: Reset Abdul's ACH status
+**1. `index.html`** — Add synchronous `fbq` stub (queues calls before script loads) alongside existing `gtag`/`lintrk` stubs. Add `<noscript>` fallback img in `<body>`.
 
-Run a migration to clear the broken payment method and reset status so the ACH setup flow can be re-initiated:
+**2. `src/lib/deferredAnalytics.ts`** — Load `https://connect.facebook.net/en_US/fbevents.js` after page load, then call `fbq('init', '1555487965511323')` and `fbq('track', 'PageView')`.
 
-```sql
-UPDATE customer_applications
-SET payment_setup_status = 'pending',
-    stripe_payment_method_id = NULL
-WHERE id = '25b5046d-d4b2-405c-bf78-ba3e2b71039f';
-```
+**3. `src/lib/analytics.ts`** — Add `trackFacebookEvent(eventName, params?)` helper.
 
-### 2. UI: Add a "Reset ACH" option for admins
+**4. `src/pages/FacebookLanding.tsx`** — Fire `fbq('track', 'Lead')` on successful form submission.
 
-In `src/pages/admin/Applications.tsx`, update the ACH badge area (~line 773) so that when `payment_setup_status === "completed"`, instead of only showing the static "ACH ✓" badge, also show a small reset button that sets `payment_setup_status` back to `pending` and clears `stripe_payment_method_id`. This prevents needing manual database edits in the future.
-
-The reset button will:
-- Update `customer_applications` setting `payment_setup_status = 'pending'` and `stripe_payment_method_id = null`
-- Refresh the applications list
-- Show a toast confirmation
-
-### Files to update
-- **Database migration** — one UPDATE statement for Abdul's record
-- `src/pages/admin/Applications.tsx` — add reset ACH button next to the "ACH ✓" badge (~5 lines)
+**5. `src/pages/FacebookThankYou.tsx`** — Fire `fbq('track', 'Lead')` on page load as backup conversion.
 
