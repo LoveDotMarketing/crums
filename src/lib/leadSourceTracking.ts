@@ -1,6 +1,7 @@
 /**
  * Lead Source Tracking Utility
  * Captures UTM parameters, referrer, and landing page for attribution tracking
+ * v2 - cleaned up for proper module resolution
  */
 
 const STORAGE_KEY = 'crums_lead_source';
