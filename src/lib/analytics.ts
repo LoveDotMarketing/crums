@@ -199,10 +199,18 @@ export const fireMetaCapi = (options: FireMetaCapiOptions) => {
   // Browser pixel
   trackFacebookEvent(options.eventName, options.pixelParams, eventId);
 
-  // Server-side CAPI (non-blocking)
-  import('@/integrations/supabase/client').then(({ supabase }) => {
-    supabase.functions.invoke('meta-capi', {
-      body: {
+  // Server-side CAPI (non-blocking, direct fetch to avoid dynamic import issues)
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+  const supabaseKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+  if (supabaseUrl && supabaseKey) {
+    fetch(`${supabaseUrl}/functions/v1/meta-capi`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${supabaseKey}`,
+        'apikey': supabaseKey,
+      },
+      body: JSON.stringify({
         eventName: options.eventName,
         eventId,
         email: options.email,
@@ -217,9 +225,9 @@ export const fireMetaCapi = (options: FireMetaCapiOptions) => {
         fbc: getCookie('_fbc'),
         fbp: getCookie('_fbp'),
         customData: options.customData,
-      },
-    }).catch(() => {});
-  });
+      }),
+    }).catch((err) => console.warn('[Meta CAPI] fetch failed:', err));
+  }
 };
 
 // GA4 Dashboard URL for admin reference
