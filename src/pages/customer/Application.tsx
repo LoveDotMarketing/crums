@@ -14,7 +14,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Progress } from "@/components/ui/progress";
 import { validateFile, sanitizeInput } from "@/lib/validations";
 import { format } from "date-fns";
-import { trackApplicationStarted, trackFormSubmission } from "@/lib/analytics";
+import { trackApplicationStarted, trackFormSubmission, fireMetaCapi } from "@/lib/analytics";
 import { logApplicationSubmitted, logApplicationSaveFailed, logDocumentUploadFailed } from "@/lib/eventLogger";
 import {
   Select,
