@@ -288,8 +288,8 @@ const LinkedInLanding = () => {
                 <CardContent className="p-6 md:p-8">
                   {isSubmitted ? (
                     <div className="text-center py-8 space-y-4">
-                      <div className="mx-auto w-16 h-16 rounded-full bg-green-100 flex items-center justify-center">
-                        <CheckCircle className="h-8 w-8 text-green-600" />
+                      <div className="mx-auto w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+                        <CheckCircle className="h-8 w-8 text-primary" />
                       </div>
                       <h2 className="text-2xl font-bold text-foreground">Quote Request Received!</h2>
                       <p className="text-muted-foreground">
