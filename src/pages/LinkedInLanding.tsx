@@ -78,7 +78,7 @@ const LinkedInLanding = () => {
     e.preventDefault();
 
     // Honeypot
-    if (formData.website) {
+    if (formData.address2) {
       toast({ title: "Success!", description: "We'll be in touch soon!" });
       return;
     }
