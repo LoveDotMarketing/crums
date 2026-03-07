@@ -116,7 +116,7 @@ const Contact = () => {
     e.preventDefault();
     
     // Honeypot check - if filled, silently "succeed" (bots fill hidden fields)
-    if (formData.website) {
+    if (formData.address2) {
       // Fake success to fool bots
       toast({
         title: "Success!",
