@@ -230,6 +230,8 @@ const App = () => (
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/get-started" element={<GetStarted />} />
+            {/* Landing pages (ad campaigns) — no-index */}
+            <Route path="/lp/linkedin" element={<LinkedInLanding />} />
             <Route 
               path="/dashboard/admin" 
               element={
