@@ -155,18 +155,20 @@ export const trackScrollDepth = (pageName: string, depth: number) => {
   });
 };
 
-// Meta Pixel event tracking
+// Meta Pixel event tracking (with optional eventID for server-side deduplication)
 export const trackFacebookEvent = (
   eventName: string,
-  parameters?: Record<string, string | number | boolean>
+  parameters?: Record<string, string | number | boolean>,
+  eventID?: string
 ) => {
   if (typeof window !== 'undefined' && window.fbq) {
+    const opts = eventID ? { eventID } : undefined;
     if (parameters) {
-      window.fbq('track', eventName, parameters);
+      window.fbq('track', eventName, parameters, opts);
     } else {
-      window.fbq('track', eventName);
+      window.fbq('track', eventName, {}, opts);
     }
-    console.log('[Analytics] Meta Pixel event:', eventName);
+    console.log('[Analytics] Meta Pixel event:', eventName, eventID ? `(eventID: ${eventID})` : '');
   }
 };
 

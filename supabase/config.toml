@@ -140,3 +140,7 @@ verify_jwt = false
 # One-time customer charge - admin only (auth handled in code)
 [functions.charge-customer]
 verify_jwt = false
+
+# Meta Conversions API - public (Facebook landing page is unauthenticated)
+[functions.meta-capi]
+verify_jwt = false
