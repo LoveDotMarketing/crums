@@ -54,3 +54,10 @@ export const trackLinkedInSignup = () => {
 export const trackLinkedInApplicationSubmit = () => {
   trackLinkedInConversion(LINKEDIN_CONVERSIONS.APPLICATION_SUBMIT);
 };
+
+/**
+ * Track landing page view (ad click-through)
+ */
+export const trackLinkedInPageView = () => {
+  trackLinkedInConversion(LINKEDIN_CONVERSIONS.PAGE_VIEW);
+};
