@@ -52,6 +52,7 @@ const ChatBot = lazy(() => import("@/components/ChatBot").then(m => ({ default: 
 
 const Index = () => {
   useTimeOnPageTracking('home');
+  useEffect(() => { fireMetaCapi({ eventName: 'ViewContent' }); }, []);
   const breadcrumbSchema = generateBreadcrumbSchema([
     { name: "Home", url: "https://crumsleasing.com/" }
   ]);
