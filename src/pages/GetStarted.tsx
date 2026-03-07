@@ -360,6 +360,15 @@ export default function GetStarted() {
       trackConversion('signup');
       trackLinkedInSignup();
       logSignupCompleted(email);
+      
+      // Meta CAPI CompleteRegistration
+      fireMetaCapi({
+        eventName: 'CompleteRegistration',
+        email,
+        phone: phoneNumber || undefined,
+        firstName: firstName || undefined,
+        lastName: lastName || undefined,
+      });
 
       clearSavedForm();
 

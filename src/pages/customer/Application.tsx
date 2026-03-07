@@ -417,6 +417,12 @@ export default function Application() {
       clearSavedApplication();
       trackFormSubmission('customer_application', true);
       logApplicationSubmitted();
+      
+      // Meta CAPI SubmitApplication
+      fireMetaCapi({
+        eventName: 'SubmitApplication',
+        phone: applicationData.phone_number || undefined,
+      });
       fetchData();
     } catch (error: any) {
       console.error("Error saving application:", error);

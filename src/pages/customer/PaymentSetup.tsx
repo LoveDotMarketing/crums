@@ -178,6 +178,7 @@ export default function PaymentSetup() {
           },
         });
         toast.success("Bank account linked successfully!");
+        fireMetaCapi({ eventName: 'AddPaymentInfo', email: user?.email || undefined });
         checkPaymentStatus();
       } else if (collectedSetupIntent.status === 'requires_action') {
         // Microdeposit verification required

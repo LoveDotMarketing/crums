@@ -14,6 +14,9 @@ import { trackCtaClick, trackPhoneClick, fireMetaCapi } from "@/lib/analytics";
 import { useEffect } from "react";
 
 const Locations = () => {
+  useEffect(() => {
+    fireMetaCapi({ eventName: 'FindLocation' });
+  }, []);
   const breadcrumbSchema = generateBreadcrumbSchema([
     { name: "Home", url: "https://crumsleasing.com/" },
     { name: "Locations", url: "https://crumsleasing.com/locations" }

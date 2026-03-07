@@ -228,6 +228,15 @@ const Contact = () => {
       trackFormSubmission('contact_quote');
       trackConversion('quote_request');
       
+      // Meta CAPI Contact event
+      fireMetaCapi({
+        eventName: 'Contact',
+        email: formData.email,
+        phone: formData.phone,
+        firstName: formData.name.split(' ')[0],
+        lastName: formData.name.split(' ').slice(1).join(' ') || undefined,
+      });
+      
       // LinkedIn tracking (Insight Tag)
       trackLinkedInQuoteRequest();
       

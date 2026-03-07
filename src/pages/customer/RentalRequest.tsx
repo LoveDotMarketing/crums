@@ -92,6 +92,7 @@ export default function RentalRequest() {
 
       trackFormSubmission('rental_request', true);
       trackConversion('rental_request');
+      fireMetaCapi({ eventName: 'Schedule', email: userEmail || undefined });
       toast.success("Rental request submitted successfully!");
       
       // Reset form

@@ -127,6 +127,7 @@ export default function TrailerCheckout() {
       if (error) throw error;
 
       toast.success("Trailer checkout completed successfully!");
+      fireMetaCapi({ eventName: 'InitiateCheckout' });
       navigate(`/dashboard/customer/checkout/${inspection.id}/complete`);
     } catch (error) {
       console.error("Error submitting checkout:", error);

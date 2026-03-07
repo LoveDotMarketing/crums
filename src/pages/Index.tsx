@@ -1,6 +1,7 @@
 import { lazy, Suspense } from "react";
 import { Link } from "react-router-dom";
-import { trackCtaClick, trackPhoneClick } from "@/lib/analytics";
+import { trackCtaClick, trackPhoneClick, fireMetaCapi } from "@/lib/analytics";
+import { useEffect } from "react";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
 import { ProgressiveImage } from "@/components/ProgressiveImage";
