@@ -172,5 +172,54 @@ export const trackFacebookEvent = (
   }
 };
 
+// Reusable Meta CAPI + Pixel helper with deduplication
+interface FireMetaCapiOptions {
+  eventName: string;
+  email?: string;
+  phone?: string;
+  firstName?: string;
+  lastName?: string;
+  city?: string;
+  state?: string;
+  zipCode?: string;
+  customData?: Record<string, string | number>;
+  pixelParams?: Record<string, string | number | boolean>;
+}
+
+function getCookie(name: string): string | undefined {
+  if (typeof document === 'undefined') return undefined;
+  const match = document.cookie.match(new RegExp('(?:^|; )' + name + '=([^;]*)'));
+  return match ? decodeURIComponent(match[1]) : undefined;
+}
+
+export const fireMetaCapi = (options: FireMetaCapiOptions) => {
+  const eventId = crypto.randomUUID();
+
+  // Browser pixel
+  trackFacebookEvent(options.eventName, options.pixelParams, eventId);
+
+  // Server-side CAPI (non-blocking)
+  import('@/integrations/supabase/client').then(({ supabase }) => {
+    supabase.functions.invoke('meta-capi', {
+      body: {
+        eventName: options.eventName,
+        eventId,
+        email: options.email,
+        phone: options.phone,
+        firstName: options.firstName,
+        lastName: options.lastName,
+        city: options.city,
+        state: options.state,
+        zipCode: options.zipCode,
+        sourceUrl: typeof window !== 'undefined' ? window.location.href : undefined,
+        clientUserAgent: typeof navigator !== 'undefined' ? navigator.userAgent : undefined,
+        fbc: getCookie('_fbc'),
+        fbp: getCookie('_fbp'),
+        customData: options.customData,
+      },
+    }).catch(() => {});
+  });
+};
+
 // GA4 Dashboard URL for admin reference
 export const GA4_DASHBOARD_URL = 'https://analytics.google.com/analytics/web/#/a377323275p515941987/reports/intelligenthome?params=_u..nav%3Dmaui';

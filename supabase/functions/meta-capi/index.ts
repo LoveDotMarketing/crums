@@ -13,7 +13,15 @@ interface MetaCapiRequest {
   email?: string;
   phone?: string;
   firstName?: string;
+  lastName?: string;
+  city?: string;
+  state?: string;
+  zipCode?: string;
   sourceUrl?: string;
+  clientUserAgent?: string;
+  fbc?: string;
+  fbp?: string;
+  customData?: Record<string, string | number>;
 }
 
 async function sha256Hash(value: string): Promise<string> {
@@ -30,8 +38,8 @@ serve(async (req: Request) => {
   }
 
   try {
-    const { eventName, eventId, email, phone, firstName, sourceUrl } =
-      await req.json() as MetaCapiRequest;
+    const body = await req.json() as MetaCapiRequest;
+    const { eventName, eventId, email, phone, firstName, lastName, city, state, zipCode, sourceUrl, clientUserAgent, fbc, fbp, customData } = body;
 
     console.log(`[Meta CAPI] Processing ${eventName} event, id=${eventId}`);
 
@@ -47,25 +55,42 @@ serve(async (req: Request) => {
     const userData: Record<string, string> = {};
     if (email) userData.em = await sha256Hash(email);
     if (phone) {
-      // Normalize phone: digits only, prepend country code if needed
       const digits = phone.replace(/\D/g, '');
       const normalized = digits.length === 10 ? `1${digits}` : digits;
       userData.ph = await sha256Hash(normalized);
     }
     if (firstName) userData.fn = await sha256Hash(firstName);
+    if (lastName) userData.ln = await sha256Hash(lastName);
+    if (city) userData.ct = await sha256Hash(city);
+    if (state) userData.st = await sha256Hash(state);
+    if (zipCode) userData.zp = await sha256Hash(zipCode);
 
-    const eventPayload = {
-      data: [
-        {
-          event_name: eventName,
-          event_time: Math.floor(Date.now() / 1000),
-          event_id: eventId,
-          event_source_url: sourceUrl || 'https://crumsleasing.com/lp/facebook',
-          action_source: 'website',
-          user_data: userData,
-        },
-      ],
+    // Unhashed fields per Meta spec
+    if (clientUserAgent) userData.client_user_agent = clientUserAgent;
+    if (fbc) userData.fbc = fbc;
+    if (fbp) userData.fbp = fbp;
+
+    // Client IP from request headers
+    const clientIp = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || req.headers.get('cf-connecting-ip')
+      || req.headers.get('x-real-ip');
+    if (clientIp) userData.client_ip_address = clientIp;
+
+    const eventData: Record<string, unknown> = {
+      event_name: eventName,
+      event_time: Math.floor(Date.now() / 1000),
+      event_id: eventId,
+      event_source_url: sourceUrl || 'https://crumsleasing.com',
+      action_source: 'website',
+      user_data: userData,
     };
+
+    // Add custom_data for events like Purchase
+    if (customData && Object.keys(customData).length > 0) {
+      eventData.custom_data = customData;
+    }
+
+    const eventPayload = { data: [eventData] };
 
     console.log('[Meta CAPI] Sending payload:', JSON.stringify(eventPayload));
 
