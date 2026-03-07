@@ -58,7 +58,7 @@ const LinkedInLanding = () => {
     phone: "",
     trailersNeeded: "",
     message: "",
-    website: "", // honeypot
+    address2: "", // honeypot
   });
 
   const handleInputChange = (
@@ -78,7 +78,7 @@ const LinkedInLanding = () => {
     e.preventDefault();
 
     // Honeypot
-    if (formData.website) {
+    if (formData.address2) {
       toast({ title: "Success!", description: "We'll be in touch soon!" });
       return;
     }
@@ -293,13 +293,13 @@ const LinkedInLanding = () => {
                       <form onSubmit={handleSubmit} className="space-y-4">
                         {/* Honeypot — hidden from humans */}
                         <div className="absolute -left-[9999px]" aria-hidden="true">
-                          <input
+                           <input
                             type="text"
-                            id="website"
-                            name="website"
+                            id="address2"
+                            name="address2"
                             tabIndex={-1}
-                            autoComplete="off"
-                            value={formData.website}
+                            autoComplete="nope"
+                            value={formData.address2}
                             onChange={handleInputChange}
                           />
                         </div>
