@@ -1,31 +1,32 @@
 
 
-## Add Meta Conversions API (Server-Side)
+## Problem
 
-### Overview
-Create a new backend function that sends `Lead` events server-side to Meta's Graph API, mirroring the LinkedIn CAPI pattern. Both browser pixel and server event share a deduplication `event_id`.
+Abdul's `customer_applications` record shows `payment_setup_status = 'completed'` and has a `stripe_payment_method_id` (`pm_1T7dwSLjIwiEGQIhzU647O3c`) that is dead/detached in Stripe. The UI shows "ACH ✓" and hides the "Send ACH Setup" button, so there's no way to re-do the setup.
 
-### Secret
-- **`META_CAPI_TOKEN`** — I'll prompt you to add it.
+## Fix
 
-### Changes
+### 1. Database: Reset Abdul's ACH status
 
-**1. New backend function: `supabase/functions/meta-capi/index.ts`**
-- No JWT required (Facebook landing page is public/unauthenticated)
-- Accepts: `eventName`, `eventId`, `email`, `phone`, `firstName`, `sourceUrl`
-- SHA256-hashes all PII per Meta's requirements
-- POSTs to `https://graph.facebook.com/v21.0/1555487965511323/events`
-- Always returns 200 to never block the user flow
+Run a migration to clear the broken payment method and reset status so the ACH setup flow can be re-initiated:
 
-**2. `supabase/config.toml`** — Add `verify_jwt = false` for `meta-capi`
+```sql
+UPDATE customer_applications
+SET payment_setup_status = 'pending',
+    stripe_payment_method_id = NULL
+WHERE id = '25b5046d-d4b2-405c-bf78-ba3e2b71039f';
+```
 
-**3. `src/lib/analytics.ts`** — Update `trackFacebookEvent` to accept optional `eventID` for deduplication
+### 2. UI: Add a "Reset ACH" option for admins
 
-**4. `src/pages/FacebookLanding.tsx`**
-- Generate a UUID `eventId` before submission
-- Pass it to both `trackFacebookEvent('Lead', undefined, eventId)` (browser pixel) and invoke `meta-capi` with the same ID plus PII (email, phone, name)
-- Fire both calls in parallel (non-blocking)
+In `src/pages/admin/Applications.tsx`, update the ACH badge area (~line 773) so that when `payment_setup_status === "completed"`, instead of only showing the static "ACH ✓" badge, also show a small reset button that sets `payment_setup_status` back to `pending` and clears `stripe_payment_method_id`. This prevents needing manual database edits in the future.
 
-### Deduplication
-Both browser pixel and server event share the same `event_id` so Meta automatically deduplicates — no double-counting.
+The reset button will:
+- Update `customer_applications` setting `payment_setup_status = 'pending'` and `stripe_payment_method_id = null`
+- Refresh the applications list
+- Show a toast confirmation
+
+### Files to update
+- **Database migration** — one UPDATE statement for Abdul's record
+- `src/pages/admin/Applications.tsx` — add reset ACH button next to the "ACH ✓" badge (~5 lines)
 
