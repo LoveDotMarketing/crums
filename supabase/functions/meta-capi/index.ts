@@ -107,7 +107,7 @@ serve(async (req: Request) => {
 
     if (!response.ok) {
       console.error('[Meta CAPI] API error:', response.status, responseData);
-      return new Response(JSON.stringify({ success: false, error: `Meta API returned ${response.status}` }), {
+      return new Response(JSON.stringify({ success: false, error: `Meta API returned ${response.status}`, details: responseData }), {
         status: 200,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
