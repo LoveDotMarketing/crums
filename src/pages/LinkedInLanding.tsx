@@ -394,7 +394,6 @@ const LinkedInLanding = () => {
                         </p>
                       </form>
                     </>
-                  )}
                 </CardContent>
               </Card>
             </div>
