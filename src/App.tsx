@@ -236,6 +236,8 @@ const App = () => (
             {/* Landing pages (ad campaigns) — no-index */}
             <Route path="/lp/linkedin" element={<LinkedInLanding />} />
             <Route path="/lp/linkedin/thank-you" element={<LinkedInThankYou />} />
+            <Route path="/lp/facebook" element={<FacebookLanding />} />
+            <Route path="/lp/facebook/thank-you" element={<FacebookThankYou />} />
             <Route 
               path="/dashboard/admin" 
               element={
