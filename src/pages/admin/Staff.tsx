@@ -63,9 +63,16 @@ export default function Staff() {
 
       if (profilesError) throw profilesError;
 
+      // Get staff profiles for these users
+      const { data: staffProfiles } = await supabase
+        .from("staff_profiles")
+        .select("id, user_id")
+        .in("user_id", userIds);
+
       // Combine data
       const staff: StaffMember[] = roles.map(r => {
         const profile = profiles?.find(p => p.id === r.user_id);
+        const sp = staffProfiles?.find(s => s.user_id === r.user_id);
         return {
           id: r.user_id,
           email: profile?.email || "Unknown",
@@ -73,6 +80,7 @@ export default function Staff() {
           last_name: profile?.last_name,
           role: r.role as "admin" | "mechanic",
           created_at: profile?.created_at || "",
+          staffProfileId: sp?.id,
         };
       });
 
