@@ -123,6 +123,20 @@ export const checkPartnerCode = async (code: string): Promise<string | null> => 
 };
 
 /**
+ * Checks if a code belongs to a staff member.
+ * Returns the staff_profile id if found, null otherwise.
+ */
+export const checkStaffCode = async (code: string): Promise<string | null> => {
+  const { data } = await supabase
+    .from("staff_profiles")
+    .select("id")
+    .eq("referral_code", code.toUpperCase().trim())
+    .eq("is_active", true)
+    .maybeSingle();
+  return data?.id || null;
+};
+
+/**
  * Processes a referral code during signup.
  * Checks partner codes first, then customer referral codes.
  * @param referralCode - The referral code entered by the user
