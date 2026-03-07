@@ -173,7 +173,7 @@ export const trackFacebookEvent = (
 };
 
 // Reusable Meta CAPI + Pixel helper with deduplication
-interface FireMetaCapiOptions {
+export interface FireMetaCapiOptions {
   eventName: string;
   email?: string;
   phone?: string;
