@@ -1,32 +1,32 @@
 
 
-## Move "Ready to Roll" Section Above "Why CDL Drivers Choose CRUMS"
+## Problem
 
-**File:** `src/pages/Index.tsx`
+Abdul's `customer_applications` record shows `payment_setup_status = 'completed'` and has a `stripe_payment_method_id` (`pm_1T7dwSLjIwiEGQIhzU647O3c`) that is dead/detached in Stripe. The UI shows "ACH ✓" and hides the "Send ACH Setup" button, so there's no way to re-do the setup.
 
-**Current section order:**
-1. Hero
-2. Event CTA Banner
-3. Trust & Transparency
-4. Featured Video — "Why CDL Drivers Choose CRUMS" (lines 238–268)
-5. Semantic Router
-6. Veterans
-7. Customer Reviews
-8. **Ready to Roll** (lines 497–562)
-9. Referral Program
-10. We're Hiring
-11. About
+## Fix
 
-**New order:** Move the "Ready to Roll" section (lines 497–562) to just above the "Featured Video" section (before line 238), so it appears right after "Trust & Transparency."
+### 1. Database: Reset Abdul's ACH status
 
-Result:
-1. Hero
-2. Event CTA Banner
-3. Trust & Transparency
-4. **Ready to Roll** ← moved up
-5. Featured Video — "Why CDL Drivers Choose CRUMS"
-6. Semantic Router
-7. (rest unchanged)
+Run a migration to clear the broken payment method and reset status so the ACH setup flow can be re-initiated:
 
-Single cut-and-paste operation in one file.
+```sql
+UPDATE customer_applications
+SET payment_setup_status = 'pending',
+    stripe_payment_method_id = NULL
+WHERE id = '25b5046d-d4b2-405c-bf78-ba3e2b71039f';
+```
+
+### 2. UI: Add a "Reset ACH" option for admins
+
+In `src/pages/admin/Applications.tsx`, update the ACH badge area (~line 773) so that when `payment_setup_status === "completed"`, instead of only showing the static "ACH ✓" badge, also show a small reset button that sets `payment_setup_status` back to `pending` and clears `stripe_payment_method_id`. This prevents needing manual database edits in the future.
+
+The reset button will:
+- Update `customer_applications` setting `payment_setup_status = 'pending'` and `stripe_payment_method_id = null`
+- Refresh the applications list
+- Show a toast confirmation
+
+### Files to update
+- **Database migration** — one UPDATE statement for Abdul's record
+- `src/pages/admin/Applications.tsx` — add reset ACH button next to the "ACH ✓" badge (~5 lines)
 
