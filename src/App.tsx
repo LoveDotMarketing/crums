@@ -85,6 +85,9 @@ const CrumsStory = lazy(() => import("./pages/CrumsStory"));
 const News = lazy(() => import("./pages/News"));
 const NewsArticlePage = lazy(() => import("./pages/news/NewsArticlePage"));
 
+// Landing pages (ad campaigns)
+const LinkedInLanding = lazy(() => import("./pages/LinkedInLanding"));
+
 // Industries pages
 const Industries = lazy(() => import("./pages/Industries"));
 const FleetLeasing = lazy(() => import("./pages/industries/FleetLeasing"));
@@ -227,6 +230,8 @@ const App = () => (
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/get-started" element={<GetStarted />} />
+            {/* Landing pages (ad campaigns) — no-index */}
+            <Route path="/lp/linkedin" element={<LinkedInLanding />} />
             <Route 
               path="/dashboard/admin" 
               element={
