@@ -95,7 +95,7 @@ const Contact = () => {
     phone: "",
     service: "",
     message: "",
-    website: "", // Honeypot field - should always be empty
+    address2: "", // Honeypot field - should always be empty
   });
 
   const handleInputChange = (
@@ -116,7 +116,7 @@ const Contact = () => {
     e.preventDefault();
     
     // Honeypot check - if filled, silently "succeed" (bots fill hidden fields)
-    if (formData.website) {
+    if (formData.address2) {
       // Fake success to fool bots
       toast({
         title: "Success!",
@@ -255,7 +255,7 @@ const Contact = () => {
         phone: "",
         service: "",
         message: "",
-        website: "",
+        address2: "",
       });
     } catch (error: any) {
       console.error('Error submitting form:', error);
@@ -305,15 +305,15 @@ const Contact = () => {
                 />
                 <h2 className="text-2xl font-bold mb-6 text-foreground">Get A Quote</h2>
                 <form onSubmit={handleSubmit} className="space-y-6">
-                  {/* Honeypot field - hidden from humans, visible to bots */}
+                   {/* Honeypot field - hidden from humans, visible to bots */}
                   <div className="absolute -left-[9999px] opacity-0 h-0 w-0 overflow-hidden" aria-hidden="true">
-                    <Label htmlFor="website">Website (leave blank)</Label>
+                    <Label htmlFor="address2">Address 2 (leave blank)</Label>
                     <Input 
-                      id="website" 
-                      name="website"
+                      id="address2" 
+                      name="address2"
                       tabIndex={-1}
-                      autoComplete="off"
-                      value={formData.website}
+                      autoComplete="nope"
+                      value={formData.address2}
                       onChange={handleInputChange}
                     />
                   </div>
