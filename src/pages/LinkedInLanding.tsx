@@ -275,26 +275,7 @@ const LinkedInLanding = () => {
               {/* Right — form */}
               <Card className="bg-background text-foreground shadow-2xl border-0">
                 <CardContent className="p-6 md:p-8">
-                  {isSubmitted ? (
-                    <div className="text-center py-8 space-y-4">
-                      <div className="mx-auto w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
-                        <CheckCircle className="h-8 w-8 text-primary" />
-                      </div>
-                      <h2 className="text-2xl font-bold text-foreground">Quote Request Received!</h2>
-                      <p className="text-muted-foreground">
-                        Our team will reach out within 1 business day. Need it
-                        sooner?
-                      </p>
-                      <a
-                        href="tel:+18885704564"
-                        className="inline-flex items-center gap-2 text-primary font-semibold hover:underline"
-                      >
-                        <Phone className="h-4 w-4" />
-                        Call (888) 570-4564
-                      </a>
-                    </div>
-                  ) : (
-                    <>
+                  <>
                       <div className="mb-6">
                         <h2 className="text-xl font-bold text-foreground">
                           Get Your Free Quote
