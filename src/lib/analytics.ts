@@ -182,6 +182,7 @@ interface FireMetaCapiOptions {
   city?: string;
   state?: string;
   zipCode?: string;
+  sourceUrl?: string;
   customData?: Record<string, string | number>;
   pixelParams?: Record<string, string | number | boolean>;
 }
@@ -211,7 +212,7 @@ export const fireMetaCapi = (options: FireMetaCapiOptions) => {
         city: options.city,
         state: options.state,
         zipCode: options.zipCode,
-        sourceUrl: typeof window !== 'undefined' ? window.location.href : undefined,
+        sourceUrl: options.sourceUrl || (typeof window !== 'undefined' ? window.location.href : undefined),
         clientUserAgent: typeof navigator !== 'undefined' ? navigator.userAgent : undefined,
         fbc: getCookie('_fbc'),
         fbp: getCookie('_fbp'),
