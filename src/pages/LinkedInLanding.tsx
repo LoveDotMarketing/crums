@@ -146,25 +146,14 @@ const LinkedInLanding = () => {
         return;
       }
 
-      // Fire all conversion tracking
-      trackFormSubmission("linkedin_landing");
-      trackConversion("quote_request");
-      trackLinkedInQuoteRequest();
-
-      // LinkedIn CAPI (background)
-      supabase.functions
-        .invoke("linkedin-capi", {
-          body: {
-            conversionType: "quote_request",
-            email: formData.email,
-            firstName: formData.name.split(" ")[0],
-            lastName: formData.name.split(" ").slice(1).join(" "),
-            company: formData.company,
-          },
-        })
-        .catch((err) => console.warn("[LinkedIn CAPI] Background call failed:", err));
-
-      setIsSubmitted(true);
+      // Redirect to thank-you page (conversion tracking fires there)
+      navigate("/lp/linkedin/thank-you", {
+        state: {
+          name: formData.name,
+          email: formData.email,
+          company: formData.company,
+        },
+      });
     } catch {
       toast({
         title: "Error",
