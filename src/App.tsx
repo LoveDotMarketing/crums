@@ -356,7 +356,23 @@ const App = () => (
               } 
             />
             <Route 
-              path="/dashboard/admin/sitemap-generator" 
+              path="/dashboard/admin/staff/:id" 
+              element={
+                <ProtectedRoute requiredRole="admin">
+                  <StaffDetail />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/dashboard/admin/employee" 
+              element={
+                <ProtectedRoute requiredRole="admin">
+                  <EmployeeDashboard />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/dashboard/admin/sitemap-generator"
               element={
                 <ProtectedRoute requiredRole="admin">
                   <SitemapGenerator />

@@ -406,7 +406,7 @@ export default function Staff() {
                   </TableHeader>
                   <TableBody>
                     {staffMembers.map((member) => (
-                      <TableRow key={member.id}>
+                      <TableRow key={member.id} className="cursor-pointer" onClick={() => navigate(`/dashboard/admin/staff/${member.id}`)}>
                         <TableCell className="font-medium">
                           <div className="flex items-center gap-2">
                             {member.first_name || member.last_name
