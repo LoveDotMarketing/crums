@@ -85,6 +85,9 @@ const CrumsStory = lazy(() => import("./pages/CrumsStory"));
 const News = lazy(() => import("./pages/News"));
 const NewsArticlePage = lazy(() => import("./pages/news/NewsArticlePage"));
 
+// Landing pages (ad campaigns)
+const LinkedInLanding = lazy(() => import("./pages/LinkedInLanding"));
+
 // Industries pages
 const Industries = lazy(() => import("./pages/Industries"));
 const FleetLeasing = lazy(() => import("./pages/industries/FleetLeasing"));

@@ -568,7 +568,7 @@ const LinkedInLanding = () => {
               Call us now or scroll up to fill out the form. We respond within 1
               business day.
             </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <a
                 href="tel:+18885704564"
                 className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/90 text-secondary-foreground font-semibold px-8 py-3 rounded-md text-lg transition-colors"
@@ -578,7 +578,7 @@ const LinkedInLanding = () => {
               </a>
               <button
                 onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-                className="inline-flex items-center gap-2 bg-primary-foreground/10 hover:bg-primary-foreground/20 text-primary-foreground font-semibold px-8 py-3 rounded-md text-lg transition-colors border border-primary-foreground/20"
+                className="inline-flex items-center gap-2 bg-background/10 hover:bg-background/20 text-primary-foreground font-semibold px-8 py-3 rounded-md text-lg transition-colors border border-background/20"
               >
                 Fill Out the Form
               </button>
