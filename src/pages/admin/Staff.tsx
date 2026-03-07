@@ -29,6 +29,7 @@ interface StaffMember {
 
 export default function Staff() {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const { user, startImpersonation } = useAuth();
   const queryClient = useQueryClient();
   const [isInviteOpen, setIsInviteOpen] = useState(false);
