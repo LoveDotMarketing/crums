@@ -12,7 +12,6 @@ import { trackFormStart } from "@/lib/analytics";
 import { getLeadSourceData } from "@/lib/leadSourceTracking";
 import {
   Phone,
-  CheckCircle,
   Truck,
   Shield,
   Clock,
