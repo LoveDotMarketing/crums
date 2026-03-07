@@ -115,6 +115,16 @@ export const Footer = () => {
                 </Link>
               </li>
               <li>
+                <Link to="/services/lease-to-own" className="hover:text-secondary transition-colors">
+                  Lease to Own
+                </Link>
+              </li>
+              <li>
+                <Link to="/services/rent-for-storage" className="hover:text-secondary transition-colors">
+                  Rent for Storage
+                </Link>
+              </li>
+              <li>
                 <Link to="/login" className="hover:text-secondary transition-colors">
                   Customer Login
                 </Link>
