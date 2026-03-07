@@ -14,7 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { SEO } from "@/components/SEO";
 import { localBusinessSchema, generateBreadcrumbSchema } from "@/lib/structuredData";
-import { trackFormSubmission, trackConversion, trackPhoneClick, trackFormStart } from "@/lib/analytics";
+import { trackFormSubmission, trackConversion, trackPhoneClick, trackFormStart, fireMetaCapi } from "@/lib/analytics";
 import { trackLinkedInQuoteRequest } from "@/lib/linkedinAnalytics";
 import { getLeadSourceData } from "@/lib/leadSourceTracking";
 
