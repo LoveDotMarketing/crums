@@ -25,6 +25,7 @@ interface StaffMember {
   last_name: string | null;
   role: "admin" | "mechanic";
   created_at: string;
+  staffProfileId?: string;
 }
 
 export default function Staff() {
