@@ -13,6 +13,7 @@ const FacebookThankYou = () => {
   useEffect(() => {
     trackFormSubmission("facebook_landing");
     trackConversion("quote_request");
+    trackFacebookEvent('Lead');
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (

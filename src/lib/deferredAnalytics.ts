@@ -7,6 +7,7 @@ declare global {
     __analyticsLoaded?: boolean;
     _linkedin_partner_id?: string;
     _linkedin_data_partner_ids?: string[];
+    fbq: (...args: unknown[]) => void;
   }
 }
 

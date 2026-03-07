@@ -155,5 +155,20 @@ export const trackScrollDepth = (pageName: string, depth: number) => {
   });
 };
 
+// Meta Pixel event tracking
+export const trackFacebookEvent = (
+  eventName: string,
+  parameters?: Record<string, string | number | boolean>
+) => {
+  if (typeof window !== 'undefined' && window.fbq) {
+    if (parameters) {
+      window.fbq('track', eventName, parameters);
+    } else {
+      window.fbq('track', eventName);
+    }
+    console.log('[Analytics] Meta Pixel event:', eventName);
+  }
+};
+
 // GA4 Dashboard URL for admin reference
 export const GA4_DASHBOARD_URL = 'https://analytics.google.com/analytics/web/#/a377323275p515941987/reports/intelligenthome?params=_u..nav%3Dmaui';

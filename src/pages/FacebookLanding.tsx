@@ -148,6 +148,9 @@ const FacebookLanding = () => {
         return;
       }
 
+      // Fire Meta Pixel Lead event
+      trackFacebookEvent('Lead');
+
       // Redirect to thank-you page
       navigate("/lp/facebook/thank-you", {
         state: {
