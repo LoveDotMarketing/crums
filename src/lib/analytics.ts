@@ -182,6 +182,7 @@ interface FireMetaCapiOptions {
   city?: string;
   state?: string;
   zipCode?: string;
+  sourceUrl?: string;
   customData?: Record<string, string | number>;
   pixelParams?: Record<string, string | number | boolean>;
 }
