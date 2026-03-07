@@ -255,7 +255,7 @@ const Contact = () => {
         phone: "",
         service: "",
         message: "",
-        website: "",
+        address2: "",
       });
     } catch (error: any) {
       console.error('Error submitting form:', error);
