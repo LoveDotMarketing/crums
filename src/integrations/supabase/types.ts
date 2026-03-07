@@ -266,6 +266,7 @@ export type Database = {
           secondary_contact_phone: string | null
           secondary_contact_relationship: string | null
           ssn: string | null
+          staff_referral_id: string | null
           status: string
           stripe_customer_id: string | null
           stripe_payment_method_id: string | null
@@ -301,6 +302,7 @@ export type Database = {
           secondary_contact_phone?: string | null
           secondary_contact_relationship?: string | null
           ssn?: string | null
+          staff_referral_id?: string | null
           status?: string
           stripe_customer_id?: string | null
           stripe_payment_method_id?: string | null
@@ -336,6 +338,7 @@ export type Database = {
           secondary_contact_phone?: string | null
           secondary_contact_relationship?: string | null
           ssn?: string | null
+          staff_referral_id?: string | null
           status?: string
           stripe_customer_id?: string | null
           stripe_payment_method_id?: string | null
@@ -357,6 +360,13 @@ export type Database = {
             columns: ["reviewed_by"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_applications_staff_referral_id_fkey"
+            columns: ["staff_referral_id"]
+            isOneToOne: false
+            referencedRelation: "staff_profiles"
             referencedColumns: ["id"]
           },
           {
@@ -1644,6 +1654,66 @@ export type Database = {
           },
         ]
       }
+      performance_reviews: {
+        Row: {
+          ai_summary: string | null
+          bonus_amount: number | null
+          created_at: string | null
+          goals: string | null
+          id: string
+          notes: string | null
+          performance_rating: number | null
+          review_quarter: string
+          reviewer_id: string | null
+          staff_id: string
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          ai_summary?: string | null
+          bonus_amount?: number | null
+          created_at?: string | null
+          goals?: string | null
+          id?: string
+          notes?: string | null
+          performance_rating?: number | null
+          review_quarter: string
+          reviewer_id?: string | null
+          staff_id: string
+          status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          ai_summary?: string | null
+          bonus_amount?: number | null
+          created_at?: string | null
+          goals?: string | null
+          id?: string
+          notes?: string | null
+          performance_rating?: number | null
+          review_quarter?: string
+          reviewer_id?: string | null
+          staff_id?: string
+          status?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "performance_reviews_reviewer_id_fkey"
+            columns: ["reviewer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "performance_reviews_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -1907,6 +1977,53 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      staff_profiles: {
+        Row: {
+          base_salary: number | null
+          commission_rate: number | null
+          created_at: string | null
+          hire_date: string | null
+          id: string
+          is_active: boolean | null
+          position: string
+          referral_code: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          base_salary?: number | null
+          commission_rate?: number | null
+          created_at?: string | null
+          hire_date?: string | null
+          id?: string
+          is_active?: boolean | null
+          position?: string
+          referral_code?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          base_salary?: number | null
+          commission_rate?: number | null
+          created_at?: string | null
+          hire_date?: string | null
+          id?: string
+          is_active?: boolean | null
+          position?: string
+          referral_code?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_profiles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       stripe_webhook_logs: {
         Row: {
@@ -2908,6 +3025,7 @@ export type Database = {
       }
       generate_account_number: { Args: never; Returns: string }
       generate_referral_code: { Args: never; Returns: string }
+      generate_staff_referral_code: { Args: never; Returns: string }
       get_cron_history: {
         Args: { limit_count?: number }
         Returns: {

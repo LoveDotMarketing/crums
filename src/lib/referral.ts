@@ -123,6 +123,20 @@ export const checkPartnerCode = async (code: string): Promise<string | null> => 
 };
 
 /**
+ * Checks if a code belongs to a staff member.
+ * Returns the staff_profile id if found, null otherwise.
+ */
+export const checkStaffCode = async (code: string): Promise<string | null> => {
+  const { data } = await supabase
+    .from("staff_profiles")
+    .select("id")
+    .eq("referral_code", code.toUpperCase().trim())
+    .eq("is_active", true)
+    .maybeSingle();
+  return data?.id || null;
+};
+
+/**
  * Processes a referral code during signup.
  * Checks partner codes first, then customer referral codes.
  * @param referralCode - The referral code entered by the user
@@ -143,7 +157,6 @@ export const processReferralCode = async (
   const partnerId = await checkPartnerCode(normalizedCode);
   if (partnerId) {
     // Partner code — store partner_id on subscription when it's created
-    // We store it in sessionStorage so the subscription creation flow can pick it up
     if (typeof window !== "undefined") {
       sessionStorage.setItem("pending_partner_id", partnerId);
       sessionStorage.setItem("pending_partner_code", normalizedCode);
@@ -151,6 +164,19 @@ export const processReferralCode = async (
     return {
       success: true,
       message: `Partner code ${normalizedCode} recognized! Your account will be linked to this partner.`,
+      variant: "default",
+    };
+  }
+
+  // Check if this is a staff referral code
+  const staffProfileId = await checkStaffCode(normalizedCode);
+  if (staffProfileId) {
+    if (typeof window !== "undefined") {
+      sessionStorage.setItem("pending_staff_referral_id", staffProfileId);
+    }
+    return {
+      success: true,
+      message: `Referral code ${normalizedCode} recognized! Your application will be linked to your sales rep.`,
       variant: "default",
     };
   }

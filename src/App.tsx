@@ -120,6 +120,8 @@ const CallLogs = lazy(() => import("./pages/admin/CallLogs"));
 const ContentSchedule = lazy(() => import("./pages/admin/ContentSchedule"));
 const AdminWorkOrders = lazy(() => import("./pages/admin/WorkOrders"));
 const AdminArchivedTrailers = lazy(() => import("./pages/admin/AdminArchivedTrailers"));
+const StaffDetail = lazy(() => import("./pages/admin/StaffDetail"));
+const EmployeeDashboard = lazy(() => import("./pages/admin/EmployeeDashboard"));
 
 // Public pages
 const ReferralProgram = lazy(() => import("./pages/ReferralProgram"));
@@ -354,7 +356,23 @@ const App = () => (
               } 
             />
             <Route 
-              path="/dashboard/admin/sitemap-generator" 
+              path="/dashboard/admin/staff/:id" 
+              element={
+                <ProtectedRoute requiredRole="admin">
+                  <StaffDetail />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/dashboard/admin/employee" 
+              element={
+                <ProtectedRoute requiredRole="admin">
+                  <EmployeeDashboard />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/dashboard/admin/sitemap-generator"
               element={
                 <ProtectedRoute requiredRole="admin">
                   <SitemapGenerator />

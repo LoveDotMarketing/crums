@@ -82,6 +82,7 @@ const menuGroups: MenuGroup[] = [
     items: [
       { title: "Customers", url: "/dashboard/admin/customers", icon: Users },
       { title: "Staff", url: "/dashboard/admin/staff", icon: UserCog },
+      { title: "Employee Dashboard", url: "/dashboard/admin/employee", icon: TrendingUp },
       { title: "Mechanics", url: "/dashboard/admin/mechanics", icon: Wrench },
       { title: "Referrals", url: "/dashboard/admin/referrals", icon: Users },
     ]

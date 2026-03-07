@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
@@ -24,10 +25,12 @@ interface StaffMember {
   last_name: string | null;
   role: "admin" | "mechanic";
   created_at: string;
+  staffProfileId?: string;
 }
 
 export default function Staff() {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const { user, startImpersonation } = useAuth();
   const queryClient = useQueryClient();
   const [isInviteOpen, setIsInviteOpen] = useState(false);
@@ -60,9 +63,16 @@ export default function Staff() {
 
       if (profilesError) throw profilesError;
 
+      // Get staff profiles for these users
+      const { data: staffProfiles } = await supabase
+        .from("staff_profiles")
+        .select("id, user_id")
+        .in("user_id", userIds);
+
       // Combine data
       const staff: StaffMember[] = roles.map(r => {
         const profile = profiles?.find(p => p.id === r.user_id);
+        const sp = staffProfiles?.find(s => s.user_id === r.user_id);
         return {
           id: r.user_id,
           email: profile?.email || "Unknown",
@@ -70,6 +80,7 @@ export default function Staff() {
           last_name: profile?.last_name,
           role: r.role as "admin" | "mechanic",
           created_at: profile?.created_at || "",
+          staffProfileId: sp?.id,
         };
       });
 
@@ -404,7 +415,11 @@ export default function Staff() {
                   </TableHeader>
                   <TableBody>
                     {staffMembers.map((member) => (
-                      <TableRow key={member.id}>
+                      <TableRow 
+                        key={member.id} 
+                        className={member.staffProfileId ? "cursor-pointer hover:bg-muted/50" : ""} 
+                        onClick={() => member.staffProfileId && navigate(`/dashboard/admin/staff/${member.staffProfileId}`)}
+                      >
                         <TableCell className="font-medium">
                           <div className="flex items-center gap-2">
                             {member.first_name || member.last_name
