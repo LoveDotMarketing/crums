@@ -95,7 +95,7 @@ const Contact = () => {
     phone: "",
     service: "",
     message: "",
-    website: "", // Honeypot field - should always be empty
+    address2: "", // Honeypot field - should always be empty
   });
 
   const handleInputChange = (
