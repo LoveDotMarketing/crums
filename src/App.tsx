@@ -87,6 +87,7 @@ const NewsArticlePage = lazy(() => import("./pages/news/NewsArticlePage"));
 
 // Landing pages (ad campaigns)
 const LinkedInLanding = lazy(() => import("./pages/LinkedInLanding"));
+const LinkedInThankYou = lazy(() => import("./pages/LinkedInThankYou"));
 
 // Industries pages
 const Industries = lazy(() => import("./pages/Industries"));
