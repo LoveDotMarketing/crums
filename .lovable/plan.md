@@ -1,26 +1,32 @@
 
 
-## Thank You Page for LinkedIn Landing Page Conversion Tracking
+## Problem
 
-Currently the LinkedIn landing page shows an inline success message after form submission. For proper conversion tracking (especially LinkedIn's URL-based conversion tracking), we need a dedicated thank-you page that the user redirects to after submission.
+Abdul's `customer_applications` record shows `payment_setup_status = 'completed'` and has a `stripe_payment_method_id` (`pm_1T7dwSLjIwiEGQIhzU647O3c`) that is dead/detached in Stripe. The UI shows "ACH ✓" and hides the "Send ACH Setup" button, so there's no way to re-do the setup.
 
-### Changes
+## Fix
 
-**1. Create `src/pages/LinkedInThankYou.tsx`**
-- Standalone thank-you page at `/lp/linkedin/thank-you`
-- `noindex={true}` on the SEO component
-- Fire conversion tracking events on page load (`useEffect`): `trackFormSubmission`, `trackConversion`, `trackLinkedInQuoteRequest`, and LinkedIn CAPI call
-- Clean, branded layout matching the landing page style (no nav/footer)
-- Clear confirmation message, next steps, phone number CTA
-- No back-navigation to prevent double submissions
+### 1. Database: Reset Abdul's ACH status
 
-**2. Update `src/pages/LinkedInLanding.tsx`**
-- After successful form submission, `navigate("/lp/linkedin/thank-you")` instead of setting `isSubmitted = true`
-- Pass minimal data (name) via route state for personalization
-- Remove inline success UI and the conversion tracking calls from this page (move them to thank-you page)
+Run a migration to clear the broken payment method and reset status so the ACH setup flow can be re-initiated:
 
-**3. Update `src/App.tsx`**
-- Add lazy-loaded route for `/lp/linkedin/thank-you` → `LinkedInThankYou`
+```sql
+UPDATE customer_applications
+SET payment_setup_status = 'pending',
+    stripe_payment_method_id = NULL
+WHERE id = '25b5046d-d4b2-405c-bf78-ba3e2b71039f';
+```
 
-This gives LinkedIn a concrete URL to use as the conversion page in Campaign Manager, which is more reliable than event-based tracking alone.
+### 2. UI: Add a "Reset ACH" option for admins
+
+In `src/pages/admin/Applications.tsx`, update the ACH badge area (~line 773) so that when `payment_setup_status === "completed"`, instead of only showing the static "ACH ✓" badge, also show a small reset button that sets `payment_setup_status` back to `pending` and clears `stripe_payment_method_id`. This prevents needing manual database edits in the future.
+
+The reset button will:
+- Update `customer_applications` setting `payment_setup_status = 'pending'` and `stripe_payment_method_id = null`
+- Refresh the applications list
+- Show a toast confirmation
+
+### Files to update
+- **Database migration** — one UPDATE statement for Abdul's record
+- `src/pages/admin/Applications.tsx` — add reset ACH button next to the "ACH ✓" badge (~5 lines)
 

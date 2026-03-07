@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { SEO } from "@/components/SEO";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,12 +8,10 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { trackFormSubmission, trackConversion, trackFormStart } from "@/lib/analytics";
-import { trackLinkedInQuoteRequest } from "@/lib/linkedinAnalytics";
+import { trackFormStart } from "@/lib/analytics";
 import { getLeadSourceData } from "@/lib/leadSourceTracking";
 import {
   Phone,
-  CheckCircle,
   Truck,
   Shield,
   Clock,
@@ -40,8 +39,8 @@ const isValidPhone = (phone: string): boolean => {
 
 const LinkedInLanding = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isSubmitted, setIsSubmitted] = useState(false);
   const [formStarted, setFormStarted] = useState(false);
   const [formLoadTime] = useState(Date.now());
   const [openFaq, setOpenFaq] = useState<number | null>(null);
@@ -144,25 +143,14 @@ const LinkedInLanding = () => {
         return;
       }
 
-      // Fire all conversion tracking
-      trackFormSubmission("linkedin_landing");
-      trackConversion("quote_request");
-      trackLinkedInQuoteRequest();
-
-      // LinkedIn CAPI (background)
-      supabase.functions
-        .invoke("linkedin-capi", {
-          body: {
-            conversionType: "quote_request",
-            email: formData.email,
-            firstName: formData.name.split(" ")[0],
-            lastName: formData.name.split(" ").slice(1).join(" "),
-            company: formData.company,
-          },
-        })
-        .catch((err) => console.warn("[LinkedIn CAPI] Background call failed:", err));
-
-      setIsSubmitted(true);
+      // Redirect to thank-you page (conversion tracking fires there)
+      navigate("/lp/linkedin/thank-you", {
+        state: {
+          name: formData.name,
+          email: formData.email,
+          company: formData.company,
+        },
+      });
     } catch {
       toast({
         title: "Error",
@@ -286,26 +274,7 @@ const LinkedInLanding = () => {
               {/* Right — form */}
               <Card className="bg-background text-foreground shadow-2xl border-0">
                 <CardContent className="p-6 md:p-8">
-                  {isSubmitted ? (
-                    <div className="text-center py-8 space-y-4">
-                      <div className="mx-auto w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
-                        <CheckCircle className="h-8 w-8 text-primary" />
-                      </div>
-                      <h2 className="text-2xl font-bold text-foreground">Quote Request Received!</h2>
-                      <p className="text-muted-foreground">
-                        Our team will reach out within 1 business day. Need it
-                        sooner?
-                      </p>
-                      <a
-                        href="tel:+18885704564"
-                        className="inline-flex items-center gap-2 text-primary font-semibold hover:underline"
-                      >
-                        <Phone className="h-4 w-4" />
-                        Call (888) 570-4564
-                      </a>
-                    </div>
-                  ) : (
-                    <>
+                  <>
                       <div className="mb-6">
                         <h2 className="text-xl font-bold text-foreground">
                           Get Your Free Quote
@@ -424,7 +393,6 @@ const LinkedInLanding = () => {
                         </p>
                       </form>
                     </>
-                  )}
                 </CardContent>
               </Card>
             </div>

@@ -87,6 +87,7 @@ const NewsArticlePage = lazy(() => import("./pages/news/NewsArticlePage"));
 
 // Landing pages (ad campaigns)
 const LinkedInLanding = lazy(() => import("./pages/LinkedInLanding"));
+const LinkedInThankYou = lazy(() => import("./pages/LinkedInThankYou"));
 
 // Industries pages
 const Industries = lazy(() => import("./pages/Industries"));
@@ -232,6 +233,7 @@ const App = () => (
             <Route path="/get-started" element={<GetStarted />} />
             {/* Landing pages (ad campaigns) — no-index */}
             <Route path="/lp/linkedin" element={<LinkedInLanding />} />
+            <Route path="/lp/linkedin/thank-you" element={<LinkedInThankYou />} />
             <Route 
               path="/dashboard/admin" 
               element={
