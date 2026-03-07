@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { trackFormStart, trackPageView } from "@/lib/analytics";
+import { trackFormStart, trackPageView, trackFacebookEvent } from "@/lib/analytics";
 import { getLeadSourceData } from "@/lib/leadSourceTracking";
 import {
   Phone,
@@ -147,6 +147,9 @@ const FacebookLanding = () => {
         toast({ title: "Submission Failed", description: "Please try again later.", variant: "destructive" });
         return;
       }
+
+      // Fire Meta Pixel Lead event
+      trackFacebookEvent('Lead');
 
       // Redirect to thank-you page
       navigate("/lp/facebook/thank-you", {

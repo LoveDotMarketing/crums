@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { SEO } from "@/components/SEO";
 import { Phone, CheckCircle, Truck, Shield, Clock } from "lucide-react";
-import { trackFormSubmission, trackConversion } from "@/lib/analytics";
+import { trackFormSubmission, trackConversion, trackFacebookEvent } from "@/lib/analytics";
 import crumsLogo from "@/assets/crums-leasing-logo-contact.jpg";
 
 const FacebookThankYou = () => {
@@ -13,6 +13,7 @@ const FacebookThankYou = () => {
   useEffect(() => {
     trackFormSubmission("facebook_landing");
     trackConversion("quote_request");
+    trackFacebookEvent('Lead');
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (

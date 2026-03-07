@@ -9,6 +9,7 @@ declare global {
     __analyticsLoaded?: boolean;
     _linkedin_partner_id?: string;
     _linkedin_data_partner_ids?: string[];
+    fbq: (...args: unknown[]) => void;
   }
 }
 
@@ -152,6 +153,21 @@ export const trackScrollDepth = (pageName: string, depth: number) => {
     percent_scrolled: depth,
     event_category: 'engagement',
   });
+};
+
+// Meta Pixel event tracking
+export const trackFacebookEvent = (
+  eventName: string,
+  parameters?: Record<string, string | number | boolean>
+) => {
+  if (typeof window !== 'undefined' && window.fbq) {
+    if (parameters) {
+      window.fbq('track', eventName, parameters);
+    } else {
+      window.fbq('track', eventName);
+    }
+    console.log('[Analytics] Meta Pixel event:', eventName);
+  }
 };
 
 // GA4 Dashboard URL for admin reference

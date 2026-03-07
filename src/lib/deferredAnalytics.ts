@@ -7,6 +7,7 @@ declare global {
     __analyticsLoaded?: boolean;
     _linkedin_partner_id?: string;
     _linkedin_data_partner_ids?: string[];
+    fbq: (...args: unknown[]) => void;
   }
 }
 
@@ -41,4 +42,18 @@ export function loadDeferredAnalytics(): void {
   liScript.async = true;
   liScript.src = 'https://snap.licdn.com/li.lms-analytics/insight.min.js';
   document.head.appendChild(liScript);
+
+  // Meta Pixel - stub already initialized in index.html synchronously
+  const fbScript = document.createElement('script');
+  fbScript.async = true;
+  fbScript.src = 'https://connect.facebook.net/en_US/fbevents.js';
+  fbScript.onload = () => {
+    window.fbq('init', '1555487965511323');
+    window.fbq('track', 'PageView');
+    console.log('[Analytics] Meta Pixel loaded successfully');
+  };
+  fbScript.onerror = () => {
+    console.warn('[Analytics] Meta Pixel failed to load - likely blocked by ad blocker');
+  };
+  document.head.appendChild(fbScript);
 }
