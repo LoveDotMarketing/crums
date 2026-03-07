@@ -58,7 +58,7 @@ const LinkedInLanding = () => {
     phone: "",
     trailersNeeded: "",
     message: "",
-    website: "", // honeypot
+    address2: "", // honeypot
   });
 
   const handleInputChange = (
