@@ -162,6 +162,7 @@ export default function PaymentSetup() {
             },
           });
           toast.success("Bank account linked successfully!");
+          fireMetaCapi({ eventName: 'AddPaymentInfo', email: user?.email || undefined });
           checkPaymentStatus();
         } else if (confirmedSetupIntent?.status === 'requires_action') {
           toast.info("Bank account requires verification. Check your email for next steps.");
