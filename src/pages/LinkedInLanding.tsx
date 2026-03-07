@@ -43,7 +43,6 @@ const LinkedInLanding = () => {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formStarted, setFormStarted] = useState(false);
-  const [formStarted, setFormStarted] = useState(false);
   const [formLoadTime] = useState(Date.now());
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [formData, setFormData] = useState({
