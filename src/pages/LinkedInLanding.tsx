@@ -45,6 +45,12 @@ const LinkedInLanding = () => {
   const [formStarted, setFormStarted] = useState(false);
   const [formLoadTime] = useState(Date.now());
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+
+  useEffect(() => {
+    trackLinkedInPageView();
+    trackPageView("/lp/linkedin", "LinkedIn Landing Page");
+  }, []);
+
   const [formData, setFormData] = useState({
     name: "",
     company: "",
