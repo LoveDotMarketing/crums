@@ -14,7 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { SEO } from "@/components/SEO";
 import { localBusinessSchema, generateBreadcrumbSchema } from "@/lib/structuredData";
-import { trackFormSubmission, trackConversion, trackPhoneClick, trackFormStart } from "@/lib/analytics";
+import { trackFormSubmission, trackConversion, trackPhoneClick, trackFormStart, fireMetaCapi } from "@/lib/analytics";
 import { trackLinkedInQuoteRequest } from "@/lib/linkedinAnalytics";
 import { getLeadSourceData } from "@/lib/leadSourceTracking";
 
@@ -227,6 +227,15 @@ const Contact = () => {
       // Track successful form submission
       trackFormSubmission('contact_quote');
       trackConversion('quote_request');
+      
+      // Meta CAPI Contact event
+      fireMetaCapi({
+        eventName: 'Contact',
+        email: formData.email,
+        phone: formData.phone,
+        firstName: formData.name.split(' ')[0],
+        lastName: formData.name.split(' ').slice(1).join(' ') || undefined,
+      });
       
       // LinkedIn tracking (Insight Tag)
       trackLinkedInQuoteRequest();

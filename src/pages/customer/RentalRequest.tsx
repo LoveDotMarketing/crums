@@ -12,7 +12,7 @@ import { Footer } from "@/components/Footer";
 import { toast } from "sonner";
 import { Loader2, FileText, AlertCircle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { trackFormSubmission, trackConversion, trackFormStart } from "@/lib/analytics";
+import { trackFormSubmission, trackConversion, trackFormStart, fireMetaCapi } from "@/lib/analytics";
 
 export default function RentalRequest() {
   const { user } = useAuth();
@@ -92,6 +92,7 @@ export default function RentalRequest() {
 
       trackFormSubmission('rental_request', true);
       trackConversion('rental_request');
+      fireMetaCapi({ eventName: 'Schedule', email: userEmail || undefined });
       toast.success("Rental request submitted successfully!");
       
       // Reset form

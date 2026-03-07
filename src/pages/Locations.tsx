@@ -10,9 +10,13 @@ const nationwideMapImage = "/images/crums-leasing-pickup-delivery-map-2.webp";
 import { SEO } from "@/components/SEO";
 import { localBusinessSchema, generateBreadcrumbSchema } from "@/lib/structuredData";
 import { locations, getLocationsByRegion, HEADQUARTERS } from "@/lib/locations";
-import { trackCtaClick, trackPhoneClick } from "@/lib/analytics";
+import { trackCtaClick, trackPhoneClick, fireMetaCapi } from "@/lib/analytics";
+import { useEffect } from "react";
 
 const Locations = () => {
+  useEffect(() => {
+    fireMetaCapi({ eventName: 'FindLocation' });
+  }, []);
   const breadcrumbSchema = generateBreadcrumbSchema([
     { name: "Home", url: "https://crumsleasing.com/" },
     { name: "Locations", url: "https://crumsleasing.com/locations" }

@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { trackFormStart, trackPageView, trackFacebookEvent } from "@/lib/analytics";
+import { trackFormStart, trackPageView, fireMetaCapi } from "@/lib/analytics";
 import { getLeadSourceData } from "@/lib/leadSourceTracking";
 import {
   Phone,
@@ -148,23 +148,13 @@ const FacebookLanding = () => {
         return;
       }
 
-      // Deduplication: shared eventId for browser pixel + server CAPI
-      const eventId = crypto.randomUUID();
-
-      // Fire Meta Pixel Lead event (browser-side)
-      trackFacebookEvent('Lead', undefined, eventId);
-
-      // Fire Meta CAPI Lead event (server-side, non-blocking)
-      supabase.functions.invoke('meta-capi', {
-        body: {
-          eventName: 'Lead',
-          eventId,
-          email: formData.email,
-          phone: formData.phone,
-          firstName: formData.name.split(' ')[0],
-          sourceUrl: window.location.href,
-        },
-      }).catch(() => {}); // never block the user flow
+      // Meta CAPI + Pixel Lead event with deduplication
+      fireMetaCapi({
+        eventName: 'Lead',
+        email: formData.email,
+        phone: formData.phone,
+        firstName: formData.name.split(' ')[0],
+      });
 
       // Redirect to thank-you page
       navigate("/lp/facebook/thank-you", {

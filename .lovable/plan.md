@@ -1,81 +1,32 @@
 
 
-## Expand Meta CAPI to All Required Events
+## Problem
 
-### Overview
-Meta has defined 12 events for complete Conversions API coverage. The current implementation only fires `Lead`. This plan maps each Meta event to your existing user actions and updates the edge function + frontend to fire them server-side with deduplication.
+Abdul's `customer_applications` record shows `payment_setup_status = 'completed'` and has a `stripe_payment_method_id` (`pm_1T7dwSLjIwiEGQIhzU647O3c`) that is dead/detached in Stripe. The UI shows "ACH ✓" and hides the "Send ACH Setup" button, so there's no way to re-do the setup.
 
-### Event-to-Page Mapping
+## Fix
 
-| Meta Event | Where It Fires | Page/Component |
-|---|---|---|
-| **Lead** | Facebook landing form submit | `FacebookLanding.tsx` *(already done)* |
-| **Contact** | Contact form submit | `Contact.tsx` |
-| **CompleteRegistration** | Account signup complete | `GetStarted.tsx` |
-| **SubmitApplication** | Application form submit | `customer/Application.tsx` |
-| **AddPaymentInfo** | ACH/payment setup complete | `customer/PaymentSetup.tsx` |
-| **InitiateCheckout** | Customer starts checkout flow | `customer/TrailerCheckout.tsx` |
-| **Purchase** | Subscription activated / first payment | `customer/CheckoutComplete.tsx` or admin activation |
-| **Schedule** | Rental request or dropoff scheduled | `customer/RentalRequest.tsx` |
-| **Search** | Resource/tool search or trailer search | Could defer — low priority |
-| **ViewContent** | Key landing pages (trailer pages, services) | `Index.tsx`, trailer pages |
-| **FindLocation** | Locations page visit | `Locations.tsx` |
-| **CustomizeProduct** | Calculator/tool usage | Resource calculators |
-| **StartTrial** | Not applicable (no free trials) — skip or map to lease-to-own inquiry | Can skip |
+### 1. Database: Reset Abdul's ACH status
 
-### Changes
+Run a migration to clear the broken payment method and reset status so the ACH setup flow can be re-initiated:
 
-**1. Update `supabase/functions/meta-capi/index.ts`**
-- Add support for optional `custom_data` (currency, value) for Purchase events
-- Add `client_user_agent` pass-through (unhashed, per Meta spec)
-- Add `client_ip_address` from request headers (unhashed)
-- Add `fbc` and `fbp` cookie pass-through (unhashed) for better matching
-- Add `lastName`, `city`, `state`, `zipCode` to the interface and hash them
-
-**2. Update `src/lib/analytics.ts`**
-- Create a reusable `fireMetaCapi()` helper that:
-  - Generates a shared `eventId` (UUID)
-  - Fires browser pixel via `trackFacebookEvent()` with `eventID`
-  - Fires server-side via `supabase.functions.invoke('meta-capi')` with the same ID
-  - Accepts optional PII (email, phone, name, city, state, zip) and custom_data
-  - Reads `fbc`/`fbp` cookies from `document.cookie`
-  - Passes `navigator.userAgent` as client_user_agent
-
-**3. Update frontend pages** — Add `fireMetaCapi()` calls at each conversion point:
-- `Contact.tsx` — fire `Contact` on form submit
-- `GetStarted.tsx` — fire `CompleteRegistration` on successful signup
-- `customer/Application.tsx` — fire `SubmitApplication` on submit
-- `customer/PaymentSetup.tsx` — fire `AddPaymentInfo` on payment info saved
-- `customer/TrailerCheckout.tsx` — fire `InitiateCheckout` on checkout start
-- `customer/CheckoutComplete.tsx` — fire `Purchase` with value/currency
-- `customer/RentalRequest.tsx` — fire `Schedule` on rental request submit
-- `Locations.tsx` — fire `FindLocation` on page view
-- `FacebookLanding.tsx` — refactor existing Lead to use the new helper
-- Key landing pages — fire `ViewContent` on page view (Index, trailer pages)
-
-**4. No edge function or config.toml changes needed** — the existing function and JWT-free config already support all events via the `eventName` parameter.
-
-### Technical Detail: Enhanced Edge Function Payload
-
-```text
-user_data additions (hashed):
-  - ln (last name)
-  - ct (city)  
-  - st (state)
-  - zp (zip code)
-
-user_data additions (NOT hashed):
-  - client_user_agent
-  - client_ip_address (from req headers)
-  - fbc (click ID cookie)
-  - fbp (browser ID cookie)
-
-custom_data (for Purchase):
-  - currency: "USD"
-  - value: string
+```sql
+UPDATE customer_applications
+SET payment_setup_status = 'pending',
+    stripe_payment_method_id = NULL
+WHERE id = '25b5046d-d4b2-405c-bf78-ba3e2b71039f';
 ```
 
-### Priority
+### 2. UI: Add a "Reset ACH" option for admins
 
-High-value events first: **Contact**, **CompleteRegistration**, **SubmitApplication**, **AddPaymentInfo**, **Purchase**. Lower-value signals (ViewContent, FindLocation, Search) can follow.
+In `src/pages/admin/Applications.tsx`, update the ACH badge area (~line 773) so that when `payment_setup_status === "completed"`, instead of only showing the static "ACH ✓" badge, also show a small reset button that sets `payment_setup_status` back to `pending` and clears `stripe_payment_method_id`. This prevents needing manual database edits in the future.
+
+The reset button will:
+- Update `customer_applications` setting `payment_setup_status = 'pending'` and `stripe_payment_method_id = null`
+- Refresh the applications list
+- Show a toast confirmation
+
+### Files to update
+- **Database migration** — one UPDATE statement for Abdul's record
+- `src/pages/admin/Applications.tsx` — add reset ACH button next to the "ACH ✓" badge (~5 lines)
 

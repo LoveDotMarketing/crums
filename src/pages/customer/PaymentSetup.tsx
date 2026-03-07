@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { fireMetaCapi } from "@/lib/analytics";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
 import { CustomerNav } from "@/components/customer/CustomerNav";
@@ -162,6 +163,7 @@ export default function PaymentSetup() {
             },
           });
           toast.success("Bank account linked successfully!");
+          fireMetaCapi({ eventName: 'AddPaymentInfo', email: user?.email || undefined });
           checkPaymentStatus();
         } else if (confirmedSetupIntent?.status === 'requires_action') {
           toast.info("Bank account requires verification. Check your email for next steps.");
@@ -177,6 +179,7 @@ export default function PaymentSetup() {
           },
         });
         toast.success("Bank account linked successfully!");
+        fireMetaCapi({ eventName: 'AddPaymentInfo', email: user?.email || undefined });
         checkPaymentStatus();
       } else if (collectedSetupIntent.status === 'requires_action') {
         // Microdeposit verification required

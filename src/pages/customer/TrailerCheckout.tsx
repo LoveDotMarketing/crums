@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { fireMetaCapi } from "@/lib/analytics";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { Navigation } from "@/components/Navigation";
@@ -127,6 +128,7 @@ export default function TrailerCheckout() {
       if (error) throw error;
 
       toast.success("Trailer checkout completed successfully!");
+      fireMetaCapi({ eventName: 'InitiateCheckout' });
       navigate(`/dashboard/customer/checkout/${inspection.id}/complete`);
     } catch (error) {
       console.error("Error submitting checkout:", error);
