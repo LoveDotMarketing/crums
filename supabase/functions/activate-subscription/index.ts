@@ -26,15 +26,29 @@ const resolveAchPaymentMethodId = async ({
   customerEmail?: string | null;
 }) => {
   // 1) Prefer payment methods already attached to the Stripe customer on the subscription
-  const existingMethods = await stripe.paymentMethods.list({
+  // Check ACH first, then card as fallback
+  const existingAchMethods = await stripe.paymentMethods.list({
     customer: stripeCustomerId,
     type: "us_bank_account",
     limit: 1,
   });
 
-  if (existingMethods.data.length > 0) {
-    const paymentMethodId = existingMethods.data[0].id;
+  if (existingAchMethods.data.length > 0) {
+    const paymentMethodId = existingAchMethods.data[0].id;
     logStep("Found ACH payment method on subscription customer", { paymentMethodId });
+    return paymentMethodId;
+  }
+
+  // Check for card payment methods
+  const existingCardMethods = await stripe.paymentMethods.list({
+    customer: stripeCustomerId,
+    type: "card",
+    limit: 1,
+  });
+
+  if (existingCardMethods.data.length > 0) {
+    const paymentMethodId = existingCardMethods.data[0].id;
+    logStep("Found card payment method on subscription customer", { paymentMethodId });
     return paymentMethodId;
   }
 
