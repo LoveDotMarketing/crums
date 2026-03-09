@@ -28,23 +28,28 @@ import {
   CreditCard,
   ChevronDown,
   Clock,
-  Check
+  Check,
+  ArrowRightLeft
 } from "lucide-react";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
 
 interface PaymentMethod {
   id: string;
-  bankName: string;
+  bankName?: string;
   last4: string;
-  accountType: string;
-  accountHolderType: string;
+  accountType?: string;
+  accountHolderType?: string;
+  brand?: string;
+  expMonth?: number;
+  expYear?: number;
 }
 
 interface PaymentStatus {
   hasPaymentMethod: boolean;
   applicationStatus: string | null;
   paymentSetupStatus: string | null;
+  paymentMethodType?: "ach" | "card";
   paymentMethod?: PaymentMethod;
 }
 
@@ -55,6 +60,8 @@ export default function PaymentSetup() {
   const [isSettingUp, setIsSettingUp] = useState(false);
   const [billingAnchorDay, setBillingAnchorDay] = useState<1 | 15>(1);
   const [isAchInfoOpen, setIsAchInfoOpen] = useState(false);
+  const [selectedPaymentType, setSelectedPaymentType] = useState<"ach" | "card">("ach");
+  const [isSwitching, setIsSwitching] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -69,6 +76,9 @@ export default function PaymentSetup() {
       
       if (error) throw error;
       setPaymentStatus(data);
+      if (data?.paymentMethodType) {
+        setSelectedPaymentType(data.paymentMethodType);
+      }
     } catch (error) {
       console.error("Error checking payment status:", error);
       toast.error("Failed to check payment status");
@@ -84,8 +94,10 @@ export default function PaymentSetup() {
       setIsSettingUp(true);
       setSetupError(null);
       
-      // Create SetupIntent
-      const { data, error } = await supabase.functions.invoke("create-ach-setup");
+      // Create SetupIntent with selected payment type
+      const { data, error } = await supabase.functions.invoke("create-ach-setup", {
+        body: { paymentMethodType: selectedPaymentType },
+      });
       
       if (error) throw error;
       
@@ -105,95 +117,20 @@ export default function PaymentSetup() {
         throw new Error("Failed to load Stripe");
       }
 
-      // STEP 1: Collect bank account via Financial Connections
-      const { setupIntent: collectedSetupIntent, error: collectError } = 
-        await stripe.collectBankAccountForSetup({
-          clientSecret: data.clientSecret,
-          params: {
-            payment_method_type: 'us_bank_account',
-            payment_method_data: {
-              billing_details: {
-                name: user?.user_metadata?.first_name 
-                  ? `${user.user_metadata.first_name} ${user.user_metadata.last_name || ''}`.trim()
-                  : user?.email || 'Customer',
-                email: user?.email,
-              },
-            },
-          },
-          expand: ['payment_method'],
-        });
-
-      if (collectError) {
-        console.error("Error collecting bank account:", collectError);
-        if (collectError.type === 'validation_error') {
-          setSetupError({ message: "Please check your information and try again.", canRetry: true });
-        } else {
-          setSetupError({ message: collectError.message || "Failed to connect to your bank. Please try again.", canRetry: true });
-        }
-        return;
-      }
-
-      // Check if user cancelled or closed the modal
-      if (!collectedSetupIntent || collectedSetupIntent.status === 'requires_payment_method') {
-        toast.info("Bank account linking was cancelled. You can try again when you're ready.");
-        return;
-      }
-
-      // STEP 2: If the bank requires additional confirmation (e.g., mandate acceptance)
-      if (collectedSetupIntent.status === 'requires_confirmation') {
-        const { setupIntent: confirmedSetupIntent, error: confirmError } = 
-          await stripe.confirmUsBankAccountSetup(data.clientSecret);
-
-        if (confirmError) {
-          console.error("Error confirming setup:", confirmError);
-          setSetupError({ 
-            message: "Bank verification failed. This can happen if your bank session timed out. Please try again.", 
-            canRetry: true 
-          });
-          return;
-        }
-
-        // Handle the final status
-        if (confirmedSetupIntent?.status === 'succeeded') {
-          await supabase.functions.invoke("confirm-ach-setup", {
-            body: {
-              setupIntentId: confirmedSetupIntent.id,
-              paymentMethodId: confirmedSetupIntent.payment_method,
-              billingAnchorDay: billingAnchorDay,
-            },
-          });
-          toast.success("Bank account linked successfully!");
-          fireMetaCapi({ eventName: 'AddPaymentInfo', email: user?.email || undefined });
-          checkPaymentStatus();
-        } else if (confirmedSetupIntent?.status === 'requires_action') {
-          toast.info("Bank account requires verification. Check your email for next steps.");
-          checkPaymentStatus();
-        }
-      } else if (collectedSetupIntent.status === 'succeeded') {
-        // Direct success (instant verification completed)
-        await supabase.functions.invoke("confirm-ach-setup", {
-          body: {
-            setupIntentId: collectedSetupIntent.id,
-            paymentMethodId: collectedSetupIntent.payment_method,
-            billingAnchorDay: billingAnchorDay,
-          },
-        });
-        toast.success("Bank account linked successfully!");
-        fireMetaCapi({ eventName: 'AddPaymentInfo', email: user?.email || undefined });
-        checkPaymentStatus();
-      } else if (collectedSetupIntent.status === 'requires_action') {
-        // Microdeposit verification required
-        toast.info("Bank account requires verification. Check your email for next steps.");
-        checkPaymentStatus();
+      if (selectedPaymentType === "card") {
+        // Card setup flow using Stripe Elements
+        await handleCardSetup(stripe, data);
+      } else {
+        // ACH setup flow (existing)
+        await handleAchSetup(stripe, data);
       }
     } catch (error) {
       console.error("Error setting up payment:", error);
       const message = error instanceof Error ? error.message : "Failed to set up payment method";
       
-      // Detect network errors
       if (message.includes('fetch') || message.includes('network') || message.includes('NetworkError')) {
         setSetupError({ 
-          message: "Connection lost during setup. Your bank was not charged. Please check your internet and try again.", 
+          message: "Connection lost during setup. Your account was not charged. Please check your internet and try again.", 
           canRetry: true 
         });
       } else {
@@ -201,6 +138,232 @@ export default function PaymentSetup() {
       }
     } finally {
       setIsSettingUp(false);
+    }
+  };
+
+  const handleCardSetup = async (stripe: any, data: any) => {
+    // Use Stripe's confirmCardSetup with a card element
+    const elements = stripe.elements({ clientSecret: data.clientSecret });
+    const cardElement = elements.create("card", {
+      style: {
+        base: {
+          fontSize: "16px",
+          color: "#32325d",
+          "::placeholder": { color: "#aab7c4" },
+        },
+      },
+    });
+
+    // Create a temporary container for the card element
+    const container = document.createElement("div");
+    container.id = "stripe-card-element-container";
+    container.style.cssText = "position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10000;background:white;padding:32px;border-radius:12px;box-shadow:0 25px 50px -12px rgba(0,0,0,0.25);min-width:400px;max-width:500px;";
+    
+    const title = document.createElement("h3");
+    title.textContent = "Enter Card Details";
+    title.style.cssText = "margin:0 0 4px;font-size:18px;font-weight:600;";
+    container.appendChild(title);
+
+    const feeNote = document.createElement("p");
+    feeNote.textContent = "A 2.9% + $0.30 processing fee applies to card payments.";
+    feeNote.style.cssText = "margin:0 0 16px;font-size:13px;color:#6b7280;";
+    container.appendChild(feeNote);
+
+    const cardDiv = document.createElement("div");
+    cardDiv.style.cssText = "padding:12px;border:1px solid #e5e7eb;border-radius:8px;margin-bottom:16px;";
+    container.appendChild(cardDiv);
+
+    const btnRow = document.createElement("div");
+    btnRow.style.cssText = "display:flex;gap:8px;justify-content:flex-end;";
+    
+    const cancelBtn = document.createElement("button");
+    cancelBtn.textContent = "Cancel";
+    cancelBtn.style.cssText = "padding:8px 16px;border:1px solid #d1d5db;border-radius:6px;background:white;cursor:pointer;font-size:14px;";
+    
+    const confirmBtn = document.createElement("button");
+    confirmBtn.textContent = "Link Card";
+    confirmBtn.style.cssText = "padding:8px 16px;border:none;border-radius:6px;background:#2563eb;color:white;cursor:pointer;font-size:14px;font-weight:500;";
+    
+    btnRow.appendChild(cancelBtn);
+    btnRow.appendChild(confirmBtn);
+    container.appendChild(btnRow);
+
+    const overlay = document.createElement("div");
+    overlay.style.cssText = "position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:9999;";
+
+    document.body.appendChild(overlay);
+    document.body.appendChild(container);
+    cardElement.mount(cardDiv);
+
+    return new Promise<void>((resolve, reject) => {
+      cancelBtn.onclick = () => {
+        cardElement.destroy();
+        container.remove();
+        overlay.remove();
+        toast.info("Card setup cancelled.");
+        resolve();
+      };
+
+      overlay.onclick = () => {
+        cardElement.destroy();
+        container.remove();
+        overlay.remove();
+        toast.info("Card setup cancelled.");
+        resolve();
+      };
+
+      confirmBtn.onclick = async () => {
+        confirmBtn.disabled = true;
+        confirmBtn.textContent = "Processing...";
+
+        try {
+          const { setupIntent: confirmedSI, error: confirmError } = await stripe.confirmCardSetup(
+            data.clientSecret,
+            { payment_method: { card: cardElement } }
+          );
+
+          cardElement.destroy();
+          container.remove();
+          overlay.remove();
+
+          if (confirmError) {
+            setSetupError({ message: confirmError.message || "Card setup failed", canRetry: true });
+            reject(new Error(confirmError.message));
+            return;
+          }
+
+          if (confirmedSI?.status === "succeeded") {
+            await supabase.functions.invoke("confirm-ach-setup", {
+              body: {
+                setupIntentId: confirmedSI.id,
+                paymentMethodId: confirmedSI.payment_method,
+                billingAnchorDay,
+                paymentMethodType: "card",
+              },
+            });
+            toast.success("Credit card linked successfully!");
+            fireMetaCapi({ eventName: 'AddPaymentInfo', email: user?.email || undefined });
+            checkPaymentStatus();
+          } else {
+            setSetupError({ message: "Card verification did not complete. Please try again.", canRetry: true });
+          }
+          resolve();
+        } catch (err: any) {
+          cardElement.destroy();
+          container.remove();
+          overlay.remove();
+          reject(err);
+        }
+      };
+    });
+  };
+
+  const handleAchSetup = async (stripe: any, data: any) => {
+    // STEP 1: Collect bank account via Financial Connections
+    const { setupIntent: collectedSetupIntent, error: collectError } = 
+      await stripe.collectBankAccountForSetup({
+        clientSecret: data.clientSecret,
+        params: {
+          payment_method_type: 'us_bank_account',
+          payment_method_data: {
+            billing_details: {
+              name: user?.user_metadata?.first_name 
+                ? `${user.user_metadata.first_name} ${user.user_metadata.last_name || ''}`.trim()
+                : user?.email || 'Customer',
+              email: user?.email,
+            },
+          },
+        },
+        expand: ['payment_method'],
+      });
+
+    if (collectError) {
+      console.error("Error collecting bank account:", collectError);
+      if (collectError.type === 'validation_error') {
+        setSetupError({ message: "Please check your information and try again.", canRetry: true });
+      } else {
+        setSetupError({ message: collectError.message || "Failed to connect to your bank. Please try again.", canRetry: true });
+      }
+      return;
+    }
+
+    // Check if user cancelled or closed the modal
+    if (!collectedSetupIntent || collectedSetupIntent.status === 'requires_payment_method') {
+      toast.info("Bank account linking was cancelled. You can try again when you're ready.");
+      return;
+    }
+
+    // STEP 2: If the bank requires additional confirmation
+    if (collectedSetupIntent.status === 'requires_confirmation') {
+      const { setupIntent: confirmedSetupIntent, error: confirmError } = 
+        await stripe.confirmUsBankAccountSetup(data.clientSecret);
+
+      if (confirmError) {
+        console.error("Error confirming setup:", confirmError);
+        setSetupError({ 
+          message: "Bank verification failed. This can happen if your bank session timed out. Please try again.", 
+          canRetry: true 
+        });
+        return;
+      }
+
+      if (confirmedSetupIntent?.status === 'succeeded') {
+        await supabase.functions.invoke("confirm-ach-setup", {
+          body: {
+            setupIntentId: confirmedSetupIntent.id,
+            paymentMethodId: confirmedSetupIntent.payment_method,
+            billingAnchorDay: billingAnchorDay,
+            paymentMethodType: "ach",
+          },
+        });
+        toast.success("Bank account linked successfully!");
+        fireMetaCapi({ eventName: 'AddPaymentInfo', email: user?.email || undefined });
+        checkPaymentStatus();
+      } else if (confirmedSetupIntent?.status === 'requires_action') {
+        toast.info("Bank account requires verification. Check your email for next steps.");
+        checkPaymentStatus();
+      }
+    } else if (collectedSetupIntent.status === 'succeeded') {
+      await supabase.functions.invoke("confirm-ach-setup", {
+        body: {
+          setupIntentId: collectedSetupIntent.id,
+          paymentMethodId: collectedSetupIntent.payment_method,
+          billingAnchorDay: billingAnchorDay,
+          paymentMethodType: "ach",
+        },
+      });
+      toast.success("Bank account linked successfully!");
+      fireMetaCapi({ eventName: 'AddPaymentInfo', email: user?.email || undefined });
+      checkPaymentStatus();
+    } else if (collectedSetupIntent.status === 'requires_action') {
+      toast.info("Bank account requires verification. Check your email for next steps.");
+      checkPaymentStatus();
+    }
+  };
+
+  const handleSwitchPaymentMethod = async () => {
+    setIsSwitching(true);
+    try {
+      // Reset payment setup status to allow re-setup
+      const { error } = await supabase
+        .from("customer_applications" as any)
+        .update({ 
+          payment_setup_status: "pending", 
+          stripe_payment_method_id: null,
+          payment_method_type: selectedPaymentType === "ach" ? "card" : "ach",
+        } as any)
+        .eq("user_id", user?.id);
+
+      if (error) throw error;
+      
+      setSelectedPaymentType(prev => prev === "ach" ? "card" : "ach");
+      toast.success(`Switched to ${selectedPaymentType === "ach" ? "credit card" : "ACH"} setup. Please complete the new payment method setup.`);
+      checkPaymentStatus();
+    } catch (err) {
+      console.error("Error switching payment method:", err);
+      toast.error("Failed to switch payment method. Please try again.");
+    } finally {
+      setIsSwitching(false);
     }
   };
 
@@ -217,6 +380,7 @@ export default function PaymentSetup() {
   }
 
   const hasPaymentMethod = paymentStatus?.hasPaymentMethod;
+  const currentPmType = paymentStatus?.paymentMethodType || "ach";
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -227,7 +391,7 @@ export default function PaymentSetup() {
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-foreground">Payment Setup</h1>
           <p className="text-muted-foreground mt-2">
-            Link your bank account for future billing
+            Link your bank account or credit card for future billing
           </p>
         </div>
 
@@ -242,7 +406,6 @@ export default function PaymentSetup() {
                 {/* Progress connector line */}
                 <div className="absolute top-5 left-5 right-5 h-0.5 bg-border" />
 
-                {/* Step 1: Application Submitted */}
                 {(() => {
                   const appStatus = paymentStatus.applicationStatus;
                   const step1Complete = ["pending_review", "approved", "rejected"].includes(appStatus!);
@@ -250,7 +413,6 @@ export default function PaymentSetup() {
                   const step2Complete = ["approved", "rejected"].includes(appStatus!);
                   const step2Active = appStatus === "pending_review";
                   const step3Complete = appStatus === "approved";
-                  const step3Active = false;
                   const isRejected = appStatus === "rejected";
 
                   return (
@@ -270,7 +432,7 @@ export default function PaymentSetup() {
                       </div>
 
                       <div className="relative flex flex-col items-center text-center z-10 flex-1">
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 bg-background ${isRejected ? "border-destructive bg-destructive text-destructive-foreground" : step3Complete ? "border-primary bg-primary text-primary-foreground" : step3Active ? "border-primary text-primary" : "border-border text-muted-foreground"}`}>
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 bg-background ${isRejected ? "border-destructive bg-destructive text-destructive-foreground" : step3Complete ? "border-primary bg-primary text-primary-foreground" : "border-border text-muted-foreground"}`}>
                           {isRejected ? <AlertCircle className="h-4 w-4" /> : step3Complete ? <CheckCircle2 className="h-4 w-4" /> : <CheckCircle2 className="h-4 w-4" />}
                         </div>
                         <span className={`mt-2 text-xs font-medium ${isRejected ? "text-destructive" : step3Complete ? "text-foreground" : "text-muted-foreground"}`}>
@@ -291,7 +453,7 @@ export default function PaymentSetup() {
                   <p className="text-sm text-muted-foreground">Our team is reviewing your application. This typically takes 1–2 business days. You can complete payment setup now — <span className="font-medium text-foreground">no charges will occur until a trailer is assigned.</span></p>
                 )}
                 {paymentStatus.applicationStatus === "approved" && (
-                  <p className="text-sm text-muted-foreground">Your application is approved! Complete bank linking below to finish onboarding.</p>
+                  <p className="text-sm text-muted-foreground">Your application is approved! Complete payment setup below to finish onboarding.</p>
                 )}
                 {paymentStatus.applicationStatus === "rejected" && (
                   <p className="text-sm text-destructive">Your application was not approved. Please call <span className="font-medium">(888) 570-4564</span> for details.</p>
@@ -314,27 +476,72 @@ export default function PaymentSetup() {
                   </CardTitle>
                 </div>
                 <Badge variant="outline" className="bg-green-100 text-green-700 border-green-300">
-                  Connected
+                  {currentPmType === "card" ? "Credit Card" : "ACH"} Connected
                 </Badge>
               </div>
             </CardHeader>
             <CardContent>
               <div className="flex items-center gap-4 p-4 bg-white dark:bg-card rounded-lg border">
-                <Building2 className="h-10 w-10 text-muted-foreground" />
+                {currentPmType === "card" ? (
+                  <CreditCard className="h-10 w-10 text-muted-foreground" />
+                ) : (
+                  <Building2 className="h-10 w-10 text-muted-foreground" />
+                )}
                 <div>
-                  <p className="font-medium text-foreground">
-                    {paymentStatus.paymentMethod.bankName}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    {paymentStatus.paymentMethod.accountType.charAt(0).toUpperCase() + 
-                     paymentStatus.paymentMethod.accountType.slice(1)} ••••{paymentStatus.paymentMethod.last4}
-                  </p>
+                  {currentPmType === "card" && paymentStatus.paymentMethod.brand ? (
+                    <>
+                      <p className="font-medium text-foreground">
+                        {paymentStatus.paymentMethod.brand.charAt(0).toUpperCase() + paymentStatus.paymentMethod.brand.slice(1)}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        ••••{paymentStatus.paymentMethod.last4}
+                        {paymentStatus.paymentMethod.expMonth && paymentStatus.paymentMethod.expYear && (
+                          <> · Exp {paymentStatus.paymentMethod.expMonth}/{paymentStatus.paymentMethod.expYear}</>
+                        )}
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <p className="font-medium text-foreground">
+                        {paymentStatus.paymentMethod.bankName}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        {paymentStatus.paymentMethod.accountType?.charAt(0).toUpperCase()}{paymentStatus.paymentMethod.accountType?.slice(1)} ••••{paymentStatus.paymentMethod.last4}
+                      </p>
+                    </>
+                  )}
                 </div>
               </div>
-              <p className="text-sm text-muted-foreground mt-4">
-                Your bank account is linked and ready for payments. To update your payment method, 
-                please contact support.
-              </p>
+
+              {/* Card fee notice */}
+              {currentPmType === "card" && (
+                <Alert className="mt-4">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription className="text-sm">
+                    Credit card payments include a <strong>2.9% + $0.30</strong> processing fee per transaction. Switch to ACH to avoid fees.
+                  </AlertDescription>
+                </Alert>
+              )}
+
+              {/* Switch payment method button */}
+              <div className="mt-4 flex items-center justify-between">
+                <p className="text-sm text-muted-foreground">
+                  Want to use a different payment method?
+                </p>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={handleSwitchPaymentMethod}
+                  disabled={isSwitching}
+                >
+                  {isSwitching ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <ArrowRightLeft className="h-4 w-4 mr-2" />
+                  )}
+                  Switch to {currentPmType === "ach" ? "Credit Card" : "ACH"}
+                </Button>
+              </div>
             </CardContent>
           </Card>
         )}
@@ -356,7 +563,7 @@ export default function PaymentSetup() {
                       You Won't Be Charged Today
                     </h2>
                     <p className="text-green-700/80 dark:text-green-300/80">
-                      You're simply linking your bank account for future billing. 
+                      You're simply linking your payment method for future billing. 
                       No money will be withdrawn until:
                     </p>
                     <ul className="space-y-1 text-green-700/80 dark:text-green-300/80">
@@ -377,7 +584,77 @@ export default function PaymentSetup() {
               </CardContent>
             </Card>
 
-            {/* SECTION 2: What You're Doing Today */}
+            {/* SECTION 2: Payment Method Selection */}
+            <Card>
+              <CardHeader>
+                <div className="flex items-center gap-2">
+                  <CreditCard className="h-5 w-5 text-primary" />
+                  <CardTitle className="text-lg">Choose Payment Method</CardTitle>
+                </div>
+                <CardDescription>
+                  Select how you'd like to pay your monthly lease
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <RadioGroup
+                  value={selectedPaymentType}
+                  onValueChange={(val) => setSelectedPaymentType(val as "ach" | "card")}
+                  className="grid gap-3"
+                >
+                  <div className="relative">
+                    <RadioGroupItem
+                      value="ach"
+                      id="pm-ach"
+                      className="peer sr-only"
+                    />
+                    <Label
+                      htmlFor="pm-ach"
+                      className="flex items-start gap-4 rounded-lg border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer"
+                    >
+                      <Building2 className="h-6 w-6 text-primary mt-0.5" />
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold">ACH Bank Transfer</span>
+                          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 text-xs">
+                            Recommended — No Fees
+                          </Badge>
+                        </div>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          Direct bank connection. No processing fees. Most reliable for recurring payments.
+                        </p>
+                      </div>
+                    </Label>
+                  </div>
+
+                  <div className="relative">
+                    <RadioGroupItem
+                      value="card"
+                      id="pm-card"
+                      className="peer sr-only"
+                    />
+                    <Label
+                      htmlFor="pm-card"
+                      className="flex items-start gap-4 rounded-lg border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer"
+                    >
+                      <CreditCard className="h-6 w-6 text-muted-foreground mt-0.5" />
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold">Credit / Debit Card</span>
+                        </div>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          Visa, Mastercard, Amex, Discover. A <strong>2.9% + $0.30</strong> processing fee applies per transaction.
+                        </p>
+                        <div className="mt-2 p-2 bg-amber-50 dark:bg-amber-950/20 rounded text-xs text-amber-700 dark:text-amber-400">
+                          <strong>Example:</strong> On a $700/mo lease, the processing fee is ~$20.99/mo → you pay $720.99
+                        </div>
+                      </div>
+                    </Label>
+                  </div>
+                </RadioGroup>
+              </CardContent>
+            </Card>
+
+            {/* SECTION 3: What You're Doing Today */}
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg">What You're Doing Today</CardTitle>
@@ -404,14 +681,13 @@ export default function PaymentSetup() {
               </CardContent>
             </Card>
 
-            {/* SECTION 3: Billing Timeline */}
+            {/* SECTION 4: Billing Timeline */}
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg">When Will I Be Charged?</CardTitle>
                 <CardDescription>Here's exactly when billing happens</CardDescription>
               </CardHeader>
               <CardContent className="space-y-0">
-                {/* Timeline Item 1: Today */}
                 <div className="flex gap-4">
                   <div className="flex flex-col items-center">
                     <div className="h-10 w-10 rounded-full bg-green-100 dark:bg-green-900/50 flex items-center justify-center border-2 border-green-500">
@@ -427,12 +703,11 @@ export default function PaymentSetup() {
                       </Badge>
                     </div>
                     <p className="text-muted-foreground">
-                      Link your bank account securely. This is just an authorization.
+                      Link your {selectedPaymentType === "card" ? "credit card" : "bank account"} securely. This is just an authorization.
                     </p>
                   </div>
                 </div>
 
-                {/* Timeline Item 2: Trailer Assignment */}
                 <div className="flex gap-4">
                   <div className="flex flex-col items-center">
                     <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center border-2 border-muted-foreground/30">
@@ -445,7 +720,8 @@ export default function PaymentSetup() {
                       <span className="font-semibold text-foreground">When We Assign Your Trailer</span>
                     </div>
                     <p className="text-muted-foreground">
-                      $1,000 security deposit charged via ACH
+                      $1,000 security deposit charged via {selectedPaymentType === "card" ? "credit card" : "ACH"}
+                      {selectedPaymentType === "card" && <span className="text-amber-600"> (+ processing fee)</span>}
                     </p>
                     <p className="text-sm text-muted-foreground flex items-center gap-1.5 mt-1">
                       <Mail className="h-3.5 w-3.5" />
@@ -454,7 +730,6 @@ export default function PaymentSetup() {
                   </div>
                 </div>
 
-                {/* Timeline Item 3: Recurring Monthly */}
                 <div className="flex gap-4">
                   <div className="flex flex-col items-center">
                     <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center border-2 border-muted-foreground/30">
@@ -467,6 +742,7 @@ export default function PaymentSetup() {
                     </div>
                     <p className="text-muted-foreground">
                       Monthly rent charged automatically on your selected date (1st or 15th)
+                      {selectedPaymentType === "card" && <span className="text-amber-600"> (+ processing fee)</span>}
                     </p>
                     <p className="text-sm text-muted-foreground flex items-center gap-1.5 mt-1">
                       <Clock className="h-3.5 w-3.5" />
@@ -477,7 +753,7 @@ export default function PaymentSetup() {
               </CardContent>
             </Card>
 
-            {/* SECTION 4: Payment Date Selection */}
+            {/* SECTION 5: Payment Date Selection */}
             <Card>
               <CardHeader>
                 <div className="flex items-center gap-2">
@@ -530,7 +806,7 @@ export default function PaymentSetup() {
               </CardContent>
             </Card>
 
-            {/* SECTION 5: Link Bank Account Button */}
+            {/* SECTION 6: Link Payment Method Button */}
             <Card>
               <CardContent className="pt-6">
                 <Button 
@@ -543,6 +819,11 @@ export default function PaymentSetup() {
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       Setting Up...
+                    </>
+                  ) : selectedPaymentType === "card" ? (
+                    <>
+                      <CreditCard className="mr-2 h-4 w-4" />
+                      Link Credit Card
                     </>
                   ) : (
                     <>
@@ -586,7 +867,7 @@ export default function PaymentSetup() {
 
             <Separator />
 
-            {/* SECTION 6: What is ACH? (Collapsible) */}
+            {/* SECTION 7: ACH vs Card Comparison */}
             <Collapsible open={isAchInfoOpen} onOpenChange={setIsAchInfoOpen}>
               <Card>
                 <CollapsibleTrigger asChild>
@@ -594,7 +875,7 @@ export default function PaymentSetup() {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <Building2 className="h-5 w-5 text-primary" />
-                        <CardTitle className="text-lg">What is ACH?</CardTitle>
+                        <CardTitle className="text-lg">ACH vs Credit Card — What's the Difference?</CardTitle>
                       </div>
                       <ChevronDown className={`h-5 w-5 text-muted-foreground transition-transform ${isAchInfoOpen ? 'rotate-180' : ''}`} />
                     </div>
@@ -602,49 +883,54 @@ export default function PaymentSetup() {
                 </CollapsibleTrigger>
                 <CollapsibleContent>
                   <CardContent className="pt-0 space-y-4">
-                    <p className="text-muted-foreground">
-                      ACH (Automated Clearing House) is the same secure electronic payment system used for:
-                    </p>
-                    <ul className="space-y-2 text-muted-foreground">
-                      <li className="flex items-center gap-2">
-                        <Check className="h-4 w-4 text-primary" />
-                        Direct deposit of paychecks
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <Check className="h-4 w-4 text-primary" />
-                        Utility and mortgage payments
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <Check className="h-4 w-4 text-primary" />
-                        Government benefit payments
-                      </li>
-                    </ul>
-                    
-                    <Separator />
-                    
-                    <div>
-                      <h4 className="font-medium text-foreground mb-2">Why we use ACH instead of credit cards:</h4>
-                      <ul className="space-y-2 text-muted-foreground">
-                        <li className="flex items-center gap-2">
-                          <DollarSign className="h-4 w-4 text-green-600" />
-                          Lower fees = lower costs for you
-                        </li>
-                        <li className="flex items-center gap-2">
-                          <CreditCard className="h-4 w-4 text-primary" />
-                          Direct bank connection = no expired cards or declined payments
-                        </li>
-                        <li className="flex items-center gap-2">
-                          <Clock className="h-4 w-4 text-primary" />
-                          Reliable = helps avoid payment failures and service interruptions
-                        </li>
-                      </ul>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="p-4 rounded-lg border bg-green-50/50 dark:bg-green-950/10 border-green-200 dark:border-green-800">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Building2 className="h-5 w-5 text-green-600" />
+                          <h4 className="font-semibold text-green-700 dark:text-green-400">ACH</h4>
+                        </div>
+                        <ul className="space-y-1.5 text-sm text-muted-foreground">
+                          <li className="flex items-center gap-1.5">
+                            <Check className="h-3.5 w-3.5 text-green-600" />
+                            No processing fees
+                          </li>
+                          <li className="flex items-center gap-1.5">
+                            <Check className="h-3.5 w-3.5 text-green-600" />
+                            No card expirations
+                          </li>
+                          <li className="flex items-center gap-1.5">
+                            <Check className="h-3.5 w-3.5 text-green-600" />
+                            Most reliable for recurring
+                          </li>
+                        </ul>
+                      </div>
+                      <div className="p-4 rounded-lg border">
+                        <div className="flex items-center gap-2 mb-2">
+                          <CreditCard className="h-5 w-5 text-muted-foreground" />
+                          <h4 className="font-semibold">Credit Card</h4>
+                        </div>
+                        <ul className="space-y-1.5 text-sm text-muted-foreground">
+                          <li className="flex items-center gap-1.5">
+                            <AlertCircle className="h-3.5 w-3.5 text-amber-500" />
+                            2.9% + $0.30 fee per payment
+                          </li>
+                          <li className="flex items-center gap-1.5">
+                            <AlertCircle className="h-3.5 w-3.5 text-amber-500" />
+                            Cards can expire or decline
+                          </li>
+                          <li className="flex items-center gap-1.5">
+                            <Check className="h-3.5 w-3.5 text-primary" />
+                            Convenient instant setup
+                          </li>
+                        </ul>
+                      </div>
                     </div>
                   </CardContent>
                 </CollapsibleContent>
               </Card>
             </Collapsible>
 
-            {/* SECTION 7: Billing Terms from Lease Agreement */}
+            {/* SECTION 8: Billing Terms */}
             <Card>
               <CardHeader>
                 <div className="flex items-center gap-2">
@@ -658,11 +944,11 @@ export default function PaymentSetup() {
               <CardContent>
                 <Accordion type="single" collapsible className="w-full">
                   <AccordionItem value="ach-authorization">
-                    <AccordionTrigger>ACH Authorization</AccordionTrigger>
+                    <AccordionTrigger>Payment Authorization</AccordionTrigger>
                     <AccordionContent className="space-y-2 text-muted-foreground">
                       <p>
                         By signing the Trailer Leasing Agreement, you authorize CRUMS Leasing to initiate 
-                        ACH withdrawals for all amounts owed, including:
+                        payments for all amounts owed, including:
                       </p>
                       <ul className="list-disc pl-5 space-y-1">
                         <li>Monthly lease payments</li>
@@ -672,15 +958,20 @@ export default function PaymentSetup() {
                         <li>Damage invoices</li>
                         <li>Any outstanding balances</li>
                       </ul>
+                      {selectedPaymentType === "card" && (
+                        <p className="text-amber-600 text-sm pt-2">
+                          <strong>Note:</strong> Credit card payments include a 2.9% + $0.30 processing fee per transaction.
+                        </p>
+                      )}
                     </AccordionContent>
                   </AccordionItem>
 
                   <AccordionItem value="payment-failure">
-                    <AccordionTrigger>ACH Payment Failure</AccordionTrigger>
+                    <AccordionTrigger>Payment Failure</AccordionTrigger>
                     <AccordionContent className="space-y-2 text-muted-foreground">
-                      <p>If any ACH payment is declined or returned for any reason:</p>
+                      <p>If any payment is declined or returned for any reason:</p>
                       <ul className="list-disc pl-5 space-y-1">
-                        <li>A <strong>$100.00 ACH decline fee</strong> will be applied</li>
+                        <li>A <strong>$100.00 decline fee</strong> will be applied</li>
                         <li>CRUMS Leasing will contact you requesting updated payment information</li>
                         <li>All outstanding balances remain immediately due until resolved</li>
                       </ul>
@@ -697,7 +988,7 @@ export default function PaymentSetup() {
                       <p>If payment is not received by the end of Day 7:</p>
                       <ul className="list-disc pl-5 space-y-1">
                         <li>A <strong>$150.00 late fee</strong> will be assessed</li>
-                        <li>CRUMS Leasing will automatically deduct the outstanding balance via ACH</li>
+                        <li>CRUMS Leasing will automatically deduct the outstanding balance</li>
                       </ul>
                       <p className="text-sm pt-2">
                         <strong>Note:</strong> You will receive email notifications at Day 0, 3, and 5 to help 
@@ -736,8 +1027,8 @@ export default function PaymentSetup() {
                         <li>Excessive wear</li>
                       </ul>
                       <p className="pt-2">
-                        If no charges are owed at the end of your lease, the deposit will be returned via 
-                        ACH within fourteen (14) days after inspection completion.
+                        If no charges are owed at the end of your lease, the deposit will be returned 
+                        within fourteen (14) days after inspection completion.
                       </p>
                     </AccordionContent>
                   </AccordionItem>
@@ -752,7 +1043,7 @@ export default function PaymentSetup() {
                       <p>If CRUMS Leasing receives a toll notice:</p>
                       <ul className="list-disc pl-5 space-y-1">
                         <li>You will receive an email invoice detailing the charge</li>
-                        <li>The toll amount will be deducted via ACH</li>
+                        <li>The toll amount will be deducted from your payment method</li>
                       </ul>
                       <p className="pt-2">
                         <strong>Unpaid Toll Charges:</strong> You have twenty (20) calendar days from 
@@ -765,7 +1056,7 @@ export default function PaymentSetup() {
               </CardContent>
             </Card>
 
-            {/* SECTION 8: FAQ */}
+            {/* SECTION 9: FAQ */}
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg">Frequently Asked Questions</CardTitle>
@@ -794,44 +1085,43 @@ export default function PaymentSetup() {
                     <AccordionTrigger>What happens if a payment fails?</AccordionTrigger>
                     <AccordionContent>
                       Per your lease agreement, you'll receive email notifications at Day 0, 3, and 5. 
-                      A 7-day grace period applies to resolve the issue. ACH helps avoid these issues 
-                      by providing a reliable direct bank connection — no expired cards or declined 
-                      transactions.
+                      A 7-day grace period applies to resolve the issue.
                     </AccordionContent>
                   </AccordionItem>
                   
                   <AccordionItem value="item-4">
-                    <AccordionTrigger>Can I use a credit card instead?</AccordionTrigger>
+                    <AccordionTrigger>What are the credit card fees?</AccordionTrigger>
                     <AccordionContent>
-                      CRUMS Leasing only accepts ACH bank payments. This keeps processing fees low 
-                      (saving you money) and ensures reliable, consistent payments. Credit cards often 
-                      decline due to limits, fraud alerts, or expiration, which can interrupt your service.
+                      Credit card payments include a <strong>2.9% + $0.30</strong> processing fee per transaction 
+                      to cover Stripe processing costs. For a $700/mo lease, the fee is approximately $20.99/mo. 
+                      ACH bank payments have <strong>no processing fees</strong>, which is why we recommend them.
                     </AccordionContent>
                   </AccordionItem>
-                  
+
                   <AccordionItem value="item-5">
-                    <AccordionTrigger>Is my bank information secure?</AccordionTrigger>
+                    <AccordionTrigger>Can I switch between ACH and credit card?</AccordionTrigger>
                     <AccordionContent>
-                      Yes. We partner with Stripe, a PCI Level 1 certified payment processor — the 
-                      highest level of security certification. Your bank credentials are never stored 
-                      on our servers. The connection uses bank-level encryption.
+                      Yes! You can switch between payment methods at any time from this page. 
+                      If you switch from credit card to ACH, you'll stop paying the processing fee 
+                      on your next billing cycle.
                     </AccordionContent>
                   </AccordionItem>
                   
                   <AccordionItem value="item-6">
+                    <AccordionTrigger>Is my payment information secure?</AccordionTrigger>
+                    <AccordionContent>
+                      Yes. We partner with Stripe, a PCI Level 1 certified payment processor — the 
+                      highest level of security certification. Your payment credentials are never stored 
+                      on our servers.
+                    </AccordionContent>
+                  </AccordionItem>
+                  
+                  <AccordionItem value="item-7">
                     <AccordionTrigger>What if my bank isn't supported for instant verification?</AccordionTrigger>
                     <AccordionContent>
                       If instant verification isn't available for your bank, we'll verify your account 
                       using micro-deposits. Two small deposits (usually a few cents each) will appear 
                       in your account within 1-2 business days, which you'll confirm to complete verification.
-                    </AccordionContent>
-                  </AccordionItem>
-
-                  <AccordionItem value="item-7">
-                    <AccordionTrigger>Can I change my payment method later?</AccordionTrigger>
-                    <AccordionContent>
-                      Yes. Contact our support team to update your payment method. We'll help you 
-                      link a new bank account if needed.
                     </AccordionContent>
                   </AccordionItem>
                 </Accordion>

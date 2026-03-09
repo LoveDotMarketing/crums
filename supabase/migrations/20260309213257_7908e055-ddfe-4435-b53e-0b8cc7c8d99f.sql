@@ -1,0 +1,1 @@
+ALTER TABLE public.customer_applications ADD COLUMN IF NOT EXISTS payment_method_type text DEFAULT 'ach';

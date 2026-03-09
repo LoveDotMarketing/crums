@@ -44,7 +44,7 @@ serve(async (req) => {
     // Get the user's application
     const { data: application, error: appError } = await supabaseClient
       .from("customer_applications")
-      .select("id, stripe_customer_id, stripe_payment_method_id, payment_setup_status, status")
+      .select("id, stripe_customer_id, stripe_payment_method_id, payment_setup_status, status, payment_method_type")
       .eq("user_id", user.id)
       .single();
 
@@ -55,6 +55,7 @@ serve(async (req) => {
           hasPaymentMethod: false,
           applicationStatus: null,
           paymentSetupStatus: null,
+          paymentMethodType: null,
         }),
         {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -71,6 +72,7 @@ serve(async (req) => {
           hasPaymentMethod: false,
           applicationStatus: application.status,
           paymentSetupStatus: application.payment_setup_status,
+          paymentMethodType: application.payment_method_type || "ach",
         }),
         {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -81,20 +83,28 @@ serve(async (req) => {
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
 
-    // Get payment methods for this customer
-    const paymentMethods = await stripe.paymentMethods.list({
+    // Check for ACH payment methods
+    const achMethods = await stripe.paymentMethods.list({
       customer: application.stripe_customer_id,
       type: "us_bank_account",
     });
 
-    logStep("Retrieved payment methods", { count: paymentMethods.data.length });
+    // Check for card payment methods
+    const cardMethods = await stripe.paymentMethods.list({
+      customer: application.stripe_customer_id,
+      type: "card",
+    });
 
-    if (paymentMethods.data.length === 0) {
+    logStep("Retrieved payment methods", { achCount: achMethods.data.length, cardCount: cardMethods.data.length });
+
+    // No payment methods at all
+    if (achMethods.data.length === 0 && cardMethods.data.length === 0) {
       return new Response(
         JSON.stringify({
           hasPaymentMethod: false,
           applicationStatus: application.status,
           paymentSetupStatus: application.payment_setup_status,
+          paymentMethodType: application.payment_method_type || "ach",
         }),
         {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -103,20 +113,65 @@ serve(async (req) => {
       );
     }
 
-    // Get the first (most recent) payment method
-    const pm = paymentMethods.data[0];
-    const bankAccount = pm.us_bank_account;
+    // Determine which type is active based on stored preference, falling back to what exists
+    const storedType = application.payment_method_type || "ach";
+    let activeType: "ach" | "card" = storedType as "ach" | "card";
+    let paymentMethodDetails: Record<string, unknown> = {};
+
+    if (activeType === "card" && cardMethods.data.length > 0) {
+      const card = cardMethods.data[0];
+      paymentMethodDetails = {
+        id: card.id,
+        brand: card.card?.brand || "card",
+        last4: card.card?.last4 || "****",
+        expMonth: card.card?.exp_month,
+        expYear: card.card?.exp_year,
+      };
+    } else if (activeType === "ach" && achMethods.data.length > 0) {
+      const pm = achMethods.data[0];
+      const bankAccount = pm.us_bank_account;
+      paymentMethodDetails = {
+        id: pm.id,
+        bankName: bankAccount?.bank_name || "Bank Account",
+        last4: bankAccount?.last4 || "****",
+        accountType: bankAccount?.account_type || "checking",
+        accountHolderType: bankAccount?.account_holder_type || "individual",
+      };
+    } else if (cardMethods.data.length > 0) {
+      // Fallback: stored type doesn't match what exists
+      activeType = "card";
+      const card = cardMethods.data[0];
+      paymentMethodDetails = {
+        id: card.id,
+        brand: card.card?.brand || "card",
+        last4: card.card?.last4 || "****",
+        expMonth: card.card?.exp_month,
+        expYear: card.card?.exp_year,
+      };
+    } else {
+      activeType = "ach";
+      const pm = achMethods.data[0];
+      const bankAccount = pm.us_bank_account;
+      paymentMethodDetails = {
+        id: pm.id,
+        bankName: bankAccount?.bank_name || "Bank Account",
+        last4: bankAccount?.last4 || "****",
+        accountType: bankAccount?.account_type || "checking",
+        accountHolderType: bankAccount?.account_holder_type || "individual",
+      };
+    }
 
     // Update application if payment method wasn't recorded
-    if (!application.stripe_payment_method_id && pm.id) {
+    if (!application.stripe_payment_method_id && paymentMethodDetails.id) {
       await supabaseClient
         .from("customer_applications")
         .update({
-          stripe_payment_method_id: pm.id,
+          stripe_payment_method_id: paymentMethodDetails.id as string,
           payment_setup_status: "completed",
+          payment_method_type: activeType,
         })
         .eq("id", application.id);
-      logStep("Updated application with payment method", { paymentMethodId: pm.id });
+      logStep("Updated application with payment method", { paymentMethodId: paymentMethodDetails.id, type: activeType });
     }
 
     return new Response(
@@ -124,13 +179,8 @@ serve(async (req) => {
         hasPaymentMethod: true,
         applicationStatus: application.status,
         paymentSetupStatus: "completed",
-        paymentMethod: {
-          id: pm.id,
-          bankName: bankAccount?.bank_name || "Bank Account",
-          last4: bankAccount?.last4 || "****",
-          accountType: bankAccount?.account_type || "checking",
-          accountHolderType: bankAccount?.account_holder_type || "individual",
-        },
+        paymentMethodType: activeType,
+        paymentMethod: paymentMethodDetails,
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },

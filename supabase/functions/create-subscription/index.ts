@@ -146,11 +146,10 @@ serve(async (req) => {
     if (custError || !customer) throw new Error("Customer not found");
     logStep("Customer found", { customerId, email: customer.email });
 
-    // Server-side ACH guard: verify customer has a payment method before creating subscription
+    // Server-side payment method guard: verify customer has ACH or card payment method
     let hasPaymentMethod = false;
 
     if (customer.email) {
-      // Path 1: profile → user_id → customer_applications (case-insensitive)
       const { data: profileData } = await supabaseClient
         .from("profiles")
         .select("id")
@@ -166,12 +165,12 @@ serve(async (req) => {
         
         if (appData?.stripe_payment_method_id) {
           hasPaymentMethod = true;
-          logStep("ACH payment method verified via profile path", { userId: profileData.id });
+          logStep("Payment method verified via profile path", { userId: profileData.id });
         }
       }
     }
 
-    // Path 2 (fallback): customer_id → customer_applications (admin-led ACH setup)
+    // Path 2 (fallback): customer_id → customer_applications
     if (!hasPaymentMethod) {
       const { data: appByCustomerId } = await supabaseClient
         .from("customer_applications")
@@ -181,12 +180,12 @@ serve(async (req) => {
 
       if (appByCustomerId?.stripe_payment_method_id) {
         hasPaymentMethod = true;
-        logStep("ACH payment method verified via customer_id path", { customerId });
+        logStep("Payment method verified via customer_id path", { customerId });
       }
     }
 
     if (!hasPaymentMethod) {
-      throw new Error("Customer has no ACH payment method linked. Set up ACH on their profile first.");
+      throw new Error("Customer has no payment method linked. Set up ACH or credit card on their profile first.");
     }
 
     // Resolve global anchor day from admin input or customer application

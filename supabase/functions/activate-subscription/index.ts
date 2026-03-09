@@ -26,15 +26,29 @@ const resolveAchPaymentMethodId = async ({
   customerEmail?: string | null;
 }) => {
   // 1) Prefer payment methods already attached to the Stripe customer on the subscription
-  const existingMethods = await stripe.paymentMethods.list({
+  // Check ACH first, then card as fallback
+  const existingAchMethods = await stripe.paymentMethods.list({
     customer: stripeCustomerId,
     type: "us_bank_account",
     limit: 1,
   });
 
-  if (existingMethods.data.length > 0) {
-    const paymentMethodId = existingMethods.data[0].id;
+  if (existingAchMethods.data.length > 0) {
+    const paymentMethodId = existingAchMethods.data[0].id;
     logStep("Found ACH payment method on subscription customer", { paymentMethodId });
+    return paymentMethodId;
+  }
+
+  // Check for card payment methods
+  const existingCardMethods = await stripe.paymentMethods.list({
+    customer: stripeCustomerId,
+    type: "card",
+    limit: 1,
+  });
+
+  if (existingCardMethods.data.length > 0) {
+    const paymentMethodId = existingCardMethods.data[0].id;
+    logStep("Found card payment method on subscription customer", { paymentMethodId });
     return paymentMethodId;
   }
 
@@ -85,20 +99,35 @@ const resolveAchPaymentMethodId = async ({
     }
   }
 
-  // 3) Last fallback: find ACH method on any Stripe customer with same email
+  // 3) Last fallback: find ACH or card method on any Stripe customer with same email
   if (!storedPmId && customerEmail) {
     const sameEmailCustomers = await stripe.customers.list({ email: customerEmail, limit: 10 });
 
     for (const candidateCustomer of sameEmailCustomers.data) {
       if (candidateCustomer.id === stripeCustomerId) continue;
-      const candidateMethods = await stripe.paymentMethods.list({
+      // Check ACH first
+      const candidateAch = await stripe.paymentMethods.list({
         customer: candidateCustomer.id,
         type: "us_bank_account",
         limit: 1,
       });
-      if (candidateMethods.data.length > 0) {
-        storedPmId = candidateMethods.data[0].id;
+      if (candidateAch.data.length > 0) {
+        storedPmId = candidateAch.data[0].id;
         logStep("Recovered ACH method from same-email Stripe customer", {
+          paymentMethodId: storedPmId,
+          fromStripeCustomerId: candidateCustomer.id,
+        });
+        break;
+      }
+      // Check card
+      const candidateCard = await stripe.paymentMethods.list({
+        customer: candidateCustomer.id,
+        type: "card",
+        limit: 1,
+      });
+      if (candidateCard.data.length > 0) {
+        storedPmId = candidateCard.data[0].id;
+        logStep("Recovered card method from same-email Stripe customer", {
           paymentMethodId: storedPmId,
           fromStripeCustomerId: candidateCustomer.id,
         });
@@ -108,7 +137,7 @@ const resolveAchPaymentMethodId = async ({
   }
 
   if (!storedPmId) {
-    throw new Error("Customer has no payment method attached. They need to complete ACH setup first.");
+    throw new Error("Customer has no payment method attached. They need to complete payment setup first.");
   }
 
   logStep("Recovered stored ACH payment method from application", { paymentMethodId: storedPmId });
@@ -258,12 +287,23 @@ serve(async (req) => {
           metadata: { type: "security_deposit", subscription_id: subscription.stripe_subscription_id },
         });
 
+        // Detect if payment method is a card and apply surcharge
+        const pmInfo = await stripe.paymentMethods.retrieve(paymentMethodId);
+        const isCard = pmInfo.type === "card";
+        let finalDepositAmount = depositAmount;
+        let surchargeAmount = 0;
+        if (isCard) {
+          finalDepositAmount = Math.round(((depositAmount + 0.30) / (1 - 0.029)) * 100) / 100;
+          surchargeAmount = Math.round((finalDepositAmount - depositAmount) * 100) / 100;
+          logStep("Card surcharge applied to deposit", { base: depositAmount, surcharge: surchargeAmount, total: finalDepositAmount });
+        }
+
         await stripe.invoiceItems.create({
           customer: chargeCustomerId,
           invoice: depositInvoice.id,
-          amount: Math.round(depositAmount * 100),
+          amount: Math.round(finalDepositAmount * 100),
           currency: "usd",
-          description: "Security Deposit",
+          description: isCard ? `Security Deposit (includes $${surchargeAmount.toFixed(2)} card processing fee)` : "Security Deposit",
         });
 
         const finalizedInvoice = await stripe.invoices.finalizeInvoice(depositInvoice.id);
@@ -287,14 +327,14 @@ serve(async (req) => {
         // Create billing_history record for deposit
         await supabaseClient.from("billing_history").insert({
           subscription_id: subscriptionId,
-          amount: depositAmount,
-          net_amount: depositAmount,
+          amount: finalDepositAmount,
+          net_amount: finalDepositAmount,
           status: "processing",
           stripe_payment_intent_id: typeof paidInvoice.payment_intent === "string"
             ? paidInvoice.payment_intent
             : paidInvoice.payment_intent?.id ?? null,
           stripe_invoice_id: paidInvoice.id,
-          payment_method: "ach",
+          payment_method: isCard ? "card" : "ach",
         });
 
         logStep("Deposit charged successfully");

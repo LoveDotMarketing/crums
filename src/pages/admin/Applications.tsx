@@ -773,12 +773,14 @@ export default function Applications() {
                               )}
                               {app.payment_setup_status === "completed" && (
                                 <>
-                                  <Badge variant="outline" className="ml-1 text-xs">ACH ✓</Badge>
+                                  <Badge variant="outline" className="ml-1 text-xs">
+                                    {(app as any).payment_method_type === "card" ? "Card ✓" : "ACH ✓"}
+                                  </Badge>
                                   <Button
                                     variant="ghost"
                                     size="sm"
                                     className="ml-1 h-6 px-1.5 text-xs text-muted-foreground hover:text-destructive"
-                                    title="Reset ACH setup (clear broken payment method)"
+                                    title="Reset payment setup (clear broken payment method)"
                                     onClick={async () => {
                                       const { error } = await supabase
                                         .from("customer_applications")
@@ -787,8 +789,8 @@ export default function Applications() {
                                       if (error) {
                                         toast({ title: "Error", description: error.message, variant: "destructive" });
                                       } else {
-                                        toast({ title: "ACH Reset", description: "Payment setup status reset to pending." });
-                                        queryClient.invalidateQueries({ queryKey: ["admin-applications"] });
+                                        toast({ title: "Payment Reset", description: "Payment setup status reset to pending." });
+                                        queryClient.invalidateQueries({ queryKey: ["applications"] });
                                       }
                                     }}
                                   >
