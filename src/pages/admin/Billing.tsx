@@ -424,6 +424,83 @@ export default function Billing() {
     }
   };
 
+  // Delete subscription handler
+  const handleDeleteSubscription = async () => {
+    if (!deleteConfirm) return;
+    setIsDeleting(true);
+    try {
+      const { subscriptionId, stripeSubscriptionId } = deleteConfirm;
+
+      // 1. Cancel Stripe subscription if exists
+      if (stripeSubscriptionId) {
+        try {
+          const { data: { session } } = await supabase.auth.getSession();
+          if (session) {
+            await supabase.functions.invoke("manage-subscription", {
+              body: { subscriptionId, action: "cancel", releaseTrailers: true },
+            });
+          }
+        } catch (e) {
+          console.warn("Stripe cancel during delete failed, continuing:", e);
+        }
+      }
+
+      // 2. Get trailer IDs from subscription items before deleting
+      const { data: items } = await supabase
+        .from("subscription_items")
+        .select("trailer_id")
+        .eq("subscription_id", subscriptionId);
+
+      const trailerIds = items?.map(i => i.trailer_id).filter(Boolean) || [];
+
+      // 3. Delete subscription items
+      await supabase
+        .from("subscription_items")
+        .delete()
+        .eq("subscription_id", subscriptionId);
+
+      // 4. Release trailers
+      if (trailerIds.length > 0) {
+        await supabase
+          .from("trailers")
+          .update({ is_rented: false, customer_id: null, status: "available" })
+          .in("id", trailerIds);
+      }
+
+      // 5. Delete billing history for this subscription
+      await supabase
+        .from("billing_history")
+        .delete()
+        .eq("subscription_id", subscriptionId);
+
+      // 6. Delete applied discounts
+      await supabase
+        .from("applied_discounts")
+        .delete()
+        .eq("subscription_id", subscriptionId);
+
+      // 7. Delete the subscription record
+      const { error } = await supabase
+        .from("customer_subscriptions")
+        .delete()
+        .eq("id", subscriptionId);
+
+      if (error) throw error;
+
+      queryClient.invalidateQueries({ queryKey: ["customer-subscriptions"] });
+      queryClient.invalidateQueries({ queryKey: ["subscription-items"] });
+      queryClient.invalidateQueries({ queryKey: ["billing-history"] });
+      queryClient.invalidateQueries({ queryKey: ["trailers"] });
+      toast.success(`Subscription deleted successfully${trailerIds.length > 0 ? ` — ${trailerIds.length} trailer(s) released` : ""}`);
+    } catch (error) {
+      console.error("Delete subscription error:", error);
+      toast.error("Failed to delete subscription: " + (error instanceof Error ? error.message : "Unknown error"));
+    } finally {
+      setIsDeleting(false);
+      setDeleteConfirm(null);
+    }
+  };
+
   // Sync payments from Stripe
   const handleSyncPayments = async () => {
     setIsSyncing(true);
