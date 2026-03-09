@@ -99,20 +99,35 @@ const resolveAchPaymentMethodId = async ({
     }
   }
 
-  // 3) Last fallback: find ACH method on any Stripe customer with same email
+  // 3) Last fallback: find ACH or card method on any Stripe customer with same email
   if (!storedPmId && customerEmail) {
     const sameEmailCustomers = await stripe.customers.list({ email: customerEmail, limit: 10 });
 
     for (const candidateCustomer of sameEmailCustomers.data) {
       if (candidateCustomer.id === stripeCustomerId) continue;
-      const candidateMethods = await stripe.paymentMethods.list({
+      // Check ACH first
+      const candidateAch = await stripe.paymentMethods.list({
         customer: candidateCustomer.id,
         type: "us_bank_account",
         limit: 1,
       });
-      if (candidateMethods.data.length > 0) {
-        storedPmId = candidateMethods.data[0].id;
+      if (candidateAch.data.length > 0) {
+        storedPmId = candidateAch.data[0].id;
         logStep("Recovered ACH method from same-email Stripe customer", {
+          paymentMethodId: storedPmId,
+          fromStripeCustomerId: candidateCustomer.id,
+        });
+        break;
+      }
+      // Check card
+      const candidateCard = await stripe.paymentMethods.list({
+        customer: candidateCustomer.id,
+        type: "card",
+        limit: 1,
+      });
+      if (candidateCard.data.length > 0) {
+        storedPmId = candidateCard.data[0].id;
+        logStep("Recovered card method from same-email Stripe customer", {
           paymentMethodId: storedPmId,
           fromStripeCustomerId: candidateCustomer.id,
         });
@@ -122,7 +137,7 @@ const resolveAchPaymentMethodId = async ({
   }
 
   if (!storedPmId) {
-    throw new Error("Customer has no payment method attached. They need to complete ACH setup first.");
+    throw new Error("Customer has no payment method attached. They need to complete payment setup first.");
   }
 
   logStep("Recovered stored ACH payment method from application", { paymentMethodId: storedPmId });
