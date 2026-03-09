@@ -327,14 +327,14 @@ serve(async (req) => {
         // Create billing_history record for deposit
         await supabaseClient.from("billing_history").insert({
           subscription_id: subscriptionId,
-          amount: depositAmount,
-          net_amount: depositAmount,
+          amount: finalDepositAmount,
+          net_amount: finalDepositAmount,
           status: "processing",
           stripe_payment_intent_id: typeof paidInvoice.payment_intent === "string"
             ? paidInvoice.payment_intent
             : paidInvoice.payment_intent?.id ?? null,
           stripe_invoice_id: paidInvoice.id,
-          payment_method: "ach",
+          payment_method: isCard ? "card" : "ach",
         });
 
         logStep("Deposit charged successfully");
