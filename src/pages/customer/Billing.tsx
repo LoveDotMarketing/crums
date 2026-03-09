@@ -158,6 +158,7 @@ const CustomerBilling = () => {
     const labels: Record<string, string> = {
       standard_lease: "Standard Lease",
       "6_month_lease": "6 Month Lease",
+      "24_month_lease": "24 Month Lease",
       lease_to_own: "Lease to Own",
       rent_for_storage: "Rent for Storage",
       repayment_plan: "Repayment Plan",

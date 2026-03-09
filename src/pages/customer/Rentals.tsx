@@ -264,9 +264,11 @@ export default function Rentals() {
                               ? "Lease to Own"
                               : item.subscription?.subscription_type === "6_month_lease"
                                 ? "6 Mo Lease"
-                                : item.subscription?.subscription_type === "rent_for_storage"
-                                  ? "Storage"
-                                  : "12 Mo Lease"}
+                                : item.subscription?.subscription_type === "24_month_lease"
+                                  ? "24 Mo Lease"
+                                  : item.subscription?.subscription_type === "rent_for_storage"
+                                    ? "Storage"
+                                    : "12 Mo Lease"}
                           </Badge>
                         </div>
                       </CardHeader>

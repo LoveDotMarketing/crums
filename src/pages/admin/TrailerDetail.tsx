@@ -981,6 +981,8 @@ export default function TrailerDetail() {
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="standard_lease">Standard Lease</SelectItem>
+                            <SelectItem value="6_month_lease">6 Month Lease</SelectItem>
+                            <SelectItem value="24_month_lease">24 Month Lease</SelectItem>
                             <SelectItem value="lease_to_own">Lease to Own</SelectItem>
                             <SelectItem value="rent_for_storage">Rent for Storage</SelectItem>
                             <SelectItem value="repayment_plan">Repayment Plan</SelectItem>

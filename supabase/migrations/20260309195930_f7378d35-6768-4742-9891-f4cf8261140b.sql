@@ -1,0 +1,1 @@
+ALTER TYPE public.subscription_type ADD VALUE '24_month_lease';

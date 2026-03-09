@@ -557,6 +557,22 @@ export function CreateSubscriptionDialog({ onSuccess, mode = "dialog", onCancel 
 
               <div className={cn(
                 "flex items-start space-x-3 p-3 rounded-lg border cursor-pointer hover:bg-muted/50 transition-colors",
+                subscriptionType === "24_month_lease" && "border-indigo-500 bg-indigo-500/5"
+              )}>
+                <RadioGroupItem value="24_month_lease" id="24_month_lease" className="mt-1" />
+                <Label htmlFor="24_month_lease" className="flex-1 cursor-pointer">
+                  <div className="flex items-center gap-2 font-medium">
+                    <FileText className="h-4 w-4 text-indigo-500" />
+                    24 Month Lease
+                  </div>
+                  <p className="text-sm text-muted-foreground font-normal mt-0.5">
+                    Extended 24-month commitment with recurring billing
+                  </p>
+                </Label>
+              </div>
+
+              <div className={cn(
+                "flex items-start space-x-3 p-3 rounded-lg border cursor-pointer hover:bg-muted/50 transition-colors",
                 subscriptionType === "rent_for_storage" && "border-blue-500 bg-blue-500/5"
               )}>
                 <RadioGroupItem value="rent_for_storage" id="rent_for_storage" className="mt-1" />
