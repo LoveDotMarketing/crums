@@ -65,7 +65,8 @@ import {
   Webhook,
   KeyRound,
   Warehouse,
-  Handshake
+  Handshake,
+  Trash2
 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
@@ -276,6 +277,12 @@ export default function Billing() {
     customerName: string;
   } | null>(null);
   const [isManaging, setIsManaging] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState<{
+    subscriptionId: string;
+    customerName: string;
+    stripeSubscriptionId?: string | null;
+  } | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Manual resolution state
   const [resolveDialogOpen, setResolveDialogOpen] = useState(false);
@@ -414,6 +421,83 @@ export default function Billing() {
     } finally {
       setIsManaging(false);
       setConfirmAction(null);
+    }
+  };
+
+  // Delete subscription handler
+  const handleDeleteSubscription = async () => {
+    if (!deleteConfirm) return;
+    setIsDeleting(true);
+    try {
+      const { subscriptionId, stripeSubscriptionId } = deleteConfirm;
+
+      // 1. Cancel Stripe subscription if exists
+      if (stripeSubscriptionId) {
+        try {
+          const { data: { session } } = await supabase.auth.getSession();
+          if (session) {
+            await supabase.functions.invoke("manage-subscription", {
+              body: { subscriptionId, action: "cancel", releaseTrailers: true },
+            });
+          }
+        } catch (e) {
+          console.warn("Stripe cancel during delete failed, continuing:", e);
+        }
+      }
+
+      // 2. Get trailer IDs from subscription items before deleting
+      const { data: items } = await supabase
+        .from("subscription_items")
+        .select("trailer_id")
+        .eq("subscription_id", subscriptionId);
+
+      const trailerIds = items?.map(i => i.trailer_id).filter(Boolean) || [];
+
+      // 3. Delete subscription items
+      await supabase
+        .from("subscription_items")
+        .delete()
+        .eq("subscription_id", subscriptionId);
+
+      // 4. Release trailers
+      if (trailerIds.length > 0) {
+        await supabase
+          .from("trailers")
+          .update({ is_rented: false, customer_id: null, status: "available" })
+          .in("id", trailerIds);
+      }
+
+      // 5. Delete billing history for this subscription
+      await supabase
+        .from("billing_history")
+        .delete()
+        .eq("subscription_id", subscriptionId);
+
+      // 6. Delete applied discounts
+      await supabase
+        .from("applied_discounts")
+        .delete()
+        .eq("subscription_id", subscriptionId);
+
+      // 7. Delete the subscription record
+      const { error } = await supabase
+        .from("customer_subscriptions")
+        .delete()
+        .eq("id", subscriptionId);
+
+      if (error) throw error;
+
+      queryClient.invalidateQueries({ queryKey: ["customer-subscriptions"] });
+      queryClient.invalidateQueries({ queryKey: ["subscription-items"] });
+      queryClient.invalidateQueries({ queryKey: ["billing-history"] });
+      queryClient.invalidateQueries({ queryKey: ["trailers"] });
+      toast.success(`Subscription deleted successfully${trailerIds.length > 0 ? ` — ${trailerIds.length} trailer(s) released` : ""}`);
+    } catch (error) {
+      console.error("Delete subscription error:", error);
+      toast.error("Failed to delete subscription: " + (error instanceof Error ? error.message : "Unknown error"));
+    } finally {
+      setIsDeleting(false);
+      setDeleteConfirm(null);
     }
   };
 
@@ -1684,11 +1768,18 @@ export default function Billing() {
                                             </DropdownMenuItem>
                                           </>
                                         )}
-                                        {sub.status === "cancelled" && (
-                                          <DropdownMenuItem disabled>
-                                            <span className="text-muted-foreground">No actions available</span>
-                                          </DropdownMenuItem>
-                                        )}
+                                        <DropdownMenuSeparator />
+                                        <DropdownMenuItem
+                                          className="text-destructive focus:text-destructive"
+                                          onClick={() => setDeleteConfirm({
+                                            subscriptionId: sub.id,
+                                            customerName: sub.customers?.full_name || "Unknown",
+                                            stripeSubscriptionId: sub.stripe_subscription_id
+                                          })}
+                                        >
+                                          <Trash2 className="h-4 w-4 mr-2" />
+                                          Delete Subscription
+                                        </DropdownMenuItem>
                                       </DropdownMenuContent>
                                     </DropdownMenu>
                                   </div>
@@ -2597,6 +2688,30 @@ export default function Billing() {
                       confirmAction?.action === "pause" ? "Pause Subscription" :
                       "Resume Subscription"
                     )}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+
+            {/* Delete Subscription Confirmation */}
+            <AlertDialog open={!!deleteConfirm} onOpenChange={(open) => !open && setDeleteConfirm(null)}>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Delete Subscription</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This will <strong>permanently delete</strong> the subscription for <strong>{deleteConfirm?.customerName}</strong>, 
+                    release all assigned trailers back to inventory, and remove all associated billing records. 
+                    This action cannot be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={handleDeleteSubscription}
+                    disabled={isDeleting}
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  >
+                    {isDeleting ? "Deleting..." : "Delete Subscription"}
                   </AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>

@@ -1,57 +1,32 @@
 
 
-# Add "Delete Subscription" Option
+## Problem
 
-## What
-Add a "Delete Subscription" dropdown option for admins. Deleting a subscription will:
-1. Release any assigned trailers back to inventory
-2. Cancel the Stripe subscription if one exists
-3. Delete subscription items from the database
-4. Delete the subscription record itself
+Abdul's `customer_applications` record shows `payment_setup_status = 'completed'` and has a `stripe_payment_method_id` (`pm_1T7dwSLjIwiEGQIhzU647O3c`) that is dead/detached in Stripe. The UI shows "ACH ✓" and hides the "Send ACH Setup" button, so there's no way to re-do the setup.
 
-## When it appears
-Show "Delete Subscription" for subscriptions in any status — particularly useful for empty/erroneous records, but available for all. It will appear after "Cancel Subscription" with a separator, styled in destructive red.
+## Fix
 
-## Implementation
+### 1. Database: Reset Abdul's ACH status
 
-### 1. Add delete state (`src/pages/admin/Billing.tsx` ~line 277)
-Add a `deleteConfirm` state similar to `confirmAction`:
-```typescript
-const [deleteConfirm, setDeleteConfirm] = useState<{
-  subscriptionId: string;
-  customerName: string;
-  stripeSubscriptionId?: string;
-} | null>(null);
+Run a migration to clear the broken payment method and reset status so the ACH setup flow can be re-initiated:
+
+```sql
+UPDATE customer_applications
+SET payment_setup_status = 'pending',
+    stripe_payment_method_id = NULL
+WHERE id = '25b5046d-d4b2-405c-bf78-ba3e2b71039f';
 ```
 
-### 2. Add delete handler (~line 418)
-New `handleDeleteSubscription` function that:
-- Cancels Stripe subscription via `manage-subscription` edge function (if `stripe_subscription_id` exists and status is active/paused)
-- Deletes `subscription_items` where `subscription_id` matches
-- Releases trailers (`is_rented = false`, `customer_id = null`, `status = 'available'`) for any trailers linked via subscription items
-- Deletes the `customer_subscriptions` record
-- Invalidates queries and shows toast
+### 2. UI: Add a "Reset ACH" option for admins
 
-### 3. Add dropdown menu item (~line 1686)
-Add "Delete Subscription" option for all statuses, after the cancel option area:
-```tsx
-<DropdownMenuSeparator />
-<DropdownMenuItem
-  className="text-destructive focus:text-destructive"
-  onClick={() => setDeleteConfirm({
-    subscriptionId: sub.id,
-    customerName: sub.customers?.full_name || "Unknown",
-    stripeSubscriptionId: sub.stripe_subscription_id
-  })}
->
-  <Trash2 className="h-4 w-4 mr-2" />
-  Delete Subscription
-</DropdownMenuItem>
-```
+In `src/pages/admin/Applications.tsx`, update the ACH badge area (~line 773) so that when `payment_setup_status === "completed"`, instead of only showing the static "ACH ✓" badge, also show a small reset button that sets `payment_setup_status` back to `pending` and clears `stripe_payment_method_id`. This prevents needing manual database edits in the future.
 
-### 4. Add confirmation dialog (~line 2600)
-AlertDialog confirming deletion with strong warning text: "This will permanently delete the subscription record, release all trailers, and cannot be undone."
+The reset button will:
+- Update `customer_applications` setting `payment_setup_status = 'pending'` and `stripe_payment_method_id = null`
+- Refresh the applications list
+- Show a toast confirmation
 
-### Files changed
-- `src/pages/admin/Billing.tsx` — state, handler, dropdown item, confirmation dialog
+### Files to update
+- **Database migration** — one UPDATE statement for Abdul's record
+- `src/pages/admin/Applications.tsx` — add reset ACH button next to the "ACH ✓" badge (~5 lines)
 
