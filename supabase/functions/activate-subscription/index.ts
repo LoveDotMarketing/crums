@@ -287,12 +287,23 @@ serve(async (req) => {
           metadata: { type: "security_deposit", subscription_id: subscription.stripe_subscription_id },
         });
 
+        // Detect if payment method is a card and apply surcharge
+        const pmInfo = await stripe.paymentMethods.retrieve(paymentMethodId);
+        const isCard = pmInfo.type === "card";
+        let finalDepositAmount = depositAmount;
+        let surchargeAmount = 0;
+        if (isCard) {
+          finalDepositAmount = Math.round(((depositAmount + 0.30) / (1 - 0.029)) * 100) / 100;
+          surchargeAmount = Math.round((finalDepositAmount - depositAmount) * 100) / 100;
+          logStep("Card surcharge applied to deposit", { base: depositAmount, surcharge: surchargeAmount, total: finalDepositAmount });
+        }
+
         await stripe.invoiceItems.create({
           customer: chargeCustomerId,
           invoice: depositInvoice.id,
-          amount: Math.round(depositAmount * 100),
+          amount: Math.round(finalDepositAmount * 100),
           currency: "usd",
-          description: "Security Deposit",
+          description: isCard ? `Security Deposit (includes $${surchargeAmount.toFixed(2)} card processing fee)` : "Security Deposit",
         });
 
         const finalizedInvoice = await stripe.invoices.finalizeInvoice(depositInvoice.id);
