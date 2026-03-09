@@ -112,6 +112,7 @@ const formatSubscriptionType = (type: string | null): string => {
   switch (type) {
     case 'standard_lease': return 'Standard Lease';
     case '6_month_lease': return '6 Month Lease';
+    case '24_month_lease': return '24 Month Lease';
     case 'rent_for_storage': return 'Rent for Storage';
     case 'lease_to_own': return 'Lease to Own';
     case 'repayment_plan': return 'Repayment Plan';

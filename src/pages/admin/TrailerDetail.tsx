@@ -106,10 +106,12 @@ interface MaintenanceRecord {
   work_order_id: string | null;
 }
 
-type AgreementType = 'standard_lease' | 'lease_to_own' | 'rent_for_storage' | 'repayment_plan';
+type AgreementType = 'standard_lease' | '6_month_lease' | '24_month_lease' | 'lease_to_own' | 'rent_for_storage' | 'repayment_plan';
 
 const AGREEMENT_LABELS: Record<AgreementType, string> = {
   standard_lease: 'Standard Lease',
+  '6_month_lease': '6 Month Lease',
+  '24_month_lease': '24 Month Lease',
   lease_to_own: 'Lease to Own',
   rent_for_storage: 'Rent for Storage',
   repayment_plan: 'Repayment Plan',
@@ -979,6 +981,8 @@ export default function TrailerDetail() {
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="standard_lease">Standard Lease</SelectItem>
+                            <SelectItem value="6_month_lease">6 Month Lease</SelectItem>
+                            <SelectItem value="24_month_lease">24 Month Lease</SelectItem>
                             <SelectItem value="lease_to_own">Lease to Own</SelectItem>
                             <SelectItem value="rent_for_storage">Rent for Storage</SelectItem>
                             <SelectItem value="repayment_plan">Repayment Plan</SelectItem>

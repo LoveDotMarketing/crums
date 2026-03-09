@@ -104,7 +104,7 @@ import { ChargeCustomerDialog } from "@/components/admin/ChargeCustomerDialog";
 import { EditSubscriptionPanel } from "@/components/admin/EditSubscriptionPanel";
 
 type BillingCycle = "weekly" | "biweekly" | "semimonthly" | "monthly";
-type SubscriptionType = "standard_lease" | "6_month_lease" | "rent_for_storage" | "lease_to_own" | "repayment_plan";
+type SubscriptionType = "standard_lease" | "6_month_lease" | "24_month_lease" | "rent_for_storage" | "lease_to_own" | "repayment_plan";
 type DiscountType = "percentage" | "fixed" | "multi_trailer" | "promo_code";
 type PaymentStatus = "pending" | "processing" | "succeeded" | "failed" | "refunded";
 
@@ -1173,6 +1173,7 @@ export default function Billing() {
     const config: Record<SubscriptionType, { label: string; icon: React.ReactNode; variant: "default" | "secondary" | "outline" | "destructive" }> = {
       standard_lease: { label: "Standard Lease", icon: null, variant: "outline" },
       "6_month_lease": { label: "6 Mo Lease", icon: <Calendar className="h-3 w-3 mr-1" />, variant: "secondary" },
+      "24_month_lease": { label: "24 Mo Lease", icon: <Calendar className="h-3 w-3 mr-1" />, variant: "secondary" },
       rent_for_storage: { label: "Storage", icon: <Warehouse className="h-3 w-3 mr-1" />, variant: "secondary" },
       lease_to_own: { label: "Lease to Own", icon: <KeyRound className="h-3 w-3 mr-1" />, variant: "default" },
       repayment_plan: { label: "Repayment", icon: <CreditCard className="h-3 w-3 mr-1" />, variant: "destructive" },

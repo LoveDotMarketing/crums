@@ -31,7 +31,7 @@ import {
 import { cn } from "@/lib/utils";
 
 type BillingCycle = "weekly" | "biweekly" | "semimonthly" | "monthly";
-type SubscriptionType = "standard_lease" | "6_month_lease" | "rent_for_storage" | "lease_to_own" | "repayment_plan";
+type SubscriptionType = "standard_lease" | "6_month_lease" | "24_month_lease" | "rent_for_storage" | "lease_to_own" | "repayment_plan";
 
 interface EditSubscriptionPanelProps {
   subscriptionId: string;
@@ -42,6 +42,7 @@ interface EditSubscriptionPanelProps {
 const subscriptionTypes: { value: SubscriptionType; label: string; icon: React.ReactNode }[] = [
   { value: "standard_lease", label: "Standard 12 Month Lease", icon: null },
   { value: "6_month_lease", label: "6 Month Lease", icon: <CalendarIcon className="h-4 w-4" /> },
+  { value: "24_month_lease", label: "24 Month Lease", icon: <CalendarIcon className="h-4 w-4" /> },
   { value: "rent_for_storage", label: "Rent for Storage", icon: <Warehouse className="h-4 w-4" /> },
   { value: "lease_to_own", label: "Lease to Own", icon: <KeyRound className="h-4 w-4" /> },
   { value: "repayment_plan", label: "Repayment Plan", icon: <CreditCard className="h-4 w-4" /> },
