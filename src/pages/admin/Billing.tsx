@@ -277,6 +277,12 @@ export default function Billing() {
     customerName: string;
   } | null>(null);
   const [isManaging, setIsManaging] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState<{
+    subscriptionId: string;
+    customerName: string;
+    stripeSubscriptionId?: string | null;
+  } | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Manual resolution state
   const [resolveDialogOpen, setResolveDialogOpen] = useState(false);
