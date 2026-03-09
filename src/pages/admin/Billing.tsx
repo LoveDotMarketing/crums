@@ -580,8 +580,12 @@ export default function Billing() {
       if (error) throw error;
 
       if (data.success) {
-        toast.success(data.message || `Subscription activated for ${customerName}`);
-        setActivatedIds(prev => new Set(prev).add(subscriptionId));
+        if (data.alreadyActive) {
+          toast.info("Subscription is already active — no additional charges were created.");
+        } else {
+          toast.success(data.message || `Subscription activated for ${customerName}`);
+          setActivatedIds(prev => new Set(prev).add(subscriptionId));
+        }
         await Promise.all([
           queryClient.invalidateQueries({ queryKey: ["customer-subscriptions"] }),
           queryClient.invalidateQueries({ queryKey: ["subscription-items"] }),
