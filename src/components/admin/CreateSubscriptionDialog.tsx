@@ -406,6 +406,13 @@ export function CreateSubscriptionDialog({ onSuccess, mode = "dialog", onCancel 
       setEndDate(sixMonthsFromNow);
     }
     
+    // Auto-set end date for 24-month lease
+    if (value === "24_month_lease") {
+      const twentyFourMonthsFromNow = new Date();
+      twentyFourMonthsFromNow.setMonth(twentyFourMonthsFromNow.getMonth() + 24);
+      setEndDate(twentyFourMonthsFromNow);
+    }
+    
     // If lease to own, mark all trailers as lease to own
     if (value === "lease_to_own") {
       setSelectedTrailers(prev =>
