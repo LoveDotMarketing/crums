@@ -1587,7 +1587,7 @@ export default function Billing() {
                                           </DropdownMenuItem>
                                         )}
                                         <DropdownMenuSeparator />
-                                        {sub.stripe_subscription_id && sub.stripe_customer_id && (
+                                        {isReadyToActivate && (
                                           <>
                                             <DropdownMenuItem
                                               onClick={() => handleActivateSubscription(sub.id, sub.customers?.full_name || "Unknown")}
