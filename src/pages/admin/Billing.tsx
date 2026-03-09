@@ -580,8 +580,12 @@ export default function Billing() {
       if (error) throw error;
 
       if (data.success) {
-        toast.success(data.message || `Subscription activated for ${customerName}`);
-        setActivatedIds(prev => new Set(prev).add(subscriptionId));
+        if (data.alreadyActive) {
+          toast.info("Subscription is already active — no additional charges were created.");
+        } else {
+          toast.success(data.message || `Subscription activated for ${customerName}`);
+          setActivatedIds(prev => new Set(prev).add(subscriptionId));
+        }
         await Promise.all([
           queryClient.invalidateQueries({ queryKey: ["customer-subscriptions"] }),
           queryClient.invalidateQueries({ queryKey: ["subscription-items"] }),
@@ -1388,7 +1392,8 @@ export default function Billing() {
                             // Pending subs with Stripe IDs are ready (even if previously attempted)
                             // Active subs with no successful payment also qualify
                             const isReadyToActivate = !isProcessing && sub.stripe_subscription_id && 
-                              sub.stripe_customer_id && !hasProcessingPayment && (
+                              sub.stripe_customer_id && !hasProcessingPayment && 
+                              !(sub.status === "active" && sub.deposit_paid) && (
                                 sub.status === "pending" || 
                                 (sub.status === "active" && !hasSuccessfulPayment)
                               );
@@ -1582,7 +1587,7 @@ export default function Billing() {
                                           </DropdownMenuItem>
                                         )}
                                         <DropdownMenuSeparator />
-                                        {sub.stripe_subscription_id && sub.stripe_customer_id && (
+                                        {isReadyToActivate && (
                                           <>
                                             <DropdownMenuItem
                                               onClick={() => handleActivateSubscription(sub.id, sub.customers?.full_name || "Unknown")}
