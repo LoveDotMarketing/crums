@@ -1392,7 +1392,8 @@ export default function Billing() {
                             // Pending subs with Stripe IDs are ready (even if previously attempted)
                             // Active subs with no successful payment also qualify
                             const isReadyToActivate = !isProcessing && sub.stripe_subscription_id && 
-                              sub.stripe_customer_id && !hasProcessingPayment && (
+                              sub.stripe_customer_id && !hasProcessingPayment && 
+                              !(sub.status === "active" && sub.deposit_paid) && (
                                 sub.status === "pending" || 
                                 (sub.status === "active" && !hasSuccessfulPayment)
                               );
