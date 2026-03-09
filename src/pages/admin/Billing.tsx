@@ -2693,6 +2693,30 @@ export default function Billing() {
               </AlertDialogContent>
             </AlertDialog>
 
+            {/* Delete Subscription Confirmation */}
+            <AlertDialog open={!!deleteConfirm} onOpenChange={(open) => !open && setDeleteConfirm(null)}>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Delete Subscription</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This will <strong>permanently delete</strong> the subscription for <strong>{deleteConfirm?.customerName}</strong>, 
+                    release all assigned trailers back to inventory, and remove all associated billing records. 
+                    This action cannot be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={handleDeleteSubscription}
+                    disabled={isDeleting}
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  >
+                    {isDeleting ? "Deleting..." : "Delete Subscription"}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+
             {/* Manual Resolution Dialog */}
             <Dialog open={resolveDialogOpen} onOpenChange={setResolveDialogOpen}>
               <DialogContent>
