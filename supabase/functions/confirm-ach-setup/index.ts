@@ -42,9 +42,9 @@ serve(async (req) => {
     logStep("User authenticated", { userId: user.id, email: user.email });
 
     // Get request body
-    const { setupIntentId, paymentMethodId, billingAnchorDay, targetUserId, customerId } = await req.json();
+    const { setupIntentId, paymentMethodId, billingAnchorDay, targetUserId, customerId, paymentMethodType } = await req.json();
     if (!setupIntentId) throw new Error("setupIntentId is required");
-    logStep("Received request", { setupIntentId, billingAnchorDay, targetUserId, customerId });
+    logStep("Received request", { setupIntentId, billingAnchorDay, targetUserId, customerId, paymentMethodType });
 
     let lookupUserId = user.id;
 
@@ -59,7 +59,7 @@ serve(async (req) => {
         .maybeSingle();
 
       if (!adminRole) {
-        throw new Error("Admin access required to confirm ACH for another user");
+        throw new Error("Admin access required to confirm payment setup for another user");
       }
       logStep("Admin role verified");
       lookupUserId = targetUserId || customerId;
@@ -84,14 +84,16 @@ serve(async (req) => {
       throw new Error("No payment method found on SetupIntent");
     }
 
-    // Ensure the payment method is attached to any existing Stripe customer for this user
-    // This prevents detached PM issues when activating subscriptions later
+    // Determine payment method type from the PM itself or from metadata
+    const pmDetails = await stripe.paymentMethods.retrieve(pmId as string);
+    const resolvedPmType = pmDetails.type === "card" ? "card" : "ach";
+    logStep("Resolved payment method type", { pmType: resolvedPmType, stripeType: pmDetails.type });
+
+    // Ensure the payment method is attached to the correct Stripe customer
     try {
-      const pmDetails = await stripe.paymentMethods.retrieve(pmId as string);
       const pmCustomer = typeof pmDetails.customer === "string" ? pmDetails.customer : pmDetails.customer?.id ?? null;
       
       // Determine the correct email to look up the Stripe customer
-      // In admin mode, we need the customer's email, not the admin's
       let lookupEmail = user.email!;
       if (customerId) {
         const { data: custData } = await supabaseClient
@@ -140,7 +142,7 @@ serve(async (req) => {
       throw new Error("Application not found");
     }
 
-    // Auto-link customer_id on the application if missing (prevents future lookup failures)
+    // Auto-link customer_id on the application if missing
     if (!application.customer_id && application.user_id) {
       const { data: profileData } = await supabaseClient
         .from("profiles")
@@ -165,13 +167,14 @@ serve(async (req) => {
       }
     }
 
-    // Update the application with the payment method and billing anchor preference
+    // Update the application with the payment method, billing anchor, and payment method type
     const { error: updateError } = await supabaseClient
       .from("customer_applications")
       .update({
         stripe_payment_method_id: pmId as string,
         payment_setup_status: "completed",
         billing_anchor_day: billingAnchorDay || null,
+        payment_method_type: resolvedPmType,
       })
       .eq("id", application.id);
 
@@ -184,6 +187,7 @@ serve(async (req) => {
       applicationId: application.id, 
       paymentMethodId: pmId,
       billingAnchorDay: billingAnchorDay || null,
+      paymentMethodType: resolvedPmType,
     });
 
     return new Response(
@@ -191,6 +195,7 @@ serve(async (req) => {
         success: true,
         message: "Payment method successfully linked",
         paymentMethodId: pmId,
+        paymentMethodType: resolvedPmType,
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },

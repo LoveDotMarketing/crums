@@ -45,7 +45,8 @@ serve(async (req) => {
 
     // Check for admin acting on behalf of a customer
     const body = await req.json().catch(() => ({}));
-    const { targetUserId, customerId, customerEmail } = body;
+    const { targetUserId, customerId, customerEmail, paymentMethodType } = body;
+    const pmType = paymentMethodType === "card" ? "card" : "ach";
     let lookupUserId = user.id;
     let useCustomerPath = false;
 
@@ -60,7 +61,7 @@ serve(async (req) => {
         .maybeSingle();
 
       if (!adminRole) {
-        throw new Error("Admin access required to set up ACH for another user");
+        throw new Error("Admin access required to set up payment for another user");
       }
       logStep("Admin role verified");
 
@@ -68,7 +69,7 @@ serve(async (req) => {
         lookupUserId = targetUserId;
       } else if (customerId) {
         useCustomerPath = true;
-        lookupUserId = customerId; // Will be used as placeholder user_id
+        lookupUserId = customerId;
       }
     }
 
@@ -80,7 +81,6 @@ serve(async (req) => {
     let targetCompany: string | undefined;
 
     if (useCustomerPath) {
-      // ── Customer-record path (no auth account) ──
       const { data: customerRecord } = await supabaseClient
         .from("customers")
         .select("id, email, full_name, phone, company_name")
@@ -100,7 +100,6 @@ serve(async (req) => {
       targetCompany = customerRecord.company_name || undefined;
       logStep("Using customer record path", { customerId, email: targetEmail });
     } else {
-      // ── Profile path (auth account exists) ──
       const { data: targetProfile } = await supabaseClient
         .from("profiles")
         .select("id, email, first_name, last_name, phone, company_name")
@@ -150,7 +149,7 @@ serve(async (req) => {
         .single();
       if (createAppError) {
         logStep("Error creating application", { error: createAppError.message });
-        throw new Error("Failed to create application record for ACH setup");
+        throw new Error("Failed to create application record for payment setup");
       }
       application = newApp;
       logStep("Auto-created application", { applicationId: application.id });
@@ -190,29 +189,48 @@ serve(async (req) => {
         .eq("id", application.id);
     }
 
-    // Create SetupIntent for ACH Direct Debit with Financial Connections
-    const setupIntent = await stripe.setupIntents.create({
-      customer: customerId_stripe,
-      payment_method_types: ["us_bank_account"],
-      payment_method_options: {
-        us_bank_account: {
-          financial_connections: {
-            permissions: ["payment_method", "balances"],
-          },
-          verification_method: "automatic",
+    // Create SetupIntent based on payment method type
+    let setupIntent;
+    if (pmType === "card") {
+      setupIntent = await stripe.setupIntents.create({
+        customer: customerId_stripe,
+        payment_method_types: ["card"],
+        metadata: {
+          supabase_user_id: lookupUserId,
+          application_id: application.id,
+          initiated_by_admin: user.id,
+          payment_method_type: "card",
+          ...(useCustomerPath ? { customer_record_path: "true" } : {}),
         },
-      },
-      metadata: {
-        supabase_user_id: lookupUserId,
-        application_id: application.id,
-        initiated_by_admin: user.id,
-        ...(useCustomerPath ? { customer_record_path: "true" } : {}),
-      },
-    });
+      });
+      logStep("Card SetupIntent created", { setupIntentId: setupIntent.id });
+    } else {
+      setupIntent = await stripe.setupIntents.create({
+        customer: customerId_stripe,
+        payment_method_types: ["us_bank_account"],
+        payment_method_options: {
+          us_bank_account: {
+            financial_connections: {
+              permissions: ["payment_method", "balances"],
+            },
+            verification_method: "automatic",
+          },
+        },
+        metadata: {
+          supabase_user_id: lookupUserId,
+          application_id: application.id,
+          initiated_by_admin: user.id,
+          payment_method_type: "ach",
+          ...(useCustomerPath ? { customer_record_path: "true" } : {}),
+        },
+      });
+      logStep("ACH SetupIntent created", { setupIntentId: setupIntent.id });
+    }
 
     logStep("SetupIntent created", { 
       setupIntentId: setupIntent.id, 
-      clientSecret: setupIntent.client_secret?.slice(0, 20) + '...' 
+      clientSecret: setupIntent.client_secret?.slice(0, 20) + '...',
+      paymentMethodType: pmType,
     });
 
     return new Response(
@@ -221,6 +239,7 @@ serve(async (req) => {
         setupIntentId: setupIntent.id,
         customerId: customerId_stripe,
         publishableKey: stripePublishableKey,
+        paymentMethodType: pmType,
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
