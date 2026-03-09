@@ -1768,11 +1768,18 @@ export default function Billing() {
                                             </DropdownMenuItem>
                                           </>
                                         )}
-                                        {sub.status === "cancelled" && (
-                                          <DropdownMenuItem disabled>
-                                            <span className="text-muted-foreground">No actions available</span>
-                                          </DropdownMenuItem>
-                                        )}
+                                        <DropdownMenuSeparator />
+                                        <DropdownMenuItem
+                                          className="text-destructive focus:text-destructive"
+                                          onClick={() => setDeleteConfirm({
+                                            subscriptionId: sub.id,
+                                            customerName: sub.customers?.full_name || "Unknown",
+                                            stripeSubscriptionId: sub.stripe_subscription_id
+                                          })}
+                                        >
+                                          <Trash2 className="h-4 w-4 mr-2" />
+                                          Delete Subscription
+                                        </DropdownMenuItem>
                                       </DropdownMenuContent>
                                     </DropdownMenu>
                                   </div>
