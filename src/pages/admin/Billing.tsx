@@ -65,7 +65,8 @@ import {
   Webhook,
   KeyRound,
   Warehouse,
-  Handshake
+  Handshake,
+  Trash2
 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
