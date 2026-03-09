@@ -256,6 +256,7 @@ export type Database = {
           insurance_docs_url: string | null
           message: string | null
           number_of_trailers: number | null
+          payment_method_type: string | null
           payment_setup_sent_at: string | null
           payment_setup_status: string | null
           phone_number: string
@@ -292,6 +293,7 @@ export type Database = {
           insurance_docs_url?: string | null
           message?: string | null
           number_of_trailers?: number | null
+          payment_method_type?: string | null
           payment_setup_sent_at?: string | null
           payment_setup_status?: string | null
           phone_number: string
@@ -328,6 +330,7 @@ export type Database = {
           insurance_docs_url?: string | null
           message?: string | null
           number_of_trailers?: number | null
+          payment_method_type?: string | null
           payment_setup_sent_at?: string | null
           payment_setup_status?: string | null
           phone_number?: string
