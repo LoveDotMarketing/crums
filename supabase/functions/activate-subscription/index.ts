@@ -250,18 +250,20 @@ serve(async (req) => {
           invoice_settings: { default_payment_method: paymentMethodId },
         });
 
-        // Create standalone deposit invoice
-        await stripe.invoiceItems.create({
-          customer: chargeCustomerId,
-          amount: Math.round(depositAmount * 100),
-          currency: "usd",
-          description: "Security Deposit",
-        });
-
+        // Create standalone deposit invoice first, then attach the item explicitly
         const depositInvoice = await stripe.invoices.create({
           customer: chargeCustomerId,
           auto_advance: false,
+          pending_invoice_items_behavior: 'exclude',
           metadata: { type: "security_deposit", subscription_id: subscription.stripe_subscription_id },
+        });
+
+        await stripe.invoiceItems.create({
+          customer: chargeCustomerId,
+          invoice: depositInvoice.id,
+          amount: Math.round(depositAmount * 100),
+          currency: "usd",
+          description: "Security Deposit",
         });
 
         const finalizedInvoice = await stripe.invoices.finalizeInvoice(depositInvoice.id);
