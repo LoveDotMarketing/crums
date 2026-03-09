@@ -12,6 +12,13 @@ const logStep = (step: string, details?: Record<string, unknown>) => {
   console.log(`[CHARGE-CUSTOMER] ${step}${detailsStr}`);
 };
 
+// Calculate card surcharge using reverse formula: (base + 0.30) / (1 - 0.029)
+function calculateCardSurcharge(baseAmount: number): { adjustedAmount: number; surcharge: number } {
+  const adjustedAmount = Math.round(((baseAmount + 0.30) / (1 - 0.029)) * 100) / 100;
+  const surcharge = Math.round((adjustedAmount - baseAmount) * 100) / 100;
+  return { adjustedAmount, surcharge };
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -60,23 +67,47 @@ serve(async (req) => {
       .single();
 
     if (subError || !sub?.stripe_customer_id) {
-      throw new Error("Customer has no linked Stripe account. Set up ACH payment first.");
+      throw new Error("Customer has no linked Stripe account. Set up payment method first.");
     }
     logStep("Stripe customer found", { stripeCustomerId: sub.stripe_customer_id });
 
-    // Create Stripe invoice
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY")!, {
       apiVersion: "2025-08-27.basil",
     });
 
+    // Check the customer's default payment method to detect card vs ACH
+    const stripeCustomer = await stripe.customers.retrieve(sub.stripe_customer_id);
+    let isCard = false;
+    if (stripeCustomer && !stripeCustomer.deleted) {
+      const defaultPmId = stripeCustomer.invoice_settings?.default_payment_method;
+      if (defaultPmId) {
+        const pmId = typeof defaultPmId === "string" ? defaultPmId : defaultPmId.id;
+        const pm = await stripe.paymentMethods.retrieve(pmId);
+        isCard = pm.type === "card";
+        logStep("Default payment method type", { type: pm.type, isCard });
+      }
+    }
+
+    // Apply card surcharge if needed
+    let finalAmountCents = amountCents;
+    let surchargeAmount = 0;
+    let finalDescription = description;
+    if (isCard) {
+      const { adjustedAmount, surcharge } = calculateCardSurcharge(amount);
+      finalAmountCents = Math.round(adjustedAmount * 100);
+      surchargeAmount = surcharge;
+      finalDescription = `${description} (includes $${surcharge.toFixed(2)} card processing fee)`;
+      logStep("Card surcharge applied", { base: amount, surcharge, total: adjustedAmount });
+    }
+
     // Create invoice item
     await stripe.invoiceItems.create({
       customer: sub.stripe_customer_id,
-      amount: amountCents,
+      amount: finalAmountCents,
       currency: "usd",
-      description,
+      description: finalDescription,
     });
-    logStep("Invoice item created", { amountCents, description });
+    logStep("Invoice item created", { amountCents: finalAmountCents, description: finalDescription });
 
     // Create and finalize invoice
     const invoice = await stripe.invoices.create({
@@ -97,6 +128,8 @@ serve(async (req) => {
       status: finalizedInvoice.status,
       invoiceId: finalizedInvoice.id,
       paymentIntentId,
+      isCard,
+      surcharge: surchargeAmount,
     });
 
     return new Response(JSON.stringify({
@@ -104,6 +137,8 @@ serve(async (req) => {
       status: finalizedInvoice.status,
       stripe_invoice_id: finalizedInvoice.id,
       stripe_payment_intent_id: paymentIntentId,
+      surcharge: isCard ? surchargeAmount : 0,
+      payment_method: isCard ? "card" : "ach",
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
