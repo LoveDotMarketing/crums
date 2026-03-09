@@ -1,32 +1,31 @@
 
 
-## Problem
+# Fix Abdul's Split Stripe Customer & Sync ACH Status
 
-Abdul's `customer_applications` record shows `payment_setup_status = 'completed'` and has a `stripe_payment_method_id` (`pm_1T7dwSLjIwiEGQIhzU647O3c`) that is dead/detached in Stripe. The UI shows "ACH ✓" and hides the "Send ACH Setup" button, so there's no way to re-do the setup.
+## Problem
+Abdul has **two Stripe customers**:
+- `cus_U4oBrNhek7Fs0K` — old, dead payment method, linked to `customer_applications`
+- `cus_U5sQ2ohTsvdzXt` — new, has active subscription `sub_1T7gfi...`, likely has the working ACH payment method
+
+The `customer_applications` record still points to the old Stripe customer and shows `payment_setup_status = pending`, even though Abdul says ACH is linked on the new customer.
 
 ## Fix
 
-### 1. Database: Reset Abdul's ACH status
-
-Run a migration to clear the broken payment method and reset status so the ACH setup flow can be re-initiated:
+### 1. Database migration — sync application to new Stripe customer
+Update Abdul's `customer_applications` to point to the correct Stripe customer and mark ACH as completed:
 
 ```sql
 UPDATE customer_applications
-SET payment_setup_status = 'pending',
-    stripe_payment_method_id = NULL
+SET stripe_customer_id = 'cus_U5sQ2ohTsvdzXt',
+    payment_setup_status = 'completed'
 WHERE id = '25b5046d-d4b2-405c-bf78-ba3e2b71039f';
 ```
 
-### 2. UI: Add a "Reset ACH" option for admins
+This aligns the application with the Stripe customer that actually has the subscription and (presumably) the working payment method.
 
-In `src/pages/admin/Applications.tsx`, update the ACH badge area (~line 773) so that when `payment_setup_status === "completed"`, instead of only showing the static "ACH ✓" badge, also show a small reset button that sets `payment_setup_status` back to `pending` and clears `stripe_payment_method_id`. This prevents needing manual database edits in the future.
+### 2. Next step — activate subscription
+Once the migration is applied, the subscription (`d7a95e0a-21e4-4706-8a9e-cb5969faa987`) already exists as `active` with `deposit_paid = false` and `deposit_amount = $700`. The admin can then use the existing "Activate Subscription" button to collect the deposit.
 
-The reset button will:
-- Update `customer_applications` setting `payment_setup_status = 'pending'` and `stripe_payment_method_id = null`
-- Refresh the applications list
-- Show a toast confirmation
-
-### Files to update
-- **Database migration** — one UPDATE statement for Abdul's record
-- `src/pages/admin/Applications.tsx` — add reset ACH button next to the "ACH ✓" badge (~5 lines)
+### No code changes needed
+This is a data-only fix — one UPDATE statement.
 
