@@ -443,6 +443,11 @@ export function CreateSubscriptionDialog({ onSuccess, mode = "dialog", onCancel 
   };
 
   const totalMonthlyRate = selectedTrailers.reduce((sum, t) => sum + t.customRate, 0);
+  
+  // Detect if any trailer uses weekly billing for summary labels
+  const hasWeeklyTrailer = selectedTrailers.some(t => t.billingSchedule === "weekly-friday");
+  const effectiveBillingLabel = hasWeeklyTrailer ? "Weekly" : billingCycle.charAt(0).toUpperCase() + billingCycle.slice(1);
+  const effectiveTotalLabel = hasWeeklyTrailer ? "Weekly Total" : "Monthly Total";
 
   const isTrailerSelected = (trailerId: string) => 
     selectedTrailers.some(t => t.id === trailerId);
