@@ -443,6 +443,11 @@ export function CreateSubscriptionDialog({ onSuccess, mode = "dialog", onCancel 
   };
 
   const totalMonthlyRate = selectedTrailers.reduce((sum, t) => sum + t.customRate, 0);
+  
+  // Detect if any trailer uses weekly billing for summary labels
+  const hasWeeklyTrailer = selectedTrailers.some(t => t.billingSchedule === "weekly-friday");
+  const effectiveBillingLabel = hasWeeklyTrailer ? "Weekly" : billingCycle.charAt(0).toUpperCase() + billingCycle.slice(1);
+  const effectiveTotalLabel = hasWeeklyTrailer ? "Weekly Total" : "Monthly Total";
 
   const isTrailerSelected = (trailerId: string) => 
     selectedTrailers.some(t => t.id === trailerId);
@@ -877,10 +882,10 @@ export function CreateSubscriptionDialog({ onSuccess, mode = "dialog", onCancel 
                 </div>
                 <div>
                   <span className="text-muted-foreground">Billing:</span>{" "}
-                  <span className="font-medium capitalize">{billingCycle}</span>
+                  <span className="font-medium capitalize">{effectiveBillingLabel}</span>
                 </div>
                 <div>
-                  <span className="text-muted-foreground">Monthly Total:</span>{" "}
+                  <span className="text-muted-foreground">{effectiveTotalLabel}:</span>{" "}
                   <span className="font-medium text-primary">${totalMonthlyRate.toLocaleString()}</span>
                 </div>
                 <div>
