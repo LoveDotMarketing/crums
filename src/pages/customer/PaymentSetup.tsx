@@ -26,7 +26,7 @@ import {
   DollarSign,
   Mail,
   CreditCard,
-  ChevronDown,
+  
   Clock,
   Check,
   ArrowRightLeft
