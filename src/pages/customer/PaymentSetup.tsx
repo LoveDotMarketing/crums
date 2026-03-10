@@ -549,40 +549,6 @@ export default function PaymentSetup() {
         {/* Main Setup Flow - Only show if no payment method */}
         {!hasPaymentMethod && (
           <div className="space-y-6">
-            {/* SECTION 1: Hero Alert - No Charges Today */}
-            <Card className="border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950/20">
-              <CardContent className="pt-6">
-                <div className="flex gap-4">
-                  <div className="flex-shrink-0">
-                    <div className="h-12 w-12 rounded-full bg-green-100 dark:bg-green-900/50 flex items-center justify-center">
-                      <ShieldCheck className="h-6 w-6 text-green-600 dark:text-green-400" />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <h2 className="text-xl font-semibold text-green-700 dark:text-green-400">
-                      You Won't Be Charged Today
-                    </h2>
-                    <p className="text-green-700/80 dark:text-green-300/80">
-                      You're simply linking your payment method for future billing. 
-                      No money will be withdrawn until:
-                    </p>
-                    <ul className="space-y-1 text-green-700/80 dark:text-green-300/80">
-                      <li className="flex items-center gap-2">
-                        <Check className="h-4 w-4 text-green-600" />
-                        We assign a trailer to your account
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <Check className="h-4 w-4 text-green-600" />
-                        You receive notification of your first charge
-                      </li>
-                    </ul>
-                    <p className="text-sm font-medium text-green-600 dark:text-green-400 pt-1">
-                      This is just an authorization — not a payment.
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
 
             {/* SECTION 2: Payment Method Selection */}
             <Card>
