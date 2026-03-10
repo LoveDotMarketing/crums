@@ -168,7 +168,7 @@ export default function PaymentSetup() {
     // Create a temporary container for the card element
     const container = document.createElement("div");
     container.id = "stripe-card-element-container";
-    container.style.cssText = "position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10000;background:white;padding:32px;border-radius:12px;box-shadow:0 25px 50px -12px rgba(0,0,0,0.25);min-width:400px;max-width:500px;";
+    container.style.cssText = "position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10000;background:white;padding:32px;border-radius:12px;box-shadow:0 25px 50px -12px rgba(0,0,0,0.25);width:calc(100vw - 32px);max-width:500px;box-sizing:border-box;";
     
     const title = document.createElement("h3");
     title.textContent = "Enter Card Details";
