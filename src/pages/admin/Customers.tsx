@@ -106,6 +106,7 @@ interface Customer {
   application_completion?: number;
   has_application?: boolean;
   ach_linked?: boolean;
+  payment_method_type?: string | null;
 }
 
 export default function Customers() {
@@ -187,10 +188,10 @@ export default function Customers() {
         .from('profiles')
         .select('id, email, first_name, last_name, phone, home_address, company_name');
 
-      // Fetch applications for profile completion calculation and ACH status
+      // Fetch applications for profile completion calculation and payment status
       const { data: applications } = await supabase
         .from('customer_applications')
-        .select('user_id, trailer_type, drivers_license_url, drivers_license_back_url, insurance_docs_url, dot_number_url, stripe_payment_method_id, company_address, business_type, truck_vin, insurance_company, secondary_contact_name, secondary_contact_phone, secondary_contact_relationship, payment_setup_status, status');
+        .select('user_id, trailer_type, drivers_license_url, drivers_license_back_url, insurance_docs_url, dot_number_url, stripe_payment_method_id, company_address, business_type, truck_vin, insurance_company, secondary_contact_name, secondary_contact_phone, secondary_contact_relationship, payment_setup_status, status, payment_method_type');
       
       // Map data to customers
       return filteredData.map((customer: Customer) => {
@@ -259,8 +260,9 @@ export default function Customers() {
           ? Math.round((completedApplicationFields / applicationFields.length) * 100)
           : 0;
 
-        // Check if ACH is linked (has stripe_payment_method_id)
+        // Check if payment method is linked (has stripe_payment_method_id)
         const achLinked = !!customerApplication?.stripe_payment_method_id;
+        const paymentMethodType = customerApplication?.payment_method_type || null;
         
         return {
           ...customer,
@@ -281,6 +283,7 @@ export default function Customers() {
           application_completion: applicationCompletion,
           has_application: !!customerApplication,
           ach_linked: achLinked,
+          payment_method_type: paymentMethodType,
           profile_first_name: customerProfile?.first_name || null,
           profile_last_name: customerProfile?.last_name || null,
           profile_home_address: customerProfile?.home_address || null,
@@ -398,7 +401,7 @@ export default function Customers() {
       'Home Address', 'Company Address', 'Business Type', 'DOT Number (URL)',
       'Truck VIN', 'Trailer Type', 'Insurance Company',
       'Secondary Contact Name', 'Secondary Contact Phone', 'Secondary Contact Relationship',
-      'Application Status', 'ACH Linked', 'Payment Setup Status',
+      'Application Status', 'Payment Linked', 'Payment Method Type', 'Payment Setup Status',
       'Trailers Assigned', 'Trailer Numbers', 'Outstanding Tolls ($)',
       'Referral Code', 'Referrals Sent', 'Credits Earned ($)', 'Was Referred',
       'Customer Status', 'Payment Type', 'Created At'
@@ -427,6 +430,7 @@ export default function Customers() {
       escapeCSV(c.app_secondary_contact_relationship),
       escapeCSV(c.app_status),
       escapeCSV(c.ach_linked ? 'Yes' : 'No'),
+      escapeCSV(c.payment_method_type || ''),
       escapeCSV(c.app_payment_setup_status),
       escapeCSV(c.trailers_count || 0),
       escapeCSV((c.trailers || []).map((t: TrailerInfo) => t.trailer_number || t.vin).join('; ')),
@@ -716,8 +720,8 @@ export default function Customers() {
                 onClick={() => { setAchFilter(achFilter === 'linked' ? 'all' : 'linked'); setStatusFilter('all'); }}
               >
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">
-                    ACH Linked
+                   <CardTitle className="text-sm font-medium text-muted-foreground">
+                    Payment Linked
                   </CardTitle>
                   <CreditCard className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
@@ -828,7 +832,7 @@ export default function Customers() {
                         onClick={() => handleSort("ach")}
                       >
                         <div className="flex items-center">
-                          ACH
+                          Payment
                           {getSortIcon("ach")}
                         </div>
                       </TableHead>
@@ -941,7 +945,7 @@ export default function Customers() {
                             {customer.ach_linked ? (
                               <Badge variant="default" className="text-xs">
                                 <CreditCard className="h-3 w-3 mr-1" />
-                                Linked
+                                {customer.payment_method_type === 'card' ? 'Card' : 'ACH'}
                               </Badge>
                             ) : (
                               <Badge variant="outline" className="text-xs text-muted-foreground">

@@ -137,7 +137,7 @@ export default function Tolls() {
 
       if (error) {
         // When edge function returns non-2xx, the body is still in data
-        const msg = data?.error || "Failed to charge toll. Ensure customer has ACH payment set up.";
+        const msg = data?.error || "Failed to charge toll. Ensure customer has a payment method set up.";
         toast.error(msg);
         return;
       }
@@ -390,7 +390,7 @@ export default function Tolls() {
                                     )}
                                   </TooltipTrigger>
                                   <TooltipContent>
-                                    {achStatusMap[toll.customer_id] ? "ACH linked — chargeable" : "No ACH on file"}
+                                    {achStatusMap[toll.customer_id] ? "Payment method linked — chargeable" : "No payment method on file"}
                                   </TooltipContent>
                                 </Tooltip>
                               </TooltipProvider>
