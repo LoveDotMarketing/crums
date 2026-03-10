@@ -430,6 +430,7 @@ export default function Customers() {
       escapeCSV(c.app_secondary_contact_relationship),
       escapeCSV(c.app_status),
       escapeCSV(c.ach_linked ? 'Yes' : 'No'),
+      escapeCSV(c.payment_method_type || ''),
       escapeCSV(c.app_payment_setup_status),
       escapeCSV(c.trailers_count || 0),
       escapeCSV((c.trailers || []).map((t: TrailerInfo) => t.trailer_number || t.vin).join('; ')),

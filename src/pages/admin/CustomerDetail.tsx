@@ -448,11 +448,11 @@ export default function CustomerDetail() {
                         <InfoRow icon={<CreditCard className="h-4 w-4" />} label="Payment Type" value={customer.payment_type} />
                       )}
                       <div className="flex items-center gap-2 pt-1">
-                        <span className="text-muted-foreground w-28">ACH Status</span>
+                        <span className="text-muted-foreground w-28">Payment Method</span>
                         {application?.stripe_payment_method_id ? (
                           <Badge variant="default" className="text-xs">
                             <CheckCircle2 className="h-3 w-3 mr-1" />
-                            Linked
+                            {application?.payment_method_type === 'card' ? 'Card Linked' : 'ACH Linked'}
                           </Badge>
                         ) : (
                           <Badge variant="outline" className="text-xs text-muted-foreground">Not Linked</Badge>
