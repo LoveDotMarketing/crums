@@ -1,24 +1,17 @@
 
 
-# Fix ACH Setup for Bahram Nabizada (zitruckingteamllc@gmail.com)
+# Fix: Stale Payment Status on Customer Payment Setup Page
 
-## Diagnosis
+## Problem
+The customer stays on the same page retrying without refreshing. The `PaymentSetup` page only fetches status once on mount (`useEffect` with `[user]` dependency). After we reset their status in the database, the page still shows stale data until they do a full page reload — which they don't know to do.
 
-The customer's application record shows:
-- `stripe_customer_id`: `cus_U4kPrwJVKqaaln` (Stripe customer exists)
-- `stripe_payment_method_id`: **null** (no bank linked)
-- `payment_setup_status`: **"sent"** (setup was initiated but never completed)
-- `customer_id`: **null** (application not linked to customer record `9a5cbc3b-...`)
+## Solution
+Two small changes to `src/pages/customer/PaymentSetup.tsx`:
 
-The customer started the ACH flow but never finished connecting their bank. The "sent" status prevents the UI from showing the setup button again.
+1. **Auto-refetch on window focus** — When the customer tabs back to the page (e.g., after checking email or after the Stripe modal closes), re-fetch the payment status automatically.
 
-## Fix
+2. **Add a visible "Refresh Status" button** — A small link/button near the top of the payment setup card that calls `checkPaymentStatus()` so the customer can manually refresh without reloading the entire page. This also helps after admin resets.
 
-### 1. Database patch — reset payment status and link customer record
-Run a single update on `customer_applications` to:
-- Set `payment_setup_status` back to `null` so the "Link Bank Account" button reappears
-- Link `customer_id` to the correct customer record (`9a5cbc3b-04b5-4292-b7ff-0213b7d73bdf`)
-
-### 2. No code changes needed
-The existing flow handles re-setup correctly once the status is cleared. The customer can then click "Link Bank Account" again and complete the Stripe Financial Connections modal.
+### Files to change
+- `src/pages/customer/PaymentSetup.tsx` — Add `visibilitychange` listener to auto-refetch, and add a "Refresh Status" button in the UI (~10 lines total).
 
