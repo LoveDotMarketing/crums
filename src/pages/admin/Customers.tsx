@@ -259,8 +259,9 @@ export default function Customers() {
           ? Math.round((completedApplicationFields / applicationFields.length) * 100)
           : 0;
 
-        // Check if ACH is linked (has stripe_payment_method_id)
+        // Check if payment method is linked (has stripe_payment_method_id)
         const achLinked = !!customerApplication?.stripe_payment_method_id;
+        const paymentMethodType = customerApplication?.payment_method_type || null;
         
         return {
           ...customer,
