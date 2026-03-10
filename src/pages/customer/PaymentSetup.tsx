@@ -865,68 +865,6 @@ export default function PaymentSetup() {
 
             <Separator />
 
-            {/* SECTION 7: ACH vs Card Comparison */}
-            <Collapsible open={isAchInfoOpen} onOpenChange={setIsAchInfoOpen}>
-              <Card>
-                <CollapsibleTrigger asChild>
-                  <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Building2 className="h-5 w-5 text-primary" />
-                        <CardTitle className="text-lg">ACH vs Credit Card — What's the Difference?</CardTitle>
-                      </div>
-                      <ChevronDown className={`h-5 w-5 text-muted-foreground transition-transform ${isAchInfoOpen ? 'rotate-180' : ''}`} />
-                    </div>
-                  </CardHeader>
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  <CardContent className="pt-0 space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="p-4 rounded-lg border bg-green-50/50 dark:bg-green-950/10 border-green-200 dark:border-green-800">
-                        <div className="flex items-center gap-2 mb-2">
-                          <Building2 className="h-5 w-5 text-green-600" />
-                          <h4 className="font-semibold text-green-700 dark:text-green-400">ACH</h4>
-                        </div>
-                        <ul className="space-y-1.5 text-sm text-muted-foreground">
-                          <li className="flex items-center gap-1.5">
-                            <Check className="h-3.5 w-3.5 text-green-600" />
-                            No processing fees
-                          </li>
-                          <li className="flex items-center gap-1.5">
-                            <Check className="h-3.5 w-3.5 text-green-600" />
-                            No card expirations
-                          </li>
-                          <li className="flex items-center gap-1.5">
-                            <Check className="h-3.5 w-3.5 text-green-600" />
-                            Most reliable for recurring
-                          </li>
-                        </ul>
-                      </div>
-                      <div className="p-4 rounded-lg border">
-                        <div className="flex items-center gap-2 mb-2">
-                          <CreditCard className="h-5 w-5 text-muted-foreground" />
-                          <h4 className="font-semibold">Credit Card</h4>
-                        </div>
-                        <ul className="space-y-1.5 text-sm text-muted-foreground">
-                          <li className="flex items-center gap-1.5">
-                            <AlertCircle className="h-3.5 w-3.5 text-amber-500" />
-                            2.9% + $0.30 fee per payment
-                          </li>
-                          <li className="flex items-center gap-1.5">
-                            <AlertCircle className="h-3.5 w-3.5 text-amber-500" />
-                            Cards can expire or decline
-                          </li>
-                          <li className="flex items-center gap-1.5">
-                            <Check className="h-3.5 w-3.5 text-primary" />
-                            Convenient instant setup
-                          </li>
-                        </ul>
-                      </div>
-                    </div>
-                  </CardContent>
-                </CollapsibleContent>
-              </Card>
-            </Collapsible>
 
             {/* SECTION 8: Billing Terms */}
             <Card>
