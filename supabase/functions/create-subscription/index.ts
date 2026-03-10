@@ -358,23 +358,28 @@ serve(async (req) => {
     for (const [groupKey, groupTrailers] of anchorGroups) {
       const anchorDay = groupKey === "default" ? null : parseInt(groupKey, 10);
       
-      logStep(`Processing anchor group`, { anchorDay: groupKey, trailerCount: groupTrailers.length });
+      // Resolve effective billing cycle for this group from per-trailer overrides
+      const firstTrailerSchedule = trailerBillingSchedules?.[groupTrailers[0].id];
+      const groupBillingCycle = firstTrailerSchedule?.billing_cycle || billingCycle;
+      const groupBillingInterval = intervalMap[groupBillingCycle as keyof typeof intervalMap] || billingInterval;
+      
+      logStep(`Processing anchor group`, { anchorDay: groupKey, trailerCount: groupTrailers.length, groupBillingCycle });
 
-      // Create Stripe prices for this group's trailers
+      // Create Stripe prices for this group's trailers using the GROUP's billing interval
       const subscriptionItems: Stripe.SubscriptionCreateParams.Item[] = [];
       for (const trailer of groupTrailers) {
         const rate = customRates?.[trailer.id] ?? trailer.rental_rate ?? getDefaultRate(trailer.type);
         const price = await stripe.prices.create({
           unit_amount: Math.round(rate * 100),
           currency: "usd",
-          recurring: billingInterval,
+          recurring: groupBillingInterval,
           product_data: {
             name: `Trailer ${trailer.trailer_number} Lease`,
             metadata: { trailer_id: trailer.id },
           },
         });
         subscriptionItems.push({ price: price.id });
-        logStep("Created price for trailer", { trailerId: trailer.id, priceId: price.id, rate, group: groupKey });
+        logStep("Created price for trailer", { trailerId: trailer.id, priceId: price.id, rate, group: groupKey, interval: groupBillingInterval });
       }
 
       // Only add deposit to the first group's subscription
@@ -402,13 +407,19 @@ serve(async (req) => {
         metadata: { 
           internal_customer_id: customerId,
           deposit_amount: isFirstGroup ? (depositAmount?.toString() || "0") : "0",
-          billing_cycle: billingCycle,
+          billing_cycle: groupBillingCycle,
           billing_anchor_day: anchorDay?.toString() || "none",
         },
       };
 
-      // Set billing cycle anchor
-      const anchorTimestamp = calculateNextAnchorDate(anchorDay);
+      // Set billing cycle anchor — use weekday anchor for weekly, month-day anchor for monthly
+      let anchorTimestamp: number | undefined;
+      if (groupBillingCycle === "weekly" && anchorDay !== null) {
+        anchorTimestamp = calculateNextWeekdayAnchor(anchorDay);
+        logStep("Using weekly anchor (next weekday)", { dayOfWeek: anchorDay, anchorTimestamp, group: groupKey });
+      } else {
+        anchorTimestamp = calculateNextAnchorDate(anchorDay);
+      }
       if (anchorTimestamp) {
         subscriptionParams.billing_cycle_anchor = anchorTimestamp;
         subscriptionParams.proration_behavior = "none";

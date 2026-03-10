@@ -882,10 +882,10 @@ export function CreateSubscriptionDialog({ onSuccess, mode = "dialog", onCancel 
                 </div>
                 <div>
                   <span className="text-muted-foreground">Billing:</span>{" "}
-                  <span className="font-medium capitalize">{billingCycle}</span>
+                  <span className="font-medium capitalize">{effectiveBillingLabel}</span>
                 </div>
                 <div>
-                  <span className="text-muted-foreground">Monthly Total:</span>{" "}
+                  <span className="text-muted-foreground">{effectiveTotalLabel}:</span>{" "}
                   <span className="font-medium text-primary">${totalMonthlyRate.toLocaleString()}</span>
                 </div>
                 <div>
