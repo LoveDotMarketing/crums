@@ -140,6 +140,12 @@ Deno.serve(async (req) => {
         });
 
         for (const invoice of invoices.data) {
+          // Map Stripe status to our payment_status enum
+            let paymentStatus: "pending" | "processing" | "succeeded" | "failed" | "refunded" = "pending";
+            if (invoice.status === "paid") paymentStatus = "succeeded";
+            else if (invoice.status === "open") paymentStatus = "pending";
+            else if (invoice.status === "uncollectible") paymentStatus = "failed";
+
           // Check if we already have this invoice (e.g. inserted by activate-subscription)
           const { data: existing } = await supabaseClient
             .from("billing_history")
@@ -169,12 +175,6 @@ Deno.serve(async (req) => {
             }
             continue;
           }
-
-            // Map Stripe status to our payment_status enum
-            let paymentStatus: "pending" | "processing" | "succeeded" | "failed" | "refunded" = "pending";
-            if (invoice.status === "paid") paymentStatus = "succeeded";
-            else if (invoice.status === "open") paymentStatus = "pending";
-            else if (invoice.status === "uncollectible") paymentStatus = "failed";
 
             await supabaseClient
               .from("billing_history")
