@@ -104,7 +104,7 @@ serve(async (req) => {
       body: JSON.stringify({
         chatInput: message,
         sessionId: sessionId,
-        userId: userId || "anonymous",
+        userId: user.id,
       }),
     });
 
