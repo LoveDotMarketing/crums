@@ -1,32 +1,30 @@
 
 
-## Problem
+# Fix Mobile Issues for ACH/Payment Setup
 
-Abdul's `customer_applications` record shows `payment_setup_status = 'completed'` and has a `stripe_payment_method_id` (`pm_1T7dwSLjIwiEGQIhzU647O3c`) that is dead/detached in Stripe. The UI shows "ACH ✓" and hides the "Send ACH Setup" button, so there's no way to re-do the setup.
+## Problem
+The card setup modal uses `min-width:400px` which overflows on mobile screens (most phones are 360-390px wide). If Abdikarim chooses ACH, the Stripe Financial Connections flow handles mobile natively, but the card path would break visually.
+
+The ACH bank-linking flow itself uses Stripe's hosted Financial Connections UI, which is fully mobile-responsive — no code changes needed there. The page layout uses `container mx-auto px-4 max-w-3xl` which is already mobile-friendly.
 
 ## Fix
 
-### 1. Database: Reset Abdul's ACH status
+**File:** `src/pages/customer/PaymentSetup.tsx` (~line 171)
 
-Run a migration to clear the broken payment method and reset status so the ACH setup flow can be re-initiated:
+Change the card modal container styling to be mobile-safe:
+- Replace `min-width:400px;max-width:500px;` with `width:calc(100vw - 32px);max-width:500px;`
+- Add `box-sizing:border-box;` to prevent padding overflow
 
-```sql
-UPDATE customer_applications
-SET payment_setup_status = 'pending',
-    stripe_payment_method_id = NULL
-WHERE id = '25b5046d-d4b2-405c-bf78-ba3e2b71039f';
-```
+This is a one-line CSS change. The ACH flow, page layout, radio buttons, and accordion sections are all already responsive.
 
-### 2. UI: Add a "Reset ACH" option for admins
+## For Abdikarim's Setup
+Everything else is ready to go. He can:
+1. Log in on his phone
+2. Go to Payment Setup from the dashboard menu
+3. Select ACH (recommended, no fees)
+4. Tap "Link Bank Account"
+5. Stripe's mobile-optimized bank login opens
+6. Connect his bank and confirm
 
-In `src/pages/admin/Applications.tsx`, update the ACH badge area (~line 773) so that when `payment_setup_status === "completed"`, instead of only showing the static "ACH ✓" badge, also show a small reset button that sets `payment_setup_status` back to `pending` and clears `stripe_payment_method_id`. This prevents needing manual database edits in the future.
-
-The reset button will:
-- Update `customer_applications` setting `payment_setup_status = 'pending'` and `stripe_payment_method_id = null`
-- Refresh the applications list
-- Show a toast confirmation
-
-### Files to update
-- **Database migration** — one UPDATE statement for Abdul's record
-- `src/pages/admin/Applications.tsx` — add reset ACH button next to the "ACH ✓" badge (~5 lines)
+No database or backend changes needed.
 
