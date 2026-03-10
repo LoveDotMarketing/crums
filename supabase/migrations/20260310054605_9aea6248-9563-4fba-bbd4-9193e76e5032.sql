@@ -1,0 +1,1 @@
+DROP POLICY IF EXISTS "Anyone can update login attempts" ON public.login_attempts;
