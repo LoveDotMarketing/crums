@@ -69,6 +69,17 @@ export default function PaymentSetup() {
     }
   }, [user]);
 
+  // Auto-refetch when user tabs back to the page
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible" && user) {
+        checkPaymentStatus();
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
+  }, [user]);
+
   const checkPaymentStatus = async () => {
     try {
       setIsLoading(true);
@@ -388,11 +399,23 @@ export default function PaymentSetup() {
       <CustomerNav />
       
       <main className="flex-1 container mx-auto px-4 py-8 max-w-3xl">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-foreground">Payment Setup</h1>
-          <p className="text-muted-foreground mt-2">
-            Link your bank account or credit card for future billing
-          </p>
+        <div className="mb-6 flex items-start justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-foreground">Payment Setup</h1>
+            <p className="text-muted-foreground mt-2">
+              Link your bank account or credit card for future billing
+            </p>
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={checkPaymentStatus}
+            disabled={isLoading}
+            className="text-muted-foreground hover:text-foreground"
+          >
+            {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowRightLeft className="h-4 w-4 mr-1" />}
+            Refresh
+          </Button>
         </div>
 
         {/* Application Status Banner — only show before payment is complete */}

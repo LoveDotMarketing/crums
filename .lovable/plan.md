@@ -1,17 +1,32 @@
 
 
-# Fix: Stale Payment Status on Customer Payment Setup Page
-
 ## Problem
-The customer stays on the same page retrying without refreshing. The `PaymentSetup` page only fetches status once on mount (`useEffect` with `[user]` dependency). After we reset their status in the database, the page still shows stale data until they do a full page reload — which they don't know to do.
 
-## Solution
-Two small changes to `src/pages/customer/PaymentSetup.tsx`:
+Abdul's `customer_applications` record shows `payment_setup_status = 'completed'` and has a `stripe_payment_method_id` (`pm_1T7dwSLjIwiEGQIhzU647O3c`) that is dead/detached in Stripe. The UI shows "ACH ✓" and hides the "Send ACH Setup" button, so there's no way to re-do the setup.
 
-1. **Auto-refetch on window focus** — When the customer tabs back to the page (e.g., after checking email or after the Stripe modal closes), re-fetch the payment status automatically.
+## Fix
 
-2. **Add a visible "Refresh Status" button** — A small link/button near the top of the payment setup card that calls `checkPaymentStatus()` so the customer can manually refresh without reloading the entire page. This also helps after admin resets.
+### 1. Database: Reset Abdul's ACH status
 
-### Files to change
-- `src/pages/customer/PaymentSetup.tsx` — Add `visibilitychange` listener to auto-refetch, and add a "Refresh Status" button in the UI (~10 lines total).
+Run a migration to clear the broken payment method and reset status so the ACH setup flow can be re-initiated:
+
+```sql
+UPDATE customer_applications
+SET payment_setup_status = 'pending',
+    stripe_payment_method_id = NULL
+WHERE id = '25b5046d-d4b2-405c-bf78-ba3e2b71039f';
+```
+
+### 2. UI: Add a "Reset ACH" option for admins
+
+In `src/pages/admin/Applications.tsx`, update the ACH badge area (~line 773) so that when `payment_setup_status === "completed"`, instead of only showing the static "ACH ✓" badge, also show a small reset button that sets `payment_setup_status` back to `pending` and clears `stripe_payment_method_id`. This prevents needing manual database edits in the future.
+
+The reset button will:
+- Update `customer_applications` setting `payment_setup_status = 'pending'` and `stripe_payment_method_id = null`
+- Refresh the applications list
+- Show a toast confirmation
+
+### Files to update
+- **Database migration** — one UPDATE statement for Abdul's record
+- `src/pages/admin/Applications.tsx` — add reset ACH button next to the "ACH ✓" badge (~5 lines)
 
