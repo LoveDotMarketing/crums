@@ -1,32 +1,24 @@
 
 
-## Problem
+# Fix ACH Setup for Bahram Nabizada (zitruckingteamllc@gmail.com)
 
-Abdul's `customer_applications` record shows `payment_setup_status = 'completed'` and has a `stripe_payment_method_id` (`pm_1T7dwSLjIwiEGQIhzU647O3c`) that is dead/detached in Stripe. The UI shows "ACH ✓" and hides the "Send ACH Setup" button, so there's no way to re-do the setup.
+## Diagnosis
+
+The customer's application record shows:
+- `stripe_customer_id`: `cus_U4kPrwJVKqaaln` (Stripe customer exists)
+- `stripe_payment_method_id`: **null** (no bank linked)
+- `payment_setup_status`: **"sent"** (setup was initiated but never completed)
+- `customer_id`: **null** (application not linked to customer record `9a5cbc3b-...`)
+
+The customer started the ACH flow but never finished connecting their bank. The "sent" status prevents the UI from showing the setup button again.
 
 ## Fix
 
-### 1. Database: Reset Abdul's ACH status
+### 1. Database patch — reset payment status and link customer record
+Run a single update on `customer_applications` to:
+- Set `payment_setup_status` back to `null` so the "Link Bank Account" button reappears
+- Link `customer_id` to the correct customer record (`9a5cbc3b-04b5-4292-b7ff-0213b7d73bdf`)
 
-Run a migration to clear the broken payment method and reset status so the ACH setup flow can be re-initiated:
-
-```sql
-UPDATE customer_applications
-SET payment_setup_status = 'pending',
-    stripe_payment_method_id = NULL
-WHERE id = '25b5046d-d4b2-405c-bf78-ba3e2b71039f';
-```
-
-### 2. UI: Add a "Reset ACH" option for admins
-
-In `src/pages/admin/Applications.tsx`, update the ACH badge area (~line 773) so that when `payment_setup_status === "completed"`, instead of only showing the static "ACH ✓" badge, also show a small reset button that sets `payment_setup_status` back to `pending` and clears `stripe_payment_method_id`. This prevents needing manual database edits in the future.
-
-The reset button will:
-- Update `customer_applications` setting `payment_setup_status = 'pending'` and `stripe_payment_method_id = null`
-- Refresh the applications list
-- Show a toast confirmation
-
-### Files to update
-- **Database migration** — one UPDATE statement for Abdul's record
-- `src/pages/admin/Applications.tsx` — add reset ACH button next to the "ACH ✓" badge (~5 lines)
+### 2. No code changes needed
+The existing flow handles re-setup correctly once the status is cleared. The customer can then click "Link Bank Account" again and complete the Stripe Financial Connections modal.
 
