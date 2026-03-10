@@ -390,7 +390,7 @@ export default function Tolls() {
                                     )}
                                   </TooltipTrigger>
                                   <TooltipContent>
-                                    {achStatusMap[toll.customer_id] ? "ACH linked — chargeable" : "No ACH on file"}
+                                    {achStatusMap[toll.customer_id] ? "Payment method linked — chargeable" : "No payment method on file"}
                                   </TooltipContent>
                                 </Tooltip>
                               </TooltipProvider>
