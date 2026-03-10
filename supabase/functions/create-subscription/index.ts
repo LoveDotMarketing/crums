@@ -12,7 +12,7 @@ const logStep = (step: string, details?: Record<string, unknown>) => {
   console.log(`[CREATE-SUBSCRIPTION] ${step}${detailsStr}`);
 };
 
-// Helper function to calculate next anchor date for billing cycle
+// Helper function to calculate next anchor date for monthly billing cycle
 function calculateNextAnchorDate(anchorDay: number | null): number | undefined {
   if (!anchorDay || anchorDay < 1 || anchorDay > 28) return undefined;
   
@@ -23,6 +23,22 @@ function calculateNextAnchorDate(anchorDay: number | null): number | undefined {
   if (targetDate <= now) {
     targetDate.setMonth(targetDate.getMonth() + 1);
   }
+  
+  return Math.floor(targetDate.getTime() / 1000);
+}
+
+// Helper function to calculate next occurrence of a weekday for weekly billing
+// dayOfWeek: 0=Sunday, 1=Monday, ..., 5=Friday, 6=Saturday
+function calculateNextWeekdayAnchor(dayOfWeek: number): number | undefined {
+  if (dayOfWeek < 0 || dayOfWeek > 6) return undefined;
+  
+  const now = new Date();
+  const currentDay = now.getDay(); // 0=Sunday
+  let daysUntil = dayOfWeek - currentDay;
+  if (daysUntil <= 0) daysUntil += 7; // Always pick the NEXT occurrence
+  
+  const targetDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() + daysUntil);
+  targetDate.setHours(0, 0, 0, 0);
   
   return Math.floor(targetDate.getTime() / 1000);
 }
