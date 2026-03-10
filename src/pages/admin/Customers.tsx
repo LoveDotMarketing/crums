@@ -106,6 +106,7 @@ interface Customer {
   application_completion?: number;
   has_application?: boolean;
   ach_linked?: boolean;
+  payment_method_type?: string | null;
 }
 
 export default function Customers() {
