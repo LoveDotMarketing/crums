@@ -282,6 +282,7 @@ export default function Customers() {
           application_completion: applicationCompletion,
           has_application: !!customerApplication,
           ach_linked: achLinked,
+          payment_method_type: paymentMethodType,
           profile_first_name: customerProfile?.first_name || null,
           profile_last_name: customerProfile?.last_name || null,
           profile_home_address: customerProfile?.home_address || null,
