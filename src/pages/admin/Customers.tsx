@@ -719,8 +719,8 @@ export default function Customers() {
                 onClick={() => { setAchFilter(achFilter === 'linked' ? 'all' : 'linked'); setStatusFilter('all'); }}
               >
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">
-                    ACH Linked
+                   <CardTitle className="text-sm font-medium text-muted-foreground">
+                    Payment Linked
                   </CardTitle>
                   <CreditCard className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
