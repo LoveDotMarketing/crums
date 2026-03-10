@@ -618,32 +618,6 @@ export default function PaymentSetup() {
               </CardContent>
             </Card>
 
-            {/* SECTION 3: What You're Doing Today */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">What You're Doing Today</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex items-center gap-3">
-                  <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center">
-                    <Check className="h-4 w-4 text-primary" />
-                  </div>
-                  <span className="text-foreground">Authorizing CRUMS Leasing to collect future payments</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center">
-                    <Check className="h-4 w-4 text-primary" />
-                  </div>
-                  <span className="text-foreground">Selecting your preferred payment due date (1st or 15th)</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center">
-                    <Check className="h-4 w-4 text-primary" />
-                  </div>
-                  <span className="text-foreground">That's it — no charges, no commitments today</span>
-                </div>
-              </CardContent>
-            </Card>
 
             {/* SECTION 4: Billing Timeline */}
             <Card>
