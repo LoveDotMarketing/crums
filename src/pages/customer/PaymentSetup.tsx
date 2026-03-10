@@ -59,7 +59,7 @@ export default function PaymentSetup() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSettingUp, setIsSettingUp] = useState(false);
   const [billingAnchorDay, setBillingAnchorDay] = useState<1 | 15>(1);
-  const [isAchInfoOpen, setIsAchInfoOpen] = useState(false);
+  
   const [selectedPaymentType, setSelectedPaymentType] = useState<"ach" | "card">("ach");
   const [isSwitching, setIsSwitching] = useState(false);
 
