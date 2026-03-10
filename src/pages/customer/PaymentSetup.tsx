@@ -69,6 +69,17 @@ export default function PaymentSetup() {
     }
   }, [user]);
 
+  // Auto-refetch when user tabs back to the page
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible" && user) {
+        checkPaymentStatus();
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
+  }, [user]);
+
   const checkPaymentStatus = async () => {
     try {
       setIsLoading(true);
