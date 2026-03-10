@@ -240,6 +240,8 @@ const App = () => (
             <Route path="/lp/linkedin/thank-you" element={<LinkedInThankYou />} />
             <Route path="/lp/facebook" element={<FacebookLanding />} />
             <Route path="/lp/facebook/thank-you" element={<FacebookThankYou />} />
+            <Route path="/lp/google" element={<GoogleLanding />} />
+            <Route path="/lp/google/thank-you" element={<GoogleThankYou />} />
             <Route 
               path="/dashboard/admin" 
               element={
