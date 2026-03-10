@@ -944,7 +944,7 @@ export default function Customers() {
                             {customer.ach_linked ? (
                               <Badge variant="default" className="text-xs">
                                 <CreditCard className="h-3 w-3 mr-1" />
-                                Linked
+                                {customer.payment_method_type === 'card' ? 'Card' : 'ACH'}
                               </Badge>
                             ) : (
                               <Badge variant="outline" className="text-xs text-muted-foreground">
