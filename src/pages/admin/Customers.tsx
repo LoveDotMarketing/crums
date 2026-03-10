@@ -401,7 +401,7 @@ export default function Customers() {
       'Home Address', 'Company Address', 'Business Type', 'DOT Number (URL)',
       'Truck VIN', 'Trailer Type', 'Insurance Company',
       'Secondary Contact Name', 'Secondary Contact Phone', 'Secondary Contact Relationship',
-      'Application Status', 'ACH Linked', 'Payment Setup Status',
+      'Application Status', 'Payment Linked', 'Payment Method Type', 'Payment Setup Status',
       'Trailers Assigned', 'Trailer Numbers', 'Outstanding Tolls ($)',
       'Referral Code', 'Referrals Sent', 'Credits Earned ($)', 'Was Referred',
       'Customer Status', 'Payment Type', 'Created At'
