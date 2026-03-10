@@ -831,7 +831,7 @@ export default function Customers() {
                         onClick={() => handleSort("ach")}
                       >
                         <div className="flex items-center">
-                          ACH
+                          Payment
                           {getSortIcon("ach")}
                         </div>
                       </TableHead>
