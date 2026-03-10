@@ -399,6 +399,13 @@ export default function PaymentSetup() {
       <CustomerNav />
       
       <main className="flex-1 container mx-auto px-4 py-8 max-w-3xl">
+        <Alert className="mb-6 border-primary/30 bg-primary/5">
+          <AlertCircle className="h-4 w-4 text-primary" />
+          <AlertTitle className="text-primary font-semibold">Best on Mobile</AlertTitle>
+          <AlertDescription className="text-muted-foreground">
+            For the smoothest experience linking your bank account, we recommend completing this step on your phone.
+          </AlertDescription>
+        </Alert>
         <div className="mb-6 flex items-start justify-between">
           <div>
             <h1 className="text-3xl font-bold text-foreground">Payment Setup</h1>
