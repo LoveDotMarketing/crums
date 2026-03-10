@@ -90,6 +90,8 @@ const LinkedInLanding = lazy(() => import("./pages/LinkedInLanding"));
 const LinkedInThankYou = lazy(() => import("./pages/LinkedInThankYou"));
 const FacebookLanding = lazy(() => import("./pages/FacebookLanding"));
 const FacebookThankYou = lazy(() => import("./pages/FacebookThankYou"));
+const GoogleLanding = lazy(() => import("./pages/GoogleLanding"));
+const GoogleThankYou = lazy(() => import("./pages/GoogleThankYou"));
 
 // Industries pages
 const Industries = lazy(() => import("./pages/Industries"));
@@ -238,6 +240,8 @@ const App = () => (
             <Route path="/lp/linkedin/thank-you" element={<LinkedInThankYou />} />
             <Route path="/lp/facebook" element={<FacebookLanding />} />
             <Route path="/lp/facebook/thank-you" element={<FacebookThankYou />} />
+            <Route path="/lp/google" element={<GoogleLanding />} />
+            <Route path="/lp/google/thank-you" element={<GoogleThankYou />} />
             <Route 
               path="/dashboard/admin" 
               element={
