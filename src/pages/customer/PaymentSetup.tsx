@@ -616,11 +616,11 @@ export default function PaymentSetup() {
                         <div className="flex items-center gap-2">
                           <span className="font-semibold">ACH Bank Transfer</span>
                           <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 text-xs">
-                            Recommended — No Fees
+                            No Fees
                           </Badge>
                         </div>
                         <p className="text-sm text-muted-foreground mt-1">
-                          Direct bank connection. No processing fees. Most reliable for recurring payments.
+                          Log in to your bank and connect it directly. More setup steps, but <strong>no processing fees</strong> on any payment.
                         </p>
                       </div>
                     </Label>
@@ -638,15 +638,13 @@ export default function PaymentSetup() {
                     >
                       <CreditCard className="h-6 w-6 text-muted-foreground mt-0.5" />
                       <div className="flex-1">
-                        <div className="flex items-center gap-2">
-                          <span className="font-semibold">Credit / Debit Card</span>
-                        </div>
+                        <span className="font-semibold">Credit / Debit Card</span>
                         <p className="text-sm text-muted-foreground mt-1">
-                          Visa, Mastercard, Amex, Discover. A <strong>2.9% + $0.30</strong> processing fee applies per transaction.
+                          Quick and easy setup. <strong>Processing fees (2.9% + $0.30) are added to each payment</strong> and covered by you.
                         </p>
-                        <div className="mt-2 p-2 bg-amber-50 dark:bg-amber-950/20 rounded text-xs text-amber-700 dark:text-amber-400">
-                          <strong>Example:</strong> On a $700/mo lease, the processing fee is ~$20.99/mo → you pay $720.99
-                        </div>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Example: $700/mo lease → ~$20.99 fee → you pay $720.99
+                        </p>
                       </div>
                     </Label>
                   </div>
