@@ -90,6 +90,8 @@ const LinkedInLanding = lazy(() => import("./pages/LinkedInLanding"));
 const LinkedInThankYou = lazy(() => import("./pages/LinkedInThankYou"));
 const FacebookLanding = lazy(() => import("./pages/FacebookLanding"));
 const FacebookThankYou = lazy(() => import("./pages/FacebookThankYou"));
+const GoogleLanding = lazy(() => import("./pages/GoogleLanding"));
+const GoogleThankYou = lazy(() => import("./pages/GoogleThankYou"));
 
 // Industries pages
 const Industries = lazy(() => import("./pages/Industries"));
