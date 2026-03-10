@@ -13,7 +13,7 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+
 import { 
   Loader2, 
   Building2, 
@@ -26,7 +26,7 @@ import {
   DollarSign,
   Mail,
   CreditCard,
-  ChevronDown,
+  
   Clock,
   Check,
   ArrowRightLeft
@@ -59,7 +59,7 @@ export default function PaymentSetup() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSettingUp, setIsSettingUp] = useState(false);
   const [billingAnchorDay, setBillingAnchorDay] = useState<1 | 15>(1);
-  const [isAchInfoOpen, setIsAchInfoOpen] = useState(false);
+  
   const [selectedPaymentType, setSelectedPaymentType] = useState<"ach" | "card">("ach");
   const [isSwitching, setIsSwitching] = useState(false);
 
@@ -616,11 +616,11 @@ export default function PaymentSetup() {
                         <div className="flex items-center gap-2">
                           <span className="font-semibold">ACH Bank Transfer</span>
                           <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 text-xs">
-                            Recommended — No Fees
+                            No Fees
                           </Badge>
                         </div>
                         <p className="text-sm text-muted-foreground mt-1">
-                          Direct bank connection. No processing fees. Most reliable for recurring payments.
+                          Log in to your bank and connect it directly. More setup steps, but <strong>no processing fees</strong> on any payment.
                         </p>
                       </div>
                     </Label>
@@ -638,15 +638,13 @@ export default function PaymentSetup() {
                     >
                       <CreditCard className="h-6 w-6 text-muted-foreground mt-0.5" />
                       <div className="flex-1">
-                        <div className="flex items-center gap-2">
-                          <span className="font-semibold">Credit / Debit Card</span>
-                        </div>
+                        <span className="font-semibold">Credit / Debit Card</span>
                         <p className="text-sm text-muted-foreground mt-1">
-                          Visa, Mastercard, Amex, Discover. A <strong>2.9% + $0.30</strong> processing fee applies per transaction.
+                          Quick and easy setup. <strong>Processing fees (2.9% + $0.30) are added to each payment</strong> and covered by you.
                         </p>
-                        <div className="mt-2 p-2 bg-amber-50 dark:bg-amber-950/20 rounded text-xs text-amber-700 dark:text-amber-400">
-                          <strong>Example:</strong> On a $700/mo lease, the processing fee is ~$20.99/mo → you pay $720.99
-                        </div>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Example: $700/mo lease → ~$20.99 fee → you pay $720.99
+                        </p>
                       </div>
                     </Label>
                   </div>
@@ -867,68 +865,6 @@ export default function PaymentSetup() {
 
             <Separator />
 
-            {/* SECTION 7: ACH vs Card Comparison */}
-            <Collapsible open={isAchInfoOpen} onOpenChange={setIsAchInfoOpen}>
-              <Card>
-                <CollapsibleTrigger asChild>
-                  <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Building2 className="h-5 w-5 text-primary" />
-                        <CardTitle className="text-lg">ACH vs Credit Card — What's the Difference?</CardTitle>
-                      </div>
-                      <ChevronDown className={`h-5 w-5 text-muted-foreground transition-transform ${isAchInfoOpen ? 'rotate-180' : ''}`} />
-                    </div>
-                  </CardHeader>
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  <CardContent className="pt-0 space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="p-4 rounded-lg border bg-green-50/50 dark:bg-green-950/10 border-green-200 dark:border-green-800">
-                        <div className="flex items-center gap-2 mb-2">
-                          <Building2 className="h-5 w-5 text-green-600" />
-                          <h4 className="font-semibold text-green-700 dark:text-green-400">ACH</h4>
-                        </div>
-                        <ul className="space-y-1.5 text-sm text-muted-foreground">
-                          <li className="flex items-center gap-1.5">
-                            <Check className="h-3.5 w-3.5 text-green-600" />
-                            No processing fees
-                          </li>
-                          <li className="flex items-center gap-1.5">
-                            <Check className="h-3.5 w-3.5 text-green-600" />
-                            No card expirations
-                          </li>
-                          <li className="flex items-center gap-1.5">
-                            <Check className="h-3.5 w-3.5 text-green-600" />
-                            Most reliable for recurring
-                          </li>
-                        </ul>
-                      </div>
-                      <div className="p-4 rounded-lg border">
-                        <div className="flex items-center gap-2 mb-2">
-                          <CreditCard className="h-5 w-5 text-muted-foreground" />
-                          <h4 className="font-semibold">Credit Card</h4>
-                        </div>
-                        <ul className="space-y-1.5 text-sm text-muted-foreground">
-                          <li className="flex items-center gap-1.5">
-                            <AlertCircle className="h-3.5 w-3.5 text-amber-500" />
-                            2.9% + $0.30 fee per payment
-                          </li>
-                          <li className="flex items-center gap-1.5">
-                            <AlertCircle className="h-3.5 w-3.5 text-amber-500" />
-                            Cards can expire or decline
-                          </li>
-                          <li className="flex items-center gap-1.5">
-                            <Check className="h-3.5 w-3.5 text-primary" />
-                            Convenient instant setup
-                          </li>
-                        </ul>
-                      </div>
-                    </div>
-                  </CardContent>
-                </CollapsibleContent>
-              </Card>
-            </Collapsible>
 
             {/* SECTION 8: Billing Terms */}
             <Card>
