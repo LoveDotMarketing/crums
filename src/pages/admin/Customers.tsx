@@ -187,10 +187,10 @@ export default function Customers() {
         .from('profiles')
         .select('id, email, first_name, last_name, phone, home_address, company_name');
 
-      // Fetch applications for profile completion calculation and ACH status
+      // Fetch applications for profile completion calculation and payment status
       const { data: applications } = await supabase
         .from('customer_applications')
-        .select('user_id, trailer_type, drivers_license_url, drivers_license_back_url, insurance_docs_url, dot_number_url, stripe_payment_method_id, company_address, business_type, truck_vin, insurance_company, secondary_contact_name, secondary_contact_phone, secondary_contact_relationship, payment_setup_status, status');
+        .select('user_id, trailer_type, drivers_license_url, drivers_license_back_url, insurance_docs_url, dot_number_url, stripe_payment_method_id, company_address, business_type, truck_vin, insurance_company, secondary_contact_name, secondary_contact_phone, secondary_contact_relationship, payment_setup_status, status, payment_method_type');
       
       // Map data to customers
       return filteredData.map((customer: Customer) => {
