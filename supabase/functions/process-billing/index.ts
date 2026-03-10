@@ -1,6 +1,5 @@
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import Stripe from "https://esm.sh/stripe@18.5.0";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
+import Stripe from "npm:stripe@18.5.0";
+import { createClient } from "npm:@supabase/supabase-js@2.57.2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -12,7 +11,7 @@ const logStep = (step: string, details?: Record<string, unknown>) => {
   console.log(`[PROCESS-BILLING] ${step}${detailsStr}`);
 };
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -141,6 +140,12 @@ serve(async (req) => {
         });
 
         for (const invoice of invoices.data) {
+          // Map Stripe status to our payment_status enum
+            let paymentStatus: "pending" | "processing" | "succeeded" | "failed" | "refunded" = "pending";
+            if (invoice.status === "paid") paymentStatus = "succeeded";
+            else if (invoice.status === "open") paymentStatus = "pending";
+            else if (invoice.status === "uncollectible") paymentStatus = "failed";
+
           // Check if we already have this invoice (e.g. inserted by activate-subscription)
           const { data: existing } = await supabaseClient
             .from("billing_history")
@@ -170,12 +175,6 @@ serve(async (req) => {
             }
             continue;
           }
-
-            // Map Stripe status to our payment_status enum
-            let paymentStatus: "pending" | "processing" | "succeeded" | "failed" | "refunded" = "pending";
-            if (invoice.status === "paid") paymentStatus = "succeeded";
-            else if (invoice.status === "open") paymentStatus = "pending";
-            else if (invoice.status === "uncollectible") paymentStatus = "failed";
 
             await supabaseClient
               .from("billing_history")
