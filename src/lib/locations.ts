@@ -158,7 +158,7 @@ export const locations: LocationData[] = [
     nearbyAirports: ["LAX - Los Angeles International", "ONT - Ontario International"],
     portAccess: "Port of Los Angeles & Port of Long Beach - busiest container port complex in the Western Hemisphere",
     regionalContext: "Los Angeles is the largest trucking market in the United States. The ports of LA and Long Beach handle nearly half of all containers entering the U.S., creating enormous demand for trailer capacity.",
-    nearbyCities: ["phoenix-az", "denver-co"],
+    nearbyCities: ["phoenix-az", "denver-co", "portland-or"],
     landmarks: "We deliver across LA County from the Port of Long Beach to the Inland Empire. Serving carriers on I-10 from San Bernardino to Santa Monica.",
     testimonialSnippet: { text: "Needed a trailer for port work in Long Beach. CRUMS delivered on time and the equipment was solid.", author: "A.R., Los Angeles" }
   },
@@ -194,7 +194,7 @@ export const locations: LocationData[] = [
     keyIndustries: ["E-commerce", "Retail distribution", "Beverage", "Automotive", "Film production"],
     nearbyAirports: ["ATL - Hartsfield-Jackson Atlanta International"],
     regionalContext: "Atlanta is the logistics hub of the Southeast, where I-85, I-75, and I-20 converge. Hartsfield-Jackson is the world's busiest airport, and the region is home to major corporate headquarters.",
-    nearbyCities: ["charlotte-nc", "nashville-tn", "memphis-tn"],
+    nearbyCities: ["charlotte-nc", "nashville-tn", "memphis-tn", "jacksonville-fl"],
     landmarks: "Delivering across metro Atlanta from Marietta to McDonough. Convenient for carriers working the I-75 and I-85 corridors through Georgia.",
     testimonialSnippet: { text: "Southeast runs are my bread and butter. CRUMS keeps me rolling with reliable equipment.", author: "D.J., Atlanta" }
   },
@@ -286,7 +286,7 @@ export const locations: LocationData[] = [
     keyIndustries: ["Banking", "Automotive", "E-commerce", "Food processing", "Energy"],
     nearbyAirports: ["CLT - Charlotte Douglas International"],
     regionalContext: "Charlotte is a major East Coast distribution hub on the I-85 corridor. The city's central East Coast location and strong infrastructure make it ideal for serving markets from Atlanta to Washington D.C.",
-    nearbyCities: ["atlanta-ga", "nashville-tn"],
+    nearbyCities: ["atlanta-ga", "nashville-tn", "richmond-va", "jacksonville-fl"],
     landmarks: "Serving the Charlotte metro from Uptown to the I-485 outer belt. Delivering to carriers near Charlotte Douglas Airport and the Concord distribution zone.",
     testimonialSnippet: { text: "I-85 corridor is my life. CRUMS equipment handles the miles like a champ.", author: "E.C., Charlotte" }
   },
@@ -322,7 +322,7 @@ export const locations: LocationData[] = [
     keyIndustries: ["Intermodal", "Automotive", "Agriculture", "Manufacturing", "E-commerce"],
     nearbyAirports: ["MCI - Kansas City International"],
     regionalContext: "Kansas City is a major freight hub where I-70 and I-35 intersect, connecting major markets from coast to coast and border to border. The city is a growing intermodal and e-commerce fulfillment center.",
-    nearbyCities: ["denver-co", "chicago-il", "dallas-tx", "indianapolis-in"],
+    nearbyCities: ["denver-co", "chicago-il", "dallas-tx", "indianapolis-in", "des-moines-ia"],
     landmarks: "Serving the KC metro from the Fairfax industrial district to the Logistics Park Kansas City. I-35 corridor access for carriers on both sides of the state line.",
     testimonialSnippet: { text: "KC is where America's freight meets. CRUMS keeps my business moving.", author: "W.R., Kansas City" }
   },
@@ -341,9 +341,104 @@ export const locations: LocationData[] = [
     keyIndustries: ["Logistics/distribution", "Automotive (Honda Marysville)", "E-commerce (Amazon fulfillment)", "Agriculture", "Steel"],
     nearbyAirports: ["CMH - John Glenn Columbus International"],
     regionalContext: "Columbus is Ohio's capital and fastest-growing city, sitting at the I-70/I-71 crossroads. A major logistics hub with massive Amazon and distribution center presence, 60% of the US population is reachable within a day's drive from Columbus.",
-    nearbyCities: ["indianapolis-in", "charlotte-nc"],
+    nearbyCities: ["indianapolis-in", "charlotte-nc", "philadelphia-pa"],
     landmarks: "Serving carriers near Rickenbacker Intermodal Yard, the Groveport logistics corridor, Honda Marysville plant, and the I-270 outer belt distribution centers.",
     testimonialSnippet: { text: "Texas prices beat what I was paying up here. And they delivered it right to my yard.", author: "Ohio carrier" }
+  },
+  // Nationwide Expansion — Texas prices + delivery focus
+  {
+    city: "Philadelphia",
+    state: "Pennsylvania",
+    stateAbbr: "PA",
+    slug: "philadelphia-pa",
+    metaTitle: "Trailer Rental Philadelphia PA | Texas Prices, Delivered | CRUMS Leasing",
+    metaDescription: "Trailer rental in Philadelphia, PA. Texas-based pricing delivered nationwide — save more than leasing locally. 53' dry van & flatbed trailers. Call 1-888-570-4564.",
+    h1: "Trailer Rental & Leasing in Philadelphia, Pennsylvania",
+    distanceFromBulverde: 1750,
+    isPickupFriendly: false,
+    keyHighways: ["I-76", "I-95", "I-476", "PA Turnpike"],
+    keyIndustries: ["Pharma distribution", "Retail", "E-commerce fulfillment", "Port logistics", "Food processing"],
+    nearbyAirports: ["PHL - Philadelphia International"],
+    portAccess: "Port of Philadelphia — major East Coast container and breakbulk port",
+    regionalContext: "Philadelphia sits at the heart of the I-95 corridor, one of the most heavily trafficked freight lanes in the country. The region's pharma, retail, and e-commerce sectors drive consistent trailer demand year-round.",
+    nearbyCities: ["charlotte-nc", "columbus-oh", "richmond-va"],
+    landmarks: "Serving the Greater Philadelphia area from the Port of Philadelphia to King of Prussia distribution centers. Easy access via I-76, I-95, and the PA Turnpike.",
+    testimonialSnippet: { text: "Leasing locally in Philly was expensive. CRUMS delivered from Texas and saved me hundreds a month.", author: "D.M., Philadelphia" }
+  },
+  {
+    city: "Jacksonville",
+    state: "Florida",
+    stateAbbr: "FL",
+    slug: "jacksonville-fl",
+    metaTitle: "Trailer Rental Jacksonville FL | Texas Prices, Delivered | CRUMS Leasing",
+    metaDescription: "Trailer rental in Jacksonville, FL. Texas-based pricing delivered nationwide — save more than leasing locally. 53' dry van & flatbed trailers. Call 1-888-570-4564.",
+    h1: "Trailer Rental & Leasing in Jacksonville, Florida",
+    distanceFromBulverde: 1000,
+    isPickupFriendly: false,
+    keyHighways: ["I-95", "I-10", "I-295"],
+    keyIndustries: ["Port logistics", "Import/export", "Cold chain", "Distribution", "Military logistics"],
+    nearbyAirports: ["JAX - Jacksonville International"],
+    portAccess: "JAXPORT — one of the fastest-growing container ports on the East Coast",
+    regionalContext: "Jacksonville is Florida's logistics gateway where I-95 meets I-10, connecting the East Coast corridor to the Gulf states. JAXPORT handles growing container volumes and the city is a major distribution hub for the Southeast.",
+    nearbyCities: ["atlanta-ga", "charlotte-nc"],
+    landmarks: "Delivering across the Jacksonville metro from the Westside industrial district near JAXPORT to the I-295 distribution corridor and Cecil Commerce Center.",
+    testimonialSnippet: { text: "Florida trailer prices are wild. CRUMS shipped one from Texas and I'm saving big every month.", author: "R.T., Jacksonville" }
+  },
+  {
+    city: "Richmond",
+    state: "Virginia",
+    stateAbbr: "VA",
+    slug: "richmond-va",
+    metaTitle: "Trailer Rental Richmond VA | Texas Prices, Delivered | CRUMS Leasing",
+    metaDescription: "Trailer rental in Richmond, VA. Texas-based pricing delivered nationwide — save more than leasing locally. 53' dry van & flatbed trailers. Call 1-888-570-4564.",
+    h1: "Trailer Rental & Leasing in Richmond, Virginia",
+    distanceFromBulverde: 1500,
+    isPickupFriendly: false,
+    keyHighways: ["I-95", "I-64", "I-85", "I-295"],
+    keyIndustries: ["Distribution", "Amazon fulfillment", "Port access", "Agriculture", "Government logistics"],
+    nearbyAirports: ["RIC - Richmond International"],
+    portAccess: "Port of Virginia (nearby) — one of the deepest harbors on the East Coast",
+    regionalContext: "Richmond sits at the crossroads of I-95 and I-64, making it a strategic mid-Atlantic distribution point. The region has seen explosive growth in fulfillment centers and serves as a gateway between the Northeast and Southeast.",
+    nearbyCities: ["charlotte-nc", "philadelphia-pa"],
+    landmarks: "Serving the Richmond metro from the Hanover County industrial parks to the I-95/I-64 interchange logistics hub. Convenient access to the Port of Virginia via I-64.",
+    testimonialSnippet: { text: "Virginia leasing rates had me looking elsewhere. Texas prices from CRUMS were the answer.", author: "B.W., Richmond" }
+  },
+  {
+    city: "Des Moines",
+    state: "Iowa",
+    stateAbbr: "IA",
+    slug: "des-moines-ia",
+    metaTitle: "Trailer Rental Des Moines IA | Texas Prices, Delivered | CRUMS Leasing",
+    metaDescription: "Trailer rental in Des Moines, IA. Texas-based pricing delivered nationwide — save more than leasing locally. 53' dry van & flatbed trailers. Call 1-888-570-4564.",
+    h1: "Trailer Rental & Leasing in Des Moines, Iowa",
+    distanceFromBulverde: 1100,
+    isPickupFriendly: false,
+    keyHighways: ["I-80", "I-35", "I-235"],
+    keyIndustries: ["Agriculture", "Food processing", "Distribution", "Insurance logistics", "Manufacturing"],
+    nearbyAirports: ["DSM - Des Moines International"],
+    regionalContext: "Des Moines is Iowa's capital and a major crossroads where I-80 and I-35 meet. The region's agricultural, food processing, and distribution industries create steady demand for trailer capacity throughout the year.",
+    nearbyCities: ["kansas-city-mo", "chicago-il"],
+    landmarks: "Serving carriers across central Iowa from the Ankeny distribution corridor to the I-80/I-35 interchange industrial parks and Grimes logistics hub.",
+    testimonialSnippet: { text: "Midwest leasing options were limited and overpriced. CRUMS delivered from Texas and the savings are real.", author: "H.J., Des Moines" }
+  },
+  {
+    city: "Portland",
+    state: "Oregon",
+    stateAbbr: "OR",
+    slug: "portland-or",
+    metaTitle: "Trailer Rental Portland OR | Texas Prices, Delivered | CRUMS Leasing",
+    metaDescription: "Trailer rental in Portland, OR. Texas-based pricing delivered nationwide — save more than leasing locally. 53' dry van & flatbed trailers. Call 1-888-570-4564.",
+    h1: "Trailer Rental & Leasing in Portland, Oregon",
+    distanceFromBulverde: 2100,
+    isPickupFriendly: false,
+    keyHighways: ["I-5", "I-84", "I-205"],
+    keyIndustries: ["Timber", "Tech manufacturing", "Agriculture", "Port logistics", "Sustainable goods"],
+    nearbyAirports: ["PDX - Portland International"],
+    portAccess: "Port of Portland — key Pacific Northwest gateway for agriculture and manufacturing exports",
+    regionalContext: "Portland is the Pacific Northwest's primary logistics hub, connecting I-5's north-south West Coast corridor with I-84's route to the inland Northwest. The region's timber, tech, and agricultural sectors drive strong trailer demand.",
+    nearbyCities: ["los-angeles-ca"],
+    landmarks: "Delivering across the Portland metro from the Swan Island industrial district to the Rivergate terminal area and Troutdale distribution zone along I-84.",
+    testimonialSnippet: { text: "West Coast trailer rates are brutal. CRUMS shipped from Texas and I'm paying way less than local options.", author: "M.K., Portland" }
   }
 ];
 
@@ -371,11 +466,13 @@ export const getNearbyLocations = (slug: string): LocationData[] => {
 export const getLocationsByRegion = () => {
   const texas = locations.filter(loc => loc.stateAbbr === "TX");
   const southwest = locations.filter(loc => ["CA", "AZ"].includes(loc.stateAbbr));
-  const midwest = locations.filter(loc => ["IL", "IN", "MO", "OH"].includes(loc.stateAbbr));
-  const southeast = locations.filter(loc => ["GA", "TN", "NC"].includes(loc.stateAbbr));
+  const midwest = locations.filter(loc => ["IL", "IN", "MO", "OH", "IA"].includes(loc.stateAbbr));
+  const southeast = locations.filter(loc => ["GA", "TN", "NC", "FL", "VA"].includes(loc.stateAbbr));
   const mountain = locations.filter(loc => ["CO"].includes(loc.stateAbbr));
+  const northeast = locations.filter(loc => ["PA"].includes(loc.stateAbbr));
+  const west = locations.filter(loc => ["OR"].includes(loc.stateAbbr));
   
-  return { texas, southwest, midwest, southeast, mountain };
+  return { texas, southwest, midwest, southeast, mountain, northeast, west };
 };
 
 // Get pickup-friendly locations
