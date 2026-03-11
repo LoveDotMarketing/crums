@@ -309,7 +309,13 @@ const Index = () => {
           <Link 
             to="/why-choose-crums" 
             className="block max-w-3xl mx-auto group"
-            onClick={() => trackCtaClick('Featured Video', 'home', '/why-choose-crums')}
+            onClick={() => {
+              trackCtaClick('Featured Video', 'home', '/why-choose-crums');
+              trackEvent('video_play', {
+                video_title: 'Why CDL Drivers Choose CRUMS Leasing for Reliable Trailer Rentals',
+                page_section: 'homepage_video',
+              });
+            }}
           >
             <h2 className="text-xl md:text-2xl font-bold text-foreground text-center mb-6 group-hover:text-primary transition-colors">
               Why CDL Drivers Choose CRUMS Leasing for Reliable Trailer Rentals
