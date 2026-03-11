@@ -75,9 +75,17 @@ const FuelCostCalculator = () => {
   const costPerMile = totalFuelCost / distance;
 
   // Track calculator usage when inputs change meaningfully
+  const fuelResultFiredRef = useRef(false);
   useEffect(() => {
     if (distance > 0 && mpg > 0) {
       trackCalculatorUse('fuel_cost', true);
+      if (!fuelResultFiredRef.current) {
+        fuelResultFiredRef.current = true;
+        trackEvent('calculator_result', {
+          calculator_name: 'fuel_calculator',
+          result_value: Math.round(totalFuelCost * 100) / 100,
+        });
+      }
     }
   }, [distance, fuelPrice, mpg]);
 
