@@ -74,7 +74,7 @@ export const locations: LocationData[] = [
     state: "Texas",
     stateAbbr: "TX",
     slug: "new-braunfels-tx",
-    metaTitle: "Trailer Rental New Braunfels TX | CRUMS Leasing",
+    metaTitle: "Trailer Rental New Braunfels TX | 20 Min from HQ",
     metaDescription: "Trailer rental in New Braunfels, TX - 20 min from our Bulverde HQ. Same-day pickup or delivery. Dry van & flatbed trailers.",
     h1: "Trailer Rental & Leasing in New Braunfels, Texas",
     distanceFromBulverde: 20,
