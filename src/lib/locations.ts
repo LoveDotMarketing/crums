@@ -222,7 +222,7 @@ export const locations: LocationData[] = [
     state: "Arizona",
     stateAbbr: "AZ",
     slug: "phoenix-az",
-    metaTitle: "Trailer Rental Phoenix AZ | CRUMS Leasing",
+    metaTitle: "Trailer Rental Phoenix AZ | Texas Prices, Delivered",
     metaDescription: "Trailer rental in Phoenix, AZ. 53' dry van and flatbed trailers delivered to Phoenix metro. Serving the fast-growing Southwest.",
     h1: "Trailer Rental & Leasing in Phoenix, Arizona",
     distanceFromBulverde: 870,
