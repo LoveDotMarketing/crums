@@ -15,6 +15,37 @@ const breadcrumbSchema = generateBreadcrumbSchema([
   { name: "Owner Operators", url: "https://crumsleasing.com/industries/owner-operators" }
 ]);
 
+const faqSchema = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "What trailers does CRUMS Leasing offer for owner operators?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "CRUMS Leasing offers 53-foot dry van trailers and flatbed trailers for owner operators. Our dry vans are the most popular choice for hauling general freight."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Do I need a large down payment to lease a trailer?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "No. CRUMS Leasing does not require a large down payment. We offer affordable lease rates designed specifically for independent owner operators."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How long are the lease terms for owner operators?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Our minimum lease term is 12 months with flexible options. We also offer lease-to-own programs for owner operators who want to build equity in their equipment."
+      }
+    }
+  ]
+};
+
 const OwnerOperators = () => {
   const benefits = [
     { icon: DollarSign, title: "Affordable Payments", description: "Competitive lease rates designed for independent carriers." },
