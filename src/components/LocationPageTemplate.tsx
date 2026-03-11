@@ -123,7 +123,11 @@ export const LocationPageTemplate = ({ location }: LocationPageTemplateProps) =>
     {
       question: `What makes CRUMS different from other ${location.city} trailer rental companies?`,
       answer: `We're a family-owned company founded by former NBA player Eric Bledsoe. When you call, you talk to real people — not automated systems. We offer competitive rates, GPS-equipped trailers, and flexible terms. We understand the ${location.keyIndustries.slice(0, 2).join(" and ")} industries that keep ${location.city} moving.`
-    }
+    },
+    ...(!location.isPickupFriendly ? [{
+      question: `Why are CRUMS' Texas prices lower than local ${location.city} rates?`,
+      answer: `Our headquarters and fleet are based in San Antonio, Texas, where operating costs — land, labor, insurance — are significantly lower than in ${location.city}. We pass those savings directly to you. Even with delivery to ${location.stateAbbr}, most carriers save hundreds per month compared to leasing locally. That's the Texas advantage.`
+    }] : [])
   ];
 
   // FAQPage schema for rich results
