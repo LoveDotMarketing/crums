@@ -92,7 +92,7 @@ export const locations: LocationData[] = [
     state: "Texas",
     stateAbbr: "TX",
     slug: "houston-tx",
-    metaTitle: "Trailer Rental Houston TX | CRUMS Leasing",
+    metaTitle: "Trailer Rental Houston TX | Delivery Available",
     metaDescription: "Trailer rental in Houston, TX. We deliver 53' dry van and flatbed trailers to the greater Houston area. Call 1-888-570-4564.",
     h1: "Trailer Rental & Leasing in Houston, Texas",
     distanceFromBulverde: 180,
