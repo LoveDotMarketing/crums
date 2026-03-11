@@ -168,32 +168,44 @@ export const LocationPageTemplate = ({ location }: LocationPageTemplateProps) =>
       {/* Hero Section */}
       <section className="bg-gradient-to-r from-primary to-brand-teal-dark text-primary-foreground py-20">
         <div className="container mx-auto px-4">
-          <div className="max-w-4xl">
-            <div className="flex items-center gap-2 text-primary-foreground/80 mb-4">
-              <MapPin className="h-5 w-5" />
-              <span>Serving {location.city}, {location.stateAbbr}</span>
+          <div className="grid md:grid-cols-2 gap-8 items-center">
+            <div className="max-w-xl">
+              <div className="flex items-center gap-2 text-primary-foreground/80 mb-4">
+                <MapPin className="h-5 w-5" />
+                <span>Serving {location.city}, {location.stateAbbr}</span>
+              </div>
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6">
+                {location.h1}
+              </h1>
+              <p className="text-xl md:text-2xl text-primary-foreground/90 mb-8">
+                {location.isPickupFriendly 
+                  ? `Pick up at our Bulverde, TX yard (${location.distanceFromBulverde} miles away) or get convenient delivery to your ${location.city} location.`
+                  : `Nationwide delivery from Texas — quality trailers at competitive Texas prices, delivered directly to your ${location.city} location.`
+                }
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4">
+                <Button asChild size="lg" variant="secondary">
+                  <Link to="/get-started">
+                    Get a Quote <ArrowRight className="ml-2 h-5 w-5" />
+                  </Link>
+                </Button>
+                <Button asChild size="lg" variant="outline" className="bg-transparent border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10">
+                  <a href={`tel:${HEADQUARTERS.phone}`}>
+                    <Phone className="mr-2 h-5 w-5" />
+                    Call {HEADQUARTERS.phone}
+                  </a>
+                </Button>
+              </div>
             </div>
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6">
-              {location.h1}
-            </h1>
-            <p className="text-xl md:text-2xl text-primary-foreground/90 mb-8">
-              {location.isPickupFriendly 
-                ? `Pick up at our Bulverde, TX yard (${location.distanceFromBulverde} miles away) or get convenient delivery to your ${location.city} location.`
-                : `Nationwide delivery from Texas — quality trailers at competitive Texas prices, delivered directly to your ${location.city} location.`
-              }
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4">
-              <Button asChild size="lg" variant="secondary">
-                <Link to="/get-started">
-                  Get a Quote <ArrowRight className="ml-2 h-5 w-5" />
-                </Link>
-              </Button>
-              <Button asChild size="lg" variant="outline" className="bg-transparent border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10">
-                <a href={`tel:${HEADQUARTERS.phone}`}>
-                  <Phone className="mr-2 h-5 w-5" />
-                  Call {HEADQUARTERS.phone}
-                </a>
-              </Button>
+            <div className="hidden md:block">
+              <img 
+                src="/images/crums-trailer-fleet.webp" 
+                alt={`Dry van trailer for lease delivered to ${location.city}, ${location.stateAbbr}`}
+                width={600}
+                height={400}
+                className="rounded-lg shadow-2xl opacity-90"
+                loading="eager"
+              />
             </div>
           </div>
         </div>
