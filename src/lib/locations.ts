@@ -436,7 +436,7 @@ export const locations: LocationData[] = [
     nearbyAirports: ["PDX - Portland International"],
     portAccess: "Port of Portland — key Pacific Northwest gateway for agriculture and manufacturing exports",
     regionalContext: "Portland is the Pacific Northwest's primary logistics hub, connecting I-5's north-south West Coast corridor with I-84's route to the inland Northwest. The region's timber, tech, and agricultural sectors drive strong trailer demand.",
-    nearbyCities: ["los-angeles-ca"],
+    nearbyCities: ["los-angeles-ca", "seattle-wa"],
     landmarks: "Delivering across the Portland metro from the Swan Island industrial district to the Rivergate terminal area and Troutdale distribution zone along I-84.",
     testimonialSnippet: { text: "West Coast trailer rates are brutal. CRUMS shipped from Texas and I'm paying way less than local options.", author: "M.K., Portland" }
   }
