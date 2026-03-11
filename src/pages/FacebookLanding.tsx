@@ -46,7 +46,7 @@ const FacebookLanding = () => {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
   useEffect(() => {
-    trackPageView("/lp/facebook", "Facebook Landing Page");
+    trackPageView("/lp/facebook", "Facebook Landing Page", "landing_page");
     fireMetaCapi({
       eventName: 'ViewContent',
     });
