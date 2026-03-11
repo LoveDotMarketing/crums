@@ -361,7 +361,7 @@ export const locations: LocationData[] = [
     nearbyAirports: ["PHL - Philadelphia International"],
     portAccess: "Port of Philadelphia — major East Coast container and breakbulk port",
     regionalContext: "Philadelphia sits at the heart of the I-95 corridor, one of the most heavily trafficked freight lanes in the country. The region's pharma, retail, and e-commerce sectors drive consistent trailer demand year-round.",
-    nearbyCities: ["charlotte-nc", "columbus-oh", "richmond-va"],
+    nearbyCities: ["charlotte-nc", "columbus-oh", "richmond-va", "new-york-ny"],
     landmarks: "Serving the Greater Philadelphia area from the Port of Philadelphia to King of Prussia distribution centers. Easy access via I-76, I-95, and the PA Turnpike.",
     testimonialSnippet: { text: "Leasing locally in Philly was expensive. CRUMS delivered from Texas and saved me hundreds a month.", author: "D.M., Philadelphia" }
   },
