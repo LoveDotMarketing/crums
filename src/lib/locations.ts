@@ -167,7 +167,7 @@ export const locations: LocationData[] = [
     state: "Illinois",
     stateAbbr: "IL",
     slug: "chicago-il",
-    metaTitle: "Trailer Rental Chicago IL | Commercial Leasing | CRUMS Leasing",
+    metaTitle: "Trailer Rental Chicago IL | Texas Prices, Delivered",
     metaDescription: "Trailer rental in Chicago, IL. Delivered nationwide from Texas at competitive rates. 53' dry van and flatbed trailers. Call 1-888-570-4564.",
     h1: "Trailer Rental & Leasing in Chicago, Illinois",
     distanceFromBulverde: 1150,
