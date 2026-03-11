@@ -370,7 +370,7 @@ export const locations: LocationData[] = [
     state: "Florida",
     stateAbbr: "FL",
     slug: "jacksonville-fl",
-    metaTitle: "Trailer Rental Jacksonville FL | Texas Prices, Delivered | CRUMS Leasing",
+    metaTitle: "Trailer Rental Jacksonville FL | Texas Prices, Delivered",
     metaDescription: "Trailer rental in Jacksonville, FL. Texas-based pricing delivered nationwide — save more than leasing locally. 53' dry van & flatbed trailers. Call 1-888-570-4564.",
     h1: "Trailer Rental & Leasing in Jacksonville, Florida",
     distanceFromBulverde: 1000,
