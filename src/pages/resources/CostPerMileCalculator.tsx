@@ -11,7 +11,7 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip, BarChart, Ba
 import { Calculator, DollarSign, Fuel, Shield, Wrench, Truck, MoreHorizontal } from "lucide-react";
 import { PrintButton } from "@/components/PrintButton";
 import { Link } from "react-router-dom";
-import { trackCalculatorUse } from "@/lib/analytics";
+import { trackCalculatorUse, trackEvent } from "@/lib/analytics";
 
 const toolSchema = {
   "@context": "https://schema.org",

@@ -11,7 +11,7 @@ import { Calculator, DollarSign, Route, Fuel, TrendingUp, AlertTriangle } from "
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from "recharts";
 import { PrintButton } from "@/components/PrintButton";
 import { Link } from "react-router-dom";
-import { trackCalculatorUse } from "@/lib/analytics";
+import { trackCalculatorUse, trackEvent } from "@/lib/analytics";
 
 const toolSchema = {
   "@context": "https://schema.org",

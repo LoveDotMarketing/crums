@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Fuel, Route, DollarSign, Gauge } from "lucide-react";
 import { Link } from "react-router-dom";
-import { trackCalculatorUse } from "@/lib/analytics";
+import { trackCalculatorUse, trackEvent } from "@/lib/analytics";
 
 const toolSchema = {
   "@context": "https://schema.org",
