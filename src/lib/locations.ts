@@ -56,7 +56,7 @@ export const locations: LocationData[] = [
     state: "Texas",
     stateAbbr: "TX",
     slug: "austin-tx",
-    metaTitle: "Trailer Rental Austin TX | CRUMS Leasing",
+    metaTitle: "Trailer Rental Austin TX | Easy Pickup from Bulverde",
     metaDescription: "Commercial trailer rental in Austin, TX. Easy pickup from Bulverde (1 hour) or delivery. Dry van and flatbed trailers available.",
     h1: "Trailer Rental & Leasing in Austin, Texas",
     distanceFromBulverde: 65,
