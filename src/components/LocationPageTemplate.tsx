@@ -110,7 +110,7 @@ export const LocationPageTemplate = ({ location }: LocationPageTemplateProps) =>
       question: `Can you get a trailer to ${location.city} by Friday?`,
       answer: location.isPickupFriendly 
         ? `Probably! ${location.city} is just ${location.distanceFromBulverde} miles from our Bulverde, TX yard. You can pick up your trailer same-day in many cases, or we can deliver it to your location. Call us at 1-888-570-4564 to check availability.`
-        : `We'll do our best! We deliver commercial trailers to ${location.city}, ${location.stateAbbr} regularly. Give us a call at 1-888-570-4564 with your timeline and we'll work to make it happen.`
+        : `We'll do our best! We deliver trailers nationwide from Texas — ${location.city}, ${location.stateAbbr} is one of the markets we serve regularly. Give us a call at 1-888-570-4564 with your timeline and we'll work to make it happen.`
     },
     {
       question: "I'm a new carrier — do you work with startups?",
