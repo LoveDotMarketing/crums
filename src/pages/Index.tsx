@@ -693,7 +693,7 @@ const Index = () => {
                     size="lg" 
                     variant="outline"
                     className="border-2 border-secondary text-secondary hover:bg-secondary hover:text-secondary-foreground"
-                    onClick={() => trackCtaClick('The CRUMS Story', 'home', '/crums-story')}
+                    onClick={() => trackCtaClick('The CRUMS Story', 'about', '/crums-story')}
                   >
                     The CRUMS Story
                     <Heart className="ml-2 h-5 w-5" />
