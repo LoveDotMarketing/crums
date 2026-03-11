@@ -127,8 +127,8 @@ export const trackApplicationSectionComplete = (section: string) => {
 // CTA clicks
 export const trackCtaClick = (buttonText: string, page: string, destination?: string) => {
   trackEvent('cta_click', {
-    button_text: buttonText,
-    page,
+    cta_text: buttonText,
+    cta_location: page,
     destination: destination || '',
   });
 };
