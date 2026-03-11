@@ -10,7 +10,7 @@ const nationwideMapImage = "/images/crums-leasing-pickup-delivery-map-2.webp";
 import { SEO } from "@/components/SEO";
 import { localBusinessSchema, generateBreadcrumbSchema } from "@/lib/structuredData";
 import { locations, getLocationsByRegion, HEADQUARTERS } from "@/lib/locations";
-import { trackCtaClick, trackPhoneClick, fireMetaCapi } from "@/lib/analytics";
+import { trackCtaClick, trackPhoneClick, trackEvent, fireMetaCapi } from "@/lib/analytics";
 import { useEffect } from "react";
 
 const Locations = () => {
