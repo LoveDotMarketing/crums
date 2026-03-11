@@ -80,6 +80,8 @@ export const trackPhoneClick = (location: string) => {
     event_category: 'engagement',
     location,
     phone_number: '(888) 570-4564',
+    page_path: window.location.pathname,
+    page_title: document.title,
   });
 };
 
