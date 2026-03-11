@@ -755,7 +755,7 @@ export default function GetStarted() {
     return (
       <div className="min-h-screen flex flex-col">
         <SEO
-          title="Account Created - CRUMS Leasing"
+          title="Account Created — Start Your Trailer Lease"
           description="Your account has been created. Complete your application or start exploring your dashboard."
           canonical="https://crumsleasing.com/get-started"
         />
