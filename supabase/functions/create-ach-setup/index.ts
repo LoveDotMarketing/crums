@@ -159,9 +159,28 @@ serve(async (req) => {
 
     // Find or create Stripe customer
     let customerId_stripe = application.stripe_customer_id;
+
+    // Validate existing Stripe customer ID is still valid
+    if (customerId_stripe) {
+      try {
+        await stripe.customers.retrieve(customerId_stripe);
+        logStep("Verified existing Stripe customer", { customerId: customerId_stripe });
+      } catch (stripeErr) {
+        logStep("WARNING: Stored Stripe customer ID is invalid, will create new one", {
+          invalidId: customerId_stripe,
+          error: stripeErr instanceof Error ? stripeErr.message : String(stripeErr),
+        });
+        customerId_stripe = null;
+        // Clear the stale ID from the application record
+        await supabaseClient
+          .from("customer_applications")
+          .update({ stripe_customer_id: null })
+          .eq("id", application.id);
+      }
+    }
     
     if (!customerId_stripe) {
-      logStep("No existing Stripe customer, searching by email");
+      logStep("No valid Stripe customer, searching by email");
       const customers = await stripe.customers.list({ email: targetEmail, limit: 1 });
       
       if (customers.data.length > 0) {
