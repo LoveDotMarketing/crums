@@ -148,7 +148,7 @@ export const locations: LocationData[] = [
     state: "California",
     stateAbbr: "CA",
     slug: "los-angeles-ca",
-    metaTitle: "Trailer Rental Los Angeles CA | CRUMS Leasing",
+    metaTitle: "Trailer Rental Los Angeles CA | Texas Prices, Delivered",
     metaDescription: "Trailer rental in Los Angeles, CA. Commercial trailers delivered to SoCal. Serving the nation's largest trucking market.",
     h1: "Trailer Rental & Leasing in Los Angeles, California",
     distanceFromBulverde: 1350,
