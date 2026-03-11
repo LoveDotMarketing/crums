@@ -360,6 +360,10 @@ export default function GetStarted() {
       trackConversion('signup');
       trackLinkedInSignup();
       logSignupCompleted(email);
+      trackEvent('get_started_complete', {
+        form_name: 'get_started_form',
+        page_type: 'signup_page',
+      });
       
       // Meta CAPI CompleteRegistration
       fireMetaCapi({
