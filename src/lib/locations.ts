@@ -351,7 +351,7 @@ export const locations: LocationData[] = [
     state: "Pennsylvania",
     stateAbbr: "PA",
     slug: "philadelphia-pa",
-    metaTitle: "Trailer Rental Philadelphia PA | Texas Prices, Delivered | CRUMS Leasing",
+    metaTitle: "Trailer Rental Philadelphia PA | Texas Prices, Delivered",
     metaDescription: "Trailer rental in Philadelphia, PA. Texas-based pricing delivered nationwide — save more than leasing locally. 53' dry van & flatbed trailers. Call 1-888-570-4564.",
     h1: "Trailer Rental & Leasing in Philadelphia, Pennsylvania",
     distanceFromBulverde: 1750,
