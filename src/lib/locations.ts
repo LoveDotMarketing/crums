@@ -277,7 +277,7 @@ export const locations: LocationData[] = [
     state: "North Carolina",
     stateAbbr: "NC",
     slug: "charlotte-nc",
-    metaTitle: "Trailer Rental Charlotte NC | CRUMS Leasing",
+    metaTitle: "Trailer Rental Charlotte NC | Texas Prices, Delivered",
     metaDescription: "Trailer rental in Charlotte, NC. Nationwide delivery from Texas at competitive rates. 53' dry van & flatbed trailers. Call 1-888-570-4564.",
     h1: "Trailer Rental & Leasing in Charlotte, North Carolina",
     distanceFromBulverde: 1100,
