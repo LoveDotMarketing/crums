@@ -763,7 +763,7 @@ const Index = () => {
                     <Button 
                       variant="outline" 
                       className="border-primary text-primary hover:bg-primary hover:text-primary-foreground"
-                      onClick={() => trackCtaClick('View All Locations', 'home', '/locations')}
+                      onClick={() => trackCtaClick('View All Locations', 'locations', '/locations')}
                     >
                       View All Locations
                       <ArrowRight className="ml-2 h-4 w-4" />
