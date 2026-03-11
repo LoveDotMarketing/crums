@@ -1,32 +1,45 @@
 
 
-## Problem
+# Add 3 Missing Location Pages: New York, Oklahoma City, Seattle
 
-Abdul's `customer_applications` record shows `payment_setup_status = 'completed'` and has a `stripe_payment_method_id` (`pm_1T7dwSLjIwiEGQIhzU647O3c`) that is dead/detached in Stripe. The UI shows "ACH ✓" and hides the "Send ACH Setup" button, so there's no way to re-do the setup.
+## Context
+Your GA data shows 15 top out-of-state markets. We already have pages for 12 of them. Three states with real traffic have no location page yet:
 
-## Fix
+| State | Users | City to Target | Why |
+|-------|-------|---------------|-----|
+| New York | 12 | New York City | Largest US metro, high freight volume |
+| Oklahoma | 7 | Oklahoma City | Adjacent to TX, I-35 corridor |
+| Washington | 7 | Seattle | Pacific NW logistics hub, pairs with Portland |
 
-### 1. Database: Reset Abdul's ACH status
+All three will use `isPickupFriendly: false` to trigger the existing "Texas prices + nationwide delivery" template messaging.
 
-Run a migration to clear the broken payment method and reset status so the ACH setup flow can be re-initiated:
+## Changes
 
-```sql
-UPDATE customer_applications
-SET payment_setup_status = 'pending',
-    stripe_payment_method_id = NULL
-WHERE id = '25b5046d-d4b2-405c-bf78-ba3e2b71039f';
-```
+### 1. `src/lib/locations.ts`
+Add 3 new location entries:
 
-### 2. UI: Add a "Reset ACH" option for admins
+- **New York City, NY** — slug `new-york-ny`, ~1,800mi, I-95/I-78/I-87, port logistics, e-commerce fulfillment, retail distribution. Nearby: `philadelphia-pa`.
+- **Oklahoma City, OK** — slug `oklahoma-city-ok`, ~450mi, I-35/I-40/I-44, oil & gas, agriculture, distribution. Nearby: `dallas-tx`, `kansas-city-mo`.
+- **Seattle, WA** — slug `seattle-wa`, ~2,200mi, I-5/I-90/I-405, port logistics, tech, timber, agriculture. Nearby: `portland-or`, `los-angeles-ca`.
 
-In `src/pages/admin/Applications.tsx`, update the ACH badge area (~line 773) so that when `payment_setup_status === "completed"`, instead of only showing the static "ACH ✓" badge, also show a small reset button that sets `payment_setup_status` back to `pending` and clears `stripe_payment_method_id`. This prevents needing manual database edits in the future.
+Each `metaDescription` leads with Texas pricing + nationwide delivery.
 
-The reset button will:
-- Update `customer_applications` setting `payment_setup_status = 'pending'` and `stripe_payment_method_id = null`
-- Refresh the applications list
-- Show a toast confirmation
+### 2. Update `getLocationsByRegion()`
+- Add `"NY"` to `northeast` filter
+- Add `"OK"` to `southwest` filter
+- Add `"WA"` to `west` filter
 
-### Files to update
-- **Database migration** — one UPDATE statement for Abdul's record
-- `src/pages/admin/Applications.tsx` — add reset ACH button next to the "ACH ✓" badge (~5 lines)
+### 3. Update existing `nearbyCities` cross-links
+- `philadelphia-pa` → add `"new-york-ny"`
+- `dallas-tx` → add `"oklahoma-city-ok"`
+- `kansas-city-mo` → add `"oklahoma-city-ok"`
+- `portland-or` → add `"seattle-wa"`
+- `los-angeles-ca` → add `"seattle-wa"`
+
+### 4. `public/sitemap.xml`
+Add 3 new URL entries.
+
+### Files
+- `src/lib/locations.ts`
+- `public/sitemap.xml`
 
