@@ -111,7 +111,7 @@ export const locations: LocationData[] = [
     state: "Texas",
     stateAbbr: "TX",
     slug: "dallas-tx",
-    metaTitle: "Trailer Rental Dallas TX | CRUMS Leasing",
+    metaTitle: "Trailer Rental Dallas TX | Delivery Available",
     metaDescription: "Trailer rental in Dallas, TX. We deliver commercial trailers to DFW. Dry van and flatbed trailers with flexible terms.",
     h1: "Trailer Rental & Leasing in Dallas, Texas",
     distanceFromBulverde: 275,
