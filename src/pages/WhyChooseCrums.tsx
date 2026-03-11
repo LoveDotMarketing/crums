@@ -17,7 +17,88 @@ declare global {
   }
 }
 
+const VIDEO_TITLE = "Why CDL Drivers Choose CRUMS Leasing for Reliable Trailer Rentals";
+
 const WhyChooseCrums = () => {
+  const playerRef = useRef<any>(null);
+  const progressIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const firedMilestonesRef = useRef<Set<number>>(new Set());
+
+  const checkProgress = useCallback(() => {
+    const player = playerRef.current;
+    if (!player || typeof player.getDuration !== 'function') return;
+    const duration = player.getDuration();
+    const current = player.getCurrentTime();
+    if (duration <= 0) return;
+    const pct = (current / duration) * 100;
+    for (const milestone of [25, 50, 75, 100]) {
+      if (pct >= milestone && !firedMilestonesRef.current.has(milestone)) {
+        firedMilestonesRef.current.add(milestone);
+        trackEvent('video_progress', {
+          video_title: VIDEO_TITLE,
+          video_percent: milestone,
+          page_section: 'homepage_video',
+        });
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    // Load YouTube IFrame API if not already loaded
+    const initPlayer = () => {
+      playerRef.current = new window.YT.Player('yt-player', {
+        videoId: 'ttqu5Ef2SZU',
+        playerVars: { rel: 0 },
+        events: {
+          onStateChange: (event: any) => {
+            if (event.data === window.YT.PlayerState.PLAYING) {
+              // Fire play event only on first play (milestone 0 not tracked)
+              trackEvent('video_play', {
+                video_title: VIDEO_TITLE,
+                page_section: 'homepage_video',
+              });
+              // Start polling for progress
+              if (!progressIntervalRef.current) {
+                progressIntervalRef.current = setInterval(checkProgress, 1000);
+              }
+            } else if (event.data === window.YT.PlayerState.ENDED) {
+              checkProgress(); // catch 100%
+              if (progressIntervalRef.current) {
+                clearInterval(progressIntervalRef.current);
+                progressIntervalRef.current = null;
+              }
+            } else if (event.data === window.YT.PlayerState.PAUSED) {
+              if (progressIntervalRef.current) {
+                clearInterval(progressIntervalRef.current);
+                progressIntervalRef.current = null;
+              }
+            }
+          },
+        },
+      });
+    };
+
+    if (window.YT && window.YT.Player) {
+      initPlayer();
+    } else {
+      const prev = window.onYouTubeIframeAPIReady;
+      window.onYouTubeIframeAPIReady = () => {
+        prev?.();
+        initPlayer();
+      };
+      if (!document.querySelector('script[src*="youtube.com/iframe_api"]')) {
+        const tag = document.createElement('script');
+        tag.src = 'https://www.youtube.com/iframe_api';
+        document.head.appendChild(tag);
+      }
+    }
+
+    return () => {
+      if (progressIntervalRef.current) {
+        clearInterval(progressIntervalRef.current);
+      }
+    };
+  }, [checkProgress]);
   const breadcrumbSchema = generateBreadcrumbSchema([
     { name: "Home", url: "https://crumsleasing.com/" },
     { name: "Why Choose CRUMS", url: "https://crumsleasing.com/why-choose-crums" }
