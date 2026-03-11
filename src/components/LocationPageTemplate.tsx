@@ -282,32 +282,42 @@ export const LocationPageTemplate = ({ location }: LocationPageTemplateProps) =>
                 </div>
               )}
             </div>
-            <Card className="border-2">
-              <CardContent className="p-6">
-                <h3 className="text-xl font-bold mb-4 text-foreground">Our Headquarters</h3>
-                <div className="space-y-3 text-muted-foreground">
-                  <p className="font-semibold text-foreground">CRUMS Leasing</p>
-                  <p>{HEADQUARTERS.address}</p>
-                  <p>{HEADQUARTERS.city}, {HEADQUARTERS.stateAbbr} {HEADQUARTERS.zip}</p>
-                  <a 
-                    href={`tel:${HEADQUARTERS.phone}`}
-                    className="flex items-center gap-2 text-primary hover:underline font-medium"
-                  >
-                    <Phone className="h-4 w-4" />
-                    {HEADQUARTERS.phone}
-                  </a>
-                  <div className="flex items-center gap-2 text-sm">
-                    <Clock className="h-4 w-4" />
-                    <span>Mon-Fri 9am-5:30pm | Sat 9am-12pm</span>
+            <div className="space-y-6">
+              <img 
+                src="/images/crums-leasing-pickup-delivery-map.webp" 
+                alt={`CRUMS Leasing delivery map — trailer delivery to ${location.city}, ${location.stateAbbr} from Texas`}
+                width={600}
+                height={400}
+                className="rounded-lg shadow-lg w-full"
+                loading="lazy"
+              />
+              <Card className="border-2">
+                <CardContent className="p-6">
+                  <h3 className="text-xl font-bold mb-4 text-foreground">Our Headquarters</h3>
+                  <div className="space-y-3 text-muted-foreground">
+                    <p className="font-semibold text-foreground">CRUMS Leasing</p>
+                    <p>{HEADQUARTERS.address}</p>
+                    <p>{HEADQUARTERS.city}, {HEADQUARTERS.stateAbbr} {HEADQUARTERS.zip}</p>
+                    <a 
+                      href={`tel:${HEADQUARTERS.phone}`}
+                      className="flex items-center gap-2 text-primary hover:underline font-medium"
+                    >
+                      <Phone className="h-4 w-4" />
+                      {HEADQUARTERS.phone}
+                    </a>
+                    <div className="flex items-center gap-2 text-sm">
+                      <Clock className="h-4 w-4" />
+                      <span>Mon-Fri 9am-5:30pm | Sat 9am-12pm</span>
+                    </div>
                   </div>
-                </div>
-                <div className="mt-6 pt-6 border-t border-border">
-                  <p className="text-sm text-muted-foreground">
-                    <strong>Distance from {location.city}:</strong> ~{location.distanceFromBulverde} miles
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
+                  <div className="mt-6 pt-6 border-t border-border">
+                    <p className="text-sm text-muted-foreground">
+                      <strong>Distance from {location.city}:</strong> ~{location.distanceFromBulverde} miles
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </div>
         </div>
       </section>
