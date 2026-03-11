@@ -766,7 +766,7 @@ const Index = () => {
 
           {/* Featured Cities Grid */}
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-            {locations.slice(0, 12).map((location) => (
+            {locations.map((location) => (
               <Link
                 key={location.slug}
                 to={`/locations/${location.slug}`}
