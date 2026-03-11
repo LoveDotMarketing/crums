@@ -1,32 +1,32 @@
 
 
-## Problem
+## Investigation Summary
 
-Abdul's `customer_applications` record shows `payment_setup_status = 'completed'` and has a `stripe_payment_method_id` (`pm_1T7dwSLjIwiEGQIhzU647O3c`) that is dead/detached in Stripe. The UI shows "ACH ✓" and hides the "Send ACH Setup" button, so there's no way to re-do the setup.
+Trailer 606945 is correctly assigned to Gerald Porter (`customer_id = d41cab5d-8ee2-4c8c-b19b-02250091f842`) in the database with status `rented`. The SQL query returns it correctly when Gerald Porter is selected.
 
-## Fix
+The issue is in the trailer fetching logic in `CreateSubscriptionDialog.tsx`. The `.or()` PostgREST filter syntax works at the SQL level, but there may be a race condition: the `subscribedTrailerIds` query and the trailers query both depend on `selectedCustomerId` and fire simultaneously. If the `subscribedTrailerIds` resolves as `undefined` momentarily, the trailer query might run with stale cache from before the customer was selected.
 
-### 1. Database: Reset Abdul's ACH status
+## Plan
 
-Run a migration to clear the broken payment method and reset status so the ACH setup flow can be re-initiated:
+**File: `src/components/admin/CreateSubscriptionDialog.tsx`**
 
-```sql
-UPDATE customer_applications
-SET payment_setup_status = 'pending',
-    stripe_payment_method_id = NULL
-WHERE id = '25b5046d-d4b2-405c-bf78-ba3e2b71039f';
+1. Add `selectedCustomerId` to the `enabled` condition for the trailers query so it only runs the customer-specific branch after a customer is selected, preventing stale empty-customer results from being served.
+
+2. Ensure `subscribedTrailerIds` is fully resolved before the trailers query fires by adding it to the `enabled` guard (e.g., `enabled: (isOpen || mode === "inline") && !!selectedCustomerId && subscribedTrailerIds !== undefined`).
+
+3. For a more robust approach, split the query into two explicit fetches when a customer is selected:
+   - Fetch available trailers: `status = 'available' AND customer_id IS NULL`
+   - Fetch customer-assigned trailers: `customer_id = selectedCustomerId`
+   - Merge and deduplicate the results
+
+   This avoids any PostgREST `.or()` syntax edge cases entirely.
+
+## Technical Details
+
+The current query uses PostgREST's `.or()` filter:
+```
+.or(`and(status.eq.available,customer_id.is.null),customer_id.eq.${selectedCustomerId}`)
 ```
 
-### 2. UI: Add a "Reset ACH" option for admins
-
-In `src/pages/admin/Applications.tsx`, update the ACH badge area (~line 773) so that when `payment_setup_status === "completed"`, instead of only showing the static "ACH ✓" badge, also show a small reset button that sets `payment_setup_status` back to `pending` and clears `stripe_payment_method_id`. This prevents needing manual database edits in the future.
-
-The reset button will:
-- Update `customer_applications` setting `payment_setup_status = 'pending'` and `stripe_payment_method_id = null`
-- Refresh the applications list
-- Show a toast confirmation
-
-### Files to update
-- **Database migration** — one UPDATE statement for Abdul's record
-- `src/pages/admin/Applications.tsx` — add reset ACH button next to the "ACH ✓" badge (~5 lines)
+The replacement will use two separate queries merged client-side, which is more reliable and easier to debug. The `subscribedTrailerIds` exclusion filter remains unchanged.
 
