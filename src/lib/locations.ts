@@ -250,7 +250,7 @@ export const locations: LocationData[] = [
     keyIndustries: ["Automotive", "Pharmaceutical", "Logistics", "Manufacturing", "Agriculture"],
     nearbyAirports: ["IND - Indianapolis International"],
     regionalContext: "Indianapolis is known as the Crossroads of America, where more interstate highways converge than any other U.S. city. The central location provides access to 75% of the U.S. population within a day's drive.",
-    nearbyCities: ["chicago-il", "nashville-tn", "kansas-city-mo"],
+    nearbyCities: ["chicago-il", "nashville-tn", "kansas-city-mo", "columbus-oh"],
     landmarks: "Serving carriers from the Indianapolis Motor Speedway area to the Plainfield logistics parks. Central access via I-70 and I-65 interchange.",
     testimonialSnippet: { text: "Crossroads means I'm going everywhere. CRUMS has the right trailer for every haul.", author: "K.M., Indianapolis" }
   },
