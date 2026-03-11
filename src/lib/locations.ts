@@ -259,7 +259,7 @@ export const locations: LocationData[] = [
     state: "Tennessee",
     stateAbbr: "TN",
     slug: "nashville-tn",
-    metaTitle: "Trailer Rental Nashville TN | CRUMS Leasing",
+    metaTitle: "Trailer Rental Nashville TN | Texas Prices, Delivered",
     metaDescription: "Trailer rental in Nashville, TN. Dry van and flatbed trailers delivered to Middle Tennessee. Fast-growing logistics market.",
     h1: "Trailer Rental & Leasing in Nashville, Tennessee",
     distanceFromBulverde: 780,
