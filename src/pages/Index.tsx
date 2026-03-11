@@ -782,7 +782,7 @@ const Index = () => {
                 to={`/locations/${location.slug}`}
                 className="group"
                 onClick={() => {
-                  trackCtaClick(`Location: ${location.city}`, 'home', `/locations/${location.slug}`);
+                  trackCtaClick(`Location: ${location.city}`, 'locations', `/locations/${location.slug}`);
                   trackEvent('location_click', {
                     location_name: location.city,
                     page_section: 'locations',
