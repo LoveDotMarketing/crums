@@ -222,6 +222,7 @@ const SemiTrailerLeasing = () => {
               <Link to="/locations/dallas-tx" className="text-primary hover:underline">Dallas</Link>,{" "}
               <Link to="/locations/atlanta-ga" className="text-primary hover:underline">Atlanta</Link>,{" "}
               <Link to="/locations/chicago-il" className="text-primary hover:underline">Chicago</Link>,{" "}
+              <Link to="/locations/columbus-oh" className="text-primary hover:underline">Columbus</Link>,{" "}
               and <Link to="/locations" className="text-primary hover:underline">16+ more cities</Link>.
             </p>
           </div>

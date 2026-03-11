@@ -361,6 +361,7 @@ const DryVanTrailerLeasing = () => {
               <Link to="/locations/houston-tx" className="text-primary hover:underline">Houston</Link>,{" "}
               <Link to="/locations/dallas-tx" className="text-primary hover:underline">Dallas</Link>,{" "}
               <Link to="/locations/chicago-il" className="text-primary hover:underline">Chicago</Link>,{" "}
+              <Link to="/locations/columbus-oh" className="text-primary hover:underline">Columbus</Link>,{" "}
               and <Link to="/locations" className="text-primary hover:underline">all locations</Link>.
             </p>
           </div>

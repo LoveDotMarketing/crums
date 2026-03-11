@@ -357,8 +357,9 @@ const TrailerLeasing = () => {
               including{" "}
               <Link to="/locations/houston-tx" className="text-primary hover:underline">Houston</Link>,{" "}
               <Link to="/locations/dallas-tx" className="text-primary hover:underline">Dallas</Link>,{" "}
-              <Link to="/locations/los-angeles-ca" className="text-primary hover:underline">Los Angeles</Link>, and{" "}
-              <Link to="/locations/chicago-il" className="text-primary hover:underline">Chicago</Link>.
+              <Link to="/locations/los-angeles-ca" className="text-primary hover:underline">Los Angeles</Link>,{" "}
+              <Link to="/locations/chicago-il" className="text-primary hover:underline">Chicago</Link>, and{" "}
+              <Link to="/locations/columbus-oh" className="text-primary hover:underline">Columbus</Link>.
             </p>
           </div>
         </div>
