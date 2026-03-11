@@ -250,7 +250,7 @@ export const locations: LocationData[] = [
     keyIndustries: ["Automotive", "Pharmaceutical", "Logistics", "Manufacturing", "Agriculture"],
     nearbyAirports: ["IND - Indianapolis International"],
     regionalContext: "Indianapolis is known as the Crossroads of America, where more interstate highways converge than any other U.S. city. The central location provides access to 75% of the U.S. population within a day's drive.",
-    nearbyCities: ["chicago-il", "nashville-tn", "kansas-city-mo"],
+    nearbyCities: ["chicago-il", "nashville-tn", "kansas-city-mo", "columbus-oh"],
     landmarks: "Serving carriers from the Indianapolis Motor Speedway area to the Plainfield logistics parks. Central access via I-70 and I-65 interchange.",
     testimonialSnippet: { text: "Crossroads means I'm going everywhere. CRUMS has the right trailer for every haul.", author: "K.M., Indianapolis" }
   },
@@ -325,6 +325,25 @@ export const locations: LocationData[] = [
     nearbyCities: ["denver-co", "chicago-il", "dallas-tx", "indianapolis-in"],
     landmarks: "Serving the KC metro from the Fairfax industrial district to the Logistics Park Kansas City. I-35 corridor access for carriers on both sides of the state line.",
     testimonialSnippet: { text: "KC is where America's freight meets. CRUMS keeps my business moving.", author: "W.R., Kansas City" }
+  },
+  // Ohio - Validated by organic lead conversion
+  {
+    city: "Columbus",
+    state: "Ohio",
+    stateAbbr: "OH",
+    slug: "columbus-oh",
+    metaTitle: "Trailer Rental Columbus OH | Texas Prices, Delivered | CRUMS Leasing",
+    metaDescription: "Trailer rental in Columbus, OH. Texas-based pricing delivered to Ohio — save more than leasing locally. 53' dry van & flatbed trailers. Call 1-888-570-4564.",
+    h1: "Trailer Rental & Leasing in Columbus, Ohio",
+    distanceFromBulverde: 1250,
+    isPickupFriendly: false,
+    keyHighways: ["I-70", "I-71", "I-270", "I-670"],
+    keyIndustries: ["Logistics/distribution", "Automotive (Honda Marysville)", "E-commerce (Amazon fulfillment)", "Agriculture", "Steel"],
+    nearbyAirports: ["CMH - John Glenn Columbus International"],
+    regionalContext: "Columbus is Ohio's capital and fastest-growing city, sitting at the I-70/I-71 crossroads. A major logistics hub with massive Amazon and distribution center presence, 60% of the US population is reachable within a day's drive from Columbus.",
+    nearbyCities: ["indianapolis-in", "charlotte-nc"],
+    landmarks: "Serving carriers near Rickenbacker Intermodal Yard, the Groveport logistics corridor, Honda Marysville plant, and the I-270 outer belt distribution centers.",
+    testimonialSnippet: { text: "Texas prices beat what I was paying up here. And they delivered it right to my yard.", author: "Ohio carrier" }
   }
 ];
 
@@ -352,7 +371,7 @@ export const getNearbyLocations = (slug: string): LocationData[] => {
 export const getLocationsByRegion = () => {
   const texas = locations.filter(loc => loc.stateAbbr === "TX");
   const southwest = locations.filter(loc => ["CA", "AZ"].includes(loc.stateAbbr));
-  const midwest = locations.filter(loc => ["IL", "IN", "MO"].includes(loc.stateAbbr));
+  const midwest = locations.filter(loc => ["IL", "IN", "MO", "OH"].includes(loc.stateAbbr));
   const southeast = locations.filter(loc => ["GA", "TN", "NC"].includes(loc.stateAbbr));
   const mountain = locations.filter(loc => ["CO"].includes(loc.stateAbbr));
   

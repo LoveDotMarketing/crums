@@ -1,44 +1,32 @@
 
 
-# Add Columbus, Ohio Location Page
+## Problem
 
-## Context
-You have 47 users from Ohio (your organic caller's state) with no Ohio-specific landing page. The caller validated the value prop: **cheaper Texas prices + nationwide delivery**. This is the exact messaging to optimize for.
+Abdul's `customer_applications` record shows `payment_setup_status = 'completed'` and has a `stripe_payment_method_id` (`pm_1T7dwSLjIwiEGQIhzU647O3c`) that is dead/detached in Stripe. The UI shows "ACH ✓" and hides the "Send ACH Setup" button, so there's no way to re-do the setup.
 
-## What to Build
+## Fix
 
-### 1. Add Columbus, OH to `src/lib/locations.ts`
+### 1. Database: Reset Abdul's ACH status
 
-New location entry with:
-- **slug**: `columbus-oh`
-- **h1**: "Trailer Rental & Leasing in Columbus, Ohio"
-- **metaTitle**: "Trailer Rental Columbus OH | Texas Prices, Delivered | CRUMS Leasing"
-- **metaDescription**: Emphasize competitive Texas pricing + delivery to Ohio — the exact angle that converted your caller
-- **distanceFromBulverde**: ~1,250 miles, `isPickupFriendly: false`
-- **keyHighways**: I-70, I-71, I-270, I-670
-- **keyIndustries**: Logistics/distribution, automotive (Honda Marysville), e-commerce (Amazon fulfillment), agriculture, steel
-- **nearbyAirports**: CMH - John Glenn Columbus International
-- **regionalContext**: Columbus is Ohio's capital and fastest-growing city, sitting at the I-70/I-71 crossroads. Major logistics hub with massive Amazon and distribution center presence. 60% of the US population reachable within a day's drive.
-- **landmarks**: Serving carriers near Rickenbacker Intermodal Yard, Groveport logistics corridor, Honda Marysville plant, and the I-270 outer belt distribution centers
-- **nearbyCities**: `["indianapolis-in", "charlotte-nc"]` (existing pages)
-- **testimonialSnippet**: Based on the real caller insight — something like "Texas prices beat what I was paying up here. And they delivered it right to my yard." — Ohio carrier
+Run a migration to clear the broken payment method and reset status so the ACH setup flow can be re-initiated:
 
-### 2. Update `getLocationsByRegion()` in `src/lib/locations.ts`
+```sql
+UPDATE customer_applications
+SET payment_setup_status = 'pending',
+    stripe_payment_method_id = NULL
+WHERE id = '25b5046d-d4b2-405c-bf78-ba3e2b71039f';
+```
 
-Add `"OH"` to the `midwest` filter so Columbus shows up in the Locations hub page under the Midwest region.
+### 2. UI: Add a "Reset ACH" option for admins
 
-### 3. Update nearby city cross-links
+In `src/pages/admin/Applications.tsx`, update the ACH badge area (~line 773) so that when `payment_setup_status === "completed"`, instead of only showing the static "ACH ✓" badge, also show a small reset button that sets `payment_setup_status` back to `pending` and clears `stripe_payment_method_id`. This prevents needing manual database edits in the future.
 
-Add `"columbus-oh"` to the `nearbyCities` array for `indianapolis-in` so they cross-link to each other.
+The reset button will:
+- Update `customer_applications` setting `payment_setup_status = 'pending'` and `stripe_payment_method_id = null`
+- Refresh the applications list
+- Show a toast confirmation
 
-### 4. Sitemap
-
-Add Columbus to `public/sitemap.xml` with the new `/locations/columbus-oh` URL.
-
-## No other changes needed
-The routing (`/locations/:citySlug` → `CityLocationPage` → `LocationPageTemplate`) already handles new entries automatically. The template already has delivery-focused messaging for non-pickup locations, FAQ schema, LocalBusiness structured data, and the "Top Choice" SEO sections.
-
-## Files to Change
-- `src/lib/locations.ts` — add Columbus entry + update midwest filter + cross-link Indianapolis
-- `public/sitemap.xml` — add new URL entry
+### Files to update
+- **Database migration** — one UPDATE statement for Abdul's record
+- `src/pages/admin/Applications.tsx` — add reset ACH button next to the "ACH ✓" badge (~5 lines)
 
