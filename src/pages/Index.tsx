@@ -591,7 +591,7 @@ const Index = () => {
               <Button 
                 size="lg" 
                 className="bg-secondary hover:bg-secondary/90 text-secondary-foreground text-lg px-8 py-6 whitespace-nowrap"
-                onClick={() => trackCtaClick('Join the Referral Program', 'home', '/referral-program')}
+                onClick={() => trackCtaClick('Join the Referral Program', 'referral_banner', '/referral-program')}
               >
                 Join the Referral Program
                 <ArrowRight className="ml-2 h-5 w-5" />
