@@ -296,7 +296,7 @@ export const locations: LocationData[] = [
     stateAbbr: "CO",
     slug: "denver-co",
     metaTitle: "Trailer Rental Denver CO | CRUMS Leasing",
-    metaDescription: "Trailer rental in Denver, CO. Commercial trailers delivered to the Front Range. Gateway to the Mountain West.",
+    metaDescription: "Trailer rental in Denver, CO. Delivered from Texas at competitive rates. 53' dry van & flatbed trailers for the Front Range. Call 1-888-570-4564.",
     h1: "Trailer Rental & Leasing in Denver, Colorado",
     distanceFromBulverde: 930,
     isPickupFriendly: false,
