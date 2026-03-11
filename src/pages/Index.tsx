@@ -781,7 +781,13 @@ const Index = () => {
                 key={location.slug}
                 to={`/locations/${location.slug}`}
                 className="group"
-                onClick={() => trackCtaClick(`Location: ${location.city}`, 'home', `/locations/${location.slug}`)}
+                onClick={() => {
+                  trackCtaClick(`Location: ${location.city}`, 'home', `/locations/${location.slug}`);
+                  trackEvent('location_click', {
+                    location_name: location.city,
+                    page_section: 'locations',
+                  });
+                }}
               >
                 <Card className="border hover:border-primary/50 hover:shadow-md transition-all h-full">
                   <CardContent className="p-4 text-center">

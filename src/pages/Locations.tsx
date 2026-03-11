@@ -10,7 +10,7 @@ const nationwideMapImage = "/images/crums-leasing-pickup-delivery-map-2.webp";
 import { SEO } from "@/components/SEO";
 import { localBusinessSchema, generateBreadcrumbSchema } from "@/lib/structuredData";
 import { locations, getLocationsByRegion, HEADQUARTERS } from "@/lib/locations";
-import { trackCtaClick, trackPhoneClick, fireMetaCapi } from "@/lib/analytics";
+import { trackCtaClick, trackPhoneClick, trackEvent, fireMetaCapi } from "@/lib/analytics";
 import { useEffect } from "react";
 
 const Locations = () => {
@@ -205,6 +205,10 @@ const Locations = () => {
                         key={location.slug}
                         to={`/locations/${location.slug}`}
                         className="group"
+                        onClick={() => trackEvent('location_click', {
+                          location_name: location.city,
+                          page_section: 'locations',
+                        })}
                       >
                         <Card className="border hover:border-primary/50 hover:shadow-md transition-all h-full">
                           <CardContent className="p-4">
