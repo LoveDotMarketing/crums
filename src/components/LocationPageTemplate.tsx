@@ -97,11 +97,24 @@ export const LocationPageTemplate = ({ location }: LocationPageTemplateProps) =>
         "name": location.state
       }
     },
-    "description": `Commercial trailer rental and leasing services in ${location.city}, ${location.state}. 53-foot dry van and flatbed trailers available.`,
+    "description": location.isPickupFriendly
+      ? `Commercial trailer rental and leasing services in ${location.city}, ${location.state}. 53-foot dry van and flatbed trailers available for pickup or delivery.`
+      : `Commercial trailer rental and leasing in ${location.city}, ${location.state}. Delivered from Texas at competitive rates — save compared to local ${location.stateAbbr} leasing. 53-foot dry van and flatbed trailers.`,
     "offers": {
       "@type": "Offer",
       "availability": "https://schema.org/InStock"
-    }
+    },
+    ...(!location.isPickupFriendly && {
+      "availableChannel": {
+        "@type": "ServiceChannel",
+        "serviceType": "Nationwide Trailer Delivery",
+        "serviceLocation": {
+          "@type": "Place",
+          "name": `${location.city}, ${location.stateAbbr}`
+        },
+        "description": `Trailers delivered from San Antonio, TX to ${location.city}, ${location.stateAbbr}. Texas-based pricing often lower than local competitors.`
+      }
+    })
   };
 
   // FAQ items specific to this city - using customer-voice language
@@ -123,7 +136,11 @@ export const LocationPageTemplate = ({ location }: LocationPageTemplateProps) =>
     {
       question: `What makes CRUMS different from other ${location.city} trailer rental companies?`,
       answer: `We're a family-owned company founded by former NBA player Eric Bledsoe. When you call, you talk to real people — not automated systems. We offer competitive rates, GPS-equipped trailers, and flexible terms. We understand the ${location.keyIndustries.slice(0, 2).join(" and ")} industries that keep ${location.city} moving.`
-    }
+    },
+    ...(!location.isPickupFriendly ? [{
+      question: `Why are CRUMS' Texas prices lower than local ${location.city} rates?`,
+      answer: `Our headquarters and fleet are based in San Antonio, Texas, where operating costs — land, labor, insurance — are significantly lower than in ${location.city}. We pass those savings directly to you. Even with delivery to ${location.stateAbbr}, most carriers save hundreds per month compared to leasing locally. That's the Texas advantage.`
+    }] : [])
   ];
 
   // FAQPage schema for rich results
@@ -164,32 +181,44 @@ export const LocationPageTemplate = ({ location }: LocationPageTemplateProps) =>
       {/* Hero Section */}
       <section className="bg-gradient-to-r from-primary to-brand-teal-dark text-primary-foreground py-20">
         <div className="container mx-auto px-4">
-          <div className="max-w-4xl">
-            <div className="flex items-center gap-2 text-primary-foreground/80 mb-4">
-              <MapPin className="h-5 w-5" />
-              <span>Serving {location.city}, {location.stateAbbr}</span>
+          <div className="grid md:grid-cols-2 gap-8 items-center">
+            <div className="max-w-xl">
+              <div className="flex items-center gap-2 text-primary-foreground/80 mb-4">
+                <MapPin className="h-5 w-5" />
+                <span>Serving {location.city}, {location.stateAbbr}</span>
+              </div>
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6">
+                {location.h1}
+              </h1>
+              <p className="text-xl md:text-2xl text-primary-foreground/90 mb-8">
+                {location.isPickupFriendly 
+                  ? `Pick up at our Bulverde, TX yard (${location.distanceFromBulverde} miles away) or get convenient delivery to your ${location.city} location.`
+                  : `Nationwide delivery from Texas — quality trailers at competitive Texas prices, delivered directly to your ${location.city} location.`
+                }
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4">
+                <Button asChild size="lg" variant="secondary">
+                  <Link to="/get-started">
+                    Get a Quote <ArrowRight className="ml-2 h-5 w-5" />
+                  </Link>
+                </Button>
+                <Button asChild size="lg" variant="outline" className="bg-transparent border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10">
+                  <a href={`tel:${HEADQUARTERS.phone}`}>
+                    <Phone className="mr-2 h-5 w-5" />
+                    Call {HEADQUARTERS.phone}
+                  </a>
+                </Button>
+              </div>
             </div>
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6">
-              {location.h1}
-            </h1>
-            <p className="text-xl md:text-2xl text-primary-foreground/90 mb-8">
-              {location.isPickupFriendly 
-                ? `Pick up at our Bulverde, TX yard (${location.distanceFromBulverde} miles away) or get convenient delivery to your ${location.city} location.`
-                : `Nationwide delivery from Texas — quality trailers at competitive Texas prices, delivered directly to your ${location.city} location.`
-              }
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4">
-              <Button asChild size="lg" variant="secondary">
-                <Link to="/get-started">
-                  Get a Quote <ArrowRight className="ml-2 h-5 w-5" />
-                </Link>
-              </Button>
-              <Button asChild size="lg" variant="outline" className="bg-transparent border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10">
-                <a href={`tel:${HEADQUARTERS.phone}`}>
-                  <Phone className="mr-2 h-5 w-5" />
-                  Call {HEADQUARTERS.phone}
-                </a>
-              </Button>
+            <div className="hidden md:block">
+              <img 
+                src="/images/crums-trailer-fleet.webp" 
+                alt={`Dry van trailer for lease delivered to ${location.city}, ${location.stateAbbr}`}
+                width={600}
+                height={400}
+                className="rounded-lg shadow-2xl opacity-90"
+                loading="eager"
+              />
             </div>
           </div>
         </div>
@@ -266,32 +295,42 @@ export const LocationPageTemplate = ({ location }: LocationPageTemplateProps) =>
                 </div>
               )}
             </div>
-            <Card className="border-2">
-              <CardContent className="p-6">
-                <h3 className="text-xl font-bold mb-4 text-foreground">Our Headquarters</h3>
-                <div className="space-y-3 text-muted-foreground">
-                  <p className="font-semibold text-foreground">CRUMS Leasing</p>
-                  <p>{HEADQUARTERS.address}</p>
-                  <p>{HEADQUARTERS.city}, {HEADQUARTERS.stateAbbr} {HEADQUARTERS.zip}</p>
-                  <a 
-                    href={`tel:${HEADQUARTERS.phone}`}
-                    className="flex items-center gap-2 text-primary hover:underline font-medium"
-                  >
-                    <Phone className="h-4 w-4" />
-                    {HEADQUARTERS.phone}
-                  </a>
-                  <div className="flex items-center gap-2 text-sm">
-                    <Clock className="h-4 w-4" />
-                    <span>Mon-Fri 9am-5:30pm | Sat 9am-12pm</span>
+            <div className="space-y-6">
+              <img 
+                src="/images/crums-leasing-pickup-delivery-map.webp" 
+                alt={`CRUMS Leasing delivery map — trailer delivery to ${location.city}, ${location.stateAbbr} from Texas`}
+                width={600}
+                height={400}
+                className="rounded-lg shadow-lg w-full"
+                loading="lazy"
+              />
+              <Card className="border-2">
+                <CardContent className="p-6">
+                  <h3 className="text-xl font-bold mb-4 text-foreground">Our Headquarters</h3>
+                  <div className="space-y-3 text-muted-foreground">
+                    <p className="font-semibold text-foreground">CRUMS Leasing</p>
+                    <p>{HEADQUARTERS.address}</p>
+                    <p>{HEADQUARTERS.city}, {HEADQUARTERS.stateAbbr} {HEADQUARTERS.zip}</p>
+                    <a 
+                      href={`tel:${HEADQUARTERS.phone}`}
+                      className="flex items-center gap-2 text-primary hover:underline font-medium"
+                    >
+                      <Phone className="h-4 w-4" />
+                      {HEADQUARTERS.phone}
+                    </a>
+                    <div className="flex items-center gap-2 text-sm">
+                      <Clock className="h-4 w-4" />
+                      <span>Mon-Fri 9am-5:30pm | Sat 9am-12pm</span>
+                    </div>
                   </div>
-                </div>
-                <div className="mt-6 pt-6 border-t border-border">
-                  <p className="text-sm text-muted-foreground">
-                    <strong>Distance from {location.city}:</strong> ~{location.distanceFromBulverde} miles
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
+                  <div className="mt-6 pt-6 border-t border-border">
+                    <p className="text-sm text-muted-foreground">
+                      <strong>Distance from {location.city}:</strong> ~{location.distanceFromBulverde} miles
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </div>
         </div>
       </section>
@@ -597,6 +636,16 @@ export const LocationPageTemplate = ({ location }: LocationPageTemplateProps) =>
                   {nearby.city}, {nearby.stateAbbr}
                 </Link>
               ))}
+            </div>
+            <div className="text-center mt-8">
+              <Link
+                to="/locations"
+                className="inline-flex items-center gap-2 text-primary hover:underline font-semibold"
+              >
+                <MapPin className="h-4 w-4" />
+                View All Locations We Serve
+                <ArrowRight className="h-4 w-4" />
+              </Link>
             </div>
           </div>
         </section>
