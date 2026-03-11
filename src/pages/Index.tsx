@@ -1239,7 +1239,7 @@ const Index = () => {
                 <Button 
                   size="lg" 
                   variant="outline"
-                  onClick={() => trackCtaClick('Learn More About Us', 'home', '/about')}
+                  onClick={() => trackCtaClick('Learn More About Us', 'trust', '/about')}
                 >
                   Learn More About Us
                   <ArrowRight className="ml-2 h-5 w-5" />
