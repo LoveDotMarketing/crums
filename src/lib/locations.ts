@@ -241,7 +241,7 @@ export const locations: LocationData[] = [
     state: "Indiana",
     stateAbbr: "IN",
     slug: "indianapolis-in",
-    metaTitle: "Trailer Rental Indianapolis IN | CRUMS Leasing",
+    metaTitle: "Trailer Rental Indianapolis IN | Texas Prices, Delivered",
     metaDescription: "Trailer leasing in Indianapolis, IN. Texas prices, delivered nationwide to central Indiana. 53' dry van & flatbed trailers. Call 1-888-570-4564.",
     h1: "Trailer Rental & Leasing in Indianapolis, Indiana",
     distanceFromBulverde: 1050,
