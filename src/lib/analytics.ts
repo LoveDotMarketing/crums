@@ -134,10 +134,11 @@ export const trackCtaClick = (buttonText: string, page: string, destination?: st
 };
 
 // Calculator usage
-export const trackCalculatorUse = (calculatorType: string, hasResult: boolean) => {
+export const trackCalculatorUse = (calculatorName: string, hasResult: boolean) => {
   trackEvent('calculator_use', {
-    calculator_type: calculatorType,
+    calculator_name: calculatorName,
     has_result: hasResult,
+    page_type: 'calculator_page',
   });
 };
 
