@@ -682,7 +682,7 @@ const Index = () => {
                     size="lg" 
                     variant="outline"
                     className="border-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground"
-                    onClick={() => trackCtaClick('Learn More About Us', 'home', '/about')}
+                    onClick={() => trackCtaClick('Learn More About Us', 'about', '/about')}
                   >
                     Learn More About Us
                     <ArrowRight className="ml-2 h-5 w-5" />
