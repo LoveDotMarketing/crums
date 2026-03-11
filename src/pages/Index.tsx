@@ -1274,7 +1274,7 @@ const Index = () => {
                 <Link
                   to="/contact"
                   className="inline-flex items-center text-primary font-semibold hover:underline"
-                  onClick={() => trackCtaClick('Lease to Own CTA', 'home', '/contact')}
+                  onClick={() => trackCtaClick('Ask About Lease to Own', 'more_ways', '/contact')}
                 >
                   Ask About Lease to Own
                   <ArrowRight className="h-4 w-4 ml-2" />
