@@ -289,6 +289,10 @@ const Index = () => {
                       onClick={(e) => {
                         e.preventDefault();
                         trackCtaClick('View Trailer Details', 'home', '/commercial-dry-van-trailer-for-lease-56171');
+                        trackEvent('trailer_detail_view', {
+                          trailer_number: '56171',
+                          trailer_type: 'Dry Van',
+                        });
                         window.location.href = '/commercial-dry-van-trailer-for-lease-56171';
                       }}
                     >
