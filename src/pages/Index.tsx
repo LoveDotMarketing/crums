@@ -643,7 +643,7 @@ const Index = () => {
                     className="w-full md:w-auto bg-primary hover:bg-primary/90 group-hover:bg-secondary group-hover:text-secondary-foreground transition-colors"
                     onClick={(e) => {
                       e.preventDefault();
-                      trackCtaClick('View Job Details', 'home', '/careers/trailer-leasing-sales-rep');
+                      trackCtaClick('View Job Details', 'careers', '/careers/trailer-leasing-sales-rep');
                       window.location.href = '/careers/trailer-leasing-sales-rep';
                     }}
                   >
