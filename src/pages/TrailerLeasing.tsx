@@ -376,7 +376,7 @@ const TrailerLeasing = () => {
             <Button 
               size="lg" 
               className="bg-secondary hover:bg-secondary/90"
-              onClick={() => trackCtaClick('Request A Quote Today', 'trailer_leasing', '/contact')}
+              onClick={() => trackCtaClick('Request A Quote Today', 'bottom_cta', '/contact')}
             >
               Request A Quote Today
               <ArrowRight className="ml-2 h-5 w-5" />

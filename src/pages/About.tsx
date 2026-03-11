@@ -339,7 +339,7 @@ const About = () => {
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
             </Link>
-            <Link to="/mission" onClick={() => trackCtaClick('Our Mission & Values', 'about', '/mission')}>
+            <Link to="/mission" onClick={() => trackCtaClick('Our Mission & Values', 'bottom_cta', '/mission')}>
               <Button size="lg" variant="outline">
                 Our Mission & Values
               </Button>
