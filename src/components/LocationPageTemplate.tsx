@@ -175,7 +175,7 @@ export const LocationPageTemplate = ({ location }: LocationPageTemplateProps) =>
             <p className="text-xl md:text-2xl text-primary-foreground/90 mb-8">
               {location.isPickupFriendly 
                 ? `Pick up at our Bulverde, TX yard (${location.distanceFromBulverde} miles away) or get convenient delivery to your ${location.city} location.`
-                : `We deliver commercial trailers directly to ${location.city}. Quality 53' dry van and flatbed trailers with flexible terms.`
+                : `Nationwide delivery from Texas — quality trailers at competitive Texas prices, delivered directly to your ${location.city} location.`
               }
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
