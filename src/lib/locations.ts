@@ -464,7 +464,7 @@ export const locations: LocationData[] = [
     state: "Oklahoma",
     stateAbbr: "OK",
     slug: "oklahoma-city-ok",
-    metaTitle: "Trailer Rental Oklahoma City OK | Texas Prices, Delivered | CRUMS Leasing",
+    metaTitle: "Trailer Rental Oklahoma City OK | Texas Prices, Delivered",
     metaDescription: "Trailer rental in Oklahoma City, OK. Texas-based pricing delivered to Oklahoma — save more than leasing locally. 53' dry van & flatbed trailers. Call 1-888-570-4564.",
     h1: "Trailer Rental & Leasing in Oklahoma City, Oklahoma",
     distanceFromBulverde: 450,
