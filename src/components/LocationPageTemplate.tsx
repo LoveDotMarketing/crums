@@ -237,13 +237,18 @@ export const LocationPageTemplate = ({ location }: LocationPageTemplateProps) =>
               ) : (
                 <div className="space-y-4">
                   <p className="text-lg text-muted-foreground">
-                    While our headquarters is in Bulverde, Texas, we proudly serve {location.city} with reliable trailer delivery. 
-                    Our team will transport your trailer directly to your location so you can focus on your business.
+                    We deliver trailers <strong className="text-foreground">nationwide</strong> from our San Antonio, TX headquarters — and {location.city} is one of the markets we proudly serve. Our Texas-based pricing means you often pay less than leasing locally in {location.stateAbbr}.
                   </p>
                   <div className="flex items-start gap-4">
                     <CheckCircle className="h-6 w-6 text-secondary flex-shrink-0 mt-0.5" />
                     <p className="text-muted-foreground">
-                      Competitive delivery rates based on distance
+                      <strong className="text-foreground">Nationwide delivery</strong> — from Texas to {location.city} and everywhere in between
+                    </p>
+                  </div>
+                  <div className="flex items-start gap-4">
+                    <CheckCircle className="h-6 w-6 text-secondary flex-shrink-0 mt-0.5" />
+                    <p className="text-muted-foreground">
+                      <strong className="text-foreground">Texas-based pricing</strong> — often lower than local competitors in {location.stateAbbr}
                     </p>
                   </div>
                   <div className="flex items-start gap-4">
