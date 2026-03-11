@@ -658,7 +658,7 @@ export const LocationPageTemplate = ({ location }: LocationPageTemplateProps) =>
             Ready to Get Started in {location.city}?
           </h2>
           <p className="text-xl text-primary-foreground/90 mb-8 max-w-2xl mx-auto">
-            Contact us today for a free quote on trailer rental or leasing in {location.city}, {location.stateAbbr}.
+            Contact us today for a free quote on 53' dry van or flatbed trailer rental in {location.city}, {location.stateAbbr}.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button asChild size="lg" variant="secondary">
