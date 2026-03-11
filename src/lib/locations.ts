@@ -482,7 +482,7 @@ export const locations: LocationData[] = [
     state: "Washington",
     stateAbbr: "WA",
     slug: "seattle-wa",
-    metaTitle: "Trailer Rental Seattle WA | Texas Prices, Delivered | CRUMS Leasing",
+    metaTitle: "Trailer Rental Seattle WA | Texas Prices, Delivered",
     metaDescription: "Trailer rental in Seattle, WA. Texas-based pricing delivered nationwide — save more than leasing locally. 53' dry van & flatbed trailers. Call 1-888-570-4564.",
     h1: "Trailer Rental & Leasing in Seattle, Washington",
     distanceFromBulverde: 2200,
