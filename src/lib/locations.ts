@@ -472,7 +472,7 @@ export const getLocationsByRegion = () => {
   const northeast = locations.filter(loc => ["PA"].includes(loc.stateAbbr));
   const west = locations.filter(loc => ["OR"].includes(loc.stateAbbr));
   
-  return { texas, southwest, midwest, southeast, mountain };
+  return { texas, southwest, midwest, southeast, mountain, northeast, west };
 };
 
 // Get pickup-friendly locations
