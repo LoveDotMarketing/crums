@@ -282,7 +282,7 @@ const Contact = () => {
     <div className="min-h-screen flex flex-col">
         <SEO
         title="Contact Us - Get A Quote"
-        description="Contact CRUMS Leasing for trailer leasing and rental quotes. Located in San Antonio, TX. Call (888) 570-4564. 24/7 emergency support available."
+        description="Contact CRUMS Leasing for 53' dry van and flatbed trailer leasing and rental quotes. Located in San Antonio, TX. Call (888) 570-4564. 24/7 emergency support available."
         canonical="https://crumsleasing.com/contact"
         structuredData={combinedSchema}
       />
