@@ -234,7 +234,7 @@ export const LocationPageTemplate = ({ location }: LocationPageTemplateProps) =>
               <h2 className="text-3xl font-bold mb-6 text-foreground">
                  {location.isPickupFriendly 
                    ? "Pickup or Delivery — Your Choice"
-                   : `Nationwide Delivery to ${location.city} — Straight from Texas`
+                   : `53' Dry Van & Flatbed Trailers Delivered to ${location.city} from Texas`
                  }
               </h2>
               {location.isPickupFriendly ? (
