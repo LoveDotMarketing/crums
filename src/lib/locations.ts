@@ -129,7 +129,7 @@ export const locations: LocationData[] = [
     state: "Texas",
     stateAbbr: "TX",
     slug: "fort-worth-tx",
-    metaTitle: "Trailer Rental Fort Worth TX | CRUMS Leasing",
+    metaTitle: "Trailer Rental Fort Worth TX | Delivery Available",
     metaDescription: "Trailer leasing in Fort Worth, TX. Commercial trailers delivered to DFW. 53' dry van and flatbed trailers available.",
     h1: "Trailer Rental & Leasing in Fort Worth, Texas",
     distanceFromBulverde: 280,
