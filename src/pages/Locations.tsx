@@ -205,6 +205,10 @@ const Locations = () => {
                         key={location.slug}
                         to={`/locations/${location.slug}`}
                         className="group"
+                        onClick={() => trackEvent('location_click', {
+                          location_name: location.city,
+                          page_section: 'locations',
+                        })}
                       >
                         <Card className="border hover:border-primary/50 hover:shadow-md transition-all h-full">
                           <CardContent className="p-4">
