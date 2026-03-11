@@ -38,7 +38,7 @@ export const locations: LocationData[] = [
     state: "Texas",
     stateAbbr: "TX",
     slug: "san-antonio-tx",
-    metaTitle: "Trailer Rental San Antonio TX | CRUMS Leasing",
+    metaTitle: "Trailer Rental San Antonio TX | Local Pickup Available",
     metaDescription: "Trailer rental in San Antonio, TX. Pick up at our Bulverde yard (30 min) or get delivery. 53' dry van & flatbed trailers. Call 1-888-570-4564.",
     h1: "Trailer Rental & Leasing in San Antonio, Texas",
     distanceFromBulverde: 30,
