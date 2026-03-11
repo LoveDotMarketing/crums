@@ -15,6 +15,37 @@ const breadcrumbSchema = generateBreadcrumbSchema([
   { name: "Logistics Companies", url: "https://crumsleasing.com/industries/logistics-companies" }
 ]);
 
+const faqSchema = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "What trailer types are available for logistics companies?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "CRUMS Leasing offers 53-foot dry van trailers and flatbed trailers for 3PL providers, freight brokers, and logistics companies. Both types are available for lease or short-term rental."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can CRUMS Leasing scale capacity for new customer contracts?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. We offer quick deployment of 53' dry vans and flatbeds so logistics companies can scale trailer capacity up or down based on customer contract needs."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Does CRUMS Leasing work with 3PL providers and freight brokers?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Absolutely. We partner with 3PL providers and freight brokers to provide flexible trailer capacity with competitive rates for volume commitments."
+      }
+    }
+  ]
+};
+
 const LogisticsCompanies = () => {
   const benefits = [
     { icon: Network, title: "Capacity on Demand", description: "Scale trailer capacity up or down based on customer needs." },
@@ -26,10 +57,10 @@ const LogisticsCompanies = () => {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <SEO
-        title="Logistics Company Trailer Solutions | CRUMS Leasing"
+        title="Logistics Company 53' Dry Van & Flatbed Trailer Solutions"
         description="Trailer leasing solutions for 3PL providers, freight brokers, and logistics companies. CRUMS Leasing offers flexible capacity to match your customer demands."
         canonical="https://crumsleasing.com/industries/logistics-companies"
-        structuredData={[logisticsServiceSchema, breadcrumbSchema]}
+        structuredData={[logisticsServiceSchema, breadcrumbSchema, faqSchema]}
       />
       <Navigation />
       

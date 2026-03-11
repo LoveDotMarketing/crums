@@ -46,6 +46,37 @@ const howToSchema = {
   ]
 };
 
+const faqSchema = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "What trailers are available for seasonal rental?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "CRUMS Leasing offers 53-foot dry van trailers and flatbed trailers for seasonal rentals. Dry vans are the most popular choice for holiday retail surge and harvest transport."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How short can a seasonal trailer rental be?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "We offer flexible short-term rentals for seasonal needs — whether it's a week, a month, or an entire peak season. No long-term commitment is required."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can I reserve trailers in advance for peak season?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. We recommend contacting us in advance of your peak season to reserve 53' dry van or flatbed trailers and ensure availability when you need them."
+      }
+    }
+  ]
+};
+
 const SeasonalDemand = () => {
   const benefits = [
     { icon: TrendingUp, title: "Peak Capacity", description: "Scale up quickly for holiday and seasonal rushes." },
@@ -57,10 +88,10 @@ const SeasonalDemand = () => {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <SEO
-        title="Seasonal Trailer Rentals | CRUMS Leasing"
+        title="Seasonal 53' Dry Van & Flatbed Trailer Rentals"
         description="Short-term trailer rentals for seasonal demand spikes. CRUMS Leasing offers flexible capacity solutions for holiday seasons, harvest, and peak shipping periods."
         canonical="https://crumsleasing.com/industries/seasonal-demand"
-        structuredData={[seasonalDemandServiceSchema, breadcrumbSchema, howToSchema]}
+        structuredData={[seasonalDemandServiceSchema, breadcrumbSchema, howToSchema, faqSchema]}
       />
       <Navigation />
       

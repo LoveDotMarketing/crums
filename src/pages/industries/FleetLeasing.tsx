@@ -15,6 +15,37 @@ const breadcrumbSchema = generateBreadcrumbSchema([
   { name: "Fleet Leasing", url: "https://crumsleasing.com/industries/fleet-leasing" }
 ]);
 
+const faqSchema = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "What trailer types does CRUMS Leasing offer for fleets?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "CRUMS Leasing offers 53-foot dry van trailers and flatbed trailers for fleet operations. Both types are well-maintained and available for flexible lease terms starting at 12 months."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can I scale my fleet up or down with CRUMS Leasing?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. CRUMS Leasing provides scalable solutions so you can add or reduce 53' dry van and flatbed trailers based on your business demands without large capital investments."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Does CRUMS Leasing offer volume pricing for larger fleets?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes, volume pricing is available for larger fleet commitments. Contact our team to discuss customized rates for multi-trailer leases."
+      }
+    }
+  ]
+};
+
 const FleetLeasing = () => {
   const benefits = [
     { icon: TrendingUp, title: "Scalable Solutions", description: "Easily expand or reduce your fleet based on business demands." },
@@ -26,10 +57,10 @@ const FleetLeasing = () => {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <SEO
-        title="Fleet Leasing Solutions | CRUMS Leasing"
+        title="Fleet Leasing — 53' Dry Van & Flatbed Trailers"
         description="Scalable trailer leasing solutions for growing fleets. CRUMS Leasing offers flexible terms, maintained equipment, and multiple trailer types for fleet operators."
         canonical="https://crumsleasing.com/industries/fleet-leasing"
-        structuredData={[fleetLeasingServiceSchema, breadcrumbSchema]}
+        structuredData={[fleetLeasingServiceSchema, breadcrumbSchema, faqSchema]}
       />
       <Navigation />
       

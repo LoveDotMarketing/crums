@@ -15,6 +15,37 @@ const breadcrumbSchema = generateBreadcrumbSchema([
   { name: "Food Distribution", url: "https://crumsleasing.com/industries/food-distribution" }
 ]);
 
+const faqSchema = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "What trailers does CRUMS Leasing offer for food distribution?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "CRUMS Leasing offers 53-foot dry van trailers ideal for transporting packaged and shelf-stable food products. Our trailers are clean, well-maintained, and meet food transport standards."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Are CRUMS trailers suitable for food-grade transport?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. Our 53' dry van trailers are sanitized and maintained to food transport standards, making them suitable for packaged goods, shelf-stable products, and palletized food shipments."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can I lease trailers short-term for seasonal food distribution?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. CRUMS Leasing offers flexible lease terms to match distribution contracts, including short-term rentals for seasonal demand spikes in food distribution."
+      }
+    }
+  ]
+};
+
 const FoodDistribution = () => {
   const benefits = [
     { icon: Box, title: "Dry Van Transport", description: "Enclosed trailers for packaged and shelf-stable food products." },
@@ -26,10 +57,10 @@ const FoodDistribution = () => {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <SEO
-        title="Food Distribution Trailer Leasing | CRUMS Leasing"
+        title="Food Distribution — 53' Dry Van Trailer Leasing"
         description="Trailer leasing for food distribution companies. CRUMS Leasing offers dry van trailers for safe, reliable food transport."
         canonical="https://crumsleasing.com/industries/food-distribution"
-        structuredData={[foodDistributionServiceSchema, breadcrumbSchema]}
+        structuredData={[foodDistributionServiceSchema, breadcrumbSchema, faqSchema]}
       />
       <Navigation />
       

@@ -1,62 +1,32 @@
 
 
-# SEO Audit: Gaps Found Across All Pages
+## Problem
 
-## Issue 1: Double "CRUMS Leasing" in Titles (9 public pages)
-The SEO component appends `| CRUMS Leasing` automatically. These pages include it manually, producing doubled branding in Google results:
+Abdul's `customer_applications` record shows `payment_setup_status = 'completed'` and has a `stripe_payment_method_id` (`pm_1T7dwSLjIwiEGQIhzU647O3c`) that is dead/detached in Stripe. The UI shows "ACH ✓" and hides the "Send ACH Setup" button, so there's no way to re-do the setup.
 
-| Page | Current Title |
-|------|--------------|
-| Industries hub | `Industries We Serve | ... | CRUMS Leasing` |
-| Fleet Leasing | `Fleet Leasing Solutions | CRUMS Leasing` |
-| Owner Operators | `Owner Operator Trailer Leasing | CRUMS Leasing` |
-| Logistics Companies | `Logistics Company Trailer Solutions | CRUMS Leasing` |
-| Food Distribution | `Food Distribution Trailer Leasing | CRUMS Leasing` |
-| Retail Distribution | `Retail Distribution Trailer Leasing | CRUMS Leasing` |
-| Manufacturing | `Manufacturing Logistics Trailer Leasing | CRUMS Leasing` |
-| Seasonal Demand | `Seasonal Trailer Rentals | CRUMS Leasing` |
-| Emergency Rental | `Emergency Trailer Rental | Same-Day Response | CRUMS Leasing` |
-| Partners | `Partners | CRUMS Leasing` |
+## Fix
 
-**Fix**: Strip `| CRUMS Leasing` from all 10 titles.
+### 1. Database: Reset Abdul's ACH status
 
-## Issue 2: Industry Pages Have No FAQ Schema (7 pages)
-Location pages all have FAQ schema with 5 items (including the Texas pricing question). Industry pages have zero FAQ schema -- missing rich result opportunity.
+Run a migration to clear the broken payment method and reset status so the ACH setup flow can be re-initiated:
 
-**Fix**: Add FAQ schema to all 7 industry pages with 3 relevant questions each (including one about 53' dry van and flatbed availability for that industry).
+```sql
+UPDATE customer_applications
+SET payment_setup_status = 'pending',
+    stripe_payment_method_id = NULL
+WHERE id = '25b5046d-d4b2-405c-bf78-ba3e2b71039f';
+```
 
-## Issue 3: FleetSolutions and Mission Have Minimal Schema
-Both pages only pass breadcrumb schema. FleetSolutions is a money page that should have a Service schema. Mission should have an Organization schema.
+### 2. UI: Add a "Reset ACH" option for admins
 
-**Fix**: Add Service schema to FleetSolutions, Organization schema to Mission.
+In `src/pages/admin/Applications.tsx`, update the ACH badge area (~line 773) so that when `payment_setup_status === "completed"`, instead of only showing the static "ACH ✓" badge, also show a small reset button that sets `payment_setup_status` back to `pending` and clears `stripe_payment_method_id`. This prevents needing manual database edits in the future.
 
-## Issue 4: Industry Pages Don't Mention Core Products in Titles
-Location pages now target "53' Dry Van Trailer" in titles. Industry pages still use generic terms like "Fleet Leasing Solutions" and "Logistics Company Trailer Solutions" without naming the actual products.
+The reset button will:
+- Update `customer_applications` setting `payment_setup_status = 'pending'` and `stripe_payment_method_id = null`
+- Refresh the applications list
+- Show a toast confirmation
 
-**Fix**: Update industry page titles to include "53' Dry Van & Flatbed" where natural. Example: `"Fleet Leasing — 53' Dry Van & Flatbed Trailers"`.
-
-## Issue 5: Sitemap-Index lastmod is Stale
-`sitemap-index.xml` shows `lastmod: 2026-02-06` for the main sitemap, but we've added pages since then (3 new cities on 2026-03-11).
-
-**Fix**: Update sitemap-index.xml lastmod to `2026-03-11`.
-
-## Changes
-
-| File | What |
-|------|------|
-| `src/pages/industries/FleetLeasing.tsx` | Fix double title, add FAQ schema, add product keyword |
-| `src/pages/industries/OwnerOperators.tsx` | Fix double title, add FAQ schema, add product keyword |
-| `src/pages/industries/LogisticsCompanies.tsx` | Fix double title, add FAQ schema, add product keyword |
-| `src/pages/industries/FoodDistribution.tsx` | Fix double title, add FAQ schema, add product keyword |
-| `src/pages/industries/RetailDistribution.tsx` | Fix double title, add FAQ schema, add product keyword |
-| `src/pages/industries/Manufacturing.tsx` | Fix double title, add FAQ schema, add product keyword |
-| `src/pages/industries/SeasonalDemand.tsx` | Fix double title, add FAQ schema, add product keyword |
-| `src/pages/Industries.tsx` | Fix double title |
-| `src/pages/EmergencyTrailerRental.tsx` | Fix double title |
-| `src/pages/Partners.tsx` | Fix double title |
-| `src/pages/FleetSolutions.tsx` | Add Service schema |
-| `src/pages/Mission.tsx` | Add Organization schema |
-| `public/sitemap-index.xml` | Update lastmod |
-
-13 files, no new routes.
+### Files to update
+- **Database migration** — one UPDATE statement for Abdul's record
+- `src/pages/admin/Applications.tsx` — add reset ACH button next to the "ACH ✓" badge (~5 lines)
 

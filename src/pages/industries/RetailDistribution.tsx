@@ -15,6 +15,37 @@ const breadcrumbSchema = generateBreadcrumbSchema([
   { name: "Retail Distribution", url: "https://crumsleasing.com/industries/retail-distribution" }
 ]);
 
+const faqSchema = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "What trailers does CRUMS Leasing offer for retail distribution?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "CRUMS Leasing offers 53-foot dry van trailers for high-volume retail freight and flatbed trailers for oversized retail fixtures, displays, and store equipment."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can I add trailer capacity during peak retail seasons?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. CRUMS Leasing offers flexible capacity solutions so retail distributors can quickly add 53' dry vans and flatbeds during holiday and seasonal peaks without long-term commitments."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Does CRUMS Leasing deliver trailers for retail distribution?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. We offer nationwide trailer delivery from our Texas headquarters. Retail distributors across the U.S. benefit from competitive Texas pricing with delivery to their location."
+      }
+    }
+  ]
+};
+
 const RetailDistribution = () => {
   const benefits = [
     { icon: Package, title: "High-Volume Capacity", description: "53-foot trailers for maximum retail freight capacity." },
@@ -26,10 +57,10 @@ const RetailDistribution = () => {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <SEO
-        title="Retail Distribution Trailer Leasing | CRUMS Leasing"
+        title="Retail Distribution — 53' Dry Van & Flatbed Trailers"
         description="Trailer leasing solutions for retail distribution and e-commerce fulfillment. CRUMS Leasing offers scalable capacity for retail supply chains."
         canonical="https://crumsleasing.com/industries/retail-distribution"
-        structuredData={[retailDistributionServiceSchema, breadcrumbSchema]}
+        structuredData={[retailDistributionServiceSchema, breadcrumbSchema, faqSchema]}
       />
       <Navigation />
       
