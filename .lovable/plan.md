@@ -1,32 +1,63 @@
 
 
-## Problem
+# SEO Audit: Title, Meta Description & H1 Alignment Across All Pages
 
-Abdul's `customer_applications` record shows `payment_setup_status = 'completed'` and has a `stripe_payment_method_id` (`pm_1T7dwSLjIwiEGQIhzU647O3c`) that is dead/detached in Stripe. The UI shows "ACH ✓" and hides the "Send ACH Setup" button, so there's no way to re-do the setup.
+## Issues Found
 
-## Fix
+### 1. Double "CRUMS Leasing" in Titles (5 remaining pages)
+These pages still manually include the brand suffix that the SEO component auto-appends:
 
-### 1. Database: Reset Abdul's ACH status
+| Page | Current Title |
+|------|--------------|
+| Reviews | `Customer Reviews \| CRUMS Leasing Trailer Testimonials` |
+| DryVanTrailers | `53' & 48' Dry Van Trailer Dimensions & Leasing \| CRUMS` |
+| Locations | `Trailer Rental Locations \| Nationwide Delivery \| CRUMS` |
+| GetStarted (step 2) | `Account Created - CRUMS Leasing` |
+| GetStarted (step 3) | `Complete Your Application - CRUMS Leasing` |
 
-Run a migration to clear the broken payment method and reset status so the ACH setup flow can be re-initiated:
+**Fix**: Remove the brand suffix from all 5.
 
-```sql
-UPDATE customer_applications
-SET payment_setup_status = 'pending',
-    stripe_payment_method_id = NULL
-WHERE id = '25b5046d-d4b2-405c-bf78-ba3e2b71039f';
-```
+### 2. Title ↔ H1 Mismatch (keyword dilution)
+When the `<title>` targets one keyword but the `<h1>` says something different, Google gets mixed signals. These pages have significant mismatches:
 
-### 2. UI: Add a "Reset ACH" option for admins
+| Page | Title (in tab) | H1 (on page) | Problem |
+|------|---------------|--------------|---------|
+| Index | "Dry Van & Flatbed Trailer Leasing in Texas" | "Empowering Every Carrier To Build the Life They're Proud Of" | H1 is brand-emotional, zero keywords |
+| Services | "Trailer Leasing, Rentals & Fleet Solutions" | "Our Services" | H1 is generic |
+| Contact | "Contact Us - Get A Quote" | "Contact Us" | H1 misses "trailer leasing quote" |
+| Reviews | "Customer Reviews \| CRUMS Leasing..." | "Customer Reviews" | H1 misses product terms |
+| LeaseToOwn | "Lease to Own a Trailer..." | "Every Payment Brings You Closer to Ownership" | H1 misses "lease to own" keyword |
+| TrailerRentals | "Trailer Rentals - Short-Term 53-Foot..." | "Trailer Rental Solutions" | H1 loses "53-foot dry van" |
+| Locations | "Trailer Rental Locations..." | "Trailer Rental Locations" | Misses "53' dry van" |
 
-In `src/pages/admin/Applications.tsx`, update the ACH badge area (~line 773) so that when `payment_setup_status === "completed"`, instead of only showing the static "ACH ✓" badge, also show a small reset button that sets `payment_setup_status` back to `pending` and clears `stripe_payment_method_id`. This prevents needing manual database edits in the future.
+**Fix**: Align H1s to echo the primary keyword from the title while keeping them natural.
 
-The reset button will:
-- Update `customer_applications` setting `payment_setup_status = 'pending'` and `stripe_payment_method_id = null`
-- Refresh the applications list
-- Show a toast confirmation
+### 3. Meta Descriptions Missing Product Specifics (4 pages)
+These descriptions don't mention "53' dry van" or "flatbed":
 
-### Files to update
-- **Database migration** — one UPDATE statement for Abdul's record
-- `src/pages/admin/Applications.tsx` — add reset ACH button next to the "ACH ✓" badge (~5 lines)
+| Page | Current Description |
+|------|-------------------|
+| Services | "Explore CRUMS Leasing services including long-term trailer leasing..." (generic) |
+| Contact | "Contact CRUMS Leasing for trailer leasing and rental quotes..." (generic) |
+| About | "Learn about CRUMS Leasing's family-rooted legacy..." (no products) |
+| Locations | "CRUMS Leasing delivers trailers nationwide..." (no product sizes) |
+
+**Fix**: Inject "53' dry van and flatbed trailers" into each description.
+
+## Changes
+
+| File | What |
+|------|------|
+| `src/pages/Index.tsx` | Add keyword subtitle to H1 (keep emotional line, add product line) |
+| `src/pages/Services.tsx` | H1 → "53' Dry Van & Flatbed Trailer Leasing, Rentals & Fleet Solutions"; meta desc update |
+| `src/pages/Contact.tsx` | H1 → "Contact Us for a 53' Dry Van or Flatbed Trailer Quote"; meta desc update |
+| `src/pages/About.tsx` | Meta desc update to include products |
+| `src/pages/Reviews.tsx` | Fix double title; H1 → "Customer Reviews — 53' Dry Van & Flatbed Trailer Leasing" |
+| `src/pages/LeaseToOwn.tsx` | H1 → "Lease to Own a 53' Dry Van Trailer" |
+| `src/pages/TrailerRentals.tsx` | H1 → "53' Dry Van & Flatbed Trailer Rentals" |
+| `src/pages/Locations.tsx` | Fix double title; H1 → "53' Dry Van & Flatbed Trailer Rental Locations"; meta desc update |
+| `src/pages/DryVanTrailers.tsx` | Fix double title |
+| `src/pages/GetStarted.tsx` | Fix double title on steps 2 & 3 |
+
+10 files, no new routes, no schema changes (schema is solid across the board).
 
