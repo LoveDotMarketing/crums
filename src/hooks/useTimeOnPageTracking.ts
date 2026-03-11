@@ -24,6 +24,7 @@ export const useTimeOnPageTracking = (pageName: string) => {
             page_name: pageName,
             seconds: milestone,
             event_category: 'engagement',
+            page_path: window.location.pathname,
           });
         }
       });
