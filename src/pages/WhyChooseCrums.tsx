@@ -1,3 +1,4 @@
+import { useEffect, useRef, useCallback } from "react";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
 import { SEO } from "@/components/SEO";
@@ -6,8 +7,15 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ArrowRight, Phone } from "lucide-react";
 import { Link } from "react-router-dom";
-import { trackCtaClick, trackPhoneClick } from "@/lib/analytics";
+import { trackCtaClick, trackPhoneClick, trackEvent } from "@/lib/analytics";
 import { generateBreadcrumbSchema } from "@/lib/structuredData";
+
+declare global {
+  interface Window {
+    YT: any;
+    onYouTubeIframeAPIReady: (() => void) | undefined;
+  }
+}
 
 const WhyChooseCrums = () => {
   const breadcrumbSchema = generateBreadcrumbSchema([
