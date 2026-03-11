@@ -45,7 +45,7 @@ const GoogleLanding = () => {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
   useEffect(() => {
-    trackPageView("/lp/google", "Google Landing Page");
+    trackPageView("/lp/google", "Google Landing Page", "landing_page");
   }, []);
 
   const [formData, setFormData] = useState({
