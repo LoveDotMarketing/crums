@@ -286,7 +286,7 @@ export const locations: LocationData[] = [
     keyIndustries: ["Banking", "Automotive", "E-commerce", "Food processing", "Energy"],
     nearbyAirports: ["CLT - Charlotte Douglas International"],
     regionalContext: "Charlotte is a major East Coast distribution hub on the I-85 corridor. The city's central East Coast location and strong infrastructure make it ideal for serving markets from Atlanta to Washington D.C.",
-    nearbyCities: ["atlanta-ga", "nashville-tn"],
+    nearbyCities: ["atlanta-ga", "nashville-tn", "richmond-va", "jacksonville-fl"],
     landmarks: "Serving the Charlotte metro from Uptown to the I-485 outer belt. Delivering to carriers near Charlotte Douglas Airport and the Concord distribution zone.",
     testimonialSnippet: { text: "I-85 corridor is my life. CRUMS equipment handles the miles like a champ.", author: "E.C., Charlotte" }
   },
