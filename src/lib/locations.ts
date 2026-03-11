@@ -371,7 +371,7 @@ export const getNearbyLocations = (slug: string): LocationData[] => {
 export const getLocationsByRegion = () => {
   const texas = locations.filter(loc => loc.stateAbbr === "TX");
   const southwest = locations.filter(loc => ["CA", "AZ"].includes(loc.stateAbbr));
-  const midwest = locations.filter(loc => ["IL", "IN", "MO"].includes(loc.stateAbbr));
+  const midwest = locations.filter(loc => ["IL", "IN", "MO", "OH"].includes(loc.stateAbbr));
   const southeast = locations.filter(loc => ["GA", "TN", "NC"].includes(loc.stateAbbr));
   const mountain = locations.filter(loc => ["CO"].includes(loc.stateAbbr));
   
