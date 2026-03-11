@@ -15,6 +15,37 @@ const breadcrumbSchema = generateBreadcrumbSchema([
   { name: "Manufacturing", url: "https://crumsleasing.com/industries/manufacturing" }
 ]);
 
+const faqSchema = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "What trailers does CRUMS Leasing offer for manufacturing logistics?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "CRUMS Leasing offers 53-foot dry van trailers for finished goods and components, plus flatbed trailers for machinery, equipment, and raw materials transport."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can CRUMS trailers support just-in-time manufacturing?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. Our reliable 53' dry vans and flatbeds are available on flexible terms to support just-in-time delivery requirements and dedicated manufacturing routes."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Does CRUMS Leasing offer long-term leases for manufacturing?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. We offer long-term leasing for dedicated manufacturing routes as well as flexible capacity for production schedule changes and new contracts."
+      }
+    }
+  ]
+};
+
 const Manufacturing = () => {
   const benefits = [
     { icon: Cog, title: "Production Support", description: "Reliable trailers for just-in-time manufacturing logistics." },
