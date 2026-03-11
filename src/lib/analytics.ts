@@ -14,12 +14,14 @@ declare global {
 }
 
 // Track page views (for SPA navigation)
-export const trackPageView = (path: string, title?: string) => {
+export const trackPageView = (path: string, title?: string, pageType?: string) => {
   if (typeof window !== 'undefined' && window.gtag) {
-    window.gtag('config', 'G-FHB5E7Q0PK', {
+    const params: Record<string, string> = {
       page_path: path,
       page_title: title || document.title,
-    });
+    };
+    if (pageType) params.page_type = pageType;
+    window.gtag('config', 'G-FHB5E7Q0PK', params);
     console.log('[Analytics] Page view tracked:', path);
   }
 };
