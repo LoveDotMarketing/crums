@@ -445,7 +445,7 @@ export const locations: LocationData[] = [
     state: "New York",
     stateAbbr: "NY",
     slug: "new-york-ny",
-    metaTitle: "Trailer Rental New York City NY | Texas Prices, Delivered | CRUMS Leasing",
+    metaTitle: "Trailer Rental New York City NY | Texas Prices, Delivered",
     metaDescription: "Trailer rental in New York City, NY. Texas-based pricing delivered nationwide — save more than leasing locally. 53' dry van & flatbed trailers. Call 1-888-570-4564.",
     h1: "Trailer Rental & Leasing in New York City, New York",
     distanceFromBulverde: 1800,
