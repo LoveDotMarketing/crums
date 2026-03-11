@@ -322,7 +322,7 @@ export const locations: LocationData[] = [
     keyIndustries: ["Intermodal", "Automotive", "Agriculture", "Manufacturing", "E-commerce"],
     nearbyAirports: ["MCI - Kansas City International"],
     regionalContext: "Kansas City is a major freight hub where I-70 and I-35 intersect, connecting major markets from coast to coast and border to border. The city is a growing intermodal and e-commerce fulfillment center.",
-    nearbyCities: ["denver-co", "chicago-il", "dallas-tx", "indianapolis-in", "des-moines-ia"],
+    nearbyCities: ["denver-co", "chicago-il", "dallas-tx", "indianapolis-in", "des-moines-ia", "oklahoma-city-ok"],
     landmarks: "Serving the KC metro from the Fairfax industrial district to the Logistics Park Kansas City. I-35 corridor access for carriers on both sides of the state line.",
     testimonialSnippet: { text: "KC is where America's freight meets. CRUMS keeps my business moving.", author: "W.R., Kansas City" }
   },
