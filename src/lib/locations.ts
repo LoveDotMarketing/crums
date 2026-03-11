@@ -408,7 +408,7 @@ export const locations: LocationData[] = [
     state: "Iowa",
     stateAbbr: "IA",
     slug: "des-moines-ia",
-    metaTitle: "Trailer Rental Des Moines IA | Texas Prices, Delivered | CRUMS Leasing",
+    metaTitle: "Trailer Rental Des Moines IA | Texas Prices, Delivered",
     metaDescription: "Trailer rental in Des Moines, IA. Texas-based pricing delivered nationwide — save more than leasing locally. 53' dry van & flatbed trailers. Call 1-888-570-4564.",
     h1: "Trailer Rental & Leasing in Des Moines, Iowa",
     distanceFromBulverde: 1100,
