@@ -520,6 +520,10 @@ export default function GetStarted() {
       if (applicationError) throw applicationError;
 
       trackLinkedInApplicationSubmit();
+      trackEvent('get_started_complete', {
+        form_name: 'get_started_form',
+        page_type: 'signup_page',
+      });
       
       // LinkedIn CAPI
       supabase.functions.invoke('linkedin-capi', {
