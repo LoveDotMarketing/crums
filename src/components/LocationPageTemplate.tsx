@@ -203,10 +203,10 @@ export const LocationPageTemplate = ({ location }: LocationPageTemplateProps) =>
           <div className="grid md:grid-cols-2 gap-8 items-center">
             <div>
               <h2 className="text-3xl font-bold mb-6 text-foreground">
-                {location.isPickupFriendly 
-                  ? "Pickup or Delivery — Your Choice"
-                  : `Trailer Delivery to ${location.city}`
-                }
+                 {location.isPickupFriendly 
+                   ? "Pickup or Delivery — Your Choice"
+                   : `Nationwide Delivery to ${location.city} — Straight from Texas`
+                 }
               </h2>
               {location.isPickupFriendly ? (
                 <div className="space-y-4">
