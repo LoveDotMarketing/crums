@@ -71,7 +71,7 @@ const FleetSolutions = () => {
             <Button 
               size="lg" 
               className="bg-secondary hover:bg-secondary/90"
-              onClick={() => trackCtaClick('Discuss Your Fleet Needs', 'fleet_solutions', '/contact')}
+              onClick={() => trackCtaClick('Discuss Your Fleet Needs', 'hero', '/contact')}
             >
               Discuss Your Fleet Needs
               <ArrowRight className="ml-2 h-5 w-5" />
