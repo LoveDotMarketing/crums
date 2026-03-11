@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
@@ -10,6 +10,7 @@ import { Link } from "react-router-dom";
 import { Calculator, DollarSign, Calendar, Truck, ArrowRight, Info, CheckCircle } from "lucide-react";
 import { SEO } from "@/components/SEO";
 import { generateBreadcrumbSchema } from "@/lib/structuredData";
+import { trackCalculatorUse, trackEvent } from "@/lib/analytics";
 
 const PerDiemCalculator = () => {
   const [daysAway, setDaysAway] = useState<string>("250");
@@ -28,6 +29,20 @@ const PerDiemCalculator = () => {
   const partialDayDeduction = partialDaysNum * PARTIAL_DAY_RATE;
   const totalDeduction = fullDayDeduction + partialDayDeduction;
   const estimatedTaxSavings = totalDeduction * (taxBracketNum / 100);
+
+  const perDiemResultFiredRef = useRef(false);
+  useEffect(() => {
+    if (daysAwayNum > 0 && totalDeduction > 0) {
+      trackCalculatorUse('per_diem', true);
+      if (!perDiemResultFiredRef.current) {
+        perDiemResultFiredRef.current = true;
+        trackEvent('calculator_result', {
+          calculator_name: 'per_diem',
+          result_value: Math.round(estimatedTaxSavings),
+        });
+      }
+    }
+  }, [daysAwayNum, partialDaysNum, taxBracketNum]);
 
   const breadcrumbSchema = generateBreadcrumbSchema([
     { name: "Home", url: "https://crumsleasing.com/" },

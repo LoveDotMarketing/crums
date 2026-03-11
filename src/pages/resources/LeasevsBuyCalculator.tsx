@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
@@ -11,7 +11,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsi
 import { Scale, DollarSign, TrendingUp, RefreshCw, Calculator, CheckCircle2, XCircle, Shield, Wallet, ArrowRight, Lightbulb } from "lucide-react";
 import { PrintButton } from "@/components/PrintButton";
 import { Link } from "react-router-dom";
-import { trackCalculatorUse } from "@/lib/analytics";
+import { trackCalculatorUse, trackEvent } from "@/lib/analytics";
 
 const toolSchema = {
   "@context": "https://schema.org",
@@ -113,9 +113,18 @@ const LeasevsBuyCalculator = () => {
   const [analysisYears, setAnalysisYears] = useState(3);
 
   // Track calculator usage
+  const resultFiredRef = useRef(false);
   useEffect(() => {
     if (buyInputs.purchasePrice > 0) {
       trackCalculatorUse('lease_vs_buy', true);
+      if (!resultFiredRef.current) {
+        resultFiredRef.current = true;
+        const totalBuy = buyInputs.purchasePrice - buyInputs.downPayment;
+        trackEvent('calculator_result', {
+          calculator_name: 'lease_vs_buy',
+          result_value: Math.round(totalBuy),
+        });
+      }
     }
   }, [buyInputs, leaseInputs, analysisYears]);
 

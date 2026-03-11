@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
@@ -11,7 +11,7 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip, BarChart, Ba
 import { Calculator, DollarSign, Fuel, Shield, Wrench, Truck, MoreHorizontal } from "lucide-react";
 import { PrintButton } from "@/components/PrintButton";
 import { Link } from "react-router-dom";
-import { trackCalculatorUse } from "@/lib/analytics";
+import { trackCalculatorUse, trackEvent } from "@/lib/analytics";
 
 const toolSchema = {
   "@context": "https://schema.org",
@@ -120,6 +120,17 @@ const CostPerMileCalculator = () => {
 
     return { fuelCostPerMonth, totalMonthly, costPerMile, breakdown, perMileBreakdown };
   }, [inputs]);
+
+  const cpmResultFiredRef = useRef(false);
+  useEffect(() => {
+    if (inputs.milesPerMonth > 0 && calculations.costPerMile > 0 && !cpmResultFiredRef.current) {
+      cpmResultFiredRef.current = true;
+      trackEvent('calculator_result', {
+        calculator_name: 'cost_per_mile',
+        result_value: Math.round(calculations.costPerMile * 100) / 100,
+      });
+    }
+  }, [calculations, inputs.milesPerMonth]);
 
   const handleInputChange = (field: keyof CostInputs, value: string) => {
     const numValue = parseFloat(value) || 0;
