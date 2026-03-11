@@ -1161,7 +1161,7 @@ const Index = () => {
                 size="lg" 
                 variant="outline" 
                 className="border-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground"
-                onClick={() => trackCtaClick('View All Guides & Resources', 'home', '/resources/guides')}
+                onClick={() => trackCtaClick('View All Guides & Resources', 'guides', '/resources/guides')}
               >
                 View All Guides & Resources
                 <ArrowRight className="ml-2 h-5 w-5" />
