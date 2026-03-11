@@ -332,7 +332,7 @@ export const locations: LocationData[] = [
     state: "Ohio",
     stateAbbr: "OH",
     slug: "columbus-oh",
-    metaTitle: "Trailer Rental Columbus OH | Texas Prices, Delivered | CRUMS Leasing",
+    metaTitle: "Trailer Rental Columbus OH | Texas Prices, Delivered",
     metaDescription: "Trailer rental in Columbus, OH. Texas-based pricing delivered to Ohio — save more than leasing locally. 53' dry van & flatbed trailers. Call 1-888-570-4564.",
     h1: "Trailer Rental & Leasing in Columbus, Ohio",
     distanceFromBulverde: 1250,
