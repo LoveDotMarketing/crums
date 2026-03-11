@@ -492,7 +492,7 @@ const Index = () => {
           <Link 
             to="/veterans-military-discount"
             className="flex flex-col md:flex-row items-center justify-center gap-6 md:gap-10 group"
-            onClick={() => trackCtaClick('Veterans Discount', 'home', '/veterans-military-discount')}
+            onClick={() => trackCtaClick('Veterans Discount', 'veterans_banner', '/veterans-military-discount')}
           >
             <img 
               src="/images/thank-a-veteran.png" 
