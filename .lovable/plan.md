@@ -1,54 +1,32 @@
 
 
-# SEO: Product-Specific Optimization for All Location Pages
-
 ## Problem
-The location pages use generic "Trailer Rental" in titles and headings. They should target **"53 foot dry van trailer near [City]"** and **"flatbed trailer near [City]"** — the exact products you sell. Several metaDescriptions also omit product specifics entirely (LA, Atlanta, Memphis, Nashville).
 
-## Audit Summary
+Abdul's `customer_applications` record shows `payment_setup_status = 'completed'` and has a `stripe_payment_method_id` (`pm_1T7dwSLjIwiEGQIhzU647O3c`) that is dead/detached in Stripe. The UI shows "ACH ✓" and hides the "Send ACH Setup" button, so there's no way to re-do the setup.
 
-| Issue | Pages Affected |
-|-------|---------------|
-| metaTitle missing "Dry Van" keyword | All 24 pages |
-| h1 generic "Trailer Rental & Leasing" | All 24 pages |
-| metaDescription missing "53' dry van & flatbed" | LA, Atlanta, Memphis, Nashville (4 pages) |
-| Hero/delivery copy doesn't name specific products | Template (all pages) |
+## Fix
 
-## Changes
+### 1. Database: Reset Abdul's ACH status
 
-### 1. `src/lib/locations.ts` — All 24 entries
+Run a migration to clear the broken payment method and reset status so the ACH setup flow can be re-initiated:
 
-**metaTitle** — Shift primary keyword to "Dry Van Trailer":
-- Before: `"Trailer Rental Dallas TX | Delivery Available"`
-- After: `"53' Dry Van Trailer Rental Dallas TX | Flatbed Available"`
-- Non-TX pattern: `"53' Dry Van Trailer Near [City] [ST] | Texas Prices, Delivered"`
-- TX pickup pattern: `"53' Dry Van Trailer Rental [City] TX | Local Pickup"`
+```sql
+UPDATE customer_applications
+SET payment_setup_status = 'pending',
+    stripe_payment_method_id = NULL
+WHERE id = '25b5046d-d4b2-405c-bf78-ba3e2b71039f';
+```
 
-**h1** — Include product names:
-- Before: `"Trailer Rental & Leasing in Dallas, Texas"`
-- After: `"53' Dry Van & Flatbed Trailer Rental in Dallas, Texas"`
+### 2. UI: Add a "Reset ACH" option for admins
 
-**metaDescription** — Fix 4 pages missing product specifics (LA, Atlanta, Memphis, Nashville) to include "53' dry van & flatbed trailers".
+In `src/pages/admin/Applications.tsx`, update the ACH badge area (~line 773) so that when `payment_setup_status === "completed"`, instead of only showing the static "ACH ✓" badge, also show a small reset button that sets `payment_setup_status` back to `pending` and clears `stripe_payment_method_id`. This prevents needing manual database edits in the future.
 
-### 2. `src/components/LocationPageTemplate.tsx` — Template updates
+The reset button will:
+- Update `customer_applications` setting `payment_setup_status = 'pending'` and `stripe_payment_method_id = null`
+- Refresh the applications list
+- Show a toast confirmation
 
-**Hero subtitle** — Mention products explicitly:
-- Pickup: "Pick up a 53-foot dry van or flatbed trailer at our Bulverde, TX yard..."
-- Delivery: "53-foot dry van trailers and flatbed trailers at competitive Texas prices, delivered directly to your [City] location."
-
-**Delivery section h2** — Product-specific:
-- Before: "Nationwide Delivery to [City] — Straight from Texas"
-- After: "53' Dry Van & Flatbed Trailers Delivered to [City] from Texas"
-
-**Delivery bullet points** — Add product line:
-- Add: "53-foot dry van trailers and flatbed trailers — our core fleet"
-
-**CTA section** — Product mention:
-- "Contact us today for a free quote on 53' dry van or flatbed trailer rental in [City], [ST]."
-
-**Schema description** — Already mentions products, no change needed.
-
-### Files
-- `src/lib/locations.ts` — Update metaTitle, h1, and 4 metaDescriptions across all 24 entries
-- `src/components/LocationPageTemplate.tsx` — Update hero, delivery, and CTA copy
+### Files to update
+- **Database migration** — one UPDATE statement for Abdul's record
+- `src/pages/admin/Applications.tsx` — add reset ACH button next to the "ACH ✓" badge (~5 lines)
 

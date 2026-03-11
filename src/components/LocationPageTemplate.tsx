@@ -192,8 +192,8 @@ export const LocationPageTemplate = ({ location }: LocationPageTemplateProps) =>
               </h1>
               <p className="text-xl md:text-2xl text-primary-foreground/90 mb-8">
                 {location.isPickupFriendly 
-                  ? `Pick up at our Bulverde, TX yard (${location.distanceFromBulverde} miles away) or get convenient delivery to your ${location.city} location.`
-                  : `Nationwide delivery from Texas — quality trailers at competitive Texas prices, delivered directly to your ${location.city} location.`
+                  ? `Pick up a 53-foot dry van or flatbed trailer at our Bulverde, TX yard (${location.distanceFromBulverde} miles away) or get convenient delivery to your ${location.city} location.`
+                  : `53-foot dry van trailers and flatbed trailers at competitive Texas prices, delivered directly to your ${location.city} location.`
                 }
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
@@ -234,7 +234,7 @@ export const LocationPageTemplate = ({ location }: LocationPageTemplateProps) =>
               <h2 className="text-3xl font-bold mb-6 text-foreground">
                  {location.isPickupFriendly 
                    ? "Pickup or Delivery — Your Choice"
-                   : `Nationwide Delivery to ${location.city} — Straight from Texas`
+                   : `53' Dry Van & Flatbed Trailers Delivered to ${location.city} from Texas`
                  }
               </h2>
               {location.isPickupFriendly ? (
@@ -289,7 +289,7 @@ export const LocationPageTemplate = ({ location }: LocationPageTemplateProps) =>
                   <div className="flex items-start gap-4">
                     <CheckCircle className="h-6 w-6 text-secondary flex-shrink-0 mt-0.5" />
                     <p className="text-muted-foreground">
-                      GPS-equipped trailers for peace of mind
+                      <strong className="text-foreground">53-foot dry van trailers and flatbed trailers</strong> — our core fleet, GPS-equipped
                     </p>
                   </div>
                 </div>
@@ -658,7 +658,7 @@ export const LocationPageTemplate = ({ location }: LocationPageTemplateProps) =>
             Ready to Get Started in {location.city}?
           </h2>
           <p className="text-xl text-primary-foreground/90 mb-8 max-w-2xl mx-auto">
-            Contact us today for a free quote on trailer rental or leasing in {location.city}, {location.stateAbbr}.
+            Contact us today for a free quote on 53' dry van or flatbed trailer rental in {location.city}, {location.stateAbbr}.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button asChild size="lg" variant="secondary">
