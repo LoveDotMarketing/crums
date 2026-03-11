@@ -120,7 +120,7 @@ export const locations: LocationData[] = [
     keyIndustries: ["Retail distribution", "E-commerce", "Technology", "Telecommunications", "Financial services"],
     nearbyAirports: ["DFW - Dallas/Fort Worth International", "DAL - Dallas Love Field"],
     regionalContext: "Dallas-Fort Worth is a major logistics hub and crossroads of America. The I-35 corridor connects to major markets in Mexico, and multiple interstates make DFW a natural distribution center.",
-    nearbyCities: ["houston-tx", "austin-tx", "fort-worth-tx"],
+    nearbyCities: ["houston-tx", "austin-tx", "fort-worth-tx", "oklahoma-city-ok"],
     landmarks: "Serving the entire DFW metroplex from Frisco and Plano to Grand Prairie and Arlington. I-35 corridor delivery from Central Texas.",
     testimonialSnippet: { text: "Fair rates, good equipment, and they actually answer the phone.", author: "C.D., Dallas" }
   },
