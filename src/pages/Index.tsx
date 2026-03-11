@@ -149,7 +149,7 @@ const Index = () => {
               <Button 
                 size="lg" 
                 className="bg-secondary hover:bg-secondary/90 text-secondary-foreground text-lg px-8 py-6"
-                onClick={() => trackCtaClick('Get Started', 'home', '/contact')}
+                onClick={() => trackCtaClick('Free Quote', 'hero', '/contact')}
               >
                 Free Quote
                 <ArrowRight className="ml-2 h-5 w-5" />
@@ -288,7 +288,7 @@ const Index = () => {
                       className="w-full bg-primary hover:bg-primary/90 group-hover:bg-secondary group-hover:text-secondary-foreground transition-colors"
                       onClick={(e) => {
                         e.preventDefault();
-                        trackCtaClick('View Trailer Details', 'home', '/commercial-dry-van-trailer-for-lease-56171');
+                        trackCtaClick('View Trailer Details', 'fleet', '/commercial-dry-van-trailer-for-lease-56171');
                         trackEvent('trailer_detail_view', {
                           trailer_number: '56171',
                           trailer_type: 'Dry Van',
@@ -314,7 +314,7 @@ const Index = () => {
             to="/why-choose-crums" 
             className="block max-w-3xl mx-auto group"
             onClick={() => {
-              trackCtaClick('Featured Video', 'home', '/why-choose-crums');
+              trackCtaClick('Featured Video', 'video', '/why-choose-crums');
               trackEvent('video_play', {
                 video_title: 'Why CDL Drivers Choose CRUMS Leasing for Reliable Trailer Rentals',
                 page_section: 'homepage_video',
@@ -492,7 +492,7 @@ const Index = () => {
           <Link 
             to="/veterans-military-discount"
             className="flex flex-col md:flex-row items-center justify-center gap-6 md:gap-10 group"
-            onClick={() => trackCtaClick('Veterans Discount', 'home', '/veterans-military-discount')}
+            onClick={() => trackCtaClick('Veterans Discount', 'veterans_banner', '/veterans-military-discount')}
           >
             <img 
               src="/images/thank-a-veteran.png" 
@@ -563,7 +563,7 @@ const Index = () => {
                 size="lg" 
                 variant="outline" 
                 className="border-2 border-secondary text-secondary hover:bg-secondary hover:text-secondary-foreground"
-                onClick={() => trackCtaClick('Read Reviews', 'home', '/reviews')}
+                onClick={() => trackCtaClick('Read Reviews', 'testimonials', '/reviews')}
               >
                 Read Reviews
                 <ArrowRight className="ml-2 h-5 w-5" />
@@ -591,7 +591,7 @@ const Index = () => {
               <Button 
                 size="lg" 
                 className="bg-secondary hover:bg-secondary/90 text-secondary-foreground text-lg px-8 py-6 whitespace-nowrap"
-                onClick={() => trackCtaClick('Join the Referral Program', 'home', '/referral-program')}
+                onClick={() => trackCtaClick('Join the Referral Program', 'referral_banner', '/referral-program')}
               >
                 Join the Referral Program
                 <ArrowRight className="ml-2 h-5 w-5" />
@@ -643,7 +643,7 @@ const Index = () => {
                     className="w-full md:w-auto bg-primary hover:bg-primary/90 group-hover:bg-secondary group-hover:text-secondary-foreground transition-colors"
                     onClick={(e) => {
                       e.preventDefault();
-                      trackCtaClick('View Job Details', 'home', '/careers/trailer-leasing-sales-rep');
+                      trackCtaClick('View Job Details', 'careers', '/careers/trailer-leasing-sales-rep');
                       window.location.href = '/careers/trailer-leasing-sales-rep';
                     }}
                   >
@@ -682,7 +682,7 @@ const Index = () => {
                     size="lg" 
                     variant="outline"
                     className="border-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground"
-                    onClick={() => trackCtaClick('Learn More About Us', 'home', '/about')}
+                    onClick={() => trackCtaClick('Learn More About Us', 'about', '/about')}
                   >
                     Learn More About Us
                     <ArrowRight className="ml-2 h-5 w-5" />
@@ -693,7 +693,7 @@ const Index = () => {
                     size="lg" 
                     variant="outline"
                     className="border-2 border-secondary text-secondary hover:bg-secondary hover:text-secondary-foreground"
-                    onClick={() => trackCtaClick('The CRUMS Story', 'home', '/crums-story')}
+                    onClick={() => trackCtaClick('The CRUMS Story', 'about', '/crums-story')}
                   >
                     The CRUMS Story
                     <Heart className="ml-2 h-5 w-5" />
@@ -763,7 +763,7 @@ const Index = () => {
                     <Button 
                       variant="outline" 
                       className="border-primary text-primary hover:bg-primary hover:text-primary-foreground"
-                      onClick={() => trackCtaClick('View All Locations', 'home', '/locations')}
+                      onClick={() => trackCtaClick('View All Locations', 'locations', '/locations')}
                     >
                       View All Locations
                       <ArrowRight className="ml-2 h-4 w-4" />
@@ -782,7 +782,7 @@ const Index = () => {
                 to={`/locations/${location.slug}`}
                 className="group"
                 onClick={() => {
-                  trackCtaClick(`Location: ${location.city}`, 'home', `/locations/${location.slug}`);
+                  trackCtaClick(`Location: ${location.city}`, 'locations', `/locations/${location.slug}`);
                   trackEvent('location_click', {
                     location_name: location.city,
                     page_section: 'locations',
@@ -812,7 +812,7 @@ const Index = () => {
               <Button 
                 size="lg"
                 className="bg-primary hover:bg-primary/90"
-                onClick={() => trackCtaClick('See All Locations', 'home', '/locations')}
+                onClick={() => trackCtaClick('See All Locations', 'locations', '/locations')}
               >
                 See All {locations.length} Locations
                 <ArrowRight className="ml-2 h-5 w-5" />
@@ -1161,7 +1161,7 @@ const Index = () => {
                 size="lg" 
                 variant="outline" 
                 className="border-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground"
-                onClick={() => trackCtaClick('View All Guides & Resources', 'home', '/resources/guides')}
+                onClick={() => trackCtaClick('View All Guides & Resources', 'guides', '/resources/guides')}
               >
                 View All Guides & Resources
                 <ArrowRight className="ml-2 h-5 w-5" />
@@ -1239,7 +1239,7 @@ const Index = () => {
                 <Button 
                   size="lg" 
                   variant="outline"
-                  onClick={() => trackCtaClick('Learn More About Us', 'home', '/about')}
+                  onClick={() => trackCtaClick('Learn More About Us', 'trust', '/about')}
                 >
                   Learn More About Us
                   <ArrowRight className="ml-2 h-5 w-5" />
@@ -1274,7 +1274,7 @@ const Index = () => {
                 <Link
                   to="/contact"
                   className="inline-flex items-center text-primary font-semibold hover:underline"
-                  onClick={() => trackCtaClick('Lease to Own CTA', 'home', '/contact')}
+                  onClick={() => trackCtaClick('Ask About Lease to Own', 'more_ways', '/contact')}
                 >
                   Ask About Lease to Own
                   <ArrowRight className="h-4 w-4 ml-2" />
@@ -1293,7 +1293,7 @@ const Index = () => {
                 <Link
                   to="/contact"
                   className="inline-flex items-center text-secondary font-semibold hover:underline"
-                  onClick={() => trackCtaClick('Rent for Storage CTA', 'home', '/contact')}
+                  onClick={() => trackCtaClick('Ask About Storage Rentals', 'more_ways', '/contact')}
                 >
                   Ask About Storage Rentals
                   <ArrowRight className="h-4 w-4 ml-2" />

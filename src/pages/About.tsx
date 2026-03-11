@@ -333,13 +333,13 @@ const About = () => {
             trailer leasing partnership.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link to="/contact" onClick={() => trackCtaClick('Get A Quote', 'about', '/contact')}>
+            <Link to="/contact" onClick={() => trackCtaClick('Get A Quote', 'bottom_cta', '/contact')}>
               <Button size="lg" className="bg-secondary hover:bg-secondary/90">
                 Get A Quote
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
             </Link>
-            <Link to="/mission" onClick={() => trackCtaClick('Our Mission & Values', 'about', '/mission')}>
+            <Link to="/mission" onClick={() => trackCtaClick('Our Mission & Values', 'bottom_cta', '/mission')}>
               <Button size="lg" variant="outline">
                 Our Mission & Values
               </Button>
