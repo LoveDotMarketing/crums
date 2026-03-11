@@ -14,12 +14,14 @@ declare global {
 }
 
 // Track page views (for SPA navigation)
-export const trackPageView = (path: string, title?: string) => {
+export const trackPageView = (path: string, title?: string, pageType?: string) => {
   if (typeof window !== 'undefined' && window.gtag) {
-    window.gtag('config', 'G-FHB5E7Q0PK', {
+    const params: Record<string, string> = {
       page_path: path,
       page_title: title || document.title,
-    });
+    };
+    if (pageType) params.page_type = pageType;
+    window.gtag('config', 'G-FHB5E7Q0PK', params);
     console.log('[Analytics] Page view tracked:', path);
   }
 };
@@ -125,17 +127,18 @@ export const trackApplicationSectionComplete = (section: string) => {
 // CTA clicks
 export const trackCtaClick = (buttonText: string, page: string, destination?: string) => {
   trackEvent('cta_click', {
-    button_text: buttonText,
-    page,
+    cta_text: buttonText,
+    cta_location: page,
     destination: destination || '',
   });
 };
 
 // Calculator usage
-export const trackCalculatorUse = (calculatorType: string, hasResult: boolean) => {
+export const trackCalculatorUse = (calculatorName: string, hasResult: boolean) => {
   trackEvent('calculator_use', {
-    calculator_type: calculatorType,
+    calculator_name: calculatorName,
     has_result: hasResult,
+    page_type: 'calculator_page',
   });
 };
 

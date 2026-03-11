@@ -48,7 +48,7 @@ const LinkedInLanding = () => {
 
   useEffect(() => {
     trackLinkedInPageView();
-    trackPageView("/lp/linkedin", "LinkedIn Landing Page");
+    trackPageView("/lp/linkedin", "LinkedIn Landing Page", "landing_page");
   }, []);
 
   const [formData, setFormData] = useState({
