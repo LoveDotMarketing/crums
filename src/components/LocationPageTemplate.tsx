@@ -110,7 +110,7 @@ export const LocationPageTemplate = ({ location }: LocationPageTemplateProps) =>
       question: `Can you get a trailer to ${location.city} by Friday?`,
       answer: location.isPickupFriendly 
         ? `Probably! ${location.city} is just ${location.distanceFromBulverde} miles from our Bulverde, TX yard. You can pick up your trailer same-day in many cases, or we can deliver it to your location. Call us at 1-888-570-4564 to check availability.`
-        : `We'll do our best! We deliver commercial trailers to ${location.city}, ${location.stateAbbr} regularly. Give us a call at 1-888-570-4564 with your timeline and we'll work to make it happen.`
+        : `We'll do our best! We deliver trailers nationwide from Texas — ${location.city}, ${location.stateAbbr} is one of the markets we serve regularly. Give us a call at 1-888-570-4564 with your timeline and we'll work to make it happen.`
     },
     {
       question: "I'm a new carrier — do you work with startups?",
@@ -175,7 +175,7 @@ export const LocationPageTemplate = ({ location }: LocationPageTemplateProps) =>
             <p className="text-xl md:text-2xl text-primary-foreground/90 mb-8">
               {location.isPickupFriendly 
                 ? `Pick up at our Bulverde, TX yard (${location.distanceFromBulverde} miles away) or get convenient delivery to your ${location.city} location.`
-                : `We deliver commercial trailers directly to ${location.city}. Quality 53' dry van and flatbed trailers with flexible terms.`
+                : `Nationwide delivery from Texas — quality trailers at competitive Texas prices, delivered directly to your ${location.city} location.`
               }
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
@@ -203,10 +203,10 @@ export const LocationPageTemplate = ({ location }: LocationPageTemplateProps) =>
           <div className="grid md:grid-cols-2 gap-8 items-center">
             <div>
               <h2 className="text-3xl font-bold mb-6 text-foreground">
-                {location.isPickupFriendly 
-                  ? "Pickup or Delivery — Your Choice"
-                  : `Trailer Delivery to ${location.city}`
-                }
+                 {location.isPickupFriendly 
+                   ? "Pickup or Delivery — Your Choice"
+                   : `Nationwide Delivery to ${location.city} — Straight from Texas`
+                 }
               </h2>
               {location.isPickupFriendly ? (
                 <div className="space-y-4">
@@ -237,13 +237,18 @@ export const LocationPageTemplate = ({ location }: LocationPageTemplateProps) =>
               ) : (
                 <div className="space-y-4">
                   <p className="text-lg text-muted-foreground">
-                    While our headquarters is in Bulverde, Texas, we proudly serve {location.city} with reliable trailer delivery. 
-                    Our team will transport your trailer directly to your location so you can focus on your business.
+                    We deliver trailers <strong className="text-foreground">nationwide</strong> from our San Antonio, TX headquarters — and {location.city} is one of the markets we proudly serve. Our Texas-based pricing means you often pay less than leasing locally in {location.stateAbbr}.
                   </p>
                   <div className="flex items-start gap-4">
                     <CheckCircle className="h-6 w-6 text-secondary flex-shrink-0 mt-0.5" />
                     <p className="text-muted-foreground">
-                      Competitive delivery rates based on distance
+                      <strong className="text-foreground">Nationwide delivery</strong> — from Texas to {location.city} and everywhere in between
+                    </p>
+                  </div>
+                  <div className="flex items-start gap-4">
+                    <CheckCircle className="h-6 w-6 text-secondary flex-shrink-0 mt-0.5" />
+                    <p className="text-muted-foreground">
+                      <strong className="text-foreground">Texas-based pricing</strong> — often lower than local competitors in {location.stateAbbr}
                     </p>
                   </div>
                   <div className="flex items-start gap-4">
