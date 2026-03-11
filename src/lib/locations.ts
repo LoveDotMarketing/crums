@@ -158,7 +158,7 @@ export const locations: LocationData[] = [
     nearbyAirports: ["LAX - Los Angeles International", "ONT - Ontario International"],
     portAccess: "Port of Los Angeles & Port of Long Beach - busiest container port complex in the Western Hemisphere",
     regionalContext: "Los Angeles is the largest trucking market in the United States. The ports of LA and Long Beach handle nearly half of all containers entering the U.S., creating enormous demand for trailer capacity.",
-    nearbyCities: ["phoenix-az", "denver-co"],
+    nearbyCities: ["phoenix-az", "denver-co", "portland-or"],
     landmarks: "We deliver across LA County from the Port of Long Beach to the Inland Empire. Serving carriers on I-10 from San Bernardino to Santa Monica.",
     testimonialSnippet: { text: "Needed a trailer for port work in Long Beach. CRUMS delivered on time and the equipment was solid.", author: "A.R., Los Angeles" }
   },

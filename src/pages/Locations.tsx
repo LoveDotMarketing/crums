@@ -27,14 +27,16 @@ const Locations = () => {
     "@graph": [localBusinessSchema, breadcrumbSchema]
   };
 
-  const { texas, southwest, midwest, southeast, mountain } = getLocationsByRegion();
+  const { texas, southwest, midwest, southeast, mountain, northeast, west } = getLocationsByRegion();
 
   const regions = [
     { name: "Texas", locations: texas, description: "Our home state — pickup available at our San Antonio yard" },
     { name: "Southwest", locations: southwest, description: "Serving California and Arizona markets" },
     { name: "Midwest", locations: midwest, description: "America's freight crossroads" },
     { name: "Southeast", locations: southeast, description: "Major East Coast distribution hubs" },
-    { name: "Mountain West", locations: mountain, description: "Gateway to the Rocky Mountain region" }
+    { name: "Northeast", locations: northeast, description: "Mid-Atlantic logistics corridor" },
+    { name: "Mountain West", locations: mountain, description: "Gateway to the Rocky Mountain region" },
+    { name: "Pacific Northwest", locations: west, description: "West Coast timber, tech & agriculture" }
   ];
 
   return (
