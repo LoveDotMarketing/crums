@@ -97,11 +97,24 @@ export const LocationPageTemplate = ({ location }: LocationPageTemplateProps) =>
         "name": location.state
       }
     },
-    "description": `Commercial trailer rental and leasing services in ${location.city}, ${location.state}. 53-foot dry van and flatbed trailers available.`,
+    "description": location.isPickupFriendly
+      ? `Commercial trailer rental and leasing services in ${location.city}, ${location.state}. 53-foot dry van and flatbed trailers available for pickup or delivery.`
+      : `Commercial trailer rental and leasing in ${location.city}, ${location.state}. Delivered from Texas at competitive rates — save compared to local ${location.stateAbbr} leasing. 53-foot dry van and flatbed trailers.`,
     "offers": {
       "@type": "Offer",
       "availability": "https://schema.org/InStock"
-    }
+    },
+    ...(!location.isPickupFriendly && {
+      "availableChannel": {
+        "@type": "ServiceChannel",
+        "serviceType": "Nationwide Trailer Delivery",
+        "serviceLocation": {
+          "@type": "Place",
+          "name": `${location.city}, ${location.stateAbbr}`
+        },
+        "description": `Trailers delivered from San Antonio, TX to ${location.city}, ${location.stateAbbr}. Texas-based pricing often lower than local competitors.`
+      }
+    })
   };
 
   // FAQ items specific to this city - using customer-voice language
