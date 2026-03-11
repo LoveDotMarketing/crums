@@ -159,6 +159,13 @@ const FacebookLanding = () => {
         firstName: formData.name.split(' ')[0],
       });
 
+      // GA4 custom quote form event
+      trackEvent('quote_form_submit', {
+        form_name: 'facebook_lp_quote',
+        trailer_count: formData.trailersNeeded || 'not_specified',
+        page_section: 'facebook_landing_page',
+      });
+
       // Redirect to thank-you page
       navigate("/lp/facebook/thank-you", {
         state: {
