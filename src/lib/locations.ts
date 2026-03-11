@@ -185,7 +185,7 @@ export const locations: LocationData[] = [
     state: "Georgia",
     stateAbbr: "GA",
     slug: "atlanta-ga",
-    metaTitle: "Trailer Rental Atlanta GA | CRUMS Leasing",
+    metaTitle: "Trailer Rental Atlanta GA | Texas Prices, Delivered",
     metaDescription: "Trailer leasing in Atlanta, GA. Commercial trailers delivered to metro Atlanta. Serving the Southeast's largest logistics hub.",
     h1: "Trailer Rental & Leasing in Atlanta, Georgia",
     distanceFromBulverde: 920,
