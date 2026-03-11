@@ -10,6 +10,7 @@ import { Link } from "react-router-dom";
 import { Calculator, DollarSign, Calendar, Truck, ArrowRight, Info, CheckCircle } from "lucide-react";
 import { SEO } from "@/components/SEO";
 import { generateBreadcrumbSchema } from "@/lib/structuredData";
+import { trackCalculatorUse, trackEvent } from "@/lib/analytics";
 
 const PerDiemCalculator = () => {
   const [daysAway, setDaysAway] = useState<string>("250");
