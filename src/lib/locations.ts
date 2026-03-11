@@ -295,7 +295,7 @@ export const locations: LocationData[] = [
     state: "Colorado",
     stateAbbr: "CO",
     slug: "denver-co",
-    metaTitle: "Trailer Rental Denver CO | CRUMS Leasing",
+    metaTitle: "Trailer Rental Denver CO | Texas Prices, Delivered",
     metaDescription: "Trailer rental in Denver, CO. Delivered from Texas at competitive rates. 53' dry van & flatbed trailers for the Front Range. Call 1-888-570-4564.",
     h1: "Trailer Rental & Leasing in Denver, Colorado",
     distanceFromBulverde: 930,
