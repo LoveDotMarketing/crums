@@ -134,7 +134,7 @@ const Services = () => {
     <div className="min-h-screen flex flex-col">
       <SEO
         title="Trailer Leasing, Rentals & Fleet Solutions"
-        description="Explore CRUMS Leasing services including long-term trailer leasing, flexible short-term rentals, and comprehensive fleet management solutions for carriers nationwide."
+        description="Explore CRUMS Leasing services: long-term 53' dry van and flatbed trailer leasing, flexible short-term rentals, lease-to-own, and fleet management solutions for carriers nationwide."
         canonical="https://crumsleasing.com/services"
         structuredData={[breadcrumbSchema, servicesHubSchema]}
       />
