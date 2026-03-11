@@ -3,14 +3,21 @@ import { HelmetProvider } from "react-helmet-async";
 import App from "./App.tsx";
 import "./index.css";
 import { loadDeferredAnalytics } from "./lib/deferredAnalytics";
+import { setLeadSourceUserProperties } from "./lib/analytics";
 
 // Load analytics after the page is fully loaded to prevent favicon spinning
+const initAnalytics = () => {
+  setTimeout(() => {
+    loadDeferredAnalytics();
+    // Set lead source user properties after gtag is ready
+    setTimeout(setLeadSourceUserProperties, 500);
+  }, 100);
+};
+
 if (document.readyState === 'complete') {
-  setTimeout(loadDeferredAnalytics, 100);
+  initAnalytics();
 } else {
-  window.addEventListener('load', () => {
-    setTimeout(loadDeferredAnalytics, 100);
-  });
+  window.addEventListener('load', initAnalytics);
 }
 
 createRoot(document.getElementById("root")!).render(

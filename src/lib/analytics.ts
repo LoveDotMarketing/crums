@@ -154,7 +154,31 @@ export const trackScrollDepth = (pageName: string, depth: number) => {
     page_name: pageName,
     percent_scrolled: depth,
     event_category: 'engagement',
+    page_path: window.location.pathname,
   });
+};
+
+// Set GA4 user properties from lead source session data
+export const setLeadSourceUserProperties = () => {
+  if (typeof window === 'undefined' || !window.gtag) return;
+  try {
+    const raw = sessionStorage.getItem('crums_lead_source');
+    if (!raw) return;
+    const data = JSON.parse(raw) as Record<string, string | undefined>;
+    const props: Record<string, string> = {};
+    if (data.utm_source) props.lead_utm_source = data.utm_source;
+    if (data.utm_medium) props.lead_utm_medium = data.utm_medium;
+    if (data.utm_campaign) props.lead_utm_campaign = data.utm_campaign;
+    if (data.utm_term) props.lead_utm_term = data.utm_term;
+    if (data.utm_content) props.lead_utm_content = data.utm_content;
+    if (data.referrer) props.lead_referrer = data.referrer;
+    if (data.landing_page) props.lead_landing_page = data.landing_page;
+    if (Object.keys(props).length > 0) {
+      window.gtag('set', 'user_properties', props);
+    }
+  } catch {
+    // silently fail
+  }
 };
 
 // Meta Pixel event tracking (with optional eventID for server-side deduplication)
