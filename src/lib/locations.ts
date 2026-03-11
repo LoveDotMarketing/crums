@@ -521,12 +521,12 @@ export const getNearbyLocations = (slug: string): LocationData[] => {
 // Group locations by region for the hub page
 export const getLocationsByRegion = () => {
   const texas = locations.filter(loc => loc.stateAbbr === "TX");
-  const southwest = locations.filter(loc => ["CA", "AZ"].includes(loc.stateAbbr));
+  const southwest = locations.filter(loc => ["CA", "AZ", "OK"].includes(loc.stateAbbr));
   const midwest = locations.filter(loc => ["IL", "IN", "MO", "OH", "IA"].includes(loc.stateAbbr));
   const southeast = locations.filter(loc => ["GA", "TN", "NC", "FL", "VA"].includes(loc.stateAbbr));
   const mountain = locations.filter(loc => ["CO"].includes(loc.stateAbbr));
-  const northeast = locations.filter(loc => ["PA"].includes(loc.stateAbbr));
-  const west = locations.filter(loc => ["OR"].includes(loc.stateAbbr));
+  const northeast = locations.filter(loc => ["PA", "NY"].includes(loc.stateAbbr));
+  const west = locations.filter(loc => ["OR", "WA"].includes(loc.stateAbbr));
   
   return { texas, southwest, midwest, southeast, mountain, northeast, west };
 };
