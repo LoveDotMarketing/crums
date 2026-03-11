@@ -161,16 +161,7 @@ const WhyChooseCrums = () => {
           <div className="container mx-auto px-4">
             <div className="max-w-4xl mx-auto">
               <div className="aspect-video rounded-lg overflow-hidden shadow-2xl mb-10">
-                <iframe
-                  width="100%"
-                  height="100%"
-                  src="https://www.youtube.com/embed/ttqu5Ef2SZU"
-                  title="Why CDL Drivers Choose CRUMS Leasing for Reliable Trailer Rentals"
-                  frameBorder="0"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                  allowFullScreen
-                  className="w-full h-full"
-                ></iframe>
+                <div id="yt-player" className="w-full h-full"></div>
               </div>
 
               {/* Video Transcript */}
