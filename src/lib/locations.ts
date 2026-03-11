@@ -203,7 +203,7 @@ export const locations: LocationData[] = [
     state: "Tennessee",
     stateAbbr: "TN",
     slug: "memphis-tn",
-    metaTitle: "Trailer Rental Memphis TN | FedEx Hub Area | CRUMS Leasing",
+    metaTitle: "Trailer Rental Memphis TN | FedEx Hub Area | Texas Prices",
     metaDescription: "Trailer rental in Memphis, TN - America's distribution center. We deliver commercial trailers to the Memphis area. Near the FedEx SuperHub.",
     h1: "Trailer Rental & Leasing in Memphis, Tennessee",
     distanceFromBulverde: 680,
