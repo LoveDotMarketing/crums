@@ -812,7 +812,7 @@ const Index = () => {
               <Button 
                 size="lg"
                 className="bg-primary hover:bg-primary/90"
-                onClick={() => trackCtaClick('See All Locations', 'home', '/locations')}
+                onClick={() => trackCtaClick('See All Locations', 'locations', '/locations')}
               >
                 See All {locations.length} Locations
                 <ArrowRight className="ml-2 h-5 w-5" />
