@@ -1,35 +1,32 @@
 
 
-## Fix Abdul's Payment Setup Issue
+## Problem
 
-### Root Cause
-Abdul has a stale Stripe customer ID (`cus_U5sQ2ohTsvdzXt`) stored in his `customer_applications` record that likely doesn't exist under the current live Stripe API key. When the `create-ach-setup` function tries to create a SetupIntent against this customer, Stripe returns an error. Additionally, there are two Stripe customer records for his email — the system needs a clean slate.
+Abdul's `customer_applications` record shows `payment_setup_status = 'completed'` and has a `stripe_payment_method_id` (`pm_1T7dwSLjIwiEGQIhzU647O3c`) that is dead/detached in Stripe. The UI shows "ACH ✓" and hides the "Send ACH Setup" button, so there's no way to re-do the setup.
 
-### Plan
+## Fix
 
-**1. Database migration — reset Abdul's stale Stripe data**
+### 1. Database: Reset Abdul's ACH status
 
-Clear the orphaned Stripe customer ID so the `create-ach-setup` function creates a fresh Stripe customer under the current live key:
+Run a migration to clear the broken payment method and reset status so the ACH setup flow can be re-initiated:
 
 ```sql
 UPDATE customer_applications
-SET stripe_customer_id = NULL,
-    stripe_payment_method_id = NULL,
-    payment_setup_status = 'pending'
+SET payment_setup_status = 'pending',
+    stripe_payment_method_id = NULL
 WHERE id = '25b5046d-d4b2-405c-bf78-ba3e2b71039f';
 ```
 
-**2. Add error resilience to `create-ach-setup` edge function**
+### 2. UI: Add a "Reset ACH" option for admins
 
-In `supabase/functions/create-ach-setup/index.ts`, wrap the Stripe customer retrieval in a try/catch so that if the stored `stripe_customer_id` is invalid (deleted, wrong mode), the function automatically creates a new customer instead of failing:
+In `src/pages/admin/Applications.tsx`, update the ACH badge area (~line 773) so that when `payment_setup_status === "completed"`, instead of only showing the static "ACH ✓" badge, also show a small reset button that sets `payment_setup_status` back to `pending` and clears `stripe_payment_method_id`. This prevents needing manual database edits in the future.
 
-- After line ~143 where it uses `customerId_stripe`, add a verification step: call `stripe.customers.retrieve(customerId_stripe)` inside a try/catch
-- If it throws (customer doesn't exist), log a warning, fall through to the "search by email / create new" path
-- Update the application record with the new valid customer ID
+The reset button will:
+- Update `customer_applications` setting `payment_setup_status = 'pending'` and `stripe_payment_method_id = null`
+- Refresh the applications list
+- Show a toast confirmation
 
-This prevents this class of issue from ever happening again for any customer.
-
-### Files to change
-- **Database migration** — one UPDATE for Abdul's record
-- `supabase/functions/create-ach-setup/index.ts` — add ~10 lines of Stripe customer validation with fallback
+### Files to update
+- **Database migration** — one UPDATE statement for Abdul's record
+- `src/pages/admin/Applications.tsx` — add reset ACH button next to the "ACH ✓" badge (~5 lines)
 
