@@ -30,6 +30,20 @@ const PerDiemCalculator = () => {
   const totalDeduction = fullDayDeduction + partialDayDeduction;
   const estimatedTaxSavings = totalDeduction * (taxBracketNum / 100);
 
+  const perDiemResultFiredRef = useRef(false);
+  useEffect(() => {
+    if (daysAwayNum > 0 && totalDeduction > 0) {
+      trackCalculatorUse('per_diem', true);
+      if (!perDiemResultFiredRef.current) {
+        perDiemResultFiredRef.current = true;
+        trackEvent('calculator_result', {
+          calculator_name: 'per_diem',
+          result_value: Math.round(estimatedTaxSavings),
+        });
+      }
+    }
+  }, [daysAwayNum, partialDaysNum, taxBracketNum]);
+
   const breadcrumbSchema = generateBreadcrumbSchema([
     { name: "Home", url: "https://crumsleasing.com/" },
     { name: "Resources", url: "https://crumsleasing.com/resources" },
