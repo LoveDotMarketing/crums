@@ -110,7 +110,7 @@ const TrailerLeasingSalesRep = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <SEO
-        title="Trailer Leasing Sales Representative - Careers at CRUMS Leasing"
+        title="Trailer Leasing Sales Representative - Careers"
         description="Join CRUMS Leasing as a Sales Representative. $30,000 base + commission. Lease trailers, manage accounts, and grow with a family-owned company in San Antonio, TX."
         canonical="https://crumsleasing.com/careers/trailer-leasing-sales-rep"
         structuredData={combinedSchema}
