@@ -26,7 +26,7 @@ const OwnerOperators = () => {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <SEO
-        title="Owner Operator Trailer Leasing | CRUMS Leasing"
+        title="Owner Operator 53' Dry Van & Flatbed Trailer Leasing"
         description="Flexible trailer leasing for independent owner operators. CRUMS Leasing offers affordable rates, simple contracts, and a people-first approach for independent carriers."
         canonical="https://crumsleasing.com/industries/owner-operators"
         structuredData={[ownerOperatorsServiceSchema, breadcrumbSchema]}

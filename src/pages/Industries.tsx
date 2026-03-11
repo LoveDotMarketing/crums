@@ -87,7 +87,7 @@ const Industries = () => {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <SEO
-        title="Industries We Serve | Trailer Leasing for Every Sector | CRUMS Leasing"
+        title="Industries We Serve | 53' Dry Van & Flatbed Trailer Leasing"
         description="CRUMS Leasing provides specialized trailer solutions for fleet operators, owner operators, logistics companies, food distribution, retail, manufacturing, and seasonal demand across the United States."
         canonical="https://crumsleasing.com/industries"
         structuredData={[industriesSchema, breadcrumbSchema]}

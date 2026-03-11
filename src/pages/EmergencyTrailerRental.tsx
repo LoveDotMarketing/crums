@@ -87,7 +87,7 @@ const EmergencyTrailerRental = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <SEO
-        title="Emergency Trailer Rental | Same-Day Response | CRUMS Leasing"
+        title="Emergency Trailer Rental | Same-Day Response"
         description="Need a trailer fast? CRUMS Leasing offers emergency trailer rental with same-day response. Breakdown replacements, urgent capacity, and last-minute loads. Call 1-888-570-4564."
         canonical="https://crumsleasing.com/emergency-trailer-rental"
         structuredData={combinedSchema}

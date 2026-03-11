@@ -26,7 +26,7 @@ const Manufacturing = () => {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <SEO
-        title="Manufacturing Logistics Trailer Leasing | CRUMS Leasing"
+        title="Manufacturing Logistics — 53' Dry Van & Flatbed Trailers"
         description="Trailer leasing for manufacturing companies. CRUMS Leasing offers dry van and flatbed trailers to support manufacturing logistics and supply chains."
         canonical="https://crumsleasing.com/industries/manufacturing"
         structuredData={[manufacturingServiceSchema, breadcrumbSchema]}

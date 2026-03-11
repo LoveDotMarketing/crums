@@ -26,7 +26,7 @@ const FoodDistribution = () => {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <SEO
-        title="Food Distribution Trailer Leasing | CRUMS Leasing"
+        title="Food Distribution — 53' Dry Van Trailer Leasing"
         description="Trailer leasing for food distribution companies. CRUMS Leasing offers dry van trailers for safe, reliable food transport."
         canonical="https://crumsleasing.com/industries/food-distribution"
         structuredData={[foodDistributionServiceSchema, breadcrumbSchema]}

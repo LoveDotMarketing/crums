@@ -26,7 +26,7 @@ const LogisticsCompanies = () => {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <SEO
-        title="Logistics Company Trailer Solutions | CRUMS Leasing"
+        title="Logistics Company 53' Dry Van & Flatbed Trailer Solutions"
         description="Trailer leasing solutions for 3PL providers, freight brokers, and logistics companies. CRUMS Leasing offers flexible capacity to match your customer demands."
         canonical="https://crumsleasing.com/industries/logistics-companies"
         structuredData={[logisticsServiceSchema, breadcrumbSchema]}

@@ -82,7 +82,7 @@ const Partners = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <SEO
-        title="Partners | CRUMS Leasing"
+        title="Our Trusted Partners"
         description="Meet our trusted partners who help keep your trailers on the road. CRUMS Leasing works with the best in diesel truck and trailer repair services."
         canonical="https://crumsleasing.com/partners"
         structuredData={combinedSchema}

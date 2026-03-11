@@ -26,7 +26,7 @@ const FleetLeasing = () => {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <SEO
-        title="Fleet Leasing Solutions | CRUMS Leasing"
+        title="Fleet Leasing — 53' Dry Van & Flatbed Trailers"
         description="Scalable trailer leasing solutions for growing fleets. CRUMS Leasing offers flexible terms, maintained equipment, and multiple trailer types for fleet operators."
         canonical="https://crumsleasing.com/industries/fleet-leasing"
         structuredData={[fleetLeasingServiceSchema, breadcrumbSchema]}
