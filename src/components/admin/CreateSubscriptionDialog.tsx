@@ -178,29 +178,54 @@ export function CreateSubscriptionDialog({ onSuccess, mode = "dialog", onCancel 
   const { data: availableTrailers, isLoading: loadingTrailers } = useQuery({
     queryKey: ["available-trailers-for-subscription", selectedCustomerId, subscribedTrailerIds],
     queryFn: async () => {
-      let query = supabase
-        .from("trailers")
-        .select("id, trailer_number, vin, type, year, rental_rate");
+      const cols = "id, trailer_number, vin, type, year, rental_rate";
+      const excludeIds = new Set(subscribedTrailerIds || []);
 
       if (selectedCustomerId) {
-        // Show globally available trailers OR trailers assigned to this customer
-        query = query.or(`and(status.eq.available,customer_id.is.null),customer_id.eq.${selectedCustomerId}`);
-      } else {
-        query = query.eq("status", "available").is("customer_id", null);
-      }
+        // Two explicit queries to avoid PostgREST .or() edge cases
+        const [availableRes, customerRes] = await Promise.all([
+          supabase
+            .from("trailers")
+            .select(cols)
+            .eq("status", "available")
+            .is("customer_id", null)
+            .order("trailer_number"),
+          supabase
+            .from("trailers")
+            .select(cols)
+            .eq("customer_id", selectedCustomerId)
+            .order("trailer_number"),
+        ]);
 
-      const { data, error } = await query.order("trailer_number");
-      if (error) throw error;
-      
-      // Filter out trailers already on an active/pending/paused subscription
-      const excludeIds = new Set(subscribedTrailerIds || []);
-      const filtered = excludeIds.size > 0
-        ? (data || []).filter(t => !excludeIds.has(t.id))
-        : (data || []);
-      
-      return filtered as AvailableTrailer[];
+        if (availableRes.error) throw availableRes.error;
+        if (customerRes.error) throw customerRes.error;
+
+        // Merge and deduplicate
+        const seen = new Set<string>();
+        const merged: AvailableTrailer[] = [];
+        for (const t of [...(customerRes.data || []), ...(availableRes.data || [])]) {
+          if (!seen.has(t.id) && !excludeIds.has(t.id)) {
+            seen.add(t.id);
+            merged.push(t as AvailableTrailer);
+          }
+        }
+        return merged;
+      } else {
+        const { data, error } = await supabase
+          .from("trailers")
+          .select(cols)
+          .eq("status", "available")
+          .is("customer_id", null)
+          .order("trailer_number");
+
+        if (error) throw error;
+        const filtered = excludeIds.size > 0
+          ? (data || []).filter(t => !excludeIds.has(t.id))
+          : (data || []);
+        return filtered as AvailableTrailer[];
+      }
     },
-    enabled: isOpen || mode === "inline"
+    enabled: (isOpen || mode === "inline") && (!!selectedCustomerId ? subscribedTrailerIds !== undefined : true)
   });
 
   // Fetch active discounts
