@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { trackFormStart, trackPageView, fireMetaCapi } from "@/lib/analytics";
+import { trackFormStart, trackPageView, trackEvent, fireMetaCapi } from "@/lib/analytics";
 import { getLeadSourceData } from "@/lib/leadSourceTracking";
 import {
   Phone,
@@ -157,6 +157,13 @@ const FacebookLanding = () => {
         email: formData.email,
         phone: formData.phone,
         firstName: formData.name.split(' ')[0],
+      });
+
+      // GA4 custom quote form event
+      trackEvent('quote_form_submit', {
+        form_name: 'facebook_lp_quote',
+        trailer_count: formData.trailersNeeded || 'not_specified',
+        page_section: 'facebook_landing_page',
       });
 
       // Redirect to thank-you page
