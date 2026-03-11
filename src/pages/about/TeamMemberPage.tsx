@@ -59,7 +59,7 @@ const TeamMemberPage = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <SEO
-        title={`${member.name} - ${member.title} | CRUMS Leasing Team`}
+        title={`${member.name} - ${member.title}`}
         description={member.bio[0]}
         canonical={`https://crumsleasing.com/about/${member.slug}`}
         structuredData={[personSchema, breadcrumbSchema]}
