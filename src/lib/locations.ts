@@ -426,7 +426,7 @@ export const locations: LocationData[] = [
     state: "Oregon",
     stateAbbr: "OR",
     slug: "portland-or",
-    metaTitle: "Trailer Rental Portland OR | Texas Prices, Delivered | CRUMS Leasing",
+    metaTitle: "Trailer Rental Portland OR | Texas Prices, Delivered",
     metaDescription: "Trailer rental in Portland, OR. Texas-based pricing delivered nationwide — save more than leasing locally. 53' dry van & flatbed trailers. Call 1-888-570-4564.",
     h1: "Trailer Rental & Leasing in Portland, Oregon",
     distanceFromBulverde: 2100,
