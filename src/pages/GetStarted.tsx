@@ -848,7 +848,7 @@ export default function GetStarted() {
   return (
     <div className="min-h-screen flex flex-col">
       <SEO
-        title="Complete Your Application - CRUMS Leasing"
+        title="Complete Your Trailer Leasing Application"
         description="Complete your trailer leasing application with CRUMS Leasing."
         canonical="https://crumsleasing.com/get-started"
         structuredData={breadcrumbSchema}

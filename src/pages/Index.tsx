@@ -137,9 +137,9 @@ const Index = () => {
             Need a trailer fast? We deliver nationwide.
           </Badge>
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
-            Empowering Every Carrier
+            Dry Van & Flatbed Trailer Leasing
             <br />
-            <span className="text-secondary">To Build the Life They're Proud Of</span>
+            <span className="text-secondary">Empowering Every Carrier to Succeed</span>
           </h1>
           <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto text-primary-foreground">
             Quality dry van and flatbed trailers guided by family values, integrity, and commitment to your success — creating lasting partnerships that move people forward.

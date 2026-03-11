@@ -119,7 +119,7 @@ const Reviews = () => {
       <section className="py-16 bg-gradient-to-b from-primary/10 to-background">
         <div className="container mx-auto px-4 text-center">
           <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
-            Customer Reviews
+            Customer Reviews — 53' Dry Van & Flatbed Trailer Leasing
           </h1>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-6">
             See what trucking professionals across Texas are saying about their experience with CRUMS Leasing.

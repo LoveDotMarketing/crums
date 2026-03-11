@@ -143,7 +143,7 @@ const Services = () => {
       {/* Hero Section */}
       <section className="bg-gradient-to-r from-primary to-brand-teal-dark text-primary-foreground py-16">
         <div className="container mx-auto px-4 text-center">
-          <h1 className="text-4xl md:text-5xl font-bold mb-4">Our Services</h1>
+          <h1 className="text-4xl md:text-5xl font-bold mb-4">53' Dry Van & Flatbed Trailer Leasing, Rentals & Fleet Solutions</h1>
           <p className="text-xl text-primary-foreground/90 max-w-2xl mx-auto">
             Flexible trailer solutions designed to keep your business moving forward
           </p>

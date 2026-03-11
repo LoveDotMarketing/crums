@@ -139,7 +139,7 @@ const LeaseToOwn = () => {
             <span className="text-sm font-medium">Lease-to-Own Program</span>
           </div>
           <h1 className="text-4xl md:text-6xl font-bold mb-6">
-            Every Payment Brings You Closer to Ownership
+            Lease to Own a 53' Dry Van Trailer
           </h1>
           <p className="text-xl md:text-2xl max-w-3xl mx-auto text-primary-foreground/90 mb-8">
             Stop renting. Start building equity with every monthly payment toward a trailer you'll own outright—no balloon payments, no buyout fees.

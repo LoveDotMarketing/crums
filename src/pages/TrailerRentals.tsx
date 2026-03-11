@@ -33,7 +33,7 @@ const TrailerRentals = () => {
       {/* Hero */}
       <section className="bg-gradient-to-r from-secondary to-brand-orange-light text-secondary-foreground py-20">
         <div className="container mx-auto px-4 text-center">
-          <h1 className="text-4xl md:text-6xl font-bold mb-6">Trailer Rental Solutions</h1>
+          <h1 className="text-4xl md:text-6xl font-bold mb-6">53' Dry Van & Flatbed Trailer Rentals</h1>
           <p className="text-xl md:text-2xl max-w-4xl mx-auto mb-8 text-secondary-foreground/90">
             Flexible short-term rental options for peak seasons, special projects, or testing new equipment before you commit. We ship trailers anywhere in the United States.
           </p>

@@ -52,7 +52,7 @@ const Locations = () => {
       {/* Hero */}
       <section className="bg-gradient-to-r from-primary to-brand-teal-dark text-primary-foreground py-20">
         <div className="container mx-auto px-4 text-center">
-          <h1 className="text-4xl md:text-6xl font-bold mb-6">Trailer Rental Locations</h1>
+          <h1 className="text-4xl md:text-6xl font-bold mb-6">53' Dry Van & Flatbed Trailer Rental Locations</h1>
           <p className="text-xl md:text-2xl max-w-4xl mx-auto text-primary-foreground/90 mb-8">
             Pick up at our San Antonio, Texas yard or get delivery anywhere in the nation. 
             We serve {locations.length}+ major markets across the United States.

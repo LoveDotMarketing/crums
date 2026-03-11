@@ -131,7 +131,7 @@ const DryVanTrailers = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <SEO
-        title="53' & 48' Dry Van Trailer Dimensions & Leasing | CRUMS"
+        title="53' & 48' Dry Van Trailer Dimensions & Leasing"
         description="53' and 48' dry van interior dimensions, cubic feet, and pallet positions. 53'L x 8'6&quot;W x 9'H (3,489 cu ft) | 48'L x 8'6&quot;W x 9'H (3,165 cu ft). Lease from CRUMS - flexible terms."
         canonical="https://crumsleasing.com/dry-van-trailers"
         structuredData={combinedSchema}
