@@ -314,7 +314,7 @@ export const locations: LocationData[] = [
     stateAbbr: "MO",
     slug: "kansas-city-mo",
     metaTitle: "Trailer Rental Kansas City MO | CRUMS Leasing",
-    metaDescription: "Trailer leasing in Kansas City, MO. Commercial trailers delivered to KC metro. Central hub for freight distribution.",
+    metaDescription: "Trailer leasing in Kansas City, MO. Delivered from Texas at competitive rates. 53' dry van & flatbed trailers. Call 1-888-570-4564.",
     h1: "Trailer Rental & Leasing in Kansas City, Missouri",
     distanceFromBulverde: 690,
     isPickupFriendly: false,
