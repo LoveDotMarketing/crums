@@ -23,13 +23,39 @@ const FleetSolutions = () => {
     { name: "Fleet Solutions", url: "https://crumsleasing.com/services/fleet-solutions" }
   ]);
 
+  const serviceSchema = {
+    "@context": "https://schema.org",
+    "@type": "Service",
+    "serviceType": "Fleet Management Solutions",
+    "name": "Comprehensive Fleet Solutions",
+    "description": "Complete fleet management services including 53-foot dry van and flatbed trailer leasing, digital portal, GPS tracking, maintenance coordination, and 24/7 support for growing businesses.",
+    "provider": {
+      "@type": "LocalBusiness",
+      "name": "CRUMS Leasing",
+      "telephone": "+1-888-570-4564",
+      "url": "https://crumsleasing.com"
+    },
+    "areaServed": {
+      "@type": "Country",
+      "name": "United States"
+    },
+    "hasOfferCatalog": {
+      "@type": "OfferCatalog",
+      "name": "Fleet Trailer Options",
+      "itemListElement": [
+        { "@type": "Offer", "itemOffered": { "@type": "Product", "name": "53-Foot Dry Van Trailer Lease" } },
+        { "@type": "Offer", "itemOffered": { "@type": "Product", "name": "Flatbed Trailer Lease" } }
+      ]
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <SEO
         title="Fleet Solutions - Comprehensive Fleet Management Services"
         description="Complete fleet management with 24/7 support, digital portal, GPS tracking, and maintenance coordination. Perfect for growing businesses with multiple trailers."
         canonical="https://crumsleasing.com/services/fleet-solutions"
-        structuredData={breadcrumbSchema}
+        structuredData={[breadcrumbSchema, serviceSchema]}
       />
       <Navigation />
 

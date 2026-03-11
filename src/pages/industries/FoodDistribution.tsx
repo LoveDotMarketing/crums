@@ -60,7 +60,7 @@ const FoodDistribution = () => {
         title="Food Distribution — 53' Dry Van Trailer Leasing"
         description="Trailer leasing for food distribution companies. CRUMS Leasing offers dry van trailers for safe, reliable food transport."
         canonical="https://crumsleasing.com/industries/food-distribution"
-        structuredData={[foodDistributionServiceSchema, breadcrumbSchema]}
+        structuredData={[foodDistributionServiceSchema, breadcrumbSchema, faqSchema]}
       />
       <Navigation />
       

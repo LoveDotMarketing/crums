@@ -60,7 +60,7 @@ const Manufacturing = () => {
         title="Manufacturing Logistics — 53' Dry Van & Flatbed Trailers"
         description="Trailer leasing for manufacturing companies. CRUMS Leasing offers dry van and flatbed trailers to support manufacturing logistics and supply chains."
         canonical="https://crumsleasing.com/industries/manufacturing"
-        structuredData={[manufacturingServiceSchema, breadcrumbSchema]}
+        structuredData={[manufacturingServiceSchema, breadcrumbSchema, faqSchema]}
       />
       <Navigation />
       

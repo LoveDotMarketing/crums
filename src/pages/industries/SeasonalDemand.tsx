@@ -91,7 +91,7 @@ const SeasonalDemand = () => {
         title="Seasonal 53' Dry Van & Flatbed Trailer Rentals"
         description="Short-term trailer rentals for seasonal demand spikes. CRUMS Leasing offers flexible capacity solutions for holiday seasons, harvest, and peak shipping periods."
         canonical="https://crumsleasing.com/industries/seasonal-demand"
-        structuredData={[seasonalDemandServiceSchema, breadcrumbSchema, howToSchema]}
+        structuredData={[seasonalDemandServiceSchema, breadcrumbSchema, howToSchema, faqSchema]}
       />
       <Navigation />
       

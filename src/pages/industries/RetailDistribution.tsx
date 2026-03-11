@@ -60,7 +60,7 @@ const RetailDistribution = () => {
         title="Retail Distribution — 53' Dry Van & Flatbed Trailers"
         description="Trailer leasing solutions for retail distribution and e-commerce fulfillment. CRUMS Leasing offers scalable capacity for retail supply chains."
         canonical="https://crumsleasing.com/industries/retail-distribution"
-        structuredData={[retailDistributionServiceSchema, breadcrumbSchema]}
+        structuredData={[retailDistributionServiceSchema, breadcrumbSchema, faqSchema]}
       />
       <Navigation />
       

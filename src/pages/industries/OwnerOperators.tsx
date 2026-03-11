@@ -60,7 +60,7 @@ const OwnerOperators = () => {
         title="Owner Operator 53' Dry Van & Flatbed Trailer Leasing"
         description="Flexible trailer leasing for independent owner operators. CRUMS Leasing offers affordable rates, simple contracts, and a people-first approach for independent carriers."
         canonical="https://crumsleasing.com/industries/owner-operators"
-        structuredData={[ownerOperatorsServiceSchema, breadcrumbSchema]}
+        structuredData={[ownerOperatorsServiceSchema, breadcrumbSchema, faqSchema]}
       />
       <Navigation />
       

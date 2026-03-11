@@ -14,13 +14,29 @@ const Mission = () => {
     { name: "Mission", url: "https://crumsleasing.com/mission" }
   ]);
 
+  const organizationSchema = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "CRUMS Leasing",
+    "url": "https://crumsleasing.com",
+    "description": "Family-owned trailer leasing company empowering carriers with 53-foot dry van and flatbed trailers, flexible solutions, and a people-first approach.",
+    "foundingDate": "2024",
+    "telephone": "+1-888-570-4564",
+    "slogan": "Follow the CRUMS home — to a future built on trust, family, and opportunity.",
+    "knowsAbout": ["Trailer Leasing", "53-Foot Dry Van Trailers", "Flatbed Trailers", "Fleet Management"],
+    "areaServed": {
+      "@type": "Country",
+      "name": "United States"
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <SEO
         title="Our Mission & Values - People-First Trailer Leasing"
         description="Discover CRUMS Leasing's mission: empowering carriers with freedom and stability. Our core values include integrity, family-first approach, and quality you can count on."
         canonical="https://crumsleasing.com/mission"
-        structuredData={breadcrumbSchema}
+        structuredData={[breadcrumbSchema, organizationSchema]}
       />
       <Navigation />
 
