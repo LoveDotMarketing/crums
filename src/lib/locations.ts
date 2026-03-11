@@ -120,7 +120,7 @@ export const locations: LocationData[] = [
     keyIndustries: ["Retail distribution", "E-commerce", "Technology", "Telecommunications", "Financial services"],
     nearbyAirports: ["DFW - Dallas/Fort Worth International", "DAL - Dallas Love Field"],
     regionalContext: "Dallas-Fort Worth is a major logistics hub and crossroads of America. The I-35 corridor connects to major markets in Mexico, and multiple interstates make DFW a natural distribution center.",
-    nearbyCities: ["houston-tx", "austin-tx", "fort-worth-tx"],
+    nearbyCities: ["houston-tx", "austin-tx", "fort-worth-tx", "oklahoma-city-ok"],
     landmarks: "Serving the entire DFW metroplex from Frisco and Plano to Grand Prairie and Arlington. I-35 corridor delivery from Central Texas.",
     testimonialSnippet: { text: "Fair rates, good equipment, and they actually answer the phone.", author: "C.D., Dallas" }
   },
@@ -158,7 +158,7 @@ export const locations: LocationData[] = [
     nearbyAirports: ["LAX - Los Angeles International", "ONT - Ontario International"],
     portAccess: "Port of Los Angeles & Port of Long Beach - busiest container port complex in the Western Hemisphere",
     regionalContext: "Los Angeles is the largest trucking market in the United States. The ports of LA and Long Beach handle nearly half of all containers entering the U.S., creating enormous demand for trailer capacity.",
-    nearbyCities: ["phoenix-az", "denver-co", "portland-or"],
+    nearbyCities: ["phoenix-az", "denver-co", "portland-or", "seattle-wa"],
     landmarks: "We deliver across LA County from the Port of Long Beach to the Inland Empire. Serving carriers on I-10 from San Bernardino to Santa Monica.",
     testimonialSnippet: { text: "Needed a trailer for port work in Long Beach. CRUMS delivered on time and the equipment was solid.", author: "A.R., Los Angeles" }
   },
@@ -322,7 +322,7 @@ export const locations: LocationData[] = [
     keyIndustries: ["Intermodal", "Automotive", "Agriculture", "Manufacturing", "E-commerce"],
     nearbyAirports: ["MCI - Kansas City International"],
     regionalContext: "Kansas City is a major freight hub where I-70 and I-35 intersect, connecting major markets from coast to coast and border to border. The city is a growing intermodal and e-commerce fulfillment center.",
-    nearbyCities: ["denver-co", "chicago-il", "dallas-tx", "indianapolis-in", "des-moines-ia"],
+    nearbyCities: ["denver-co", "chicago-il", "dallas-tx", "indianapolis-in", "des-moines-ia", "oklahoma-city-ok"],
     landmarks: "Serving the KC metro from the Fairfax industrial district to the Logistics Park Kansas City. I-35 corridor access for carriers on both sides of the state line.",
     testimonialSnippet: { text: "KC is where America's freight meets. CRUMS keeps my business moving.", author: "W.R., Kansas City" }
   },
@@ -361,7 +361,7 @@ export const locations: LocationData[] = [
     nearbyAirports: ["PHL - Philadelphia International"],
     portAccess: "Port of Philadelphia — major East Coast container and breakbulk port",
     regionalContext: "Philadelphia sits at the heart of the I-95 corridor, one of the most heavily trafficked freight lanes in the country. The region's pharma, retail, and e-commerce sectors drive consistent trailer demand year-round.",
-    nearbyCities: ["charlotte-nc", "columbus-oh", "richmond-va"],
+    nearbyCities: ["charlotte-nc", "columbus-oh", "richmond-va", "new-york-ny"],
     landmarks: "Serving the Greater Philadelphia area from the Port of Philadelphia to King of Prussia distribution centers. Easy access via I-76, I-95, and the PA Turnpike.",
     testimonialSnippet: { text: "Leasing locally in Philly was expensive. CRUMS delivered from Texas and saved me hundreds a month.", author: "D.M., Philadelphia" }
   },
@@ -436,9 +436,65 @@ export const locations: LocationData[] = [
     nearbyAirports: ["PDX - Portland International"],
     portAccess: "Port of Portland — key Pacific Northwest gateway for agriculture and manufacturing exports",
     regionalContext: "Portland is the Pacific Northwest's primary logistics hub, connecting I-5's north-south West Coast corridor with I-84's route to the inland Northwest. The region's timber, tech, and agricultural sectors drive strong trailer demand.",
-    nearbyCities: ["los-angeles-ca"],
+    nearbyCities: ["los-angeles-ca", "seattle-wa"],
     landmarks: "Delivering across the Portland metro from the Swan Island industrial district to the Rivergate terminal area and Troutdale distribution zone along I-84.",
     testimonialSnippet: { text: "West Coast trailer rates are brutal. CRUMS shipped from Texas and I'm paying way less than local options.", author: "M.K., Portland" }
+  },
+  {
+    city: "New York City",
+    state: "New York",
+    stateAbbr: "NY",
+    slug: "new-york-ny",
+    metaTitle: "Trailer Rental New York City NY | Texas Prices, Delivered | CRUMS Leasing",
+    metaDescription: "Trailer rental in New York City, NY. Texas-based pricing delivered nationwide — save more than leasing locally. 53' dry van & flatbed trailers. Call 1-888-570-4564.",
+    h1: "Trailer Rental & Leasing in New York City, New York",
+    distanceFromBulverde: 1800,
+    isPickupFriendly: false,
+    keyHighways: ["I-95", "I-78", "I-87", "I-278"],
+    keyIndustries: ["Port logistics", "E-commerce fulfillment", "Retail distribution", "Food & beverage", "Construction"],
+    nearbyAirports: ["JFK - John F. Kennedy International", "EWR - Newark Liberty International"],
+    portAccess: "Port of New York & New Jersey — largest port complex on the East Coast",
+    regionalContext: "New York City is the largest freight market on the East Coast. The Port of NY/NJ handles the most container volume of any East Coast port, and the metro area's massive consumer base drives enormous demand for trailer capacity year-round.",
+    nearbyCities: ["philadelphia-pa"],
+    landmarks: "Serving the tri-state area from the Hunts Point distribution center in the Bronx to the NJ Turnpike corridor. Delivering to carriers across Brooklyn, Queens, and the I-95 Northeast Corridor.",
+    testimonialSnippet: { text: "NYC leasing rates are insane. CRUMS delivered from Texas and I'm saving over $400 a month.", author: "J.R., New York" }
+  },
+  {
+    city: "Oklahoma City",
+    state: "Oklahoma",
+    stateAbbr: "OK",
+    slug: "oklahoma-city-ok",
+    metaTitle: "Trailer Rental Oklahoma City OK | Texas Prices, Delivered | CRUMS Leasing",
+    metaDescription: "Trailer rental in Oklahoma City, OK. Texas-based pricing delivered to Oklahoma — save more than leasing locally. 53' dry van & flatbed trailers. Call 1-888-570-4564.",
+    h1: "Trailer Rental & Leasing in Oklahoma City, Oklahoma",
+    distanceFromBulverde: 450,
+    isPickupFriendly: false,
+    keyHighways: ["I-35", "I-40", "I-44"],
+    keyIndustries: ["Oil & gas", "Agriculture", "Distribution", "Aerospace", "Manufacturing"],
+    nearbyAirports: ["OKC - Will Rogers World Airport"],
+    regionalContext: "Oklahoma City sits at the crossroads of I-35 and I-40, connecting Texas markets to the Midwest. The region's oil & gas, agriculture, and distribution sectors drive steady trailer demand. Just 450 miles from our Texas base — one of our closest out-of-state markets.",
+    nearbyCities: ["dallas-tx", "kansas-city-mo"],
+    landmarks: "Serving the OKC metro from the Tinker AFB logistics corridor to the I-35/I-40 interchange distribution centers and the Will Rogers World Airport cargo area.",
+    testimonialSnippet: { text: "Oklahoma to Texas is a quick run. CRUMS had my trailer delivered next day at half the local price.", author: "C.B., Oklahoma City" }
+  },
+  {
+    city: "Seattle",
+    state: "Washington",
+    stateAbbr: "WA",
+    slug: "seattle-wa",
+    metaTitle: "Trailer Rental Seattle WA | Texas Prices, Delivered | CRUMS Leasing",
+    metaDescription: "Trailer rental in Seattle, WA. Texas-based pricing delivered nationwide — save more than leasing locally. 53' dry van & flatbed trailers. Call 1-888-570-4564.",
+    h1: "Trailer Rental & Leasing in Seattle, Washington",
+    distanceFromBulverde: 2200,
+    isPickupFriendly: false,
+    keyHighways: ["I-5", "I-90", "I-405"],
+    keyIndustries: ["Port logistics", "Tech", "Timber", "Agriculture", "Aerospace"],
+    nearbyAirports: ["SEA - Seattle-Tacoma International"],
+    portAccess: "Port of Seattle & Port of Tacoma — major Pacific trade gateway, the Northwest Seaport Alliance",
+    regionalContext: "Seattle is the Pacific Northwest's largest metro and a critical gateway for trans-Pacific trade. The ports of Seattle and Tacoma form the Northwest Seaport Alliance, handling massive container volumes. The I-5 corridor connects to Portland and California markets.",
+    nearbyCities: ["portland-or", "los-angeles-ca"],
+    landmarks: "Delivering across the Puget Sound region from the Port of Tacoma to the SoDo industrial district and Kent Valley distribution centers along I-5.",
+    testimonialSnippet: { text: "Seattle trailer prices are sky-high. CRUMS shipped from Texas and the savings are unreal.", author: "T.N., Seattle" }
   }
 ];
 
@@ -465,12 +521,12 @@ export const getNearbyLocations = (slug: string): LocationData[] => {
 // Group locations by region for the hub page
 export const getLocationsByRegion = () => {
   const texas = locations.filter(loc => loc.stateAbbr === "TX");
-  const southwest = locations.filter(loc => ["CA", "AZ"].includes(loc.stateAbbr));
+  const southwest = locations.filter(loc => ["CA", "AZ", "OK"].includes(loc.stateAbbr));
   const midwest = locations.filter(loc => ["IL", "IN", "MO", "OH", "IA"].includes(loc.stateAbbr));
   const southeast = locations.filter(loc => ["GA", "TN", "NC", "FL", "VA"].includes(loc.stateAbbr));
   const mountain = locations.filter(loc => ["CO"].includes(loc.stateAbbr));
-  const northeast = locations.filter(loc => ["PA"].includes(loc.stateAbbr));
-  const west = locations.filter(loc => ["OR"].includes(loc.stateAbbr));
+  const northeast = locations.filter(loc => ["PA", "NY"].includes(loc.stateAbbr));
+  const west = locations.filter(loc => ["OR", "WA"].includes(loc.stateAbbr));
   
   return { texas, southwest, midwest, southeast, mountain, northeast, west };
 };
