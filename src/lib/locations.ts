@@ -194,7 +194,7 @@ export const locations: LocationData[] = [
     keyIndustries: ["E-commerce", "Retail distribution", "Beverage", "Automotive", "Film production"],
     nearbyAirports: ["ATL - Hartsfield-Jackson Atlanta International"],
     regionalContext: "Atlanta is the logistics hub of the Southeast, where I-85, I-75, and I-20 converge. Hartsfield-Jackson is the world's busiest airport, and the region is home to major corporate headquarters.",
-    nearbyCities: ["charlotte-nc", "nashville-tn", "memphis-tn"],
+    nearbyCities: ["charlotte-nc", "nashville-tn", "memphis-tn", "jacksonville-fl"],
     landmarks: "Delivering across metro Atlanta from Marietta to McDonough. Convenient for carriers working the I-75 and I-85 corridors through Georgia.",
     testimonialSnippet: { text: "Southeast runs are my bread and butter. CRUMS keeps me rolling with reliable equipment.", author: "D.J., Atlanta" }
   },
