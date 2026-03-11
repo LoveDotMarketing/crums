@@ -33,7 +33,7 @@ const About = () => {
     <div className="min-h-screen flex flex-col">
       <SEO
         title="About Us - Family-Owned Trailer Leasing Company"
-        description="Learn about CRUMS Leasing's family-rooted legacy. Founded on trust and integrity, we provide quality trailer leasing solutions with a people-first approach."
+        description="Learn about CRUMS Leasing's family-rooted legacy. Founded on trust and integrity, we provide 53' dry van and flatbed trailer leasing solutions with a people-first approach."
         canonical="https://crumsleasing.com/about"
         structuredData={combinedSchema}
       />

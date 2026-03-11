@@ -282,7 +282,7 @@ const Contact = () => {
     <div className="min-h-screen flex flex-col">
         <SEO
         title="Contact Us - Get A Quote"
-        description="Contact CRUMS Leasing for trailer leasing and rental quotes. Located in San Antonio, TX. Call (888) 570-4564. 24/7 emergency support available."
+        description="Contact CRUMS Leasing for 53' dry van and flatbed trailer leasing and rental quotes. Located in San Antonio, TX. Call (888) 570-4564. 24/7 emergency support available."
         canonical="https://crumsleasing.com/contact"
         structuredData={combinedSchema}
       />
@@ -291,7 +291,7 @@ const Contact = () => {
       {/* Hero */}
       <section className="bg-gradient-to-r from-secondary to-brand-orange-light text-secondary-foreground py-20">
         <div className="container mx-auto px-4 text-center">
-          <h1 className="text-4xl md:text-6xl font-bold mb-6">Contact Us</h1>
+          <h1 className="text-4xl md:text-6xl font-bold mb-6">Contact Us for a 53' Dry Van or Flatbed Trailer Quote</h1>
           <p className="text-xl md:text-2xl max-w-4xl mx-auto text-secondary-foreground/90">
             Ready to get started? Our team is here to help you find the perfect solution.
           </p>

@@ -42,8 +42,8 @@ const Locations = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <SEO
-        title="Trailer Rental Locations | Nationwide Delivery | CRUMS"
-        description="CRUMS Leasing delivers trailers nationwide. Pick up at our San Antonio, TX yard or get delivery to Houston, Dallas, LA, Chicago & more. Call 1-888-570-4564."
+        title="53' Dry Van & Flatbed Trailer Rental Locations — Nationwide Delivery"
+        description="CRUMS Leasing delivers 53' dry van and flatbed trailers nationwide. Pick up at our San Antonio, TX yard or get delivery to Houston, Dallas, LA, Chicago & more. Call 1-888-570-4564."
         canonical="https://crumsleasing.com/locations"
         structuredData={combinedSchema}
       />
@@ -52,7 +52,7 @@ const Locations = () => {
       {/* Hero */}
       <section className="bg-gradient-to-r from-primary to-brand-teal-dark text-primary-foreground py-20">
         <div className="container mx-auto px-4 text-center">
-          <h1 className="text-4xl md:text-6xl font-bold mb-6">Trailer Rental Locations</h1>
+          <h1 className="text-4xl md:text-6xl font-bold mb-6">53' Dry Van & Flatbed Trailer Rental Locations</h1>
           <p className="text-xl md:text-2xl max-w-4xl mx-auto text-primary-foreground/90 mb-8">
             Pick up at our San Antonio, Texas yard or get delivery anywhere in the nation. 
             We serve {locations.length}+ major markets across the United States.
