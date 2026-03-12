@@ -233,6 +233,11 @@ export default function Fleet() {
       return;
     }
 
+    if (!companyId) {
+      toast.error("Company configuration missing. Contact admin.");
+      return;
+    }
+
     setSaving(true);
 
     try {
