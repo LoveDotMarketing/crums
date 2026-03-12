@@ -89,6 +89,14 @@ const GoogleThankYou = () => {
             <p className="text-sm text-muted-foreground">Need it sooner?</p>
             <a
               href="tel:+18885704564"
+              onClick={() => {
+                if (typeof window !== 'undefined' && window.gtag) {
+                  window.gtag('event', 'phone_click', {
+                    phone_number: '+18885704564',
+                    page: window.location.pathname,
+                  });
+                }
+              }}
               className="inline-flex items-center gap-2 text-primary font-semibold text-lg hover:underline"
             >
               <Phone className="h-5 w-5" />
