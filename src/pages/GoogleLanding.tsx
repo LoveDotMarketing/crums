@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { trackFormStart, trackPageView } from "@/lib/analytics";
+import { trackFormStart, trackPageView, trackEvent } from "@/lib/analytics";
 import { getLeadSourceData } from "@/lib/leadSourceTracking";
 import {
   Phone,
@@ -217,6 +217,14 @@ const GoogleLanding = () => {
           />
           <a
             href="tel:+18885704564"
+            onClick={() => {
+              if (typeof window !== 'undefined' && window.gtag) {
+                window.gtag('event', 'phone_click', {
+                  phone_number: '+18885704564',
+                  page: window.location.pathname,
+                });
+              }
+            }}
             className="flex items-center gap-2 text-sm font-semibold text-primary hover:text-primary/80 transition-colors"
           >
             <Phone className="h-4 w-4" />
