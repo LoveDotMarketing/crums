@@ -162,6 +162,16 @@ export default function Fleet() {
       // Store company_id for adding new trailers (use default if not set)
       if (profileData?.company_id) {
         setCompanyId(profileData.company_id);
+      } else {
+        // Fallback: get company_id from existing trailers
+        const { data: existingTrailer } = await supabase
+          .from("trailers")
+          .select("company_id")
+          .limit(1)
+          .single();
+        if (existingTrailer?.company_id) {
+          setCompanyId(existingTrailer.company_id);
+        }
       }
 
       // Admins can view ALL trailers - RLS already enforces access control
