@@ -11,6 +11,7 @@ const GoogleThankYou = () => {
   const firstName = state?.name?.split(" ")[0] || "";
 
   useEffect(() => {
+    trackPageView("/lp/google/thank-you", "Thank You | CRUMS Leasing", "landing_page");
     trackFormSubmission("google_landing");
     trackConversion("quote_request");
   }, []);
