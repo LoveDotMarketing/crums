@@ -55,6 +55,14 @@ const LinkedInThankYou = () => {
           <a
             href="tel:+18885704564"
             className="flex items-center gap-2 text-sm font-semibold text-primary hover:text-primary/80 transition-colors"
+            onClick={() => {
+              if (typeof window !== 'undefined' && (window as Window & { gtag?: (...args: unknown[]) => void }).gtag) {
+                (window as Window & { gtag: (...args: unknown[]) => void }).gtag('event', 'phone_click', {
+                  phone_number: '+18885704564',
+                  page: window.location.pathname,
+                });
+              }
+            }}
           >
             <Phone className="h-4 w-4" />
             <span className="hidden sm:inline">(888) 570-4564</span>
@@ -101,6 +109,14 @@ const LinkedInThankYou = () => {
             <a
               href="tel:+18885704564"
               className="inline-flex items-center gap-2 text-primary font-semibold text-lg hover:underline"
+              onClick={() => {
+                if (typeof window !== 'undefined' && (window as Window & { gtag?: (...args: unknown[]) => void }).gtag) {
+                  (window as Window & { gtag: (...args: unknown[]) => void }).gtag('event', 'phone_click', {
+                    phone_number: '+18885704564',
+                    page: window.location.pathname,
+                  });
+                }
+              }}
             >
               <Phone className="h-5 w-5" />
               Call (888) 570-4564
