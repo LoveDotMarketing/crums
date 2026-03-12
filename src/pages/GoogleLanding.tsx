@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { trackFormStart, trackPageView } from "@/lib/analytics";
+import { trackFormStart, trackPageView, trackEvent } from "@/lib/analytics";
 import { getLeadSourceData } from "@/lib/leadSourceTracking";
 import {
   Phone,
