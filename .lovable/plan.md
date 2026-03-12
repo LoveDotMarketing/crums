@@ -1,32 +1,47 @@
 
 
-## Problem
+## Fix: "Failed to add trailer" for staff without company_id
 
-Abdul's `customer_applications` record shows `payment_setup_status = 'completed'` and has a `stripe_payment_method_id` (`pm_1T7dwSLjIwiEGQIhzU647O3c`) that is dead/detached in Stripe. The UI shows "ACH ✓" and hides the "Send ACH Setup" button, so there's no way to re-do the setup.
+### Root Cause
+Eric Bledsoe's profile (`eric@crumsleasing.com`) has `company_id: NULL`. When adding a trailer, the code uses the logged-in user's `company_id` from their profile. Since it's null, `companyId` stays as an empty string `""`, which fails the UUID NOT NULL constraint on the `trailers` table.
 
-## Fix
+All existing trailers use the same company ID: `fac613bd-c65f-42a5-b241-75afe75d53c5`.
 
-### 1. Database: Reset Abdul's ACH status
+### Plan
 
-Run a migration to clear the broken payment method and reset status so the ACH setup flow can be re-initiated:
+**1. Database fix — set Eric's company_id**
+Run a migration to set the correct `company_id` on Eric's profile so he can add trailers immediately.
 
-```sql
-UPDATE customer_applications
-SET payment_setup_status = 'pending',
-    stripe_payment_method_id = NULL
-WHERE id = '25b5046d-d4b2-405c-bf78-ba3e2b71039f';
+**2. Code fix — add fallback in `Fleet.tsx`**
+When the admin's profile has no `company_id`, fall back to fetching it from an existing trailer in the fleet. This prevents this issue from happening for any future staff member.
+
+In `src/pages/admin/Fleet.tsx` around line 162-165, after the profile fetch, add a fallback:
+
+```typescript
+if (profileData?.company_id) {
+  setCompanyId(profileData.company_id);
+} else {
+  // Fallback: get company_id from existing trailers
+  const { data: existingTrailer } = await supabase
+    .from("trailers")
+    .select("company_id")
+    .limit(1)
+    .single();
+  if (existingTrailer?.company_id) {
+    setCompanyId(existingTrailer.company_id);
+  }
+}
 ```
 
-### 2. UI: Add a "Reset ACH" option for admins
+Also add a guard in `handleAddTrailer` to show a clear error if `companyId` is still empty:
+```typescript
+if (!companyId) {
+  toast.error("Company configuration missing. Contact admin.");
+  return;
+}
+```
 
-In `src/pages/admin/Applications.tsx`, update the ACH badge area (~line 773) so that when `payment_setup_status === "completed"`, instead of only showing the static "ACH ✓" badge, also show a small reset button that sets `payment_setup_status` back to `pending` and clears `stripe_payment_method_id`. This prevents needing manual database edits in the future.
-
-The reset button will:
-- Update `customer_applications` setting `payment_setup_status = 'pending'` and `stripe_payment_method_id = null`
-- Refresh the applications list
-- Show a toast confirmation
-
-### Files to update
-- **Database migration** — one UPDATE statement for Abdul's record
-- `src/pages/admin/Applications.tsx` — add reset ACH button next to the "ACH ✓" badge (~5 lines)
+### Files changed
+- **Database migration** — UPDATE Eric's profile with correct company_id
+- `src/pages/admin/Fleet.tsx` — fallback logic + guard
 
