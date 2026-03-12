@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { SEO } from "@/components/SEO";
 import { Phone, CheckCircle, Truck, Shield, Clock } from "lucide-react";
-import { trackFormSubmission, trackConversion } from "@/lib/analytics";
+import { trackFormSubmission, trackConversion, trackPageView } from "@/lib/analytics";
 import crumsLogo from "@/assets/crums-leasing-logo-contact.jpg";
 
 const GoogleThankYou = () => {
