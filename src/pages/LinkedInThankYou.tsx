@@ -5,7 +5,17 @@ import { Phone, CheckCircle, Truck, Shield, Clock } from "lucide-react";
 import { trackFormSubmission, trackConversion } from "@/lib/analytics";
 import { trackLinkedInQuoteRequest } from "@/lib/linkedinAnalytics";
 import { supabase } from "@/integrations/supabase/client";
+import { RelatedLinksSection } from "@/components/RelatedLinksSection";
 import crumsLogo from "@/assets/crums-leasing-logo-contact.jpg";
+
+const thankYouLinks = [
+  { to: "/dry-van-trailer-leasing", label: "Dry Van Trailer Leasing", description: "Flexible leasing plans with no credit check required" },
+  { to: "/services/lease-to-own", label: "Lease-to-Own Program", description: "Build equity with every payment toward trailer ownership" },
+  { to: "/commercial-dry-van-trailer-for-lease-56171", label: "View Available Trailer", description: "Browse our current inventory — Unit 56171 ready for pickup" },
+  { to: "/resources/guides/owner-operator-basics", label: "Owner-Operator Basics", description: "Essential guide for independent truckers getting started" },
+  { to: "/resources/tools/cost-per-mile", label: "Cost Per Mile Calculator", description: "Calculate your true operating costs per mile" },
+  { to: "/why-choose-crums", label: "Why Choose CRUMS?", description: "See what sets us apart from other leasing companies" },
+];
 
 const LinkedInThankYou = () => {
   const location = useLocation();
@@ -137,6 +147,11 @@ const LinkedInThankYou = () => {
           </div>
         </div>
       </main>
+      <RelatedLinksSection
+        title="While You Wait"
+        subtitle="Explore resources to help you get started"
+        links={thankYouLinks}
+      />
     </>
   );
 };
