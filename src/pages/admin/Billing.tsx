@@ -686,48 +686,8 @@ export default function Billing() {
       setIsActivating(null);
     }
   };
-  // Sync payments from Stripe
-  const handleSyncPayments = async () => {
-    setIsSyncingPayments(true);
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        toast.error("You must be logged in");
-        return;
-      }
 
-      const { data, error } = await supabase.functions.invoke("sync-payments", {
-        headers: { Authorization: `Bearer ${session.access_token}` },
-        body: { time: "manual" }
-      });
 
-      if (error) throw error;
-
-      const created = data?.paymentsCreated || 0;
-      const updated = data?.paymentsUpdated || 0;
-      const deposits = data?.depositsConfirmed || 0;
-
-      if (created + updated + deposits === 0) {
-        toast.info("All payments are already in sync");
-      } else {
-        const parts = [];
-        if (created) parts.push(`${created} created`);
-        if (updated) parts.push(`${updated} updated`);
-        if (deposits) parts.push(`${deposits} deposits confirmed`);
-        toast.success(`Sync complete: ${parts.join(", ")}`);
-      }
-
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ["customer-subscriptions"] }),
-        queryClient.invalidateQueries({ queryKey: ["billing-history"] }),
-      ]);
-    } catch (error) {
-      console.error("Sync payments error:", error);
-      toast.error("Sync failed: " + (error instanceof Error ? error.message : "Unknown error"));
-    } finally {
-      setIsSyncingPayments(false);
-    }
-  };
 
   const { data: subscriptions, isLoading: loadingSubscriptions } = useQuery({
     queryKey: ["customer-subscriptions"],
