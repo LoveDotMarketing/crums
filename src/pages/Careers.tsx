@@ -331,6 +331,19 @@ const Careers = () => {
         </div>
       </section>
 
+      <RelatedLinksSection
+        title="Explore CRUMS Leasing"
+        subtitle="Learn more about our company and services"
+        links={[
+          { to: "/about", label: "About Us", description: "Meet the team and learn about our mission to support truckers." },
+          { to: "/our-story", label: "Our Story", description: "How CRUMS Leasing grew from a family dream into a trusted name." },
+          { to: "/why-choose-crums", label: "Why Choose CRUMS", description: "Reliable equipment, personal service, and flexible terms." },
+          { to: "/dry-van-trailer-leasing", label: "Trailer Leasing Services", description: "See the lease options we offer for owner-operators and fleets." },
+          { to: "/reviews", label: "Customer Reviews", description: "Read what our customers say about working with CRUMS." },
+          { to: "/resources/guides/trucking-career", label: "Guide: Starting a Trucking Career", description: "Everything you need to know about building a career in trucking." },
+        ]}
+      />
+
       <Footer />
     </div>
   );

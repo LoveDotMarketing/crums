@@ -320,6 +320,19 @@ const VeteransMilitaryDiscount = () => {
         </section>
       </main>
 
+      <RelatedLinksSection
+        title="Helpful Resources for Veterans"
+        subtitle="Tools and guides to start your trucking business"
+        links={[
+          { to: "/dry-van-trailer-leasing", label: "Dry Van Trailer Leasing", description: "Explore flexible lease terms on 53' dry van trailers." },
+          { to: "/services/lease-to-own", label: "Lease to Own Program", description: "Build equity with every payment toward full trailer ownership." },
+          { to: "/resources/guides/getting-your-cdl", label: "Guide: Getting Your CDL", description: "Step-by-step guide to earning your commercial driver's license." },
+          { to: "/resources/guides/owner-operator-basics", label: "Owner-Operator Basics", description: "Essential knowledge for starting as an independent truck operator." },
+          { to: "/resources/tools/profit-calculator", label: "Profit Per Load Calculator", description: "Estimate your take-home profit on each haul." },
+          { to: "/get-started", label: "Apply with Your Military Discount", description: "Submit your application and receive your veteran discount." },
+        ]}
+      />
+
       <Footer />
     </div>
   );

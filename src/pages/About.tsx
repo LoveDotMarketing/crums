@@ -349,6 +349,19 @@ const About = () => {
         </div>
       </section>
 
+      <RelatedLinksSection
+        title="Learn More About CRUMS"
+        subtitle="Explore our services and helpful resources"
+        links={[
+          { to: "/our-story", label: "Our Story", description: "Read how CRUMS Leasing grew from a family vision into a trusted trailer leasing company." },
+          { to: "/why-choose-crums", label: "Why Choose CRUMS", description: "See what sets us apart — reliable equipment, flexible terms, and personal service." },
+          { to: "/dry-van-trailer-leasing", label: "Dry Van Trailer Leasing", description: "Explore flexible lease options on 53' dry van trailers." },
+          { to: "/resources/guides/owner-operator-basics", label: "Owner-Operator Basics Guide", description: "Everything new owner-operators need to know to get started." },
+          { to: "/resources/tools/cost-per-mile", label: "Cost Per Mile Calculator", description: "Calculate your true operating cost per mile." },
+          { to: "/get-started", label: "Get Started Today", description: "Apply online for a trailer lease in minutes." },
+        ]}
+      />
+
       <Footer />
     </div>
   );

@@ -377,6 +377,19 @@ const Reviews = () => {
         </div>
       </section>
 
+      <RelatedLinksSection
+        title="See Why Drivers Choose CRUMS"
+        subtitle="Explore our services and resources"
+        links={[
+          { to: "/why-choose-crums", label: "Why Choose CRUMS", description: "Discover what makes CRUMS Leasing the trusted choice for owner-operators." },
+          { to: "/dry-van-trailer-leasing", label: "Dry Van Trailer Leasing", description: "Flexible lease terms on well-maintained 53' dry van trailers." },
+          { to: "/commercial-dry-van-trailer-for-lease-56171", label: "View Trailer: Unit 56171", description: "See a fully inspected 2020 Great Dane dry van ready to lease." },
+          { to: "/resources/guides/lease-first-trailer", label: "Guide: Lease Your First Trailer", description: "Step-by-step guide for first-time trailer lessees." },
+          { to: "/resources/tools/lease-vs-buy", label: "Lease vs Buy Calculator", description: "Compare leasing versus buying a trailer over time." },
+          { to: "/get-started", label: "Apply for a Lease", description: "Get approved in as little as 24 hours." },
+        ]}
+      />
+
       <Footer />
       <ChatBot userType="customer" />
     </div>
