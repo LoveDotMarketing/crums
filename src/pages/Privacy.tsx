@@ -94,6 +94,19 @@ const Privacy = () => {
         </div>
       </main>
 
+      <RelatedLinksSection
+        title="Explore CRUMS Leasing"
+        subtitle="Learn more about our services and commitment to carriers"
+        links={[
+          { to: "/terms", label: "Terms of Service", description: "Review the terms governing our trailer leasing services." },
+          { to: "/dry-van-trailer-leasing", label: "Dry Van Trailer Leasing", description: "53' dry van trailers with flexible lease terms." },
+          { to: "/get-started", label: "Apply Now", description: "Start your lease application — fast and easy online process." },
+          { to: "/commercial-dry-van-trailer-for-lease-56171", label: "Browse Available Trailers", description: "See our 2020 Great Dane dry van with full inspection details." },
+          { to: "/contact", label: "Contact Us", description: "Questions about our privacy practices? Reach out anytime." },
+          { to: "/mission", label: "Our Mission & Values", description: "People-first values that guide everything we do." },
+        ]}
+      />
+
       <Footer />
     </div>
   );

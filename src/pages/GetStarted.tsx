@@ -1296,6 +1296,19 @@ export default function GetStarted() {
         </div>
       </main>
       
+      <RelatedLinksSection
+        title="Helpful Resources"
+        subtitle="Everything you need to get started with confidence"
+        links={[
+          { to: "/dry-van-trailer-leasing", label: "Dry Van Trailer Leasing", description: "Explore our 53' dry van lease options with flexible terms." },
+          { to: "/flatbed-trailer-leasing", label: "Flatbed Trailer Leasing", description: "Flatbed trailers for construction, lumber, and oversized loads." },
+          { to: "/commercial-dry-van-trailer-for-lease-56171", label: "See a Trailer Profile", description: "View our 2020 Great Dane dry van with full specs and photos." },
+          { to: "/lease-to-own", label: "Lease-to-Own Program", description: "Build equity while you haul — own your trailer over time." },
+          { to: "/resources/tools", label: "Trucking Calculators", description: "Cost-per-mile, fuel, IFTA, and profit calculators for carriers." },
+          { to: "/reviews", label: "Customer Reviews", description: "See what other owner-operators say about leasing with CRUMS." },
+        ]}
+      />
+
       <Footer />
     </div>
   );

@@ -133,6 +133,19 @@ const Terms = () => {
         </div>
       </main>
 
+      <RelatedLinksSection
+        title="Related Pages"
+        subtitle="More information about CRUMS Leasing and our services"
+        links={[
+          { to: "/privacy", label: "Privacy Policy", description: "Learn how we collect, use, and protect your information." },
+          { to: "/dry-van-trailer-leasing", label: "Dry Van Trailer Leasing", description: "Explore lease options for our 53' dry van trailers." },
+          { to: "/flatbed-trailer-leasing", label: "Flatbed Trailer Leasing", description: "Flatbed trailers for heavy haul and specialized freight." },
+          { to: "/commercial-dry-van-trailer-for-lease-56171", label: "View a Trailer Profile", description: "See full specs, photos, and inspection details on Unit 56171." },
+          { to: "/get-started", label: "Start Your Application", description: "Apply online in minutes with our streamlined process." },
+          { to: "/why-choose-crums", label: "Why Choose CRUMS", description: "Family-owned, carrier-focused — see why drivers trust us." },
+        ]}
+      />
+
       <Footer />
     </div>
   );
