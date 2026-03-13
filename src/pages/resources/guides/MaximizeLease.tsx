@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
+import { GuideRelatedContent } from "@/components/GuideRelatedContent";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { SEO } from "@/components/SEO";
 import { FileCheck, DollarSign, Wrench, Shield, Calendar, Phone, CheckCircle2, AlertTriangle } from "lucide-react";
@@ -369,6 +370,7 @@ const MaximizeLease = () => {
         </section>
       </main>
       
+      <GuideRelatedContent currentSlug="maximize-lease" />
       <Footer />
     </div>
   );

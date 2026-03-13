@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
+import { GuideRelatedContent } from "@/components/GuideRelatedContent";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { SEO } from "@/components/SEO";
 import { Fuel, Gauge, Wind, Weight, Timer, TrendingDown, CheckCircle2, Calculator } from "lucide-react";
@@ -397,6 +398,7 @@ const FuelEfficiency = () => {
         </section>
       </main>
       
+      <GuideRelatedContent currentSlug="fuel-efficiency" />
       <Footer />
     </div>
   );

@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
+import { GuideRelatedContent } from "@/components/GuideRelatedContent";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { SEO } from "@/components/SEO";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -518,6 +519,7 @@ const GettingYourCDL = () => {
         </div>
       </section>
 
+      <GuideRelatedContent currentSlug="getting-your-cdl" />
       <Footer />
     </div>
   );

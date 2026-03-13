@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
+import { GuideRelatedContent } from "@/components/GuideRelatedContent";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { SEO } from "@/components/SEO";
 import { Brain, Sun, Moon, Heart, Music, Phone, Coffee, Activity, CheckCircle2, AlertCircle } from "lucide-react";
@@ -427,6 +428,7 @@ const MentalHealth = () => {
         </section>
       </main>
       
+      <GuideRelatedContent currentSlug="mental-health" />
       <Footer />
     </div>
   );

@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
+import { GuideRelatedContent } from "@/components/GuideRelatedContent";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { SEO } from "@/components/SEO";
 import { GraduationCap, TrendingUp, Users, Award, Target, Briefcase, ArrowRight, CheckCircle2 } from "lucide-react";
@@ -436,6 +437,7 @@ const TruckingCareer = () => {
         </section>
       </main>
       
+      <GuideRelatedContent currentSlug="trucking-career" />
       <Footer />
     </div>
   );
