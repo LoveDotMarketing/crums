@@ -78,22 +78,23 @@ const CATEGORY_ORDER = [
   "Body and Structure",
 ];
 
-export function WorkOrderForm({ onSuccess, onCancel }: WorkOrderFormProps) {
+export function WorkOrderForm({ onSuccess, onCancel, existingWorkOrder, existingLineItems }: WorkOrderFormProps) {
   const { effectiveUserId } = useAuth();
+  const isEditMode = !!existingWorkOrder;
   const [trailers, setTrailers] = useState<Trailer[]>([]);
   const [catalog, setCatalog] = useState<CatalogItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [loadingTrailers, setLoadingTrailers] = useState(true);
 
   // Form state
-  const [trailerId, setTrailerId] = useState("");
-  const [repairType, setRepairType] = useState("");
-  const [description, setDescription] = useState("");
-  const [workStartDate, setWorkStartDate] = useState(new Date().toISOString().split("T")[0]);
-  const [workCompletionDate, setWorkCompletionDate] = useState("");
-  const [laborHours, setLaborHours] = useState<number>(0);
-  const [includeTravelFee, setIncludeTravelFee] = useState(false);
-  const [parts, setParts] = useState<LineItem[]>([]);
+  const [trailerId, setTrailerId] = useState(existingWorkOrder?.trailer_id || "");
+  const [repairType, setRepairType] = useState(existingWorkOrder?.repair_type || "");
+  const [description, setDescription] = useState(existingWorkOrder?.description || "");
+  const [workStartDate, setWorkStartDate] = useState(existingWorkOrder?.work_start_date || new Date().toISOString().split("T")[0]);
+  const [workCompletionDate, setWorkCompletionDate] = useState(existingWorkOrder?.work_completion_date || "");
+  const [laborHours, setLaborHours] = useState<number>(existingWorkOrder?.labor_hours || 0);
+  const [includeTravelFee, setIncludeTravelFee] = useState(existingWorkOrder ? existingWorkOrder.travel_fee > 0 : false);
+  const [parts, setParts] = useState<LineItem[]>(existingLineItems || []);
 
   const LABOR_RATE = 85;
   const TRAVEL_FEE = 75;
