@@ -131,6 +131,8 @@ export default function DOTInspectionForm() {
   const [searchParams] = useSearchParams();
   const trailerId = searchParams.get("trailerId");
   const releaseId = searchParams.get("releaseId");
+  const isPhotosOnly = searchParams.get("photosOnly") === "true";
+  const photosOnlyInspectionId = searchParams.get("inspectionId");
   
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(true);
@@ -148,13 +150,60 @@ export default function DOTInspectionForm() {
   const [showMissingPhotoDialog, setShowMissingPhotoDialog] = useState(false);
 
   useEffect(() => {
+    if (isPhotosOnly && photosOnlyInspectionId) {
+      loadPhotosOnlyMode();
+      return;
+    }
     if (!trailerId) {
       toast.error("No trailer selected");
       navigate("/dashboard/mechanic");
       return;
     }
     initializeInspection();
-  }, [trailerId]);
+  }, [trailerId, isPhotosOnly, photosOnlyInspectionId]);
+
+  const loadPhotosOnlyMode = async () => {
+    try {
+      const { data: inspection, error } = await supabase
+        .from("dot_inspections")
+        .select("id, trailer_id, trailer_number, vin, license_plate, trailer_type")
+        .eq("id", photosOnlyInspectionId!)
+        .single();
+
+      if (error || !inspection) throw error || new Error("Inspection not found");
+
+      setInspectionId(inspection.id);
+      setTrailerInfo({
+        trailer_number: inspection.trailer_number,
+        vin: inspection.vin,
+        license_plate: inspection.license_plate,
+        type: inspection.trailer_type || "",
+      });
+
+      // Load existing photos
+      const { data: photosData } = await supabase
+        .from("dot_inspection_photos")
+        .select("id, category, photo_url")
+        .eq("inspection_id", inspection.id);
+
+      if (photosData) {
+        const groupedPhotos: Record<string, { id: string; photo_url: string }[]> = {};
+        photosData.forEach(photo => {
+          if (!groupedPhotos[photo.category]) {
+            groupedPhotos[photo.category] = [];
+          }
+          groupedPhotos[photo.category].push({ id: photo.id, photo_url: photo.photo_url });
+        });
+        setPhotos(groupedPhotos);
+      }
+    } catch (error) {
+      console.error("Error loading inspection for photos:", error);
+      toast.error("Failed to load inspection");
+      navigate("/dashboard/mechanic");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const initializeInspection = async () => {
     try {
@@ -409,6 +458,70 @@ export default function DOTInspectionForm() {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
+    );
+  }
+
+  // Photos-only mode: show all photo categories on a single page
+  if (isPhotosOnly && inspectionId) {
+    const photoCategories = [
+      { category: "brakes", label: "Brake System Photos" },
+      { category: "tires_left", label: "Left Side Tires" },
+      { category: "tires_right", label: "Right Side Tires" },
+      { category: "lights", label: "Lighting Photos" },
+      { category: "frame", label: "Frame & Structure Photos" },
+      { category: "doors", label: "Door Photos" },
+      { category: "landing_gear", label: "Landing Gear Photos" },
+      { category: "coupling", label: "Kingpin/Coupling Photos" },
+      { category: "reflective", label: "Reflective Tape Photos" },
+      { category: "license_plate", label: "License Plate Photo" },
+    ];
+
+    return (
+      <>
+        <SEO title="Add Inspection Photos" description="Upload photos for a completed DOT inspection" noindex />
+        <div className="min-h-screen bg-background">
+          <header className="border-b bg-card sticky top-0 z-10">
+            <div className="container mx-auto px-4 py-3">
+              <div className="flex items-center gap-3">
+                <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard/mechanic")}>
+                  <ArrowLeft className="h-5 w-5" />
+                </Button>
+                <div>
+                  <h1 className="text-lg font-semibold">Add Photos</h1>
+                  <p className="text-sm text-muted-foreground">
+                    Trailer #{trailerInfo?.trailer_number} • {trailerInfo?.type}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </header>
+
+          <main className="container mx-auto px-4 py-6 max-w-2xl space-y-6">
+            <p className="text-sm text-muted-foreground">
+              Upload or manage photos for this completed inspection. Changes are saved automatically.
+            </p>
+            {photoCategories.map(({ category, label }) => (
+              <Card key={category}>
+                <CardContent className="pt-6">
+                  <InspectionPhotoUpload
+                    inspectionId={inspectionId}
+                    category={category}
+                    label={label}
+                    existingPhotos={photos[category]}
+                    onPhotoUploaded={(url) => handlePhotoUploaded(category, url)}
+                    onPhotoDeleted={(id) => handlePhotoDeleted(category, id)}
+                  />
+                </CardContent>
+              </Card>
+            ))}
+
+            <Button variant="outline" className="w-full" onClick={() => navigate("/dashboard/mechanic")}>
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Dashboard
+            </Button>
+          </main>
+        </div>
+      </>
     );
   }
 

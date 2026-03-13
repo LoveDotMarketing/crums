@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Wrench, LogOut, Truck, Search, MapPin, DollarSign, ClipboardList, ClipboardCheck, Eye, ArrowDownToLine, ArrowUpFromLine, History, Calendar, Loader2, UserCheck, Users, CheckCircle2, Clock, XCircle } from "lucide-react";
+import { Wrench, LogOut, Truck, Search, MapPin, DollarSign, ClipboardList, ClipboardCheck, Eye, ArrowDownToLine, ArrowUpFromLine, History, Calendar, Loader2, UserCheck, Users, CheckCircle2, Clock, XCircle, Camera } from "lucide-react";
 import { toast } from "sonner";
 import { ChatBot } from "@/components/ChatBot";
 import { SEO } from "@/components/SEO";
@@ -841,6 +841,15 @@ export default function MechanicDashboard() {
                         <XCircle className="h-3.5 w-3.5 flex-shrink-0" />
                         <span>Customer has not yet signed the DOT acknowledgment</span>
                       </div>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="w-full mt-2"
+                        onClick={() => navigate(`/dashboard/mechanic/inspection?photosOnly=true&inspectionId=${inspection.id}`)}
+                      >
+                        <Camera className="mr-2 h-4 w-4" />
+                        Add Photos
+                      </Button>
                     </CardContent>
                   </Card>
                 ))}
