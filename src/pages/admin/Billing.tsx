@@ -1475,17 +1475,28 @@ export default function Billing() {
                             
                             // Check if subscription is ready to activate
                             // Pending subs with Stripe IDs are ready (even if previously attempted)
-                            // Active subs with no successful payment also qualify
+                            // Active subs with no successful payment also qualify ONLY if they're genuinely pending
+                            // (not just missing billing_history due to sync lag)
+                            const hasBillingHistoryRecords = billingHistory?.some(
+                              bh => bh.subscription_id === sub.id
+                            );
                             const isReadyToActivate = !isProcessing && sub.stripe_subscription_id && 
                               sub.stripe_customer_id && !hasProcessingPayment && 
                               !(sub.status === "active" && sub.deposit_paid) && (
                                 sub.status === "pending" || 
-                                (sub.status === "active" && !hasSuccessfulPayment)
+                                // Only show Activate for active subs if they have billing_history but none succeeded
+                                // If they have NO billing_history at all, it's likely a sync gap — don't show Activate
+                                (sub.status === "active" && !hasSuccessfulPayment && hasBillingHistoryRecords)
                               );
                             
-                            // Show warning badge for active subs with no successful payments
+                            // Show warning badge for active subs with no successful payments AND no billing history
+                            // (indicates sync hasn't run yet)
+                            const needsSync = sub.status === "active" && 
+                              sub.stripe_subscription_id && !hasBillingHistoryRecords;
+                            
+                            // Show warning badge for active subs with billing history but no successful payments
                             const hasPaymentWarning = sub.status === "active" && 
-                              sub.stripe_subscription_id && !hasSuccessfulPayment;
+                              sub.stripe_subscription_id && !hasSuccessfulPayment && !needsSync;
                             
                             return (
                               <TableRow key={sub.id} className="cursor-pointer hover:bg-muted/50" onClick={() => { setSelectedSubscriptionId(sub.id); setActiveTab("edit-subscription"); }}>
