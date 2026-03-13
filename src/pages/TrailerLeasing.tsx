@@ -167,6 +167,9 @@ const TrailerLeasing = () => {
                   Learn more about dry van trailers
                   <ArrowRight className="h-4 w-4 ml-1" />
                 </Link>
+                <p className="text-sm text-muted-foreground mt-3">
+                  <Link to="/commercial-dry-van-trailer-for-lease-56171" className="text-primary hover:underline">Browse our 2020 Great Dane dry van →</Link>
+                </p>
               </CardContent>
             </Card>
             <Card className="border-2 hover:shadow-lg transition-shadow">

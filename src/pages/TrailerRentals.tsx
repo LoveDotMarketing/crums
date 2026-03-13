@@ -236,7 +236,7 @@ const TrailerRentals = () => {
               and{" "}
               <Link to="/flatbed-trailers" className="text-secondary hover:underline font-medium">
                 flatbed trailers
-              </Link>. Not sure which is right for your cargo? Check out our{" "}
+              </Link>. You can also <Link to="/commercial-dry-van-trailer-for-lease-56171" className="text-secondary hover:underline font-medium">check out this dry van trailer available for lease</Link>. Not sure which is right for your cargo? Check out our{" "}
               <Link to="/resources/guides/choosing-trailer" className="text-secondary hover:underline font-medium">
                 guide to choosing the right trailer
               </Link>.

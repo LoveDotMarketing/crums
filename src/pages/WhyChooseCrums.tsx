@@ -186,8 +186,11 @@ const WhyChooseCrums = () => {
                       From independent owner-operators to growing fleets, CRUMS Leasing delivers 
                       the support and capacity your business depends on.
                     </p>
-                    <p className="font-semibold text-foreground">
+                     <p className="font-semibold text-foreground">
                       CRUMS Leasing. Built for drivers who keep America moving.
+                    </p>
+                    <p className="mt-4">
+                      <Link to="/commercial-dry-van-trailer-for-lease-56171" className="text-primary hover:underline font-medium">See a fully inspected trailer — Unit 56171 →</Link>
                     </p>
                   </div>
                 </CardContent>

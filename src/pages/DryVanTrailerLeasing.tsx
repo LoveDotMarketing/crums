@@ -354,7 +354,10 @@ const DryVanTrailerLeasing = () => {
               </CardContent>
             </Card>
           </div>
-          <div className="max-w-3xl mx-auto text-center mt-8">
+          <div className="max-w-3xl mx-auto text-center mt-8 space-y-3">
+            <p className="text-sm text-muted-foreground">
+              Want to see what you're leasing? <Link to="/commercial-dry-van-trailer-for-lease-56171" className="text-primary hover:underline font-medium">See our 2020 Great Dane dry van trailer available now</Link>.
+            </p>
             <p className="text-sm text-muted-foreground">
               We serve trucking professionals across the nation — view{" "}
               <Link to="/locations/atlanta-ga" className="text-primary hover:underline">Atlanta</Link>,{" "}
