@@ -118,6 +118,11 @@ const GoogleThankYou = () => {
           </div>
         </div>
       </main>
+      <RelatedLinksSection
+        title="While You Wait"
+        subtitle="Explore resources to help you get started"
+        links={thankYouLinks}
+      />
     </>
   );
 };
