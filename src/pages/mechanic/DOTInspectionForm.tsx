@@ -131,6 +131,8 @@ export default function DOTInspectionForm() {
   const [searchParams] = useSearchParams();
   const trailerId = searchParams.get("trailerId");
   const releaseId = searchParams.get("releaseId");
+  const isPhotosOnly = searchParams.get("photosOnly") === "true";
+  const photosOnlyInspectionId = searchParams.get("inspectionId");
   
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(true);
@@ -148,13 +150,17 @@ export default function DOTInspectionForm() {
   const [showMissingPhotoDialog, setShowMissingPhotoDialog] = useState(false);
 
   useEffect(() => {
+    if (isPhotosOnly && photosOnlyInspectionId) {
+      loadPhotosOnlyMode();
+      return;
+    }
     if (!trailerId) {
       toast.error("No trailer selected");
       navigate("/dashboard/mechanic");
       return;
     }
     initializeInspection();
-  }, [trailerId]);
+  }, [trailerId, isPhotosOnly, photosOnlyInspectionId]);
 
   const initializeInspection = async () => {
     try {
