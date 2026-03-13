@@ -423,7 +423,12 @@ export const Navigation = () => {
                 <a 
                   href="tel:+18885704564" 
                   onClick={() => {
-                    trackPhoneClick('mobile-nav');
+                    if (typeof window !== 'undefined' && window.gtag) {
+                      window.gtag('event', 'phone_click', {
+                        phone_number: '+18885704564',
+                        page: window.location.pathname,
+                      });
+                    }
                     setMobileMenuOpen(false);
                   }}
                 >

@@ -160,7 +160,14 @@ const Index = () => {
                 size="lg"
                 variant="outline"
                 className="bg-primary-foreground border-2 border-primary-foreground text-primary hover:bg-transparent hover:text-primary-foreground text-lg px-8 py-6"
-                onClick={() => trackPhoneClick('hero')}
+                onClick={() => {
+                  if (typeof window !== 'undefined' && window.gtag) {
+                    window.gtag('event', 'phone_click', {
+                      phone_number: '+18885704564',
+                      page: window.location.pathname,
+                    });
+                  }
+                }}
               >
                 <Phone className="mr-2 h-5 w-5" />
                 1-888-570-4564
