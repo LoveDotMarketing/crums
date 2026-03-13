@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { Calendar } from "lucide-react";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
+import { RelatedLinksSection } from "@/components/RelatedLinksSection";
 import { SEO } from "@/components/SEO";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { newsArticles, generateNewsListSchema } from "@/lib/news";
