@@ -296,7 +296,7 @@ export default function Billing() {
   // Activate subscription state
   const [isActivating, setIsActivating] = useState<string | null>(null);
   const [activatedIds, setActivatedIds] = useState<Set<string>>(new Set());
-  const [isSyncingPayments, setIsSyncingPayments] = useState(false);
+  
   
   // Payment failures filter/sort state
   const [failuresSearch, setFailuresSearch] = useState("");
