@@ -192,36 +192,59 @@ export function WorkOrderForm({ onSuccess, onCancel, existingWorkOrder, existing
 
     setLoading(true);
     try {
-      // Create work order
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data: workOrder, error: woError } = await (supabase as any)
-        .from("work_orders")
-        .insert({
-          trailer_id: trailerId,
-          mechanic_id: effectiveUserId,
-          repair_type: repairType,
-          description,
-          work_start_date: workStartDate,
-          work_completion_date: workCompletionDate || null,
-          labor_hours: totalLaborHours,
-          labor_rate: LABOR_RATE,
-          travel_fee: includeTravelFee ? TRAVEL_FEE : 0,
-          parts_total: partsTotal,
-          grand_total: totalLaborHours * LABOR_RATE + (includeTravelFee ? TRAVEL_FEE : 0) + partsTotal,
-          status: submitForReview ? "submitted" : "in_progress",
-          submitted_at: submitForReview ? new Date().toISOString() : null,
-        })
-        .select("id")
-        .single();
+      const woPayload = {
+        trailer_id: trailerId,
+        mechanic_id: effectiveUserId,
+        repair_type: repairType,
+        description,
+        work_start_date: workStartDate,
+        work_completion_date: workCompletionDate || null,
+        labor_hours: totalLaborHours,
+        labor_rate: LABOR_RATE,
+        travel_fee: includeTravelFee ? TRAVEL_FEE : 0,
+        parts_total: partsTotal,
+        grand_total: totalLaborHours * LABOR_RATE + (includeTravelFee ? TRAVEL_FEE : 0) + partsTotal,
+        status: submitForReview ? "submitted" : "in_progress",
+        submitted_at: submitForReview ? new Date().toISOString() : null,
+      };
 
-      if (woError) throw woError;
+      let workOrderId: string;
+
+      if (isEditMode) {
+        // Update existing work order
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { error: woError } = await (supabase as any)
+          .from("work_orders")
+          .update(woPayload)
+          .eq("id", existingWorkOrder.id);
+        if (woError) throw woError;
+        workOrderId = existingWorkOrder.id;
+
+        // Delete old line items then re-insert
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { error: delError } = await (supabase as any)
+          .from("work_order_line_items")
+          .delete()
+          .eq("work_order_id", workOrderId);
+        if (delError) throw delError;
+      } else {
+        // Create new work order
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data: workOrder, error: woError } = await (supabase as any)
+          .from("work_orders")
+          .insert(woPayload)
+          .select("id")
+          .single();
+        if (woError) throw woError;
+        workOrderId = workOrder.id;
+      }
 
       // Insert line items
       if (parts.length > 0) {
         const lineItems = parts
           .filter((p) => p.description.trim())
           .map((p) => ({
-            work_order_id: workOrder.id,
+            work_order_id: workOrderId,
             item_type: "part",
             description: p.description,
             quantity: p.quantity,
@@ -237,11 +260,15 @@ export function WorkOrderForm({ onSuccess, onCancel, existingWorkOrder, existing
         }
       }
 
-      toast.success(submitForReview ? "Work order submitted for review" : "Work order saved as draft");
+      toast.success(
+        isEditMode
+          ? submitForReview ? "Work order updated and submitted" : "Work order updated"
+          : submitForReview ? "Work order submitted for review" : "Work order saved as draft"
+      );
       onSuccess();
     } catch (error) {
-      console.error("Error creating work order:", error);
-      toast.error("Failed to create work order");
+      console.error("Error saving work order:", error);
+      toast.error("Failed to save work order");
     } finally {
       setLoading(false);
     }
