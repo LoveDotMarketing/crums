@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
+import { RelatedLinksSection } from "@/components/RelatedLinksSection";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -428,6 +429,19 @@ export const TrailerProfileTemplate = ({ data }: TrailerProfileTemplateProps) =>
           </div>
         </section>
       </main>
+
+      <RelatedLinksSection
+        title="Related Resources"
+        subtitle="Learn more about trailer leasing and trucking tools"
+        links={[
+          { to: "/dry-van-trailer-leasing", label: "Dry Van Trailer Leasing", description: "Explore flexible lease terms and pricing for 53' dry van trailers." },
+          { to: "/get-started", label: "Apply for a Lease", description: "Submit your application online and get approved in as little as 24 hours." },
+          { to: "/resources/guides/lease-first-trailer", label: "Guide: Lease Your First Trailer", description: "Step-by-step guide for first-time lessees covering costs, paperwork, and tips." },
+          { to: "/resources/guides/pre-trip-inspection", label: "Guide: Pre-Trip Inspection Checklist", description: "DOT-compliant inspection checklist every driver should follow before hitting the road." },
+          { to: "/resources/tools/cost-per-mile", label: "Cost Per Mile Calculator", description: "Calculate your true operating cost per mile including lease payments and fuel." },
+          { to: "/resources/tools/lease-vs-buy", label: "Lease vs Buy Calculator", description: "Compare total cost of leasing versus purchasing a trailer over time." },
+        ]}
+      />
 
       <Footer />
     </div>
