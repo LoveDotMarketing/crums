@@ -2,6 +2,7 @@ import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { SEO } from "@/components/SEO";
+import { RelatedLinksSection } from "@/components/RelatedLinksSection";
 
 const webPageSchema = {
   "@context": "https://schema.org",

@@ -7,6 +7,7 @@ import { SEO } from "@/components/SEO";
 import { generateBreadcrumbSchema } from "@/lib/structuredData";
 import { Link } from "react-router-dom";
 import { trackCtaClick } from "@/lib/analytics";
+import { RelatedLinksSection } from "@/components/RelatedLinksSection";
 
 const Mission = () => {
   const breadcrumbSchema = generateBreadcrumbSchema([
