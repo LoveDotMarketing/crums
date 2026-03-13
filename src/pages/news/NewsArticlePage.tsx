@@ -2,6 +2,7 @@ import { useParams, Link, Navigate } from "react-router-dom";
 import { Calendar, ExternalLink, ArrowLeft, ArrowRight, MapPin } from "lucide-react";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
+import { RelatedLinksSection } from "@/components/RelatedLinksSection";
 import { SEO } from "@/components/SEO";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { Button } from "@/components/ui/button";
