@@ -14,6 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { SEO } from "@/components/SEO";
 import { localBusinessSchema, generateBreadcrumbSchema } from "@/lib/structuredData";
+import { RelatedLinksSection } from "@/components/RelatedLinksSection";
 import { trackFormSubmission, trackConversion, trackPhoneClick, trackFormStart, fireMetaCapi } from "@/lib/analytics";
 import { trackLinkedInQuoteRequest } from "@/lib/linkedinAnalytics";
 import { getLeadSourceData } from "@/lib/leadSourceTracking";
@@ -589,6 +590,19 @@ const Contact = () => {
           </div>
         </div>
       </section>
+
+      <RelatedLinksSection
+        title="Related Services"
+        subtitle="Learn more about what CRUMS Leasing has to offer"
+        links={[
+          { to: "/dry-van-trailer-leasing", label: "Dry Van Trailer Leasing", description: "Flexible lease terms on 53' dry van trailers starting at competitive rates." },
+          { to: "/trailer-rentals", label: "Trailer Rentals", description: "Short-term rental options for seasonal or emergency needs." },
+          { to: "/get-started", label: "Apply Online", description: "Start your lease application in minutes — fast approval process." },
+          { to: "/commercial-dry-van-trailer-for-lease-56171", label: "View Available Trailers", description: "Browse our 2020 Great Dane 53' dry van — fully inspected and road-ready." },
+          { to: "/why-choose-crums", label: "Why Choose CRUMS", description: "See what sets our family-owned leasing company apart." },
+          { to: "/locations", label: "Service Locations", description: "Find pickup and delivery options near you nationwide." },
+        ]}
+      />
 
       <Footer />
     </div>

@@ -7,6 +7,7 @@ import { SEO } from "@/components/SEO";
 import { generateBreadcrumbSchema } from "@/lib/structuredData";
 import { Link } from "react-router-dom";
 import { trackCtaClick } from "@/lib/analytics";
+import { RelatedLinksSection } from "@/components/RelatedLinksSection";
 
 const Mission = () => {
   const breadcrumbSchema = generateBreadcrumbSchema([
@@ -317,6 +318,19 @@ const Mission = () => {
           </div>
         </div>
       </section>
+
+      <RelatedLinksSection
+        title="Explore Our Services"
+        subtitle="See our mission in action across everything we do"
+        links={[
+          { to: "/our-story", label: "Our Story", description: "The family behind CRUMS and how we got started." },
+          { to: "/dry-van-trailer-leasing", label: "Dry Van Trailer Leasing", description: "Flexible 53' dry van leases built for owner-operators." },
+          { to: "/fleet-solutions", label: "Fleet Solutions", description: "Scalable trailer solutions for growing fleets." },
+          { to: "/commercial-dry-van-trailer-for-lease-56171", label: "See Our Equipment", description: "Browse our 2020 Great Dane dry van — fully inspected." },
+          { to: "/veterans-military-discount", label: "Veterans & Military Discount", description: "Special pricing for those who served our country." },
+          { to: "/reviews", label: "Customer Reviews", description: "Hear from carriers who trust CRUMS with their business." },
+        ]}
+      />
 
       <Footer />
     </div>
