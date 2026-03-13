@@ -1425,11 +1425,11 @@ export default function Billing() {
                       <Button 
                         variant="outline" 
                         size="sm"
-                        disabled={isSyncingPayments}
+                        disabled={isSyncing}
                         onClick={handleSyncPayments}
                       >
-                        <RefreshCw className={`h-4 w-4 mr-2 ${isSyncingPayments ? "animate-spin" : ""}`} />
-                        {isSyncingPayments ? "Syncing..." : "Sync Payments"}
+                        <RefreshCw className={`h-4 w-4 mr-2 ${isSyncing ? "animate-spin" : ""}`} />
+                        {isSyncing ? "Syncing..." : "Sync Payments"}
                       </Button>
                       <Button onClick={() => setActiveTab("create-subscription")}>
                         <Plus className="h-4 w-4 mr-2" />
