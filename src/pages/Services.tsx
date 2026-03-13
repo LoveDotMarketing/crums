@@ -303,6 +303,22 @@ const Services = () => {
         </div>
       </main>
 
+      <RelatedLinksSection
+        title="Helpful Resources"
+        subtitle="Guides and calculators to support your leasing decision"
+        links={[
+          { to: "/why-choose-crums", label: "Why Choose CRUMS Leasing", description: "See what sets us apart — family-owned service, flexible terms, and reliable equipment." },
+          { to: "/resources/guides/lease-first-trailer", label: "Guide: Lease Your First Trailer", description: "Step-by-step walkthrough of the leasing process for first-time lessees." },
+          { to: "/resources/guides/maximize-lease", label: "Guide: Maximize Your Lease Value", description: "Tips to get the most out of your trailer lease and reduce costs." },
+          { to: "/resources/guides/maintenance-schedules", label: "Trailer Maintenance Schedules", description: "Keep your leased trailer in top condition with preventive maintenance." },
+          { to: "/resources/tools/profit-calculator", label: "Profit Per Load Calculator", description: "Estimate your profit margin on each load after all expenses." },
+          { to: "/resources/tools/cost-per-mile", label: "Cost Per Mile Calculator", description: "Break down your operating costs to make smarter business decisions." },
+          { to: "/commercial-dry-van-trailer-for-lease-56171", label: "View Available Trailer: Unit 56171", description: "Browse a fully inspected 2020 53' dry van ready for immediate lease." },
+          { to: "/locations", label: "Service Locations", description: "Find CRUMS Leasing pickup and delivery locations near you." },
+          { to: "/get-started", label: "Get Started Today", description: "Apply online and get approved quickly with flexible lease options." },
+        ]}
+      />
+
       <Footer />
     </div>
   );

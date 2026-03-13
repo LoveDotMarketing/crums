@@ -236,6 +236,22 @@ const WhyChooseCrums = () => {
         </section>
       </main>
 
+      <RelatedLinksSection
+        title="Explore Our Services & Resources"
+        subtitle="Tools, guides, and leasing options to help you succeed"
+        links={[
+          { to: "/dry-van-trailer-leasing", label: "Dry Van Trailer Leasing", description: "Flexible lease terms on 53' dry van trailers with maintenance included." },
+          { to: "/services/trailer-rentals", label: "Short-Term Trailer Rentals", description: "Rent trailers by the week or month for seasonal or emergency needs." },
+          { to: "/services/lease-to-own", label: "Lease to Own Program", description: "Build equity with every payment and own your trailer outright." },
+          { to: "/get-started", label: "Apply for a Lease", description: "Submit your application and get approved in as little as 24 hours." },
+          { to: "/resources/guides/owner-operator-basics", label: "Owner-Operator Basics Guide", description: "Everything new owner-operators need to know about running their business." },
+          { to: "/resources/guides/choosing-trailer", label: "How to Choose the Right Trailer", description: "Compare dry van, flatbed, and reefer trailers for your freight type." },
+          { to: "/resources/tools/cost-per-mile", label: "Cost Per Mile Calculator", description: "Calculate your true operating cost per mile including lease payments." },
+          { to: "/resources/tools/lease-vs-buy", label: "Lease vs Buy Calculator", description: "Compare the total cost of leasing versus buying a trailer." },
+          { to: "/commercial-dry-van-trailer-for-lease-56171", label: "View Available Trailer: Unit 56171", description: "See a fully inspected 2020 Great Dane 53' dry van ready to lease." },
+        ]}
+      />
+
       <Footer />
     </div>
   );
