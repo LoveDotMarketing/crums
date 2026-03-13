@@ -729,7 +729,7 @@ export default function Billing() {
     }
   };
 
-
+  const { data: subscriptions, isLoading: loadingSubscriptions } = useQuery({
     queryKey: ["customer-subscriptions"],
     queryFn: async () => {
       const { data, error } = await supabase
