@@ -10,6 +10,7 @@ import { ArrowLeft, Plus, FileText, Clock, CheckCircle2, XCircle, AlertCircle } 
 import { toast } from "sonner";
 import { SEO } from "@/components/SEO";
 import { WorkOrderForm } from "@/components/mechanic/WorkOrderForm";
+import type { ExistingWorkOrder, LineItem } from "@/components/mechanic/WorkOrderForm";
 import { format } from "date-fns";
 
 interface WorkOrder {
@@ -46,12 +47,16 @@ const STATUS_CONFIG: Record<string, { label: string; variant: "default" | "secon
   needs_info: { label: "Needs Info", variant: "outline", icon: AlertCircle },
 };
 
+const EDITABLE_STATUSES = ["in_progress", "needs_info"];
+
 export default function WorkOrders() {
   const navigate = useNavigate();
   const { effectiveUserId } = useAuth();
   const [workOrders, setWorkOrders] = useState<(WorkOrder & { trailer?: TrailerInfo })[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [editingWorkOrder, setEditingWorkOrder] = useState<ExistingWorkOrder | null>(null);
+  const [editingLineItems, setEditingLineItems] = useState<LineItem[]>([]);
 
   useEffect(() => {
     if (effectiveUserId) fetchWorkOrders();
@@ -89,6 +94,48 @@ export default function WorkOrders() {
     }
   };
 
+  const handleCardClick = async (wo: WorkOrder) => {
+    if (!EDITABLE_STATUSES.includes(wo.status)) {
+      toast.info("Only draft or needs-info work orders can be edited");
+      return;
+    }
+
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: lineItems, error } = await (supabase as any)
+        .from("work_order_line_items")
+        .select("id, description, quantity, unit_cost")
+        .eq("work_order_id", wo.id);
+
+      if (error) throw error;
+
+      setEditingWorkOrder({
+        id: wo.id,
+        trailer_id: wo.trailer_id,
+        repair_type: wo.repair_type,
+        description: wo.description,
+        work_start_date: wo.work_start_date,
+        work_completion_date: wo.work_completion_date,
+        labor_hours: wo.labor_hours,
+        labor_rate: wo.labor_rate,
+        travel_fee: wo.travel_fee,
+        labor_total: wo.labor_total,
+        parts_total: wo.parts_total,
+        grand_total: wo.grand_total,
+        status: wo.status,
+      });
+      setEditingLineItems((lineItems || []).map((li: LineItem) => ({
+        id: li.id,
+        description: li.description,
+        quantity: li.quantity,
+        unit_cost: li.unit_cost,
+      })));
+    } catch (error) {
+      console.error("Error fetching line items:", error);
+      toast.error("Failed to open work order");
+    }
+  };
+
   const getStatusBadge = (status: string) => {
     const config = STATUS_CONFIG[status] || STATUS_CONFIG.in_progress;
     const Icon = config.icon;
@@ -99,6 +146,34 @@ export default function WorkOrders() {
       </Badge>
     );
   };
+
+  // Show edit form
+  if (editingWorkOrder) {
+    return (
+      <div className="min-h-screen bg-background p-6">
+        <SEO title="Edit Work Order | CRUMS Leasing" description="Edit work order" />
+        <div className="max-w-3xl mx-auto">
+          <div className="flex items-center gap-3 mb-6">
+            <Button variant="ghost" size="icon" onClick={() => { setEditingWorkOrder(null); setEditingLineItems([]); }}>
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <h1 className="text-2xl font-bold">Edit Work Order</h1>
+            {getStatusBadge(editingWorkOrder.status)}
+          </div>
+          <WorkOrderForm
+            existingWorkOrder={editingWorkOrder}
+            existingLineItems={editingLineItems}
+            onSuccess={() => {
+              setEditingWorkOrder(null);
+              setEditingLineItems([]);
+              fetchWorkOrders();
+            }}
+            onCancel={() => { setEditingWorkOrder(null); setEditingLineItems([]); }}
+          />
+        </div>
+      </div>
+    );
+  }
 
   if (showForm) {
     return (
@@ -157,7 +232,11 @@ export default function WorkOrders() {
         ) : (
           <div className="space-y-3">
             {workOrders.map((wo) => (
-              <Card key={wo.id} className="hover:shadow-md transition-shadow">
+              <Card
+                key={wo.id}
+                className={`hover:shadow-md transition-shadow ${EDITABLE_STATUSES.includes(wo.status) ? "cursor-pointer" : ""}`}
+                onClick={() => handleCardClick(wo)}
+              >
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between">
                     <div className="space-y-1">

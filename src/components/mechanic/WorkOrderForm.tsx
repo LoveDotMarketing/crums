@@ -29,7 +29,7 @@ interface CatalogItem {
   labor_hours: number | null;
 }
 
-interface LineItem {
+export interface LineItem {
   id?: string;
   description: string;
   quantity: number;
@@ -37,9 +37,27 @@ interface LineItem {
   catalog_labor_hours?: number | null;
 }
 
+export interface ExistingWorkOrder {
+  id: string;
+  trailer_id: string;
+  repair_type: string;
+  description: string;
+  work_start_date: string;
+  work_completion_date: string | null;
+  labor_hours: number;
+  labor_rate: number;
+  travel_fee: number;
+  labor_total: number;
+  parts_total: number;
+  grand_total: number;
+  status: string;
+}
+
 interface WorkOrderFormProps {
   onSuccess: () => void;
   onCancel: () => void;
+  existingWorkOrder?: ExistingWorkOrder;
+  existingLineItems?: LineItem[];
 }
 
 const REPAIR_TYPES = [
@@ -60,22 +78,23 @@ const CATEGORY_ORDER = [
   "Body and Structure",
 ];
 
-export function WorkOrderForm({ onSuccess, onCancel }: WorkOrderFormProps) {
+export function WorkOrderForm({ onSuccess, onCancel, existingWorkOrder, existingLineItems }: WorkOrderFormProps) {
   const { effectiveUserId } = useAuth();
+  const isEditMode = !!existingWorkOrder;
   const [trailers, setTrailers] = useState<Trailer[]>([]);
   const [catalog, setCatalog] = useState<CatalogItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [loadingTrailers, setLoadingTrailers] = useState(true);
 
   // Form state
-  const [trailerId, setTrailerId] = useState("");
-  const [repairType, setRepairType] = useState("");
-  const [description, setDescription] = useState("");
-  const [workStartDate, setWorkStartDate] = useState(new Date().toISOString().split("T")[0]);
-  const [workCompletionDate, setWorkCompletionDate] = useState("");
-  const [laborHours, setLaborHours] = useState<number>(0);
-  const [includeTravelFee, setIncludeTravelFee] = useState(false);
-  const [parts, setParts] = useState<LineItem[]>([]);
+  const [trailerId, setTrailerId] = useState(existingWorkOrder?.trailer_id || "");
+  const [repairType, setRepairType] = useState(existingWorkOrder?.repair_type || "");
+  const [description, setDescription] = useState(existingWorkOrder?.description || "");
+  const [workStartDate, setWorkStartDate] = useState(existingWorkOrder?.work_start_date || new Date().toISOString().split("T")[0]);
+  const [workCompletionDate, setWorkCompletionDate] = useState(existingWorkOrder?.work_completion_date || "");
+  const [laborHours, setLaborHours] = useState<number>(existingWorkOrder?.labor_hours || 0);
+  const [includeTravelFee, setIncludeTravelFee] = useState(existingWorkOrder ? existingWorkOrder.travel_fee > 0 : false);
+  const [parts, setParts] = useState<LineItem[]>(existingLineItems || []);
 
   const LABOR_RATE = 85;
   const TRAVEL_FEE = 75;
@@ -173,36 +192,59 @@ export function WorkOrderForm({ onSuccess, onCancel }: WorkOrderFormProps) {
 
     setLoading(true);
     try {
-      // Create work order
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data: workOrder, error: woError } = await (supabase as any)
-        .from("work_orders")
-        .insert({
-          trailer_id: trailerId,
-          mechanic_id: effectiveUserId,
-          repair_type: repairType,
-          description,
-          work_start_date: workStartDate,
-          work_completion_date: workCompletionDate || null,
-          labor_hours: totalLaborHours,
-          labor_rate: LABOR_RATE,
-          travel_fee: includeTravelFee ? TRAVEL_FEE : 0,
-          parts_total: partsTotal,
-          grand_total: totalLaborHours * LABOR_RATE + (includeTravelFee ? TRAVEL_FEE : 0) + partsTotal,
-          status: submitForReview ? "submitted" : "in_progress",
-          submitted_at: submitForReview ? new Date().toISOString() : null,
-        })
-        .select("id")
-        .single();
+      const woPayload = {
+        trailer_id: trailerId,
+        mechanic_id: effectiveUserId,
+        repair_type: repairType,
+        description,
+        work_start_date: workStartDate,
+        work_completion_date: workCompletionDate || null,
+        labor_hours: totalLaborHours,
+        labor_rate: LABOR_RATE,
+        travel_fee: includeTravelFee ? TRAVEL_FEE : 0,
+        parts_total: partsTotal,
+        grand_total: totalLaborHours * LABOR_RATE + (includeTravelFee ? TRAVEL_FEE : 0) + partsTotal,
+        status: submitForReview ? "submitted" : "in_progress",
+        submitted_at: submitForReview ? new Date().toISOString() : null,
+      };
 
-      if (woError) throw woError;
+      let workOrderId: string;
+
+      if (isEditMode) {
+        // Update existing work order
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { error: woError } = await (supabase as any)
+          .from("work_orders")
+          .update(woPayload)
+          .eq("id", existingWorkOrder.id);
+        if (woError) throw woError;
+        workOrderId = existingWorkOrder.id;
+
+        // Delete old line items then re-insert
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { error: delError } = await (supabase as any)
+          .from("work_order_line_items")
+          .delete()
+          .eq("work_order_id", workOrderId);
+        if (delError) throw delError;
+      } else {
+        // Create new work order
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data: workOrder, error: woError } = await (supabase as any)
+          .from("work_orders")
+          .insert(woPayload)
+          .select("id")
+          .single();
+        if (woError) throw woError;
+        workOrderId = workOrder.id;
+      }
 
       // Insert line items
       if (parts.length > 0) {
         const lineItems = parts
           .filter((p) => p.description.trim())
           .map((p) => ({
-            work_order_id: workOrder.id,
+            work_order_id: workOrderId,
             item_type: "part",
             description: p.description,
             quantity: p.quantity,
@@ -218,11 +260,15 @@ export function WorkOrderForm({ onSuccess, onCancel }: WorkOrderFormProps) {
         }
       }
 
-      toast.success(submitForReview ? "Work order submitted for review" : "Work order saved as draft");
+      toast.success(
+        isEditMode
+          ? submitForReview ? "Work order updated and submitted" : "Work order updated"
+          : submitForReview ? "Work order submitted for review" : "Work order saved as draft"
+      );
       onSuccess();
     } catch (error) {
-      console.error("Error creating work order:", error);
-      toast.error("Failed to create work order");
+      console.error("Error saving work order:", error);
+      toast.error("Failed to save work order");
     } finally {
       setLoading(false);
     }

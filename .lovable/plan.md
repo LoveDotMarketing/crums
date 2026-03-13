@@ -2,36 +2,31 @@
 
 ## Problem
 
-The mechanic reports that once a work order is saved as a draft, they cannot reopen or edit it. This is because:
+Abdul's `customer_applications` record shows `payment_setup_status = 'completed'` and has a `stripe_payment_method_id` (`pm_1T7dwSLjIwiEGQIhzU647O3c`) that is dead/detached in Stripe. The UI shows "ACH ✓" and hides the "Send ACH Setup" button, so there's no way to re-do the setup.
 
-1. Work order cards in the list are **not clickable** — there's no click handler or link to open them.
-2. The `WorkOrderForm` component only supports **creating** new work orders — it doesn't accept an existing work order to edit.
+## Fix
 
-## Plan
+### 1. Database: Reset Abdul's ACH status
 
-### 1. Make WorkOrderForm support edit mode
+Run a migration to clear the broken payment method and reset status so the ACH setup flow can be re-initiated:
 
-- Add an optional `workOrder` prop (with its line items) to `WorkOrderForm`.
-- When provided, pre-populate all form fields with existing data.
-- On save/submit, use `update` instead of `insert` for the work order, and delete+re-insert line items.
-- Only allow editing if status is `in_progress` (draft) or `needs_info`.
+```sql
+UPDATE customer_applications
+SET payment_setup_status = 'pending',
+    stripe_payment_method_id = NULL
+WHERE id = '25b5046d-d4b2-405c-bf78-ba3e2b71039f';
+```
 
-### 2. Make work order cards clickable
+### 2. UI: Add a "Reset ACH" option for admins
 
-- In `WorkOrders.tsx`, add an `editingWorkOrder` state.
-- When a draft/needs-info card is clicked, fetch the work order + its line items and pass them to `WorkOrderForm`.
-- Show the form in edit mode (similar to how `showForm` works for new orders).
-- Non-editable statuses (submitted, approved, etc.) open as read-only or show a toast saying it can't be edited.
+In `src/pages/admin/Applications.tsx`, update the ACH badge area (~line 773) so that when `payment_setup_status === "completed"`, instead of only showing the static "ACH ✓" badge, also show a small reset button that sets `payment_setup_status` back to `pending` and clears `stripe_payment_method_id`. This prevents needing manual database edits in the future.
 
-### 3. Files to modify
+The reset button will:
+- Update `customer_applications` setting `payment_setup_status = 'pending'` and `stripe_payment_method_id = null`
+- Refresh the applications list
+- Show a toast confirmation
 
-- **`src/components/mechanic/WorkOrderForm.tsx`** — Accept optional `workOrder` + `lineItems` props; pre-fill form state in `useEffect`; switch between insert/update on save.
-- **`src/pages/mechanic/WorkOrders.tsx`** — Add click handlers to cards; add state for editing; fetch line items when opening; pass data to `WorkOrderForm`.
-
-### Technical details
-
-- The form will receive `existingWorkOrder?: WorkOrder` and `existingLineItems?: LineItem[]`.
-- `useEffect` will set all form state from the existing data when provided.
-- On submit in edit mode: `supabase.from("work_orders").update({...}).eq("id", workOrder.id)`, then delete existing line items and re-insert.
-- Cards with `in_progress` or `needs_info` status get `cursor-pointer` and an `onClick`; others remain non-clickable.
+### Files to update
+- **Database migration** — one UPDATE statement for Abdul's record
+- `src/pages/admin/Applications.tsx` — add reset ACH button next to the "ACH ✓" badge (~5 lines)
 
