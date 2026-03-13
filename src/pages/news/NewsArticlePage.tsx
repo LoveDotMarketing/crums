@@ -354,6 +354,19 @@ const NewsArticlePage = () => {
         </div>
       </article>
 
+      <RelatedLinksSection
+        title="You May Also Like"
+        subtitle="Resources and services for trucking professionals"
+        links={[
+          { to: "/dry-van-trailer-leasing", label: "Dry Van Trailer Leasing", description: "Flexible lease terms on 53' dry van trailers." },
+          { to: "/commercial-dry-van-trailer-for-lease-56171", label: "Browse Available Trailers", description: "View our 2020 Great Dane 53' dry van with full specs." },
+          { to: "/resources/guides/lease-first-trailer", label: "Why Lease Your First Trailer", description: "Compare leasing vs buying for new owner-operators." },
+          { to: "/resources/tools/profit-calculator", label: "Profit Per Load Calculator", description: "Estimate your profit margin on each load after expenses." },
+          { to: "/why-choose-crums", label: "Why Choose CRUMS", description: "See what sets our family-owned leasing company apart." },
+          { to: "/locations", label: "Service Locations", description: "Find pickup and delivery options near you nationwide." },
+        ]}
+      />
+
       <Footer />
     </div>
   );

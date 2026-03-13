@@ -170,6 +170,19 @@ const News = () => {
         </div>
       </section>
 
+      <RelatedLinksSection
+        title="Related Pages"
+        subtitle="Explore our services and resources for carriers"
+        links={[
+          { to: "/dry-van-trailer-leasing", label: "Dry Van Trailer Leasing", description: "Flexible 53' dry van leases with competitive rates." },
+          { to: "/our-story", label: "Our Story", description: "The family behind CRUMS and how we got started." },
+          { to: "/commercial-dry-van-trailer-for-lease-56171", label: "View Available Trailers", description: "See our 2020 Great Dane dry van — fully inspected and road-ready." },
+          { to: "/resources/guides/owner-operator-basics", label: "Owner-Operator Business Basics", description: "Essential guide for starting your trucking business." },
+          { to: "/resources/tools/cost-per-mile", label: "Cost Per Mile Calculator", description: "Calculate your operating cost per mile as an owner-operator." },
+          { to: "/get-started", label: "Start Your Application", description: "Apply online in minutes — fast approval process." },
+        ]}
+      />
+
       <Footer />
     </div>
   );
