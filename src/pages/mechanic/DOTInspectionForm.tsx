@@ -162,6 +162,49 @@ export default function DOTInspectionForm() {
     initializeInspection();
   }, [trailerId, isPhotosOnly, photosOnlyInspectionId]);
 
+  const loadPhotosOnlyMode = async () => {
+    try {
+      const { data: inspection, error } = await supabase
+        .from("dot_inspections")
+        .select("id, trailer_id, trailer_number, vin, license_plate, trailer_type")
+        .eq("id", photosOnlyInspectionId!)
+        .single();
+
+      if (error || !inspection) throw error || new Error("Inspection not found");
+
+      setInspectionId(inspection.id);
+      setTrailerInfo({
+        trailer_number: inspection.trailer_number,
+        vin: inspection.vin,
+        license_plate: inspection.license_plate,
+        type: inspection.trailer_type || "",
+      });
+
+      // Load existing photos
+      const { data: photosData } = await supabase
+        .from("dot_inspection_photos")
+        .select("id, category, photo_url")
+        .eq("inspection_id", inspection.id);
+
+      if (photosData) {
+        const groupedPhotos: Record<string, { id: string; photo_url: string }[]> = {};
+        photosData.forEach(photo => {
+          if (!groupedPhotos[photo.category]) {
+            groupedPhotos[photo.category] = [];
+          }
+          groupedPhotos[photo.category].push({ id: photo.id, photo_url: photo.photo_url });
+        });
+        setPhotos(groupedPhotos);
+      }
+    } catch (error) {
+      console.error("Error loading inspection for photos:", error);
+      toast.error("Failed to load inspection");
+      navigate("/dashboard/mechanic");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const initializeInspection = async () => {
     try {
       // Get trailer info
