@@ -31,7 +31,14 @@ export const Footer = () => {
               <a 
                 href="tel:+18885704564"
                 className="hover:text-secondary transition-colors block"
-                onClick={() => trackPhoneClick('footer')}
+                onClick={() => {
+                  if (typeof window !== 'undefined' && window.gtag) {
+                    window.gtag('event', 'phone_click', {
+                      phone_number: '+18885704564',
+                      page: window.location.pathname,
+                    });
+                  }
+                }}
               >
                 (888) 570-4564
               </a>
