@@ -92,50 +92,101 @@ serve(async (req) => {
 
     for (const sub of subscriptions || []) {
       try {
-        // Get all payment intents for this subscription's customer
-        const paymentIntents = await stripe.paymentIntents.list({
-          customer: sub.stripe_customer_id,
-          limit: 100,
-        });
+        // Get invoices for this subscription directly from Stripe
+        const stripeInvoices = [];
+        if (sub.stripe_subscription_id) {
+          try {
+            const invoiceList = await stripe.invoices.list({
+              subscription: sub.stripe_subscription_id,
+              limit: 100,
+            });
+            stripeInvoices.push(...invoiceList.data);
+          } catch {
+            logStep("Could not list invoices for subscription", { subId: sub.id });
+          }
+        }
 
-        for (const pi of paymentIntents.data) {
-          // Check if this payment is already recorded - try by PI id first, then by invoice id
+        // Also get standalone invoices (deposits/charges) for this customer
+        try {
+          const customerInvoices = await stripe.invoices.list({
+            customer: sub.stripe_customer_id,
+            limit: 100,
+          });
+          // Add invoices that reference this subscription via metadata
+          for (const inv of customerInvoices.data) {
+            if (inv.metadata?.subscription_id === sub.stripe_subscription_id && 
+                !stripeInvoices.some(si => si.id === inv.id)) {
+              stripeInvoices.push(inv);
+            }
+          }
+        } catch {
+          // ignore
+        }
+
+        logStep("Found invoices for subscription", { subId: sub.id, count: stripeInvoices.length });
+
+        for (const inv of stripeInvoices) {
+          // Skip $0 invoices
+          if (inv.amount_due === 0 && inv.amount_paid === 0) continue;
+
+          const piId = typeof inv.payment_intent === "string" 
+            ? inv.payment_intent 
+            : inv.payment_intent?.id ?? null;
+
+          // Check if this payment is already recorded
           let existingPayment: { id: string; status: string } | null = null;
-          
-          const { data: byPI } = await supabaseClient
-            .from("billing_history")
-            .select("id, status")
-            .eq("stripe_payment_intent_id", pi.id)
-            .maybeSingle();
-          
-          existingPayment = byPI;
-          
-          if (!existingPayment && pi.invoice) {
+
+          if (piId) {
+            const { data: byPI } = await supabaseClient
+              .from("billing_history")
+              .select("id, status")
+              .eq("stripe_payment_intent_id", piId)
+              .maybeSingle();
+            existingPayment = byPI;
+          }
+
+          if (!existingPayment) {
             const { data: byInv } = await supabaseClient
               .from("billing_history")
               .select("id, status")
-              .eq("stripe_invoice_id", pi.invoice as string)
+              .eq("stripe_invoice_id", inv.id)
               .maybeSingle();
             existingPayment = byInv;
-            
-            // Backfill the payment_intent_id so future lookups work
-            if (byInv) {
+
+            // Backfill the payment_intent_id
+            if (byInv && piId) {
               await supabaseClient
                 .from("billing_history")
-                .update({ stripe_payment_intent_id: pi.id })
+                .update({ stripe_payment_intent_id: piId })
                 .eq("id", byInv.id);
-              logStep("Backfilled stripe_payment_intent_id", { id: byInv.id, piId: pi.id });
+              logStep("Backfilled stripe_payment_intent_id", { id: byInv.id, piId });
             }
           }
 
-          // Map Stripe status to our enum
+          // Map invoice status to payment status
           let paymentStatus: "pending" | "processing" | "succeeded" | "failed" | "refunded" = "pending";
-          if (pi.status === "succeeded") paymentStatus = "succeeded";
-          else if (pi.status === "processing") paymentStatus = "processing";
-          else if (pi.status === "canceled" || pi.status === "requires_payment_method") paymentStatus = "failed";
+          if (inv.status === "paid") {
+            // Double-check via PI if available
+            if (piId) {
+              try {
+                const pi = await stripe.paymentIntents.retrieve(piId);
+                if (pi.status === "succeeded") paymentStatus = "succeeded";
+                else if (pi.status === "processing") paymentStatus = "processing";
+                else if (pi.status === "canceled" || pi.status === "requires_payment_method") paymentStatus = "failed";
+                else paymentStatus = "succeeded"; // invoice is paid, trust it
+              } catch {
+                paymentStatus = "succeeded"; // invoice says paid
+              }
+            } else {
+              paymentStatus = "succeeded";
+            }
+          } else if (inv.status === "open") {
+            paymentStatus = "processing";
+          } else if (inv.status === "void" || inv.status === "uncollectible") {
+            paymentStatus = "failed";
+          }
 
           if (existingPayment) {
-            // Update if status changed
             if (existingPayment.status !== paymentStatus) {
               await supabaseClient
                 .from("billing_history")
@@ -143,54 +194,45 @@ serve(async (req) => {
                   status: paymentStatus,
                   paid_at: paymentStatus === "succeeded" ? new Date().toISOString() : null,
                   updated_at: new Date().toISOString(),
+                  stripe_payment_intent_id: piId || undefined,
                 })
                 .eq("id", existingPayment.id);
 
               results.paymentsUpdated++;
               logStep("Updated payment status", { 
                 paymentId: existingPayment.id, 
+                oldStatus: existingPayment.status,
                 newStatus: paymentStatus 
               });
             }
-          } else if (pi.metadata?.subscription_id || pi.invoice) {
-            // New payment - create record
-            // Try to get invoice details for period info
+          } else {
+            // Create new billing_history record
             let billingPeriodStart: string | null = null;
             let billingPeriodEnd: string | null = null;
-            let invoiceId: string | null = null;
-
-            if (pi.invoice) {
-              try {
-                const invoice = await stripe.invoices.retrieve(pi.invoice as string);
-                invoiceId = invoice.id;
-                if (invoice.period_start) {
-                  billingPeriodStart = new Date(invoice.period_start * 1000).toISOString();
-                }
-                if (invoice.period_end) {
-                  billingPeriodEnd = new Date(invoice.period_end * 1000).toISOString();
-                }
-              } catch {
-                // Invoice might not exist anymore
-              }
+            if (inv.period_start) {
+              billingPeriodStart = new Date(inv.period_start * 1000).toISOString();
+            }
+            if (inv.period_end) {
+              billingPeriodEnd = new Date(inv.period_end * 1000).toISOString();
             }
 
             await supabaseClient
               .from("billing_history")
               .insert({
                 subscription_id: sub.id,
-                amount: pi.amount / 100,
-                net_amount: pi.amount_received / 100,
+                amount: inv.amount_due / 100,
+                net_amount: inv.amount_paid / 100,
                 status: paymentStatus,
-                stripe_payment_intent_id: pi.id,
-                stripe_invoice_id: invoiceId,
+                stripe_payment_intent_id: piId,
+                stripe_invoice_id: inv.id,
                 billing_period_start: billingPeriodStart,
                 billing_period_end: billingPeriodEnd,
-                paid_at: paymentStatus === "succeeded" ? new Date(pi.created * 1000).toISOString() : null,
+                paid_at: paymentStatus === "succeeded" ? new Date(inv.created * 1000).toISOString() : null,
                 payment_method: "ach",
               });
 
             results.paymentsCreated++;
-            logStep("Created payment record", { paymentIntentId: pi.id });
+            logStep("Created payment record", { invoiceId: inv.id, status: paymentStatus, amount: inv.amount_due / 100 });
           }
 
           // Check if this might be a deposit payment
@@ -198,7 +240,7 @@ serve(async (req) => {
             paymentStatus === "succeeded" &&
             !sub.deposit_paid &&
             sub.deposit_amount &&
-            Math.abs((pi.amount / 100) - sub.deposit_amount) < 1
+            Math.abs((inv.amount_due / 100) - sub.deposit_amount) < 1
           ) {
             await supabaseClient
               .from("customer_subscriptions")

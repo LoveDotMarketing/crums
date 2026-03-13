@@ -297,6 +297,7 @@ export default function Billing() {
   const [isActivating, setIsActivating] = useState<string | null>(null);
   const [activatedIds, setActivatedIds] = useState<Set<string>>(new Set());
   
+  
   // Payment failures filter/sort state
   const [failuresSearch, setFailuresSearch] = useState("");
   const [failuresStatusFilter, setFailuresStatusFilter] = useState<"all" | "unresolved" | "resolved">("all");
@@ -685,6 +686,8 @@ export default function Billing() {
       setIsActivating(null);
     }
   };
+
+
 
   const { data: subscriptions, isLoading: loadingSubscriptions } = useQuery({
     queryKey: ["customer-subscriptions"],
@@ -1418,10 +1421,21 @@ export default function Billing() {
                         Manage billing cycles, deposits, and trailer assignments
                       </CardDescription>
                     </div>
-                    <Button onClick={() => setActiveTab("create-subscription")}>
-                      <Plus className="h-4 w-4 mr-2" />
-                      Create Subscription
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        disabled={isSyncing}
+                        onClick={handleSyncPayments}
+                      >
+                        <RefreshCw className={`h-4 w-4 mr-2 ${isSyncing ? "animate-spin" : ""}`} />
+                        {isSyncing ? "Syncing..." : "Sync Payments"}
+                      </Button>
+                      <Button onClick={() => setActiveTab("create-subscription")}>
+                        <Plus className="h-4 w-4 mr-2" />
+                        Create Subscription
+                      </Button>
+                    </div>
                   </CardHeader>
                   <CardContent>
                     {loadingSubscriptions ? (
@@ -1475,17 +1489,28 @@ export default function Billing() {
                             
                             // Check if subscription is ready to activate
                             // Pending subs with Stripe IDs are ready (even if previously attempted)
-                            // Active subs with no successful payment also qualify
+                            // Active subs with no successful payment also qualify ONLY if they're genuinely pending
+                            // (not just missing billing_history due to sync lag)
+                            const hasBillingHistoryRecords = billingHistory?.some(
+                              bh => bh.subscription_id === sub.id
+                            );
                             const isReadyToActivate = !isProcessing && sub.stripe_subscription_id && 
                               sub.stripe_customer_id && !hasProcessingPayment && 
                               !(sub.status === "active" && sub.deposit_paid) && (
                                 sub.status === "pending" || 
-                                (sub.status === "active" && !hasSuccessfulPayment)
+                                // Only show Activate for active subs if they have billing_history but none succeeded
+                                // If they have NO billing_history at all, it's likely a sync gap — don't show Activate
+                                (sub.status === "active" && !hasSuccessfulPayment && hasBillingHistoryRecords)
                               );
                             
-                            // Show warning badge for active subs with no successful payments
+                            // Show warning badge for active subs with no successful payments AND no billing history
+                            // (indicates sync hasn't run yet)
+                            const needsSync = sub.status === "active" && 
+                              sub.stripe_subscription_id && !hasBillingHistoryRecords;
+                            
+                            // Show warning badge for active subs with billing history but no successful payments
                             const hasPaymentWarning = sub.status === "active" && 
-                              sub.stripe_subscription_id && !hasSuccessfulPayment;
+                              sub.stripe_subscription_id && !hasSuccessfulPayment && !needsSync;
                             
                             return (
                               <TableRow key={sub.id} className="cursor-pointer hover:bg-muted/50" onClick={() => { setSelectedSubscriptionId(sub.id); setActiveTab("edit-subscription"); }}>
@@ -1567,7 +1592,23 @@ export default function Billing() {
                                         </Tooltip>
                                       </TooltipProvider>
                                     )}
-                                    {hasPaymentWarning && !isReadyToActivate && (
+                                    {needsSync && !isReadyToActivate && (
+                                      <TooltipProvider>
+                                        <Tooltip>
+                                          <TooltipTrigger asChild>
+                                            <Badge variant="outline" className="text-muted-foreground border-muted">
+                                              <RefreshCw className="h-3 w-3 mr-1" />
+                                              Sync
+                                            </Badge>
+                                          </TooltipTrigger>
+                                          <TooltipContent>
+                                            <p>Billing data not yet synced from Stripe.</p>
+                                            <p className="text-muted-foreground">Click "Sync Payments" to update.</p>
+                                          </TooltipContent>
+                                        </Tooltip>
+                                      </TooltipProvider>
+                                    )}
+                                    {hasPaymentWarning && !isReadyToActivate && !needsSync && (
                                       <TooltipProvider>
                                         <Tooltip>
                                           <TooltipTrigger asChild>
