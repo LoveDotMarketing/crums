@@ -1,32 +1,35 @@
 
 
-## Problem
+## Why Add Internal Links to Ad Landing Pages?
 
-Abdul's `customer_applications` record shows `payment_setup_status = 'completed'` and has a `stripe_payment_method_id` (`pm_1T7dwSLjIwiEGQIhzU647O3c`) that is dead/detached in Stripe. The UI shows "ACH ✓" and hides the "Send ACH Setup" button, so there's no way to re-do the setup.
+**Short answer: Don't add links to the landing pages themselves — add them to the thank-you pages.**
 
-## Fix
+Ad landing pages are intentionally distraction-free funnels. Adding outbound links before conversion would hurt your conversion rate (every link is an exit). The link equity argument is real — paid traffic gives those pages authority that gets "trapped" — but conversion rate matters more than SEO equity on paid pages.
 
-### 1. Database: Reset Abdul's ACH status
+**Thank-you pages are the sweet spot.** The visitor has already converted, so now you want to:
+- Distribute accumulated link equity to money pages and guides
+- Keep the user on-site exploring (reduces bounce, builds brand familiarity)
+- Cross-sell services (rentals, lease-to-own, fleet solutions)
 
-Run a migration to clear the broken payment method and reset status so the ACH setup flow can be re-initiated:
+---
 
-```sql
-UPDATE customer_applications
-SET payment_setup_status = 'pending',
-    stripe_payment_method_id = NULL
-WHERE id = '25b5046d-d4b2-405c-bf78-ba3e2b71039f';
-```
+## Plan
 
-### 2. UI: Add a "Reset ACH" option for admins
+**Files to modify:** 3 thank-you pages
+- `src/pages/GoogleThankYou.tsx`
+- `src/pages/FacebookThankYou.tsx`
+- `src/pages/LinkedInThankYou.tsx`
 
-In `src/pages/admin/Applications.tsx`, update the ACH badge area (~line 773) so that when `payment_setup_status === "completed"`, instead of only showing the static "ACH ✓" badge, also show a small reset button that sets `payment_setup_status` back to `pending` and clears `stripe_payment_method_id`. This prevents needing manual database edits in the future.
+**What to add:** A `RelatedLinksSection` after the `</main>` closing tag on each page, with 6 contextual internal links per page:
 
-The reset button will:
-- Update `customer_applications` setting `payment_setup_status = 'pending'` and `stripe_payment_method_id = null`
-- Refresh the applications list
-- Show a toast confirmation
+| Link | Why |
+|------|-----|
+| `/dry-van-trailer-leasing` | Primary money page — reinforces what they just requested |
+| `/services/lease-to-own` | Cross-sell a higher-commitment option |
+| `/commercial-dry-van-trailer-for-lease-56171` | Show real inventory — builds confidence |
+| `/resources/guides/owner-operator-basics` | Educational value for the audience |
+| `/resources/tools/cost-per-mile` | Practical tool keeps them engaged |
+| `/why-choose-crums` | Trust-building while they wait for callback |
 
-### Files to update
-- **Database migration** — one UPDATE statement for Abdul's record
-- `src/pages/admin/Applications.tsx` — add reset ACH button next to the "ACH ✓" badge (~5 lines)
+Each page gets the same link set since they serve the same post-conversion audience. The section renders below `</main>` so it doesn't interfere with the conversion confirmation content or tracking pixels.
 
