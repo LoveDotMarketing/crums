@@ -369,6 +369,7 @@ const MaximizeLease = () => {
         </section>
       </main>
       
+      <GuideRelatedContent currentSlug="maximize-lease" />
       <Footer />
     </div>
   );

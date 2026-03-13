@@ -758,6 +758,7 @@ const ChoosingTrailer = () => {
         </div>
       </section>
 
+      <GuideRelatedContent currentSlug="choosing-trailer" />
       <Footer />
     </div>
   );

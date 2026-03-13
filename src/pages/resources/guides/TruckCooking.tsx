@@ -414,6 +414,7 @@ export default function TruckCooking() {
         </div>
       </main>
 
+      <GuideRelatedContent currentSlug="truck-cooking" />
       <Footer />
     </>
   );

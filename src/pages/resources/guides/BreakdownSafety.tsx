@@ -648,6 +648,7 @@ const BreakdownSafety = () => {
         </div>
       </section>
 
+      <GuideRelatedContent currentSlug="breakdown-safety" />
       <Footer />
     </div>
   );

@@ -427,6 +427,7 @@ const MentalHealth = () => {
         </section>
       </main>
       
+      <GuideRelatedContent currentSlug="mental-health" />
       <Footer />
     </div>
   );

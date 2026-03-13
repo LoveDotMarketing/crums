@@ -700,6 +700,7 @@ const PreTripInspection = () => {
         </div>
       </article>
 
+      <GuideRelatedContent currentSlug="pre-trip-inspection" />
       <Footer />
     </div>
   );

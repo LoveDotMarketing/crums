@@ -518,6 +518,7 @@ const GettingYourCDL = () => {
         </div>
       </section>
 
+      <GuideRelatedContent currentSlug="getting-your-cdl" />
       <Footer />
     </div>
   );

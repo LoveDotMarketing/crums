@@ -611,6 +611,7 @@ const TireCare = () => {
         </div>
       </section>
 
+      <GuideRelatedContent currentSlug="tire-care" />
       <Footer />
     </div>
   );

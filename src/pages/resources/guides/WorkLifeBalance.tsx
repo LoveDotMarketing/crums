@@ -385,6 +385,7 @@ export default function WorkLifeBalance() {
         </div>
       </main>
 
+      <GuideRelatedContent currentSlug="work-life-balance" />
       <Footer />
     </>
   );

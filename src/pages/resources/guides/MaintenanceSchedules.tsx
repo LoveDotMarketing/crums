@@ -568,6 +568,7 @@ const MaintenanceSchedules = () => {
         </div>
       </section>
 
+      <GuideRelatedContent currentSlug="maintenance-schedules" />
       <Footer />
     </div>
   );

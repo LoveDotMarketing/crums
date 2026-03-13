@@ -543,6 +543,7 @@ const OwnerOperatorBasics = () => {
         </div>
       </section>
 
+      <GuideRelatedContent currentSlug="owner-operator-basics" />
       <Footer />
     </div>
   );

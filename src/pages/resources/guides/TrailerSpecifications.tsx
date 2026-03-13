@@ -451,6 +451,7 @@ const TrailerSpecifications = () => {
         </div>
       </main>
 
+      <GuideRelatedContent currentSlug="trailer-specifications" />
       <Footer />
     </div>
   );

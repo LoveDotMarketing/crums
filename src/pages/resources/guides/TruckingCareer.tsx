@@ -436,6 +436,7 @@ const TruckingCareer = () => {
         </section>
       </main>
       
+      <GuideRelatedContent currentSlug="trucking-career" />
       <Footer />
     </div>
   );

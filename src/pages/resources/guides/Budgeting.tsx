@@ -383,6 +383,7 @@ export default function Budgeting() {
         </div>
       </main>
 
+      <GuideRelatedContent currentSlug="budgeting" />
       <Footer />
     </>
   );

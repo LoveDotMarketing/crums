@@ -457,6 +457,7 @@ const WhyLeasingDryVan = () => {
         </div>
       </section>
 
+      <GuideRelatedContent currentSlug="why-leasing-a-dry-van-trailer-is-a-smart-business-decision" />
       <Footer />
     </div>
   );

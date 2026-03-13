@@ -397,6 +397,7 @@ const FuelEfficiency = () => {
         </section>
       </main>
       
+      <GuideRelatedContent currentSlug="fuel-efficiency" />
       <Footer />
     </div>
   );

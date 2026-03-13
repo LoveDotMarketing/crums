@@ -452,6 +452,7 @@ const LeaseFirstTrailer = () => {
         </div>
       </section>
 
+      <GuideRelatedContent currentSlug="lease-first-trailer" />
       <Footer />
     </div>
   );

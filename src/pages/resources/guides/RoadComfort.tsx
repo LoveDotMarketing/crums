@@ -411,6 +411,7 @@ export default function RoadComfort() {
         </div>
       </main>
 
+      <GuideRelatedContent currentSlug="road-comfort" />
       <Footer />
     </>
   );

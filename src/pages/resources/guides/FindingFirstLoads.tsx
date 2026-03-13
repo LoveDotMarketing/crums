@@ -536,6 +536,7 @@ const FindingFirstLoads = () => {
         </div>
       </section>
 
+      <GuideRelatedContent currentSlug="finding-first-loads" />
       <Footer />
     </div>
   );

@@ -496,6 +496,7 @@ const LoadBoardsGuide = () => {
         </div>
       </section>
 
+      <GuideRelatedContent currentSlug="load-boards-guide" />
       <Footer />
     </div>
   );
