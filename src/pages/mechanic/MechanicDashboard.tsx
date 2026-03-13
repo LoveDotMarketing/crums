@@ -841,6 +841,15 @@ export default function MechanicDashboard() {
                         <XCircle className="h-3.5 w-3.5 flex-shrink-0" />
                         <span>Customer has not yet signed the DOT acknowledgment</span>
                       </div>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="w-full mt-2"
+                        onClick={() => navigate(`/dashboard/mechanic/inspection?photosOnly=true&inspectionId=${inspection.id}`)}
+                      >
+                        <Camera className="mr-2 h-4 w-4" />
+                        Add Photos
+                      </Button>
                     </CardContent>
                   </Card>
                 ))}

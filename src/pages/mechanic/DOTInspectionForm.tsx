@@ -461,6 +461,70 @@ export default function DOTInspectionForm() {
     );
   }
 
+  // Photos-only mode: show all photo categories on a single page
+  if (isPhotosOnly && inspectionId) {
+    const photoCategories = [
+      { category: "brakes", label: "Brake System Photos" },
+      { category: "tires_left", label: "Left Side Tires" },
+      { category: "tires_right", label: "Right Side Tires" },
+      { category: "lights", label: "Lighting Photos" },
+      { category: "frame", label: "Frame & Structure Photos" },
+      { category: "doors", label: "Door Photos" },
+      { category: "landing_gear", label: "Landing Gear Photos" },
+      { category: "coupling", label: "Kingpin/Coupling Photos" },
+      { category: "reflective", label: "Reflective Tape Photos" },
+      { category: "license_plate", label: "License Plate Photo" },
+    ];
+
+    return (
+      <>
+        <SEO title="Add Inspection Photos" description="Upload photos for a completed DOT inspection" noindex />
+        <div className="min-h-screen bg-background">
+          <header className="border-b bg-card sticky top-0 z-10">
+            <div className="container mx-auto px-4 py-3">
+              <div className="flex items-center gap-3">
+                <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard/mechanic")}>
+                  <ArrowLeft className="h-5 w-5" />
+                </Button>
+                <div>
+                  <h1 className="text-lg font-semibold">Add Photos</h1>
+                  <p className="text-sm text-muted-foreground">
+                    Trailer #{trailerInfo?.trailer_number} • {trailerInfo?.type}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </header>
+
+          <main className="container mx-auto px-4 py-6 max-w-2xl space-y-6">
+            <p className="text-sm text-muted-foreground">
+              Upload or manage photos for this completed inspection. Changes are saved automatically.
+            </p>
+            {photoCategories.map(({ category, label }) => (
+              <Card key={category}>
+                <CardContent className="pt-6">
+                  <InspectionPhotoUpload
+                    inspectionId={inspectionId}
+                    category={category}
+                    label={label}
+                    existingPhotos={photos[category]}
+                    onPhotoUploaded={(url) => handlePhotoUploaded(category, url)}
+                    onPhotoDeleted={(id) => handlePhotoDeleted(category, id)}
+                  />
+                </CardContent>
+              </Card>
+            ))}
+
+            <Button variant="outline" className="w-full" onClick={() => navigate("/dashboard/mechanic")}>
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Dashboard
+            </Button>
+          </main>
+        </div>
+      </>
+    );
+  }
+
   return (
     <>
       <SEO title="DOT Inspection" description="Complete DOT trailer inspection checklist" noindex />
