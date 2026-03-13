@@ -158,7 +158,7 @@ const SemiTrailerLeasing = () => {
               { icon: TrendingUp, title: "Grow With Us", desc: "Start with one trailer. Scale to a fleet. We grow with you.", color: "text-primary" },
               { icon: Clock, title: "Fast Turnaround", desc: "Apply today, get approved quickly, and start hauling.", color: "text-secondary" }
             ].map(({ icon: Icon, title, desc, color }) => (
-              <Card key={title} className="border-2 hover:shadow-lg transition-shadow">
+           <Card key={title} className="border-2 hover:shadow-lg transition-shadow">
                 <CardContent className="p-6">
                   <Icon className={`h-10 w-10 ${color} mb-4`} />
                   <h3 className="text-lg font-bold mb-2">{title}</h3>
@@ -166,6 +166,11 @@ const SemiTrailerLeasing = () => {
                 </CardContent>
               </Card>
             ))}
+          </div>
+          <div className="text-center mt-8">
+            <p className="text-sm text-muted-foreground">
+              See what DOT-ready equipment looks like — <Link to="/commercial-dry-van-trailer-for-lease-56171" className="text-primary hover:underline font-medium">view a trailer profile for Unit 56171</Link>.
+            </p>
           </div>
         </div>
       </section>

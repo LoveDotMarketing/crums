@@ -132,6 +132,11 @@ export const Footer = () => {
                 </Link>
               </li>
               <li>
+                <Link to="/commercial-dry-van-trailer-for-lease-56171" className="hover:text-secondary transition-colors">
+                  Available Trailers
+                </Link>
+              </li>
+              <li>
                 <Link to="/login" className="hover:text-secondary transition-colors">
                   Customer Login
                 </Link>

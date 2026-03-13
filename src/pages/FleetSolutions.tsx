@@ -246,6 +246,11 @@ const FleetSolutions = () => {
               </CardContent>
             </Card>
           </div>
+          <div className="text-center mt-8">
+            <p className="text-sm text-muted-foreground">
+              Curious about equipment quality? <Link to="/commercial-dry-van-trailer-for-lease-56171" className="text-primary hover:underline font-medium">See a sample trailer from our fleet</Link>.
+            </p>
+          </div>
         </div>
       </section>
 

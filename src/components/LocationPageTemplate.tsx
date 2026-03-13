@@ -289,7 +289,7 @@ export const LocationPageTemplate = ({ location }: LocationPageTemplateProps) =>
                   <div className="flex items-start gap-4">
                     <CheckCircle className="h-6 w-6 text-secondary flex-shrink-0 mt-0.5" />
                     <p className="text-muted-foreground">
-                      <strong className="text-foreground">53-foot dry van trailers and flatbed trailers</strong> — our core fleet, GPS-equipped
+                      <strong className="text-foreground">53-foot dry van trailers and flatbed trailers</strong> — our core fleet, GPS-equipped. <Link to="/commercial-dry-van-trailer-for-lease-56171" className="text-primary hover:underline">View available trailers like our 2020 53' dry van</Link>
                     </p>
                   </div>
                 </div>
