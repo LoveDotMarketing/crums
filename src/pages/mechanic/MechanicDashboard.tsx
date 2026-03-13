@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Wrench, LogOut, Truck, Search, MapPin, DollarSign, ClipboardList, ClipboardCheck, Eye, ArrowDownToLine, ArrowUpFromLine, History, Calendar, Loader2, UserCheck, Users, CheckCircle2, Clock, XCircle } from "lucide-react";
+import { Wrench, LogOut, Truck, Search, MapPin, DollarSign, ClipboardList, ClipboardCheck, Eye, ArrowDownToLine, ArrowUpFromLine, History, Calendar, Loader2, UserCheck, Users, CheckCircle2, Clock, XCircle, Camera } from "lucide-react";
 import { toast } from "sonner";
 import { ChatBot } from "@/components/ChatBot";
 import { SEO } from "@/components/SEO";
