@@ -1,6 +1,7 @@
 import { SEO } from "@/components/SEO";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
+import { RelatedLinksSection } from "@/components/RelatedLinksSection";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -153,6 +154,19 @@ const Industries = () => {
         </section>
       </main>
       
+      <RelatedLinksSection
+        title="Explore Our Services & Resources"
+        subtitle="Find the right leasing solution for your industry"
+        links={[
+          { to: "/dry-van-trailer-leasing", label: "Dry Van Trailer Leasing", description: "Flexible lease terms for the most popular trailer type in freight." },
+          { to: "/services/fleet-solutions", label: "Fleet Solutions", description: "Comprehensive fleet management for multi-trailer operations." },
+          { to: "/services/lease-to-own", label: "Lease to Own", description: "Build equity toward ownership with every monthly payment." },
+          { to: "/resources/guides/choosing-trailer", label: "Guide: Choosing the Right Trailer", description: "Compare trailer types to find the best fit for your freight." },
+          { to: "/resources/tools/profit-calculator", label: "Profit Per Load Calculator", description: "Estimate your profit margin per haul after all expenses." },
+          { to: "/get-started", label: "Get Started", description: "Apply online and get approved for a trailer lease quickly." },
+        ]}
+      />
+
       <Footer />
     </div>
   );
