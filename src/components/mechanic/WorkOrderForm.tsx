@@ -29,7 +29,7 @@ interface CatalogItem {
   labor_hours: number | null;
 }
 
-interface LineItem {
+export interface LineItem {
   id?: string;
   description: string;
   quantity: number;
@@ -37,9 +37,27 @@ interface LineItem {
   catalog_labor_hours?: number | null;
 }
 
+export interface ExistingWorkOrder {
+  id: string;
+  trailer_id: string;
+  repair_type: string;
+  description: string;
+  work_start_date: string;
+  work_completion_date: string | null;
+  labor_hours: number;
+  labor_rate: number;
+  travel_fee: number;
+  labor_total: number;
+  parts_total: number;
+  grand_total: number;
+  status: string;
+}
+
 interface WorkOrderFormProps {
   onSuccess: () => void;
   onCancel: () => void;
+  existingWorkOrder?: ExistingWorkOrder;
+  existingLineItems?: LineItem[];
 }
 
 const REPAIR_TYPES = [
