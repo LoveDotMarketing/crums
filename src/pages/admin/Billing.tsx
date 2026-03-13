@@ -1592,7 +1592,23 @@ export default function Billing() {
                                         </Tooltip>
                                       </TooltipProvider>
                                     )}
-                                    {hasPaymentWarning && !isReadyToActivate && (
+                                    {needsSync && !isReadyToActivate && (
+                                      <TooltipProvider>
+                                        <Tooltip>
+                                          <TooltipTrigger asChild>
+                                            <Badge variant="outline" className="text-muted-foreground border-muted">
+                                              <RefreshCw className="h-3 w-3 mr-1" />
+                                              Sync
+                                            </Badge>
+                                          </TooltipTrigger>
+                                          <TooltipContent>
+                                            <p>Billing data not yet synced from Stripe.</p>
+                                            <p className="text-muted-foreground">Click "Sync Payments" to update.</p>
+                                          </TooltipContent>
+                                        </Tooltip>
+                                      </TooltipProvider>
+                                    )}
+                                    {hasPaymentWarning && !isReadyToActivate && !needsSync && (
                                       <TooltipProvider>
                                         <Tooltip>
                                           <TooltipTrigger asChild>
