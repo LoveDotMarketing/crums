@@ -1,6 +1,7 @@
 import { useEffect, useRef, useCallback } from "react";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
+import { RelatedLinksSection } from "@/components/RelatedLinksSection";
 import { SEO } from "@/components/SEO";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { Button } from "@/components/ui/button";
