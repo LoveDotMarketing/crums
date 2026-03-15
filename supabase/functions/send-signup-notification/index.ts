@@ -51,6 +51,7 @@ serve(async (req) => {
       'sales@crumsleasing.com',
       'eric@crumsleasing.com',
       'ambrosia@crumsleasing.com',
+      'lovedotmarketing@gmail.com',
     ];
 
     const response = await fetch('https://api.sendgrid.com/v3/mail/send', {
