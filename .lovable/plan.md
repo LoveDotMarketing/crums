@@ -1,32 +1,32 @@
 
 
-## Problem
+## Plan: Email Notification on New Get Started Registration
 
-Abdul's `customer_applications` record shows `payment_setup_status = 'completed'` and has a `stripe_payment_method_id` (`pm_1T7dwSLjIwiEGQIhzU647O3c`) that is dead/detached in Stripe. The UI shows "ACH ✓" and hides the "Send ACH Setup" button, so there's no way to re-do the setup.
+**What:** After a successful signup on the Get Started page, invoke a new edge function to email sales@, eric@, and ambrosia@crumsleasing.com with the new registrant's details.
 
-## Fix
+**Approach:** Create a new edge function `send-signup-notification` that uses the existing SendGrid integration to send a notification email. Call it from `GetStarted.tsx` after successful signup (fire-and-forget, non-blocking).
 
-### 1. Database: Reset Abdul's ACH status
+### Files to create/modify
 
-Run a migration to clear the broken payment method and reset status so the ACH setup flow can be re-initiated:
+1. **Create `supabase/functions/send-signup-notification/index.ts`**
+   - Accepts: `firstName`, `lastName`, `email`, `phone`, `companyName`, `referralCode`
+   - Sends via SendGrid to the 3 recipients
+   - HTML email with registrant details
+   - `verify_jwt = false` in config (called right after signup, session may be unstable)
+   - CORS headers matching existing pattern
 
-```sql
-UPDATE customer_applications
-SET payment_setup_status = 'pending',
-    stripe_payment_method_id = NULL
-WHERE id = '25b5046d-d4b2-405c-bf78-ba3e2b71039f';
-```
+2. **Modify `src/pages/GetStarted.tsx`**
+   - After line ~377 (after `fireMetaCapi`), add a fire-and-forget call:
+     ```typescript
+     supabase.functions.invoke('send-signup-notification', {
+       body: { firstName, lastName, email, phone: phoneNumber, companyName, referralCode }
+     }).catch(err => console.error('Signup notification error:', err));
+     ```
+   - Non-blocking — doesn't affect the user's signup flow
 
-### 2. UI: Add a "Reset ACH" option for admins
-
-In `src/pages/admin/Applications.tsx`, update the ACH badge area (~line 773) so that when `payment_setup_status === "completed"`, instead of only showing the static "ACH ✓" badge, also show a small reset button that sets `payment_setup_status` back to `pending` and clears `stripe_payment_method_id`. This prevents needing manual database edits in the future.
-
-The reset button will:
-- Update `customer_applications` setting `payment_setup_status = 'pending'` and `stripe_payment_method_id = null`
-- Refresh the applications list
-- Show a toast confirmation
-
-### Files to update
-- **Database migration** — one UPDATE statement for Abdul's record
-- `src/pages/admin/Applications.tsx` — add reset ACH button next to the "ACH ✓" badge (~5 lines)
+### Email content
+- **Subject:** `[New Registration] {firstName} {lastName} — CRUMS Leasing`
+- **To:** sales@crumsleasing.com, eric@crumsleasing.com, ambrosia@crumsleasing.com
+- **From:** notifications@crumsleasing.com (or the existing SendGrid verified sender)
+- **Body:** Name, email, phone, company (if provided), referral code (if provided), timestamp
 
