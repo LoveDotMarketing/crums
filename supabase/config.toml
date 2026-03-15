@@ -144,3 +144,7 @@ verify_jwt = false
 # Meta Conversions API - public (Facebook landing page is unauthenticated)
 [functions.meta-capi]
 verify_jwt = false
+
+# Signup notification - called right after registration, session may not be ready
+[functions.send-signup-notification]
+verify_jwt = false

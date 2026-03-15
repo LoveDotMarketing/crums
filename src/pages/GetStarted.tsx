@@ -375,6 +375,11 @@ export default function GetStarted() {
         lastName: lastName || undefined,
       });
 
+      // Notify team of new registration (fire-and-forget)
+      supabase.functions.invoke('send-signup-notification', {
+        body: { firstName, lastName, email, phone: phoneNumber, companyName, referralCode }
+      }).catch(err => console.error('Signup notification error:', err));
+
       clearSavedForm();
 
       toast({ 
