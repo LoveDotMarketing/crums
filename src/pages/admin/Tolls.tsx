@@ -551,6 +551,15 @@ export default function Tolls() {
         onOpenChange={setIsDialogOpen}
         onSuccess={fetchTolls}
       />
+
+      {/* Hidden file input for inline photo uploads */}
+      <input
+        ref={photoInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={onPhotoFileSelected}
+      />
     </SidebarProvider>
   );
 }
