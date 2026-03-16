@@ -772,33 +772,33 @@ export default function Applications() {
                                 </Button>
                               )}
                               {app.payment_setup_status === "completed" && (
-                                <>
-                                  <Badge variant="outline" className="ml-1 text-xs">
-                                    {(app as any).payment_method_type === "card" ? "Card ✓" : "ACH ✓"}
-                                  </Badge>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="ml-1 h-6 px-1.5 text-xs text-muted-foreground hover:text-destructive"
-                                    title="Hard reset: clears DB + detaches stale Stripe payment methods"
-                                    onClick={async () => {
-                                      try {
-                                        const { data, error } = await supabase.functions.invoke("reset-payment-setup", {
-                                          body: { applicationId: app.id },
-                                        });
-                                        if (error) throw error;
-                                        if (data?.error) throw new Error(data.error);
-                                        const msg = `Reset complete. ${data.detachedCount || 0} stale payment method(s) removed from Stripe.${data.clearedDefault ? " Default cleared." : ""}`;
-                                        toast({ title: "Payment Reset", description: msg });
-                                        queryClient.invalidateQueries({ queryKey: ["applications"] });
-                                      } catch (err: any) {
-                                        toast({ title: "Error", description: err.message || "Reset failed", variant: "destructive" });
-                                      }
-                                    }}
-                                  >
-                                    <RotateCcw className="h-3 w-3" />
-                                  </Button>
-                                </>
+                                <Badge variant="outline" className="ml-1 text-xs">
+                                  {(app as any).payment_method_type === "card" ? "Card ✓" : "ACH ✓"}
+                                </Badge>
+                              )}
+                              {app.stripe_customer_id && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="ml-1 h-6 px-1.5 text-xs text-muted-foreground hover:text-destructive"
+                                  title="Hard reset: clears DB + detaches stale Stripe payment methods"
+                                  onClick={async () => {
+                                    try {
+                                      const { data, error } = await supabase.functions.invoke("reset-payment-setup", {
+                                        body: { applicationId: app.id },
+                                      });
+                                      if (error) throw error;
+                                      if (data?.error) throw new Error(data.error);
+                                      const msg = `Reset complete. ${data.detachedCount || 0} stale payment method(s) removed from Stripe.${data.clearedDefault ? " Default cleared." : ""}`;
+                                      toast({ title: "Payment Reset", description: msg });
+                                      queryClient.invalidateQueries({ queryKey: ["applications"] });
+                                    } catch (err: any) {
+                                      toast({ title: "Error", description: err.message || "Reset failed", variant: "destructive" });
+                                    }
+                                  }}
+                                >
+                                  <RotateCcw className="h-3 w-3" />
+                                </Button>
                               )}
                               <Button
                                 variant="ghost"
