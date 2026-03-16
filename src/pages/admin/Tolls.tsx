@@ -19,7 +19,9 @@ import {
   Loader2,
   CreditCard,
   Landmark,
-  XCircle
+  XCircle,
+  Camera,
+  ImageIcon
 } from "lucide-react";
 import {
   Tooltip,
