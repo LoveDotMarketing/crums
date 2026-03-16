@@ -418,6 +418,7 @@ export default function Tolls() {
                         <TableHead>Location</TableHead>
                         <TableHead>Authority</TableHead>
                         <TableHead>Amount</TableHead>
+                        <TableHead>Photo</TableHead>
                         <TableHead>Status</TableHead>
                         <TableHead>Payment Date</TableHead>
                         <TableHead>Actions</TableHead>
