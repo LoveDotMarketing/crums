@@ -48,6 +48,7 @@ interface Toll {
   toll_date: string;
   status: string;
   payment_date: string | null;
+  receipt_url: string | null;
   profiles: { first_name: string | null; last_name: string | null; email: string } | null;
   trailers: { trailer_number: string } | null;
 }
