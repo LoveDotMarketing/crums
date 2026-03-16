@@ -148,3 +148,7 @@ verify_jwt = false
 # Signup notification - called right after registration, session may not be ready
 [functions.send-signup-notification]
 verify_jwt = false
+
+# Hard reset payment setup - admin only (auth handled in code)
+[functions.reset-payment-setup]
+verify_jwt = false
