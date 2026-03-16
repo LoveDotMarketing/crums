@@ -65,6 +65,9 @@ export default function Tolls() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [chargingTollId, setChargingTollId] = useState<string | null>(null);
   const [achStatusMap, setAchStatusMap] = useState<Record<string, boolean>>({});
+  const [uploadingTollId, setUploadingTollId] = useState<string | null>(null);
+  const photoInputRef = useRef<HTMLInputElement>(null);
+  const pendingTollIdRef = useRef<string | null>(null);
 
   useEffect(() => {
     setCustomerFilter(customerIdFromUrl);
