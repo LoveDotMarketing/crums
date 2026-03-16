@@ -167,7 +167,50 @@ export default function Tolls() {
     }
   };
 
-  const getCustomerName = (toll: Toll) => {
+  const handlePhotoUpload = async (tollId: string, customerId: string, file: File) => {
+    setUploadingTollId(tollId);
+    try {
+      const ext = file.name.split(".").pop() || "jpg";
+      const path = `${customerId}/${tollId}.${ext}`;
+      const { error: uploadError } = await supabase.storage
+        .from("toll-receipts")
+        .upload(path, file, { upsert: true });
+      if (uploadError) throw uploadError;
+
+      await supabase.from("tolls").update({ receipt_url: path }).eq("id", tollId);
+
+      // Auto-send email
+      await supabase.functions.invoke("send-toll-email", { body: { toll_id: tollId } });
+
+      toast.success("Photo uploaded and email sent to customer");
+      fetchTolls();
+    } catch (err: any) {
+      toast.error(err.message || "Failed to upload photo");
+    } finally {
+      setUploadingTollId(null);
+    }
+  };
+
+  const triggerPhotoUpload = (tollId: string) => {
+    pendingTollIdRef.current = tollId;
+    photoInputRef.current?.click();
+  };
+
+  const onPhotoFileSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    const tollId = pendingTollIdRef.current;
+    if (!file || !tollId) return;
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select an image file");
+      return;
+    }
+    const toll = tolls.find(t => t.id === tollId);
+    if (toll) {
+      handlePhotoUpload(tollId, toll.customer_id, file);
+    }
+    e.target.value = "";
+  };
+
     if (toll.profiles) {
       const { first_name, last_name, email } = toll.profiles;
       if (first_name || last_name) {
