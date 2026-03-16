@@ -463,6 +463,46 @@ export default function Tolls() {
                           <TableCell className="font-medium">
                             ${Number(toll.amount).toFixed(2)}
                           </TableCell>
+                          <TableCell>
+                            {toll.receipt_url ? (
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-7 w-7 text-primary"
+                                      onClick={() => triggerPhotoUpload(toll.id)}
+                                    >
+                                      <ImageIcon className="h-4 w-4" />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>Photo attached — click to replace</TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            ) : (
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-7 w-7 text-muted-foreground"
+                                      onClick={() => triggerPhotoUpload(toll.id)}
+                                      disabled={uploadingTollId === toll.id}
+                                    >
+                                      {uploadingTollId === toll.id ? (
+                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                      ) : (
+                                        <Camera className="h-4 w-4" />
+                                      )}
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>Upload toll photo</TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            )}
+                          </TableCell>
                           <TableCell>{getStatusBadge(toll.status)}</TableCell>
                           <TableCell className="text-sm text-muted-foreground">
                             {toll.payment_date 
