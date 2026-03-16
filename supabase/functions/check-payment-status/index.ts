@@ -99,11 +99,26 @@ serve(async (req) => {
 
     // No payment methods at all
     if (achMethods.data.length === 0 && cardMethods.data.length === 0) {
+      // Auto-reset: if status is 'sent' but no payment methods exist, reset to 'pending'
+      // so the customer can retry without admin intervention
+      let effectiveStatus = application.payment_setup_status;
+      if (application.payment_setup_status === 'sent') {
+        logStep("Auto-resetting stuck ACH setup", { applicationId: application.id });
+        await supabaseClient
+          .from("customer_applications")
+          .update({
+            payment_setup_status: "pending",
+            stripe_payment_method_id: null,
+          })
+          .eq("id", application.id);
+        effectiveStatus = "pending";
+      }
+
       return new Response(
         JSON.stringify({
           hasPaymentMethod: false,
           applicationStatus: application.status,
-          paymentSetupStatus: application.payment_setup_status,
+          paymentSetupStatus: effectiveStatus,
           paymentMethodType: application.payment_method_type || "ach",
         }),
         {
