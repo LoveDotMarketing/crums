@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
@@ -19,7 +19,9 @@ import {
   Loader2,
   CreditCard,
   Landmark,
-  XCircle
+  XCircle,
+  Camera,
+  ImageIcon
 } from "lucide-react";
 import {
   Tooltip,
@@ -46,6 +48,7 @@ interface Toll {
   toll_date: string;
   status: string;
   payment_date: string | null;
+  receipt_url: string | null;
   profiles: { first_name: string | null; last_name: string | null; email: string } | null;
   trailers: { trailer_number: string } | null;
 }
@@ -62,6 +65,9 @@ export default function Tolls() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [chargingTollId, setChargingTollId] = useState<string | null>(null);
   const [achStatusMap, setAchStatusMap] = useState<Record<string, boolean>>({});
+  const [uploadingTollId, setUploadingTollId] = useState<string | null>(null);
+  const photoInputRef = useRef<HTMLInputElement>(null);
+  const pendingTollIdRef = useRef<string | null>(null);
 
   useEffect(() => {
     setCustomerFilter(customerIdFromUrl);
@@ -85,6 +91,7 @@ export default function Tolls() {
         toll_date,
         status,
         payment_date,
+        receipt_url,
         profiles:customer_id(first_name, last_name, email),
         trailers(trailer_number)
       `)
@@ -158,6 +165,50 @@ export default function Tolls() {
     } finally {
       setChargingTollId(null);
     }
+  };
+
+  const handlePhotoUpload = async (tollId: string, customerId: string, file: File) => {
+    setUploadingTollId(tollId);
+    try {
+      const ext = file.name.split(".").pop() || "jpg";
+      const path = `${customerId}/${tollId}.${ext}`;
+      const { error: uploadError } = await supabase.storage
+        .from("toll-receipts")
+        .upload(path, file, { upsert: true });
+      if (uploadError) throw uploadError;
+
+      await supabase.from("tolls").update({ receipt_url: path }).eq("id", tollId);
+
+      // Auto-send email
+      await supabase.functions.invoke("send-toll-email", { body: { toll_id: tollId } });
+
+      toast.success("Photo uploaded and email sent to customer");
+      fetchTolls();
+    } catch (err: any) {
+      toast.error(err.message || "Failed to upload photo");
+    } finally {
+      setUploadingTollId(null);
+    }
+  };
+
+  const triggerPhotoUpload = (tollId: string) => {
+    pendingTollIdRef.current = tollId;
+    photoInputRef.current?.click();
+  };
+
+  const onPhotoFileSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    const tollId = pendingTollIdRef.current;
+    if (!file || !tollId) return;
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select an image file");
+      return;
+    }
+    const toll = tolls.find(t => t.id === tollId);
+    if (toll) {
+      handlePhotoUpload(tollId, toll.customer_id, file);
+    }
+    e.target.value = "";
   };
 
   const getCustomerName = (toll: Toll) => {
@@ -367,6 +418,7 @@ export default function Tolls() {
                         <TableHead>Location</TableHead>
                         <TableHead>Authority</TableHead>
                         <TableHead>Amount</TableHead>
+                        <TableHead>Photo</TableHead>
                         <TableHead>Status</TableHead>
                         <TableHead>Payment Date</TableHead>
                         <TableHead>Actions</TableHead>
@@ -410,6 +462,46 @@ export default function Tolls() {
                           </TableCell>
                           <TableCell className="font-medium">
                             ${Number(toll.amount).toFixed(2)}
+                          </TableCell>
+                          <TableCell>
+                            {toll.receipt_url ? (
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-7 w-7 text-primary"
+                                      onClick={() => triggerPhotoUpload(toll.id)}
+                                    >
+                                      <ImageIcon className="h-4 w-4" />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>Photo attached — click to replace</TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            ) : (
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-7 w-7 text-muted-foreground"
+                                      onClick={() => triggerPhotoUpload(toll.id)}
+                                      disabled={uploadingTollId === toll.id}
+                                    >
+                                      {uploadingTollId === toll.id ? (
+                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                      ) : (
+                                        <Camera className="h-4 w-4" />
+                                      )}
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>Upload toll photo</TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            )}
                           </TableCell>
                           <TableCell>{getStatusBadge(toll.status)}</TableCell>
                           <TableCell className="text-sm text-muted-foreground">
@@ -458,6 +550,15 @@ export default function Tolls() {
         open={isDialogOpen} 
         onOpenChange={setIsDialogOpen}
         onSuccess={fetchTolls}
+      />
+
+      {/* Hidden file input for inline photo uploads */}
+      <input
+        ref={photoInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={onPhotoFileSelected}
       />
     </SidebarProvider>
   );
