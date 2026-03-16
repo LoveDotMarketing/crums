@@ -91,6 +91,7 @@ export default function Tolls() {
         toll_date,
         status,
         payment_date,
+        receipt_url,
         profiles:customer_id(first_name, last_name, email),
         trailers(trailer_number)
       `)
