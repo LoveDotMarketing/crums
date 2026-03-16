@@ -88,6 +88,7 @@ interface Application {
   payment_setup_status: string | null;
   payment_setup_sent_at: string | null;
   stripe_payment_method_id: string | null;
+  stripe_customer_id: string | null;
   profiles: {
     email: string;
     first_name: string | null;
