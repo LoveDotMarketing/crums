@@ -211,6 +211,7 @@ export default function Tolls() {
     e.target.value = "";
   };
 
+  const getCustomerName = (toll: Toll) => {
     if (toll.profiles) {
       const { first_name, last_name, email } = toll.profiles;
       if (first_name || last_name) {
