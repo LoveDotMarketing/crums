@@ -1,32 +1,19 @@
 
 
-## Problem
+## Fix Ground Link Double Billing
 
-Abdul's `customer_applications` record shows `payment_setup_status = 'completed'` and has a `stripe_payment_method_id` (`pm_1T7dwSLjIwiEGQIhzU647O3c`) that is dead/detached in Stripe. The UI shows "ACH ✓" and hides the "Send ACH Setup" button, so there's no way to re-do the setup.
+**Root cause:** There are 3 Stripe subscriptions for Ground Link but only 2 should exist. Subscription `sub_1T6fduLjIwiEGQIhq7hxoreX` (database ID `c83102db`) is a duplicate of the 15th-of-month subscription — it has no active equipment items in the database but is still live in Stripe, causing a second $3,800 charge.
 
-## Fix
+**Correct billing:**
+- 1st of month: $2,300 (sub `c232ab1a`) — 3 trailers
+- 15th of month: $3,800 (sub `81046ac5`) — 5 trailers
 
-### 1. Database: Reset Abdul's ACH status
+### Steps
 
-Run a migration to clear the broken payment method and reset status so the ACH setup flow can be re-initiated:
+1. **Cancel the duplicate Stripe subscription** `sub_1T6fduLjIwiEGQIhq7hxoreX` immediately so it stops billing
+2. **Update the local database record** — set subscription `c83102db` status to `canceled` so it no longer appears as active
+3. **You handle the refund** for the extra $3,800 charge directly in Stripe
 
-```sql
-UPDATE customer_applications
-SET payment_setup_status = 'pending',
-    stripe_payment_method_id = NULL
-WHERE id = '25b5046d-d4b2-405c-bf78-ba3e2b71039f';
-```
-
-### 2. UI: Add a "Reset ACH" option for admins
-
-In `src/pages/admin/Applications.tsx`, update the ACH badge area (~line 773) so that when `payment_setup_status === "completed"`, instead of only showing the static "ACH ✓" badge, also show a small reset button that sets `payment_setup_status` back to `pending` and clears `stripe_payment_method_id`. This prevents needing manual database edits in the future.
-
-The reset button will:
-- Update `customer_applications` setting `payment_setup_status = 'pending'` and `stripe_payment_method_id = null`
-- Refresh the applications list
-- Show a toast confirmation
-
-### Files to update
-- **Database migration** — one UPDATE statement for Abdul's record
-- `src/pages/admin/Applications.tsx` — add reset ACH button next to the "ACH ✓" badge (~5 lines)
+### Files changed
+- No code changes needed — this is a data fix using Stripe API + database migration
 
