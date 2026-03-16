@@ -780,17 +780,19 @@ export default function Applications() {
                                     variant="ghost"
                                     size="sm"
                                     className="ml-1 h-6 px-1.5 text-xs text-muted-foreground hover:text-destructive"
-                                    title="Reset payment setup (clear broken payment method)"
+                                    title="Hard reset: clears DB + detaches stale Stripe payment methods"
                                     onClick={async () => {
-                                      const { error } = await supabase
-                                        .from("customer_applications")
-                                        .update({ payment_setup_status: "pending", stripe_payment_method_id: null })
-                                        .eq("id", app.id);
-                                      if (error) {
-                                        toast({ title: "Error", description: error.message, variant: "destructive" });
-                                      } else {
-                                        toast({ title: "Payment Reset", description: "Payment setup status reset to pending." });
+                                      try {
+                                        const { data, error } = await supabase.functions.invoke("reset-payment-setup", {
+                                          body: { applicationId: app.id },
+                                        });
+                                        if (error) throw error;
+                                        if (data?.error) throw new Error(data.error);
+                                        const msg = `Reset complete. ${data.detachedCount || 0} stale payment method(s) removed from Stripe.${data.clearedDefault ? " Default cleared." : ""}`;
+                                        toast({ title: "Payment Reset", description: msg });
                                         queryClient.invalidateQueries({ queryKey: ["applications"] });
+                                      } catch (err: any) {
+                                        toast({ title: "Error", description: err.message || "Reset failed", variant: "destructive" });
                                       }
                                     }}
                                   >

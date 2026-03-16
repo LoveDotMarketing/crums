@@ -270,9 +270,10 @@ export default function PaymentSetup() {
   };
 
   const handleAchSetup = async (stripe: any, data: any) => {
-    // STEP 1: Collect bank account via Financial Connections
-    const { setupIntent: collectedSetupIntent, error: collectError } = 
-      await stripe.collectBankAccountForSetup({
+    // STEP 1: Collect bank account via Financial Connections with timeout guard
+    let collectResult: any;
+    try {
+      const collectPromise = stripe.collectBankAccountForSetup({
         clientSecret: data.clientSecret,
         params: {
           payment_method_type: 'us_bank_account',
@@ -287,6 +288,25 @@ export default function PaymentSetup() {
         },
         expand: ['payment_method'],
       });
+
+      // 3-minute timeout — if the bank prompt never opens, don't hang forever
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("TIMEOUT")), 180_000)
+      );
+
+      collectResult = await Promise.race([collectPromise, timeoutPromise]);
+    } catch (timeoutOrError: any) {
+      if (timeoutOrError?.message === "TIMEOUT") {
+        setSetupError({
+          message: "The bank connection prompt didn't open. Please make sure you're using Safari or Chrome (not an in-app browser from email), then try again.",
+          canRetry: true,
+        });
+        return;
+      }
+      throw timeoutOrError;
+    }
+
+    const { setupIntent: collectedSetupIntent, error: collectError } = collectResult;
 
     if (collectError) {
       console.error("Error collecting bank account:", collectError);
