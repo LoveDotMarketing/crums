@@ -29,7 +29,6 @@ serve(async (req) => {
       { auth: { persistSession: false } }
     );
 
-    // Get auth token
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) throw new Error("No authorization header provided");
 
@@ -51,20 +50,19 @@ serve(async (req) => {
     if (appError) {
       logStep("No application found", { error: appError.message });
       return new Response(
-        JSON.stringify({
-          hasPaymentMethod: false,
-          applicationStatus: null,
-          paymentSetupStatus: null,
-          paymentMethodType: null,
-        }),
-        {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-          status: 200,
-        }
+        JSON.stringify({ hasPaymentMethod: false, applicationStatus: null, paymentSetupStatus: null, paymentMethodType: null }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
       );
     }
 
-    // If no Stripe customer yet, no payment method
+    logStep("Application loaded", {
+      appId: application.id,
+      status: application.payment_setup_status,
+      storedPmId: application.stripe_payment_method_id,
+      stripeCustomerId: application.stripe_customer_id,
+    });
+
+    // No Stripe customer yet → no payment method
     if (!application.stripe_customer_id) {
       logStep("No Stripe customer ID found");
       return new Response(
@@ -74,119 +72,97 @@ serve(async (req) => {
           paymentSetupStatus: application.payment_setup_status,
           paymentMethodType: application.payment_method_type || "ach",
         }),
-        {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-          status: 200,
-        }
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
       );
     }
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
 
-    // Check for ACH payment methods
-    const achMethods = await stripe.paymentMethods.list({
-      customer: application.stripe_customer_id,
-      type: "us_bank_account",
-    });
-
-    // Check for card payment methods
-    const cardMethods = await stripe.paymentMethods.list({
-      customer: application.stripe_customer_id,
-      type: "card",
-    });
-
+    // Fetch actual payment methods from Stripe
+    const achMethods = await stripe.paymentMethods.list({ customer: application.stripe_customer_id, type: "us_bank_account" });
+    const cardMethods = await stripe.paymentMethods.list({ customer: application.stripe_customer_id, type: "card" });
     logStep("Retrieved payment methods", { achCount: achMethods.data.length, cardCount: cardMethods.data.length });
 
-    // No payment methods at all
-    if (achMethods.data.length === 0 && cardMethods.data.length === 0) {
-      // Auto-reset: if status is 'sent' but no payment methods exist, reset to 'pending'
-      // so the customer can retry without admin intervention
-      let effectiveStatus = application.payment_setup_status;
-      if (application.payment_setup_status === 'sent') {
-        logStep("Auto-resetting stuck ACH setup", { applicationId: application.id });
-        await supabaseClient
-          .from("customer_applications")
-          .update({
-            payment_setup_status: "pending",
-            stripe_payment_method_id: null,
-          })
-          .eq("id", application.id);
-        effectiveStatus = "pending";
-      }
+    const allMethods = [...achMethods.data, ...cardMethods.data];
+    const storedPmId = application.stripe_payment_method_id;
+
+    // KEY RULE: Only trust the stored PM id. Check if it actually exists on the Stripe customer.
+    const storedPmValid = storedPmId ? allMethods.some(m => m.id === storedPmId) : false;
+
+    // AUTO-RESET: If DB says "completed" but stored PM is missing/detached, reset to pending
+    if (application.payment_setup_status === "completed" && !storedPmValid) {
+      logStep("Auto-resetting: completed but stored PM invalid", { storedPmId, appId: application.id });
+      await supabaseClient
+        .from("customer_applications")
+        .update({ payment_setup_status: "pending", stripe_payment_method_id: null })
+        .eq("id", application.id);
 
       return new Response(
         JSON.stringify({
           hasPaymentMethod: false,
           applicationStatus: application.status,
-          paymentSetupStatus: effectiveStatus,
+          paymentSetupStatus: "pending",
           paymentMethodType: application.payment_method_type || "ach",
         }),
-        {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-          status: 200,
-        }
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
       );
     }
 
-    // Determine which type is active based on stored preference, falling back to what exists
-    const storedType = application.payment_method_type || "ach";
-    let activeType: "ach" | "card" = storedType as "ach" | "card";
-    let paymentMethodDetails: Record<string, unknown> = {};
-
-    if (activeType === "card" && cardMethods.data.length > 0) {
-      const card = cardMethods.data[0];
-      paymentMethodDetails = {
-        id: card.id,
-        brand: card.card?.brand || "card",
-        last4: card.card?.last4 || "****",
-        expMonth: card.card?.exp_month,
-        expYear: card.card?.exp_year,
-      };
-    } else if (activeType === "ach" && achMethods.data.length > 0) {
-      const pm = achMethods.data[0];
-      const bankAccount = pm.us_bank_account;
-      paymentMethodDetails = {
-        id: pm.id,
-        bankName: bankAccount?.bank_name || "Bank Account",
-        last4: bankAccount?.last4 || "****",
-        accountType: bankAccount?.account_type || "checking",
-        accountHolderType: bankAccount?.account_holder_type || "individual",
-      };
-    } else if (cardMethods.data.length > 0) {
-      // Fallback: stored type doesn't match what exists
-      activeType = "card";
-      const card = cardMethods.data[0];
-      paymentMethodDetails = {
-        id: card.id,
-        brand: card.card?.brand || "card",
-        last4: card.card?.last4 || "****",
-        expMonth: card.card?.exp_month,
-        expYear: card.card?.exp_year,
-      };
-    } else {
-      activeType = "ach";
-      const pm = achMethods.data[0];
-      const bankAccount = pm.us_bank_account;
-      paymentMethodDetails = {
-        id: pm.id,
-        bankName: bankAccount?.bank_name || "Bank Account",
-        last4: bankAccount?.last4 || "****",
-        accountType: bankAccount?.account_type || "checking",
-        accountHolderType: bankAccount?.account_holder_type || "individual",
-      };
-    }
-
-    // Update application if payment method wasn't recorded
-    if (!application.stripe_payment_method_id && paymentMethodDetails.id) {
+    // AUTO-RESET: If status is "sent" but no methods exist at all, reset to pending for retry
+    if (application.payment_setup_status === "sent" && allMethods.length === 0) {
+      logStep("Auto-resetting stuck 'sent' status", { appId: application.id });
       await supabaseClient
         .from("customer_applications")
-        .update({
-          stripe_payment_method_id: paymentMethodDetails.id as string,
-          payment_setup_status: "completed",
-          payment_method_type: activeType,
-        })
+        .update({ payment_setup_status: "pending", stripe_payment_method_id: null })
         .eq("id", application.id);
-      logStep("Updated application with payment method", { paymentMethodId: paymentMethodDetails.id, type: activeType });
+
+      return new Response(
+        JSON.stringify({
+          hasPaymentMethod: false,
+          applicationStatus: application.status,
+          paymentSetupStatus: "pending",
+          paymentMethodType: application.payment_method_type || "ach",
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
+      );
+    }
+
+    // GUARD: If pending/sent and orphan methods exist but no stored PM, do NOT auto-complete.
+    // The customer must go through the full setup flow.
+    if (!storedPmValid) {
+      logStep("No valid stored PM, returning not-complete", { status: application.payment_setup_status });
+      return new Response(
+        JSON.stringify({
+          hasPaymentMethod: false,
+          applicationStatus: application.status,
+          paymentSetupStatus: application.payment_setup_status,
+          paymentMethodType: application.payment_method_type || "ach",
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
+      );
+    }
+
+    // Stored PM is valid — build detail response
+    const storedPm = allMethods.find(m => m.id === storedPmId)!;
+    const storedType = application.payment_method_type || "ach";
+    let paymentMethodDetails: Record<string, unknown> = {};
+
+    if (storedPm.type === "card" && storedPm.card) {
+      paymentMethodDetails = {
+        id: storedPm.id,
+        brand: storedPm.card.brand || "card",
+        last4: storedPm.card.last4 || "****",
+        expMonth: storedPm.card.exp_month,
+        expYear: storedPm.card.exp_year,
+      };
+    } else if (storedPm.type === "us_bank_account" && storedPm.us_bank_account) {
+      paymentMethodDetails = {
+        id: storedPm.id,
+        bankName: storedPm.us_bank_account.bank_name || "Bank Account",
+        last4: storedPm.us_bank_account.last4 || "****",
+        accountType: storedPm.us_bank_account.account_type || "checking",
+        accountHolderType: storedPm.us_bank_account.account_holder_type || "individual",
+      };
     }
 
     return new Response(
@@ -194,23 +170,17 @@ serve(async (req) => {
         hasPaymentMethod: true,
         applicationStatus: application.status,
         paymentSetupStatus: "completed",
-        paymentMethodType: activeType,
+        paymentMethodType: storedType,
         paymentMethod: paymentMethodDetails,
       }),
-      {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 200,
-      }
+      { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
     );
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     logStep("ERROR", { message: errorMessage });
     return new Response(
       JSON.stringify({ error: errorMessage }),
-      {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 500,
-      }
+      { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
     );
   }
 });
