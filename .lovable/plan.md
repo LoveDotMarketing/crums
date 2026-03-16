@@ -1,19 +1,28 @@
 
 
-## Fix Ground Link Double Billing
+## Reset BMS Logistics ACH Setup
 
-**Root cause:** There are 3 Stripe subscriptions for Ground Link but only 2 should exist. Subscription `sub_1T6fduLjIwiEGQIhq7hxoreX` (database ID `c83102db`) is a duplicate of the 15th-of-month subscription — it has no active equipment items in the database but is still live in Stripe, causing a second $3,800 charge.
+**Current state:** BMS Logistics (`bmslogisticsdispatch@gmail.com`, application `7c6ec643`) has:
+- `payment_setup_status = 'sent'` — ACH setup link was sent
+- `stripe_payment_method_id = null` — penny verification was never completed
+- Stripe customer `cus_U8CRQOeIKUwWRJ` exists but has 0 payment methods attached
+- Edge logs confirm repeated failed setup attempts with no payment methods resolving
 
-**Correct billing:**
-- 1st of month: $2,300 (sub `c232ab1a`) — 3 trailers
-- 15th of month: $3,800 (sub `81046ac5`) — 5 trailers
+The customer never completed the micro-deposit (penny) verification, so the bank account was never confirmed and the setup is stuck.
 
-### Steps
+### Fix
 
-1. **Cancel the duplicate Stripe subscription** `sub_1T6fduLjIwiEGQIhq7hxoreX` immediately so it stops billing
-2. **Update the local database record** — set subscription `c83102db` status to `canceled` so it no longer appears as active
-3. **You handle the refund** for the extra $3,800 charge directly in Stripe
+**Database migration** — Reset the application's payment setup status so the ACH setup flow can be re-initiated:
+
+```sql
+UPDATE customer_applications
+SET payment_setup_status = 'pending',
+    stripe_payment_method_id = NULL
+WHERE id = '7c6ec643-c1ad-40fe-b67c-80e25f82dee0';
+```
+
+After this runs, you'll be able to click "Send ACH Setup" again from the Applications page, and BMS will get a fresh link to set up their bank account and complete the penny verification.
 
 ### Files changed
-- No code changes needed — this is a data fix using Stripe API + database migration
+- **Database migration only** — no code changes needed
 
