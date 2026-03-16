@@ -1,32 +1,44 @@
 
 
-## Problem
+## Current Toll Flow
 
-Abdul's `customer_applications` record shows `payment_setup_status = 'completed'` and has a `stripe_payment_method_id` (`pm_1T7dwSLjIwiEGQIhzU647O3c`) that is dead/detached in Stripe. The UI shows "ACH ✓" and hides the "Send ACH Setup" button, so there's no way to re-do the setup.
+Here's how tolls work today:
 
-## Fix
+1. **Admin adds a toll** via the "Add Toll" dialog — enters customer, trailer, date, amount, location, authority, and notes
+2. **Toll is stored** in the `tolls` table with status `pending`
+3. **Admin can act** on pending tolls: "Charge" (creates a Stripe invoice via `charge-toll` edge function) or "Mark Paid" (manual)
+4. **Automated reminders** — the `send-toll-reminders` edge function emails customers about pending tolls on a configurable interval
+5. **Customer sees tolls** on their dashboard in real-time via Supabase realtime subscriptions
+6. The `tolls` table has a `receipt_url` column (text) but it's **not used anywhere** in the current UI
 
-### 1. Database: Reset Abdul's ACH status
+**No photo upload capability exists today.** There's no way to attach a toll image, and the existing toll reminder email is plain text with toll details — no attachment support.
 
-Run a migration to clear the broken payment method and reset status so the ACH setup flow can be re-initiated:
+---
 
-```sql
-UPDATE customer_applications
-SET payment_setup_status = 'pending',
-    stripe_payment_method_id = NULL
-WHERE id = '25b5046d-d4b2-405c-bf78-ba3e2b71039f';
-```
+## Proposed Feature: Toll Photo Upload + Auto-Email
 
-### 2. UI: Add a "Reset ACH" option for admins
+### What it does
+When an admin adds or edits a toll, they can upload a photo of the toll notice. On upload, the system automatically sends an email to the customer with the toll photo attached, so they have a copy of what they owe.
 
-In `src/pages/admin/Applications.tsx`, update the ACH badge area (~line 773) so that when `payment_setup_status === "completed"`, instead of only showing the static "ACH ✓" badge, also show a small reset button that sets `payment_setup_status` back to `pending` and clears `stripe_payment_method_id`. This prevents needing manual database edits in the future.
+### Implementation
 
-The reset button will:
-- Update `customer_applications` setting `payment_setup_status = 'pending'` and `stripe_payment_method_id = null`
-- Refresh the applications list
-- Show a toast confirmation
+**1. Use the existing `toll-receipts` storage bucket** (already exists, private) to store uploaded toll photos.
 
-### Files to update
-- **Database migration** — one UPDATE statement for Abdul's record
-- `src/pages/admin/Applications.tsx` — add reset ACH button next to the "ACH ✓" badge (~5 lines)
+**2. Update `TollFormDialog`** — add a file upload input for a toll photo (image). On form submit, upload the image to `toll-receipts/{customer_id}/{toll_id}.{ext}`, save the storage path in the `receipt_url` column (already exists in the table).
+
+**3. Add upload capability to the Tolls table** — add a small camera/image icon button on each toll row so admins can also attach a photo to existing tolls (not just new ones).
+
+**4. Create a `send-toll-email` edge function** — triggered after a toll photo is uploaded. It:
+   - Fetches the toll record + customer profile (email, name)
+   - Generates a signed URL for the toll photo
+   - Sends an email via SendGrid with the toll details and a link to view/download the photo
+   - Sends from `noreply@crumsleasing.com` (same as existing toll reminders)
+
+**5. Update the Tolls table UI** — show a small image indicator on rows that have a photo attached, and allow clicking to preview the image.
+
+### Files changed
+- `src/components/admin/TollFormDialog.tsx` — add photo upload field
+- `src/pages/admin/Tolls.tsx` — add photo indicator column, upload button for existing tolls
+- `supabase/functions/send-toll-email/index.ts` — new edge function to send toll photo email
+- Database migration: RLS policy on `toll-receipts` bucket for admin uploads + signed URL access
 
