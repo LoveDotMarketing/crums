@@ -1,33 +1,32 @@
 
 
-## Send Checkout Confirmation Email + Surface DocuSign in Customer Portal
+## Problem
 
-Based on your notes, two things are missing from the current checkout flow:
+Abdul's `customer_applications` record shows `payment_setup_status = 'completed'` and has a `stripe_payment_method_id` (`pm_1T7dwSLjIwiEGQIhzU647O3c`) that is dead/detached in Stripe. The UI shows "ACH ✓" and hides the "Send ACH Setup" button, so there's no way to re-do the setup.
 
-### What's missing today
-1. **No email is sent after checkout** — when the customer signs the DOT acknowledgment at `/dashboard/customer/checkout/:id`, the system updates the database and redirects to a "Complete" page, but no email goes out. You want a confirmation email with the DOT inspection summary so the customer has a record in their inbox.
-2. **DocuSign/lease agreement not visible on the main customer dashboard** — the lease agreement URL exists on `customer_subscriptions.lease_agreement_url` but is only shown on the Lease-to-Own page and admin detail. Customers should see their signed contract on their main dashboard or profile.
+## Fix
 
-### Plan
+### 1. Database: Reset Abdul's ACH status
 
-**1. Send checkout confirmation email (after customer signs DOT acknowledgment)**
-- In `src/pages/customer/TrailerCheckout.tsx`, after the successful `handleSubmit` update, call the `send-outreach-email` edge function to email the customer a checkout confirmation.
-- Email content: trailer number, type, VIN, inspection date, all checklist items (pass/fail), customer name/company, signed date — essentially a text version of the CheckoutComplete page.
-- Uses existing `send-outreach-email` function (already handles SendGrid + logging).
-- Also CC/BCC the admin emails (sales@crumsleasing.com) so you have a record too.
+Run a migration to clear the broken payment method and reset status so the ACH setup flow can be re-initiated:
 
-**2. Add "My Documents" section to customer dashboard**
-- In `src/pages/customer/CustomerDashboard.tsx`, add a documents card that shows:
-  - **Lease Agreement** (from `customer_subscriptions.lease_agreement_url`) with a "View" button that generates a signed URL
-  - **Completed DOT Checkout forms** (from `dot_inspections` where `customer_acknowledged = true`) with links back to the checkout-complete page
-- This gives customers a single place to find their signed documents.
+```sql
+UPDATE customer_applications
+SET payment_setup_status = 'pending',
+    stripe_payment_method_id = NULL
+WHERE id = '25b5046d-d4b2-405c-bf78-ba3e2b71039f';
+```
 
-### Files to change
-- `src/pages/customer/TrailerCheckout.tsx` — add email send after successful checkout submission
-- `src/pages/customer/CustomerDashboard.tsx` — add "My Documents" card showing lease agreement + completed checkout records
+### 2. UI: Add a "Reset ACH" option for admins
 
-### Technical notes
-- The email will be an HTML summary built from the inspection data already loaded in the component — no new backend function needed.
-- For the lease agreement download, we use the same `supabase.storage.createSignedUrl` pattern already used in admin CustomerDetail and LeaseToOwn pages.
-- The checkout email fires client-side after the DB update succeeds, so if it fails the checkout itself is not affected.
+In `src/pages/admin/Applications.tsx`, update the ACH badge area (~line 773) so that when `payment_setup_status === "completed"`, instead of only showing the static "ACH ✓" badge, also show a small reset button that sets `payment_setup_status` back to `pending` and clears `stripe_payment_method_id`. This prevents needing manual database edits in the future.
+
+The reset button will:
+- Update `customer_applications` setting `payment_setup_status = 'pending'` and `stripe_payment_method_id = null`
+- Refresh the applications list
+- Show a toast confirmation
+
+### Files to update
+- **Database migration** — one UPDATE statement for Abdul's record
+- `src/pages/admin/Applications.tsx` — add reset ACH button next to the "ACH ✓" badge (~5 lines)
 

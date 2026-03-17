@@ -129,6 +129,92 @@ export default function TrailerCheckout() {
 
       toast.success("Trailer checkout completed successfully!");
       fireMetaCapi({ eventName: 'InitiateCheckout' });
+
+      // Send checkout confirmation email (fire-and-forget)
+      try {
+        const checklistItems = [
+          { label: "Brakes Operational", value: inspection.brakes_operational },
+          { label: "Tires Tread Depth", value: inspection.tires_tread_depth },
+          { label: "Lights Operational", value: inspection.lights_operational },
+          { label: "Frame Condition", value: inspection.frame_no_cracks },
+          { label: "Rear Doors", value: inspection.rear_doors_operational },
+          { label: "Kingpin Secure", value: inspection.kingpin_secure },
+          { label: "Reflective Tape", value: inspection.dot_reflective_tape_present },
+        ];
+        const checklistHtml = checklistItems
+          .map(item => `<tr><td style="padding:6px 12px;border-bottom:1px solid #eee;">${item.label}</td><td style="padding:6px 12px;border-bottom:1px solid #eee;text-align:center;color:${item.value ? '#16a34a' : '#9ca3af'};">${item.value ? '✓ Pass' : 'N/A'}</td></tr>`)
+          .join("");
+
+        const signedDate = format(new Date(), "MMMM d, yyyy 'at' h:mm a");
+        const inspectionDate = format(new Date(inspection.inspection_date), "MMMM d, yyyy");
+
+        const emailBody = `
+          <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px;">
+            <div style="background:#1a365d;color:white;padding:20px;border-radius:8px 8px 0 0;text-align:center;">
+              <h1 style="margin:0;font-size:22px;">Trailer Checkout Confirmation</h1>
+              <p style="margin:8px 0 0;opacity:0.9;">Crum's Leasing LLC</p>
+            </div>
+            <div style="border:1px solid #e5e7eb;border-top:none;padding:24px;border-radius:0 0 8px 8px;">
+              <p>Hi ${signerName},</p>
+              <p>Your trailer checkout has been completed successfully. Below is a summary of the DOT inspection and your acknowledgment.</p>
+              
+              <h2 style="font-size:16px;border-bottom:2px solid #1a365d;padding-bottom:8px;">Trailer Details</h2>
+              <table style="width:100%;border-collapse:collapse;margin-bottom:20px;">
+                <tr><td style="padding:6px 0;color:#6b7280;">Trailer Number</td><td style="padding:6px 0;font-weight:600;">${inspection.trailer_number}</td></tr>
+                <tr><td style="padding:6px 0;color:#6b7280;">Type</td><td style="padding:6px 0;font-weight:600;">${inspection.trailer_type || 'N/A'}</td></tr>
+                <tr><td style="padding:6px 0;color:#6b7280;">VIN</td><td style="padding:6px 0;font-weight:600;">${inspection.vin || 'N/A'}</td></tr>
+                <tr><td style="padding:6px 0;color:#6b7280;">License Plate</td><td style="padding:6px 0;font-weight:600;">${inspection.license_plate || 'N/A'}</td></tr>
+                <tr><td style="padding:6px 0;color:#6b7280;">Inspection Date</td><td style="padding:6px 0;font-weight:600;">${inspectionDate}</td></tr>
+              </table>
+
+              <h2 style="font-size:16px;border-bottom:2px solid #1a365d;padding-bottom:8px;">DOT Inspection Checklist</h2>
+              <table style="width:100%;border-collapse:collapse;margin-bottom:20px;">
+                <thead><tr style="background:#f9fafb;"><th style="padding:8px 12px;text-align:left;">Item</th><th style="padding:8px 12px;text-align:center;">Status</th></tr></thead>
+                <tbody>${checklistHtml}</tbody>
+              </table>
+
+              <h2 style="font-size:16px;border-bottom:2px solid #1a365d;padding-bottom:8px;">Customer Acknowledgment</h2>
+              <table style="width:100%;border-collapse:collapse;margin-bottom:20px;">
+                <tr><td style="padding:6px 0;color:#6b7280;">Company / Customer</td><td style="padding:6px 0;font-weight:600;">${companyName}</td></tr>
+                <tr><td style="padding:6px 0;color:#6b7280;">Authorized Signer</td><td style="padding:6px 0;font-weight:600;">${signerName}</td></tr>
+                <tr><td style="padding:6px 0;color:#6b7280;">Signed Date</td><td style="padding:6px 0;font-weight:600;">${signedDate}</td></tr>
+              </table>
+
+              <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px;padding:12px;text-align:center;margin-top:16px;">
+                <p style="margin:0;color:#16a34a;font-weight:600;">✓ All acknowledgments confirmed and signed</p>
+              </div>
+
+              <p style="margin-top:24px;font-size:13px;color:#6b7280;">
+                If you have any questions, contact us at <a href="tel:2103174735" style="color:#1a365d;">(210) 317-4735</a> or 
+                <a href="mailto:sales@crumsleasing.com" style="color:#1a365d;">sales@crumsleasing.com</a>.
+              </p>
+            </div>
+          </div>
+        `;
+
+        const customerEmail = user?.email;
+        if (customerEmail) {
+          const { data: sessionData } = await supabase.auth.getSession();
+          const token = sessionData?.session?.access_token;
+          
+          // Send to customer
+          await supabase.functions.invoke("send-outreach-email", {
+            body: {
+              recipients: [
+                { email: customerEmail, customer_name: signerName },
+                { email: "sales@crumsleasing.com", customer_name: "CRUMS Admin" },
+              ],
+              subject: `Trailer Checkout Confirmation — #${inspection.trailer_number}`,
+              body: emailBody,
+              email_type: "checkout_confirmation",
+            },
+          });
+        }
+      } catch (emailError) {
+        console.error("Failed to send checkout confirmation email:", emailError);
+        // Don't block the checkout flow for email failures
+      }
+
       navigate(`/dashboard/customer/checkout/${inspection.id}/complete`);
     } catch (error) {
       console.error("Error submitting checkout:", error);

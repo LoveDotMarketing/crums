@@ -3,7 +3,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Truck, AlertCircle, CheckCircle, Loader2, Bell, Phone, ExternalLink, Mail, ClipboardCheck, CreditCard, AlertTriangle, KeyRound } from "lucide-react";
+import { Truck, AlertCircle, CheckCircle, Loader2, Bell, Phone, ExternalLink, Mail, ClipboardCheck, CreditCard, AlertTriangle, KeyRound, FileText, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
@@ -56,6 +56,9 @@ export default function CustomerDashboard() {
   const [markingPaid, setMarkingPaid] = useState<string | null>(null);
   const [profileData, setProfileData] = useState<{ first_name: string | null; last_name: string | null; company_name: string | null } | null>(null);
   const [hasLeaseToOwn, setHasLeaseToOwn] = useState(false);
+  const [leaseAgreementUrl, setLeaseAgreementUrl] = useState<string | null>(null);
+  const [completedCheckouts, setCompletedCheckouts] = useState<{ id: string; trailer_number: string; trailer_type: string | null; inspection_date: string; customer_acknowledged_at: string | null }[]>([]);
+  const [downloadingLease, setDownloadingLease] = useState(false);
 
   // Use effectiveUserId for queries when impersonating
   const currentUserId = effectiveUserId;
@@ -69,6 +72,7 @@ export default function CustomerDashboard() {
       fetchSubscriptionStatus();
       fetchProfile();
       checkLeaseToOwnSubscription();
+      fetchMyDocuments();
 
       // Set up real-time subscription for tolls
       const tollChannel = supabase
@@ -144,6 +148,67 @@ export default function CustomerDashboard() {
       setHasLeaseToOwn(!!sub);
     } catch (error) {
       console.error("Error checking lease-to-own:", error);
+    }
+  };
+
+  const fetchMyDocuments = async () => {
+    if (!currentEmail || !currentUserId) return;
+    try {
+      // Fetch lease agreement URL
+      const { data: customer } = await supabase
+        .from("customers")
+        .select("id")
+        .ilike("email", currentEmail)
+        .maybeSingle();
+
+      if (customer) {
+        const { data: sub } = await supabase
+          .from("customer_subscriptions")
+          .select("lease_agreement_url")
+          .eq("customer_id", customer.id)
+          .not("lease_agreement_url", "is", null)
+          .limit(1)
+          .maybeSingle();
+        setLeaseAgreementUrl(sub?.lease_agreement_url || null);
+      }
+
+      // Fetch completed DOT checkouts for this customer's trailers
+      const { data: trailers } = await supabase
+        .from("trailers")
+        .select("id")
+        .or(`customer_id.eq.${currentUserId},assigned_to.eq.${currentUserId}`);
+
+      if (trailers?.length) {
+        const { data: inspections } = await supabase
+          .from("dot_inspections")
+          .select("id, trailer_number, trailer_type, inspection_date, customer_acknowledged_at")
+          .in("trailer_id", trailers.map(t => t.id))
+          .eq("customer_acknowledged", true)
+          .order("customer_acknowledged_at", { ascending: false })
+          .limit(10);
+        setCompletedCheckouts(inspections || []);
+      }
+    } catch (error) {
+      console.error("Error fetching documents:", error);
+    }
+  };
+
+  const handleViewLeaseAgreement = async () => {
+    if (!leaseAgreementUrl) return;
+    setDownloadingLease(true);
+    try {
+      // lease_agreement_url is a storage path — generate a signed URL
+      const { data, error } = await supabase.storage
+        .from("customer-documents")
+        .createSignedUrl(leaseAgreementUrl, 300);
+      if (error) throw error;
+      window.open(data.signedUrl, "_blank");
+    } catch (error) {
+      console.error("Error generating signed URL:", error);
+      // Fallback: try as a direct URL (e.g. DocuSign hosted)
+      window.open(leaseAgreementUrl, "_blank");
+    } finally {
+      setDownloadingLease(false);
     }
   };
 
@@ -499,7 +564,71 @@ export default function CustomerDashboard() {
             </Card>
           )}
 
-          {/* Pending Toll Notices */}
+          {/* My Documents */}
+          {(leaseAgreementUrl || completedCheckouts.length > 0) && (
+            <Card className="mb-8">
+              <CardHeader>
+                <CardTitle className="text-foreground flex items-center gap-2">
+                  <FileText className="h-5 w-5 text-primary" />
+                  My Documents
+                </CardTitle>
+                <CardDescription>Access your signed agreements and checkout records</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {leaseAgreementUrl && (
+                  <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg border">
+                    <div className="flex items-center gap-3">
+                      <FileText className="h-5 w-5 text-primary flex-shrink-0" />
+                      <div>
+                        <p className="font-medium text-foreground">Lease Agreement</p>
+                        <p className="text-sm text-muted-foreground">Your signed leasing contract</p>
+                      </div>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={handleViewLeaseAgreement}
+                      disabled={downloadingLease}
+                    >
+                      {downloadingLease ? (
+                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                      ) : (
+                        <Download className="h-4 w-4 mr-2" />
+                      )}
+                      View
+                    </Button>
+                  </div>
+                )}
+                {completedCheckouts.length > 0 && (
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground mb-2">Completed Trailer Checkouts</p>
+                    <div className="space-y-2">
+                      {completedCheckouts.map((checkout) => (
+                        <div key={checkout.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg border">
+                          <div className="flex items-center gap-3">
+                            <ClipboardCheck className="h-5 w-5 text-green-600 flex-shrink-0" />
+                            <div>
+                              <p className="font-medium text-foreground">Trailer #{checkout.trailer_number}</p>
+                              <p className="text-sm text-muted-foreground">
+                                {checkout.trailer_type} • Signed {checkout.customer_acknowledged_at ? format(new Date(checkout.customer_acknowledged_at), "MMM d, yyyy") : ""}
+                              </p>
+                            </div>
+                          </div>
+                          <Link to={`/dashboard/customer/checkout/${checkout.id}/complete`}>
+                            <Button size="sm" variant="outline">
+                              <ExternalLink className="h-4 w-4 mr-2" />
+                              View
+                            </Button>
+                          </Link>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
           <Card className="mb-8">
             <CardHeader>
               <CardTitle className="text-foreground flex items-center gap-2">
