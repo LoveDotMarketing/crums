@@ -72,6 +72,7 @@ export default function CustomerDashboard() {
       fetchSubscriptionStatus();
       fetchProfile();
       checkLeaseToOwnSubscription();
+      fetchMyDocuments();
 
       // Set up real-time subscription for tolls
       const tollChannel = supabase
