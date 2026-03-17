@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { ManageTrailersDialog } from "./ManageTrailersDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -31,7 +32,7 @@ import {
 import { cn } from "@/lib/utils";
 
 type BillingCycle = "weekly" | "biweekly" | "semimonthly" | "monthly";
-type SubscriptionType = "standard_lease" | "6_month_lease" | "24_month_lease" | "rent_for_storage" | "lease_to_own" | "repayment_plan";
+type SubscriptionType = "standard_lease" | "6_month_lease" | "24_month_lease" | "month_to_month" | "rent_for_storage" | "lease_to_own" | "repayment_plan";
 
 interface EditSubscriptionPanelProps {
   subscriptionId: string;
@@ -43,6 +44,7 @@ const subscriptionTypes: { value: SubscriptionType; label: string; icon: React.R
   { value: "standard_lease", label: "Standard 12 Month Lease", icon: null },
   { value: "6_month_lease", label: "6 Month Lease", icon: <CalendarIcon className="h-4 w-4" /> },
   { value: "24_month_lease", label: "24 Month Lease", icon: <CalendarIcon className="h-4 w-4" /> },
+  { value: "month_to_month", label: "Month to Month", icon: <CalendarIcon className="h-4 w-4" /> },
   { value: "rent_for_storage", label: "Rent for Storage", icon: <Warehouse className="h-4 w-4" /> },
   { value: "lease_to_own", label: "Lease to Own", icon: <KeyRound className="h-4 w-4" /> },
   { value: "repayment_plan", label: "Repayment Plan", icon: <CreditCard className="h-4 w-4" /> },
@@ -51,6 +53,7 @@ const subscriptionTypes: { value: SubscriptionType; label: string; icon: React.R
 export function EditSubscriptionPanel({ subscriptionId, onSave, onCancel }: EditSubscriptionPanelProps) {
   const queryClient = useQueryClient();
   const [isSaving, setIsSaving] = useState(false);
+  const [showManageTrailers, setShowManageTrailers] = useState(false);
 
   // Form state
   const [subscriptionType, setSubscriptionType] = useState<SubscriptionType>("standard_lease");
@@ -327,9 +330,28 @@ export function EditSubscriptionPanel({ subscriptionId, onSave, onCancel }: Edit
             ) : (
               <p className="text-sm text-muted-foreground">No trailers assigned</p>
             )}
-            <p className="text-xs text-muted-foreground mt-3">
-              Use "Manage Trailers" from the subscription actions to add/remove trailers.
-            </p>
+            <Button
+              variant="outline"
+              size="sm"
+              className="mt-3 w-full"
+              onClick={() => setShowManageTrailers(true)}
+            >
+              <Truck className="h-4 w-4 mr-2" />
+              Manage Trailers
+            </Button>
+            <ManageTrailersDialog
+              open={showManageTrailers}
+              onOpenChange={(open) => {
+                setShowManageTrailers(open);
+                if (!open) {
+                  queryClient.invalidateQueries({ queryKey: ["subscription-items-detail", subscriptionId] });
+                }
+              }}
+              subscriptionId={subscriptionId}
+              customerId={subscription.customer_id}
+              customerName={subscription.customers?.full_name || "Customer"}
+              currentItems={activeItems}
+            />
           </CardContent>
         </Card>
       </div>

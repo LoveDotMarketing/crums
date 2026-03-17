@@ -3082,6 +3082,7 @@ export type Database = {
         | "repayment_plan"
         | "6_month_lease"
         | "24_month_lease"
+        | "month_to_month"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -3226,6 +3227,7 @@ export const Constants = {
         "repayment_plan",
         "6_month_lease",
         "24_month_lease",
+        "month_to_month",
       ],
     },
   },

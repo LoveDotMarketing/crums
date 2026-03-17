@@ -40,7 +40,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { logSubscriptionCreated } from "@/lib/eventLogger";
 
 type BillingCycle = "weekly" | "biweekly" | "semimonthly" | "monthly";
-type SubscriptionType = "standard_lease" | "6_month_lease" | "24_month_lease" | "rent_for_storage" | "lease_to_own" | "repayment_plan";
+type SubscriptionType = "standard_lease" | "6_month_lease" | "24_month_lease" | "month_to_month" | "rent_for_storage" | "lease_to_own" | "repayment_plan";
 
 interface Customer {
   id: string;
@@ -629,6 +629,22 @@ export function CreateSubscriptionDialog({ onSuccess, mode = "dialog", onCancel 
                   </div>
                   <p className="text-sm text-muted-foreground font-normal mt-0.5">
                     Customer will own trailer(s) at end of lease
+                  </p>
+                </Label>
+              </div>
+
+              <div className={cn(
+                "flex items-start space-x-3 p-3 rounded-lg border cursor-pointer hover:bg-muted/50 transition-colors",
+                subscriptionType === "month_to_month" && "border-teal-500 bg-teal-500/5"
+              )}>
+                <RadioGroupItem value="month_to_month" id="month_to_month" className="mt-1" />
+                <Label htmlFor="month_to_month" className="flex-1 cursor-pointer">
+                  <div className="flex items-center gap-2 font-medium">
+                    <CalendarIcon className="h-4 w-4 text-teal-500" />
+                    Month to Month
+                  </div>
+                  <p className="text-sm text-muted-foreground font-normal mt-0.5">
+                    No long-term commitment, cancel anytime
                   </p>
                 </Label>
               </div>
