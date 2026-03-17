@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -11,9 +11,20 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { CheckCircle2, Calendar, Pencil, RefreshCw, CreditCard, Building2 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { CheckCircle2, Calendar, Pencil, RefreshCw, CreditCard, Building2, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
+import { toast } from "@/hooks/use-toast";
 import { EditBillingDateDialog } from "./EditBillingDateDialog";
 
 interface ReadyToActivateCustomer {
@@ -35,7 +46,9 @@ interface ReadyToActivateCustomer {
 export function ReadyToActivateCard() {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState<ReadyToActivateCustomer | null>(null);
-
+  const [customerToDelete, setCustomerToDelete] = useState<ReadyToActivateCustomer | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const queryClient = useQueryClient();
   const { data: readyCustomers, isLoading } = useQuery({
     queryKey: ["ready-to-activate"],
     queryFn: async () => {
@@ -121,6 +134,26 @@ export function ReadyToActivateCard() {
     setEditDialogOpen(true);
   };
 
+  const handleRemoveFromQueue = async () => {
+    if (!customerToDelete) return;
+    const { error } = await supabase
+      .from("customer_applications")
+      .update({
+        status: "rejected",
+        admin_notes: "Removed from activation queue by admin",
+      })
+      .eq("id", customerToDelete.id);
+    
+    if (error) {
+      toast({ title: "Error", description: "Failed to remove customer from queue.", variant: "destructive" });
+    } else {
+      toast({ title: "Removed", description: `${customerToDelete.profiles?.first_name || "Customer"} removed from activation queue.` });
+      queryClient.invalidateQueries({ queryKey: ["ready-to-activate"] });
+    }
+    setDeleteDialogOpen(false);
+    setCustomerToDelete(null);
+  };
+
   return (
     <>
       <Card className="border-green-200 bg-green-50/50 dark:border-green-800 dark:bg-green-950/20">
@@ -195,14 +228,27 @@ export function ReadyToActivateCard() {
                     )}
                   </TableCell>
                   <TableCell>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleEditDate(customer)}
-                    >
-                      <Pencil className="h-4 w-4 mr-1" />
-                      Edit
-                    </Button>
+                    <div className="flex items-center gap-1">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleEditDate(customer)}
+                      >
+                        <Pencil className="h-4 w-4 mr-1" />
+                        Edit
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-destructive hover:text-destructive"
+                        onClick={() => {
+                          setCustomerToDelete(customer);
+                          setDeleteDialogOpen(true);
+                        }}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
@@ -222,6 +268,23 @@ export function ReadyToActivateCard() {
           applicationId={selectedCustomer.id}
         />
       )}
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove from Queue?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will mark {customerToDelete?.profiles?.first_name || "this customer"}'s application as rejected. They will no longer appear in the Ready to Activate list.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleRemoveFromQueue} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Remove
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
