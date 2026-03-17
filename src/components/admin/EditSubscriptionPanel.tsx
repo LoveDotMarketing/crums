@@ -52,6 +52,7 @@ const subscriptionTypes: { value: SubscriptionType; label: string; icon: React.R
 export function EditSubscriptionPanel({ subscriptionId, onSave, onCancel }: EditSubscriptionPanelProps) {
   const queryClient = useQueryClient();
   const [isSaving, setIsSaving] = useState(false);
+  const [showManageTrailers, setShowManageTrailers] = useState(false);
 
   // Form state
   const [subscriptionType, setSubscriptionType] = useState<SubscriptionType>("standard_lease");
