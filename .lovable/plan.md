@@ -1,32 +1,30 @@
 
 
-## Problem
+## Add "Remove from Queue" to Ready to Activate Card
 
-Abdul's `customer_applications` record shows `payment_setup_status = 'completed'` and has a `stripe_payment_method_id` (`pm_1T7dwSLjIwiEGQIhzU647O3c`) that is dead/detached in Stripe. The UI shows "ACH ✓" and hides the "Send ACH Setup" button, so there's no way to re-do the setup.
+The "Ready to Activate" card currently only has an "Edit" button per row. Customers who completed ACH but won't sign a contract need to be removable from this queue.
 
-## Fix
+### Approach
 
-### 1. Database: Reset Abdul's ACH status
+The queue is populated by filtering `customer_applications` where `payment_setup_status = 'completed'` and `status = 'approved'`. To remove a customer from this queue, we reset their application status back to a non-active state — specifically setting `status` to `'rejected'` (or a new `'withdrawn'` value) and optionally clearing the ACH status.
 
-Run a migration to clear the broken payment method and reset status so the ACH setup flow can be re-initiated:
+Since these customers explicitly decided not to proceed, the cleanest approach is:
+- Set `customer_applications.status` to `'rejected'` with an `admin_notes` update indicating withdrawal
+- This removes them from the "Ready to Activate" query without deleting any data
 
-```sql
-UPDATE customer_applications
-SET payment_setup_status = 'pending',
-    stripe_payment_method_id = NULL
-WHERE id = '25b5046d-d4b2-405c-bf78-ba3e2b71039f';
-```
+### Changes
 
-### 2. UI: Add a "Reset ACH" option for admins
+**File: `src/components/admin/ReadyToActivateCard.tsx`**
 
-In `src/pages/admin/Applications.tsx`, update the ACH badge area (~line 773) so that when `payment_setup_status === "completed"`, instead of only showing the static "ACH ✓" badge, also show a small reset button that sets `payment_setup_status` back to `pending` and clears `stripe_payment_method_id`. This prevents needing manual database edits in the future.
+1. Add a delete/remove button next to the existing "Edit" button in each row
+2. Add confirmation dialog (AlertDialog) before removing — "Are you sure? This will mark the application as rejected."
+3. On confirm: update `customer_applications` setting `status = 'rejected'` and `admin_notes` appended with withdrawal note
+4. Invalidate the `ready-to-activate` query to refresh the list
+5. Show toast confirmation
 
-The reset button will:
-- Update `customer_applications` setting `payment_setup_status = 'pending'` and `stripe_payment_method_id = null`
-- Refresh the applications list
-- Show a toast confirmation
-
-### Files to update
-- **Database migration** — one UPDATE statement for Abdul's record
-- `src/pages/admin/Applications.tsx` — add reset ACH button next to the "ACH ✓" badge (~5 lines)
+### Technical details
+- Import `Trash2` icon, `AlertDialog` components, `useQueryClient`, and `toast`
+- Add state for `customerToDelete` and `deleteDialogOpen`
+- The update query: `supabase.from("customer_applications").update({ status: "rejected", admin_notes: "Removed from activation queue by admin" }).eq("id", customer.id)`
+- No database migration needed — uses existing `status` column values
 
