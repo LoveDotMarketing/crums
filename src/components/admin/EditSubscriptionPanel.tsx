@@ -330,9 +330,28 @@ export function EditSubscriptionPanel({ subscriptionId, onSave, onCancel }: Edit
             ) : (
               <p className="text-sm text-muted-foreground">No trailers assigned</p>
             )}
-            <p className="text-xs text-muted-foreground mt-3">
-              Use "Manage Trailers" from the subscription actions to add/remove trailers.
-            </p>
+            <Button
+              variant="outline"
+              size="sm"
+              className="mt-3 w-full"
+              onClick={() => setShowManageTrailers(true)}
+            >
+              <Truck className="h-4 w-4 mr-2" />
+              Manage Trailers
+            </Button>
+            <ManageTrailersDialog
+              open={showManageTrailers}
+              onOpenChange={(open) => {
+                setShowManageTrailers(open);
+                if (!open) {
+                  queryClient.invalidateQueries({ queryKey: ["subscription-items-detail", subscriptionId] });
+                }
+              }}
+              subscriptionId={subscriptionId}
+              customerId={subscription.customer_id}
+              customerName={subscription.customers?.full_name || "Customer"}
+              currentItems={activeItems}
+            />
           </CardContent>
         </Card>
       </div>

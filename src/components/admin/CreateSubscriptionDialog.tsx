@@ -635,6 +635,22 @@ export function CreateSubscriptionDialog({ onSuccess, mode = "dialog", onCancel 
 
               <div className={cn(
                 "flex items-start space-x-3 p-3 rounded-lg border cursor-pointer hover:bg-muted/50 transition-colors",
+                subscriptionType === "month_to_month" && "border-teal-500 bg-teal-500/5"
+              )}>
+                <RadioGroupItem value="month_to_month" id="month_to_month" className="mt-1" />
+                <Label htmlFor="month_to_month" className="flex-1 cursor-pointer">
+                  <div className="flex items-center gap-2 font-medium">
+                    <CalendarIcon className="h-4 w-4 text-teal-500" />
+                    Month to Month
+                  </div>
+                  <p className="text-sm text-muted-foreground font-normal mt-0.5">
+                    No long-term commitment, cancel anytime
+                  </p>
+                </Label>
+              </div>
+
+              <div className={cn(
+                "flex items-start space-x-3 p-3 rounded-lg border cursor-pointer hover:bg-muted/50 transition-colors",
                 subscriptionType === "repayment_plan" && "border-amber-500 bg-amber-500/5"
               )}>
                 <RadioGroupItem value="repayment_plan" id="repayment_plan" className="mt-1" />
