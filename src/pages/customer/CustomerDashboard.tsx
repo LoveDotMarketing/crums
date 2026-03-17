@@ -56,6 +56,9 @@ export default function CustomerDashboard() {
   const [markingPaid, setMarkingPaid] = useState<string | null>(null);
   const [profileData, setProfileData] = useState<{ first_name: string | null; last_name: string | null; company_name: string | null } | null>(null);
   const [hasLeaseToOwn, setHasLeaseToOwn] = useState(false);
+  const [leaseAgreementUrl, setLeaseAgreementUrl] = useState<string | null>(null);
+  const [completedCheckouts, setCompletedCheckouts] = useState<{ id: string; trailer_number: string; trailer_type: string | null; inspection_date: string; customer_acknowledged_at: string | null }[]>([]);
+  const [downloadingLease, setDownloadingLease] = useState(false);
 
   // Use effectiveUserId for queries when impersonating
   const currentUserId = effectiveUserId;
