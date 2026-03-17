@@ -250,10 +250,6 @@ export function ReadyToActivateCard() {
                       </Button>
                     </div>
                   </TableCell>
-                      <Pencil className="h-4 w-4 mr-1" />
-                      Edit
-                    </Button>
-                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -272,6 +268,23 @@ export function ReadyToActivateCard() {
           applicationId={selectedCustomer.id}
         />
       )}
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove from Queue?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will mark {customerToDelete?.profiles?.first_name || "this customer"}'s application as rejected. They will no longer appear in the Ready to Activate list.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleRemoveFromQueue} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Remove
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
