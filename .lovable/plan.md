@@ -1,32 +1,39 @@
 
 
-## Problem
+## Add "Month to Month" Subscription Type + Inline Trailer Editing
 
-Abdul's `customer_applications` record shows `payment_setup_status = 'completed'` and has a `stripe_payment_method_id` (`pm_1T7dwSLjIwiEGQIhzU647O3c`) that is dead/detached in Stripe. The UI shows "ACH ✓" and hides the "Send ACH Setup" button, so there's no way to re-do the setup.
+Two changes requested for the Edit Subscription panel:
 
-## Fix
+### 1. Add "Month to Month" subscription type
 
-### 1. Database: Reset Abdul's ACH status
+The `subscription_type` enum in Postgres needs a new value. Then update the UI list.
 
-Run a migration to clear the broken payment method and reset status so the ACH setup flow can be re-initiated:
-
+**Database migration:**
 ```sql
-UPDATE customer_applications
-SET payment_setup_status = 'pending',
-    stripe_payment_method_id = NULL
-WHERE id = '25b5046d-d4b2-405c-bf78-ba3e2b71039f';
+ALTER TYPE public.subscription_type ADD VALUE 'month_to_month';
 ```
 
-### 2. UI: Add a "Reset ACH" option for admins
+**UI change** in `EditSubscriptionPanel.tsx` — add to the `subscriptionTypes` array:
+```ts
+{ value: "month_to_month", label: "Month to Month", icon: <CalendarIcon /> }
+```
 
-In `src/pages/admin/Applications.tsx`, update the ACH badge area (~line 773) so that when `payment_setup_status === "completed"`, instead of only showing the static "ACH ✓" badge, also show a small reset button that sets `payment_setup_status` back to `pending` and clears `stripe_payment_method_id`. This prevents needing manual database edits in the future.
+Also update `CreateSubscriptionDialog.tsx` and any other places that list subscription types to include this option.
 
-The reset button will:
-- Update `customer_applications` setting `payment_setup_status = 'pending'` and `stripe_payment_method_id = null`
-- Refresh the applications list
-- Show a toast confirmation
+### 2. Embed "Manage Trailers" directly in Edit Subscription panel
 
-### Files to update
-- **Database migration** — one UPDATE statement for Abdul's record
-- `src/pages/admin/Applications.tsx` — add reset ACH button next to the "ACH ✓" badge (~5 lines)
+Currently the Assigned Trailers card is read-only with a note to use "Manage Trailers" from subscription actions. Instead, embed a "Manage Trailers" button that opens the existing `ManageTrailersDialog` right from the Edit panel.
+
+**Change in `EditSubscriptionPanel.tsx`:**
+- Import `ManageTrailersDialog`
+- Add state: `const [showManageTrailers, setShowManageTrailers] = useState(false)`
+- Replace the static hint text with a "Manage Trailers" button
+- Render `<ManageTrailersDialog>` with the current subscription's ID, customer ID, and items
+- After the dialog closes, invalidate the `subscription-items-detail` query to refresh the list
+
+### Files to change
+- **New migration** — `ALTER TYPE subscription_type ADD VALUE 'month_to_month'`
+- `src/components/admin/EditSubscriptionPanel.tsx` — add month_to_month type + embed ManageTrailersDialog
+- `src/components/admin/CreateSubscriptionDialog.tsx` — add month_to_month option (if not already there)
+- `src/integrations/supabase/types.ts` will auto-update after migration
 
