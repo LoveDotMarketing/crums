@@ -151,6 +151,66 @@ export default function CustomerDashboard() {
     }
   };
 
+  const fetchMyDocuments = async () => {
+    if (!currentEmail || !currentUserId) return;
+    try {
+      // Fetch lease agreement URL
+      const { data: customer } = await supabase
+        .from("customers")
+        .select("id")
+        .ilike("email", currentEmail)
+        .maybeSingle();
+
+      if (customer) {
+        const { data: sub } = await supabase
+          .from("customer_subscriptions")
+          .select("lease_agreement_url")
+          .eq("customer_id", customer.id)
+          .not("lease_agreement_url", "is", null)
+          .limit(1)
+          .maybeSingle();
+        setLeaseAgreementUrl(sub?.lease_agreement_url || null);
+      }
+
+      // Fetch completed DOT checkouts for this customer's trailers
+      const { data: trailers } = await supabase
+        .from("trailers")
+        .select("id")
+        .or(`customer_id.eq.${currentUserId},assigned_to.eq.${currentUserId}`);
+
+      if (trailers?.length) {
+        const { data: inspections } = await supabase
+          .from("dot_inspections")
+          .select("id, trailer_number, trailer_type, inspection_date, customer_acknowledged_at")
+          .in("trailer_id", trailers.map(t => t.id))
+          .eq("customer_acknowledged", true)
+          .order("customer_acknowledged_at", { ascending: false })
+          .limit(10);
+        setCompletedCheckouts(inspections || []);
+      }
+    } catch (error) {
+      console.error("Error fetching documents:", error);
+    }
+  };
+
+  const handleViewLeaseAgreement = async () => {
+    if (!leaseAgreementUrl) return;
+    setDownloadingLease(true);
+    try {
+      // lease_agreement_url is a storage path — generate a signed URL
+      const { data, error } = await supabase.storage
+        .from("customer-documents")
+        .createSignedUrl(leaseAgreementUrl, 300);
+      if (error) throw error;
+      window.open(data.signedUrl, "_blank");
+    } catch (error) {
+      console.error("Error generating signed URL:", error);
+      // Fallback: try as a direct URL (e.g. DocuSign hosted)
+      window.open(leaseAgreementUrl, "_blank");
+    } finally {
+      setDownloadingLease(false);
+    }
+
   const checkApplicationStatus = async () => {
 
     try {
