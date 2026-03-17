@@ -134,6 +134,26 @@ export function ReadyToActivateCard() {
     setEditDialogOpen(true);
   };
 
+  const handleRemoveFromQueue = async () => {
+    if (!customerToDelete) return;
+    const { error } = await supabase
+      .from("customer_applications")
+      .update({
+        status: "rejected",
+        admin_notes: "Removed from activation queue by admin",
+      })
+      .eq("id", customerToDelete.id);
+    
+    if (error) {
+      toast({ title: "Error", description: "Failed to remove customer from queue.", variant: "destructive" });
+    } else {
+      toast({ title: "Removed", description: `${customerToDelete.profiles?.first_name || "Customer"} removed from activation queue.` });
+      queryClient.invalidateQueries({ queryKey: ["ready-to-activate"] });
+    }
+    setDeleteDialogOpen(false);
+    setCustomerToDelete(null);
+  };
+
   return (
     <>
       <Card className="border-green-200 bg-green-50/50 dark:border-green-800 dark:bg-green-950/20">
