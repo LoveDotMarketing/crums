@@ -46,7 +46,9 @@ interface ReadyToActivateCustomer {
 export function ReadyToActivateCard() {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState<ReadyToActivateCustomer | null>(null);
-
+  const [customerToDelete, setCustomerToDelete] = useState<ReadyToActivateCustomer | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const queryClient = useQueryClient();
   const { data: readyCustomers, isLoading } = useQuery({
     queryKey: ["ready-to-activate"],
     queryFn: async () => {
