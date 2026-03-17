@@ -210,6 +210,7 @@ export default function CustomerDashboard() {
     } finally {
       setDownloadingLease(false);
     }
+  };
 
   const checkApplicationStatus = async () => {
 
