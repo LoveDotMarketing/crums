@@ -3,7 +3,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Truck, AlertCircle, CheckCircle, Loader2, Bell, Phone, ExternalLink, Mail, ClipboardCheck, CreditCard, AlertTriangle, KeyRound } from "lucide-react";
+import { Truck, AlertCircle, CheckCircle, Loader2, Bell, Phone, ExternalLink, Mail, ClipboardCheck, CreditCard, AlertTriangle, KeyRound, FileText, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
