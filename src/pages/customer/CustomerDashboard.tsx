@@ -564,7 +564,71 @@ export default function CustomerDashboard() {
             </Card>
           )}
 
-          {/* Pending Toll Notices */}
+          {/* My Documents */}
+          {(leaseAgreementUrl || completedCheckouts.length > 0) && (
+            <Card className="mb-8">
+              <CardHeader>
+                <CardTitle className="text-foreground flex items-center gap-2">
+                  <FileText className="h-5 w-5 text-primary" />
+                  My Documents
+                </CardTitle>
+                <CardDescription>Access your signed agreements and checkout records</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {leaseAgreementUrl && (
+                  <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg border">
+                    <div className="flex items-center gap-3">
+                      <FileText className="h-5 w-5 text-primary flex-shrink-0" />
+                      <div>
+                        <p className="font-medium text-foreground">Lease Agreement</p>
+                        <p className="text-sm text-muted-foreground">Your signed leasing contract</p>
+                      </div>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={handleViewLeaseAgreement}
+                      disabled={downloadingLease}
+                    >
+                      {downloadingLease ? (
+                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                      ) : (
+                        <Download className="h-4 w-4 mr-2" />
+                      )}
+                      View
+                    </Button>
+                  </div>
+                )}
+                {completedCheckouts.length > 0 && (
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground mb-2">Completed Trailer Checkouts</p>
+                    <div className="space-y-2">
+                      {completedCheckouts.map((checkout) => (
+                        <div key={checkout.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg border">
+                          <div className="flex items-center gap-3">
+                            <ClipboardCheck className="h-5 w-5 text-green-600 flex-shrink-0" />
+                            <div>
+                              <p className="font-medium text-foreground">Trailer #{checkout.trailer_number}</p>
+                              <p className="text-sm text-muted-foreground">
+                                {checkout.trailer_type} • Signed {checkout.customer_acknowledged_at ? format(new Date(checkout.customer_acknowledged_at), "MMM d, yyyy") : ""}
+                              </p>
+                            </div>
+                          </div>
+                          <Link to={`/dashboard/customer/checkout/${checkout.id}/complete`}>
+                            <Button size="sm" variant="outline">
+                              <ExternalLink className="h-4 w-4 mr-2" />
+                              View
+                            </Button>
+                          </Link>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
           <Card className="mb-8">
             <CardHeader>
               <CardTitle className="text-foreground flex items-center gap-2">
