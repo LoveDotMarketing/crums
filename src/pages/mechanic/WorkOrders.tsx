@@ -58,6 +58,9 @@ export default function WorkOrders() {
   const [showForm, setShowForm] = useState(false);
   const [editingWorkOrder, setEditingWorkOrder] = useState<ExistingWorkOrder | null>(null);
   const [editingLineItems, setEditingLineItems] = useState<LineItem[]>([]);
+  const [viewingWorkOrder, setViewingWorkOrder] = useState<(WorkOrder & { trailer?: TrailerInfo }) | null>(null);
+  const [viewingLineItems, setViewingLineItems] = useState<LineItem[]>([]);
+  const [viewingPhotos, setViewingPhotos] = useState<{ id: string; photo_url: string; category: string }[]>([]);
 
   useEffect(() => {
     if (effectiveUserId) fetchWorkOrders();
