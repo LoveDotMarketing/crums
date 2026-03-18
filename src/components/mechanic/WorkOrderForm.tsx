@@ -250,6 +250,7 @@ export function WorkOrderForm({ onSuccess, onCancel, existingWorkOrder, existing
           .single();
         if (woError) throw woError;
         workOrderId = workOrder.id;
+        setSavedWorkOrderId(workOrderId);
       }
 
       // Insert line items
