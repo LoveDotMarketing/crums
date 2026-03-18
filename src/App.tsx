@@ -444,6 +444,14 @@ const App = () => (
               } 
             />
             <Route 
+              path="/dashboard/admin/phone-leads" 
+              element={
+                <ProtectedRoute requiredRole="admin">
+                  <PhoneLeads />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
               path="/dashboard/admin/work-orders" 
               element={
                 <ProtectedRoute requiredRole="admin">

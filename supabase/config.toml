@@ -152,3 +152,7 @@ verify_jwt = false
 # Hard reset payment setup - admin only (auth handled in code)
 [functions.reset-payment-setup]
 verify_jwt = false
+
+# Phone lead creation - agent secret auth (N8N_AGENT_SECRET)
+[functions.create-phone-lead]
+verify_jwt = false
