@@ -1,5 +1,23 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { corsHeaders, validateAgentSecret, unauthorizedResponse } from "../_shared/auth.ts";
+import { corsHeaders } from "../_shared/auth.ts";
+
+function validateWebhookAuth(req: Request): { valid: boolean; error?: string } {
+  const authHeader = req.headers.get("authorization");
+  if (!authHeader) return { valid: false, error: "Missing authorization header" };
+
+  const [scheme, token] = authHeader.split(" ");
+  if (scheme.toLowerCase() !== "bearer" || !token) {
+    return { valid: false, error: "Invalid authorization format. Use: Bearer <token>" };
+  }
+
+  const agentSecret = Deno.env.get("N8N_AGENT_SECRET");
+  const blandKey = Deno.env.get("BLAND_WEBHOOK_KEY");
+
+  if (agentSecret && token === agentSecret) return { valid: true };
+  if (blandKey && token === blandKey) return { valid: true };
+
+  return { valid: false, error: "Invalid authorization token" };
+}
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -13,10 +31,12 @@ Deno.serve(async (req) => {
     });
   }
 
-  // Validate agent secret
-  const authResult = validateAgentSecret(req);
+  const authResult = validateWebhookAuth(req);
   if (!authResult.valid) {
-    return unauthorizedResponse(authResult.error!);
+    return new Response(JSON.stringify({ error: authResult.error }), {
+      status: 401,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
 
   try {
