@@ -130,6 +130,7 @@ const AdminWorkOrders = lazy(() => import("./pages/admin/WorkOrders"));
 const AdminArchivedTrailers = lazy(() => import("./pages/admin/AdminArchivedTrailers"));
 const StaffDetail = lazy(() => import("./pages/admin/StaffDetail"));
 const EmployeeDashboard = lazy(() => import("./pages/admin/EmployeeDashboard"));
+const PhoneLeads = lazy(() => import("./pages/admin/PhoneLeads"));
 
 // Public pages
 const ReferralProgram = lazy(() => import("./pages/ReferralProgram"));
@@ -439,6 +440,14 @@ const App = () => (
               element={
                 <ProtectedRoute requiredRole="admin">
                   <CallLogs />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/dashboard/admin/phone-leads" 
+              element={
+                <ProtectedRoute requiredRole="admin">
+                  <PhoneLeads />
                 </ProtectedRoute>
               } 
             />

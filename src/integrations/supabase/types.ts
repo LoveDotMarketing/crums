@@ -1717,6 +1717,50 @@ export type Database = {
           },
         ]
       }
+      phone_leads: {
+        Row: {
+          converted_customer_id: string | null
+          created_at: string
+          email: string | null
+          id: string
+          name: string
+          notes: string | null
+          phone: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          converted_customer_id?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          name: string
+          notes?: string | null
+          phone: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          converted_customer_id?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          name?: string
+          notes?: string | null
+          phone?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "phone_leads_converted_customer_id_fkey"
+            columns: ["converted_customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
