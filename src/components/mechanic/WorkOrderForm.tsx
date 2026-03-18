@@ -96,6 +96,8 @@ export function WorkOrderForm({ onSuccess, onCancel, existingWorkOrder, existing
   const [laborHours, setLaborHours] = useState<number>(existingWorkOrder?.labor_hours || 0);
   const [includeTravelFee, setIncludeTravelFee] = useState(existingWorkOrder ? existingWorkOrder.travel_fee > 0 : false);
   const [parts, setParts] = useState<LineItem[]>(existingLineItems || []);
+  const [photos, setPhotos] = useState<{ id: string; photo_url: string; category: string }[]>([]);
+  const [savedWorkOrderId, setSavedWorkOrderId] = useState<string | null>(existingWorkOrder?.id || null);
 
   const LABOR_RATE = 85;
   const TRAVEL_FEE = 75;
