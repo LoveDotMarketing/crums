@@ -112,7 +112,17 @@ export function WorkOrderForm({ onSuccess, onCancel, existingWorkOrder, existing
   useEffect(() => {
     fetchTrailers();
     fetchCatalog();
+    if (existingWorkOrder?.id) fetchPhotos(existingWorkOrder.id);
   }, []);
+
+  const fetchPhotos = async (woId: string) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data } = await (supabase as any)
+      .from("work_order_photos")
+      .select("id, photo_url, category")
+      .eq("work_order_id", woId);
+    setPhotos(data || []);
+  };
 
   const fetchTrailers = async () => {
     try {
