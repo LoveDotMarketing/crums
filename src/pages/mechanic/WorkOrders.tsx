@@ -248,7 +248,7 @@ export default function WorkOrders() {
             {workOrders.map((wo) => (
               <Card
                 key={wo.id}
-                className={`hover:shadow-md transition-shadow ${EDITABLE_STATUSES.includes(wo.status) ? "cursor-pointer" : ""}`}
+                className="hover:shadow-md transition-shadow cursor-pointer"
                 onClick={() => handleCardClick(wo)}
               >
                 <CardContent className="p-4">
