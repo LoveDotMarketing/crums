@@ -498,6 +498,32 @@ export function WorkOrderForm({ onSuccess, onCancel, existingWorkOrder, existing
         </CardContent>
       </Card>
 
+      {/* Photos — only available after first save */}
+      {savedWorkOrderId && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Photos</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {["before", "after", "parts"].map((cat) => (
+              <WorkOrderPhotoUpload
+                key={cat}
+                workOrderId={savedWorkOrderId}
+                category={cat}
+                label={cat.charAt(0).toUpperCase() + cat.slice(1)}
+                existingPhotos={photos.filter((p) => p.category === cat)}
+                onPhotoUploaded={() => fetchPhotos(savedWorkOrderId)}
+                onPhotoDeleted={() => fetchPhotos(savedWorkOrderId)}
+              />
+            ))}
+          </CardContent>
+        </Card>
+      )}
+
+      {!savedWorkOrderId && (
+        <p className="text-xs text-muted-foreground text-center">Save as draft first to add photos</p>
+      )}
+
       {/* Grand Total */}
       <Card className="border-primary">
         <CardContent className="pt-6">
