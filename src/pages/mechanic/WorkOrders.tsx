@@ -98,12 +98,7 @@ export default function WorkOrders() {
     }
   };
 
-  const handleCardClick = async (wo: WorkOrder) => {
-    if (!EDITABLE_STATUSES.includes(wo.status)) {
-      toast.info("Only draft or needs-info work orders can be edited");
-      return;
-    }
-
+  const handleCardClick = async (wo: WorkOrder & { trailer?: TrailerInfo }) => {
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data: lineItems, error } = await (supabase as any)
@@ -113,29 +108,44 @@ export default function WorkOrders() {
 
       if (error) throw error;
 
-      setEditingWorkOrder({
-        id: wo.id,
-        trailer_id: wo.trailer_id,
-        repair_type: wo.repair_type,
-        description: wo.description,
-        work_start_date: wo.work_start_date,
-        work_completion_date: wo.work_completion_date,
-        labor_hours: wo.labor_hours,
-        labor_rate: wo.labor_rate,
-        travel_fee: wo.travel_fee,
-        labor_total: wo.labor_total,
-        parts_total: wo.parts_total,
-        grand_total: wo.grand_total,
-        status: wo.status,
-      });
-      setEditingLineItems((lineItems || []).map((li: LineItem) => ({
+      const mappedItems = (lineItems || []).map((li: LineItem) => ({
         id: li.id,
         description: li.description,
         quantity: li.quantity,
         unit_cost: li.unit_cost,
-      })));
+      }));
+
+      if (EDITABLE_STATUSES.includes(wo.status)) {
+        setEditingWorkOrder({
+          id: wo.id,
+          trailer_id: wo.trailer_id,
+          repair_type: wo.repair_type,
+          description: wo.description,
+          work_start_date: wo.work_start_date,
+          work_completion_date: wo.work_completion_date,
+          labor_hours: wo.labor_hours,
+          labor_rate: wo.labor_rate,
+          travel_fee: wo.travel_fee,
+          labor_total: wo.labor_total,
+          parts_total: wo.parts_total,
+          grand_total: wo.grand_total,
+          status: wo.status,
+        });
+        setEditingLineItems(mappedItems);
+      } else {
+        // Read-only view for approved/rejected
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data: photos } = await (supabase as any)
+          .from("work_order_photos")
+          .select("id, photo_url, category")
+          .eq("work_order_id", wo.id);
+
+        setViewingWorkOrder(wo);
+        setViewingLineItems(mappedItems);
+        setViewingPhotos(photos || []);
+      }
     } catch (error) {
-      console.error("Error fetching line items:", error);
+      console.error("Error fetching work order details:", error);
       toast.error("Failed to open work order");
     }
   };
