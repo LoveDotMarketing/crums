@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, Plus, FileText, Clock, CheckCircle2, XCircle, AlertCircle } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ArrowLeft, Plus, FileText, Clock, CheckCircle2, XCircle, AlertCircle, Eye } from "lucide-react";
 import { toast } from "sonner";
 import { SEO } from "@/components/SEO";
 import { WorkOrderForm } from "@/components/mechanic/WorkOrderForm";
@@ -47,7 +48,7 @@ const STATUS_CONFIG: Record<string, { label: string; variant: "default" | "secon
   needs_info: { label: "Needs Info", variant: "outline", icon: AlertCircle },
 };
 
-const EDITABLE_STATUSES = ["in_progress", "needs_info"];
+const EDITABLE_STATUSES = ["in_progress", "needs_info", "submitted"];
 
 export default function WorkOrders() {
   const navigate = useNavigate();
@@ -57,6 +58,9 @@ export default function WorkOrders() {
   const [showForm, setShowForm] = useState(false);
   const [editingWorkOrder, setEditingWorkOrder] = useState<ExistingWorkOrder | null>(null);
   const [editingLineItems, setEditingLineItems] = useState<LineItem[]>([]);
+  const [viewingWorkOrder, setViewingWorkOrder] = useState<(WorkOrder & { trailer?: TrailerInfo }) | null>(null);
+  const [viewingLineItems, setViewingLineItems] = useState<LineItem[]>([]);
+  const [viewingPhotos, setViewingPhotos] = useState<{ id: string; photo_url: string; category: string }[]>([]);
 
   useEffect(() => {
     if (effectiveUserId) fetchWorkOrders();
@@ -94,12 +98,7 @@ export default function WorkOrders() {
     }
   };
 
-  const handleCardClick = async (wo: WorkOrder) => {
-    if (!EDITABLE_STATUSES.includes(wo.status)) {
-      toast.info("Only draft or needs-info work orders can be edited");
-      return;
-    }
-
+  const handleCardClick = async (wo: WorkOrder & { trailer?: TrailerInfo }) => {
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data: lineItems, error } = await (supabase as any)
@@ -109,29 +108,44 @@ export default function WorkOrders() {
 
       if (error) throw error;
 
-      setEditingWorkOrder({
-        id: wo.id,
-        trailer_id: wo.trailer_id,
-        repair_type: wo.repair_type,
-        description: wo.description,
-        work_start_date: wo.work_start_date,
-        work_completion_date: wo.work_completion_date,
-        labor_hours: wo.labor_hours,
-        labor_rate: wo.labor_rate,
-        travel_fee: wo.travel_fee,
-        labor_total: wo.labor_total,
-        parts_total: wo.parts_total,
-        grand_total: wo.grand_total,
-        status: wo.status,
-      });
-      setEditingLineItems((lineItems || []).map((li: LineItem) => ({
+      const mappedItems = (lineItems || []).map((li: LineItem) => ({
         id: li.id,
         description: li.description,
         quantity: li.quantity,
         unit_cost: li.unit_cost,
-      })));
+      }));
+
+      if (EDITABLE_STATUSES.includes(wo.status)) {
+        setEditingWorkOrder({
+          id: wo.id,
+          trailer_id: wo.trailer_id,
+          repair_type: wo.repair_type,
+          description: wo.description,
+          work_start_date: wo.work_start_date,
+          work_completion_date: wo.work_completion_date,
+          labor_hours: wo.labor_hours,
+          labor_rate: wo.labor_rate,
+          travel_fee: wo.travel_fee,
+          labor_total: wo.labor_total,
+          parts_total: wo.parts_total,
+          grand_total: wo.grand_total,
+          status: wo.status,
+        });
+        setEditingLineItems(mappedItems);
+      } else {
+        // Read-only view for approved/rejected
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data: photos } = await (supabase as any)
+          .from("work_order_photos")
+          .select("id, photo_url, category")
+          .eq("work_order_id", wo.id);
+
+        setViewingWorkOrder(wo);
+        setViewingLineItems(mappedItems);
+        setViewingPhotos(photos || []);
+      }
     } catch (error) {
-      console.error("Error fetching line items:", error);
+      console.error("Error fetching work order details:", error);
       toast.error("Failed to open work order");
     }
   };
@@ -234,7 +248,7 @@ export default function WorkOrders() {
             {workOrders.map((wo) => (
               <Card
                 key={wo.id}
-                className={`hover:shadow-md transition-shadow ${EDITABLE_STATUSES.includes(wo.status) ? "cursor-pointer" : ""}`}
+                className="hover:shadow-md transition-shadow cursor-pointer"
                 onClick={() => handleCardClick(wo)}
               >
                 <CardContent className="p-4">
@@ -273,6 +287,73 @@ export default function WorkOrders() {
           </div>
         )}
       </div>
+
+      {/* Read-only detail dialog for locked work orders */}
+      <Dialog open={!!viewingWorkOrder} onOpenChange={(open) => { if (!open) { setViewingWorkOrder(null); setViewingLineItems([]); setViewingPhotos([]); } }}>
+        <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
+          {viewingWorkOrder && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <span>{viewingWorkOrder.trailer?.trailer_number || "Unknown Trailer"}</span>
+                  {getStatusBadge(viewingWorkOrder.status)}
+                </DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 pt-2">
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div><p className="text-muted-foreground">Repair Type</p><p className="font-medium">{viewingWorkOrder.repair_type}</p></div>
+                  <div><p className="text-muted-foreground">Start Date</p><p className="font-medium">{format(new Date(viewingWorkOrder.work_start_date), "MMM d, yyyy")}</p></div>
+                  {viewingWorkOrder.work_completion_date && (
+                    <div><p className="text-muted-foreground">Completion</p><p className="font-medium">{format(new Date(viewingWorkOrder.work_completion_date), "MMM d, yyyy")}</p></div>
+                  )}
+                  <div><p className="text-muted-foreground">Grand Total</p><p className="font-medium text-primary">${viewingWorkOrder.grand_total.toFixed(2)}</p></div>
+                </div>
+                <Separator />
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">Description</p>
+                  <p className="text-sm">{viewingWorkOrder.description}</p>
+                </div>
+                {viewingLineItems.length > 0 && (
+                  <>
+                    <Separator />
+                    <div>
+                      <p className="text-sm font-medium mb-2">Line Items</p>
+                      {viewingLineItems.map((li, i) => (
+                        <div key={i} className="flex justify-between text-sm py-1">
+                          <span>{li.description} × {li.quantity}</span>
+                          <span className="font-medium">${(li.quantity * li.unit_cost).toFixed(2)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
+                {viewingPhotos.length > 0 && (
+                  <>
+                    <Separator />
+                    <div>
+                      <p className="text-sm font-medium mb-2">Photos</p>
+                      <div className="flex flex-wrap gap-2">
+                        {viewingPhotos.map((p) => (
+                          <img key={p.id} src={p.photo_url} alt={p.category} className="w-24 h-24 object-cover rounded-md border" />
+                        ))}
+                      </div>
+                    </div>
+                  </>
+                )}
+                {viewingWorkOrder.approval_notes && (
+                  <>
+                    <Separator />
+                    <div className="bg-muted/50 p-3 rounded text-sm">
+                      <p className="font-medium text-xs text-muted-foreground mb-1">Admin Note:</p>
+                      <p>{viewingWorkOrder.approval_notes}</p>
+                    </div>
+                  </>
+                )}
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

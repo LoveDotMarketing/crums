@@ -10,8 +10,9 @@ import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrig
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Plus, Trash2, Loader2, DollarSign, Search } from "lucide-react";
+import { Plus, Trash2, Loader2, DollarSign } from "lucide-react";
 import { toast } from "sonner";
+import { WorkOrderPhotoUpload } from "./WorkOrderPhotoUpload";
 
 interface Trailer {
   id: string;
@@ -95,6 +96,8 @@ export function WorkOrderForm({ onSuccess, onCancel, existingWorkOrder, existing
   const [laborHours, setLaborHours] = useState<number>(existingWorkOrder?.labor_hours || 0);
   const [includeTravelFee, setIncludeTravelFee] = useState(existingWorkOrder ? existingWorkOrder.travel_fee > 0 : false);
   const [parts, setParts] = useState<LineItem[]>(existingLineItems || []);
+  const [photos, setPhotos] = useState<{ id: string; photo_url: string; category: string }[]>([]);
+  const [savedWorkOrderId, setSavedWorkOrderId] = useState<string | null>(existingWorkOrder?.id || null);
 
   const LABOR_RATE = 85;
   const TRAVEL_FEE = 75;
@@ -109,7 +112,17 @@ export function WorkOrderForm({ onSuccess, onCancel, existingWorkOrder, existing
   useEffect(() => {
     fetchTrailers();
     fetchCatalog();
+    if (existingWorkOrder?.id) fetchPhotos(existingWorkOrder.id);
   }, []);
+
+  const fetchPhotos = async (woId: string) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data } = await (supabase as any)
+      .from("work_order_photos")
+      .select("id, photo_url, category")
+      .eq("work_order_id", woId);
+    setPhotos(data || []);
+  };
 
   const fetchTrailers = async () => {
     try {
@@ -237,6 +250,7 @@ export function WorkOrderForm({ onSuccess, onCancel, existingWorkOrder, existing
           .single();
         if (woError) throw woError;
         workOrderId = workOrder.id;
+        setSavedWorkOrderId(workOrderId);
       }
 
       // Insert line items
@@ -483,6 +497,32 @@ export function WorkOrderForm({ onSuccess, onCancel, existingWorkOrder, existing
           )}
         </CardContent>
       </Card>
+
+      {/* Photos — only available after first save */}
+      {savedWorkOrderId && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Photos</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {["before", "after", "parts"].map((cat) => (
+              <WorkOrderPhotoUpload
+                key={cat}
+                workOrderId={savedWorkOrderId}
+                category={cat}
+                label={cat.charAt(0).toUpperCase() + cat.slice(1)}
+                existingPhotos={photos.filter((p) => p.category === cat)}
+                onPhotoUploaded={() => fetchPhotos(savedWorkOrderId)}
+                onPhotoDeleted={() => fetchPhotos(savedWorkOrderId)}
+              />
+            ))}
+          </CardContent>
+        </Card>
+      )}
+
+      {!savedWorkOrderId && (
+        <p className="text-xs text-muted-foreground text-center">Save as draft first to add photos</p>
+      )}
 
       {/* Grand Total */}
       <Card className="border-primary">
