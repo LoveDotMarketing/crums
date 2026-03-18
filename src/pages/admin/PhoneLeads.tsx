@@ -52,6 +52,21 @@ export default function PhoneLeads() {
     },
   });
 
+  const deleteLead = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from("phone_leads")
+        .delete()
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["phone-leads"] });
+      setSelectedLead(null);
+      toast({ title: "Lead deleted" });
+    },
+  });
+
   const totalLeads = leads.length;
   const convertedLeads = leads.filter((l) => l.status === "converted").length;
 
