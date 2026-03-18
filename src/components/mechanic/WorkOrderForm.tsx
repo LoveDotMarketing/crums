@@ -10,8 +10,9 @@ import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrig
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Plus, Trash2, Loader2, DollarSign, Search } from "lucide-react";
+import { Plus, Trash2, Loader2, DollarSign } from "lucide-react";
 import { toast } from "sonner";
+import { WorkOrderPhotoUpload } from "./WorkOrderPhotoUpload";
 
 interface Trailer {
   id: string;

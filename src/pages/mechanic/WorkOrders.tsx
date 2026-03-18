@@ -287,6 +287,73 @@ export default function WorkOrders() {
           </div>
         )}
       </div>
+
+      {/* Read-only detail dialog for locked work orders */}
+      <Dialog open={!!viewingWorkOrder} onOpenChange={(open) => { if (!open) { setViewingWorkOrder(null); setViewingLineItems([]); setViewingPhotos([]); } }}>
+        <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
+          {viewingWorkOrder && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <span>{viewingWorkOrder.trailer?.trailer_number || "Unknown Trailer"}</span>
+                  {getStatusBadge(viewingWorkOrder.status)}
+                </DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 pt-2">
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div><p className="text-muted-foreground">Repair Type</p><p className="font-medium">{viewingWorkOrder.repair_type}</p></div>
+                  <div><p className="text-muted-foreground">Start Date</p><p className="font-medium">{format(new Date(viewingWorkOrder.work_start_date), "MMM d, yyyy")}</p></div>
+                  {viewingWorkOrder.work_completion_date && (
+                    <div><p className="text-muted-foreground">Completion</p><p className="font-medium">{format(new Date(viewingWorkOrder.work_completion_date), "MMM d, yyyy")}</p></div>
+                  )}
+                  <div><p className="text-muted-foreground">Grand Total</p><p className="font-medium text-primary">${viewingWorkOrder.grand_total.toFixed(2)}</p></div>
+                </div>
+                <Separator />
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">Description</p>
+                  <p className="text-sm">{viewingWorkOrder.description}</p>
+                </div>
+                {viewingLineItems.length > 0 && (
+                  <>
+                    <Separator />
+                    <div>
+                      <p className="text-sm font-medium mb-2">Line Items</p>
+                      {viewingLineItems.map((li, i) => (
+                        <div key={i} className="flex justify-between text-sm py-1">
+                          <span>{li.description} × {li.quantity}</span>
+                          <span className="font-medium">${(li.quantity * li.unit_cost).toFixed(2)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
+                {viewingPhotos.length > 0 && (
+                  <>
+                    <Separator />
+                    <div>
+                      <p className="text-sm font-medium mb-2">Photos</p>
+                      <div className="flex flex-wrap gap-2">
+                        {viewingPhotos.map((p) => (
+                          <img key={p.id} src={p.photo_url} alt={p.category} className="w-24 h-24 object-cover rounded-md border" />
+                        ))}
+                      </div>
+                    </div>
+                  </>
+                )}
+                {viewingWorkOrder.approval_notes && (
+                  <>
+                    <Separator />
+                    <div className="bg-muted/50 p-3 rounded text-sm">
+                      <p className="font-medium text-xs text-muted-foreground mb-1">Admin Note:</p>
+                      <p>{viewingWorkOrder.approval_notes}</p>
+                    </div>
+                  </>
+                )}
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
