@@ -47,7 +47,7 @@ const STATUS_CONFIG: Record<string, { label: string; variant: "default" | "secon
   needs_info: { label: "Needs Info", variant: "outline", icon: AlertCircle },
 };
 
-const EDITABLE_STATUSES = ["in_progress", "needs_info"];
+const EDITABLE_STATUSES = ["in_progress", "needs_info", "submitted"];
 
 export default function WorkOrders() {
   const navigate = useNavigate();
