@@ -2876,6 +2876,41 @@ export type Database = {
           },
         ]
       }
+      work_order_photos: {
+        Row: {
+          category: string
+          created_at: string
+          id: string
+          photo_url: string
+          uploaded_by: string | null
+          work_order_id: string
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          id?: string
+          photo_url: string
+          uploaded_by?: string | null
+          work_order_id: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          id?: string
+          photo_url?: string
+          uploaded_by?: string | null
+          work_order_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "work_order_photos_work_order_id_fkey"
+            columns: ["work_order_id"]
+            isOneToOne: false
+            referencedRelation: "work_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       work_orders: {
         Row: {
           approval_notes: string | null
