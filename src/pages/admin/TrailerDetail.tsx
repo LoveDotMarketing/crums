@@ -19,7 +19,10 @@ import {
   DollarSign,
   Wrench,
   MapPin,
-  User
+  User,
+  Camera,
+  X,
+  ImageIcon
 } from "lucide-react";
 import {
   Table,
