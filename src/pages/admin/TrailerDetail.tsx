@@ -255,9 +255,63 @@ export default function TrailerDetail() {
     }
   };
 
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || !trailerId) return;
+    setUploadingPhoto(true);
+    try {
+      const userId = (await supabase.auth.getUser()).data.user?.id;
+      for (const file of Array.from(files)) {
+        if (!file.type.startsWith("image/")) continue;
+        if (file.size > 10 * 1024 * 1024) { toast.error(`${file.name} is too large (max 10MB)`); continue; }
+        const compressed = await compressImage(file);
+        const ext = compressed.name.split(".").pop() || "jpg";
+        const path = `${trailerId}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+        const { error: uploadErr } = await supabase.storage.from("trailer-photos").upload(path, compressed);
+        if (uploadErr) { toast.error(`Upload failed: ${uploadErr.message}`); continue; }
+        const { data: { publicUrl } } = supabase.storage.from("trailer-photos").getPublicUrl(path);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        await (supabase as any).from("trailer_photos").insert({
+          trailer_id: trailerId, photo_url: publicUrl, uploaded_by: userId, display_order: trailerPhotos.length,
+        });
+      }
+      toast.success("Photos uploaded");
+      fetchTrailerPhotos();
+    } catch (err) {
+      console.error("Photo upload error:", err);
+      toast.error("Failed to upload photos");
+    }
+    setUploadingPhoto(false);
+    e.target.value = "";
+  };
+
+  const handleDeletePhoto = async (photoId: string, photoUrl: string) => {
+    try {
+      const parts = photoUrl.split("/trailer-photos/");
+      if (parts.length > 1) await supabase.storage.from("trailer-photos").remove([parts[1]]);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (supabase as any).from("trailer_photos").delete().eq("id", photoId);
+      setTrailerPhotos((prev) => prev.filter((p) => p.id !== photoId));
+      toast.success("Photo deleted");
+    } catch (err) {
+      console.error("Delete photo error:", err);
+      toast.error("Failed to delete photo");
+    }
+  };
+
+  const handleSaveCaption = async (photoId: string) => {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (supabase as any).from("trailer_photos").update({ caption: captionText }).eq("id", photoId);
+      setTrailerPhotos((prev) => prev.map((p) => p.id === photoId ? { ...p, caption: captionText } : p));
+      setEditingCaption(null);
+    } catch (err) {
+      console.error("Save caption error:", err);
+      toast.error("Failed to save caption");
+    }
+  };
 
 
-  const fetchTrailerData = async () => {
     try {
       // Fetch trailer details
       const { data: trailerData, error: trailerError } = await supabase
