@@ -120,6 +120,43 @@ const AGREEMENT_LABELS: Record<AgreementType, string> = {
   repayment_plan: 'Repayment Plan',
 };
 
+interface TrailerPhoto {
+  id: string;
+  trailer_id: string;
+  photo_url: string;
+  caption: string | null;
+  display_order: number;
+  uploaded_by: string | null;
+  created_at: string;
+}
+
+async function compressImage(file: File): Promise<File> {
+  if (!file.type.startsWith("image/") || file.type === "image/svg+xml") return file;
+  return new Promise((resolve) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      const MAX = 2000;
+      let { width, height } = img;
+      if (width <= MAX && height <= MAX) { resolve(file); return; }
+      if (width > height) { height = Math.round((height * MAX) / width); width = MAX; }
+      else { width = Math.round((width * MAX) / height); height = MAX; }
+      const canvas = document.createElement("canvas");
+      canvas.width = width; canvas.height = height;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) { resolve(file); return; }
+      ctx.drawImage(img, 0, 0, width, height);
+      canvas.toBlob((blob) => {
+        if (!blob) { resolve(file); return; }
+        resolve(new File([blob], file.name.replace(/\.\w+$/, ".jpg"), { type: "image/jpeg" }));
+      }, "image/jpeg", 0.8);
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); resolve(file); };
+    img.src = url;
+  });
+}
+
 export default function TrailerDetail() {
   const { trailerId } = useParams<{ trailerId: string }>();
   const navigate = useNavigate();
@@ -137,14 +174,31 @@ export default function TrailerDetail() {
   const [subscriptionItemId, setSubscriptionItemId] = useState<string | null>(null);
   const [contractStartDate, setContractStartDate] = useState<string | null>(null);
   const [contractEndDate, setContractEndDate] = useState<string | null>(null);
+  const [trailerPhotos, setTrailerPhotos] = useState<TrailerPhoto[]>([]);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [editingCaption, setEditingCaption] = useState<string | null>(null);
+  const [captionText, setCaptionText] = useState("");
+
+  const fetchTrailerPhotos = useCallback(async () => {
+    if (!trailerId) return;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data } = await (supabase as any)
+      .from("trailer_photos")
+      .select("*")
+      .eq("trailer_id", trailerId)
+      .order("display_order", { ascending: true })
+      .order("created_at", { ascending: true });
+    setTrailerPhotos(data || []);
+  }, [trailerId]);
 
   useEffect(() => {
     if (trailerId) {
       fetchTrailerData();
       fetchCustomers();
       fetchAgreementType();
+      fetchTrailerPhotos();
     }
-  }, [trailerId]);
+  }, [trailerId, fetchTrailerPhotos]);
 
   const fetchCustomers = async () => {
     try {
