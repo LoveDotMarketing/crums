@@ -140,6 +140,9 @@ export default function AdminWorkOrders() {
     if (!selectedWO || !user) return;
     setActionLoading(true);
     try {
+      // Refresh session to ensure token is fresh
+      await supabase.auth.getSession();
+
       const updateData: Record<string, unknown> = {
         status: action,
         approval_notes: approvalNotes || null,
@@ -149,21 +152,26 @@ export default function AdminWorkOrders() {
         updateData.approved_at = new Date().toISOString();
       }
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { error } = await (supabase as any)
+      const { data, error } = await supabase
         .from("work_orders")
         .update(updateData)
-        .eq("id", selectedWO.id);
+        .eq("id", selectedWO.id)
+        .select();
 
       if (error) throw error;
+
+      if (!data || data.length === 0) {
+        throw new Error("Work order not found or you don't have permission to update it");
+      }
 
       const labels = { approved: "Approved", rejected: "Rejected", needs_info: "Requested more info" };
       toast.success(`Work order ${labels[action].toLowerCase()}`);
       setSelectedWO(null);
       fetchWorkOrders();
-    } catch (error) {
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "Unknown error";
       console.error("Error updating work order:", error);
-      toast.error("Failed to update work order");
+      toast.error(`Failed to update work order: ${message}`);
     } finally {
       setActionLoading(false);
     }
