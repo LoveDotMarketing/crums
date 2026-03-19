@@ -1,25 +1,24 @@
 
 
-## Fix "Failed to update work order" on Admin Approval
+## Add Trailer Photo Upload to Admin Trailer Detail
 
-### Problem
-The screenshot shows an admin trying to approve a submitted work order and getting "Failed to update work order." The error toast is generic — it doesn't show the actual cause.
+### What Changes
+Add a "Photos" section to the admin trailer detail page where you can manually upload, view, and delete photos for each trailer. This requires a new database table and storage bucket, plus a new UI section on the page.
 
-### Root Cause Analysis
-- RLS policies are correct (admin ALL policy exists, no WITH CHECK constraints blocking)
-- No database triggers on `work_orders` that could interfere
-- The `as any` cast hides type safety but shouldn't cause runtime issues
-- Most likely cause: transient auth session expiry or network error, but the generic error message makes it impossible to diagnose
+### Database Changes
+- **New table `trailer_photos`**: `id` (uuid PK), `trailer_id` (uuid FK → trailers), `photo_url` (text), `caption` (text, nullable), `display_order` (integer, default 0), `uploaded_by` (uuid), `created_at` (timestamptz)
+- **RLS**: Admin ALL policy (only admins manage trailer photos)
+- **Storage bucket**: `trailer-photos` (public, like `work-order-photos`)
 
-### Fix
-
-**Update `src/pages/admin/WorkOrders.tsx`** — `handleAction` function:
-
-1. **Show the actual error message** in the toast instead of a generic "Failed to update work order" — display `error.message` so admins can see what went wrong
-2. **Add a session refresh** before the update — call `supabase.auth.getSession()` to ensure the token is fresh before attempting the update
-3. **Remove the `as any` cast** on the update call (work_orders is in the generated types) to get proper type safety
-4. **Add `.select()` to the update** to confirm the row was actually updated (Supabase returns empty data on update without select, so we can verify 0 rows means the record wasn't found)
+### UI Changes — `src/pages/admin/TrailerDetail.tsx`
+- Add a new "Photos" Card section between the main detail grid and Maintenance History
+- Grid display of uploaded photos with captions
+- Upload button using file input with the same image compression logic from `WorkOrderPhotoUpload`
+- Optional caption input per photo
+- Delete button (with confirmation) on each photo
+- Drag-to-reorder could be added later; for now, photos display in upload order
 
 ### Files Changed
-- `src/pages/admin/WorkOrders.tsx` — improve `handleAction` with better error handling and session refresh
+- **Database migration** — create `trailer_photos` table + RLS + storage bucket
+- **`src/pages/admin/TrailerDetail.tsx`** — add Photos card section with upload/view/delete functionality (self-contained, no separate component needed since it's admin-only)
 
