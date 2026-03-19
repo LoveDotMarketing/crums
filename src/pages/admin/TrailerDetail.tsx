@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
@@ -19,7 +19,10 @@ import {
   DollarSign,
   Wrench,
   MapPin,
-  User
+  User,
+  Camera,
+  X,
+  ImageIcon
 } from "lucide-react";
 import {
   Table,
@@ -117,6 +120,43 @@ const AGREEMENT_LABELS: Record<AgreementType, string> = {
   repayment_plan: 'Repayment Plan',
 };
 
+interface TrailerPhoto {
+  id: string;
+  trailer_id: string;
+  photo_url: string;
+  caption: string | null;
+  display_order: number;
+  uploaded_by: string | null;
+  created_at: string;
+}
+
+async function compressImage(file: File): Promise<File> {
+  if (!file.type.startsWith("image/") || file.type === "image/svg+xml") return file;
+  return new Promise((resolve) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      const MAX = 2000;
+      let { width, height } = img;
+      if (width <= MAX && height <= MAX) { resolve(file); return; }
+      if (width > height) { height = Math.round((height * MAX) / width); width = MAX; }
+      else { width = Math.round((width * MAX) / height); height = MAX; }
+      const canvas = document.createElement("canvas");
+      canvas.width = width; canvas.height = height;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) { resolve(file); return; }
+      ctx.drawImage(img, 0, 0, width, height);
+      canvas.toBlob((blob) => {
+        if (!blob) { resolve(file); return; }
+        resolve(new File([blob], file.name.replace(/\.\w+$/, ".jpg"), { type: "image/jpeg" }));
+      }, "image/jpeg", 0.8);
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); resolve(file); };
+    img.src = url;
+  });
+}
+
 export default function TrailerDetail() {
   const { trailerId } = useParams<{ trailerId: string }>();
   const navigate = useNavigate();
@@ -134,14 +174,31 @@ export default function TrailerDetail() {
   const [subscriptionItemId, setSubscriptionItemId] = useState<string | null>(null);
   const [contractStartDate, setContractStartDate] = useState<string | null>(null);
   const [contractEndDate, setContractEndDate] = useState<string | null>(null);
+  const [trailerPhotos, setTrailerPhotos] = useState<TrailerPhoto[]>([]);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [editingCaption, setEditingCaption] = useState<string | null>(null);
+  const [captionText, setCaptionText] = useState("");
+
+  const fetchTrailerPhotos = useCallback(async () => {
+    if (!trailerId) return;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data } = await (supabase as any)
+      .from("trailer_photos")
+      .select("*")
+      .eq("trailer_id", trailerId)
+      .order("display_order", { ascending: true })
+      .order("created_at", { ascending: true });
+    setTrailerPhotos(data || []);
+  }, [trailerId]);
 
   useEffect(() => {
     if (trailerId) {
       fetchTrailerData();
       fetchCustomers();
       fetchAgreementType();
+      fetchTrailerPhotos();
     }
-  }, [trailerId]);
+  }, [trailerId, fetchTrailerPhotos]);
 
   const fetchCustomers = async () => {
     try {
@@ -198,7 +255,61 @@ export default function TrailerDetail() {
     }
   };
 
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || !trailerId) return;
+    setUploadingPhoto(true);
+    try {
+      const userId = (await supabase.auth.getUser()).data.user?.id;
+      for (const file of Array.from(files)) {
+        if (!file.type.startsWith("image/")) continue;
+        if (file.size > 10 * 1024 * 1024) { toast.error(`${file.name} is too large (max 10MB)`); continue; }
+        const compressed = await compressImage(file);
+        const ext = compressed.name.split(".").pop() || "jpg";
+        const path = `${trailerId}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+        const { error: uploadErr } = await supabase.storage.from("trailer-photos").upload(path, compressed);
+        if (uploadErr) { toast.error(`Upload failed: ${uploadErr.message}`); continue; }
+        const { data: { publicUrl } } = supabase.storage.from("trailer-photos").getPublicUrl(path);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        await (supabase as any).from("trailer_photos").insert({
+          trailer_id: trailerId, photo_url: publicUrl, uploaded_by: userId, display_order: trailerPhotos.length,
+        });
+      }
+      toast.success("Photos uploaded");
+      fetchTrailerPhotos();
+    } catch (err) {
+      console.error("Photo upload error:", err);
+      toast.error("Failed to upload photos");
+    }
+    setUploadingPhoto(false);
+    e.target.value = "";
+  };
 
+  const handleDeletePhoto = async (photoId: string, photoUrl: string) => {
+    try {
+      const parts = photoUrl.split("/trailer-photos/");
+      if (parts.length > 1) await supabase.storage.from("trailer-photos").remove([parts[1]]);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (supabase as any).from("trailer_photos").delete().eq("id", photoId);
+      setTrailerPhotos((prev) => prev.filter((p) => p.id !== photoId));
+      toast.success("Photo deleted");
+    } catch (err) {
+      console.error("Delete photo error:", err);
+      toast.error("Failed to delete photo");
+    }
+  };
+
+  const handleSaveCaption = async (photoId: string) => {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (supabase as any).from("trailer_photos").update({ caption: captionText }).eq("id", photoId);
+      setTrailerPhotos((prev) => prev.map((p) => p.id === photoId ? { ...p, caption: captionText } : p));
+      setEditingCaption(null);
+    } catch (err) {
+      console.error("Save caption error:", err);
+      toast.error("Failed to save caption");
+    }
+  };
 
   const fetchTrailerData = async () => {
     try {
@@ -1140,7 +1251,102 @@ export default function TrailerDetail() {
               </div>
             </div>
 
-            {/* Maintenance History */}
+            {/* Trailer Photos */}
+            <Card className="mt-6">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="flex items-center gap-2">
+                      <ImageIcon className="h-5 w-5" />
+                      Photos
+                    </CardTitle>
+                    <CardDescription>{trailerPhotos.length} photo(s) uploaded</CardDescription>
+                  </div>
+                  <div>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      onChange={handlePhotoUpload}
+                      className="hidden"
+                      id="trailer-photo-upload"
+                      disabled={uploadingPhoto}
+                    />
+                    <label htmlFor="trailer-photo-upload">
+                      <Button type="button" variant="outline" size="sm" disabled={uploadingPhoto} className="cursor-pointer" asChild>
+                        <span>
+                          {uploadingPhoto ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Camera className="h-4 w-4 mr-2" />}
+                          {uploadingPhoto ? "Uploading..." : "Upload Photos"}
+                        </span>
+                      </Button>
+                    </label>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {trailerPhotos.length === 0 ? (
+                  <p className="text-center text-muted-foreground py-8">
+                    No photos uploaded yet. Click "Upload Photos" to add images.
+                  </p>
+                ) : (
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                    {trailerPhotos.map((photo) => (
+                      <div key={photo.id} className="relative group rounded-lg overflow-hidden border bg-muted">
+                        <img
+                          src={photo.photo_url}
+                          alt={photo.caption || "Trailer photo"}
+                          className="w-full h-48 object-cover"
+                        />
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <button className="absolute top-2 right-2 bg-destructive text-destructive-foreground rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <X className="h-4 w-4" />
+                            </button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Delete Photo</AlertDialogTitle>
+                              <AlertDialogDescription>Are you sure you want to delete this photo?</AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => handleDeletePhoto(photo.id, photo.photo_url)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                                Delete
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                        <div className="p-2">
+                          {editingCaption === photo.id ? (
+                            <div className="flex gap-1">
+                              <Input
+                                value={captionText}
+                                onChange={(e) => setCaptionText(e.target.value)}
+                                placeholder="Caption..."
+                                className="h-7 text-xs"
+                                onKeyDown={(e) => { if (e.key === "Enter") handleSaveCaption(photo.id); }}
+                              />
+                              <Button size="sm" variant="ghost" className="h-7 px-2 text-xs" onClick={() => handleSaveCaption(photo.id)}>
+                                Save
+                              </Button>
+                            </div>
+                          ) : (
+                            <p
+                              className="text-xs text-muted-foreground cursor-pointer hover:text-foreground truncate"
+                              onClick={() => { setEditingCaption(photo.id); setCaptionText(photo.caption || ""); }}
+                            >
+                              {photo.caption || "Click to add caption..."}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+
             <Card className="mt-6">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
