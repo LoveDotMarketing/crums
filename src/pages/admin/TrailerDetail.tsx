@@ -311,7 +311,7 @@ export default function TrailerDetail() {
     }
   };
 
-
+  const fetchTrailerData = async () => {
     try {
       // Fetch trailer details
       const { data: trailerData, error: trailerError } = await supabase
