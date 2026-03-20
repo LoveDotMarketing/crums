@@ -1,4 +1,4 @@
-const mats2026Image = "/images/news/crums-mats-booth.webp";
+const mats2026Image = "/images/crums-leasing-mats-convention-01.webp";
 const chamberLogo = "/images/news/san-antonio-chamber-logo.png";
 
 export interface NewsArticle {
