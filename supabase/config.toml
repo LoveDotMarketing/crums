@@ -156,3 +156,7 @@ verify_jwt = false
 # Phone lead creation - agent secret auth (N8N_AGENT_SECRET)
 [functions.create-phone-lead]
 verify_jwt = false
+
+# Transcribe call recording - admin only (auth handled in code)
+[functions.transcribe-recording]
+verify_jwt = false

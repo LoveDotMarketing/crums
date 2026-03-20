@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { format, subDays, startOfDay, endOfDay } from "date-fns";
-import { Phone, PhoneIncoming, PhoneOutgoing, PhoneMissed, Clock, RefreshCw, Download, Volume2 } from "lucide-react";
+import { Phone, PhoneIncoming, PhoneOutgoing, PhoneMissed, Clock, RefreshCw, Download, Volume2, FileText, Loader2, ChevronDown, ChevronUp } from "lucide-react";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -94,6 +94,40 @@ export default function CallLogs() {
   const [dateRange, setDateRange] = useState("7");
   const [directionFilter, setDirectionFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [transcripts, setTranscripts] = useState<Record<string, string>>({});
+  const [loadingTranscripts, setLoadingTranscripts] = useState<Record<string, boolean>>({});
+  const [expandedTranscripts, setExpandedTranscripts] = useState<Record<string, boolean>>({});
+
+  const handleTranscribe = async (recordingSid: string) => {
+    if (transcripts[recordingSid]) {
+      setExpandedTranscripts(prev => ({ ...prev, [recordingSid]: !prev[recordingSid] }));
+      return;
+    }
+
+    setLoadingTranscripts(prev => ({ ...prev, [recordingSid]: true }));
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Not authenticated");
+
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/transcribe-recording?recordingSid=${recordingSid}`,
+        { headers: { Authorization: `Bearer ${session.access_token}` } }
+      );
+
+      if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.error || "Failed to transcribe");
+      }
+
+      const { transcript } = await response.json();
+      setTranscripts(prev => ({ ...prev, [recordingSid]: transcript }));
+      setExpandedTranscripts(prev => ({ ...prev, [recordingSid]: true }));
+    } catch (e: any) {
+      toast({ title: "Transcription failed", description: e.message, variant: "destructive" });
+    } finally {
+      setLoadingTranscripts(prev => ({ ...prev, [recordingSid]: false }));
+    }
+  };
 
   const { data, isLoading, refetch, isFetching } = useQuery({
     queryKey: ["call-logs", dateRange, directionFilter],
@@ -337,28 +371,65 @@ export default function CallLogs() {
                       </TableRow>
                     ) : (
                       filteredCalls.map((call) => (
-                        <TableRow key={call.sid}>
-                          <TableCell className="font-medium">
-                            {call.startTime 
-                              ? format(new Date(call.startTime), "MMM d, h:mm a")
-                              : "N/A"}
-                          </TableCell>
-                          <TableCell>{call.fromFormatted || call.from}</TableCell>
-                          <TableCell>{call.toFormatted || call.to}</TableCell>
-                          <TableCell>{getDirectionBadge(call.direction)}</TableCell>
-                          <TableCell>{formatDuration(call.duration)}</TableCell>
-                          <TableCell>{getStatusBadge(call.status)}</TableCell>
-                          <TableCell className="min-w-[320px]">
-                            {call.recordingSid ? (
-                              <WaveformPlayer 
-                                recordingSid={call.recordingSid} 
-                                recordingDuration={call.recordingDuration}
-                              />
-                            ) : (
-                              <span className="text-muted-foreground text-sm">—</span>
-                            )}
-                          </TableCell>
-                        </TableRow>
+                        <>
+                          <TableRow key={call.sid}>
+                            <TableCell className="font-medium">
+                              {call.startTime 
+                                ? format(new Date(call.startTime), "MMM d, h:mm a")
+                                : "N/A"}
+                            </TableCell>
+                            <TableCell>{call.fromFormatted || call.from}</TableCell>
+                            <TableCell>{call.toFormatted || call.to}</TableCell>
+                            <TableCell>{getDirectionBadge(call.direction)}</TableCell>
+                            <TableCell>{formatDuration(call.duration)}</TableCell>
+                            <TableCell>{getStatusBadge(call.status)}</TableCell>
+                            <TableCell className="min-w-[320px]">
+                              <div className="flex flex-col gap-2">
+                                {call.recordingSid ? (
+                                  <>
+                                    <WaveformPlayer 
+                                      recordingSid={call.recordingSid} 
+                                      recordingDuration={call.recordingDuration}
+                                    />
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="w-fit text-xs gap-1.5"
+                                      onClick={() => handleTranscribe(call.recordingSid!)}
+                                      disabled={loadingTranscripts[call.recordingSid]}
+                                    >
+                                      {loadingTranscripts[call.recordingSid] ? (
+                                        <Loader2 className="h-3 w-3 animate-spin" />
+                                      ) : (
+                                        <FileText className="h-3 w-3" />
+                                      )}
+                                      {transcripts[call.recordingSid] 
+                                        ? (expandedTranscripts[call.recordingSid] ? 'Hide Transcript' : 'Show Transcript')
+                                        : 'Transcribe'}
+                                      {transcripts[call.recordingSid] && (
+                                        expandedTranscripts[call.recordingSid] 
+                                          ? <ChevronUp className="h-3 w-3" />
+                                          : <ChevronDown className="h-3 w-3" />
+                                      )}
+                                    </Button>
+                                  </>
+                                ) : (
+                                  <span className="text-muted-foreground text-sm">—</span>
+                                )}
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                          {call.recordingSid && expandedTranscripts[call.recordingSid] && transcripts[call.recordingSid] && (
+                            <TableRow key={`${call.sid}-transcript`}>
+                              <TableCell colSpan={7} className="bg-muted/50 py-3 px-6">
+                                <div className="text-sm whitespace-pre-wrap max-h-64 overflow-y-auto">
+                                  <p className="font-medium text-xs text-muted-foreground mb-2">Transcript</p>
+                                  {transcripts[call.recordingSid]}
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          )}
+                        </>
                       ))
                     )}
                   </TableBody>
