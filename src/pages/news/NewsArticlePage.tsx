@@ -101,8 +101,10 @@ const NewsArticlePage = () => {
               <div className="mb-8 rounded-xl overflow-hidden border border-border">
                 <img 
                   src={article.image}
-                  alt={article.title}
+                  alt={`${article.title} - ${article.articleSection || 'CRUMS Leasing News'}`}
                   className="w-full h-auto"
+                  width="1200"
+                  height="630"
                 />
               </div>
             )}
