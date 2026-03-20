@@ -148,6 +148,27 @@ export type Database = {
           },
         ]
       }
+      call_transcripts: {
+        Row: {
+          created_at: string
+          id: string
+          recording_sid: string
+          transcript_text: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          recording_sid: string
+          transcript_text: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          recording_sid?: string
+          transcript_text?: string
+        }
+        Relationships: []
+      }
       companies: {
         Row: {
           address: string | null
