@@ -49,9 +49,7 @@ const NewsArticlePage = () => {
   }
 
   // Determine OG image - use article image if available
-  const ogImage = article.image 
-    ? `/images/news/${slug?.includes('mats-2026') ? 'crums-mats-booth.webp' : 'placeholder.png'}`
-    : "/og-image.jpg";
+  const ogImage = article.image || "/og-image.jpg";
 
   return (
     <div className="min-h-screen bg-background">
@@ -103,8 +101,10 @@ const NewsArticlePage = () => {
               <div className="mb-8 rounded-xl overflow-hidden border border-border">
                 <img 
                   src={article.image}
-                  alt={article.title}
+                  alt={`${article.title} - ${article.articleSection || 'CRUMS Leasing News'}`}
                   className="w-full h-auto"
+                  width="1200"
+                  height="630"
                 />
               </div>
             )}
