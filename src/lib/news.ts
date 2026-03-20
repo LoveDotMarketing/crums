@@ -307,7 +307,7 @@ export const generateMats2026EventSchema = () => ({
       "longitude": -85.7419
     }
   },
-  "image": "https://crumsleasing.com/images/news/crums-mats-booth.webp",
+  "image": "https://crumsleasing.com/images/crums-leasing-mats-convention-01.webp",
   "organizer": {
     "@type": "Organization",
     "name": "Mid-America Trucking Show",
