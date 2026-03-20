@@ -94,6 +94,40 @@ export default function CallLogs() {
   const [dateRange, setDateRange] = useState("7");
   const [directionFilter, setDirectionFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [transcripts, setTranscripts] = useState<Record<string, string>>({});
+  const [loadingTranscripts, setLoadingTranscripts] = useState<Record<string, boolean>>({});
+  const [expandedTranscripts, setExpandedTranscripts] = useState<Record<string, boolean>>({});
+
+  const handleTranscribe = async (recordingSid: string) => {
+    if (transcripts[recordingSid]) {
+      setExpandedTranscripts(prev => ({ ...prev, [recordingSid]: !prev[recordingSid] }));
+      return;
+    }
+
+    setLoadingTranscripts(prev => ({ ...prev, [recordingSid]: true }));
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Not authenticated");
+
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/transcribe-recording?recordingSid=${recordingSid}`,
+        { headers: { Authorization: `Bearer ${session.access_token}` } }
+      );
+
+      if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.error || "Failed to transcribe");
+      }
+
+      const { transcript } = await response.json();
+      setTranscripts(prev => ({ ...prev, [recordingSid]: transcript }));
+      setExpandedTranscripts(prev => ({ ...prev, [recordingSid]: true }));
+    } catch (e: any) {
+      toast({ title: "Transcription failed", description: e.message, variant: "destructive" });
+    } finally {
+      setLoadingTranscripts(prev => ({ ...prev, [recordingSid]: false }));
+    }
+  };
 
   const { data, isLoading, refetch, isFetching } = useQuery({
     queryKey: ["call-logs", dateRange, directionFilter],
