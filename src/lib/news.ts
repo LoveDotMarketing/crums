@@ -266,7 +266,7 @@ export const generateNewsArticleSchema = (article: NewsArticle) => {
   if (article.image) {
     baseSchema.image = {
       "@type": "ImageObject",
-      "url": `https://crumsleasing.com/images/news/${article.slug.includes('mats-2026') ? 'crums-mats-booth.webp' : 'placeholder.png'}`,
+      "url": `https://crumsleasing.com${article.image}`,
       "width": 1200,
       "height": 630
     };
