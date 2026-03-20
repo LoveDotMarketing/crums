@@ -371,28 +371,65 @@ export default function CallLogs() {
                       </TableRow>
                     ) : (
                       filteredCalls.map((call) => (
-                        <TableRow key={call.sid}>
-                          <TableCell className="font-medium">
-                            {call.startTime 
-                              ? format(new Date(call.startTime), "MMM d, h:mm a")
-                              : "N/A"}
-                          </TableCell>
-                          <TableCell>{call.fromFormatted || call.from}</TableCell>
-                          <TableCell>{call.toFormatted || call.to}</TableCell>
-                          <TableCell>{getDirectionBadge(call.direction)}</TableCell>
-                          <TableCell>{formatDuration(call.duration)}</TableCell>
-                          <TableCell>{getStatusBadge(call.status)}</TableCell>
-                          <TableCell className="min-w-[320px]">
-                            {call.recordingSid ? (
-                              <WaveformPlayer 
-                                recordingSid={call.recordingSid} 
-                                recordingDuration={call.recordingDuration}
-                              />
-                            ) : (
-                              <span className="text-muted-foreground text-sm">—</span>
-                            )}
-                          </TableCell>
-                        </TableRow>
+                        <>
+                          <TableRow key={call.sid}>
+                            <TableCell className="font-medium">
+                              {call.startTime 
+                                ? format(new Date(call.startTime), "MMM d, h:mm a")
+                                : "N/A"}
+                            </TableCell>
+                            <TableCell>{call.fromFormatted || call.from}</TableCell>
+                            <TableCell>{call.toFormatted || call.to}</TableCell>
+                            <TableCell>{getDirectionBadge(call.direction)}</TableCell>
+                            <TableCell>{formatDuration(call.duration)}</TableCell>
+                            <TableCell>{getStatusBadge(call.status)}</TableCell>
+                            <TableCell className="min-w-[320px]">
+                              <div className="flex flex-col gap-2">
+                                {call.recordingSid ? (
+                                  <>
+                                    <WaveformPlayer 
+                                      recordingSid={call.recordingSid} 
+                                      recordingDuration={call.recordingDuration}
+                                    />
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="w-fit text-xs gap-1.5"
+                                      onClick={() => handleTranscribe(call.recordingSid!)}
+                                      disabled={loadingTranscripts[call.recordingSid]}
+                                    >
+                                      {loadingTranscripts[call.recordingSid] ? (
+                                        <Loader2 className="h-3 w-3 animate-spin" />
+                                      ) : (
+                                        <FileText className="h-3 w-3" />
+                                      )}
+                                      {transcripts[call.recordingSid] 
+                                        ? (expandedTranscripts[call.recordingSid] ? 'Hide Transcript' : 'Show Transcript')
+                                        : 'Transcribe'}
+                                      {transcripts[call.recordingSid] && (
+                                        expandedTranscripts[call.recordingSid] 
+                                          ? <ChevronUp className="h-3 w-3" />
+                                          : <ChevronDown className="h-3 w-3" />
+                                      )}
+                                    </Button>
+                                  </>
+                                ) : (
+                                  <span className="text-muted-foreground text-sm">—</span>
+                                )}
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                          {call.recordingSid && expandedTranscripts[call.recordingSid] && transcripts[call.recordingSid] && (
+                            <TableRow key={`${call.sid}-transcript`}>
+                              <TableCell colSpan={7} className="bg-muted/50 py-3 px-6">
+                                <div className="text-sm whitespace-pre-wrap max-h-64 overflow-y-auto">
+                                  <p className="font-medium text-xs text-muted-foreground mb-2">Transcript</p>
+                                  {transcripts[call.recordingSid]}
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          )}
+                        </>
                       ))
                     )}
                   </TableBody>
