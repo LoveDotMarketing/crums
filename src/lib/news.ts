@@ -1,4 +1,4 @@
-const mats2026Image = "/images/news/crums-mats-booth.webp";
+const mats2026Image = "/images/crums-leasing-mats-convention-01.webp";
 const chamberLogo = "/images/news/san-antonio-chamber-logo.png";
 
 export interface NewsArticle {
@@ -266,7 +266,7 @@ export const generateNewsArticleSchema = (article: NewsArticle) => {
   if (article.image) {
     baseSchema.image = {
       "@type": "ImageObject",
-      "url": `https://crumsleasing.com/images/news/${article.slug.includes('mats-2026') ? 'crums-mats-booth.webp' : 'placeholder.png'}`,
+      "url": `https://crumsleasing.com${article.image}`,
       "width": 1200,
       "height": 630
     };
@@ -307,7 +307,7 @@ export const generateMats2026EventSchema = () => ({
       "longitude": -85.7419
     }
   },
-  "image": "https://crumsleasing.com/images/news/crums-mats-booth.webp",
+  "image": "https://crumsleasing.com/images/crums-leasing-mats-convention-01.webp",
   "organizer": {
     "@type": "Organization",
     "name": "Mid-America Trucking Show",
