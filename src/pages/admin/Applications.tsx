@@ -89,12 +89,49 @@ interface Application {
   payment_setup_sent_at: string | null;
   stripe_payment_method_id: string | null;
   stripe_customer_id: string | null;
+  utm_source: string | null;
+  utm_medium: string | null;
+  utm_campaign: string | null;
+  utm_term: string | null;
+  utm_content: string | null;
+  referrer: string | null;
+  landing_page: string | null;
   profiles: {
     email: string;
     first_name: string | null;
     last_name: string | null;
     company_name: string | null;
   } | null;
+}
+
+function getLeadSourceBadge(app: Application) {
+  const source = app.utm_source;
+  const medium = app.utm_medium;
+  const referrer = app.referrer;
+
+  if (source) {
+    const isPaid = medium === 'cpc' || medium === 'ppc' || medium === 'paid';
+    const label = `${source}${isPaid ? ' (paid)' : medium === 'organic' ? ' (organic)' : ''}`;
+    return (
+      <Badge variant={isPaid ? "default" : "secondary"} className="text-xs capitalize">
+        {label}
+      </Badge>
+    );
+  }
+
+  if (referrer) {
+    try {
+      const hostname = new URL(referrer).hostname.replace('www.', '');
+      if (hostname.includes('google')) return <Badge variant="secondary" className="text-xs">Google (organic)</Badge>;
+      if (hostname.includes('facebook') || hostname.includes('fb.')) return <Badge variant="secondary" className="text-xs">Facebook</Badge>;
+      if (hostname.includes('linkedin')) return <Badge variant="secondary" className="text-xs">LinkedIn</Badge>;
+      return <Badge variant="outline" className="text-xs">{hostname}</Badge>;
+    } catch {
+      return <Badge variant="outline" className="text-xs">Referral</Badge>;
+    }
+  }
+
+  return <Badge variant="outline" className="text-xs text-muted-foreground">Direct</Badge>;
 }
 
 const statusConfig: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline"; icon: React.ElementType }> = {
