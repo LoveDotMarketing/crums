@@ -128,6 +128,11 @@ export function getLeadSourceData(): LeadSourceData {
  * Infer the source type for display purposes
  */
 export function inferSourceType(data: LeadSourceData): string {
+  // Check for /lp/ landing pages — always Google PPC
+  if (data.landing_page?.startsWith('/lp/')) {
+    return 'Google (paid)';
+  }
+
   if (data.utm_source) {
     const source = data.utm_source.toLowerCase();
     const medium = data.utm_medium?.toLowerCase() || '';
@@ -144,6 +149,7 @@ export function inferSourceType(data: LeadSourceData): string {
       const url = new URL(data.referrer);
       const hostname = url.hostname.toLowerCase();
       
+      if (hostname.includes('syndicatedsearch')) return 'Google (paid)';
       if (hostname.includes('google')) return 'Google (organic)';
       if (hostname.includes('bing')) return 'Bing (organic)';
       if (hostname.includes('yahoo')) return 'Yahoo (organic)';

@@ -904,7 +904,11 @@ export default function LeadSources() {
 }
 
 // Helper function to extract source from referrer URL
-function getSourceFromReferrer(referrer: string | null): string | null {
+function getSourceFromReferrer(referrer: string | null, landingPage?: string | null): string | null {
+  // /lp/ pages or syndicatedsearch = google
+  if (landingPage?.startsWith('/lp/')) return "google";
+  if (referrer?.toLowerCase().includes('syndicatedsearch')) return "google";
+
   if (!referrer) return null;
   try {
     const url = new URL(referrer);
@@ -927,7 +931,11 @@ function getSourceFromReferrer(referrer: string | null): string | null {
 }
 
 // Helper function to infer medium from referrer URL
-function getMediumFromReferrer(referrer: string | null): string | null {
+function getMediumFromReferrer(referrer: string | null, landingPage?: string | null): string | null {
+  // /lp/ pages or syndicatedsearch = cpc (paid)
+  if (landingPage?.startsWith('/lp/')) return "cpc";
+  if (referrer?.toLowerCase().includes('syndicatedsearch')) return "cpc";
+
   if (!referrer) return null;
   try {
     const url = new URL(referrer);
