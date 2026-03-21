@@ -162,7 +162,7 @@ export default function LeadSources() {
 
   // Calculate source counts
   const sourceCounts: SourceCount[] = submissions.reduce((acc: SourceCount[], sub) => {
-    const source = sub.utm_source || getSourceFromReferrer(sub.referrer) || "Direct";
+    const source = sub.utm_source || getSourceFromReferrer(sub.referrer, sub.landing_page) || "Direct";
     const existing = acc.find(s => s.source === source);
     if (existing) {
       existing.count++;
