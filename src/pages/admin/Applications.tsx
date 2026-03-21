@@ -936,6 +936,58 @@ export default function Applications() {
                     <p>{format(new Date(selectedApplication.reviewed_at), "PPP 'at' p")}</p>
                   </div>
                 )}
+              </div>
+
+              {/* Lead Source Attribution */}
+              {(selectedApplication.utm_source || selectedApplication.referrer || selectedApplication.landing_page) && (
+                <div className="border-t pt-4">
+                  <h3 className="text-sm font-semibold text-muted-foreground mb-3">Lead Source Attribution</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-sm font-medium text-muted-foreground">Source</label>
+                      <div className="mt-1">{getLeadSourceBadge(selectedApplication)}</div>
+                    </div>
+                    {selectedApplication.utm_medium && (
+                      <div>
+                        <label className="text-sm font-medium text-muted-foreground">Medium</label>
+                        <p className="capitalize">{selectedApplication.utm_medium}</p>
+                      </div>
+                    )}
+                    {selectedApplication.utm_campaign && (
+                      <div>
+                        <label className="text-sm font-medium text-muted-foreground">Campaign</label>
+                        <p>{selectedApplication.utm_campaign}</p>
+                      </div>
+                    )}
+                    {selectedApplication.utm_term && (
+                      <div>
+                        <label className="text-sm font-medium text-muted-foreground">Term</label>
+                        <p>{selectedApplication.utm_term}</p>
+                      </div>
+                    )}
+                    {selectedApplication.utm_content && (
+                      <div>
+                        <label className="text-sm font-medium text-muted-foreground">Content</label>
+                        <p>{selectedApplication.utm_content}</p>
+                      </div>
+                    )}
+                    {selectedApplication.referrer && (
+                      <div className="col-span-2">
+                        <label className="text-sm font-medium text-muted-foreground">Referrer</label>
+                        <p className="text-sm break-all">{selectedApplication.referrer}</p>
+                      </div>
+                    )}
+                    {selectedApplication.landing_page && (
+                      <div className="col-span-2">
+                        <label className="text-sm font-medium text-muted-foreground">Landing Page</label>
+                        <p className="text-sm">{selectedApplication.landing_page}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              <div className="grid grid-cols-2 gap-4">
                 {selectedApplication.admin_notes && (
                   <div className="col-span-2">
                     <label className="text-sm font-medium text-muted-foreground">Admin Notes</label>
