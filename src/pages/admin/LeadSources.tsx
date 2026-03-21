@@ -730,8 +730,8 @@ export default function LeadSources() {
                     </TableHeader>
                     <TableBody>
                       {submissions.map((submission) => {
-                        const source = submission.utm_source || getSourceFromReferrer(submission.referrer) || "Direct";
-                        const medium = submission.utm_medium || getMediumFromReferrer(submission.referrer) || "direct";
+                        const source = submission.utm_source || getSourceFromReferrer(submission.referrer, submission.landing_page) || "Direct";
+                        const medium = submission.utm_medium || getMediumFromReferrer(submission.referrer, submission.landing_page) || "direct";
                         
                         return (
                           <TableRow key={submission.id}>
