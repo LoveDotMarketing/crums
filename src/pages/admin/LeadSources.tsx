@@ -200,6 +200,28 @@ export default function LeadSources() {
   const paidLeads = submissions.filter(s => s.utm_medium === "cpc" || s.utm_medium === "ppc" || s.utm_medium === "paid").length;
   const organicLeads = submissions.filter(s => s.utm_medium === "organic" || (!s.utm_medium && s.referrer?.includes("google"))).length;
 
+  // Registration source stats
+  const totalRegistrations = registrations.length;
+  const regSourceCounts = registrations.reduce((acc: { source: string; count: number }[], reg: any) => {
+    let source = "Direct";
+    if (reg.utm_source) {
+      const isPaid = reg.utm_medium === "cpc" || reg.utm_medium === "ppc" || reg.utm_medium === "paid";
+      source = `${reg.utm_source}${isPaid ? " (paid)" : reg.utm_medium === "organic" ? " (organic)" : ""}`;
+    } else if (reg.referrer) {
+      try {
+        const hostname = new URL(reg.referrer).hostname.replace("www.", "");
+        if (hostname.includes("google")) source = "Google (organic)";
+        else if (hostname.includes("facebook")) source = "Facebook";
+        else if (hostname.includes("linkedin")) source = "LinkedIn";
+        else source = hostname;
+      } catch { source = "Referral"; }
+    }
+    const existing = acc.find(s => s.source === source);
+    if (existing) existing.count++;
+    else acc.push({ source, count: 1 });
+    return acc;
+  }, []).sort((a, b) => b.count - a.count);
+
   // Calculate trend data based on granularity
   const trendData = (() => {
     if (submissions.length === 0) return [];
