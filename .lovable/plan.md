@@ -1,35 +1,44 @@
 
 
-## Add Transcripts to Call Recordings
+## Persist & Display Lead Source Attribution in Admin
 
-Use Lovable AI (which is already available via `LOVABLE_API_KEY`) to transcribe call recordings on demand. When an admin clicks a "Transcript" button on a call with a recording, the system fetches the audio, sends it to the AI gateway for transcription, and displays the result.
+### Problem
+Lead source data (UTM params, referrer, landing page) is captured in sessionStorage and sent with contact form emails, but it is **never saved to the database** during signup/registration on `/get-started`. The admin area has no way to see where a customer originally came from.
 
-### Architecture
+### Solution
 
-1. **New edge function `transcribe-recording`** — fetches the recording audio from Twilio (reusing the same proxy pattern as `twilio-call-recording`), then sends it to Lovable AI (Gemini) for transcription via the audio/multimodal capability, returns the transcript text
-2. **Database table `call_transcripts`** — caches transcripts so we only transcribe once per recording: `id`, `recording_sid` (unique), `transcript_text`, `created_at`
-3. **UI changes in `CallLogs.tsx`** — add a transcript toggle/button per row with a recording. Clicking it loads (or generates) the transcript and shows it in an expandable row or dialog below the call
+**1. Database: Add lead source columns to `customer_applications`**
 
-### Database
-- **New table**: `call_transcripts` with columns: `id` (uuid PK), `recording_sid` (text, unique), `transcript_text` (text), `created_at` (timestamptz)
-- **RLS**: Admin-only access via `has_role(auth.uid(), 'admin')`
+Add these columns to the existing `customer_applications` table (no new table needed — this is where applications land):
+- `utm_source` (text, nullable)
+- `utm_medium` (text, nullable)  
+- `utm_campaign` (text, nullable)
+- `utm_term` (text, nullable)
+- `utm_content` (text, nullable)
+- `referrer` (text, nullable)
+- `landing_page` (text, nullable)
+- `lead_source_raw` (jsonb, nullable) — stores the full raw data for future use
 
-### Edge Function: `transcribe-recording`
-- Admin auth check (same pattern as other edge functions)
-- Accepts `recordingSid` query param
-- First checks `call_transcripts` table — if cached, return immediately
-- If not cached: fetch audio from Twilio API as mp3 (same as `twilio-call-recording`)
-- Convert audio to base64, send to Lovable AI gateway with Gemini model (which supports audio input) asking for a verbatim transcript
-- Save result to `call_transcripts` table, return transcript
+**2. GetStarted.tsx: Save lead source data on signup**
 
-### UI Changes: `CallLogs.tsx`
-- Add a "Transcript" button (FileText icon) next to recordings in the Recording column
-- On click, call the edge function; show loading spinner
-- Display transcript in a collapsible row below the call entry or in a Dialog
-- Cache the result client-side in state so repeated clicks don't re-fetch
+Import `getLeadSourceData` and `inferSourceType` from `leadSourceTracking.ts`. When upserting the `customer_applications` record (both in quick-start and completion flows), include the lead source fields from sessionStorage.
+
+**3. RentalRequest.tsx: Save lead source data on rental request**
+
+Same pattern — include lead source fields when upserting the application.
+
+**4. Admin Applications page: Show lead source badge**
+
+In `src/pages/admin/Applications.tsx`, display a colored badge next to each application showing the inferred source (e.g., "Google (paid)", "Google (organic)", "Facebook", "Direct"). Show UTM details in the application detail dialog.
+
+**5. Admin LeadSources page: Include registration attribution**
+
+Update `src/pages/admin/LeadSources.tsx` to query `customer_applications` lead source data alongside existing analytics, giving a unified view of where registrations come from.
 
 ### Files Changed
-- **Database migration** — create `call_transcripts` table + RLS
-- **`supabase/functions/transcribe-recording/index.ts`** — new edge function
-- **`src/pages/admin/CallLogs.tsx`** — add transcript button + display UI
+- **Database migration** — add lead source columns to `customer_applications`
+- **`src/pages/GetStarted.tsx`** — persist lead source data on signup
+- **`src/pages/customer/RentalRequest.tsx`** — persist lead source data on rental request
+- **`src/pages/admin/Applications.tsx`** — display lead source badge + details
+- **`src/pages/admin/LeadSources.tsx`** — incorporate registration attribution data
 
