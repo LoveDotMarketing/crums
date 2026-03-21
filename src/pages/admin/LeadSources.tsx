@@ -144,6 +144,22 @@ export default function LeadSources() {
     },
   });
 
+  // Fetch registration sources from customer_applications
+  const { data: registrations = [] } = useQuery({
+    queryKey: ["registration-sources", dateRangePreset, customStartDate?.toISOString(), customEndDate?.toISOString()],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("customer_applications")
+        .select("id, created_at, utm_source, utm_medium, utm_campaign, referrer, landing_page, profiles!customer_applications_user_id_fkey(email, first_name, last_name)")
+        .gte("created_at", startDate.toISOString())
+        .lte("created_at", endDate.toISOString())
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
   // Calculate source counts
   const sourceCounts: SourceCount[] = submissions.reduce((acc: SourceCount[], sub) => {
     const source = sub.utm_source || getSourceFromReferrer(sub.referrer) || "Direct";
