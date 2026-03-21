@@ -833,7 +833,7 @@ export default function LeadSources() {
                   <div className="flex justify-between py-2 border-b border-border">
                     <span className="text-muted-foreground">Medium</span>
                     <Badge variant="outline">
-                      {selectedSubmission.utm_medium || getMediumFromReferrer(selectedSubmission.referrer) || "direct"}
+                      {selectedSubmission.utm_medium || getMediumFromReferrer(selectedSubmission.referrer, selectedSubmission.landing_page) || "direct"}
                     </Badge>
                   </div>
                   <div className="flex justify-between py-2 border-b border-border">
