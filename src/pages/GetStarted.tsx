@@ -22,6 +22,7 @@ import { trackSignup, trackConversion, trackSignupStarted, trackSignupFailed, tr
 import { processReferralCode, validateReferralCode } from "@/lib/referral";
 import { trackLinkedInSignup, trackLinkedInApplicationSubmit } from "@/lib/linkedinAnalytics";
 import { logSignupStarted, logSignupCompleted, logSignupFailed, logSessionError, logDocumentUploadFailed, logCustomerEvent } from "@/lib/eventLogger";
+import { getLeadSourceData } from "@/lib/leadSourceTracking";
 import { RelatedLinksSection } from "@/components/RelatedLinksSection";
 
 type FormMode = "quick-start" | "prompt" | "full-form";
