@@ -708,6 +708,7 @@ export default function Applications() {
                     <TableRow>
                       <TableHead>Applicant</TableHead>
                       <TableHead>Contact</TableHead>
+                      <TableHead>Source</TableHead>
                       <TableHead>Trailer Type</TableHead>
                       <TableHead>Submitted</TableHead>
                       <TableHead>Status</TableHead>
