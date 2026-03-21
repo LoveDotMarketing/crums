@@ -174,7 +174,7 @@ export default function LeadSources() {
 
   // Calculate medium counts
   const mediumCounts: MediumCount[] = submissions.reduce((acc: MediumCount[], sub) => {
-    const medium = sub.utm_medium || getMediumFromReferrer(sub.referrer) || "direct";
+    const medium = sub.utm_medium || getMediumFromReferrer(sub.referrer, sub.landing_page) || "direct";
     const existing = acc.find(m => m.medium === medium);
     if (existing) {
       existing.count++;
