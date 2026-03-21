@@ -275,6 +275,8 @@ export type Database = {
           insurance_company: string | null
           insurance_company_phone: string | null
           insurance_docs_url: string | null
+          landing_page: string | null
+          lead_source_raw: Json | null
           message: string | null
           number_of_trailers: number | null
           payment_method_type: string | null
@@ -282,6 +284,7 @@ export type Database = {
           payment_setup_status: string | null
           phone_number: string
           preferred_billing_cycle: string | null
+          referrer: string | null
           reviewed_at: string | null
           reviewed_by: string | null
           secondary_contact_name: string | null
@@ -296,6 +299,11 @@ export type Database = {
           truck_vin: string | null
           updated_at: string
           user_id: string | null
+          utm_campaign: string | null
+          utm_content: string | null
+          utm_medium: string | null
+          utm_source: string | null
+          utm_term: string | null
         }
         Insert: {
           admin_notes?: string | null
@@ -312,6 +320,8 @@ export type Database = {
           insurance_company?: string | null
           insurance_company_phone?: string | null
           insurance_docs_url?: string | null
+          landing_page?: string | null
+          lead_source_raw?: Json | null
           message?: string | null
           number_of_trailers?: number | null
           payment_method_type?: string | null
@@ -319,6 +329,7 @@ export type Database = {
           payment_setup_status?: string | null
           phone_number: string
           preferred_billing_cycle?: string | null
+          referrer?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
           secondary_contact_name?: string | null
@@ -333,6 +344,11 @@ export type Database = {
           truck_vin?: string | null
           updated_at?: string
           user_id?: string | null
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          utm_term?: string | null
         }
         Update: {
           admin_notes?: string | null
@@ -349,6 +365,8 @@ export type Database = {
           insurance_company?: string | null
           insurance_company_phone?: string | null
           insurance_docs_url?: string | null
+          landing_page?: string | null
+          lead_source_raw?: Json | null
           message?: string | null
           number_of_trailers?: number | null
           payment_method_type?: string | null
@@ -356,6 +374,7 @@ export type Database = {
           payment_setup_status?: string | null
           phone_number?: string
           preferred_billing_cycle?: string | null
+          referrer?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
           secondary_contact_name?: string | null
@@ -370,6 +389,11 @@ export type Database = {
           truck_vin?: string | null
           updated_at?: string
           user_id?: string | null
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          utm_term?: string | null
         }
         Relationships: [
           {
