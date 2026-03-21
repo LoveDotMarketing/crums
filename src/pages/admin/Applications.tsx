@@ -747,6 +747,7 @@ export default function Applications() {
                               </div>
                             </div>
                           </TableCell>
+                          <TableCell>{getLeadSourceBadge(app)}</TableCell>
                           <TableCell>{app.trailer_type || "—"}</TableCell>
                           <TableCell>
                             {format(new Date(app.created_at), "MMM d, yyyy")}
