@@ -624,6 +624,73 @@ export default function LeadSources() {
               </Card>
             )}
 
+            {/* Registration Sources */}
+            <Card className="mb-8">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <UserPlus className="h-5 w-5" />
+                  Registration Sources
+                </CardTitle>
+                <CardDescription>
+                  Where signups on /get-started came from ({totalRegistrations} registrations)
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {totalRegistrations === 0 ? (
+                  <div className="text-center py-6 text-muted-foreground">
+                    <UserPlus className="h-10 w-10 mx-auto mb-2 opacity-50" />
+                    <p>No registrations with source data yet</p>
+                  </div>
+                ) : (
+                  <div className="grid gap-6 md:grid-cols-2">
+                    {/* Source breakdown */}
+                    <div>
+                      <h4 className="text-sm font-semibold mb-3">By Source</h4>
+                      <div className="space-y-2">
+                        {regSourceCounts.map((s) => (
+                          <div key={s.source} className="flex items-center justify-between">
+                            <Badge variant={s.source.includes("paid") ? "default" : s.source === "Direct" ? "outline" : "secondary"} className="text-xs capitalize">
+                              {s.source}
+                            </Badge>
+                            <span className="text-sm font-medium">{s.count} ({((s.count / totalRegistrations) * 100).toFixed(0)}%)</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Recent registrations */}
+                    <div>
+                      <h4 className="text-sm font-semibold mb-3">Recent Registrations</h4>
+                      <div className="space-y-2 max-h-[200px] overflow-y-auto">
+                        {registrations.slice(0, 10).map((reg: any) => {
+                          let source = "Direct";
+                          if (reg.utm_source) {
+                            const isPaid = reg.utm_medium === "cpc" || reg.utm_medium === "ppc" || reg.utm_medium === "paid";
+                            source = `${reg.utm_source}${isPaid ? " (paid)" : ""}`;
+                          } else if (reg.referrer) {
+                            try { source = new URL(reg.referrer).hostname.replace("www.", ""); } catch {}
+                          }
+                          return (
+                            <div key={reg.id} className="flex items-center justify-between text-sm border-b border-border pb-1">
+                              <div className="truncate max-w-[180px]">
+                                <span className="font-medium">{reg.profiles?.first_name || reg.profiles?.email || "—"}</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <Badge variant="outline" className="text-xs capitalize">{source}</Badge>
+                                <span className="text-xs text-muted-foreground">
+                                  {reg.created_at ? format(new Date(reg.created_at), "MMM d") : ""}
+                                </span>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
             {/* Leads List */}
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
