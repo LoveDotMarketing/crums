@@ -14,7 +14,8 @@ import {
   Mail,
   ExternalLink,
   CalendarIcon,
-  Eye
+  Eye,
+  UserPlus
 } from "lucide-react";
 import {
   Sheet,
@@ -143,6 +144,22 @@ export default function LeadSources() {
     },
   });
 
+  // Fetch registration sources from customer_applications
+  const { data: registrations = [] } = useQuery({
+    queryKey: ["registration-sources", dateRangePreset, customStartDate?.toISOString(), customEndDate?.toISOString()],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("customer_applications")
+        .select("id, created_at, utm_source, utm_medium, utm_campaign, referrer, landing_page, profiles!customer_applications_user_id_fkey(email, first_name, last_name)")
+        .gte("created_at", startDate.toISOString())
+        .lte("created_at", endDate.toISOString())
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
   // Calculate source counts
   const sourceCounts: SourceCount[] = submissions.reduce((acc: SourceCount[], sub) => {
     const source = sub.utm_source || getSourceFromReferrer(sub.referrer) || "Direct";
@@ -182,6 +199,28 @@ export default function LeadSources() {
   const totalLeads = submissions.length;
   const paidLeads = submissions.filter(s => s.utm_medium === "cpc" || s.utm_medium === "ppc" || s.utm_medium === "paid").length;
   const organicLeads = submissions.filter(s => s.utm_medium === "organic" || (!s.utm_medium && s.referrer?.includes("google"))).length;
+
+  // Registration source stats
+  const totalRegistrations = registrations.length;
+  const regSourceCounts = registrations.reduce((acc: { source: string; count: number }[], reg: any) => {
+    let source = "Direct";
+    if (reg.utm_source) {
+      const isPaid = reg.utm_medium === "cpc" || reg.utm_medium === "ppc" || reg.utm_medium === "paid";
+      source = `${reg.utm_source}${isPaid ? " (paid)" : reg.utm_medium === "organic" ? " (organic)" : ""}`;
+    } else if (reg.referrer) {
+      try {
+        const hostname = new URL(reg.referrer).hostname.replace("www.", "");
+        if (hostname.includes("google")) source = "Google (organic)";
+        else if (hostname.includes("facebook")) source = "Facebook";
+        else if (hostname.includes("linkedin")) source = "LinkedIn";
+        else source = hostname;
+      } catch { source = "Referral"; }
+    }
+    const existing = acc.find(s => s.source === source);
+    if (existing) existing.count++;
+    else acc.push({ source, count: 1 });
+    return acc;
+  }, []).sort((a, b) => b.count - a.count);
 
   // Calculate trend data based on granularity
   const trendData = (() => {
@@ -584,6 +623,73 @@ export default function LeadSources() {
                 </CardContent>
               </Card>
             )}
+
+            {/* Registration Sources */}
+            <Card className="mb-8">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <UserPlus className="h-5 w-5" />
+                  Registration Sources
+                </CardTitle>
+                <CardDescription>
+                  Where signups on /get-started came from ({totalRegistrations} registrations)
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {totalRegistrations === 0 ? (
+                  <div className="text-center py-6 text-muted-foreground">
+                    <UserPlus className="h-10 w-10 mx-auto mb-2 opacity-50" />
+                    <p>No registrations with source data yet</p>
+                  </div>
+                ) : (
+                  <div className="grid gap-6 md:grid-cols-2">
+                    {/* Source breakdown */}
+                    <div>
+                      <h4 className="text-sm font-semibold mb-3">By Source</h4>
+                      <div className="space-y-2">
+                        {regSourceCounts.map((s) => (
+                          <div key={s.source} className="flex items-center justify-between">
+                            <Badge variant={s.source.includes("paid") ? "default" : s.source === "Direct" ? "outline" : "secondary"} className="text-xs capitalize">
+                              {s.source}
+                            </Badge>
+                            <span className="text-sm font-medium">{s.count} ({((s.count / totalRegistrations) * 100).toFixed(0)}%)</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Recent registrations */}
+                    <div>
+                      <h4 className="text-sm font-semibold mb-3">Recent Registrations</h4>
+                      <div className="space-y-2 max-h-[200px] overflow-y-auto">
+                        {registrations.slice(0, 10).map((reg: any) => {
+                          let source = "Direct";
+                          if (reg.utm_source) {
+                            const isPaid = reg.utm_medium === "cpc" || reg.utm_medium === "ppc" || reg.utm_medium === "paid";
+                            source = `${reg.utm_source}${isPaid ? " (paid)" : ""}`;
+                          } else if (reg.referrer) {
+                            try { source = new URL(reg.referrer).hostname.replace("www.", ""); } catch {}
+                          }
+                          return (
+                            <div key={reg.id} className="flex items-center justify-between text-sm border-b border-border pb-1">
+                              <div className="truncate max-w-[180px]">
+                                <span className="font-medium">{reg.profiles?.first_name || reg.profiles?.email || "—"}</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <Badge variant="outline" className="text-xs capitalize">{source}</Badge>
+                                <span className="text-xs text-muted-foreground">
+                                  {reg.created_at ? format(new Date(reg.created_at), "MMM d") : ""}
+                                </span>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
 
             {/* Leads List */}
             <Card>

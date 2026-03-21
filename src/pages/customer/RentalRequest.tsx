@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { Loader2, FileText, AlertCircle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { trackFormSubmission, trackConversion, trackFormStart, fireMetaCapi } from "@/lib/analytics";
+import { getLeadSourceData } from "@/lib/leadSourceTracking";
 
 export default function RentalRequest() {
   const { user } = useAuth();
@@ -66,6 +67,7 @@ export default function RentalRequest() {
     setSubmitting(true);
 
     try {
+      const leadSource = getLeadSourceData();
       const { error } = await supabase
         .from("customer_applications")
         .upsert({
@@ -77,6 +79,14 @@ export default function RentalRequest() {
           secondary_contact_relationship: formData.secondary_contact_relationship || null,
           trailer_type: formData.trailer_type || null,
           status: "new",
+          utm_source: leadSource.utm_source || null,
+          utm_medium: leadSource.utm_medium || null,
+          utm_campaign: leadSource.utm_campaign || null,
+          utm_term: leadSource.utm_term || null,
+          utm_content: leadSource.utm_content || null,
+          referrer: leadSource.referrer || null,
+          landing_page: leadSource.landing_page || null,
+          lead_source_raw: leadSource as any,
         }, { onConflict: 'user_id' });
 
       if (error) throw error;

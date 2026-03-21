@@ -22,6 +22,7 @@ import { trackSignup, trackConversion, trackSignupStarted, trackSignupFailed, tr
 import { processReferralCode, validateReferralCode } from "@/lib/referral";
 import { trackLinkedInSignup, trackLinkedInApplicationSubmit } from "@/lib/linkedinAnalytics";
 import { logSignupStarted, logSignupCompleted, logSignupFailed, logSessionError, logDocumentUploadFailed, logCustomerEvent } from "@/lib/eventLogger";
+import { getLeadSourceData } from "@/lib/leadSourceTracking";
 import { RelatedLinksSection } from "@/components/RelatedLinksSection";
 
 type FormMode = "quick-start" | "prompt" | "full-form";
@@ -255,13 +256,22 @@ export default function GetStarted() {
 
         if (profileError) throw profileError;
 
-        // Upsert application
+        // Upsert application with lead source data
+        const leadSource = getLeadSourceData();
         await supabase
           .from('customer_applications')
           .upsert({
             user_id: session.user.id,
             phone_number: phoneNumber,
-            status: 'new'
+            status: 'new',
+            utm_source: leadSource.utm_source || null,
+            utm_medium: leadSource.utm_medium || null,
+            utm_campaign: leadSource.utm_campaign || null,
+            utm_term: leadSource.utm_term || null,
+            utm_content: leadSource.utm_content || null,
+            referrer: leadSource.referrer || null,
+            landing_page: leadSource.landing_page || null,
+            lead_source_raw: leadSource as any,
           }, { onConflict: 'user_id', ignoreDuplicates: false });
 
         clearSavedForm();
@@ -331,12 +341,21 @@ export default function GetStarted() {
       if (profileError) throw profileError;
 
       // Create or update customer application (upsert to prevent duplicates)
+      const leadSource = getLeadSourceData();
       const { error: applicationError } = await supabase
         .from('customer_applications')
         .upsert({
           user_id: session.user.id,
           phone_number: phoneNumber,
-          status: 'new'
+          status: 'new',
+          utm_source: leadSource.utm_source || null,
+          utm_medium: leadSource.utm_medium || null,
+          utm_campaign: leadSource.utm_campaign || null,
+          utm_term: leadSource.utm_term || null,
+          utm_content: leadSource.utm_content || null,
+          referrer: leadSource.referrer || null,
+          landing_page: leadSource.landing_page || null,
+          lead_source_raw: leadSource as any,
         }, { 
           onConflict: 'user_id',
           ignoreDuplicates: false 
