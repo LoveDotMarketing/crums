@@ -72,11 +72,20 @@ export function captureLeadSource(): void {
   const referrer = getExternalReferrer();
   const landingPage = window.location.pathname;
   
-  // Only store if we have meaningful data
+  // Auto-tag Google Ads traffic that arrives without UTM params
   const hasUtmData = Object.values(utmParams).some(v => v !== undefined);
-  const hasReferrer = referrer !== undefined;
+  const isSyndicatedSearch = referrer?.toLowerCase().includes('syndicatedsearch') ?? false;
+  const isLpPage = landingPage.startsWith('/lp/');
   
-  if (hasUtmData || hasReferrer) {
+  if (!hasUtmData && (isSyndicatedSearch || isLpPage)) {
+    utmParams.utm_source = 'google';
+    utmParams.utm_medium = 'cpc';
+  }
+  
+  const hasReferrer = referrer !== undefined;
+  const hasUpdatedUtm = Object.values(utmParams).some(v => v !== undefined);
+  
+  if (hasUpdatedUtm || hasReferrer) {
     const sourceData: LeadSourceData = {
       ...utmParams,
       referrer,
