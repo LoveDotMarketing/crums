@@ -72,11 +72,20 @@ export function captureLeadSource(): void {
   const referrer = getExternalReferrer();
   const landingPage = window.location.pathname;
   
-  // Only store if we have meaningful data
+  // Auto-tag Google Ads traffic that arrives without UTM params
   const hasUtmData = Object.values(utmParams).some(v => v !== undefined);
-  const hasReferrer = referrer !== undefined;
+  const isSyndicatedSearch = referrer?.toLowerCase().includes('syndicatedsearch') ?? false;
+  const isLpPage = landingPage.startsWith('/lp/');
   
-  if (hasUtmData || hasReferrer) {
+  if (!hasUtmData && (isSyndicatedSearch || isLpPage)) {
+    utmParams.utm_source = 'google';
+    utmParams.utm_medium = 'cpc';
+  }
+  
+  const hasReferrer = referrer !== undefined;
+  const hasUpdatedUtm = Object.values(utmParams).some(v => v !== undefined);
+  
+  if (hasUpdatedUtm || hasReferrer) {
     const sourceData: LeadSourceData = {
       ...utmParams,
       referrer,
@@ -119,6 +128,11 @@ export function getLeadSourceData(): LeadSourceData {
  * Infer the source type for display purposes
  */
 export function inferSourceType(data: LeadSourceData): string {
+  // Check for /lp/ landing pages — always Google PPC
+  if (data.landing_page?.startsWith('/lp/')) {
+    return 'Google (paid)';
+  }
+
   if (data.utm_source) {
     const source = data.utm_source.toLowerCase();
     const medium = data.utm_medium?.toLowerCase() || '';
@@ -135,6 +149,7 @@ export function inferSourceType(data: LeadSourceData): string {
       const url = new URL(data.referrer);
       const hostname = url.hostname.toLowerCase();
       
+      if (hostname.includes('syndicatedsearch')) return 'Google (paid)';
       if (hostname.includes('google')) return 'Google (organic)';
       if (hostname.includes('bing')) return 'Bing (organic)';
       if (hostname.includes('yahoo')) return 'Yahoo (organic)';

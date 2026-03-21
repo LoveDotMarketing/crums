@@ -108,6 +108,15 @@ function getLeadSourceBadge(app: Application) {
   const source = app.utm_source;
   const medium = app.utm_medium;
   const referrer = app.referrer;
+  const landingPage = app.landing_page;
+
+  // /lp/ pages or syndicatedsearch referrer = Google PPC
+  const isSyndicated = referrer?.toLowerCase().includes('syndicatedsearch') ?? false;
+  const isLpPage = landingPage?.startsWith('/lp/') ?? false;
+
+  if (isSyndicated || isLpPage) {
+    return <Badge variant="default" className="text-xs">Google (paid)</Badge>;
+  }
 
   if (source) {
     const isPaid = medium === 'cpc' || medium === 'ppc' || medium === 'paid';

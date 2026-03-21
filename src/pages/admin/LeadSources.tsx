@@ -162,7 +162,7 @@ export default function LeadSources() {
 
   // Calculate source counts
   const sourceCounts: SourceCount[] = submissions.reduce((acc: SourceCount[], sub) => {
-    const source = sub.utm_source || getSourceFromReferrer(sub.referrer) || "Direct";
+    const source = sub.utm_source || getSourceFromReferrer(sub.referrer, sub.landing_page) || "Direct";
     const existing = acc.find(s => s.source === source);
     if (existing) {
       existing.count++;
@@ -174,7 +174,7 @@ export default function LeadSources() {
 
   // Calculate medium counts
   const mediumCounts: MediumCount[] = submissions.reduce((acc: MediumCount[], sub) => {
-    const medium = sub.utm_medium || getMediumFromReferrer(sub.referrer) || "direct";
+    const medium = sub.utm_medium || getMediumFromReferrer(sub.referrer, sub.landing_page) || "direct";
     const existing = acc.find(m => m.medium === medium);
     if (existing) {
       existing.count++;
@@ -730,8 +730,8 @@ export default function LeadSources() {
                     </TableHeader>
                     <TableBody>
                       {submissions.map((submission) => {
-                        const source = submission.utm_source || getSourceFromReferrer(submission.referrer) || "Direct";
-                        const medium = submission.utm_medium || getMediumFromReferrer(submission.referrer) || "direct";
+                        const source = submission.utm_source || getSourceFromReferrer(submission.referrer, submission.landing_page) || "Direct";
+                        const medium = submission.utm_medium || getMediumFromReferrer(submission.referrer, submission.landing_page) || "direct";
                         
                         return (
                           <TableRow key={submission.id}>
@@ -827,13 +827,13 @@ export default function LeadSources() {
                   <div className="flex justify-between py-2 border-b border-border">
                     <span className="text-muted-foreground">Source</span>
                     <Badge variant={selectedSubmission.utm_source ? "default" : "secondary"}>
-                      {selectedSubmission.utm_source || getSourceFromReferrer(selectedSubmission.referrer) || "Direct"}
+                      {selectedSubmission.utm_source || getSourceFromReferrer(selectedSubmission.referrer, selectedSubmission.landing_page) || "Direct"}
                     </Badge>
                   </div>
                   <div className="flex justify-between py-2 border-b border-border">
                     <span className="text-muted-foreground">Medium</span>
                     <Badge variant="outline">
-                      {selectedSubmission.utm_medium || getMediumFromReferrer(selectedSubmission.referrer) || "direct"}
+                      {selectedSubmission.utm_medium || getMediumFromReferrer(selectedSubmission.referrer, selectedSubmission.landing_page) || "direct"}
                     </Badge>
                   </div>
                   <div className="flex justify-between py-2 border-b border-border">
@@ -904,7 +904,11 @@ export default function LeadSources() {
 }
 
 // Helper function to extract source from referrer URL
-function getSourceFromReferrer(referrer: string | null): string | null {
+function getSourceFromReferrer(referrer: string | null, landingPage?: string | null): string | null {
+  // /lp/ pages or syndicatedsearch = google
+  if (landingPage?.startsWith('/lp/')) return "google";
+  if (referrer?.toLowerCase().includes('syndicatedsearch')) return "google";
+
   if (!referrer) return null;
   try {
     const url = new URL(referrer);
@@ -927,7 +931,11 @@ function getSourceFromReferrer(referrer: string | null): string | null {
 }
 
 // Helper function to infer medium from referrer URL
-function getMediumFromReferrer(referrer: string | null): string | null {
+function getMediumFromReferrer(referrer: string | null, landingPage?: string | null): string | null {
+  // /lp/ pages or syndicatedsearch = cpc (paid)
+  if (landingPage?.startsWith('/lp/')) return "cpc";
+  if (referrer?.toLowerCase().includes('syndicatedsearch')) return "cpc";
+
   if (!referrer) return null;
   try {
     const url = new URL(referrer);
