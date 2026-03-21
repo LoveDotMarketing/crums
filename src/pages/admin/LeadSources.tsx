@@ -14,7 +14,8 @@ import {
   Mail,
   ExternalLink,
   CalendarIcon,
-  Eye
+  Eye,
+  UserPlus
 } from "lucide-react";
 import {
   Sheet,
