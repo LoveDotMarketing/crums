@@ -827,7 +827,7 @@ export default function LeadSources() {
                   <div className="flex justify-between py-2 border-b border-border">
                     <span className="text-muted-foreground">Source</span>
                     <Badge variant={selectedSubmission.utm_source ? "default" : "secondary"}>
-                      {selectedSubmission.utm_source || getSourceFromReferrer(selectedSubmission.referrer) || "Direct"}
+                      {selectedSubmission.utm_source || getSourceFromReferrer(selectedSubmission.referrer, selectedSubmission.landing_page) || "Direct"}
                     </Badge>
                   </div>
                   <div className="flex justify-between py-2 border-b border-border">
