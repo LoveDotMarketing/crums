@@ -216,6 +216,7 @@ const App = () => (
             {/* Redirect old refrigerated trailers page */}
             <Route path="/refrigerated-trailers" element={<Navigate to="/dry-van-trailer-leasing" replace />} />
             <Route path="/commercial-dry-van-trailer-for-lease-56171" element={<TrailerProfile56171 />} />
+            <Route path="/2027-great-dane-dry-van-trailer-for-lease" element={<TrailerProfile2027GreatDane />} />
             <Route path="/why-choose-crums" element={<WhyChooseCrums />} />
             <Route path="/emergency-trailer-rental" element={<EmergencyTrailerRental />} />
             <Route path="/veterans-military-discount" element={<VeteransMilitaryDiscount />} />
