@@ -311,7 +311,7 @@ const Index = () => {
             </Link>
 
             {/* New 2027 Great Dane Fleet */}
-            <Link to="/get-started" className="block group">
+            <Link to="/2027-great-dane-dry-van-trailer-for-lease" className="block group">
               <Card className="border-2 hover:border-secondary hover:shadow-xl transition-all duration-300 overflow-hidden h-full">
                 <div className="relative aspect-video">
                   <img
