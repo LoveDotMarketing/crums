@@ -1,38 +1,47 @@
 
 
-## Feature 2027 Great Dane Trailers on Homepage and Dry Van Leasing Page
+## Add 2027 Great Dane Flatbed Trailer to Fleet, Homepage, and Flatbed Pages
 
-### What changes
+### What will happen
 
-**1. Homepage — "Ready to Roll" section (`src/pages/Index.tsx`)**
-- Change the current single-trailer layout (`max-w-4xl` with one card) to a 2-column grid
-- Keep the existing 2020 Great Dane trailer 56171 card on the left
-- Add a new 2027 Great Dane Champion Composite Plate card on the right with key specs from the PDF:
-  - Year: 2027
-  - Make: Great Dane
-  - Model: Champion Composite Plate
-  - Length: 53'
-  - Height: 13'6"
-  - Suspension: Hendrickson ULTRAAK Air-Ride
-  - Doors: Composite Swing Doors
-  - Floor: 1.38" Hardwood Laminated
-  - Side Skirts: Energy Guard
-  - Telematics: FleetPulseGo Track
-- The new card links to `/get-started` (or `/contact`) since it's a fleet of 19 units, not a single profile page
-- Badge: "New 2027 Fleet" or "New Arrival"
+**1. Add trailer to fleet inventory (database insert)**
+- VIN: 1GR4M0626VH901015
+- Trailer number: 901015 (last 6 digits of VIN, matching existing pattern)
+- Make: Great Dane, Year: 2027, Type: Flatbed
+- Status: available, rental_rate: $750
+- License plate: 560-5676
 
-**2. Dry Van Leasing page — New "Available Now" section (`src/pages/DryVanTrailerLeasing.tsx`)**
-- Add a new section after the hero (before "Why Lease a Dry Van") titled "Available Dry Van Trailers" or "Our Fleet"
-- Show two cards side by side:
-  - The 2020 Great Dane 56171 (linking to its profile page)
-  - The 2027 Great Dane Champion Composite Plate fleet (with specs, linking to `/contact` or `/get-started`)
-- Each card shows key specs and an "Available Now" badge
+**2. Copy uploaded photos to project**
+- Copy the 3 flatbed photos to `public/images/trailers/` for use on the profile page and homepage
 
-### Technical details
+**3. Create trailer profile landing page**
+- New file: `src/pages/TrailerProfile2027GreatDaneFlatbed.tsx`
+- Uses `TrailerProfileTemplate` (same pattern as 2027 dry van and 56171)
+- URL: `/2027-great-dane-flatbed-trailer-for-lease`
+- Specs: 2027 Great Dane Flatbed, aluminum deck, air-ride suspension
+- Gallery: the 3 uploaded photos
+- SEO-optimized title/description
 
-**Files changed:**
-- `src/pages/Index.tsx` — Restructure "Ready to Roll" section from single card to 2-column grid, add 2027 Dane card with specs
-- `src/pages/DryVanTrailerLeasing.tsx` — Add new "Available Dry Van Trailers" section between hero/breadcrumbs and "Why Lease" section, featuring both trailers
+**4. Add route in `src/App.tsx`**
+- Lazy-load the new flatbed profile page
 
-The 2027 Dane card will use a generic dry van image (`/images/dry-van-trailer.webp`) since no specific photo was provided. Specs are pulled directly from the Great Dane spec sheet (Order #176075).
+**5. Update Homepage "Ready to Roll" section (`src/pages/Index.tsx`)**
+- Change from 2-column to 3-column grid (lg:grid-cols-3)
+- Add a third card for the 2027 Great Dane Flatbed with photo, specs, and link to its profile page
+
+**6. Update Flatbed Trailer Leasing page (`src/pages/FlatbedTrailerLeasing.tsx`)**
+- Add an "Available Flatbed Trailers" section (similar to the dry van leasing page's "Available Now" section)
+- Feature the 2027 flatbed with specs and link to profile page
+
+**7. Update Flatbed Trailers page (`src/pages/FlatbedTrailers.tsx`)**
+- Add a featured/available trailer section showcasing the 2027 flatbed
+
+### Files changed
+- **Database** — insert 1 trailer record
+- `public/images/trailers/` — 3 new flatbed photos
+- `src/pages/TrailerProfile2027GreatDaneFlatbed.tsx` — new profile page
+- `src/App.tsx` — add route
+- `src/pages/Index.tsx` — add flatbed card to "Ready to Roll" grid
+- `src/pages/FlatbedTrailerLeasing.tsx` — add available trailer section
+- `src/pages/FlatbedTrailers.tsx` — add available trailer section
 
