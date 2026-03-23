@@ -392,8 +392,10 @@ export default function Fleet() {
         (statusFilter === "maintenance" && trailer.status === "maintenance") ||
         (statusFilter === "checked_out" && trailer.status === "checked_out") ||
         (statusFilter === "under_review" && trailer.status === "under_review");
+
+      const matchesType = typeFilter === "all" || trailer.type.toLowerCase() === typeFilter.toLowerCase();
       
-      return matchesSearch && matchesStatus;
+      return matchesSearch && matchesStatus && matchesType;
     })
     .sort((a, b) => {
       if (!sortColumn) return 0;
