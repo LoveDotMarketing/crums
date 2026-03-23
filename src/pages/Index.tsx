@@ -255,7 +255,7 @@ const Index = () => {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-6xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
             {/* Existing 2020 Great Dane 56171 */}
             <Link to="/commercial-dry-van-trailer-for-lease-56171" className="block group">
               <Card className="border-2 hover:border-primary hover:shadow-xl transition-all duration-300 overflow-hidden h-full">
