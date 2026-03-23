@@ -117,6 +117,57 @@ const FlatbedTrailers = () => {
 
       <Breadcrumbs />
 
+      {/* Available Now */}
+      <section className="py-16 bg-background">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-10">
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Available Flatbed Trailer</h2>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">Brand-new equipment ready for lease today</p>
+          </div>
+          <div className="max-w-lg mx-auto">
+            <Link to="/2027-great-dane-flatbed-trailer-for-lease" className="block group">
+              <Card className="border-2 hover:border-primary hover:shadow-xl transition-all duration-300 overflow-hidden">
+                <div className="relative aspect-video">
+                  <img
+                    src="/images/trailers/2027-great-dane-flatbed-01.jpg"
+                    alt="2027 Great Dane Flatbed trailer available for lease"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    loading="lazy"
+                    width={600}
+                    height={400}
+                  />
+                  <Badge className="absolute top-4 left-4 bg-green-600 text-white">Available Now</Badge>
+                </div>
+                <CardContent className="p-6">
+                  <h3 className="text-xl font-bold text-foreground mb-4 group-hover:text-primary transition-colors">2027 Great Dane Flatbed</h3>
+                  <div className="space-y-2 mb-6 text-sm">
+                    <div className="flex items-center gap-3">
+                      <span className="text-muted-foreground font-medium w-28">Unit</span>
+                      <span className="text-foreground font-semibold">901015</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="text-muted-foreground font-medium w-28">Year</span>
+                      <span className="text-foreground font-semibold">2027</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="text-muted-foreground font-medium w-28">Suspension</span>
+                      <span className="text-foreground font-semibold">Air Ride</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="text-muted-foreground font-medium w-28">Capacity</span>
+                      <span className="text-foreground font-semibold">~48,000 lbs</span>
+                    </div>
+                  </div>
+                  <Button className="w-full bg-primary hover:bg-primary/90">
+                    View Trailer Details <ArrowRight className="ml-2 h-5 w-5" />
+                  </Button>
+                </CardContent>
+              </Card>
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* Overview */}
       <section className="py-20 bg-background">
         <div className="container mx-auto px-4">
