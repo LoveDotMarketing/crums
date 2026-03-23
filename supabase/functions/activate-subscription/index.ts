@@ -350,7 +350,123 @@ serve(async (req) => {
         );
       }
 
-      logStep("Subscription already active and deposit already paid, skipping");
+      // SAFETY NET: Check if subscription is "active" but no real payment was ever collected.
+      // This happens when a billing_cycle_anchor + proration_behavior: "none" caused a $0 invoice
+      // to auto-activate the subscription without collecting any money.
+      const invoices = await stripe.invoices.list({
+        subscription: subscription.stripe_subscription_id,
+        limit: 10,
+      });
+      const hasRealPayment = invoices.data.some(inv => inv.amount_paid > 0);
+
+      if (!hasRealPayment) {
+        logStep("Subscription active but NO real payment found — charging first period now");
+
+        const paymentMethodId = await resolveAchPaymentMethodId({
+          stripe,
+          supabaseClient,
+          stripeCustomerId: subscription.stripe_customer_id,
+          localCustomerId: subscription.customer_id,
+          customerEmail: subscription.customers?.email,
+        });
+
+        // Ensure PM is attached to this Stripe customer
+        const resolvedPm = await stripe.paymentMethods.retrieve(paymentMethodId);
+        let pmCustomerId = typeof resolvedPm.customer === "string"
+          ? resolvedPm.customer
+          : resolvedPm.customer?.id ?? null;
+
+        if (!pmCustomerId) {
+          await stripe.paymentMethods.attach(paymentMethodId, { customer: subscription.stripe_customer_id });
+        } else if (pmCustomerId !== subscription.stripe_customer_id) {
+          await stripe.paymentMethods.detach(paymentMethodId);
+          await stripe.paymentMethods.attach(paymentMethodId, { customer: subscription.stripe_customer_id });
+        }
+
+        await stripe.customers.update(subscription.stripe_customer_id, {
+          invoice_settings: { default_payment_method: paymentMethodId },
+        });
+
+        // Get the subscription items to calculate the first period charge
+        const stripeSubExpanded = await stripe.subscriptions.retrieve(subscription.stripe_subscription_id, {
+          expand: ["items.data.price"],
+        });
+
+        // Create a standalone invoice with all recurring line items as one-time charges
+        const firstPeriodInvoice = await stripe.invoices.create({
+          customer: subscription.stripe_customer_id,
+          auto_advance: false,
+          pending_invoice_items_behavior: "exclude",
+          metadata: { type: "first_period_charge", subscription_id: subscription.stripe_subscription_id },
+        });
+
+        let totalAmount = 0;
+        for (const item of stripeSubExpanded.items.data) {
+          const unitAmount = item.price?.unit_amount || 0;
+          if (unitAmount > 0) {
+            await stripe.invoiceItems.create({
+              customer: subscription.stripe_customer_id,
+              invoice: firstPeriodInvoice.id,
+              amount: unitAmount,
+              currency: "usd",
+              description: item.price?.product 
+                ? `First period - ${typeof item.price.product === "string" ? item.price.product : (item.price.product as any).name || "Lease"}`
+                : "First period charge",
+            });
+            totalAmount += unitAmount;
+          }
+        }
+
+        // Detect card and apply surcharge
+        const pmInfo = await stripe.paymentMethods.retrieve(paymentMethodId);
+        const isCard = pmInfo.type === "card";
+        if (isCard && totalAmount > 0) {
+          const baseAmount = totalAmount / 100;
+          const adjustedAmount = Math.round(((baseAmount + 0.30) / (1 - 0.029)) * 100);
+          const surcharge = adjustedAmount - totalAmount;
+          if (surcharge > 0) {
+            await stripe.invoiceItems.create({
+              customer: subscription.stripe_customer_id,
+              invoice: firstPeriodInvoice.id,
+              amount: surcharge,
+              currency: "usd",
+              description: "Card processing fee",
+            });
+            totalAmount += surcharge;
+            logStep("Card surcharge applied to first period", { surcharge: surcharge / 100 });
+          }
+        }
+
+        logStep("Created first period invoice items", { totalAmount: totalAmount / 100 });
+
+        const finalized = await stripe.invoices.finalizeInvoice(firstPeriodInvoice.id);
+        const paid = await stripe.invoices.pay(finalized.id, { payment_method: paymentMethodId });
+        logStep("First period invoice charged", { invoiceId: paid.id, status: paid.status, amountPaid: paid.amount_paid / 100 });
+
+        // Record in billing_history
+        await supabaseClient.from("billing_history").insert({
+          subscription_id: subscriptionId,
+          amount: paid.amount_due / 100,
+          net_amount: paid.amount_due / 100,
+          status: "processing",
+          stripe_payment_intent_id: typeof paid.payment_intent === "string"
+            ? paid.payment_intent
+            : paid.payment_intent?.id ?? null,
+          stripe_invoice_id: paid.id,
+          payment_method: isCard ? "card" : "ach",
+        });
+
+        return new Response(
+          JSON.stringify({
+            success: true,
+            message: `First period payment of $${(paid.amount_due / 100).toFixed(2)} charged for ${subscription.customers?.full_name || "customer"}`,
+            amountCharged: paid.amount_due / 100,
+          }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
+        );
+      }
+
+      logStep("Subscription already active with real payments, skipping");
       return new Response(
         JSON.stringify({
           success: true,
