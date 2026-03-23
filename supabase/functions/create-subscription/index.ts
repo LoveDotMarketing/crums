@@ -426,8 +426,38 @@ serve(async (req) => {
         logStep("Setting billing cycle anchor", { anchorDay, anchorTimestamp, group: groupKey });
       }
 
+      // Collect all one-time invoice items for the initial invoice
+      const addInvoiceItems: Stripe.SubscriptionCreateParams.AddInvoiceItem[] = [];
+
       if (depositInvoiceItem) {
-        subscriptionParams.add_invoice_items = [depositInvoiceItem];
+        addInvoiceItems.push(depositInvoiceItem);
+      }
+
+      // FIX: When using billing_cycle_anchor with proration_behavior: "none",
+      // Stripe generates a $0 first invoice (no prorated charge). This causes
+      // the subscription to auto-activate without collecting any payment.
+      // Solution: Add the first period's recurring charges as one-time invoice items
+      // so the initial invoice has a real dollar amount and stays "incomplete".
+      if (anchorTimestamp) {
+        for (const trailer of groupTrailers) {
+          const rate = customRates?.[trailer.id] ?? trailer.rental_rate ?? getDefaultRate(trailer.type);
+          const firstPeriodPrice = await stripe.prices.create({
+            unit_amount: Math.round(rate * 100),
+            currency: "usd",
+            product_data: {
+              name: `Trailer ${trailer.trailer_number} - First Period Charge`,
+              metadata: { trailer_id: trailer.id, type: "first_period_charge" },
+            },
+          });
+          addInvoiceItems.push({ price: firstPeriodPrice.id });
+          logStep("Added first-period charge for anchored subscription", { 
+            trailerId: trailer.id, rate, priceId: firstPeriodPrice.id, group: groupKey 
+          });
+        }
+      }
+
+      if (addInvoiceItems.length > 0) {
+        subscriptionParams.add_invoice_items = addInvoiceItems;
       }
 
       if (coupon) {
