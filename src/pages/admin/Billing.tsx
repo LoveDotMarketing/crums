@@ -104,7 +104,7 @@ import { ChargeCustomerDialog } from "@/components/admin/ChargeCustomerDialog";
 import { EditSubscriptionPanel } from "@/components/admin/EditSubscriptionPanel";
 
 type BillingCycle = "weekly" | "biweekly" | "semimonthly" | "monthly";
-type SubscriptionType = "standard_lease" | "6_month_lease" | "24_month_lease" | "rent_for_storage" | "lease_to_own" | "repayment_plan";
+type SubscriptionType = "standard_lease" | "6_month_lease" | "24_month_lease" | "rent_for_storage" | "lease_to_own" | "repayment_plan" | "month_to_month";
 type DiscountType = "percentage" | "fixed" | "multi_trailer" | "promo_code";
 type PaymentStatus = "pending" | "processing" | "succeeded" | "failed" | "refunded";
 
