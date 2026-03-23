@@ -76,6 +76,7 @@ export default function Fleet() {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [typeFilter, setTypeFilter] = useState<string>("all");
   const [trailers, setTrailers] = useState<Trailer[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
@@ -391,8 +392,10 @@ export default function Fleet() {
         (statusFilter === "maintenance" && trailer.status === "maintenance") ||
         (statusFilter === "checked_out" && trailer.status === "checked_out") ||
         (statusFilter === "under_review" && trailer.status === "under_review");
+
+      const matchesType = typeFilter === "all" || trailer.type.toLowerCase() === typeFilter.toLowerCase();
       
-      return matchesSearch && matchesStatus;
+      return matchesSearch && matchesStatus && matchesType;
     })
     .sort((a, b) => {
       if (!sortColumn) return 0;
@@ -844,14 +847,19 @@ export default function Fleet() {
               <CardContent>
                 <div className="flex flex-wrap gap-3">
                   {Object.entries(trailersByType).sort((a, b) => b[1] - a[1]).map(([type, count]) => (
-                    <div 
+                    <button 
                       key={type} 
-                      className="flex items-center gap-2 px-3 py-2 bg-muted rounded-lg"
+                      onClick={() => setTypeFilter(typeFilter === type ? "all" : type)}
+                      className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors ${
+                        typeFilter === type 
+                          ? "bg-primary text-primary-foreground ring-2 ring-primary ring-offset-2" 
+                          : "bg-muted hover:bg-muted/80"
+                      }`}
                     >
-                      <Truck className="h-4 w-4 text-muted-foreground" />
+                      <Truck className="h-4 w-4" />
                       <span className="font-medium">{type}</span>
-                      <Badge variant="secondary">{count}</Badge>
-                    </div>
+                      <Badge variant={typeFilter === type ? "outline" : "secondary"} className={typeFilter === type ? "border-primary-foreground text-primary-foreground" : ""}>{count}</Badge>
+                    </button>
                   ))}
                   {Object.keys(trailersByType).length === 0 && (
                     <p className="text-sm text-muted-foreground">No trailers in fleet</p>
