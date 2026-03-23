@@ -311,7 +311,7 @@ const Index = () => {
             </Link>
 
             {/* New 2027 Great Dane Fleet */}
-            <Link to="/get-started" className="block group">
+            <Link to="/2027-great-dane-dry-van-trailer-for-lease" className="block group">
               <Card className="border-2 hover:border-secondary hover:shadow-xl transition-all duration-300 overflow-hidden h-full">
                 <div className="relative aspect-video">
                   <img
@@ -357,15 +357,15 @@ const Index = () => {
                     className="w-full bg-secondary hover:bg-secondary/90 text-secondary-foreground group-hover:bg-primary group-hover:text-primary-foreground transition-colors"
                     onClick={(e) => {
                       e.preventDefault();
-                      trackCtaClick('Get Started', 'fleet-2027', '/get-started');
+                      trackCtaClick('View 2027 Fleet', 'fleet-2027', '/2027-great-dane-dry-van-trailer-for-lease');
                       trackEvent('trailer_detail_view', {
                         trailer_number: '2027-fleet',
                         trailer_type: 'Dry Van',
                       });
-                      window.location.href = '/get-started';
+                      window.location.href = '/2027-great-dane-dry-van-trailer-for-lease';
                     }}
                   >
-                    Get Started
+                    View Fleet Details
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </Button>
                 </CardContent>

@@ -30,6 +30,7 @@ const DryVanTrailerLeasing = lazy(() => import("./pages/DryVanTrailerLeasing"));
 const FlatbedTrailerLeasing = lazy(() => import("./pages/FlatbedTrailerLeasing"));
 const SemiTrailerLeasing = lazy(() => import("./pages/SemiTrailerLeasing"));
 const TrailerProfile56171 = lazy(() => import("./pages/TrailerProfile56171"));
+const TrailerProfile2027GreatDane = lazy(() => import("./pages/TrailerProfile2027GreatDane"));
 const Locations = lazy(() => import("./pages/Locations"));
 const CityLocationPage = lazy(() => import("./pages/locations/CityLocationPage"));
 const Contact = lazy(() => import("./pages/Contact"));
@@ -215,6 +216,7 @@ const App = () => (
             {/* Redirect old refrigerated trailers page */}
             <Route path="/refrigerated-trailers" element={<Navigate to="/dry-van-trailer-leasing" replace />} />
             <Route path="/commercial-dry-van-trailer-for-lease-56171" element={<TrailerProfile56171 />} />
+            <Route path="/2027-great-dane-dry-van-trailer-for-lease" element={<TrailerProfile2027GreatDane />} />
             <Route path="/why-choose-crums" element={<WhyChooseCrums />} />
             <Route path="/emergency-trailer-rental" element={<EmergencyTrailerRental />} />
             <Route path="/veterans-military-discount" element={<VeteransMilitaryDiscount />} />
