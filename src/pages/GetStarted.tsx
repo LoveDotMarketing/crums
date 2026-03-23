@@ -736,17 +736,18 @@ export default function GetStarted() {
                   {/* Referral Code */}
                   {!isCompletionMode && (
                     <div>
-                      <Label htmlFor="referralCode">Referral Code (Optional)</Label>
+                      <Label htmlFor="referralCode">Referral or Partner Code (Optional)</Label>
                       <div className="relative">
                         <Gift className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                         <Input 
                           id="referralCode" 
                           value={referralCode} 
                           onChange={(e) => setReferralCode(e.target.value.toUpperCase())}
-                          placeholder="CRUMS-XXXXXX"
+                          placeholder="Enter code"
                           className="pl-10"
                         />
                       </div>
+                      <p className="text-xs text-muted-foreground mt-1">Partner, sales rep, or customer referral code</p>
                     </div>
                   )}
 
