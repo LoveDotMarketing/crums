@@ -31,6 +31,7 @@ const FlatbedTrailerLeasing = lazy(() => import("./pages/FlatbedTrailerLeasing")
 const SemiTrailerLeasing = lazy(() => import("./pages/SemiTrailerLeasing"));
 const TrailerProfile56171 = lazy(() => import("./pages/TrailerProfile56171"));
 const TrailerProfile2027GreatDane = lazy(() => import("./pages/TrailerProfile2027GreatDane"));
+const TrailerProfile2027GreatDaneFlatbed = lazy(() => import("./pages/TrailerProfile2027GreatDaneFlatbed"));
 const Locations = lazy(() => import("./pages/Locations"));
 const CityLocationPage = lazy(() => import("./pages/locations/CityLocationPage"));
 const Contact = lazy(() => import("./pages/Contact"));
