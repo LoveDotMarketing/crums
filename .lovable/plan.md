@@ -1,28 +1,22 @@
 
 
-## Fix Google Ads Lead Attribution
+## Fix Referral Code Field to Accept All Code Types
 
 ### Problem
-Leads arriving via Google Ads through syndicated search (referrer containing "syndicatedsearch.goog") or landing on `/lp/` pages are being classified as "referral" or "organic" instead of "Google PPC". The source/medium inference logic doesn't recognize these paid traffic patterns.
+The referral code field on the signup page shows placeholder "CRUMS-XXXXXX" and hints that codes must start with "CRUMS-", which confuses partners like Big Bird who use codes like "BIGBIRD". The field should accept partner codes, staff codes, and customer referral codes without showing format-specific hints.
 
-### Solution
+### Changes
 
-Update the source/medium inference logic in three places:
+**1. `src/pages/GetStarted.tsx` — Update referral code field UX**
+- Change placeholder from "CRUMS-XXXXXX" to "Enter code" (or "e.g., BIGBIRD or CRUMS-ABC123")
+- Add a subtle helper text like "Partner, staff, or referral code" instead of format-specific guidance
+- Remove the `Gift` icon label if it's confusing, or keep it — minor detail
 
-**1. `src/lib/leadSourceTracking.ts` — `captureLeadSource()` and `inferSourceType()`**
-- In `captureLeadSource()`: Before storing, check if the referrer contains "syndicatedsearch" or the landing page starts with `/lp/google` — if so, auto-set `utm_source: "google"` and `utm_medium: "cpc"` when no UTM params are present (Google Ads clicks via syndicated search don't always carry UTMs).
-- In `inferSourceType()`: Add detection for "syndicatedsearch" referrers → return "Google (paid)".
-
-**2. `src/pages/admin/LeadSources.tsx` — `getSourceFromReferrer()` and `getMediumFromReferrer()`**
-- `getSourceFromReferrer()`: Add check for "syndicatedsearch" hostname → return "google".
-- `getMediumFromReferrer()`: Add check for "syndicatedsearch" hostname → return "cpc". Also add logic: if the lead's `landing_page` starts with `/lp/`, return "cpc" instead of inferring from referrer alone.
-- Update paid lead counting to also include `medium === "cpc"` checks for syndicated leads.
-
-**3. `src/pages/admin/Applications.tsx` — `getLeadSourceBadge()`**
-- Add same syndicated search / `/lp/` detection so badges correctly show "Google (paid)" for these leads.
+**2. `src/lib/referral.ts` — `processReferralCode` already handles this correctly**
+- Partner codes are checked first, then staff codes, then customer CRUMS-format codes
+- No logic changes needed here — the flow is correct
+- The `validateReferralCode` function is only called for customer codes (after partner/staff checks fail), so it won't block "BIGBIRD"
 
 ### Files Changed
-- `src/lib/leadSourceTracking.ts` — auto-tag syndicated/lp leads as google cpc at capture time
-- `src/pages/admin/LeadSources.tsx` — fix source/medium inference helpers
-- `src/pages/admin/Applications.tsx` — fix badge display for syndicated/lp leads
+- `src/pages/GetStarted.tsx` — update placeholder text and remove CRUMS-specific hint
 
