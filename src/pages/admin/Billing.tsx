@@ -1180,8 +1180,9 @@ export default function Billing() {
       rent_for_storage: { label: "Storage", icon: <Warehouse className="h-3 w-3 mr-1" />, variant: "secondary" },
       lease_to_own: { label: "Lease to Own", icon: <KeyRound className="h-3 w-3 mr-1" />, variant: "default" },
       repayment_plan: { label: "Repayment", icon: <CreditCard className="h-3 w-3 mr-1" />, variant: "destructive" },
+      month_to_month: { label: "Month to Month", icon: <Calendar className="h-3 w-3 mr-1" />, variant: "outline" },
     };
-    return config[type];
+    return config[type] || { label: type, icon: null, variant: "outline" as const };
   };
 
   const getDiscountTypeIcon = (type: DiscountType) => {
