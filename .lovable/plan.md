@@ -1,41 +1,38 @@
 
 
-## Add 20 New Trailers to Fleet Inventory
+## Feature 2027 Great Dane Trailers on Homepage and Dry Van Leasing Page
 
-### What will happen
-A script will decode each VIN using the NHTSA API to get Make, Model, Year, Type, Axle Count, Body Material, and Suspension Type, then insert all 20 trailers into the fleet database with status "available".
+### What changes
 
-### Trailer numbers
-Your existing inventory uses 6-digit numbers (903637, 900887, etc.). The last 6 digits of these VINs (907007–907030) match that pattern, so those will be used as trailer numbers.
+**1. Homepage — "Ready to Roll" section (`src/pages/Index.tsx`)**
+- Change the current single-trailer layout (`max-w-4xl` with one card) to a 2-column grid
+- Keep the existing 2020 Great Dane trailer 56171 card on the left
+- Add a new 2027 Great Dane Champion Composite Plate card on the right with key specs from the PDF:
+  - Year: 2027
+  - Make: Great Dane
+  - Model: Champion Composite Plate
+  - Length: 53'
+  - Height: 13'6"
+  - Suspension: Hendrickson ULTRAAK Air-Ride
+  - Doors: Composite Swing Doors
+  - Floor: 1.38" Hardwood Laminated
+  - Side Skirts: Energy Guard
+  - Telematics: FleetPulseGo Track
+- The new card links to `/get-started` (or `/contact`) since it's a fleet of 19 units, not a single profile page
+- Badge: "New 2027 Fleet" or "New Arrival"
 
-### VINs to process (20 trailers)
-| VIN | Trailer # |
-|-----|-----------|
-| 1GR1P0620VJ907007 | 907007 |
-| 1GR1P0622VJ907008 | 907008 |
-| 1GR1P0624VJ907009 | 907009 |
-| 1GR1P0628VJ907014 | 907014 |
-| 1GR1P062XVJ907015 | 907015 |
-| 1GR1P0621VJ907016 | 907016 |
-| 1GR1P0623VJ907017 | 907017 |
-| 1GR1P0625VJ907018 | 907018 |
-| 1GR1P0627VJ907019 | 907019 |
-| 1GR1P0623VJ907020 | 907020 |
-| 1GR1P0625VJ907021 | 907021 |
-| 1GR1P0627VJ907022 | 907022 |
-| 1GR1P0629VJ907023 | 907023 |
-| 1GR1P0620VJ907024 | 907024 |
-| 1GR1P0622VJ907025 | 907025 |
-| 1GR1P0624VJ907026 | 907026 |
-| 1GR1P0628VJ907027 | 907027 |
-| 1GR1P062XVJ907029 | 907029 |
-| 1GR1P0626VJ907030 | 907030 |
+**2. Dry Van Leasing page — New "Available Now" section (`src/pages/DryVanTrailerLeasing.tsx`)**
+- Add a new section after the hero (before "Why Lease a Dry Van") titled "Available Dry Van Trailers" or "Our Fleet"
+- Show two cards side by side:
+  - The 2020 Great Dane 56171 (linking to its profile page)
+  - The 2027 Great Dane Champion Composite Plate fleet (with specs, linking to `/contact` or `/get-started`)
+- Each card shows key specs and an "Available Now" badge
 
-### Technical approach
-1. Run a script that calls the NHTSA vPIC API for each VIN to decode specifications
-2. Insert all 20 trailers into the `trailers` table using the existing `company_id` (`fac613bd-c65f-42a5-b241-75afe75d53c5`)
-3. Each trailer gets: status = "available", is_rented = false, rental_rate based on type (700 for Dry Van, 750 for Flatbed, 850 for Refrigerated), year_purchased = 2025
+### Technical details
 
-### Files changed
-- No code file changes — this is a direct data operation using database insert
+**Files changed:**
+- `src/pages/Index.tsx` — Restructure "Ready to Roll" section from single card to 2-column grid, add 2027 Dane card with specs
+- `src/pages/DryVanTrailerLeasing.tsx` — Add new "Available Dry Van Trailers" section between hero/breadcrumbs and "Why Lease" section, featuring both trailers
+
+The 2027 Dane card will use a generic dry van image (`/images/dry-van-trailer.webp`) since no specific photo was provided. Specs are pulled directly from the Great Dane spec sheet (Order #176075).
 
