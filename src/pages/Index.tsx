@@ -371,6 +371,63 @@ const Index = () => {
                 </CardContent>
               </Card>
             </Link>
+
+            {/* New 2027 Great Dane Flatbed */}
+            <Link to="/2027-great-dane-flatbed-trailer-for-lease" className="block group">
+              <Card className="border-2 hover:border-primary hover:shadow-xl transition-all duration-300 overflow-hidden h-full">
+                <div className="relative aspect-video">
+                  <img
+                    src="/images/trailers/2027-great-dane-flatbed-01.jpg"
+                    alt="2027 Great Dane Flatbed trailer available for lease"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    loading="lazy"
+                    decoding="async"
+                    width={600}
+                    height={400}
+                  />
+                  <Badge className="absolute top-4 left-4 bg-green-600 text-white">
+                    Available Now
+                  </Badge>
+                  <Badge className="absolute top-4 right-4 bg-primary text-primary-foreground">
+                    Flatbed
+                  </Badge>
+                </div>
+                <CardContent className="p-6">
+                  <h3 className="text-xl font-bold text-foreground mb-4 group-hover:text-primary transition-colors">
+                    2027 Great Dane Flatbed
+                  </h3>
+                  <div className="space-y-2 mb-6 text-sm">
+                    <div className="flex items-center gap-3">
+                      <span className="text-muted-foreground font-medium w-28">Unit</span>
+                      <span className="text-foreground font-semibold">901015</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="text-muted-foreground font-medium w-28">Suspension</span>
+                      <span className="text-foreground font-semibold">Air Ride</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="text-muted-foreground font-medium w-28">Capacity</span>
+                      <span className="text-foreground font-semibold">~48,000 lbs</span>
+                    </div>
+                  </div>
+                  <Button 
+                    className="w-full bg-primary hover:bg-primary/90 group-hover:bg-secondary group-hover:text-secondary-foreground transition-colors"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      trackCtaClick('View Flatbed Details', 'fleet-flatbed', '/2027-great-dane-flatbed-trailer-for-lease');
+                      trackEvent('trailer_detail_view', {
+                        trailer_number: '901015',
+                        trailer_type: 'Flatbed',
+                      });
+                      window.location.href = '/2027-great-dane-flatbed-trailer-for-lease';
+                    }}
+                  >
+                    View Trailer Details
+                    <ArrowRight className="ml-2 h-5 w-5" />
+                  </Button>
+                </CardContent>
+              </Card>
+            </Link>
           </div>
         </div>
       </section>
