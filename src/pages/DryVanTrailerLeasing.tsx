@@ -211,8 +211,8 @@ const DryVanTrailerLeasing = () => {
                     <div className="flex justify-between"><span className="text-muted-foreground">Doors</span><span className="font-semibold text-foreground">Composite Swing</span></div>
                     <div className="flex justify-between"><span className="text-muted-foreground">Available Units</span><span className="font-semibold text-foreground">19</span></div>
                   </div>
-                  <Button className="w-full bg-secondary hover:bg-secondary/90 text-secondary-foreground" onClick={(e) => { e.preventDefault(); trackCtaClick('Get Started', 'dry-van-leasing-2027', '/get-started'); window.location.href = '/get-started'; }}>
-                    Get Started <ArrowRight className="ml-2 h-4 w-4" />
+                  <Button className="w-full bg-secondary hover:bg-secondary/90 text-secondary-foreground" onClick={(e) => { e.preventDefault(); trackCtaClick('View 2027 Fleet', 'dry-van-leasing-2027', '/2027-great-dane-dry-van-trailer-for-lease'); window.location.href = '/2027-great-dane-dry-van-trailer-for-lease'; }}>
+                    View Fleet Details <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
                 </CardContent>
               </Card>
