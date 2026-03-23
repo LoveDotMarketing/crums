@@ -134,6 +134,93 @@ const DryVanTrailerLeasing = () => {
 
       <Breadcrumbs />
 
+      {/* Available Dry Van Trailers */}
+      <section className="py-16 bg-muted">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-10">
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+              Available Dry Van Trailers
+            </h2>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              Inspected, DOT-ready, and available for immediate lease
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-5xl mx-auto">
+            {/* 2020 Great Dane 56171 */}
+            <Link to="/commercial-dry-van-trailer-for-lease-56171" className="block group">
+              <Card className="border-2 hover:border-primary hover:shadow-xl transition-all duration-300 overflow-hidden h-full">
+                <div className="relative aspect-video">
+                  <img
+                    src="/images/trailers/trailer-56171.webp"
+                    alt="2020 Great Dane Dry Van Trailer 56171 available for lease"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    loading="lazy"
+                    decoding="async"
+                    width={600}
+                    height={400}
+                  />
+                  <div className="absolute top-4 left-4 bg-green-600 text-white text-xs font-semibold px-2.5 py-0.5 rounded-full">
+                    Available Now
+                  </div>
+                </div>
+                <CardContent className="p-6">
+                  <h3 className="text-xl font-bold text-foreground mb-3 group-hover:text-primary transition-colors">
+                    2020 Great Dane Dry Van
+                  </h3>
+                  <div className="space-y-2 text-sm mb-5">
+                    <div className="flex justify-between"><span className="text-muted-foreground">Unit</span><span className="font-semibold text-foreground">56171</span></div>
+                    <div className="flex justify-between"><span className="text-muted-foreground">Length</span><span className="font-semibold text-foreground">53'</span></div>
+                    <div className="flex justify-between"><span className="text-muted-foreground">Doors</span><span className="font-semibold text-foreground">Swing Doors</span></div>
+                    <div className="flex justify-between"><span className="text-muted-foreground">Suspension</span><span className="font-semibold text-foreground">Air Ride</span></div>
+                    <div className="flex justify-between"><span className="text-muted-foreground">Condition</span><span className="font-semibold text-foreground">Excellent</span></div>
+                  </div>
+                  <Button className="w-full" onClick={(e) => { e.preventDefault(); trackCtaClick('View Trailer', 'dry-van-leasing-available', '/commercial-dry-van-trailer-for-lease-56171'); window.location.href = '/commercial-dry-van-trailer-for-lease-56171'; }}>
+                    View Trailer Details <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </CardContent>
+              </Card>
+            </Link>
+
+            {/* 2027 Great Dane Champion Fleet */}
+            <Link to="/get-started" className="block group">
+              <Card className="border-2 hover:border-secondary hover:shadow-xl transition-all duration-300 overflow-hidden h-full">
+                <div className="relative aspect-video">
+                  <img
+                    src="/images/dry-van-trailer.webp"
+                    alt="2027 Great Dane Champion Composite Plate dry van trailers for lease"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    loading="lazy"
+                    decoding="async"
+                    width={600}
+                    height={400}
+                  />
+                  <div className="absolute top-4 left-4 bg-secondary text-secondary-foreground text-xs font-semibold px-2.5 py-0.5 rounded-full">
+                    New 2027 Fleet
+                  </div>
+                </div>
+                <CardContent className="p-6">
+                  <h3 className="text-xl font-bold text-foreground mb-3 group-hover:text-secondary transition-colors">
+                    2027 Great Dane Champion
+                  </h3>
+                  <div className="space-y-2 text-sm mb-5">
+                    <div className="flex justify-between"><span className="text-muted-foreground">Model</span><span className="font-semibold text-foreground">Composite Plate Van</span></div>
+                    <div className="flex justify-between"><span className="text-muted-foreground">Length / Height</span><span className="font-semibold text-foreground">53' × 13'6"</span></div>
+                    <div className="flex justify-between"><span className="text-muted-foreground">Suspension</span><span className="font-semibold text-foreground">Hendrickson ULTRAAK</span></div>
+                    <div className="flex justify-between"><span className="text-muted-foreground">Floor</span><span className="font-semibold text-foreground">1.38" Hardwood</span></div>
+                    <div className="flex justify-between"><span className="text-muted-foreground">Doors</span><span className="font-semibold text-foreground">Composite Swing</span></div>
+                    <div className="flex justify-between"><span className="text-muted-foreground">Available Units</span><span className="font-semibold text-foreground">19</span></div>
+                  </div>
+                  <Button className="w-full bg-secondary hover:bg-secondary/90 text-secondary-foreground" onClick={(e) => { e.preventDefault(); trackCtaClick('Get Started', 'dry-van-leasing-2027', '/get-started'); window.location.href = '/get-started'; }}>
+                    Get Started <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </CardContent>
+              </Card>
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* Why Lease a Dry Van */}
       <section className="py-20 bg-background">
         <div className="container mx-auto px-4">

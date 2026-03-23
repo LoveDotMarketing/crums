@@ -255,59 +255,120 @@ const Index = () => {
             </p>
           </div>
 
-          <div className="max-w-4xl mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-6xl mx-auto">
+            {/* Existing 2020 Great Dane 56171 */}
             <Link to="/commercial-dry-van-trailer-for-lease-56171" className="block group">
-              <Card className="border-2 hover:border-primary hover:shadow-xl transition-all duration-300 overflow-hidden">
-                <div className="grid grid-cols-1 md:grid-cols-2">
-                  <div className="relative aspect-video md:aspect-auto">
-                    <img
-                      src={trailer56171Img}
-                      alt="2020 Dry Van Trailer 56171 available for lease"
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      loading="lazy"
-                      decoding="async"
-                      width={600}
-                      height={400}
-                    />
-                    <Badge className="absolute top-4 left-4 bg-green-600 text-white">
-                      Available Now
-                    </Badge>
-                  </div>
-                  <CardContent className="p-6 flex flex-col justify-center">
-                    <h3 className="text-2xl font-bold text-foreground mb-4 group-hover:text-primary transition-colors">
-                      Dry Van Trailer For Lease
-                    </h3>
-                    <div className="space-y-3 mb-6">
-                      <div className="flex items-center gap-3">
-                        <span className="text-muted-foreground font-medium w-32">Year</span>
-                        <span className="text-foreground font-semibold">2020</span>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <span className="text-muted-foreground font-medium w-32">Type</span>
-                        <span className="text-foreground font-semibold">Dry Van</span>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <span className="text-muted-foreground font-medium w-32">Trailer Number</span>
-                        <span className="text-foreground font-semibold">56171</span>
-                      </div>
-                    </div>
-                    <Button 
-                      className="w-full bg-primary hover:bg-primary/90 group-hover:bg-secondary group-hover:text-secondary-foreground transition-colors"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        trackCtaClick('View Trailer Details', 'fleet', '/commercial-dry-van-trailer-for-lease-56171');
-                        trackEvent('trailer_detail_view', {
-                          trailer_number: '56171',
-                          trailer_type: 'Dry Van',
-                        });
-                        window.location.href = '/commercial-dry-van-trailer-for-lease-56171';
-                      }}
-                    >
-                      View Trailer Details
-                      <ArrowRight className="ml-2 h-5 w-5" />
-                    </Button>
-                  </CardContent>
+              <Card className="border-2 hover:border-primary hover:shadow-xl transition-all duration-300 overflow-hidden h-full">
+                <div className="relative aspect-video">
+                  <img
+                    src={trailer56171Img}
+                    alt="2020 Dry Van Trailer 56171 available for lease"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    loading="lazy"
+                    decoding="async"
+                    width={600}
+                    height={400}
+                  />
+                  <Badge className="absolute top-4 left-4 bg-green-600 text-white">
+                    Available Now
+                  </Badge>
                 </div>
+                <CardContent className="p-6">
+                  <h3 className="text-xl font-bold text-foreground mb-4 group-hover:text-primary transition-colors">
+                    2020 Great Dane Dry Van
+                  </h3>
+                  <div className="space-y-2 mb-6 text-sm">
+                    <div className="flex items-center gap-3">
+                      <span className="text-muted-foreground font-medium w-28">Unit</span>
+                      <span className="text-foreground font-semibold">56171</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="text-muted-foreground font-medium w-28">Length</span>
+                      <span className="text-foreground font-semibold">53'</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="text-muted-foreground font-medium w-28">Condition</span>
+                      <span className="text-foreground font-semibold">Excellent</span>
+                    </div>
+                  </div>
+                  <Button 
+                    className="w-full bg-primary hover:bg-primary/90 group-hover:bg-secondary group-hover:text-secondary-foreground transition-colors"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      trackCtaClick('View Trailer Details', 'fleet', '/commercial-dry-van-trailer-for-lease-56171');
+                      trackEvent('trailer_detail_view', {
+                        trailer_number: '56171',
+                        trailer_type: 'Dry Van',
+                      });
+                      window.location.href = '/commercial-dry-van-trailer-for-lease-56171';
+                    }}
+                  >
+                    View Trailer Details
+                    <ArrowRight className="ml-2 h-5 w-5" />
+                  </Button>
+                </CardContent>
+              </Card>
+            </Link>
+
+            {/* New 2027 Great Dane Fleet */}
+            <Link to="/get-started" className="block group">
+              <Card className="border-2 hover:border-secondary hover:shadow-xl transition-all duration-300 overflow-hidden h-full">
+                <div className="relative aspect-video">
+                  <img
+                    src={dryVanTrailerImg}
+                    alt="2027 Great Dane Champion Composite Plate dry van trailers available for lease"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    loading="lazy"
+                    decoding="async"
+                    width={600}
+                    height={400}
+                  />
+                  <Badge className="absolute top-4 left-4 bg-secondary text-secondary-foreground">
+                    New 2027 Fleet
+                  </Badge>
+                </div>
+                <CardContent className="p-6">
+                  <h3 className="text-xl font-bold text-foreground mb-4 group-hover:text-secondary transition-colors">
+                    2027 Great Dane Champion
+                  </h3>
+                  <div className="space-y-2 mb-6 text-sm">
+                    <div className="flex items-center gap-3">
+                      <span className="text-muted-foreground font-medium w-28">Model</span>
+                      <span className="text-foreground font-semibold">Composite Plate Van</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="text-muted-foreground font-medium w-28">Length</span>
+                      <span className="text-foreground font-semibold">53' × 13'6"</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="text-muted-foreground font-medium w-28">Suspension</span>
+                      <span className="text-foreground font-semibold">Hendrickson ULTRAAK</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="text-muted-foreground font-medium w-28">Floor</span>
+                      <span className="text-foreground font-semibold">1.38" Hardwood</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="text-muted-foreground font-medium w-28">Units</span>
+                      <span className="text-foreground font-semibold">19 Available</span>
+                    </div>
+                  </div>
+                  <Button 
+                    className="w-full bg-secondary hover:bg-secondary/90 text-secondary-foreground group-hover:bg-primary group-hover:text-primary-foreground transition-colors"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      trackCtaClick('Get Started', 'fleet-2027', '/get-started');
+                      trackEvent('trailer_detail_view', {
+                        trailer_number: '2027-fleet',
+                        trailer_type: 'Dry Van',
+                      });
+                      window.location.href = '/get-started';
+                    }}
+                  >
+                    Get Started
+                    <ArrowRight className="ml-2 h-5 w-5" />
+                  </Button>
+                </CardContent>
               </Card>
             </Link>
           </div>
