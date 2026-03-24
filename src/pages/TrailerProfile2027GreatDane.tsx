@@ -23,13 +23,13 @@ const trailerData: TrailerProfileData = {
 
   // SEO
   seoTitle: "2027 Great Dane Dry Van Trailers for Lease",
-  seoDescription: "Lease a brand-new 2027 Great Dane Champion 53' composite plate dry van trailer. Hendrickson ULTRAAK air-ride, composite swing doors, FleetPulseGo telematics. 19 units available.",
+  seoDescription: "Lease a brand-new 2027 Great Dane Champion 53' composite plate dry van trailer. Hendrickson ULTRAAK air-ride, composite swing doors, FleetPulseGo telematics. 20 units available.",
   canonicalUrl: "https://crumsleasing.com/2027-great-dane-dry-van-trailer-for-lease",
   ogImage: "/images/dry-van-trailer.webp",
 
   // Display
   heroTitle: "2027 Great Dane Champion Dry Van",
-  heroSubtitle: "Brand-new composite plate vans — 19 units available and ready for lease",
+  heroSubtitle: "Brand-new composite plate vans — 20 units available and ready for lease",
   availabilityBadge: "New 2027 Fleet",
 
   // Images
@@ -43,7 +43,7 @@ const trailerData: TrailerProfileData = {
   // Badges
   badges: [
     { text: "2027 Model Year", variant: "outline", className: "border-secondary text-secondary" },
-    { text: "19 Units Available", variant: "outline", className: "border-primary text-primary" },
+    { text: "20 Units Available", variant: "outline", className: "border-primary text-primary" },
     { text: "Brand New", variant: "default", className: "bg-green-600 text-white" },
   ],
 
@@ -58,7 +58,7 @@ const trailerData: TrailerProfileData = {
     { label: "Floor", value: "1.38\" Hardwood Laminated", icon: CheckCircle },
     { label: "Doors", value: "Composite Swing Doors", icon: CheckCircle },
     { label: "Side Skirts", value: "Energy Guard", icon: CheckCircle },
-    { label: "Units Available", value: "19", icon: Hash },
+    { label: "Units Available", value: "20", icon: Hash },
   ],
   features: [
     "Brand-new 2027 model year",
