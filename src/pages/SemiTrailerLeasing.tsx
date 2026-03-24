@@ -85,11 +85,18 @@ const SemiTrailerLeasing = () => {
           <p className="text-xl md:text-2xl max-w-4xl mx-auto text-primary-foreground/90 mb-8">
             Commercial dry van and flatbed trailer leasing for owner operators, carriers, and growing fleets. Flexible terms. Affordable rates. Family-owned service.
           </p>
-          <Link to="/contact" onClick={() => trackCtaClick('Get A Lease Quote', 'semi-trailer-leasing-hero', '/contact')}>
-            <Button size="lg" className="bg-secondary hover:bg-secondary/90">
-              Get A Lease Quote <ArrowRight className="ml-2 h-5 w-5" />
-            </Button>
-          </Link>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link to="/contact" onClick={() => trackCtaClick('Get A Lease Quote', 'semi-trailer-leasing-hero', '/contact')}>
+              <Button size="lg" className="bg-secondary hover:bg-secondary/90">
+                Get A Lease Quote <ArrowRight className="ml-2 h-5 w-5" />
+              </Button>
+            </Link>
+            <Link to="/dry-van-trailers">
+              <Button size="lg" className="bg-white text-primary hover:bg-white/90 border-white">
+                View Specs & Dimensions
+              </Button>
+            </Link>
+          </div>
         </div>
       </section>
 
