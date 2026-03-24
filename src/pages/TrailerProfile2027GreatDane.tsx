@@ -23,7 +23,7 @@ const trailerData: TrailerProfileData = {
 
   // SEO
   seoTitle: "2027 Great Dane Dry Van Trailers for Lease",
-  seoDescription: "Lease a brand-new 2027 Great Dane Champion 53' composite plate dry van trailer. Hendrickson ULTRAAK air-ride, composite swing doors, FleetPulseGo telematics. 19 units available.",
+  seoDescription: "Lease a brand-new 2027 Great Dane Champion 53' composite plate dry van trailer. Hendrickson ULTRAAK air-ride, composite swing doors, FleetPulseGo telematics. 20 units available.",
   canonicalUrl: "https://crumsleasing.com/2027-great-dane-dry-van-trailer-for-lease",
   ogImage: "/images/dry-van-trailer.webp",
 
