@@ -21,8 +21,8 @@ const trailerData: TrailerProfileData = {
   type: "Flatbed",
   slug: "2027-great-dane-flatbed-trailer-for-lease",
 
-  seoTitle: "2027 Great Dane Flatbed Trailer for Lease",
-  seoDescription: "Lease a brand-new 2027 Great Dane flatbed trailer. Steel construction, air-ride suspension, multiple tie-down points. Available now from CRUMS Leasing.",
+  seoTitle: "2027 Great Dane 53' Flatbed Trailer for Lease",
+  seoDescription: "Lease a brand-new 2027 Great Dane 53-foot flatbed trailer. Steel construction, air-ride suspension, 12 winches & tie straps. Available now from CRUMS Leasing.",
   canonicalUrl: "https://crumsleasing.com/2027-great-dane-flatbed-trailer-for-lease",
   ogImage: flatbedImage1,
 
