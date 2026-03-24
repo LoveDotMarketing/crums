@@ -66,9 +66,10 @@ const trailerData: TrailerProfileData = {
   ],
   features: [
     "Brand-new 2027 model year",
-    "Great Dane heavy-duty flatbed construction",
+    "53-foot Great Dane heavy-duty flatbed (FLP-0024-00053)",
+    "Kingpin trailer type with 2 axles",
     "Air-ride suspension for smooth hauling",
-    "Multiple D-ring and rub rail tie-downs",
+    "12 winches and tie straps for secure load securement",
     "Stake pockets throughout for versatile securement",
     "Headache rack / bulkhead included",
     "DOT compliant and road-ready",
