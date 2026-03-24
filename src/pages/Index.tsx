@@ -350,7 +350,7 @@ const Index = () => {
                     </div>
                     <div className="flex items-center gap-3">
                       <span className="text-muted-foreground font-medium w-28">Units</span>
-                      <span className="text-foreground font-semibold">19 Available</span>
+                      <span className="text-foreground font-semibold">20 Available</span>
                     </div>
                   </div>
                   <Button 
