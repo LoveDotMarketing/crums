@@ -43,7 +43,7 @@ const trailerData: TrailerProfileData = {
   // Badges
   badges: [
     { text: "2027 Model Year", variant: "outline", className: "border-secondary text-secondary" },
-    { text: "19 Units Available", variant: "outline", className: "border-primary text-primary" },
+    { text: "20 Units Available", variant: "outline", className: "border-primary text-primary" },
     { text: "Brand New", variant: "default", className: "bg-green-600 text-white" },
   ],
 
