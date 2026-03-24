@@ -26,8 +26,8 @@ const trailerData: TrailerProfileData = {
   canonicalUrl: "https://crumsleasing.com/2027-great-dane-flatbed-trailer-for-lease",
   ogImage: flatbedImage1,
 
-  heroTitle: "2027 Great Dane Flatbed Trailer",
-  heroSubtitle: "Brand-new heavy-duty flatbed — available now for lease",
+  heroTitle: "2027 Great Dane 53' Flatbed Trailer",
+  heroSubtitle: "Brand-new 53-foot heavy-duty flatbed — available now for lease",
   availabilityBadge: "Available Now",
 
   mainImage: flatbedImage1,
