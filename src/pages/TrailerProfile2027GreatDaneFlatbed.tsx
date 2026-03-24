@@ -51,14 +51,17 @@ const trailerData: TrailerProfileData = {
 
   specs: [
     { label: "Year", value: "2027", icon: Calendar },
-    { label: "Make / Model", value: "Great Dane Flatbed", icon: Truck },
-    { label: "Type", value: "Flatbed", icon: Layers },
+    { label: "Make / Model", value: "Great Dane FLP-0024-00053", icon: Truck },
+    { label: "Type", value: "Flatbed (Kingpin)", icon: Layers },
+    { label: "Length", value: "53'", icon: Ruler },
     { label: "Unit Number", value: "901015", icon: Hash },
+    { label: "Axles", value: "2", icon: Hash },
+    { label: "Color", value: "Black", icon: CheckCircle },
     { label: "Construction", value: "Steel Main Beams", icon: CheckCircle },
     { label: "Suspension", value: "Air Ride", icon: Gauge },
     { label: "Capacity", value: "~48,000 lbs", icon: Weight },
     { label: "Deck", value: "Aluminum / Steel Platform", icon: Ruler },
-    { label: "Tie-Downs", value: "Multiple D-Rings & Stake Pockets", icon: CheckCircle },
+    { label: "Tie-Downs", value: "12 Winches & Tie Straps", icon: CheckCircle },
     { label: "License Plate", value: "560-5676", icon: Hash },
   ],
   features: [
