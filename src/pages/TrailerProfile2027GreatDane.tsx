@@ -58,7 +58,7 @@ const trailerData: TrailerProfileData = {
     { label: "Floor", value: "1.38\" Hardwood Laminated", icon: CheckCircle },
     { label: "Doors", value: "Composite Swing Doors", icon: CheckCircle },
     { label: "Side Skirts", value: "Energy Guard", icon: CheckCircle },
-    { label: "Units Available", value: "19", icon: Hash },
+    { label: "Units Available", value: "20", icon: Hash },
   ],
   features: [
     "Brand-new 2027 model year",
