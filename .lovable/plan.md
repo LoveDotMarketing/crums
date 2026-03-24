@@ -1,21 +1,29 @@
 
 
-## Add Missing Trailer 907028 and Update Counts to 20
+## Update 2027 Great Dane Flatbed Profile with Verified Specs
 
-### What happened
-Trailer **907028** (VIN: `1GR1P0628VJ907028`) was deleted during the Guangyu cleanup and never re-added. This is the only missing unit from the 20-trailer fleet.
+### What needs to change
+
+The current profile page is missing the 53' length and has inaccurate tie-down info. Updating based on VIN decode + bill of lading data.
 
 ### Changes
 
-**1. Insert trailer 907028 into the database**
-- Same specs as the other 2027 Great Dane dry vans (company_id, make, model, type, rental_rate $700, status "available")
-- VIN: `1GR1P0628VJ907028`
-- Plate: `2450509` (from the image)
+**File: `src/pages/TrailerProfile2027GreatDaneFlatbed.tsx`**
 
-**2. Update "19" references to "20" in code**
-- `src/pages/TrailerProfile2027GreatDane.tsx` — Update SEO description, hero subtitle, and badges from "19 units" to "20 units"
+1. Add **Length: 53'** spec row
+2. Update **Model** from "Great Dane Flatbed" → "Great Dane FLP-0024-00053"
+3. Update **Tie-Downs** from "Multiple D-Rings & Stake Pockets" → "12 Winches & Tie Straps"
+4. Add **Axles: 2** spec row
+5. Add **Color: Black** spec row
+6. Add **Trailer Type: Kingpin** spec row
+7. Update features list to reflect 53' length and 12 winches/straps
+8. Update SEO description to include "53-foot"
+
+**Database: Update trailer record for 901015**
+- Set `model` to `FLP-0024-00053` if not already set
+- Set `length` or notes with 53' if applicable
 
 ### Files changed
-- **Database** — 1 trailer insert
-- `src/pages/TrailerProfile2027GreatDane.tsx` — change "19" → "20" in 3 places
+- `src/pages/TrailerProfile2027GreatDaneFlatbed.tsx` — update specs, features, SEO
+- Database — update trailer 901015 model info
 
