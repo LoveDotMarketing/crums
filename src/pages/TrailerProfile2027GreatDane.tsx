@@ -29,7 +29,7 @@ const trailerData: TrailerProfileData = {
 
   // Display
   heroTitle: "2027 Great Dane Champion Dry Van",
-  heroSubtitle: "Brand-new composite plate vans — 19 units available and ready for lease",
+  heroSubtitle: "Brand-new composite plate vans — 20 units available and ready for lease",
   availabilityBadge: "New 2027 Fleet",
 
   // Images
