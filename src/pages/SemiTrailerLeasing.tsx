@@ -90,6 +90,11 @@ const SemiTrailerLeasing = () => {
               Get A Lease Quote <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
           </Link>
+          <Link to="/dry-van-trailers">
+            <Button size="lg" className="bg-white text-primary hover:bg-white/90 border-white">
+              View Specs & Dimensions
+            </Button>
+          </Link>
         </div>
       </section>
 

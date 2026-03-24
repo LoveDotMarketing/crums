@@ -124,7 +124,7 @@ const DryVanTrailerLeasing = () => {
               </Button>
             </Link>
             <Link to="/dry-van-trailers">
-              <Button size="lg" variant="outline" className="border-primary-foreground text-primary-foreground hover:bg-primary-foreground/10">
+              <Button size="lg" className="bg-white text-primary hover:bg-white/90 border-white">
                 View Specs & Dimensions
               </Button>
             </Link>
