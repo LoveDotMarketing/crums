@@ -55,9 +55,9 @@ Deno.serve(async (req) => {
       );
     }
 
-    const webhookUrl = Deno.env.get("N8N_CUSTOMER_AGENT_WEBHOOK");
+    const webhookUrl = Deno.env.get("VITE_N8N_CHAT_URL");
     if (!webhookUrl) {
-      console.error("[chat-proxy] N8N_CUSTOMER_AGENT_WEBHOOK not configured");
+      console.error("[chat-proxy] VITE_N8N_CHAT_URL not configured");
       return new Response(
         JSON.stringify({ error: "Chat service not configured" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
