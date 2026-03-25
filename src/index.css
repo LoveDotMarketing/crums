@@ -135,6 +135,10 @@ All colors MUST be HSL.
 
 #n8n-chat-container {
   height: 100%;
+  --chat--message--font-size: 0.8125rem;
+  --chat--message-line-height: 1.35;
+  --chat--message--padding: 0.5rem 0.625rem;
+  --chat--messages-list--padding: 0.625rem;
 }
 
 #n8n-chat-container .chat-window {
@@ -147,12 +151,14 @@ All colors MUST be HSL.
   box-shadow: none !important;
   display: flex !important;
   flex-direction: column !important;
+  overflow-x: hidden !important;
 }
 
 #n8n-chat-container .chat-messages-list {
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
+  padding: 0.625rem !important;
 }
 
 #n8n-chat-container .chat-input {
@@ -166,22 +172,31 @@ All colors MUST be HSL.
 }
 
 /* Constrain message sizing */
-#n8n-chat-container .chat-message-body {
-  font-size: 0.875rem;
-  line-height: 1.4;
-  max-width: 85%;
-  word-break: break-word;
-  overflow-wrap: break-word;
-}
-
 #n8n-chat-container .chat-message {
   max-width: 100%;
   overflow: hidden;
+  min-width: 0;
+}
+
+#n8n-chat-container .chat-message-body {
+  font-size: 0.8125rem !important;
+  line-height: 1.35 !important;
+  padding: 0.5rem 0.625rem !important;
+  max-width: 78%;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+/* Force markdown content to inherit small font */
+#n8n-chat-container .chat-message-markdown,
+#n8n-chat-container .chat-message-markdown * {
+  font-size: inherit !important;
+  line-height: inherit !important;
 }
 
 #n8n-chat-container .chat-input textarea,
 #n8n-chat-container .chat-input input {
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
 }
 
 #n8n-chat-container .chat-message-bot .chat-message-body {
