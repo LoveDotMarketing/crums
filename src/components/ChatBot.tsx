@@ -35,7 +35,11 @@ export const ChatBot = ({ userType }: ChatBotProps) => {
       const { createChat } = await import("@n8n/chat");
       const sessionId = getSessionId();
 
+      // Clear n8n's internal persisted session so old messages don't reload
+      localStorage.removeItem("n8n-chat");
+
       createChat({
+        loadPreviousSession: false,
         webhookUrl: proxyUrl,
         webhookConfig: {
           method: "POST",
