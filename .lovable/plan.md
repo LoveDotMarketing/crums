@@ -1,47 +1,49 @@
 
+Goal: fix the existing chat so users can send messages again, and remove the “Powered by n8n” line without changing your current bubble/panel UI.
 
-## Wire Existing ChatBot to n8n Embedded Chat
+What I found
+- The chat currently initializes, but the first request (`loadPreviousSession`) fails with `Failed to fetch`, then Vue reports an unhandled mounted-hook error from `@n8n/chat`.
+- That failure blocks normal chat behavior (“I can’t respond” symptom).
+- The n8n branding in the panel uses a dedicated class (`.chat-powered-by`) and is not currently hidden.
 
-### Approach
+Implementation plan
 
-Use the official `@n8n/chat` npm package with `createChat({ target: '#n8n-chat-container' })` to mount the n8n chat widget inside the existing chat panel. This renders n8n chat in "embedded" mode (no floating launcher) within the current container.
+1) Make chat transport reliable (fix send/respond)
+- File: `src/components/ChatBot.tsx`
+- Keep your existing bubble, panel, header, close behavior, animation, spacing, and responsive layout unchanged.
+- Point `createChat()` to the existing backend proxy endpoint instead of direct browser→n8n calls (removes CORS/origin breakage causing failed fetch).
+- Keep `@n8n/chat` embed in the same existing container (`#n8n-chat-container`), no new launcher.
+- Keep localStorage session ID persistence (`crums-chat-session-id`) so conversation continuity is preserved across refresh.
 
-### Changes
+2) Align proxy with n8n embedded chat protocol
+- File: `supabase/functions/chat-proxy/index.ts`
+- Update proxy to accept and forward native `@n8n/chat` payloads (`action`, `sessionId`, `chatInput`, `metadata`) for both `loadPreviousSession` and `sendMessage`.
+- Remove assumptions from old custom payload shape (`message`, `userType` at top-level).
+- Support guest users (public pages) while still enriching metadata with authenticated user ID when available.
+- Return upstream response/body/headers in a format `@n8n/chat` expects (no incompatible wrapping), while keeping CORS + rate limiting.
 
-**1. Install `@n8n/chat` package**
+3) Remove n8n branding/footer text from the embedded panel
+- File: `src/index.css`
+- Add targeted CSS to hide branding/footer inside the embedded widget:
+  - `.chat-powered-by { display: none !important; }`
+  - (and, if needed, `.chat-get-started-footer` child only for powered-by area)
+- Keep existing launcher/header-hide rules so only your site’s bubble + site header remain visible.
 
-**2. Add environment variable `VITE_N8N_CHAT_URL`**
-- You'll paste your real n8n Chat Trigger webhook URL as a secret
+4) Keep existing error/loading UX
+- File: `src/components/ChatBot.tsx`
+- Preserve current loading and retry UI.
+- Improve error state messaging for proxy/network failures so failures are actionable without breaking the panel UI.
 
-**3. Rewrite `src/components/ChatBot.tsx`**
-- Keep the existing floating bubble button (position, size, colors, animations, z-index — unchanged)
-- Keep the existing Card panel (dimensions, shadow, open/close animation — unchanged)
-- Keep the existing header with "CRUMS AI Assistant" title, subtitle, close button — unchanged
-- **Remove**: all placeholder message state, `handleAdminCommand`, `handleCustomerStream`, `simulateStreaming`, fake message arrays, manual Input/Send UI
-- **Add**: a `<div id="n8n-chat-container">` in the message body area
-- **Add**: `useEffect` that calls `createChat()` once when the component mounts, targeting that container div
-- **Add**: CSS overrides to hide n8n's default launcher button and header (since we provide our own)
-- **Add**: localStorage-based session ID (`crums-chat-session-id`) for conversation continuity across refreshes
-- **Add**: loading state while n8n widget initializes, error fallback if `VITE_N8N_CHAT_URL` is missing
-- Keep GA4 tracking (`trackChatbotOpen`) on bubble click
+5) Verify end-to-end before closing
+- Confirm on `/` that:
+  - only one site bubble is visible,
+  - no n8n launcher appears,
+  - no “Powered by n8n” line appears,
+  - user can type/send and receive bot replies,
+  - refresh keeps the same session ID and continues context,
+  - behavior is correct on desktop and mobile breakpoints.
 
-**4. Add CSS overrides in `src/index.css`**
-- Hide n8n's built-in launcher: `#n8n-chat .chat-window-toggle { display: none !important; }`
-- Hide n8n's built-in header: `#n8n-chat-container .chat-header { display: none !important; }`
-- Make n8n chat fill the panel: `#n8n-chat-container { height: 100%; }`
-- Style n8n messages to match site theme colors where possible
-
-### What stays the same
-- Floating bubble position, size, icon, colors
-- Panel dimensions (max-w-96, h-[600px]), shadow, open/close scale animation
-- Header bar (teal background, "CRUMS AI Assistant", close X button)
-- Mobile responsive behavior
-- All 6 consumer files importing `<ChatBot>` remain untouched
-- `userType` prop kept for future routing to different n8n workflows
-
-### Files changed
-- `package.json` — add `@n8n/chat`
-- `src/components/ChatBot.tsx` — replace placeholder logic with n8n `createChat`
-- `src/index.css` — add CSS overrides for n8n widget styling
-- Environment variable `VITE_N8N_CHAT_URL` — needs to be set with your webhook URL
-
+Files to change
+- `src/components/ChatBot.tsx`
+- `supabase/functions/chat-proxy/index.ts`
+- `src/index.css`
