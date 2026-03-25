@@ -45,7 +45,10 @@ export const ChatBot = ({ userType }: ChatBotProps) => {
         webhookUrl: proxyUrl,
         webhookConfig: {
           method: "POST",
-          headers: {},
+          headers: {
+            "apikey": import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+            "Content-Type": "application/json",
+          },
         },
         target: "#n8n-chat-container",
         mode: "window",
