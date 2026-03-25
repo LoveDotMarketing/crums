@@ -27,10 +27,12 @@ export const ChatBot = ({ userType }: ChatBotProps) => {
   const chatInitialized = useRef(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const webhookUrl = import.meta.env.VITE_N8N_CHAT_URL;
+  // Build the proxy URL from the Supabase project
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string | undefined;
+  const proxyUrl = supabaseUrl ? `${supabaseUrl}/functions/v1/chat-proxy` : undefined;
 
   const initChat = useCallback(async () => {
-    if (chatInitialized.current || !containerRef.current || !webhookUrl) return;
+    if (chatInitialized.current || !containerRef.current || !proxyUrl) return;
     chatInitialized.current = true;
     setIsLoading(true);
     setHasError(false);
@@ -40,7 +42,7 @@ export const ChatBot = ({ userType }: ChatBotProps) => {
       const sessionId = getOrCreateSessionId();
 
       createChat({
-        webhookUrl,
+        webhookUrl: proxyUrl,
         webhookConfig: {
           method: "POST",
           headers: {},
@@ -71,11 +73,10 @@ export const ChatBot = ({ userType }: ChatBotProps) => {
       setIsLoading(false);
       chatInitialized.current = false;
     }
-  }, [webhookUrl, userType]);
+  }, [proxyUrl, userType]);
 
   useEffect(() => {
     if (isOpen && !chatInitialized.current) {
-      // Small delay to ensure the container is in the DOM
       const timer = setTimeout(initChat, 100);
       return () => clearTimeout(timer);
     }
@@ -132,7 +133,7 @@ export const ChatBot = ({ userType }: ChatBotProps) => {
 
         {/* n8n Chat Container */}
         <div className="flex-1 relative min-h-0">
-          {!webhookUrl ? (
+          {!proxyUrl ? (
             <div className="flex flex-col items-center justify-center h-full p-6 text-center gap-3">
               <AlertCircle className="h-8 w-8 text-destructive" />
               <p className="text-sm text-muted-foreground">
@@ -165,7 +166,7 @@ export const ChatBot = ({ userType }: ChatBotProps) => {
           <div
             id="n8n-chat-container"
             ref={containerRef}
-            className={cn("h-full", (isLoading || hasError || !webhookUrl) && "hidden")}
+            className={cn("h-full", (isLoading || hasError || !proxyUrl) && "hidden")}
           />
         </div>
       </Card>

@@ -158,6 +158,13 @@ All colors MUST be HSL.
   border-top: 1px solid hsl(var(--border));
 }
 
+/* Hide n8n branding / powered-by footer */
+#n8n-chat-container .chat-powered-by,
+#n8n-chat-container .chat-footer,
+#n8n-chat-container [class*="powered"] {
+  display: none !important;
+}
+
 #n8n-chat-container .chat-message-bot .chat-message-body {
   background: hsl(var(--muted));
   color: hsl(var(--foreground));
