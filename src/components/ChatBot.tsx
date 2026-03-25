@@ -33,7 +33,7 @@ export const ChatBot = ({ userType }: ChatBotProps) => {
 
     try {
       const { createChat } = await import("@n8n/chat");
-      const sessionId = getOrCreateSessionId();
+      const sessionId = getSessionId();
 
       createChat({
         webhookUrl: proxyUrl,
