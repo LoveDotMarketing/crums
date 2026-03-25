@@ -1,22 +1,10 @@
 
 
-## Fix: Use correct n8n webhook secret in chat proxy
+## Plan: Clear chat session on page refresh
 
-### Problem
-The `chat-proxy` edge function currently reads `N8N_CUSTOMER_AGENT_WEBHOOK` to get the n8n webhook URL. The correct secret for the main chat bubble is `VITE_N8N_CHAT_URL`.
+**Change:** In `src/components/ChatBot.tsx`, switch from `localStorage` to `sessionStorage` for the session ID. `sessionStorage` is automatically cleared when the tab/page is refreshed or closed, which gives exactly the behavior you want.
 
-### Change
-
-**File: `supabase/functions/chat-proxy/index.ts`**
-
-Replace:
-```typescript
-const webhookUrl = Deno.env.get("N8N_CUSTOMER_AGENT_WEBHOOK");
-```
-With:
-```typescript
-const webhookUrl = Deno.env.get("VITE_N8N_CHAT_URL");
-```
-
-Update the error log accordingly. One-line change, no other files affected.
+**File: `src/components/ChatBot.tsx`**
+- In `getOrCreateSessionId()`, replace all `localStorage` references with `sessionStorage`
+- No other files need changes
 
