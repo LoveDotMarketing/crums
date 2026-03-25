@@ -164,7 +164,34 @@ All colors MUST be HSL.
   display: none !important;
 }
 
+/* Constrain message sizing */
+#n8n-chat-container .chat-message-body {
+  font-size: 0.875rem;
+  line-height: 1.4;
+  max-width: 85%;
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+#n8n-chat-container .chat-message {
+  max-width: 100%;
+  overflow: hidden;
+}
+
+#n8n-chat-container .chat-input textarea,
+#n8n-chat-container .chat-input input {
+  font-size: 0.875rem;
+}
+
 #n8n-chat-container .chat-message-bot .chat-message-body {
+  background: hsl(var(--muted));
+  color: hsl(var(--foreground));
+}
+
+#n8n-chat-container .chat-message-user .chat-message-body {
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+}
   background: hsl(var(--muted));
   color: hsl(var(--foreground));
 }
