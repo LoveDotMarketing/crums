@@ -10,15 +10,9 @@ interface ChatBotProps {
   userType: "admin" | "customer" | "mechanic";
 }
 
-const getOrCreateSessionId = (): string => {
-  const key = "crums-chat-session-id";
-  let id = sessionStorage.getItem(key);
-  if (!id) {
-    id = `session_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
-    sessionStorage.setItem(key, id);
-  }
-  return id;
-};
+// Generate a fresh session ID on every page load (module re-evaluates on refresh)
+const SESSION_ID = `session_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+const getSessionId = (): string => SESSION_ID;
 
 export const ChatBot = ({ userType }: ChatBotProps) => {
   const [isOpen, setIsOpen] = useState(false);
