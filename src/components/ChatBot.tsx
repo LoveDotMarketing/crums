@@ -12,10 +12,10 @@ interface ChatBotProps {
 
 const getOrCreateSessionId = (): string => {
   const key = "crums-chat-session-id";
-  let id = localStorage.getItem(key);
+  let id = sessionStorage.getItem(key);
   if (!id) {
     id = `session_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
-    localStorage.setItem(key, id);
+    sessionStorage.setItem(key, id);
   }
   return id;
 };
