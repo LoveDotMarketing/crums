@@ -152,6 +152,7 @@ All colors MUST be HSL.
 #n8n-chat-container .chat-messages-list {
   flex: 1;
   overflow-y: auto;
+  overflow-x: hidden;
 }
 
 #n8n-chat-container .chat-input {
@@ -184,14 +185,6 @@ All colors MUST be HSL.
 }
 
 #n8n-chat-container .chat-message-bot .chat-message-body {
-  background: hsl(var(--muted));
-  color: hsl(var(--foreground));
-}
-
-#n8n-chat-container .chat-message-user .chat-message-body {
-  background: hsl(var(--primary));
-  color: hsl(var(--primary-foreground));
-}
   background: hsl(var(--muted));
   color: hsl(var(--foreground));
 }
