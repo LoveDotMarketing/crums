@@ -124,6 +124,50 @@ All colors MUST be HSL.
   }
 }
 
+/* n8n Chat widget overrides — hide default launcher & header, fill container */
+#n8n-chat-container .chat-window-toggle {
+  display: none !important;
+}
+
+#n8n-chat-container .chat-header {
+  display: none !important;
+}
+
+#n8n-chat-container {
+  height: 100%;
+}
+
+#n8n-chat-container .chat-window {
+  position: relative !important;
+  width: 100% !important;
+  height: 100% !important;
+  max-height: 100% !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+#n8n-chat-container .chat-messages-list {
+  flex: 1;
+  overflow-y: auto;
+}
+
+#n8n-chat-container .chat-input {
+  border-top: 1px solid hsl(var(--border));
+}
+
+#n8n-chat-container .chat-message-bot .chat-message-body {
+  background: hsl(var(--muted));
+  color: hsl(var(--foreground));
+}
+
+#n8n-chat-container .chat-message-user .chat-message-body {
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+}
+
 /* Performance: Defer rendering of below-fold content */
 .content-deferred {
   content-visibility: auto;
