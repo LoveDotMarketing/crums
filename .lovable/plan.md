@@ -1,44 +1,27 @@
 
 
-## Fix: Chat bubble text size and message overflow
+## Fix: Clear chat session on page refresh
 
 ### Problem
-The n8n chat messages inside the chat panel have oversized text and message bubbles that bleed outside the chat window boundaries.
+`sessionStorage` persists across refreshes within the same tab. It only clears when the tab is closed, so the session ID survives reloads.
 
-### Changes
+### Solution
+Generate a new session ID on every page load without storing it persistently. Use a module-level variable instead of `sessionStorage`.
 
-**File: `src/index.css`** — Add CSS overrides to the existing n8n chat section:
+### Change
 
-1. **Reduce font size** on messages to 14px (from the n8n default ~16px)
-2. **Constrain message bubbles** with `max-width: 85%` so they don't stretch edge-to-edge
-3. **Add `word-break: break-word`** and `overflow-wrap` to prevent long text from overflowing
-4. **Ensure the messages container clips overflow** with `overflow: hidden` on the outer wrapper
+**File: `src/components/ChatBot.tsx`**
 
-```css
-/* Constrain message sizing */
-#n8n-chat-container .chat-message-body {
-  font-size: 0.875rem;
-  line-height: 1.4;
-  max-width: 85%;
-  word-break: break-word;
-  overflow-wrap: break-word;
-}
+Replace the `getOrCreateSessionId` function with:
 
-#n8n-chat-container .chat-message {
-  max-width: 100%;
-  overflow: hidden;
-}
+```typescript
+// Generate a fresh session ID on every page load (module re-evaluates on refresh)
+const SESSION_ID = `session_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
 
-#n8n-chat-container .chat-messages-list {
-  overflow-x: hidden;
-}
-
-/* Smaller input text */
-#n8n-chat-container .chat-input textarea,
-#n8n-chat-container .chat-input input {
-  font-size: 0.875rem;
-}
+const getSessionId = (): string => SESSION_ID;
 ```
 
-No other files need changes.
+Then update the one call site from `getOrCreateSessionId()` to `getSessionId()`.
+
+This works because the module is re-evaluated on every page load/refresh, producing a new ID each time, while staying stable for the lifetime of the page.
 
