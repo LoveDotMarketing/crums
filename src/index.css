@@ -158,9 +158,10 @@ All colors MUST be HSL.
   border-top: 1px solid hsl(var(--border));
 }
 
-/* Hide n8n branding / powered-by text only — do NOT hide .chat-footer (contains input) */
+/* Hide n8n branding / powered-by footer */
 #n8n-chat-container .chat-powered-by,
-#n8n-chat-container [class*="powered-by"] {
+#n8n-chat-container .chat-footer,
+#n8n-chat-container [class*="powered"] {
   display: none !important;
 }
 
