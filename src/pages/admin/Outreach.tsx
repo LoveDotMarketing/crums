@@ -115,6 +115,7 @@ interface AutomationResult {
 }
 
 function EventLeadsTab() {
+  const queryClient = useQueryClient();
   const { data: eventLeads = [], isLoading } = useQuery({
     queryKey: ["event-leads"],
     queryFn: async () => {
@@ -125,6 +126,18 @@ function EventLeadsTab() {
       if (error) throw error;
       return data as any[];
     },
+  });
+
+  const deleteLead = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("event_leads").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["event-leads"] });
+      toast.success("Lead removed");
+    },
+    onError: () => toast.error("Failed to delete lead"),
   });
 
   const exportCSV = () => {
@@ -172,6 +185,7 @@ function EventLeadsTab() {
                 <TableHead>Phone</TableHead>
                 <TableHead>Event</TableHead>
                 <TableHead>Submitted</TableHead>
+                <TableHead className="w-12"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -182,6 +196,20 @@ function EventLeadsTab() {
                   <TableCell>{lead.phone}</TableCell>
                   <TableCell><Badge variant="secondary">{lead.event_name}</Badge></TableCell>
                   <TableCell>{format(new Date(lead.created_at), "MMM d, yyyy h:mm a")}</TableCell>
+                  <TableCell>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-destructive hover:text-destructive"
+                      onClick={() => {
+                        if (confirm(`Remove ${lead.full_name}?`)) {
+                          deleteLead.mutate(lead.id);
+                        }
+                      }}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
