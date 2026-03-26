@@ -130,6 +130,40 @@ export default function MATS2026() {
                   </FormItem>
                 )}
               />
+              <FormField
+                control={form.control}
+                name="email_optin"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                    <FormControl>
+                      <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+                    </FormControl>
+                    <div className="space-y-1 leading-none">
+                      <FormLabel className="text-xs text-muted-foreground font-normal">
+                        I agree to receive marketing emails from CRUMS Leasing. You can unsubscribe at any time.
+                      </FormLabel>
+                      <FormMessage />
+                    </div>
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="sms_optin"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                    <FormControl>
+                      <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+                    </FormControl>
+                    <div className="space-y-1 leading-none">
+                      <FormLabel className="text-xs text-muted-foreground font-normal">
+                        I agree to receive SMS messages from CRUMS Leasing. Msg & data rates may apply. Reply STOP to opt out.
+                      </FormLabel>
+                      <FormMessage />
+                    </div>
+                  </FormItem>
+                )}
+              />
               <Button type="submit" className="w-full" disabled={isSubmitting}>
                 {isSubmitting ? (
                   <>
@@ -137,7 +171,7 @@ export default function MATS2026() {
                     Submitting...
                   </>
                 ) : (
-                  "Submit"
+                  "Join Mailing List"
                 )}
               </Button>
             </form>
