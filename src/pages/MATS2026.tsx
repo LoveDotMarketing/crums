@@ -25,7 +25,7 @@ const eventLeadSchema = z.object({
 type EventLeadForm = z.infer<typeof eventLeadSchema>;
 
 export default function MATS2026() {
-  const [submitted, setSubmitted] = useState(false);
+  const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<EventLeadForm>({
