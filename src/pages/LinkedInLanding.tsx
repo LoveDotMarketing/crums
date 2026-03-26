@@ -150,6 +150,11 @@ const LinkedInLanding = () => {
         return;
       }
 
+      // Send confirmation email to the customer in background
+      supabase.functions.invoke('send-contact-confirmation', {
+        body: { name: formData.name, email: formData.email }
+      }).catch(err => console.warn('[Contact Confirmation] Background call failed:', err));
+
       // Redirect to thank-you page (conversion tracking fires there)
       navigate("/lp/linkedin/thank-you", {
         state: {
