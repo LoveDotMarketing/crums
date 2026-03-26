@@ -234,6 +234,20 @@ export default function Outreach() {
     },
   });
 
+  // Fetch MATS 2026 event leads
+  const { data: eventLeads = [] } = useQuery({
+    queryKey: ["event-leads-mats2026"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("event_leads")
+        .select("id, full_name, email, phone, event_name")
+        .eq("event_name", "MATS 2026")
+        .order("full_name");
+      if (error) throw error;
+      return data as Array<{ id: string; full_name: string; email: string; phone: string; event_name: string }>;
+    },
+  });
+
   // Fetch customer outreach status
   const { data: outreachStatuses = [], isLoading: loadingOutreachStatus } = useQuery({
     queryKey: ["customer-outreach-status"],
