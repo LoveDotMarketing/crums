@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { toast } from "sonner";
-import { CheckCircle, Loader2, MapPin, Truck } from "lucide-react";
+import { Loader2, MapPin, Truck } from "lucide-react";
 import { SEO } from "@/components/SEO";
 
 const eventLeadSchema = z.object({
