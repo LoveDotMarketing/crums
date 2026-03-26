@@ -883,6 +883,7 @@ export default function Outreach() {
                             <SelectItem value="active">Active Only</SelectItem>
                             <SelectItem value="archived">Archived Only</SelectItem>
                             <SelectItem value="pending">Pending Only</SelectItem>
+                            <SelectItem value="event_mats_2026">Event — MATS 2026</SelectItem>
                             <SelectItem value="custom">Custom Selection</SelectItem>
                           </SelectContent>
                         </Select>
