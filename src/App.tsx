@@ -94,6 +94,7 @@ const FacebookLanding = lazy(() => import("./pages/FacebookLanding"));
 const FacebookThankYou = lazy(() => import("./pages/FacebookThankYou"));
 const GoogleLanding = lazy(() => import("./pages/GoogleLanding"));
 const GoogleThankYou = lazy(() => import("./pages/GoogleThankYou"));
+const MATS2026 = lazy(() => import("./pages/MATS2026"));
 
 // Industries pages
 const Industries = lazy(() => import("./pages/Industries"));
