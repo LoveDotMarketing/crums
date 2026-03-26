@@ -44,7 +44,7 @@ export default function MATS2026() {
         event_name: "MATS 2026",
       });
       if (error) throw error;
-      setSubmitted(true);
+      navigate("/mats2026-thank-you");
     } catch {
       toast.error("Something went wrong. Please try again.");
     } finally {
