@@ -47,6 +47,13 @@ export default function MATS2026() {
         event_name: "MATS 2026",
       });
       if (error) throw error;
+      // Fire-and-forget thank you email
+      supabase.functions.invoke('send-event-thank-you', {
+        body: {
+          full_name: values.full_name.trim(),
+          email: values.email.trim().toLowerCase(),
+        },
+      }).catch(console.error);
       navigate("/mats2026-thank-you");
     } catch {
       toast.error("Something went wrong. Please try again.");
