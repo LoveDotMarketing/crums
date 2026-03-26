@@ -52,22 +52,8 @@ export default function MATS2026() {
     }
   };
 
-  if (submitted) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
-        <SEO title="Thank You | CRUMS Leasing at MATS 2026" description="Thanks for visiting CRUMS Leasing at MATS 2026." />
-        <Card className="w-full max-w-md text-center">
-          <CardContent className="pt-10 pb-10 space-y-4">
-            <CheckCircle className="h-16 w-16 text-primary mx-auto" />
-            <h2 className="text-2xl font-bold">Thank You!</h2>
-            <p className="text-muted-foreground">
-              We've got your info. A member of our team will follow up with you shortly. Enjoy MATS 2026!
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+
+
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
