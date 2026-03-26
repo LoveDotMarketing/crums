@@ -33,7 +33,7 @@ export default function MATS2026() {
 
   const form = useForm<EventLeadForm>({
     resolver: zodResolver(eventLeadSchema),
-    defaultValues: { full_name: "", email: "", phone: "", notes: "" },
+    defaultValues: { full_name: "", email: "", phone: "", notes: "", email_optin: false as any, sms_optin: false as any },
   });
 
   const onSubmit = async (values: EventLeadForm) => {
