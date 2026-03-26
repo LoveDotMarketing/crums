@@ -1194,6 +1194,11 @@ export default function Outreach() {
               </Card>
             </TabsContent>
 
+            {/* Events Tab */}
+            <TabsContent value="events">
+              <EventLeadsTab />
+            </TabsContent>
+
             {/* Settings Tab */}
             <TabsContent value="settings">
               {/* Master Automation Switch */}
