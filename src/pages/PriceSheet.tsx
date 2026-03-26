@@ -41,6 +41,17 @@ const PriceSheet = () => {
             </p>
           </div>
 
+          {/* Flat Rate Note */}
+          <div className="mb-8 rounded-lg border border-primary/20 bg-primary/5 p-6 text-center">
+            <div className="flex items-center justify-center gap-2 mb-2">
+              <Gauge className="h-5 w-5 text-primary" />
+              <span className="text-lg font-bold text-foreground">Flat Rate — No Mileage Charges</span>
+            </div>
+            <p className="text-muted-foreground">
+              All lease rates are flat monthly fees. We do not charge per mile.
+            </p>
+          </div>
+
           <div className="grid md:grid-cols-2 gap-8">
             {/* Dry Van */}
             <Card className="border-border">
