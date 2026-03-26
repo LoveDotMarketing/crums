@@ -185,6 +185,7 @@ function EventLeadsTab() {
                 <TableHead>Phone</TableHead>
                 <TableHead>Event</TableHead>
                 <TableHead>Submitted</TableHead>
+                <TableHead className="w-12"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
