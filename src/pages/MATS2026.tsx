@@ -66,13 +66,13 @@ export default function MATS2026() {
           <div className="flex justify-center">
             <Truck className="h-10 w-10 text-primary" />
           </div>
-          <CardTitle className="text-2xl">Welcome to MATS 2026!</CardTitle>
+          <CardTitle className="text-2xl">Thank You for Visiting Our Booth!</CardTitle>
           <div className="flex items-center justify-center gap-1 text-muted-foreground">
             <MapPin className="h-4 w-4" />
-            <span className="text-sm font-medium">Visit us at Booth 38024</span>
+            <span className="text-sm font-medium">MATS 2026 — Booth 38024</span>
           </div>
           <p className="text-sm text-muted-foreground">
-            Drop your info below and we'll follow up with you about our trailer leasing options.
+            Please fill out the form below to join our mailing list and stay up to date on our trailer leasing options.
           </p>
         </CardHeader>
         <CardContent>
