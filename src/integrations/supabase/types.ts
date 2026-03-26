@@ -1155,6 +1155,36 @@ export type Database = {
         }
         Relationships: []
       }
+      event_leads: {
+        Row: {
+          created_at: string
+          email: string
+          event_name: string
+          full_name: string
+          id: string
+          notes: string | null
+          phone: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          event_name?: string
+          full_name: string
+          id?: string
+          notes?: string | null
+          phone: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          event_name?: string
+          full_name?: string
+          id?: string
+          notes?: string | null
+          phone?: string
+        }
+        Relationships: []
+      }
       fleet_activity_logs: {
         Row: {
           action_type: string

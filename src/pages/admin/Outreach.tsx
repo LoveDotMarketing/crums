@@ -18,7 +18,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, Send, Save, FileText, Settings, History, Mail, Users, TestTube, Trash2, Edit, Eye, Power, AlertTriangle, Play, CheckCircle, XCircle, Clock, UserCheck } from "lucide-react";
+import { Loader2, Send, Save, FileText, Settings, History, Mail, Users, TestTube, Trash2, Edit, Eye, Power, AlertTriangle, Play, CheckCircle, XCircle, Clock, UserCheck, Truck, Download } from "lucide-react";
 import { format } from "date-fns";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
@@ -112,6 +112,84 @@ interface AutomationResult {
   password_reminder_count?: number;
   profile_reminder_count?: number;
   planned_emails?: PlannedEmail[];
+}
+
+function EventLeadsTab() {
+  const { data: eventLeads = [], isLoading } = useQuery({
+    queryKey: ["event-leads"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("event_leads" as any)
+        .select("*")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data as any[];
+    },
+  });
+
+  const exportCSV = () => {
+    if (!eventLeads.length) return;
+    const headers = ["Name", "Email", "Phone", "Event", "Notes", "Submitted At"];
+    const rows = eventLeads.map((l: any) => [
+      l.full_name, l.email, l.phone, l.event_name, l.notes || "", format(new Date(l.created_at), "yyyy-MM-dd HH:mm"),
+    ]);
+    const csv = [headers, ...rows].map(r => r.map((c: string) => `"${c}"`).join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `event-leads-${format(new Date(), "yyyy-MM-dd")}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle className="flex items-center gap-2">
+              <Truck className="h-5 w-5" /> Event Leads
+            </CardTitle>
+            <CardDescription>{eventLeads.length} total leads collected</CardDescription>
+          </div>
+          <Button variant="outline" size="sm" onClick={exportCSV} disabled={!eventLeads.length}>
+            <Download className="h-4 w-4 mr-2" /> Export CSV
+          </Button>
+        </div>
+      </CardHeader>
+      <CardContent>
+        {isLoading ? (
+          <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin" /></div>
+        ) : eventLeads.length === 0 ? (
+          <p className="text-center text-muted-foreground py-8">No event leads yet.</p>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>Phone</TableHead>
+                <TableHead>Event</TableHead>
+                <TableHead>Submitted</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {eventLeads.map((lead: any) => (
+                <TableRow key={lead.id}>
+                  <TableCell className="font-medium">{lead.full_name}</TableCell>
+                  <TableCell>{lead.email}</TableCell>
+                  <TableCell>{lead.phone}</TableCell>
+                  <TableCell><Badge variant="secondary">{lead.event_name}</Badge></TableCell>
+                  <TableCell>{format(new Date(lead.created_at), "MMM d, yyyy h:mm a")}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
+      </CardContent>
+    </Card>
+  );
 }
 
 export default function Outreach() {
@@ -613,6 +691,9 @@ export default function Outreach() {
               </TabsTrigger>
               <TabsTrigger value="customers" className="gap-2">
                 <UserCheck className="h-4 w-4" /> Customers
+              </TabsTrigger>
+              <TabsTrigger value="events" className="gap-2">
+                <Truck className="h-4 w-4" /> Events
               </TabsTrigger>
               <TabsTrigger value="settings" className="gap-2">
                 <Settings className="h-4 w-4" /> Settings
@@ -1189,6 +1270,11 @@ export default function Outreach() {
                   )}
                 </CardContent>
               </Card>
+            </TabsContent>
+
+            {/* Events Tab */}
+            <TabsContent value="events">
+              <EventLeadsTab />
             </TabsContent>
 
             {/* Settings Tab */}

@@ -94,6 +94,7 @@ const FacebookLanding = lazy(() => import("./pages/FacebookLanding"));
 const FacebookThankYou = lazy(() => import("./pages/FacebookThankYou"));
 const GoogleLanding = lazy(() => import("./pages/GoogleLanding"));
 const GoogleThankYou = lazy(() => import("./pages/GoogleThankYou"));
+const MATS2026 = lazy(() => import("./pages/MATS2026"));
 
 // Industries pages
 const Industries = lazy(() => import("./pages/Industries"));
@@ -622,6 +623,7 @@ const App = () => (
             <Route path="/terms" element={<Terms />} />
             <Route path="/api-docs" element={<ApiDocs />} />
             <Route path="/unsubscribe" element={<Unsubscribe />} />
+            <Route path="/mats2026" element={<MATS2026 />} />
             {/* Redirect old /customer/* URLs to /dashboard/customer/* */}
             <Route path="/customer/*" element={<CustomerRedirect />} />
             <Route path="*" element={<NotFound />} />
