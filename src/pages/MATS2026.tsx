@@ -21,6 +21,8 @@ const eventLeadSchema = z.object({
     .regex(/^[\+]?[(]?[0-9]{1,4}[)]?[-\s./0-9]*$/, "Invalid phone number")
     .refine((val) => val.replace(/\D/g, "").length >= 10, "Phone must have at least 10 digits"),
   notes: z.string().max(500).optional(),
+  email_optin: z.literal(true, { errorMap: () => ({ message: "You must agree to receive emails" }) }),
+  sms_optin: z.literal(true, { errorMap: () => ({ message: "You must agree to receive SMS messages" }) }),
 });
 
 type EventLeadForm = z.infer<typeof eventLeadSchema>;
