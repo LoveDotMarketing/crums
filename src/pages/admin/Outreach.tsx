@@ -196,6 +196,20 @@ function EventLeadsTab() {
                   <TableCell>{lead.phone}</TableCell>
                   <TableCell><Badge variant="secondary">{lead.event_name}</Badge></TableCell>
                   <TableCell>{format(new Date(lead.created_at), "MMM d, yyyy h:mm a")}</TableCell>
+                  <TableCell>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-destructive hover:text-destructive"
+                      onClick={() => {
+                        if (confirm(`Remove ${lead.full_name}?`)) {
+                          deleteLead.mutate(lead.id);
+                        }
+                      }}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
