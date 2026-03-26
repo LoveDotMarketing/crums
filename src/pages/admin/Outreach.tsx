@@ -528,13 +528,24 @@ export default function Outreach() {
       if (campaignError) throw campaignError;
 
       // Get recipients with customer data for personalization
-      const recipientsWithData = filteredCustomers
-        .filter(c => c.email)
-        .map(c => ({
-          email: c.email,
-          customer_id: c.id,
-          customer_name: c.full_name || "Valued Customer",
-        }));
+      let recipientsWithData;
+      if (targetAudience === "event_mats_2026") {
+        recipientsWithData = eventLeads
+          .filter(l => l.email)
+          .map(l => ({
+            email: l.email,
+            customer_id: l.id,
+            customer_name: l.full_name || "Valued Visitor",
+          }));
+      } else {
+        recipientsWithData = filteredCustomers
+          .filter(c => c.email)
+          .map(c => ({
+            email: c.email,
+            customer_id: c.id,
+            customer_name: c.full_name || "Valued Customer",
+          }));
+      }
 
       // Send emails with new format that includes customer data
       const { data, error } = await supabase.functions.invoke("send-outreach-email", {
