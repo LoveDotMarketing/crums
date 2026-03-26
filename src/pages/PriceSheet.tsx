@@ -5,15 +5,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { Truck, ArrowRight } from "lucide-react";
+import { Truck, ArrowRight, Gauge } from "lucide-react";
 
 const dryVanPricing = [
-  { year: "2027", price: "$950", badge: "New", highlight: true },
-  { year: "2024", price: "$800" },
-  { year: "2021", price: "$780" },
-  { year: "2020", price: "$750" },
-  { year: "2019", price: "$720" },
-  { year: "2018", price: "$700" },
+  { year: "2027", twoYear: "$950", flexible: "$1,100", badge: "New", highlight: true },
+  { year: "2024", twoYear: "$800", flexible: "$850" },
+  { year: "2021", twoYear: "$780" },
+  { year: "2020", twoYear: "$750" },
+  { year: "2019", twoYear: "$720" },
+  { year: "2018", twoYear: "$700" },
 ];
 
 const flatbedPricing = [
@@ -51,6 +51,14 @@ const PriceSheet = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-0">
+                {/* Column headers */}
+                <div className="flex items-center justify-between py-2 border-b border-border text-sm font-medium text-muted-foreground">
+                  <span>Year</span>
+                  <div className="flex gap-6 text-right">
+                    <span className="w-24 text-center">2-Year</span>
+                    <span className="w-24 text-center">MTM / 1-Year</span>
+                  </div>
+                </div>
                 {dryVanPricing.map((item) => (
                   <div
                     key={item.year}
@@ -66,9 +74,18 @@ const PriceSheet = () => {
                         </Badge>
                       )}
                     </div>
-                    <span className="text-lg font-bold text-foreground">
-                      {item.price}<span className="text-sm font-normal text-muted-foreground">/mo</span>
-                    </span>
+                    <div className="flex gap-6">
+                      <span className="w-24 text-center text-lg font-bold text-foreground">
+                        {item.twoYear}<span className="text-sm font-normal text-muted-foreground">/mo</span>
+                      </span>
+                      <span className="w-24 text-center text-lg font-bold text-foreground">
+                        {item.flexible ? (
+                          <>{item.flexible}<span className="text-sm font-normal text-muted-foreground">/mo</span></>
+                        ) : (
+                          <span className="text-muted-foreground text-sm font-normal">—</span>
+                        )}
+                      </span>
+                    </div>
                   </div>
                 ))}
               </CardContent>
@@ -105,6 +122,17 @@ const PriceSheet = () => {
                 ))}
               </CardContent>
             </Card>
+          </div>
+
+          {/* Flat Rate Note */}
+          <div className="mt-8 rounded-lg border border-primary/20 bg-primary/5 p-6 text-center">
+            <div className="flex items-center justify-center gap-2 mb-2">
+              <Gauge className="h-5 w-5 text-primary" />
+              <span className="text-lg font-bold text-foreground">Flat Rate — No Mileage Charges</span>
+            </div>
+            <p className="text-muted-foreground">
+              All lease rates are flat monthly fees. We do not charge per mile.
+            </p>
           </div>
 
           <div className="text-center mt-10 space-y-4">
