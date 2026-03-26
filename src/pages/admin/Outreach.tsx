@@ -614,6 +614,9 @@ export default function Outreach() {
               <TabsTrigger value="customers" className="gap-2">
                 <UserCheck className="h-4 w-4" /> Customers
               </TabsTrigger>
+              <TabsTrigger value="events" className="gap-2">
+                <Truck className="h-4 w-4" /> Events
+              </TabsTrigger>
               <TabsTrigger value="settings" className="gap-2">
                 <Settings className="h-4 w-4" /> Settings
               </TabsTrigger>

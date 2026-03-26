@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { toast } from "sonner";
 import { CheckCircle, Loader2, MapPin, Truck } from "lucide-react";
-import SEO from "@/components/SEO";
+import { SEO } from "@/components/SEO";
 
 const eventLeadSchema = z.object({
   full_name: z.string().min(1, "Name is required").max(100),
