@@ -1,23 +1,25 @@
 
 
-## Plan: MATS 2026 Thank You Page with Full Navigation
+## Plan: Update Price Sheet with tiered pricing and flat-rate note
 
-### Changes
+### Changes to `src/pages/PriceSheet.tsx`
 
-**1. Create `src/pages/MATS2026ThankYou.tsx`**
-- Full-page layout with `<Navigation />` header and `<Footer />` 
-- Thank you message with CheckCircle icon, "We've got your info" copy
-- Social links section (Facebook, Instagram, LinkedIn, YouTube) matching Footer's existing links
-- CTA buttons to explore services (e.g. "View Our Trailers", "Learn About Leasing")
-- SEO component with noindex
+**Update Dry Van pricing to show contract-based tiers:**
 
-**2. Update `src/pages/MATS2026.tsx`**
-- Replace `setSubmitted(true)` with `navigate("/mats2026-thank-you")`
-- Remove the inline thank-you card (the `if (submitted)` block)
+| Year | 2-Year Contract | Month-to-Month / 1-Year |
+|------|----------------|------------------------|
+| 2027 | $950/mo | $1,100/mo |
+| 2024 | $800/mo | $850/mo |
+| 2021 | $780/mo | — |
+| 2020 | $750/mo | — |
+| 2019 | $720/mo | — |
+| 2018 | $700/mo | — |
 
-**3. Update `src/App.tsx`**
-- Add lazy import for `MATS2026ThankYou`
-- Add route: `/mats2026-thank-you`
+- Restructure the dry van card to show two price columns: "2-Year Contract" and "Month-to-Month / 1 Year"
+- Older models (2021 and below) keep single price column (only 2-year rate)
 
-No database or backend changes needed.
+**Flatbed pricing stays as-is:** 2027 at $1,400/mo
+
+**Add flat-rate messaging:**
+- Add a highlighted note below the pricing cards: "Flat Rate — No Mileage Charges" with supporting text like "All lease rates are flat monthly fees. We do not charge per mile."
 
