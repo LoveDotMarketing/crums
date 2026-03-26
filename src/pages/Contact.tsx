@@ -241,6 +241,11 @@ const Contact = () => {
       // LinkedIn tracking (Insight Tag)
       trackLinkedInQuoteRequest();
       
+      // Send confirmation email to the customer in background
+      supabase.functions.invoke('send-contact-confirmation', {
+        body: { name: formData.name, email: formData.email }
+      }).catch(err => console.warn('[Contact Confirmation] Background call failed:', err));
+
       // LinkedIn CAPI (server-side) - fire in background
       supabase.functions.invoke('linkedin-capi', {
         body: {

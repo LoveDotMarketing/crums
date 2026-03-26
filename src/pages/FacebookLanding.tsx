@@ -166,6 +166,11 @@ const FacebookLanding = () => {
         page_section: 'facebook_landing_page',
       });
 
+      // Send confirmation email to the customer in background
+      supabase.functions.invoke('send-contact-confirmation', {
+        body: { name: formData.name, email: formData.email }
+      }).catch(err => console.warn('[Contact Confirmation] Background call failed:', err));
+
       // Redirect to thank-you page
       navigate("/lp/facebook/thank-you", {
         state: {
