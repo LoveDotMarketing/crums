@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -20,6 +21,8 @@ const eventLeadSchema = z.object({
     .regex(/^[\+]?[(]?[0-9]{1,4}[)]?[-\s./0-9]*$/, "Invalid phone number")
     .refine((val) => val.replace(/\D/g, "").length >= 10, "Phone must have at least 10 digits"),
   notes: z.string().max(500).optional(),
+  email_optin: z.literal(true, { errorMap: () => ({ message: "You must agree to receive emails" }) }),
+  sms_optin: z.literal(true, { errorMap: () => ({ message: "You must agree to receive SMS messages" }) }),
 });
 
 type EventLeadForm = z.infer<typeof eventLeadSchema>;
@@ -30,7 +33,7 @@ export default function MATS2026() {
 
   const form = useForm<EventLeadForm>({
     resolver: zodResolver(eventLeadSchema),
-    defaultValues: { full_name: "", email: "", phone: "", notes: "" },
+    defaultValues: { full_name: "", email: "", phone: "", notes: "", email_optin: false as any, sms_optin: false as any },
   });
 
   const onSubmit = async (values: EventLeadForm) => {
@@ -63,13 +66,13 @@ export default function MATS2026() {
           <div className="flex justify-center">
             <Truck className="h-10 w-10 text-primary" />
           </div>
-          <CardTitle className="text-2xl">Welcome to MATS 2026!</CardTitle>
+          <CardTitle className="text-2xl">Thank You for Visiting Our Booth!</CardTitle>
           <div className="flex items-center justify-center gap-1 text-muted-foreground">
             <MapPin className="h-4 w-4" />
-            <span className="text-sm font-medium">Visit us at Booth 38024</span>
+            <span className="text-sm font-medium">MATS 2026 — Booth 38024</span>
           </div>
           <p className="text-sm text-muted-foreground">
-            Drop your info below and we'll follow up with you about our trailer leasing options.
+            Please fill out the form below to join our mailing list and stay up to date on our trailer leasing options.
           </p>
         </CardHeader>
         <CardContent>
@@ -127,6 +130,40 @@ export default function MATS2026() {
                   </FormItem>
                 )}
               />
+              <FormField
+                control={form.control}
+                name="email_optin"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                    <FormControl>
+                      <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+                    </FormControl>
+                    <div className="space-y-1 leading-none">
+                      <FormLabel className="text-xs text-muted-foreground font-normal">
+                        I agree to receive marketing emails from CRUMS Leasing. You can unsubscribe at any time.
+                      </FormLabel>
+                      <FormMessage />
+                    </div>
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="sms_optin"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                    <FormControl>
+                      <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+                    </FormControl>
+                    <div className="space-y-1 leading-none">
+                      <FormLabel className="text-xs text-muted-foreground font-normal">
+                        I agree to receive SMS messages from CRUMS Leasing. Msg & data rates may apply. Reply STOP to opt out.
+                      </FormLabel>
+                      <FormMessage />
+                    </div>
+                  </FormItem>
+                )}
+              />
               <Button type="submit" className="w-full" disabled={isSubmitting}>
                 {isSubmitting ? (
                   <>
@@ -134,7 +171,7 @@ export default function MATS2026() {
                     Submitting...
                   </>
                 ) : (
-                  "Submit"
+                  "Join Mailing List"
                 )}
               </Button>
             </form>
