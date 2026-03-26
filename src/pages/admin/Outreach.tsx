@@ -115,6 +115,7 @@ interface AutomationResult {
 }
 
 function EventLeadsTab() {
+  const queryClient = useQueryClient();
   const { data: eventLeads = [], isLoading } = useQuery({
     queryKey: ["event-leads"],
     queryFn: async () => {
@@ -125,6 +126,18 @@ function EventLeadsTab() {
       if (error) throw error;
       return data as any[];
     },
+  });
+
+  const deleteLead = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("event_leads").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["event-leads"] });
+      toast.success("Lead removed");
+    },
+    onError: () => toast.error("Failed to delete lead"),
   });
 
   const exportCSV = () => {
