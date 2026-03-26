@@ -366,6 +366,8 @@ export default function Outreach() {
   // Get recipient count
   const recipientCount = targetAudience === "custom" 
     ? selectedCustomers.length 
+    : targetAudience === "event_mats_2026"
+    ? eventLeads.length
     : filteredCustomers.length;
 
   // Load template into compose
