@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -9,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { toast } from "sonner";
-import { CheckCircle, Loader2, MapPin, Truck } from "lucide-react";
+import { Loader2, MapPin, Truck } from "lucide-react";
 import { SEO } from "@/components/SEO";
 
 const eventLeadSchema = z.object({
@@ -24,7 +25,7 @@ const eventLeadSchema = z.object({
 type EventLeadForm = z.infer<typeof eventLeadSchema>;
 
 export default function MATS2026() {
-  const [submitted, setSubmitted] = useState(false);
+  const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<EventLeadForm>({
@@ -43,7 +44,7 @@ export default function MATS2026() {
         event_name: "MATS 2026",
       });
       if (error) throw error;
-      setSubmitted(true);
+      navigate("/mats2026-thank-you");
     } catch {
       toast.error("Something went wrong. Please try again.");
     } finally {
@@ -51,22 +52,8 @@ export default function MATS2026() {
     }
   };
 
-  if (submitted) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
-        <SEO title="Thank You | CRUMS Leasing at MATS 2026" description="Thanks for visiting CRUMS Leasing at MATS 2026." />
-        <Card className="w-full max-w-md text-center">
-          <CardContent className="pt-10 pb-10 space-y-4">
-            <CheckCircle className="h-16 w-16 text-primary mx-auto" />
-            <h2 className="text-2xl font-bold">Thank You!</h2>
-            <p className="text-muted-foreground">
-              We've got your info. A member of our team will follow up with you shortly. Enjoy MATS 2026!
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+
+
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
