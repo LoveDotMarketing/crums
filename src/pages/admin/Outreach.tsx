@@ -359,6 +359,7 @@ export default function Outreach() {
     if (targetAudience === "archived") return c.status === "archived";
     if (targetAudience === "pending") return c.status === "pending";
     if (targetAudience === "custom") return selectedCustomers.includes(c.id);
+    if (targetAudience === "event_mats_2026") return false; // handled separately
     return true;
   });
 
