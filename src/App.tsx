@@ -629,6 +629,7 @@ const App = () => (
             <Route path="/mats2026" element={<MATS2026 />} />
             <Route path="/mats2026-thank-you" element={<MATS2026ThankYou />} />
             <Route path="/mats2026-qr" element={<MATS2026QR />} />
+            <Route path="/price-sheet" element={<PriceSheet />} />
             {/* Redirect old /customer/* URLs to /dashboard/customer/* */}
             <Route path="/customer/*" element={<CustomerRedirect />} />
             <Route path="*" element={<NotFound />} />
