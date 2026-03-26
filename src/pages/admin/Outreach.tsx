@@ -234,6 +234,20 @@ export default function Outreach() {
     },
   });
 
+  // Fetch MATS 2026 event leads
+  const { data: eventLeads = [] } = useQuery({
+    queryKey: ["event-leads-mats2026"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("event_leads")
+        .select("id, full_name, email, phone, event_name")
+        .eq("event_name", "MATS 2026")
+        .order("full_name");
+      if (error) throw error;
+      return data as Array<{ id: string; full_name: string; email: string; phone: string; event_name: string }>;
+    },
+  });
+
   // Fetch customer outreach status
   const { data: outreachStatuses = [], isLoading: loadingOutreachStatus } = useQuery({
     queryKey: ["customer-outreach-status"],
@@ -345,12 +359,15 @@ export default function Outreach() {
     if (targetAudience === "archived") return c.status === "archived";
     if (targetAudience === "pending") return c.status === "pending";
     if (targetAudience === "custom") return selectedCustomers.includes(c.id);
+    if (targetAudience === "event_mats_2026") return false; // handled separately
     return true;
   });
 
   // Get recipient count
   const recipientCount = targetAudience === "custom" 
     ? selectedCustomers.length 
+    : targetAudience === "event_mats_2026"
+    ? eventLeads.length
     : filteredCustomers.length;
 
   // Load template into compose
@@ -511,13 +528,24 @@ export default function Outreach() {
       if (campaignError) throw campaignError;
 
       // Get recipients with customer data for personalization
-      const recipientsWithData = filteredCustomers
-        .filter(c => c.email)
-        .map(c => ({
-          email: c.email,
-          customer_id: c.id,
-          customer_name: c.full_name || "Valued Customer",
-        }));
+      let recipientsWithData;
+      if (targetAudience === "event_mats_2026") {
+        recipientsWithData = eventLeads
+          .filter(l => l.email)
+          .map(l => ({
+            email: l.email,
+            customer_id: l.id,
+            customer_name: l.full_name || "Valued Visitor",
+          }));
+      } else {
+        recipientsWithData = filteredCustomers
+          .filter(c => c.email)
+          .map(c => ({
+            email: c.email,
+            customer_id: c.id,
+            customer_name: c.full_name || "Valued Customer",
+          }));
+      }
 
       // Send emails with new format that includes customer data
       const { data, error } = await supabase.functions.invoke("send-outreach-email", {
@@ -855,6 +883,7 @@ export default function Outreach() {
                             <SelectItem value="active">Active Only</SelectItem>
                             <SelectItem value="archived">Archived Only</SelectItem>
                             <SelectItem value="pending">Pending Only</SelectItem>
+                            <SelectItem value="event_mats_2026">Event — MATS 2026</SelectItem>
                             <SelectItem value="custom">Custom Selection</SelectItem>
                           </SelectContent>
                         </Select>
