@@ -27,7 +27,7 @@ const PriceSheet = () => {
         title="Trailer Lease Price Sheet | CRUMS Leasing"
         description="View current monthly lease rates for dry van and flatbed trailers. Competitive pricing on 2018–2027 model year trailers."
         canonical="https://crumsleasing.com/price-sheet"
-        noIndex
+        noindex
       />
       <Navigation />
       <main className="flex-1 bg-background">
