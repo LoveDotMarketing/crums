@@ -1,0 +1,1 @@
+ALTER TABLE public.event_leads ADD COLUMN company text;
