@@ -365,16 +365,8 @@ function EventLeadsTab() {
     </>
   );
 }
-      const { data, error } = await supabase
-        .from("event_leads" as any)
-        .select("*")
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      return data as any[];
-    },
-  });
 
-  const deleteLead = useMutation({
+
     mutationFn: async (id: string) => {
       const { error } = await supabase.from("event_leads").delete().eq("id", id);
       if (error) throw error;
