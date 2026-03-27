@@ -16,6 +16,7 @@ import { SEO } from "@/components/SEO";
 
 const eventLeadSchema = z.object({
   full_name: z.string().min(1, "Name is required").max(100),
+  company: z.string().max(200).optional(),
   email: z.string().email("Invalid email address").max(255),
   phone: z.string()
     .regex(/^[\+]?[(]?[0-9]{1,4}[)]?[-\s./0-9]*$/, "Invalid phone number")
