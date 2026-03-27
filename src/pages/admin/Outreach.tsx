@@ -121,6 +121,36 @@ function EventLeadsTab() {
   const [isScanning, setIsScanning] = useState(false);
   const [scannedData, setScannedData] = useState<{ full_name: string; email: string; phone: string; company: string } | null>(null);
   const [isAddingLead, setIsAddingLead] = useState(false);
+  const [showManualDialog, setShowManualDialog] = useState(false);
+  const [manualData, setManualData] = useState({ full_name: "", email: "", phone: "", company: "" });
+  const [isAddingManual, setIsAddingManual] = useState(false);
+
+  const handleManualAdd = async () => {
+    if (!manualData.full_name || !manualData.email || !manualData.phone) {
+      toast.error("Name, email, and phone are required");
+      return;
+    }
+    setIsAddingManual(true);
+    try {
+      const { error } = await supabase.from("event_leads").insert({
+        full_name: manualData.full_name.trim(),
+        email: manualData.email.trim().toLowerCase(),
+        phone: manualData.phone.trim(),
+        company: manualData.company.trim() || null,
+        event_name: "MATS 2026",
+      });
+      if (error) throw error;
+      queryClient.invalidateQueries({ queryKey: ["event-leads"] });
+      queryClient.invalidateQueries({ queryKey: ["event-leads-mats2026"] });
+      toast.success(`${manualData.full_name.trim()} added to MATS 2026 list`);
+      setShowManualDialog(false);
+      setManualData({ full_name: "", email: "", phone: "", company: "" });
+    } catch (err: any) {
+      toast.error("Failed to add lead: " + (err.message || "Unknown error"));
+    } finally {
+      setIsAddingManual(false);
+    }
+  };
 
   const { data: eventLeads = [], isLoading } = useQuery({
     queryKey: ["event-leads"],
