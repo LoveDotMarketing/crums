@@ -148,9 +148,9 @@ function EventLeadsTab() {
 
   const exportCSV = () => {
     if (!eventLeads.length) return;
-    const headers = ["Name", "Email", "Phone", "Event", "Notes", "Submitted At"];
+    const headers = ["Name", "Company", "Email", "Phone", "Event", "Notes", "Submitted At"];
     const rows = eventLeads.map((l: any) => [
-      l.full_name, l.email, l.phone, l.event_name, l.notes || "", format(new Date(l.created_at), "yyyy-MM-dd HH:mm"),
+      l.full_name, l.company || "", l.email, l.phone, l.event_name, l.notes || "", format(new Date(l.created_at), "yyyy-MM-dd HH:mm"),
     ]);
     const csv = [headers, ...rows].map(r => r.map((c: string) => `"${c}"`).join(",")).join("\n");
     const blob = new Blob([csv], { type: "text/csv" });
