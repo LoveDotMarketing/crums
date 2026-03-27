@@ -102,6 +102,19 @@ export default function MATS2026() {
               />
               <FormField
                 control={form.control}
+                name="company"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Company Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="ABC Trucking" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
                 name="email"
                 render={({ field }) => (
                   <FormItem>

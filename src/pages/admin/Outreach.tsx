@@ -272,6 +272,7 @@ function EventLeadsTab() {
                 {eventLeads.map((lead: any) => (
                   <TableRow key={lead.id}>
                     <TableCell className="font-medium">{lead.full_name}</TableCell>
+                    <TableCell>{lead.company || "—"}</TableCell>
                     <TableCell>{lead.email}</TableCell>
                     <TableCell>{lead.phone}</TableCell>
                     <TableCell><Badge variant="secondary">{lead.event_name}</Badge></TableCell>
