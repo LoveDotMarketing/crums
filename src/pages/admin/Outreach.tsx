@@ -18,7 +18,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, Send, Save, FileText, Settings, History, Mail, Users, TestTube, Trash2, Edit, Eye, Power, AlertTriangle, Play, CheckCircle, XCircle, Clock, UserCheck, Truck, Download, Camera } from "lucide-react";
+import { Loader2, Send, Save, FileText, Settings, History, Mail, Users, TestTube, Trash2, Edit, Eye, Power, AlertTriangle, Play, CheckCircle, XCircle, Clock, UserCheck, Truck, Download, Camera, UserPlus } from "lucide-react";
 import { format } from "date-fns";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
@@ -121,6 +121,36 @@ function EventLeadsTab() {
   const [isScanning, setIsScanning] = useState(false);
   const [scannedData, setScannedData] = useState<{ full_name: string; email: string; phone: string; company: string } | null>(null);
   const [isAddingLead, setIsAddingLead] = useState(false);
+  const [showManualDialog, setShowManualDialog] = useState(false);
+  const [manualData, setManualData] = useState({ full_name: "", email: "", phone: "", company: "" });
+  const [isAddingManual, setIsAddingManual] = useState(false);
+
+  const handleManualAdd = async () => {
+    if (!manualData.full_name || !manualData.email || !manualData.phone) {
+      toast.error("Name, email, and phone are required");
+      return;
+    }
+    setIsAddingManual(true);
+    try {
+      const { error } = await supabase.from("event_leads").insert({
+        full_name: manualData.full_name.trim(),
+        email: manualData.email.trim().toLowerCase(),
+        phone: manualData.phone.trim(),
+        company: manualData.company.trim() || null,
+        event_name: "MATS 2026",
+      });
+      if (error) throw error;
+      queryClient.invalidateQueries({ queryKey: ["event-leads"] });
+      queryClient.invalidateQueries({ queryKey: ["event-leads-mats2026"] });
+      toast.success(`${manualData.full_name.trim()} added to MATS 2026 list`);
+      setShowManualDialog(false);
+      setManualData({ full_name: "", email: "", phone: "", company: "" });
+    } catch (err: any) {
+      toast.error("Failed to add lead: " + (err.message || "Unknown error"));
+    } finally {
+      setIsAddingManual(false);
+    }
+  };
 
   const { data: eventLeads = [], isLoading } = useQuery({
     queryKey: ["event-leads"],
@@ -241,8 +271,11 @@ function EventLeadsTab() {
               <CardDescription>{eventLeads.length} total leads collected</CardDescription>
             </div>
             <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={() => setShowManualDialog(true)}>
+                <UserPlus className="h-4 w-4 mr-2" /> Add Lead
+              </Button>
               <Button variant="outline" size="sm" onClick={() => setShowScanDialog(true)}>
-                <Camera className="h-4 w-4 mr-2" /> Scan Business Card
+                <Camera className="h-4 w-4 mr-2" /> Scan Card
               </Button>
               <Button variant="outline" size="sm" onClick={exportCSV} disabled={!eventLeads.length}>
                 <Download className="h-4 w-4 mr-2" /> Export CSV
@@ -362,6 +395,39 @@ function EventLeadsTab() {
               </Button>
             </DialogFooter>
           )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showManualDialog} onOpenChange={(open) => { if (!open) { setShowManualDialog(false); setManualData({ full_name: "", email: "", phone: "", company: "" }); } }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Add Lead Manually</DialogTitle>
+            <DialogDescription>Add a new lead to the MATS 2026 list.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label>Full Name *</Label>
+              <Input placeholder="John Smith" value={manualData.full_name} onChange={(e) => setManualData(d => ({ ...d, full_name: e.target.value }))} />
+            </div>
+            <div className="space-y-2">
+              <Label>Email *</Label>
+              <Input type="email" placeholder="john@example.com" value={manualData.email} onChange={(e) => setManualData(d => ({ ...d, email: e.target.value }))} />
+            </div>
+            <div className="space-y-2">
+              <Label>Phone *</Label>
+              <Input type="tel" placeholder="(555) 123-4567" value={manualData.phone} onChange={(e) => setManualData(d => ({ ...d, phone: e.target.value }))} />
+            </div>
+            <div className="space-y-2">
+              <Label>Company</Label>
+              <Input placeholder="ABC Trucking" value={manualData.company} onChange={(e) => setManualData(d => ({ ...d, company: e.target.value }))} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setShowManualDialog(false); setManualData({ full_name: "", email: "", phone: "", company: "" }); }}>Cancel</Button>
+            <Button onClick={handleManualAdd} disabled={isAddingManual}>
+              {isAddingManual ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Adding...</> : "Add to MATS 2026"}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </>
