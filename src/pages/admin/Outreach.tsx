@@ -205,7 +205,7 @@ function EventLeadsTab() {
         full_name: scannedData.full_name,
         email: scannedData.email,
         phone: scannedData.phone,
-        notes: scannedData.company || null,
+        company: scannedData.company || null,
         event_name: "MATS 2026",
       });
       if (error) throw error;
