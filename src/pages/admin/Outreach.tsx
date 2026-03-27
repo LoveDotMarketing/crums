@@ -116,9 +116,255 @@ interface AutomationResult {
 
 function EventLeadsTab() {
   const queryClient = useQueryClient();
+  const [showScanDialog, setShowScanDialog] = useState(false);
+  const [scanImage, setScanImage] = useState<string | null>(null);
+  const [isScanning, setIsScanning] = useState(false);
+  const [scannedData, setScannedData] = useState<{ full_name: string; email: string; phone: string; company: string } | null>(null);
+  const [isAddingLead, setIsAddingLead] = useState(false);
+
   const { data: eventLeads = [], isLoading } = useQuery({
     queryKey: ["event-leads"],
     queryFn: async () => {
+      const { data, error } = await supabase
+        .from("event_leads" as any)
+        .select("*")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data as any[];
+    },
+  });
+
+  const deleteLead = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("event_leads").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["event-leads"] });
+      toast.success("Lead removed");
+    },
+    onError: () => toast.error("Failed to delete lead"),
+  });
+
+  const exportCSV = () => {
+    if (!eventLeads.length) return;
+    const headers = ["Name", "Email", "Phone", "Event", "Notes", "Submitted At"];
+    const rows = eventLeads.map((l: any) => [
+      l.full_name, l.email, l.phone, l.event_name, l.notes || "", format(new Date(l.created_at), "yyyy-MM-dd HH:mm"),
+    ]);
+    const csv = [headers, ...rows].map(r => r.map((c: string) => `"${c}"`).join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `event-leads-${format(new Date(), "yyyy-MM-dd")}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setScanImage(reader.result as string);
+      setScannedData(null);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleScan = async () => {
+    if (!scanImage) return;
+    setIsScanning(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("scan-business-card", {
+        body: { image: scanImage },
+      });
+      if (error) throw error;
+      setScannedData({
+        full_name: data.full_name || "",
+        email: data.email || "",
+        phone: data.phone || "",
+        company: data.company || "",
+      });
+    } catch (err: any) {
+      toast.error("Scan failed: " + (err.message || "Unknown error"));
+    } finally {
+      setIsScanning(false);
+    }
+  };
+
+  const handleAddLead = async () => {
+    if (!scannedData?.full_name || !scannedData?.email || !scannedData?.phone) {
+      toast.error("Name, email, and phone are required");
+      return;
+    }
+    setIsAddingLead(true);
+    try {
+      const { error } = await supabase.from("event_leads").insert({
+        full_name: scannedData.full_name,
+        email: scannedData.email,
+        phone: scannedData.phone,
+        notes: scannedData.company || null,
+        event_name: "MATS 2026",
+      });
+      if (error) throw error;
+      queryClient.invalidateQueries({ queryKey: ["event-leads"] });
+      queryClient.invalidateQueries({ queryKey: ["event-leads-mats2026"] });
+      toast.success(`${scannedData.full_name} added to MATS 2026 list`);
+      setShowScanDialog(false);
+      setScanImage(null);
+      setScannedData(null);
+    } catch (err: any) {
+      toast.error("Failed to add lead: " + (err.message || "Unknown error"));
+    } finally {
+      setIsAddingLead(false);
+    }
+  };
+
+  const resetScanDialog = () => {
+    setShowScanDialog(false);
+    setScanImage(null);
+    setScannedData(null);
+    setIsScanning(false);
+  };
+
+  return (
+    <>
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <Truck className="h-5 w-5" /> Event Leads
+              </CardTitle>
+              <CardDescription>{eventLeads.length} total leads collected</CardDescription>
+            </div>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={() => setShowScanDialog(true)}>
+                <Camera className="h-4 w-4 mr-2" /> Scan Business Card
+              </Button>
+              <Button variant="outline" size="sm" onClick={exportCSV} disabled={!eventLeads.length}>
+                <Download className="h-4 w-4 mr-2" /> Export CSV
+              </Button>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin" /></div>
+          ) : eventLeads.length === 0 ? (
+            <p className="text-center text-muted-foreground py-8">No event leads yet.</p>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Phone</TableHead>
+                  <TableHead>Event</TableHead>
+                  <TableHead>Submitted</TableHead>
+                  <TableHead className="w-12"></TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {eventLeads.map((lead: any) => (
+                  <TableRow key={lead.id}>
+                    <TableCell className="font-medium">{lead.full_name}</TableCell>
+                    <TableCell>{lead.email}</TableCell>
+                    <TableCell>{lead.phone}</TableCell>
+                    <TableCell><Badge variant="secondary">{lead.event_name}</Badge></TableCell>
+                    <TableCell>{format(new Date(lead.created_at), "MMM d, yyyy h:mm a")}</TableCell>
+                    <TableCell>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-destructive hover:text-destructive"
+                        onClick={() => {
+                          if (confirm(`Remove ${lead.full_name}?`)) {
+                            deleteLead.mutate(lead.id);
+                          }
+                        }}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
+
+      <Dialog open={showScanDialog} onOpenChange={resetScanDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Scan Business Card</DialogTitle>
+            <DialogDescription>Upload or capture a business card photo to extract contact info and add to MATS 2026 leads.</DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            {!scannedData ? (
+              <>
+                <div>
+                  <Label htmlFor="card-image">Business Card Photo</Label>
+                  <Input
+                    id="card-image"
+                    type="file"
+                    accept="image/*"
+                    capture="environment"
+                    onChange={handleImageSelect}
+                    className="mt-1"
+                  />
+                </div>
+
+                {scanImage && (
+                  <div className="space-y-3">
+                    <img src={scanImage} alt="Business card preview" className="w-full rounded-md border" />
+                    <Button onClick={handleScan} disabled={isScanning} className="w-full">
+                      {isScanning ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Scanning...</> : <><Camera className="h-4 w-4 mr-2" /> Scan Card</>}
+                    </Button>
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="space-y-3">
+                <div>
+                  <Label htmlFor="scan-name">Full Name *</Label>
+                  <Input id="scan-name" value={scannedData.full_name} onChange={e => setScannedData({ ...scannedData, full_name: e.target.value })} />
+                </div>
+                <div>
+                  <Label htmlFor="scan-email">Email *</Label>
+                  <Input id="scan-email" type="email" value={scannedData.email} onChange={e => setScannedData({ ...scannedData, email: e.target.value })} />
+                </div>
+                <div>
+                  <Label htmlFor="scan-phone">Phone *</Label>
+                  <Input id="scan-phone" value={scannedData.phone} onChange={e => setScannedData({ ...scannedData, phone: e.target.value })} />
+                </div>
+                <div>
+                  <Label htmlFor="scan-company">Company / Notes</Label>
+                  <Input id="scan-company" value={scannedData.company} onChange={e => setScannedData({ ...scannedData, company: e.target.value })} />
+                </div>
+              </div>
+            )}
+          </div>
+
+          {scannedData && (
+            <DialogFooter className="gap-2 sm:gap-0">
+              <Button variant="outline" onClick={() => { setScannedData(null); setScanImage(null); }}>
+                Re-scan
+              </Button>
+              <Button onClick={handleAddLead} disabled={isAddingLead}>
+                {isAddingLead ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Adding...</> : "Add to MATS 2026"}
+              </Button>
+            </DialogFooter>
+          )}
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
       const { data, error } = await supabase
         .from("event_leads" as any)
         .select("*")
