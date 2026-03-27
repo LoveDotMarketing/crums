@@ -271,8 +271,11 @@ function EventLeadsTab() {
               <CardDescription>{eventLeads.length} total leads collected</CardDescription>
             </div>
             <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={() => setShowManualDialog(true)}>
+                <UserPlus className="h-4 w-4 mr-2" /> Add Lead
+              </Button>
               <Button variant="outline" size="sm" onClick={() => setShowScanDialog(true)}>
-                <Camera className="h-4 w-4 mr-2" /> Scan Business Card
+                <Camera className="h-4 w-4 mr-2" /> Scan Card
               </Button>
               <Button variant="outline" size="sm" onClick={exportCSV} disabled={!eventLeads.length}>
                 <Download className="h-4 w-4 mr-2" /> Export CSV
