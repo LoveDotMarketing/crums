@@ -42,6 +42,7 @@ export default function MATS2026() {
     try {
       const { error } = await supabase.from("event_leads" as any).insert({
         full_name: values.full_name.trim(),
+        company: values.company?.trim() || null,
         email: values.email.trim().toLowerCase(),
         phone: values.phone.trim(),
         notes: values.notes?.trim() || null,
