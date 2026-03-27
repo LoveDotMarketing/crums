@@ -397,6 +397,39 @@ function EventLeadsTab() {
           )}
         </DialogContent>
       </Dialog>
+
+      <Dialog open={showManualDialog} onOpenChange={(open) => { if (!open) { setShowManualDialog(false); setManualData({ full_name: "", email: "", phone: "", company: "" }); } }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Add Lead Manually</DialogTitle>
+            <DialogDescription>Add a new lead to the MATS 2026 list.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label>Full Name *</Label>
+              <Input placeholder="John Smith" value={manualData.full_name} onChange={(e) => setManualData(d => ({ ...d, full_name: e.target.value }))} />
+            </div>
+            <div className="space-y-2">
+              <Label>Email *</Label>
+              <Input type="email" placeholder="john@example.com" value={manualData.email} onChange={(e) => setManualData(d => ({ ...d, email: e.target.value }))} />
+            </div>
+            <div className="space-y-2">
+              <Label>Phone *</Label>
+              <Input type="tel" placeholder="(555) 123-4567" value={manualData.phone} onChange={(e) => setManualData(d => ({ ...d, phone: e.target.value }))} />
+            </div>
+            <div className="space-y-2">
+              <Label>Company</Label>
+              <Input placeholder="ABC Trucking" value={manualData.company} onChange={(e) => setManualData(d => ({ ...d, company: e.target.value }))} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setShowManualDialog(false); setManualData({ full_name: "", email: "", phone: "", company: "" }); }}>Cancel</Button>
+            <Button onClick={handleManualAdd} disabled={isAddingManual}>
+              {isAddingManual ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Adding...</> : "Add to MATS 2026"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
