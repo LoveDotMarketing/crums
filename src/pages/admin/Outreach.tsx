@@ -148,9 +148,9 @@ function EventLeadsTab() {
 
   const exportCSV = () => {
     if (!eventLeads.length) return;
-    const headers = ["Name", "Email", "Phone", "Event", "Notes", "Submitted At"];
+    const headers = ["Name", "Company", "Email", "Phone", "Event", "Notes", "Submitted At"];
     const rows = eventLeads.map((l: any) => [
-      l.full_name, l.email, l.phone, l.event_name, l.notes || "", format(new Date(l.created_at), "yyyy-MM-dd HH:mm"),
+      l.full_name, l.company || "", l.email, l.phone, l.event_name, l.notes || "", format(new Date(l.created_at), "yyyy-MM-dd HH:mm"),
     ]);
     const csv = [headers, ...rows].map(r => r.map((c: string) => `"${c}"`).join(",")).join("\n");
     const blob = new Blob([csv], { type: "text/csv" });
@@ -205,7 +205,7 @@ function EventLeadsTab() {
         full_name: scannedData.full_name,
         email: scannedData.email,
         phone: scannedData.phone,
-        notes: scannedData.company || null,
+        company: scannedData.company || null,
         event_name: "MATS 2026",
       });
       if (error) throw error;
@@ -260,6 +260,7 @@ function EventLeadsTab() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Name</TableHead>
+                  <TableHead>Company</TableHead>
                   <TableHead>Email</TableHead>
                   <TableHead>Phone</TableHead>
                   <TableHead>Event</TableHead>
@@ -271,6 +272,7 @@ function EventLeadsTab() {
                 {eventLeads.map((lead: any) => (
                   <TableRow key={lead.id}>
                     <TableCell className="font-medium">{lead.full_name}</TableCell>
+                    <TableCell>{lead.company || "—"}</TableCell>
                     <TableCell>{lead.email}</TableCell>
                     <TableCell>{lead.phone}</TableCell>
                     <TableCell><Badge variant="secondary">{lead.event_name}</Badge></TableCell>

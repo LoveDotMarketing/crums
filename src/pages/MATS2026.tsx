@@ -16,6 +16,7 @@ import { SEO } from "@/components/SEO";
 
 const eventLeadSchema = z.object({
   full_name: z.string().min(1, "Name is required").max(100),
+  company: z.string().max(200).optional(),
   email: z.string().email("Invalid email address").max(255),
   phone: z.string()
     .regex(/^[\+]?[(]?[0-9]{1,4}[)]?[-\s./0-9]*$/, "Invalid phone number")
@@ -33,7 +34,7 @@ export default function MATS2026() {
 
   const form = useForm<EventLeadForm>({
     resolver: zodResolver(eventLeadSchema),
-    defaultValues: { full_name: "", email: "", phone: "", notes: "", email_optin: false as any, sms_optin: false as any },
+    defaultValues: { full_name: "", company: "", email: "", phone: "", notes: "", email_optin: false as any, sms_optin: false as any },
   });
 
   const onSubmit = async (values: EventLeadForm) => {
@@ -41,6 +42,7 @@ export default function MATS2026() {
     try {
       const { error } = await supabase.from("event_leads" as any).insert({
         full_name: values.full_name.trim(),
+        company: values.company?.trim() || null,
         email: values.email.trim().toLowerCase(),
         phone: values.phone.trim(),
         notes: values.notes?.trim() || null,
@@ -93,6 +95,19 @@ export default function MATS2026() {
                     <FormLabel>Full Name *</FormLabel>
                     <FormControl>
                       <Input placeholder="John Smith" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="company"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Company Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="ABC Trucking" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

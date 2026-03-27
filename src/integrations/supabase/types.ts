@@ -1157,6 +1157,7 @@ export type Database = {
       }
       event_leads: {
         Row: {
+          company: string | null
           created_at: string
           email: string
           event_name: string
@@ -1166,6 +1167,7 @@ export type Database = {
           phone: string
         }
         Insert: {
+          company?: string | null
           created_at?: string
           email: string
           event_name?: string
@@ -1175,6 +1177,7 @@ export type Database = {
           phone: string
         }
         Update: {
+          company?: string | null
           created_at?: string
           email?: string
           event_name?: string
