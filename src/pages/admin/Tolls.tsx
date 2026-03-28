@@ -212,12 +212,10 @@ export default function Tolls() {
   };
 
   const getCustomerName = (toll: Toll) => {
-    if (toll.profiles) {
-      const { first_name, last_name, email } = toll.profiles;
-      if (first_name || last_name) {
-        return `${first_name || ''} ${last_name || ''}`.trim();
-      }
-      return email;
+    if (toll.customers) {
+      const { full_name, company_name, email } = toll.customers;
+      if (company_name) return `${full_name} (${company_name})`;
+      return full_name || email || "Unknown";
     }
     return "Unknown";
   };
