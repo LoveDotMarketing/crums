@@ -46,11 +46,11 @@ const tollSchema = z.object({
 
 type TollFormValues = z.infer<typeof tollSchema>;
 
-interface Profile {
+interface Customer {
   id: string;
-  first_name: string | null;
-  last_name: string | null;
-  email: string;
+  full_name: string;
+  email: string | null;
+  company_name: string | null;
 }
 
 interface Trailer {
@@ -66,7 +66,7 @@ interface TollFormDialogProps {
 
 export function TollFormDialog({ open, onOpenChange, onSuccess }: TollFormDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [profiles, setProfiles] = useState<Profile[]>([]);
+  const [customers, setCustomers] = useState<Customer[]>([]);
   const [trailers, setTrailers] = useState<Trailer[]>([]);
   const [tollPhoto, setTollPhoto] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
@@ -87,7 +87,7 @@ export function TollFormDialog({ open, onOpenChange, onSuccess }: TollFormDialog
 
   useEffect(() => {
     if (open) {
-      fetchProfiles();
+      fetchCustomers();
       fetchTrailers();
     } else {
       setTollPhoto(null);
@@ -95,22 +95,20 @@ export function TollFormDialog({ open, onOpenChange, onSuccess }: TollFormDialog
     }
   }, [open]);
 
-  const fetchProfiles = async () => {
+  const fetchCustomers = async () => {
     const { data, error } = await supabase
-      .from("profiles")
-      .select("id, first_name, last_name, email")
-      .order("email");
+      .from("customers")
+      .select("id, full_name, email, company_name")
+      .order("full_name");
     
     if (!error && data) {
-      setProfiles(data);
+      setCustomers(data);
     }
   };
   
-  const getProfileName = (profile: Profile) => {
-    if (profile.first_name || profile.last_name) {
-      return `${profile.first_name || ''} ${profile.last_name || ''}`.trim();
-    }
-    return profile.email;
+  const getCustomerLabel = (customer: Customer) => {
+    const name = customer.full_name || customer.email || "Unknown";
+    return customer.company_name ? `${name} (${customer.company_name})` : name;
   };
 
   const fetchTrailers = async () => {
@@ -202,9 +200,9 @@ export function TollFormDialog({ open, onOpenChange, onSuccess }: TollFormDialog
       }
 
       // Log the admin action
-      const customerProfile = profiles?.find(p => p.id === values.customer_id);
+      const customer = customers?.find(c => c.id === values.customer_id);
       logTollAssigned(
-        customerProfile ? `${customerProfile.first_name || ''} ${customerProfile.last_name || ''}`.trim() || customerProfile.email : values.customer_id,
+        customer ? customer.full_name || customer.email || values.customer_id : values.customer_id,
         parseFloat(values.amount),
         values.toll_authority || undefined
       );
@@ -240,9 +238,9 @@ export function TollFormDialog({ open, onOpenChange, onSuccess }: TollFormDialog
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {profiles.map((profile) => (
-                        <SelectItem key={profile.id} value={profile.id}>
-                          {getProfileName(profile)}
+                      {customers.map((customer) => (
+                        <SelectItem key={customer.id} value={customer.id}>
+                          {getCustomerLabel(customer)}
                         </SelectItem>
                       ))}
                     </SelectContent>

@@ -88,9 +88,9 @@ export default function Reports() {
           toll_date,
           status,
           customer_id,
-          profiles:customer_id (
-            first_name,
-            last_name,
+          customers:customer_id (
+            full_name,
+            company_name,
             email
           )
         `)
@@ -104,14 +104,12 @@ export default function Reports() {
       return (data || []).map((toll) => {
         const tollDate = new Date(toll.toll_date);
         const daysOverdue = differenceInDays(today, tollDate);
-        const profile = toll.profiles as { first_name: string | null; last_name: string | null; email: string } | null;
+        const customer = (toll as any).customers as { full_name: string; company_name: string | null; email: string | null } | null;
         
         return {
           id: toll.id,
-          customer_name: profile 
-            ? `${profile.first_name || ""} ${profile.last_name || ""}`.trim() || profile.email
-            : "Unknown",
-          customer_email: profile?.email || "",
+          customer_name: customer?.full_name || customer?.email || "Unknown",
+          customer_email: customer?.email || "",
           amount: Number(toll.amount),
           toll_date: toll.toll_date,
           days_overdue: Math.max(0, daysOverdue),
@@ -160,7 +158,7 @@ export default function Reports() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("tolls")
-        .select("id, amount, status, toll_date, customer_id, profiles:customer_id (first_name, last_name, email)")
+        .select("id, amount, status, toll_date, customer_id, customers:customer_id (full_name, company_name, email)")
         .gte("toll_date", startDate.toISOString().split("T")[0]);
 
       if (error) throw error;
@@ -173,10 +171,8 @@ export default function Reports() {
       // Group tolls by customer for invoice-like view
       const customerTolls = new Map<string, { customer: string; amount: number; status: string; id: string }>();
       tolls.forEach(toll => {
-        const profile = toll.profiles as { first_name: string | null; last_name: string | null; email: string } | null;
-        const customerName = profile 
-          ? `${profile.first_name || ""} ${profile.last_name || ""}`.trim() || profile.email
-          : "Unknown";
+        const customer = (toll as any).customers as { full_name: string; company_name: string | null; email: string | null } | null;
+        const customerName = customer?.full_name || customer?.email || "Unknown";
         const key = toll.customer_id;
         
         if (customerTolls.has(key)) {
