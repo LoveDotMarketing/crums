@@ -46,11 +46,11 @@ const tollSchema = z.object({
 
 type TollFormValues = z.infer<typeof tollSchema>;
 
-interface Profile {
+interface Customer {
   id: string;
-  first_name: string | null;
-  last_name: string | null;
-  email: string;
+  full_name: string;
+  email: string | null;
+  company_name: string | null;
 }
 
 interface Trailer {
