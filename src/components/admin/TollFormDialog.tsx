@@ -238,9 +238,9 @@ export function TollFormDialog({ open, onOpenChange, onSuccess }: TollFormDialog
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {profiles.map((profile) => (
-                        <SelectItem key={profile.id} value={profile.id}>
-                          {getProfileName(profile)}
+                      {customers.map((customer) => (
+                        <SelectItem key={customer.id} value={customer.id}>
+                          {getCustomerLabel(customer)}
                         </SelectItem>
                       ))}
                     </SelectContent>
