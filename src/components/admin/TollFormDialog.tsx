@@ -66,7 +66,7 @@ interface TollFormDialogProps {
 
 export function TollFormDialog({ open, onOpenChange, onSuccess }: TollFormDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [profiles, setProfiles] = useState<Profile[]>([]);
+  const [customers, setCustomers] = useState<Customer[]>([]);
   const [trailers, setTrailers] = useState<Trailer[]>([]);
   const [tollPhoto, setTollPhoto] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
