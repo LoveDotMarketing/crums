@@ -104,13 +104,12 @@ export default function Reports() {
       return (data || []).map((toll) => {
         const tollDate = new Date(toll.toll_date);
         const daysOverdue = differenceInDays(today, tollDate);
-        const customer = toll.customers as { full_name: string; company_name: string | null; email: string | null } | null;
+        const customer = (toll as any).customers as { full_name: string; company_name: string | null; email: string | null } | null;
         
         return {
           id: toll.id,
           customer_name: customer?.full_name || customer?.email || "Unknown",
           customer_email: customer?.email || "",
-          customer_email: profile?.email || "",
           amount: Number(toll.amount),
           toll_date: toll.toll_date,
           days_overdue: Math.max(0, daysOverdue),
