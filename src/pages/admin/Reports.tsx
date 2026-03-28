@@ -159,7 +159,7 @@ export default function Reports() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("tolls")
-        .select("id, amount, status, toll_date, customer_id, profiles:customer_id (first_name, last_name, email)")
+        .select("id, amount, status, toll_date, customer_id, customers:customer_id (full_name, company_name, email)")
         .gte("toll_date", startDate.toISOString().split("T")[0]);
 
       if (error) throw error;
