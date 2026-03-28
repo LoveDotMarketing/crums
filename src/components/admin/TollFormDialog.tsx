@@ -95,22 +95,20 @@ export function TollFormDialog({ open, onOpenChange, onSuccess }: TollFormDialog
     }
   }, [open]);
 
-  const fetchProfiles = async () => {
+  const fetchCustomers = async () => {
     const { data, error } = await supabase
-      .from("profiles")
-      .select("id, first_name, last_name, email")
-      .order("email");
+      .from("customers")
+      .select("id, full_name, email, company_name")
+      .order("full_name");
     
     if (!error && data) {
-      setProfiles(data);
+      setCustomers(data);
     }
   };
   
-  const getProfileName = (profile: Profile) => {
-    if (profile.first_name || profile.last_name) {
-      return `${profile.first_name || ''} ${profile.last_name || ''}`.trim();
-    }
-    return profile.email;
+  const getCustomerLabel = (customer: Customer) => {
+    const name = customer.full_name || customer.email || "Unknown";
+    return customer.company_name ? `${name} (${customer.company_name})` : name;
   };
 
   const fetchTrailers = async () => {
