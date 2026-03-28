@@ -87,7 +87,7 @@ export function TollFormDialog({ open, onOpenChange, onSuccess }: TollFormDialog
 
   useEffect(() => {
     if (open) {
-      fetchProfiles();
+      fetchCustomers();
       fetchTrailers();
     } else {
       setTollPhoto(null);
