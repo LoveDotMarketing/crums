@@ -92,7 +92,7 @@ export default function Tolls() {
         status,
         payment_date,
         receipt_url,
-        profiles:customer_id(first_name, last_name, email),
+        customers:customer_id(full_name, company_name, email),
         trailers(trailer_number)
       `)
       .order("toll_date", { ascending: false });
