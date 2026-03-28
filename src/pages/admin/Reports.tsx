@@ -171,7 +171,7 @@ export default function Reports() {
       // Group tolls by customer for invoice-like view
       const customerTolls = new Map<string, { customer: string; amount: number; status: string; id: string }>();
       tolls.forEach(toll => {
-        const customer = toll.customers as { full_name: string; company_name: string | null; email: string | null } | null;
+        const customer = (toll as any).customers as { full_name: string; company_name: string | null; email: string | null } | null;
         const customerName = customer?.full_name || customer?.email || "Unknown";
         const key = toll.customer_id;
         
