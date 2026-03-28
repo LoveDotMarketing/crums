@@ -103,18 +103,41 @@ export default function Tolls() {
     } else {
       const tollData = (data as unknown as Toll[]) || [];
       setTolls(tollData);
-      // Fetch ACH status for all unique customers
+      // Fetch ACH status: customer_id in tolls now maps to customers.id
+      // Need to look up via customers → profiles → customer_applications
       const customerIds = [...new Set(tollData.map(t => t.customer_id))];
       if (customerIds.length > 0) {
-        const { data: apps } = await supabase
-          .from("customer_applications")
-          .select("user_id, stripe_payment_method_id")
-          .in("user_id", customerIds);
+        const { data: customers } = await supabase
+          .from("customers")
+          .select("id, email")
+          .in("id", customerIds);
+        
         const map: Record<string, boolean> = {};
         customerIds.forEach(id => { map[id] = false; });
-        apps?.forEach(a => {
-          if (a.stripe_payment_method_id) map[a.user_id] = true;
-        });
+        
+        if (customers && customers.length > 0) {
+          const emails = customers.map(c => c.email?.toLowerCase()).filter(Boolean) as string[];
+          const { data: profiles } = await supabase
+            .from("profiles")
+            .select("id, email")
+            .in("email", emails);
+          
+          if (profiles && profiles.length > 0) {
+            const profileIds = profiles.map(p => p.id);
+            const { data: apps } = await supabase
+              .from("customer_applications")
+              .select("user_id, stripe_payment_method_id")
+              .in("user_id", profileIds);
+            
+            apps?.forEach(a => {
+              const profile = profiles.find(p => p.id === a.user_id);
+              if (profile && a.stripe_payment_method_id) {
+                const customer = customers.find(c => c.email?.toLowerCase() === profile.email?.toLowerCase());
+                if (customer) map[customer.id] = true;
+              }
+            });
+          }
+        }
         setAchStatusMap(map);
       }
     }
