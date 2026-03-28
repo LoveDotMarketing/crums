@@ -49,7 +49,7 @@ interface Toll {
   status: string;
   payment_date: string | null;
   receipt_url: string | null;
-  profiles: { first_name: string | null; last_name: string | null; email: string } | null;
+  customers: { full_name: string; company_name: string | null; email: string | null } | null;
   trailers: { trailer_number: string } | null;
 }
 
