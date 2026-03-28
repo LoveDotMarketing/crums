@@ -200,9 +200,9 @@ export function TollFormDialog({ open, onOpenChange, onSuccess }: TollFormDialog
       }
 
       // Log the admin action
-      const customerProfile = profiles?.find(p => p.id === values.customer_id);
+      const customer = customers?.find(c => c.id === values.customer_id);
       logTollAssigned(
-        customerProfile ? `${customerProfile.first_name || ''} ${customerProfile.last_name || ''}`.trim() || customerProfile.email : values.customer_id,
+        customer ? customer.full_name || customer.email || values.customer_id : values.customer_id,
         parseFloat(values.amount),
         values.toll_authority || undefined
       );
