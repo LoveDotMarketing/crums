@@ -88,9 +88,9 @@ export default function Reports() {
           toll_date,
           status,
           customer_id,
-          profiles:customer_id (
-            first_name,
-            last_name,
+          customers:customer_id (
+            full_name,
+            company_name,
             email
           )
         `)
