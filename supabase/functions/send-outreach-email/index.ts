@@ -100,6 +100,9 @@ serve(async (req) => {
     const requestBody: EmailRequest = await req.json();
     const { to, recipients, subject, body, campaign_id, template_id, customer_ids, email_type = "manual" } = requestBody;
 
+    // Check if this is an event leads campaign and filter out unsubscribed
+    const isEventCampaign = requestBody.email_type === "campaign";
+
     // Normalize recipients - support both legacy (to + customer_ids) and new (recipients) format
     let normalizedRecipients: RecipientObject[];
     
@@ -118,6 +121,22 @@ serve(async (req) => {
       console.log(`[SendOutreachEmail] Using legacy format with ${emailArray.length} recipients`);
     } else {
       throw new Error("No recipients specified");
+    }
+    // Filter out unsubscribed event leads if this is an event campaign
+    if (isEventCampaign) {
+      const recipientEmails = normalizedRecipients.map(r => r.email.toLowerCase());
+      const { data: unsubscribedLeads } = await supabaseClient
+        .from("event_leads")
+        .select("email")
+        .in("email", recipientEmails)
+        .eq("unsubscribed", true);
+
+      if (unsubscribedLeads && unsubscribedLeads.length > 0) {
+        const unsubEmails = new Set(unsubscribedLeads.map((l: any) => l.email.toLowerCase()));
+        const before = normalizedRecipients.length;
+        normalizedRecipients = normalizedRecipients.filter(r => !unsubEmails.has(r.email.toLowerCase()));
+        console.log(`[SendOutreachEmail] Filtered out ${before - normalizedRecipients.length} unsubscribed event leads`);
+      }
     }
 
     console.log(`[SendOutreachEmail] ${callerEmail} sending email to ${normalizedRecipients.length} recipients`);

@@ -85,6 +85,7 @@ interface OutreachLog {
   email_type: string;
   status: string;
   sent_at: string | null;
+  opened_at: string | null;
   error_message: string | null;
   created_at: string;
   customer_id: string | null;
@@ -124,6 +125,7 @@ function EventLeadsTab() {
   const [showManualDialog, setShowManualDialog] = useState(false);
   const [manualData, setManualData] = useState({ full_name: "", email: "", phone: "", company: "" });
   const [isAddingManual, setIsAddingManual] = useState(false);
+  const [leadTypeFilter, setLeadTypeFilter] = useState("all");
 
   const handleManualAdd = async () => {
     if (!manualData.full_name || !manualData.email || !manualData.phone) {
@@ -164,6 +166,36 @@ function EventLeadsTab() {
     },
   });
 
+  const updateLeadType = useMutation({
+    mutationFn: async ({ id, lead_type }: { id: string; lead_type: string }) => {
+      const { error } = await supabase.from("event_leads").update({ lead_type } as any).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["event-leads"] });
+      queryClient.invalidateQueries({ queryKey: ["event-leads-mats2026"] });
+    },
+    onError: () => toast.error("Failed to update lead type"),
+  });
+
+  const toggleLeadUnsubscribe = useMutation({
+    mutationFn: async ({ id, unsubscribed }: { id: string; unsubscribed: boolean }) => {
+      const { error } = await supabase.from("event_leads").update({ unsubscribed } as any).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: (_, vars) => {
+      queryClient.invalidateQueries({ queryKey: ["event-leads"] });
+      queryClient.invalidateQueries({ queryKey: ["event-leads-mats2026"] });
+      toast.success(vars.unsubscribed ? "Lead unsubscribed" : "Lead resubscribed");
+    },
+    onError: () => toast.error("Failed to update"),
+  });
+
+  const filteredLeads = eventLeads.filter((l: any) => {
+    if (leadTypeFilter !== "all" && l.lead_type !== leadTypeFilter) return false;
+    return true;
+  });
+
   const deleteLead = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase.from("event_leads").delete().eq("id", id);
@@ -178,9 +210,9 @@ function EventLeadsTab() {
 
   const exportCSV = () => {
     if (!eventLeads.length) return;
-    const headers = ["Name", "Company", "Email", "Phone", "Event", "Notes", "Submitted At"];
+    const headers = ["Name", "Company", "Email", "Phone", "Event", "Type", "Unsubscribed", "Notes", "Submitted At"];
     const rows = eventLeads.map((l: any) => [
-      l.full_name, l.company || "", l.email, l.phone, l.event_name, l.notes || "", format(new Date(l.created_at), "yyyy-MM-dd HH:mm"),
+      l.full_name, l.company || "", l.email, l.phone, l.event_name, l.lead_type || "prospect", l.unsubscribed ? "Yes" : "No", l.notes || "", format(new Date(l.created_at), "yyyy-MM-dd HH:mm"),
     ]);
     const csv = [headers, ...rows].map(r => r.map((c: string) => `"${c}"`).join(",")).join("\n");
     const blob = new Blob([csv], { type: "text/csv" });
@@ -271,6 +303,17 @@ function EventLeadsTab() {
               <CardDescription>{eventLeads.length} total leads collected</CardDescription>
             </div>
             <div className="flex gap-2">
+              <Select value={leadTypeFilter} onValueChange={setLeadTypeFilter}>
+                <SelectTrigger className="w-[140px]">
+                  <SelectValue placeholder="All Types" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Types</SelectItem>
+                  <SelectItem value="prospect">Prospects</SelectItem>
+                  <SelectItem value="partner">Partners</SelectItem>
+                  <SelectItem value="vendor">Vendors</SelectItem>
+                </SelectContent>
+              </Select>
               <Button variant="outline" size="sm" onClick={() => setShowManualDialog(true)}>
                 <UserPlus className="h-4 w-4 mr-2" /> Add Lead
               </Button>
@@ -286,7 +329,7 @@ function EventLeadsTab() {
         <CardContent>
           {isLoading ? (
             <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin" /></div>
-          ) : eventLeads.length === 0 ? (
+          ) : filteredLeads.length === 0 ? (
             <p className="text-center text-muted-foreground py-8">No event leads yet.</p>
           ) : (
             <Table>
@@ -296,19 +339,42 @@ function EventLeadsTab() {
                   <TableHead>Company</TableHead>
                   <TableHead>Email</TableHead>
                   <TableHead>Phone</TableHead>
+                  <TableHead>Type</TableHead>
                   <TableHead>Event</TableHead>
+                  <TableHead>Subscribed</TableHead>
                   <TableHead>Submitted</TableHead>
                   <TableHead className="w-12"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {eventLeads.map((lead: any) => (
-                  <TableRow key={lead.id}>
+                {filteredLeads.map((lead: any) => (
+                  <TableRow key={lead.id} className={lead.unsubscribed ? "opacity-60" : ""}>
                     <TableCell className="font-medium">{lead.full_name}</TableCell>
                     <TableCell>{lead.company || "—"}</TableCell>
                     <TableCell>{lead.email}</TableCell>
                     <TableCell>{lead.phone}</TableCell>
+                    <TableCell>
+                      <Select
+                        value={lead.lead_type || "prospect"}
+                        onValueChange={(val) => updateLeadType.mutate({ id: lead.id, lead_type: val })}
+                      >
+                        <SelectTrigger className="h-8 w-[110px]">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="prospect">Prospect</SelectItem>
+                          <SelectItem value="partner">Partner</SelectItem>
+                          <SelectItem value="vendor">Vendor</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </TableCell>
                     <TableCell><Badge variant="secondary">{lead.event_name}</Badge></TableCell>
+                    <TableCell>
+                      <Switch
+                        checked={!lead.unsubscribed}
+                        onCheckedChange={(checked) => toggleLeadUnsubscribe.mutate({ id: lead.id, unsubscribed: !checked })}
+                      />
+                    </TableCell>
                     <TableCell>{format(new Date(lead.created_at), "MMM d, yyyy h:mm a")}</TableCell>
                     <TableCell>
                       <Button
@@ -464,6 +530,7 @@ export default function Outreach() {
   // Customer status filter
   const [customerStatusFilter, setCustomerStatusFilter] = useState("all");
   const [outreachFilter, setOutreachFilter] = useState("all");
+  const [eventLeadTypeFilter, setEventLeadTypeFilter] = useState("all");
 
   // Fetch customers
   const { data: customers = [], isLoading: loadingCustomers } = useQuery({
@@ -485,11 +552,12 @@ export default function Outreach() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("event_leads")
-        .select("id, full_name, email, phone, event_name")
+        .select("*")
         .eq("event_name", "MATS 2026")
+        .eq("unsubscribed", false as any)
         .order("full_name");
       if (error) throw error;
-      return data as Array<{ id: string; full_name: string; email: string; phone: string; event_name: string }>;
+      return data as unknown as Array<{ id: string; full_name: string; email: string; phone: string; event_name: string; lead_type: string; unsubscribed: boolean }>;
     },
   });
 
@@ -608,11 +676,17 @@ export default function Outreach() {
     return true;
   });
 
+  // Filter event leads by lead type
+  const filteredEventLeads = eventLeads.filter(l => {
+    if (eventLeadTypeFilter !== "all" && l.lead_type !== eventLeadTypeFilter) return false;
+    return true;
+  });
+
   // Get recipient count
   const recipientCount = targetAudience === "custom" 
     ? selectedCustomers.length 
     : targetAudience === "event_mats_2026"
-    ? eventLeads.length
+    ? filteredEventLeads.length
     : filteredCustomers.length;
 
   // Load template into compose
@@ -775,7 +849,7 @@ export default function Outreach() {
       // Get recipients with customer data for personalization
       let recipientsWithData;
       if (targetAudience === "event_mats_2026") {
-        recipientsWithData = eventLeads
+        recipientsWithData = filteredEventLeads
           .filter(l => l.email)
           .map(l => ({
             email: l.email,
@@ -1144,6 +1218,23 @@ export default function Outreach() {
                         </Button>
                       )}
 
+                      {targetAudience === "event_mats_2026" && (
+                        <div className="space-y-2">
+                          <Label>Lead Type</Label>
+                          <Select value={eventLeadTypeFilter} onValueChange={setEventLeadTypeFilter}>
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="all">All Types</SelectItem>
+                              <SelectItem value="prospect">Prospects Only</SelectItem>
+                              <SelectItem value="partner">Partners Only</SelectItem>
+                              <SelectItem value="vendor">Vendors Only</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      )}
+
                       <div className="p-4 bg-muted rounded-lg text-center">
                         <p className="text-3xl font-bold">{recipientCount}</p>
                         <p className="text-sm text-muted-foreground">Recipients</p>
@@ -1352,6 +1443,7 @@ export default function Outreach() {
                           <TableHead>Email</TableHead>
                           <TableHead>Type</TableHead>
                           <TableHead>Status</TableHead>
+                          <TableHead>Opened</TableHead>
                           <TableHead>Sent At</TableHead>
                           <TableHead>Error</TableHead>
                         </TableRow>
@@ -1373,6 +1465,17 @@ export default function Outreach() {
                                   <><Clock className="h-3 w-3 mr-1" /> {log.status}</>
                                 )}
                               </Badge>
+                            </TableCell>
+                            <TableCell>
+                              {log.opened_at ? (
+                                <Badge variant="outline" className="border-green-500 text-green-700">
+                                  <Eye className="h-3 w-3 mr-1" /> {format(new Date(log.opened_at), "MMM d, HH:mm")}
+                                </Badge>
+                              ) : log.status === "sent" ? (
+                                <span className="text-xs text-muted-foreground">Not yet</span>
+                              ) : (
+                                <span className="text-xs text-muted-foreground">—</span>
+                              )}
                             </TableCell>
                             <TableCell>
                               {log.sent_at ? format(new Date(log.sent_at), "MMM d, yyyy HH:mm") : "-"}
