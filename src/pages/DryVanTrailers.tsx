@@ -58,14 +58,6 @@ const DryVanTrailers = () => {
       },
       {
         "@type": "Question",
-        "name": "What are 48 dry van dimensions?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "A 48-foot dry van trailer typically has interior dimensions of 48' length x 102\" width x 110\" height. This provides approximately 3,165 cubic feet of cargo space, with 24 pallet positions for standard 48x40 pallets loaded side by side."
-        }
-      },
-      {
-        "@type": "Question",
         "name": "What is the difference between a vented van trailer and dry van?",
         "acceptedAnswer": {
           "@type": "Answer",
@@ -77,7 +69,7 @@ const DryVanTrailers = () => {
         "name": "What sizes of dry van trailers does CRUMS offer?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "CRUMS Leasing offers 53-foot and 48-foot dry van trailers. The 53-foot trailers are the industry standard for maximum cargo capacity, while 48-foot trailers are ideal for routes with length restrictions."
+          "text": "CRUMS Leasing offers 53-foot dry van trailers — the industry standard for maximum cargo capacity. Our trailers come with swing doors or roll-up doors, logistic posts, and LED lighting."
         }
       },
       {
@@ -102,22 +94,6 @@ const DryVanTrailers = () => {
         "acceptedAnswer": {
           "@type": "Answer",
           "text": "Dry van trailers are versatile and can haul a wide variety of non-perishable goods including consumer products, electronics, clothing, furniture, building materials, packaged foods, and industrial equipment."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "What are the dimensions of a 48-foot dry van trailer?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "A 48-foot dry van trailer has interior dimensions of 48'L x 102\"W (8'6\") x 110\"H (9'2\"), providing approximately 3,165 cubic feet of cargo space. Exterior overall length is approximately 50 feet, with a tare weight around 12,500 lbs and payload capacity up to 44,000 lbs. The rear door opening is 94\" wide x 102\" high."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "How many pallets fit in a 48 foot trailer?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "A 48-foot dry van trailer fits 24 standard pallets (48\" x 40\") loaded side by side in two rows. This is 2 fewer pallet positions than a 53-foot trailer (26 pallets), but the 48' length is required for compliance with certain state length regulations."
         }
       }
     ]
