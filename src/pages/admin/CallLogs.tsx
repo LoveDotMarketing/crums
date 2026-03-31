@@ -28,6 +28,8 @@ interface CallLog {
   priceUnit: string;
   recordingSid: string | null;
   recordingDuration: number | null;
+  source: string;
+  campaign: string | null;
 }
 
 interface CallStats {
@@ -89,11 +91,37 @@ const getDirectionBadge = (direction: string) => {
   );
 };
 
+const getSourceBadge = (source: string, campaign: string | null) => {
+  const badgeContent = () => {
+    switch (source) {
+      case "Paid":
+        return <Badge className="bg-green-100 text-green-800 hover:bg-green-100">Paid</Badge>;
+      case "Organic":
+        return <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100">Organic</Badge>;
+      case "Direct":
+        return <Badge className="bg-gray-100 text-gray-800 hover:bg-gray-100">Direct</Badge>;
+      case "Phone Lead":
+        return <Badge className="bg-purple-100 text-purple-800 hover:bg-purple-100">Phone Lead</Badge>;
+      case "Referral":
+        return <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-100">Referral</Badge>;
+      default:
+        return <Badge variant="outline">Unknown</Badge>;
+    }
+  };
+  return (
+    <div className="flex flex-col gap-0.5">
+      {badgeContent()}
+      {campaign && <span className="text-[10px] text-muted-foreground truncate max-w-[120px]">{campaign}</span>}
+    </div>
+  );
+};
+
 export default function CallLogs() {
   const { toast } = useToast();
   const [dateRange, setDateRange] = useState("7");
   const [directionFilter, setDirectionFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [sourceFilter, setSourceFilter] = useState("all");
   const [transcripts, setTranscripts] = useState<Record<string, string>>({});
   const [loadingTranscripts, setLoadingTranscripts] = useState<Record<string, boolean>>({});
   const [expandedTranscripts, setExpandedTranscripts] = useState<Record<string, boolean>>({});
@@ -159,9 +187,11 @@ export default function CallLogs() {
   });
 
   const filteredCalls = data?.calls?.filter(call => {
-    if (statusFilter === "all") return true;
-    if (statusFilter === "completed") return call.status === "completed";
-    if (statusFilter === "missed") return ["busy", "no-answer", "failed", "canceled"].includes(call.status);
+    if (statusFilter !== "all") {
+      if (statusFilter === "completed" && call.status !== "completed") return false;
+      if (statusFilter === "missed" && !["busy", "no-answer", "failed", "canceled"].includes(call.status)) return false;
+    }
+    if (sourceFilter !== "all" && call.source !== sourceFilter) return false;
     return true;
   }) || [];
 
@@ -173,7 +203,7 @@ export default function CallLogs() {
       return;
     }
 
-    const headers = ["Date/Time", "From", "To", "Direction", "Duration", "Status", "Has Recording"];
+    const headers = ["Date/Time", "From", "To", "Direction", "Duration", "Status", "Source", "Campaign", "Has Recording"];
     const rows = filteredCalls.map(call => [
       call.startTime ? format(new Date(call.startTime), "MMM d, yyyy h:mm a") : "N/A",
       call.fromFormatted || call.from,
@@ -181,6 +211,8 @@ export default function CallLogs() {
       call.direction,
       formatDuration(call.duration),
       call.status,
+      call.source || "Unknown",
+      call.campaign || "",
       call.recordingSid ? "Yes" : "No",
     ]);
 
@@ -336,6 +368,23 @@ export default function CallLogs() {
                   </SelectContent>
                 </Select>
               </div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">Source:</span>
+                <Select value={sourceFilter} onValueChange={setSourceFilter}>
+                  <SelectTrigger className="w-[140px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All</SelectItem>
+                    <SelectItem value="Paid">Paid</SelectItem>
+                    <SelectItem value="Organic">Organic</SelectItem>
+                    <SelectItem value="Direct">Direct</SelectItem>
+                    <SelectItem value="Phone Lead">Phone Lead</SelectItem>
+                    <SelectItem value="Referral">Referral</SelectItem>
+                    <SelectItem value="Unknown">Unknown</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
             {/* Call Log Table */}
@@ -350,13 +399,14 @@ export default function CallLogs() {
                       <TableHead>Direction</TableHead>
                       <TableHead>Duration</TableHead>
                       <TableHead>Status</TableHead>
+                      <TableHead>Source</TableHead>
                       <TableHead>Recording</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {isLoading ? (
                       <TableRow>
-                        <TableCell colSpan={7} className="text-center py-8">
+                        <TableCell colSpan={8} className="text-center py-8">
                           <div className="flex items-center justify-center gap-2">
                             <RefreshCw className="h-4 w-4 animate-spin" />
                             Loading call logs...
@@ -365,7 +415,7 @@ export default function CallLogs() {
                       </TableRow>
                     ) : filteredCalls.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                        <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                           No call logs found for the selected filters
                         </TableCell>
                       </TableRow>
@@ -383,6 +433,7 @@ export default function CallLogs() {
                             <TableCell>{getDirectionBadge(call.direction)}</TableCell>
                             <TableCell>{formatDuration(call.duration)}</TableCell>
                             <TableCell>{getStatusBadge(call.status)}</TableCell>
+                            <TableCell>{getSourceBadge(call.source, call.campaign)}</TableCell>
                             <TableCell className="min-w-[320px]">
                               <div className="flex flex-col gap-2">
                                 {call.recordingSid ? (
