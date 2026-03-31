@@ -204,7 +204,7 @@ const DryVanTrailers = () => {
           <h2 className="text-3xl md:text-4xl font-bold text-center mb-16 text-foreground">
             Available Configurations
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+          <div className="max-w-lg mx-auto">
             <Card className="border-2">
               <CardContent className="p-8">
                 <div className="flex items-center gap-3 mb-6">
@@ -234,39 +234,6 @@ const DryVanTrailers = () => {
                   <li className="flex items-start">
                     <CheckCircle className="h-5 w-5 text-primary mr-3 mt-0.5 flex-shrink-0" />
                     <span>Payload Capacity: Up to 45,000 lbs</span>
-                  </li>
-                </ul>
-              </CardContent>
-            </Card>
-            <Card className="border-2">
-              <CardContent className="p-8">
-                <div className="flex items-center gap-3 mb-6">
-                  <Ruler className="h-8 w-8 text-secondary" />
-                  <h3 className="text-2xl font-bold">48' Dry Van</h3>
-                </div>
-                <p className="text-muted-foreground mb-6">
-                  Perfect for routes with length restrictions or lighter freight loads.
-                </p>
-                <ul className="space-y-3 text-muted-foreground">
-                  <li className="flex items-start">
-                    <CheckCircle className="h-5 w-5 text-secondary mr-3 mt-0.5 flex-shrink-0" />
-                    <span>Interior: 48'L x 8'6"W x 9'2"H (14.6m x 2.6m x 2.8m)</span>
-                  </li>
-                  <li className="flex items-start">
-                    <CheckCircle className="h-5 w-5 text-secondary mr-3 mt-0.5 flex-shrink-0" />
-                    <span>Cargo Capacity: ~3,165 cubic feet</span>
-                  </li>
-                  <li className="flex items-start">
-                    <CheckCircle className="h-5 w-5 text-secondary mr-3 mt-0.5 flex-shrink-0" />
-                    <span>Pallet Positions: 24 standard (48"x40")</span>
-                  </li>
-                  <li className="flex items-start">
-                    <CheckCircle className="h-5 w-5 text-secondary mr-3 mt-0.5 flex-shrink-0" />
-                    <span>Payload Capacity: Up to 44,000 lbs</span>
-                  </li>
-                  <li className="flex items-start">
-                    <CheckCircle className="h-5 w-5 text-secondary mr-3 mt-0.5 flex-shrink-0" />
-                    <span>Door Opening: 94"W x 102"H</span>
                   </li>
                 </ul>
               </CardContent>
