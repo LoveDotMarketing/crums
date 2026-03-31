@@ -203,7 +203,7 @@ export default function CallLogs() {
       return;
     }
 
-    const headers = ["Date/Time", "From", "To", "Direction", "Duration", "Status", "Has Recording"];
+    const headers = ["Date/Time", "From", "To", "Direction", "Duration", "Status", "Source", "Campaign", "Has Recording"];
     const rows = filteredCalls.map(call => [
       call.startTime ? format(new Date(call.startTime), "MMM d, yyyy h:mm a") : "N/A",
       call.fromFormatted || call.from,
@@ -211,6 +211,8 @@ export default function CallLogs() {
       call.direction,
       formatDuration(call.duration),
       call.status,
+      call.source || "Unknown",
+      call.campaign || "",
       call.recordingSid ? "Yes" : "No",
     ]);
 
