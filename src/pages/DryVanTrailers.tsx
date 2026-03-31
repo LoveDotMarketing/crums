@@ -371,16 +371,6 @@ const DryVanTrailers = () => {
             </Card>
             <Card className="border-2">
               <CardContent className="p-6">
-                <h3 className="text-lg font-bold mb-2">What are 48 dry van dimensions?</h3>
-                <p className="text-muted-foreground">
-                  A 48-foot dry van trailer typically has interior dimensions of 48' length x 102" width x 110" height. 
-                  This provides approximately 3,165 cubic feet of cargo space, with 24 pallet positions for standard 
-                  48x40 pallets loaded side by side.
-                </p>
-              </CardContent>
-            </Card>
-            <Card className="border-2">
-              <CardContent className="p-6">
                 <h3 className="text-lg font-bold mb-2">What is the difference between a vented van trailer and dry van?</h3>
                 <p className="text-muted-foreground">
                   A vented van trailer has small vents or openings that allow air circulation, typically used for 
@@ -393,8 +383,8 @@ const DryVanTrailers = () => {
               <CardContent className="p-6">
                 <h3 className="text-lg font-bold mb-2">What sizes of dry van trailers does CRUMS offer?</h3>
                 <p className="text-muted-foreground">
-                  CRUMS Leasing offers 53-foot and 48-foot dry van trailers. The 53-foot trailers are the industry 
-                  standard for maximum cargo capacity, while 48-foot trailers are ideal for routes with length restrictions.
+                  CRUMS Leasing offers 53-foot dry van trailers — the industry standard for maximum cargo capacity. 
+                  Our trailers come with swing doors or roll-up doors, logistic posts, and LED lighting.
                 </p>
               </CardContent>
             </Card>
