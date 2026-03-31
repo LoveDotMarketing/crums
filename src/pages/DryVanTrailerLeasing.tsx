@@ -23,7 +23,7 @@ const DryVanTrailerLeasing = () => {
     "@context": "https://schema.org",
     "@type": "Service",
     "name": "Dry Van Trailer Leasing",
-    "description": "Lease 53-foot and 48-foot dry van trailers with flexible terms starting at 12 months. No credit check, affordable rates, and nationwide pickup & delivery.",
+    "description": "Lease 53-foot dry van trailers with flexible terms starting at 12 months. No credit check, affordable rates, and nationwide pickup & delivery.",
     "provider": {
       "@type": "Organization",
       "name": "CRUMS Leasing",
