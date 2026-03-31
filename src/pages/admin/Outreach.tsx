@@ -530,6 +530,7 @@ export default function Outreach() {
   // Customer status filter
   const [customerStatusFilter, setCustomerStatusFilter] = useState("all");
   const [outreachFilter, setOutreachFilter] = useState("all");
+  const [eventLeadTypeFilter, setEventLeadTypeFilter] = useState("all");
 
   // Fetch customers
   const { data: customers = [], isLoading: loadingCustomers } = useQuery({
