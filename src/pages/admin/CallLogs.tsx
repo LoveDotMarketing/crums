@@ -366,6 +366,23 @@ export default function CallLogs() {
                   </SelectContent>
                 </Select>
               </div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">Source:</span>
+                <Select value={sourceFilter} onValueChange={setSourceFilter}>
+                  <SelectTrigger className="w-[140px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All</SelectItem>
+                    <SelectItem value="Paid">Paid</SelectItem>
+                    <SelectItem value="Organic">Organic</SelectItem>
+                    <SelectItem value="Direct">Direct</SelectItem>
+                    <SelectItem value="Phone Lead">Phone Lead</SelectItem>
+                    <SelectItem value="Referral">Referral</SelectItem>
+                    <SelectItem value="Unknown">Unknown</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
             {/* Call Log Table */}
