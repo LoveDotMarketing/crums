@@ -413,7 +413,7 @@ export default function CallLogs() {
                       </TableRow>
                     ) : filteredCalls.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                        <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                           No call logs found for the selected filters
                         </TableCell>
                       </TableRow>
