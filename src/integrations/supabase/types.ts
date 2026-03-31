@@ -1163,8 +1163,10 @@ export type Database = {
           event_name: string
           full_name: string
           id: string
+          lead_type: string
           notes: string | null
           phone: string
+          unsubscribed: boolean
         }
         Insert: {
           company?: string | null
@@ -1173,8 +1175,10 @@ export type Database = {
           event_name?: string
           full_name: string
           id?: string
+          lead_type?: string
           notes?: string | null
           phone: string
+          unsubscribed?: boolean
         }
         Update: {
           company?: string | null
@@ -1183,8 +1187,10 @@ export type Database = {
           event_name?: string
           full_name?: string
           id?: string
+          lead_type?: string
           notes?: string | null
           phone?: string
+          unsubscribed?: boolean
         }
         Relationships: []
       }
@@ -1422,6 +1428,7 @@ export type Database = {
           email_type: string
           error_message: string | null
           id: string
+          opened_at: string | null
           sent_at: string | null
           status: string
           template_id: string | null
@@ -1434,6 +1441,7 @@ export type Database = {
           email_type?: string
           error_message?: string | null
           id?: string
+          opened_at?: string | null
           sent_at?: string | null
           status?: string
           template_id?: string | null
@@ -1446,6 +1454,7 @@ export type Database = {
           email_type?: string
           error_message?: string | null
           id?: string
+          opened_at?: string | null
           sent_at?: string | null
           status?: string
           template_id?: string | null
@@ -3244,6 +3253,14 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      increment_campaign_failed: {
+        Args: { campaign_uuid: string }
+        Returns: undefined
+      }
+      increment_campaign_sent: {
+        Args: { campaign_uuid: string }
+        Returns: undefined
       }
       record_failed_login: { Args: { p_email: string }; Returns: Json }
       reset_login_attempts: { Args: { p_email: string }; Returns: undefined }
