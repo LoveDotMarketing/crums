@@ -849,7 +849,7 @@ export default function Outreach() {
       // Get recipients with customer data for personalization
       let recipientsWithData;
       if (targetAudience === "event_mats_2026") {
-        recipientsWithData = eventLeads
+        recipientsWithData = filteredEventLeads
           .filter(l => l.email)
           .map(l => ({
             email: l.email,
