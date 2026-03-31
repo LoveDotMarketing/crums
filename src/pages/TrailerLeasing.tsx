@@ -10,7 +10,7 @@ import { SEO } from "@/components/SEO";
 import { trailerLeasingServiceSchema, generateBreadcrumbSchema } from "@/lib/structuredData";
 const dryVanTrailerImg = "/images/dry-van-trailer.webp";
 const flatbedTrailerImg = "/images/flatbed-trailer.webp";
-const trailerPickupImg = "/images/crums-leasing-trailer-pickup.webp";
+const trailerPickupImg = "/images/dry-van-trailer.webp";
 
 const TrailerLeasing = () => {
   const breadcrumbSchema = generateBreadcrumbSchema([
