@@ -397,6 +397,7 @@ export default function CallLogs() {
                       <TableHead>Direction</TableHead>
                       <TableHead>Duration</TableHead>
                       <TableHead>Status</TableHead>
+                      <TableHead>Source</TableHead>
                       <TableHead>Recording</TableHead>
                     </TableRow>
                   </TableHeader>
