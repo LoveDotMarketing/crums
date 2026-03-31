@@ -35,7 +35,7 @@ const DryVanTrailerLeasing = () => {
       "@type": "Offer",
       "availability": "https://schema.org/InStock",
       "priceCurrency": "USD",
-      "description": "Monthly lease rates for 53' and 48' dry van trailers"
+      "description": "Monthly lease rates for 53' dry van trailers"
     }
   };
 
