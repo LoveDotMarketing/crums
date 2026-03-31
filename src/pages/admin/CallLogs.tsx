@@ -431,6 +431,7 @@ export default function CallLogs() {
                             <TableCell>{getDirectionBadge(call.direction)}</TableCell>
                             <TableCell>{formatDuration(call.duration)}</TableCell>
                             <TableCell>{getStatusBadge(call.status)}</TableCell>
+                            <TableCell>{getSourceBadge(call.source, call.campaign)}</TableCell>
                             <TableCell className="min-w-[320px]">
                               <div className="flex flex-col gap-2">
                                 {call.recordingSid ? (
