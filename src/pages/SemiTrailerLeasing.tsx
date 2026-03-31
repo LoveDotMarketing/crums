@@ -37,7 +37,7 @@ const SemiTrailerLeasing = () => {
       {
         "@type": "Question",
         "name": "What types of semi trailers can I lease from CRUMS?",
-        "acceptedAnswer": { "@type": "Answer", "text": "CRUMS Leasing offers 53-foot and 48-foot dry van trailers as well as flatbed trailers. Dry vans are available with swing doors or roll-up doors, logistic posts, and air ride suspension." }
+        "acceptedAnswer": { "@type": "Answer", "text": "CRUMS Leasing offers 53-foot dry van trailers as well as flatbed trailers. Dry vans are available with swing doors or roll-up doors, logistic posts, and air ride suspension." }
       },
       {
         "@type": "Question",
