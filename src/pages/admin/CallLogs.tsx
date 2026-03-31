@@ -116,7 +116,7 @@ const getSourceBadge = (source: string, campaign: string | null) => {
   );
 };
 
-
+export default function CallLogs() {
   const { toast } = useToast();
   const [dateRange, setDateRange] = useState("7");
   const [directionFilter, setDirectionFilter] = useState("all");
