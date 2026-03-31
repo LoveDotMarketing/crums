@@ -1,25 +1,28 @@
 
 
-## Plan: Remove Remaining 48' Dry Van References
+## Plan: Add Lead Source Attribution to Call Logs
 
-The previous cleanup missed several pages. Here are all remaining 48' **dry van** references to fix (48' flatbed references are correct and stay).
+### What this does
+Match each caller's phone number against your database records (customers, applications, phone leads) to show whether they came from a paid ad, organic search, direct visit, or referral — right in the call logs table.
+
+### How it works
+
+**1. Update the edge function (`supabase/functions/twilio-call-logs/index.ts`)**
+- After fetching calls from Twilio, collect all unique caller phone numbers
+- Query these tables to find matches by phone number:
+  - `customers` (has phone) → join to `customer_applications` (has `utm_source`, `utm_medium`, `utm_campaign`, `landing_page`)
+  - `phone_leads` (has phone, notes about source)
+  - `contact_submissions` (has `utm_source`, `utm_medium`, `utm_campaign` but no phone — skip this one)
+- For each call, attach a `source` field: "Paid" (utm_medium = cpc/ppc), "Organic" (utm_medium = organic or referrer is search engine), "Direct" (no UTM but known customer), "Phone Lead" (matched in phone_leads), or "Unknown" (no match found)
+- Also include `utm_campaign` when available so you can see which specific ad campaign
+
+**2. Update the frontend (`src/pages/admin/CallLogs.tsx`)**
+- Add a "Source" column to the table between "Status" and "Recording"
+- Display color-coded badges: green for Paid, blue for Organic, gray for Direct, purple for Phone Lead, outline for Unknown
+- Show the campaign name as smaller text below the badge when available
+- Add a Source filter dropdown (All, Paid, Organic, Direct, Phone Lead, Unknown)
 
 ### Files to modify
-
-**1. `src/pages/SemiTrailerLeasing.tsx`**
-- Line 40: FAQ answer mentions "53-foot and 48-foot dry van trailers" → change to "53-foot dry van trailers"
-- Line 117: "Enclosed 53' and 48' trailers" → "Enclosed 53' trailers"
-- Line 120: Remove "53' and 48' lengths" from the dry van feature list, replace with "53' length"
-
-**2. `src/pages/DryVanTrailerLeasing.tsx`**
-- Line 365: "DOT-inspected 53' or 48' trailer" → "DOT-inspected 53' trailer"
-
-**3. `src/pages/TrailerLeasing.tsx`**
-- Line 155: "53' and 48' options" → "53' lengths available" (this is under dry van section)
-
-### References that stay (flatbed-related, correct)
-- `FlatbedTrailers.tsx` — 48' deck length is accurate for flatbeds
-- `TrailerLeasing.tsx` line 191 — "48-foot lengths available" is under the flatbed section
-- `GetStarted.tsx` / `Application.tsx` — "48' Flatbed" as a trailer type option
-- `MaintenanceSchedules.tsx` — "48-foot flatbeds" reference
+- `supabase/functions/twilio-call-logs/index.ts` — add DB lookup for phone-to-source matching
+- `src/pages/admin/CallLogs.tsx` — add Source column, badge, and filter
 
