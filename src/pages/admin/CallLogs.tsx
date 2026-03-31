@@ -122,6 +122,7 @@ export default function CallLogs() {
   const [directionFilter, setDirectionFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [sourceFilter, setSourceFilter] = useState("all");
+  const [transcripts, setTranscripts] = useState<Record<string, string>>({});
   const [loadingTranscripts, setLoadingTranscripts] = useState<Record<string, boolean>>({});
   const [expandedTranscripts, setExpandedTranscripts] = useState<Record<string, boolean>>({});
 
