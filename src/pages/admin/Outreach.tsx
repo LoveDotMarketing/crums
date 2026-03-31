@@ -166,6 +166,36 @@ function EventLeadsTab() {
     },
   });
 
+  const updateLeadType = useMutation({
+    mutationFn: async ({ id, lead_type }: { id: string; lead_type: string }) => {
+      const { error } = await supabase.from("event_leads").update({ lead_type } as any).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["event-leads"] });
+      queryClient.invalidateQueries({ queryKey: ["event-leads-mats2026"] });
+    },
+    onError: () => toast.error("Failed to update lead type"),
+  });
+
+  const toggleLeadUnsubscribe = useMutation({
+    mutationFn: async ({ id, unsubscribed }: { id: string; unsubscribed: boolean }) => {
+      const { error } = await supabase.from("event_leads").update({ unsubscribed } as any).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: (_, vars) => {
+      queryClient.invalidateQueries({ queryKey: ["event-leads"] });
+      queryClient.invalidateQueries({ queryKey: ["event-leads-mats2026"] });
+      toast.success(vars.unsubscribed ? "Lead unsubscribed" : "Lead resubscribed");
+    },
+    onError: () => toast.error("Failed to update"),
+  });
+
+  const filteredLeads = eventLeads.filter((l: any) => {
+    if (leadTypeFilter !== "all" && l.lead_type !== leadTypeFilter) return false;
+    return true;
+  });
+
   const deleteLead = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase.from("event_leads").delete().eq("id", id);
