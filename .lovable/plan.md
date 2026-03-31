@@ -1,32 +1,27 @@
 
 
-## Plan: Fix Toll Customer ID Mismatch
+## Plan: Remove 48' Dry Van References & Replace Hector Photo
 
-### Problem
-The toll system has a customer ID mismatch:
-- **TollFormDialog** saves `profiles.id` (auth user ID) as `customer_id` when creating tolls
-- **CustomerDetail page** queries tolls using `customers.id` (from the URL)
-- These are different IDs (e.g., Ground Link: profile = `d9eb849b...`, customer = `31b4ef87...`)
-- Result: tolls created for a customer don't show up on their detail page
+### Two issues to fix
 
-### Solution
-Update the **TollFormDialog** to use `customers` table instead of `profiles` for the customer dropdown. This aligns the toll `customer_id` with the `customers.id` used throughout the admin panel.
+**1. Remove all 48' Dry Van content from the site**
+You don't offer 48' dry vans. These references appear in:
 
-### Changes
+- **`src/pages/DryVanTrailers.tsx`** — 48' Dry Van spec card (lines 265-297), entire 48' dimensions deep-dive section (lines 302-370+), SEO title/description mentioning 48', hero text, and comparison table
+- **`src/pages/DryVanTrailerLeasing.tsx`** — Hero text and schema description mentioning "53' and 48'"
+- **`src/pages/resources/guides/MaintenanceSchedules.tsx`** — One reference to "48-foot flatbeds" (this is about flatbeds, not dry vans, so likely fine to keep)
 
-**1. Update `src/components/admin/TollFormDialog.tsx`**
-- Change `fetchProfiles` to fetch from `customers` table instead of `profiles`
-- Select `id, full_name, email, company_name` from `customers`
-- Update dropdown to show customer name/company instead of profile name
-- Rename state from `profiles` to `customers` for clarity
+Changes: Remove the 48' Dry Van card, the entire 48' dimensions section, and update all page titles/descriptions/hero text to reference only 53' dry vans.
 
-**2. Update `src/pages/admin/Tolls.tsx`**
-- Change the query join from `profiles:customer_id(...)` to `customers:customer_id(...)` to match the new customer ID source
-- Update `getCustomerName` to use customer fields (`full_name`, `company_name`)
+**2. Replace the Hector photo on Trailer Leasing page**
+- **`src/pages/TrailerLeasing.tsx`** line 13 — uses `/images/crums-leasing-trailer-pickup.webp` which shows Hector
+- Replace this image with a different trailer/yard photo, or remove the image section entirely
 
-**3. Fix existing toll data (migration)**
-- Run a SQL migration to update existing tolls' `customer_id` from `profiles.id` to `customers.id` by matching via email
+### What I need from you
+- For the Hector photo: should I remove the image entirely, or do you have a replacement photo to upload?
 
-### Technical detail
-The `customers` table has `id`, `full_name`, `email`, `company_name`. Since `customer_id` in tolls has no foreign key constraint, both the old profile IDs and new customer IDs will work structurally — we just need consistency.
+### Files to modify
+- `src/pages/DryVanTrailers.tsx` — Remove 48' dry van card, specs section, update SEO/hero text
+- `src/pages/DryVanTrailerLeasing.tsx` — Update hero and schema to 53' only
+- `src/pages/TrailerLeasing.tsx` — Replace or remove the Hector photo
 
