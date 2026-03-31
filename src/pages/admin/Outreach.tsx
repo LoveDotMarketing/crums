@@ -552,12 +552,12 @@ export default function Outreach() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("event_leads")
-        .select("id, full_name, email, phone, event_name, lead_type, unsubscribed" as any)
+        .select("*")
         .eq("event_name", "MATS 2026")
-        .eq("unsubscribed", false)
+        .eq("unsubscribed", false as any)
         .order("full_name");
       if (error) throw error;
-      return data as Array<{ id: string; full_name: string; email: string; phone: string; event_name: string; lead_type: string; unsubscribed: boolean }>;
+      return data as unknown as Array<{ id: string; full_name: string; email: string; phone: string; event_name: string; lead_type: string; unsubscribed: boolean }>;
     },
   });
 
