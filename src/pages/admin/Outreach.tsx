@@ -303,6 +303,17 @@ function EventLeadsTab() {
               <CardDescription>{eventLeads.length} total leads collected</CardDescription>
             </div>
             <div className="flex gap-2">
+              <Select value={leadTypeFilter} onValueChange={setLeadTypeFilter}>
+                <SelectTrigger className="w-[140px]">
+                  <SelectValue placeholder="All Types" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Types</SelectItem>
+                  <SelectItem value="prospect">Prospects</SelectItem>
+                  <SelectItem value="partner">Partners</SelectItem>
+                  <SelectItem value="vendor">Vendors</SelectItem>
+                </SelectContent>
+              </Select>
               <Button variant="outline" size="sm" onClick={() => setShowManualDialog(true)}>
                 <UserPlus className="h-4 w-4 mr-2" /> Add Lead
               </Button>
@@ -318,7 +329,7 @@ function EventLeadsTab() {
         <CardContent>
           {isLoading ? (
             <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin" /></div>
-          ) : eventLeads.length === 0 ? (
+          ) : filteredLeads.length === 0 ? (
             <p className="text-center text-muted-foreground py-8">No event leads yet.</p>
           ) : (
             <Table>
@@ -328,19 +339,42 @@ function EventLeadsTab() {
                   <TableHead>Company</TableHead>
                   <TableHead>Email</TableHead>
                   <TableHead>Phone</TableHead>
+                  <TableHead>Type</TableHead>
                   <TableHead>Event</TableHead>
+                  <TableHead>Subscribed</TableHead>
                   <TableHead>Submitted</TableHead>
                   <TableHead className="w-12"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {eventLeads.map((lead: any) => (
-                  <TableRow key={lead.id}>
+                {filteredLeads.map((lead: any) => (
+                  <TableRow key={lead.id} className={lead.unsubscribed ? "opacity-60" : ""}>
                     <TableCell className="font-medium">{lead.full_name}</TableCell>
                     <TableCell>{lead.company || "—"}</TableCell>
                     <TableCell>{lead.email}</TableCell>
                     <TableCell>{lead.phone}</TableCell>
+                    <TableCell>
+                      <Select
+                        value={lead.lead_type || "prospect"}
+                        onValueChange={(val) => updateLeadType.mutate({ id: lead.id, lead_type: val })}
+                      >
+                        <SelectTrigger className="h-8 w-[110px]">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="prospect">Prospect</SelectItem>
+                          <SelectItem value="partner">Partner</SelectItem>
+                          <SelectItem value="vendor">Vendor</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </TableCell>
                     <TableCell><Badge variant="secondary">{lead.event_name}</Badge></TableCell>
+                    <TableCell>
+                      <Switch
+                        checked={!lead.unsubscribed}
+                        onCheckedChange={(checked) => toggleLeadUnsubscribe.mutate({ id: lead.id, unsubscribed: !checked })}
+                      />
+                    </TableCell>
                     <TableCell>{format(new Date(lead.created_at), "MMM d, yyyy h:mm a")}</TableCell>
                     <TableCell>
                       <Button
