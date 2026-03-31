@@ -186,9 +186,11 @@ export default function CallLogs() {
   });
 
   const filteredCalls = data?.calls?.filter(call => {
-    if (statusFilter === "all") return true;
-    if (statusFilter === "completed") return call.status === "completed";
-    if (statusFilter === "missed") return ["busy", "no-answer", "failed", "canceled"].includes(call.status);
+    if (statusFilter !== "all") {
+      if (statusFilter === "completed" && call.status !== "completed") return false;
+      if (statusFilter === "missed" && !["busy", "no-answer", "failed", "canceled"].includes(call.status)) return false;
+    }
+    if (sourceFilter !== "all" && call.source !== sourceFilter) return false;
     return true;
   }) || [];
 
