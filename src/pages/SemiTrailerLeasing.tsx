@@ -114,7 +114,7 @@ const SemiTrailerLeasing = () => {
               <CardContent className="p-8">
                 <h3 className="text-2xl font-bold mb-4 text-foreground">Dry Van Trailers</h3>
                 <p className="text-muted-foreground mb-6">
-                  Enclosed 53' and 48' trailers for general freight. The most versatile option for most hauling needs.
+                  Enclosed 53' trailers for general freight. The most versatile option for most hauling needs.
                 </p>
                 <ul className="space-y-3 mb-6">
                   {["53' and 48' lengths", "3,489+ cubic feet capacity", "Swing or roll-up doors", "Air ride suspension", "Logistic posts included"].map((item) => (
