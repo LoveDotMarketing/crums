@@ -122,6 +122,22 @@ serve(async (req) => {
     } else {
       throw new Error("No recipients specified");
     }
+    // Filter out unsubscribed event leads if this is an event campaign
+    if (isEventCampaign) {
+      const recipientEmails = normalizedRecipients.map(r => r.email.toLowerCase());
+      const { data: unsubscribedLeads } = await supabaseClient
+        .from("event_leads")
+        .select("email")
+        .in("email", recipientEmails)
+        .eq("unsubscribed", true);
+
+      if (unsubscribedLeads && unsubscribedLeads.length > 0) {
+        const unsubEmails = new Set(unsubscribedLeads.map((l: any) => l.email.toLowerCase()));
+        const before = normalizedRecipients.length;
+        normalizedRecipients = normalizedRecipients.filter(r => !unsubEmails.has(r.email.toLowerCase()));
+        console.log(`[SendOutreachEmail] Filtered out ${before - normalizedRecipients.length} unsubscribed event leads`);
+      }
+    }
 
     console.log(`[SendOutreachEmail] ${callerEmail} sending email to ${normalizedRecipients.length} recipients`);
 
