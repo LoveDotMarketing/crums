@@ -28,6 +28,8 @@ interface CallLog {
   priceUnit: string;
   recordingSid: string | null;
   recordingDuration: number | null;
+  source: string;
+  campaign: string | null;
 }
 
 interface CallStats {
