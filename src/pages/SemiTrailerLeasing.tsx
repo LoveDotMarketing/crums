@@ -117,7 +117,7 @@ const SemiTrailerLeasing = () => {
                   Enclosed 53' trailers for general freight. The most versatile option for most hauling needs.
                 </p>
                 <ul className="space-y-3 mb-6">
-                  {["53' and 48' lengths", "3,489+ cubic feet capacity", "Swing or roll-up doors", "Air ride suspension", "Logistic posts included"].map((item) => (
+                  {["53' length", "3,489+ cubic feet capacity", "Swing or roll-up doors", "Air ride suspension", "Logistic posts included"].map((item) => (
                     <li key={item} className="flex items-start text-muted-foreground">
                       <CheckCircle className="h-5 w-5 text-primary mr-3 mt-0.5 flex-shrink-0" />
                       <span>{item}</span>
