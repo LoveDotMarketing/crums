@@ -676,11 +676,17 @@ export default function Outreach() {
     return true;
   });
 
+  // Filter event leads by lead type
+  const filteredEventLeads = eventLeads.filter(l => {
+    if (eventLeadTypeFilter !== "all" && l.lead_type !== eventLeadTypeFilter) return false;
+    return true;
+  });
+
   // Get recipient count
   const recipientCount = targetAudience === "custom" 
     ? selectedCustomers.length 
     : targetAudience === "event_mats_2026"
-    ? eventLeads.length
+    ? filteredEventLeads.length
     : filteredCustomers.length;
 
   // Load template into compose
