@@ -1443,6 +1443,7 @@ export default function Outreach() {
                           <TableHead>Email</TableHead>
                           <TableHead>Type</TableHead>
                           <TableHead>Status</TableHead>
+                          <TableHead>Opened</TableHead>
                           <TableHead>Sent At</TableHead>
                           <TableHead>Error</TableHead>
                         </TableRow>
@@ -1464,6 +1465,17 @@ export default function Outreach() {
                                   <><Clock className="h-3 w-3 mr-1" /> {log.status}</>
                                 )}
                               </Badge>
+                            </TableCell>
+                            <TableCell>
+                              {log.opened_at ? (
+                                <Badge variant="outline" className="border-green-500 text-green-700">
+                                  <Eye className="h-3 w-3 mr-1" /> {format(new Date(log.opened_at), "MMM d, HH:mm")}
+                                </Badge>
+                              ) : log.status === "sent" ? (
+                                <span className="text-xs text-muted-foreground">Not yet</span>
+                              ) : (
+                                <span className="text-xs text-muted-foreground">—</span>
+                              )}
                             </TableCell>
                             <TableCell>
                               {log.sent_at ? format(new Date(log.sent_at), "MMM d, yyyy HH:mm") : "-"}
