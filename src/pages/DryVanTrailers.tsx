@@ -23,7 +23,7 @@ const DryVanTrailers = () => {
     "@context": "https://schema.org",
     "@type": "Service",
     "name": "Dry Van Trailer Leasing",
-    "description": "53-foot and 48-foot dry van trailer leasing with swing doors, roll-up doors, and logistic posts. Flexible lease terms starting at 12 months.",
+    "description": "53-foot dry van trailer leasing with swing doors, roll-up doors, and logistic posts. Flexible lease terms starting at 12 months.",
     "provider": {
       "@type": "Organization",
       "name": "CRUMS Leasing",
@@ -58,14 +58,6 @@ const DryVanTrailers = () => {
       },
       {
         "@type": "Question",
-        "name": "What are 48 dry van dimensions?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "A 48-foot dry van trailer typically has interior dimensions of 48' length x 102\" width x 110\" height. This provides approximately 3,165 cubic feet of cargo space, with 24 pallet positions for standard 48x40 pallets loaded side by side."
-        }
-      },
-      {
-        "@type": "Question",
         "name": "What is the difference between a vented van trailer and dry van?",
         "acceptedAnswer": {
           "@type": "Answer",
@@ -77,7 +69,7 @@ const DryVanTrailers = () => {
         "name": "What sizes of dry van trailers does CRUMS offer?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "CRUMS Leasing offers 53-foot and 48-foot dry van trailers. The 53-foot trailers are the industry standard for maximum cargo capacity, while 48-foot trailers are ideal for routes with length restrictions."
+          "text": "CRUMS Leasing offers 53-foot dry van trailers — the industry standard for maximum cargo capacity. Our trailers come with swing doors or roll-up doors, logistic posts, and LED lighting."
         }
       },
       {
@@ -103,22 +95,6 @@ const DryVanTrailers = () => {
           "@type": "Answer",
           "text": "Dry van trailers are versatile and can haul a wide variety of non-perishable goods including consumer products, electronics, clothing, furniture, building materials, packaged foods, and industrial equipment."
         }
-      },
-      {
-        "@type": "Question",
-        "name": "What are the dimensions of a 48-foot dry van trailer?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "A 48-foot dry van trailer has interior dimensions of 48'L x 102\"W (8'6\") x 110\"H (9'2\"), providing approximately 3,165 cubic feet of cargo space. Exterior overall length is approximately 50 feet, with a tare weight around 12,500 lbs and payload capacity up to 44,000 lbs. The rear door opening is 94\" wide x 102\" high."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "How many pallets fit in a 48 foot trailer?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "A 48-foot dry van trailer fits 24 standard pallets (48\" x 40\") loaded side by side in two rows. This is 2 fewer pallet positions than a 53-foot trailer (26 pallets), but the 48' length is required for compliance with certain state length regulations."
-        }
       }
     ]
   };
@@ -131,8 +107,8 @@ const DryVanTrailers = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <SEO
-        title="53' & 48' Dry Van Trailer Dimensions & Leasing"
-        description="53' and 48' dry van interior dimensions, cubic feet, and pallet positions. 53'L x 8'6&quot;W x 9'H (3,489 cu ft) | 48'L x 8'6&quot;W x 9'H (3,165 cu ft). Lease from CRUMS - flexible terms."
+        title="53' Dry Van Trailer Dimensions & Leasing"
+        description="53' dry van interior dimensions, cubic feet, and pallet positions. 53'L x 8'6&quot;W x 9'H (3,489 cu ft). Lease from CRUMS - flexible terms starting at 12 months."
         canonical="https://crumsleasing.com/dry-van-trailers"
         structuredData={combinedSchema}
       />
@@ -143,7 +119,7 @@ const DryVanTrailers = () => {
         <div className="container mx-auto px-4 text-center">
           <h1 className="text-4xl md:text-6xl font-bold mb-6">Dry Van Trailer Leasing</h1>
           <p className="text-xl md:text-2xl max-w-4xl mx-auto text-primary-foreground/90 mb-8">
-            The industry standard for enclosed freight. Protect your cargo with our premium 53' and 48' dry van trailers.
+            The industry standard for enclosed freight. Protect your cargo with our premium 53' dry van trailers.
           </p>
           <Link to="/contact" onClick={() => trackCtaClick('Request A Quote', 'dry-van-trailers-hero', '/contact')}>
             <Button size="lg" className="bg-secondary hover:bg-secondary/90">
@@ -228,7 +204,7 @@ const DryVanTrailers = () => {
           <h2 className="text-3xl md:text-4xl font-bold text-center mb-16 text-foreground">
             Available Configurations
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+          <div className="max-w-lg mx-auto">
             <Card className="border-2">
               <CardContent className="p-8">
                 <div className="flex items-center gap-3 mb-6">
@@ -262,125 +238,10 @@ const DryVanTrailers = () => {
                 </ul>
               </CardContent>
             </Card>
-            <Card className="border-2">
-              <CardContent className="p-8">
-                <div className="flex items-center gap-3 mb-6">
-                  <Ruler className="h-8 w-8 text-secondary" />
-                  <h3 className="text-2xl font-bold">48' Dry Van</h3>
-                </div>
-                <p className="text-muted-foreground mb-6">
-                  Perfect for routes with length restrictions or lighter freight loads.
-                </p>
-                <ul className="space-y-3 text-muted-foreground">
-                  <li className="flex items-start">
-                    <CheckCircle className="h-5 w-5 text-secondary mr-3 mt-0.5 flex-shrink-0" />
-                    <span>Interior: 48'L x 8'6"W x 9'2"H (14.6m x 2.6m x 2.8m)</span>
-                  </li>
-                  <li className="flex items-start">
-                    <CheckCircle className="h-5 w-5 text-secondary mr-3 mt-0.5 flex-shrink-0" />
-                    <span>Cargo Capacity: ~3,165 cubic feet</span>
-                  </li>
-                  <li className="flex items-start">
-                    <CheckCircle className="h-5 w-5 text-secondary mr-3 mt-0.5 flex-shrink-0" />
-                    <span>Pallet Positions: 24 standard (48"x40")</span>
-                  </li>
-                  <li className="flex items-start">
-                    <CheckCircle className="h-5 w-5 text-secondary mr-3 mt-0.5 flex-shrink-0" />
-                    <span>Payload Capacity: Up to 44,000 lbs</span>
-                  </li>
-                  <li className="flex items-start">
-                    <CheckCircle className="h-5 w-5 text-secondary mr-3 mt-0.5 flex-shrink-0" />
-                    <span>Door Opening: 94"W x 102"H</span>
-                  </li>
-                </ul>
-              </CardContent>
-            </Card>
           </div>
         </div>
       </section>
 
-      {/* 48' Dry Van Dimensions Deep-Dive */}
-      <section className="py-20 bg-background">
-        <div className="container mx-auto px-4">
-          <div className="max-w-4xl mx-auto">
-            <h2 className="text-3xl md:text-4xl font-bold mb-6 text-foreground">
-              48' Dry Van Trailer Dimensions & Specifications
-            </h2>
-            <p className="text-lg text-muted-foreground mb-8">
-              The 48-foot dry van trailer is a versatile alternative to the standard 53-footer, offering excellent cargo capacity while complying with state length restrictions in places like California, Oregon, and urban delivery zones. Here's a side-by-side comparison of 48' vs 53' dry van dimensions.
-            </p>
-            <div className="overflow-x-auto mb-8">
-              <table className="w-full border-collapse text-left">
-                <thead>
-                  <tr className="border-b-2 border-primary/20">
-                    <th className="py-3 px-4 text-foreground font-bold">Specification</th>
-                    <th className="py-3 px-4 text-foreground font-bold">48' Dry Van</th>
-                    <th className="py-3 px-4 text-foreground font-bold">53' Dry Van</th>
-                  </tr>
-                </thead>
-                <tbody className="text-muted-foreground">
-                  <tr className="border-b border-border">
-                    <td className="py-3 px-4 font-medium">Interior Length</td>
-                    <td className="py-3 px-4">48 ft (576 in / 14.6 m)</td>
-                    <td className="py-3 px-4">53 ft (636 in / 16.2 m)</td>
-                  </tr>
-                  <tr className="border-b border-border bg-muted/50">
-                    <td className="py-3 px-4 font-medium">Interior Width</td>
-                    <td className="py-3 px-4">102 in (8'6" / 2.6 m)</td>
-                    <td className="py-3 px-4">102 in (8'6" / 2.6 m)</td>
-                  </tr>
-                  <tr className="border-b border-border">
-                    <td className="py-3 px-4 font-medium">Interior Height</td>
-                    <td className="py-3 px-4">110 in (9'2" / 2.8 m)</td>
-                    <td className="py-3 px-4">110 in (9'2" / 2.8 m)</td>
-                  </tr>
-                  <tr className="border-b border-border bg-muted/50">
-                    <td className="py-3 px-4 font-medium">Cubic Feet</td>
-                    <td className="py-3 px-4">~3,165 cu ft</td>
-                    <td className="py-3 px-4">~3,489 cu ft</td>
-                  </tr>
-                  <tr className="border-b border-border">
-                    <td className="py-3 px-4 font-medium">Pallet Positions (48"x40")</td>
-                    <td className="py-3 px-4">24 pallets</td>
-                    <td className="py-3 px-4">26 pallets</td>
-                  </tr>
-                  <tr className="border-b border-border bg-muted/50">
-                    <td className="py-3 px-4 font-medium">Payload Capacity</td>
-                    <td className="py-3 px-4">Up to 44,000 lbs</td>
-                    <td className="py-3 px-4">Up to 45,000 lbs</td>
-                  </tr>
-                  <tr className="border-b border-border">
-                    <td className="py-3 px-4 font-medium">Door Opening</td>
-                    <td className="py-3 px-4">94"W x 102"H</td>
-                    <td className="py-3 px-4">94"W x 102"H</td>
-                  </tr>
-                  <tr className="border-b border-border bg-muted/50">
-                    <td className="py-3 px-4 font-medium">Overall Length (ext.)</td>
-                    <td className="py-3 px-4">~50 ft</td>
-                    <td className="py-3 px-4">~57 ft</td>
-                  </tr>
-                  <tr className="border-b border-border">
-                    <td className="py-3 px-4 font-medium">Tare Weight</td>
-                    <td className="py-3 px-4">~12,500 lbs</td>
-                    <td className="py-3 px-4">~14,000 lbs</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-            <h3 className="text-xl font-bold mb-3 text-foreground">When to Choose a 48' Over a 53' Dry Van</h3>
-            <p className="text-muted-foreground mb-4">
-              A 48-foot dry van is the better choice when you're operating in states with overall vehicle length limits (such as California's 65-foot kingpin-to-rear-axle regulation), making frequent urban deliveries where maneuverability matters, or hauling lighter-density freight where the extra 5 feet of a 53' wouldn't be utilized. The shorter wheelbase also means easier backing into tight docks and reduced tire wear.
-            </p>
-            <p className="text-muted-foreground">
-              Ready to get started?{" "}
-              <Link to="/dry-van-trailer-leasing" className="text-primary hover:underline font-semibold">
-                Lease a 48-foot dry van trailer
-              </Link>{" "}
-              from CRUMS with flexible terms starting at 12 months.
-            </p>
-          </div>
-        </div>
-      </section>
 
       {/* Door Options */}
       <section className="py-20 bg-background">
@@ -510,16 +371,6 @@ const DryVanTrailers = () => {
             </Card>
             <Card className="border-2">
               <CardContent className="p-6">
-                <h3 className="text-lg font-bold mb-2">What are 48 dry van dimensions?</h3>
-                <p className="text-muted-foreground">
-                  A 48-foot dry van trailer typically has interior dimensions of 48' length x 102" width x 110" height. 
-                  This provides approximately 3,165 cubic feet of cargo space, with 24 pallet positions for standard 
-                  48x40 pallets loaded side by side.
-                </p>
-              </CardContent>
-            </Card>
-            <Card className="border-2">
-              <CardContent className="p-6">
                 <h3 className="text-lg font-bold mb-2">What is the difference between a vented van trailer and dry van?</h3>
                 <p className="text-muted-foreground">
                   A vented van trailer has small vents or openings that allow air circulation, typically used for 
@@ -532,8 +383,8 @@ const DryVanTrailers = () => {
               <CardContent className="p-6">
                 <h3 className="text-lg font-bold mb-2">What sizes of dry van trailers does CRUMS offer?</h3>
                 <p className="text-muted-foreground">
-                  CRUMS Leasing offers 53-foot and 48-foot dry van trailers. The 53-foot trailers are the industry 
-                  standard for maximum cargo capacity, while 48-foot trailers are ideal for routes with length restrictions.
+                  CRUMS Leasing offers 53-foot dry van trailers — the industry standard for maximum cargo capacity. 
+                  Our trailers come with swing doors or roll-up doors, logistic posts, and LED lighting.
                 </p>
               </CardContent>
             </Card>
@@ -562,26 +413,6 @@ const DryVanTrailers = () => {
                   Dry van trailers are versatile and can haul a wide variety of non-perishable goods including 
                   consumer products, electronics, clothing, furniture, building materials, packaged foods, and 
                   industrial equipment.
-                </p>
-              </CardContent>
-            </Card>
-            <Card className="border-2">
-              <CardContent className="p-6">
-                <h3 className="text-lg font-bold mb-2">What are the dimensions of a 48-foot dry van trailer?</h3>
-                <p className="text-muted-foreground">
-                  A 48-foot dry van trailer has interior dimensions of 48'L x 102"W (8'6") x 110"H (9'2"), 
-                  providing approximately 3,165 cubic feet of cargo space. Exterior overall length is about 50 feet, 
-                  with a tare weight around 12,500 lbs and payload capacity up to 44,000 lbs.
-                </p>
-              </CardContent>
-            </Card>
-            <Card className="border-2">
-              <CardContent className="p-6">
-                <h3 className="text-lg font-bold mb-2">How many pallets fit in a 48 foot trailer?</h3>
-                <p className="text-muted-foreground">
-                  A 48-foot dry van trailer fits 24 standard pallets (48" x 40") loaded side by side in two rows. 
-                  This is 2 fewer pallet positions than a 53-foot trailer (26 pallets), but the 48' length is 
-                  required for compliance with certain state length regulations.
                 </p>
               </CardContent>
             </Card>

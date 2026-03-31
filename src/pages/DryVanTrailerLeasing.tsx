@@ -23,7 +23,7 @@ const DryVanTrailerLeasing = () => {
     "@context": "https://schema.org",
     "@type": "Service",
     "name": "Dry Van Trailer Leasing",
-    "description": "Lease 53-foot and 48-foot dry van trailers with flexible terms starting at 12 months. No credit check, affordable rates, and nationwide pickup & delivery.",
+    "description": "Lease 53-foot dry van trailers with flexible terms starting at 12 months. No credit check, affordable rates, and nationwide pickup & delivery.",
     "provider": {
       "@type": "Organization",
       "name": "CRUMS Leasing",
@@ -35,7 +35,7 @@ const DryVanTrailerLeasing = () => {
       "@type": "Offer",
       "availability": "https://schema.org/InStock",
       "priceCurrency": "USD",
-      "description": "Monthly lease rates for 53' and 48' dry van trailers"
+      "description": "Monthly lease rates for 53' dry van trailers"
     }
   };
 
@@ -114,7 +114,7 @@ const DryVanTrailerLeasing = () => {
         <div className="container mx-auto px-4 text-center">
           <h1 className="text-4xl md:text-6xl font-bold mb-6">Dry Van Trailer Leasing</h1>
           <p className="text-xl md:text-2xl max-w-4xl mx-auto text-primary-foreground/90 mb-8">
-            Affordable monthly rates on 53' and 48' dry van trailers. Flexible lease terms, no large down payment, and nationwide service.
+            Affordable monthly rates on 53' dry van trailers. Flexible lease terms, no large down payment, and nationwide service.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link to="/contact" onClick={() => trackCtaClick('Get A Lease Quote', 'dry-van-trailer-leasing-hero', '/contact')}>

@@ -10,7 +10,7 @@ import { SEO } from "@/components/SEO";
 import { trailerLeasingServiceSchema, generateBreadcrumbSchema } from "@/lib/structuredData";
 const dryVanTrailerImg = "/images/dry-van-trailer.webp";
 const flatbedTrailerImg = "/images/flatbed-trailer.webp";
-const trailerPickupImg = "/images/crums-leasing-trailer-pickup.webp";
+const trailerPickupImg = "/images/dry-van-trailer.webp";
 
 const TrailerLeasing = () => {
   const breadcrumbSchema = generateBreadcrumbSchema([
@@ -62,7 +62,7 @@ const TrailerLeasing = () => {
             <div>
               <img 
                 src={trailerPickupImg} 
-                alt="Customer picking up a CRUMS Leasing trailer at our yard with team assistance" 
+                alt="CRUMS Leasing 53-foot dry van trailer available for lease" 
                 className="rounded-lg shadow-2xl"
                 loading="lazy"
                 width="800"
