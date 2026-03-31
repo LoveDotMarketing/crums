@@ -125,6 +125,7 @@ function EventLeadsTab() {
   const [showManualDialog, setShowManualDialog] = useState(false);
   const [manualData, setManualData] = useState({ full_name: "", email: "", phone: "", company: "" });
   const [isAddingManual, setIsAddingManual] = useState(false);
+  const [leadTypeFilter, setLeadTypeFilter] = useState("all");
 
   const handleManualAdd = async () => {
     if (!manualData.full_name || !manualData.email || !manualData.phone) {
