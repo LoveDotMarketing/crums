@@ -416,26 +416,6 @@ const DryVanTrailers = () => {
                 </p>
               </CardContent>
             </Card>
-            <Card className="border-2">
-              <CardContent className="p-6">
-                <h3 className="text-lg font-bold mb-2">What are the dimensions of a 48-foot dry van trailer?</h3>
-                <p className="text-muted-foreground">
-                  A 48-foot dry van trailer has interior dimensions of 48'L x 102"W (8'6") x 110"H (9'2"), 
-                  providing approximately 3,165 cubic feet of cargo space. Exterior overall length is about 50 feet, 
-                  with a tare weight around 12,500 lbs and payload capacity up to 44,000 lbs.
-                </p>
-              </CardContent>
-            </Card>
-            <Card className="border-2">
-              <CardContent className="p-6">
-                <h3 className="text-lg font-bold mb-2">How many pallets fit in a 48 foot trailer?</h3>
-                <p className="text-muted-foreground">
-                  A 48-foot dry van trailer fits 24 standard pallets (48" x 40") loaded side by side in two rows. 
-                  This is 2 fewer pallet positions than a 53-foot trailer (26 pallets), but the 48' length is 
-                  required for compliance with certain state length regulations.
-                </p>
-              </CardContent>
-            </Card>
           </div>
         </div>
       </section>

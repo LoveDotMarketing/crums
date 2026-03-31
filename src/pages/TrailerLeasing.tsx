@@ -62,7 +62,7 @@ const TrailerLeasing = () => {
             <div>
               <img 
                 src={trailerPickupImg} 
-                alt="Customer picking up a CRUMS Leasing trailer at our yard with team assistance" 
+                alt="CRUMS Leasing 53-foot dry van trailer available for lease" 
                 className="rounded-lg shadow-2xl"
                 loading="lazy"
                 width="800"
