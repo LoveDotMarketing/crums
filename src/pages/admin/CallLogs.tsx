@@ -91,7 +91,32 @@ const getDirectionBadge = (direction: string) => {
   );
 };
 
-export default function CallLogs() {
+const getSourceBadge = (source: string, campaign: string | null) => {
+  const badgeContent = () => {
+    switch (source) {
+      case "Paid":
+        return <Badge className="bg-green-100 text-green-800 hover:bg-green-100">Paid</Badge>;
+      case "Organic":
+        return <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100">Organic</Badge>;
+      case "Direct":
+        return <Badge className="bg-gray-100 text-gray-800 hover:bg-gray-100">Direct</Badge>;
+      case "Phone Lead":
+        return <Badge className="bg-purple-100 text-purple-800 hover:bg-purple-100">Phone Lead</Badge>;
+      case "Referral":
+        return <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-100">Referral</Badge>;
+      default:
+        return <Badge variant="outline">Unknown</Badge>;
+    }
+  };
+  return (
+    <div className="flex flex-col gap-0.5">
+      {badgeContent()}
+      {campaign && <span className="text-[10px] text-muted-foreground truncate max-w-[120px]">{campaign}</span>}
+    </div>
+  );
+};
+
+
   const { toast } = useToast();
   const [dateRange, setDateRange] = useState("7");
   const [directionFilter, setDirectionFilter] = useState("all");
