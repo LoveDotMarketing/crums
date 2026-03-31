@@ -362,7 +362,7 @@ const DryVanTrailerLeasing = () => {
           <div className="max-w-3xl mx-auto">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {[
-                "DOT-inspected 53' or 48' trailer",
+                "DOT-inspected 53' trailer",
                 "Swing doors or roll-up doors",
                 "Air ride suspension",
                 "Logistic posts for load securement",
