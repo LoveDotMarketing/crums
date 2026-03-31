@@ -1218,6 +1218,23 @@ export default function Outreach() {
                         </Button>
                       )}
 
+                      {targetAudience === "event_mats_2026" && (
+                        <div className="space-y-2">
+                          <Label>Lead Type</Label>
+                          <Select value={eventLeadTypeFilter} onValueChange={setEventLeadTypeFilter}>
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="all">All Types</SelectItem>
+                              <SelectItem value="prospect">Prospects Only</SelectItem>
+                              <SelectItem value="partner">Partners Only</SelectItem>
+                              <SelectItem value="vendor">Vendors Only</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      )}
+
                       <div className="p-4 bg-muted rounded-lg text-center">
                         <p className="text-3xl font-bold">{recipientCount}</p>
                         <p className="text-sm text-muted-foreground">Recipients</p>
