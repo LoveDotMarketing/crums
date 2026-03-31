@@ -23,7 +23,7 @@ const DryVanTrailers = () => {
     "@context": "https://schema.org",
     "@type": "Service",
     "name": "Dry Van Trailer Leasing",
-    "description": "53-foot and 48-foot dry van trailer leasing with swing doors, roll-up doors, and logistic posts. Flexible lease terms starting at 12 months.",
+    "description": "53-foot dry van trailer leasing with swing doors, roll-up doors, and logistic posts. Flexible lease terms starting at 12 months.",
     "provider": {
       "@type": "Organization",
       "name": "CRUMS Leasing",
