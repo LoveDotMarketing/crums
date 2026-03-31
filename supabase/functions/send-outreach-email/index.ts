@@ -100,6 +100,9 @@ serve(async (req) => {
     const requestBody: EmailRequest = await req.json();
     const { to, recipients, subject, body, campaign_id, template_id, customer_ids, email_type = "manual" } = requestBody;
 
+    // Check if this is an event leads campaign and filter out unsubscribed
+    const isEventCampaign = requestBody.email_type === "campaign";
+
     // Normalize recipients - support both legacy (to + customer_ids) and new (recipients) format
     let normalizedRecipients: RecipientObject[];
     
