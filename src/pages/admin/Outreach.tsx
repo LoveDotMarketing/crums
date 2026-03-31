@@ -85,6 +85,7 @@ interface OutreachLog {
   email_type: string;
   status: string;
   sent_at: string | null;
+  opened_at: string | null;
   error_message: string | null;
   created_at: string;
   customer_id: string | null;
