@@ -119,7 +119,7 @@ const DryVanTrailers = () => {
         <div className="container mx-auto px-4 text-center">
           <h1 className="text-4xl md:text-6xl font-bold mb-6">Dry Van Trailer Leasing</h1>
           <p className="text-xl md:text-2xl max-w-4xl mx-auto text-primary-foreground/90 mb-8">
-            The industry standard for enclosed freight. Protect your cargo with our premium 53' and 48' dry van trailers.
+            The industry standard for enclosed freight. Protect your cargo with our premium 53' dry van trailers.
           </p>
           <Link to="/contact" onClick={() => trackCtaClick('Request A Quote', 'dry-van-trailers-hero', '/contact')}>
             <Button size="lg" className="bg-secondary hover:bg-secondary/90">
