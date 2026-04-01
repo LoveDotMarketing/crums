@@ -391,7 +391,7 @@ const Reviews = () => {
       />
 
       <Footer />
-      <ChatBot userType="customer" />
+      <ChatBot userType="public" />
     </div>
   );
 };

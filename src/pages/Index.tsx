@@ -1518,7 +1518,7 @@ const Index = () => {
 
       <Footer />
       <Suspense fallback={null}>
-        <ChatBot userType="customer" />
+        <ChatBot userType="public" />
       </Suspense>
     </div>
   );
