@@ -62,7 +62,7 @@ Deno.serve(async (req) => {
     }
 
     // Routing: authenticated users with a userType go to the customer/staff webhook
-    const { userType } = body;
+    const userType = body?.metadata?.userType ?? body?.userType;
     const isAuthenticated = verifiedUserId !== null;
     const isAuthenticatedRole = isAuthenticated && ["customer", "admin", "mechanic"].includes(userType);
 
