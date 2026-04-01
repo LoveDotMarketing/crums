@@ -4,15 +4,23 @@ import { Card } from "@/components/ui/card";
 import { MessageCircle, X, Loader2, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { trackChatbotOpen } from "@/lib/analytics";
+import { supabase } from "@/integrations/supabase/client";
 import "@n8n/chat/style.css";
 
 interface ChatBotProps {
-  userType: "admin" | "customer" | "mechanic";
+  userType: "admin" | "customer" | "mechanic" | "public";
 }
 
-// Generate a fresh session ID on every page load (module re-evaluates on refresh)
+// Generate a fresh session ID on every page load
 const SESSION_ID = `session_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
 const getSessionId = (): string => SESSION_ID;
+
+const INITIAL_MESSAGES: Record<ChatBotProps["userType"], string> = {
+  admin: "Hello! I'm your AI assistant. I can help you manage tolls, customers, and fleet operations.",
+  mechanic: "Hello! I'm your AI assistant. I can help you with trailer maintenance and fleet status.",
+  customer: "Hello! I'm your CRUMS AI assistant. I can help you check your application status, view your rentals, and answer questions about your account.",
+  public: "Hello! I'm your CRUMS AI assistant. How can I help you today?",
+};
 
 export const ChatBot = ({ userType }: ChatBotProps) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -21,9 +29,10 @@ export const ChatBot = ({ userType }: ChatBotProps) => {
   const chatInitialized = useRef(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Build the proxy URL from the Supabase project
   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string | undefined;
   const proxyUrl = supabaseUrl ? `${supabaseUrl}/functions/v1/chat-proxy` : undefined;
+
+  const isAuthenticated = userType !== "public";
 
   const initChat = useCallback(async () => {
     if (chatInitialized.current || !containerRef.current || !proxyUrl) return;
@@ -35,18 +44,28 @@ export const ChatBot = ({ userType }: ChatBotProps) => {
       const { createChat } = await import("@n8n/chat");
       const sessionId = getSessionId();
 
-      // Clear n8n's internal persisted session so old messages don't reload
+      // Clear n8n's internal persisted session
       localStorage.removeItem("n8n-chat");
+
+      // Build headers — include JWT for authenticated users
+      const headers: Record<string, string> = {
+        "apikey": import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+        "Content-Type": "application/json",
+      };
+
+      if (isAuthenticated) {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.access_token) {
+          headers["Authorization"] = `Bearer ${session.access_token}`;
+        }
+      }
 
       createChat({
         loadPreviousSession: false,
         webhookUrl: proxyUrl,
         webhookConfig: {
           method: "POST",
-          headers: {
-            "apikey": import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-            "Content-Type": "application/json",
-          },
+          headers,
         },
         target: "#n8n-chat-container",
         mode: "window",
@@ -54,13 +73,7 @@ export const ChatBot = ({ userType }: ChatBotProps) => {
         chatSessionKey: "sessionId",
         showWelcomeScreen: false,
         defaultLanguage: "en",
-        initialMessages: [
-          userType === "admin"
-            ? "Hello! I'm your AI assistant. I can help you manage tolls, customers, and fleet operations."
-            : userType === "mechanic"
-            ? "Hello! I'm your AI assistant. I can help you with trailer maintenance and fleet status."
-            : "Hello! I'm your CRUMS AI assistant. How can I help you today?",
-        ],
+        initialMessages: [INITIAL_MESSAGES[userType]],
         metadata: {
           sessionId,
           userType,
@@ -74,7 +87,7 @@ export const ChatBot = ({ userType }: ChatBotProps) => {
       setIsLoading(false);
       chatInitialized.current = false;
     }
-  }, [proxyUrl, userType]);
+  }, [proxyUrl, userType, isAuthenticated]);
 
   useEffect(() => {
     if (isOpen && !chatInitialized.current) {
@@ -83,9 +96,12 @@ export const ChatBot = ({ userType }: ChatBotProps) => {
     }
   }, [isOpen, initChat]);
 
+  const headerLabel = isAuthenticated
+    ? userType === "admin" ? "Admin Support" : userType === "mechanic" ? "Mechanic Support" : "Account Support"
+    : "Customer Support";
+
   return (
     <>
-      {/* Floating Chat Button */}
       <Button
         onClick={() => {
           if (!isOpen) trackChatbotOpen();
@@ -101,7 +117,6 @@ export const ChatBot = ({ userType }: ChatBotProps) => {
         <MessageCircle className="h-6 w-6" />
       </Button>
 
-      {/* Chat Window */}
       <Card
         className={cn(
           "fixed bottom-6 right-6 w-[calc(100vw-3rem)] max-w-96 h-[600px] shadow-2xl z-50 flex flex-col overflow-hidden",
@@ -110,15 +125,12 @@ export const ChatBot = ({ userType }: ChatBotProps) => {
           isOpen ? "scale-100 opacity-100" : "scale-0 opacity-0 pointer-events-none"
         )}
       >
-        {/* Header */}
         <div className="flex items-center justify-between p-4 border-b bg-primary text-primary-foreground rounded-t-lg shrink-0">
           <div className="flex items-center gap-2">
             <MessageCircle className="h-5 w-5" />
             <div>
               <h3 className="font-semibold">CRUMS AI Assistant</h3>
-              <p className="text-xs opacity-90">
-                {userType === "admin" ? "Admin Support" : userType === "mechanic" ? "Mechanic Support" : "Customer Support"}
-              </p>
+              <p className="text-xs opacity-90">{headerLabel}</p>
             </div>
           </div>
           <Button
@@ -132,7 +144,6 @@ export const ChatBot = ({ userType }: ChatBotProps) => {
           </Button>
         </div>
 
-        {/* n8n Chat Container */}
         <div className="flex-1 relative min-h-0">
           {!proxyUrl ? (
             <div className="flex flex-col items-center justify-center h-full p-6 text-center gap-3">
