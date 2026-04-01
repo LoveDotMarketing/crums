@@ -31,18 +31,24 @@ Deno.serve(async (req) => {
     const body = await req.json();
     console.log("[chat-proxy] Incoming payload keys:", Object.keys(body));
 
-    // Determine caller identity for rate-limiting
+    // Determine caller identity for rate-limiting and routing
     let rateLimitKey = "anon";
+    let verifiedUserId: string | null = null;
     const authHeader = req.headers.get("Authorization");
+
     if (authHeader) {
       try {
+        // Use service role to verify the JWT reliably in Lovable Cloud
         const supabaseClient = createClient(
           Deno.env.get("SUPABASE_URL")!,
-          Deno.env.get("SUPABASE_ANON_KEY")!,
-          { global: { headers: { Authorization: authHeader } } }
+          Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
         );
-        const { data: { user } } = await supabaseClient.auth.getUser();
-        if (user) rateLimitKey = user.id;
+        const token = authHeader.replace("Bearer ", "");
+        const { data: { user } } = await supabaseClient.auth.getUser(token);
+        if (user) {
+          rateLimitKey = user.id;
+          verifiedUserId = user.id;
+        }
       } catch {
         // anonymous caller – that's fine
       }
@@ -55,27 +61,33 @@ Deno.serve(async (req) => {
       );
     }
 
-    const webhookUrl = Deno.env.get("VITE_N8N_CHAT_URL");
+    // Routing: authenticated users with a userType go to the customer/staff webhook
+    const { userType } = body;
+    const isAuthenticated = verifiedUserId !== null;
+    const isAuthenticatedRole = isAuthenticated && ["customer", "admin", "mechanic"].includes(userType);
+
+    const customerWebhookUrl = Deno.env.get("N8N_CUSTOMER_AGENT_WEBHOOK");
+    const publicWebhookUrl = Deno.env.get("VITE_N8N_CHAT_URL");
+
+    const webhookUrl = isAuthenticatedRole && customerWebhookUrl
+      ? customerWebhookUrl
+      : publicWebhookUrl;
+
     if (!webhookUrl) {
-      console.error("[chat-proxy] VITE_N8N_CHAT_URL not configured");
+      console.error("[chat-proxy] No webhook URL configured for route:", isAuthenticatedRole ? "customer" : "public");
       return new Response(
         JSON.stringify({ error: "Chat service not configured" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // @n8n/chat sends: { action, chatInput, sessionId, ... }
-    // For "loadPreviousSession" n8n expects the same shape and returns []
-    // For "sendMessage" n8n expects chatInput + sessionId
-    // We forward the payload as-is and relay the response back.
+    const { action, sessionId } = body;
+    console.log("[chat-proxy] action:", action, "sessionId:", sessionId, "route:", isAuthenticatedRole ? "customer" : "public");
 
-    const { action, sessionId, chatInput } = body;
-    console.log("[chat-proxy] action:", action, "sessionId:", sessionId);
-
-    // Enrich with userId if authenticated
+    // Enrich with verified userId
     const forwardBody = {
       ...body,
-      userId: rateLimitKey !== "anon" ? rateLimitKey : undefined,
+      userId: verifiedUserId ?? undefined,
     };
 
     const n8nResponse = await fetch(webhookUrl, {
@@ -95,7 +107,6 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Relay the upstream response directly (could be JSON or SSE)
     const contentType = n8nResponse.headers.get("content-type") || "application/json";
     const responseBody = await n8nResponse.text();
     console.log("[chat-proxy] Relaying response, content-type:", contentType, "length:", responseBody.length);
