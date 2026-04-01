@@ -42,7 +42,7 @@ Deno.serve(async (req) => {
 
     let query = supabase
       .from("trailers")
-      .select("type, year, make, model")
+      .select("vin, type, year, make, body_material, rental_rate, status, is_rented")
       .eq("status", "available")
       .eq("is_rented", false);
 
@@ -60,19 +60,17 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Group by type/year/make/model with counts
-    const grouped = new Map<string, { type: string; year: number; make: string; model: string; count: number }>();
-    for (const row of data ?? []) {
-      const key = `${row.type}|${row.year}|${row.make}|${row.model}`;
-      const existing = grouped.get(key);
-      if (existing) {
-        existing.count++;
-      } else {
-        grouped.set(key, { type: row.type, year: row.year, make: row.make, model: row.model, count: 1 });
-      }
-    }
-
-    const available = Array.from(grouped.values()).sort((a, b) => b.year - a.year);
+    const available = (data ?? [])
+      .map((row) => ({
+        vin: row.vin,
+        type: row.type,
+        year: row.year,
+        make: row.make,
+        material: row.body_material,
+        price: row.rental_rate,
+        available: true,
+      }))
+      .sort((a, b) => (b.year ?? 0) - (a.year ?? 0));
 
     return new Response(JSON.stringify({
       available,
