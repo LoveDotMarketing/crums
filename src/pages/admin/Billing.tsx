@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { logAdminAction } from "@/lib/eventLogger";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
