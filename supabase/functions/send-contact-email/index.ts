@@ -10,6 +10,29 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
+function inferSource(data: any): string {
+  if (data.landing_page?.startsWith('/lp/')) return 'Google (paid)';
+  if (data.utm_source) {
+    const medium = (data.utm_medium || '').toLowerCase();
+    if (['cpc', 'ppc', 'paid'].includes(medium)) return `${data.utm_source} (paid)`;
+    return data.utm_source;
+  }
+  if (data.referrer) {
+    try {
+      const hostname = new URL(data.referrer).hostname.toLowerCase();
+      if (hostname.includes('syndicatedsearch')) return 'Google (paid)';
+      if (hostname.includes('google')) return 'Google (organic)';
+      if (hostname.includes('bing')) return 'Bing (organic)';
+      if (hostname.includes('yahoo')) return 'Yahoo (organic)';
+      if (hostname.includes('facebook') || hostname.includes('fb.com')) return 'Facebook';
+      if (hostname.includes('linkedin')) return 'LinkedIn';
+      if (hostname.includes('twitter') || hostname.includes('x.com')) return 'X/Twitter';
+      return hostname;
+    } catch { return 'Referral'; }
+  }
+  return 'Direct';
+}
+
 declare const EdgeRuntime: {
   waitUntil(promise: Promise<any>): void;
 };
