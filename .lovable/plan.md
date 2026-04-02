@@ -1,56 +1,52 @@
 
 
-## Plan: Expand `agent-public-fleet-info` Response Fields
+## Fix: Lead Source "Direct" Label When Referrer is Google
 
-### What Changes
+### Problem
+In `send-contact-email/index.ts` line 281, the Source field uses `formData.utm_source || 'Direct'`. When someone arrives from Google organic search, there's no `utm_source` — only a `referrer` of `https://www.google.com/`. So it incorrectly shows "Direct" instead of "Google (organic)".
 
-Update the edge function to return individual trailer records with VIN, Type, Year, Make, Material (body_material), rental_rate (price), and availability status — instead of grouping into counts.
+### Solution
+Add inline source inference logic in the edge function that checks the referrer when `utm_source` is missing — mirroring the `inferSourceType` logic from the frontend.
 
-### File Modified
+### Change
 
-**`supabase/functions/agent-public-fleet-info/index.ts`**
+**File: `supabase/functions/send-contact-email/index.ts`**
 
-1. Update the `.select()` query to include: `vin, type, year, make, body_material, rental_rate, status, is_rented`
-2. Replace the grouping logic with a simple map that returns each trailer as:
-   ```json
-   {
-     "vin": "1GRAA0622HB123456",
-     "type": "Dry Van",
-     "year": 2024,
-     "make": "Great Dane",
-     "material": "Aluminum",
-     "price": 800,
-     "available": true
-   }
-   ```
-3. Keep the same response shape — `available` array, `totalAvailable` count, `pricing`, and `leaseTerms` all stay the same
-4. The request format (`{ "type": "dry van" }`) and auth remain unchanged — nothing the bot calls changes
+Add a helper function that determines the display source:
 
-### Response Shape (after)
-
-```json
-{
-  "available": [
-    {
-      "vin": "1GRAA...",
-      "type": "Dry Van",
-      "year": 2024,
-      "make": "Great Dane",
-      "material": "Aluminum",
-      "price": 800,
-      "available": true
-    }
-  ],
-  "totalAvailable": 12,
-  "pricing": { ... },
-  "leaseTerms": { ... }
+```typescript
+function inferSource(data: any): string {
+  if (data.landing_page?.startsWith('/lp/')) return 'Google (paid)';
+  if (data.utm_source) {
+    const medium = (data.utm_medium || '').toLowerCase();
+    if (['cpc', 'ppc', 'paid'].includes(medium)) return `${data.utm_source} (paid)`;
+    return data.utm_source;
+  }
+  if (data.referrer) {
+    try {
+      const hostname = new URL(data.referrer).hostname.toLowerCase();
+      if (hostname.includes('syndicatedsearch')) return 'Google (paid)';
+      if (hostname.includes('google')) return 'Google (organic)';
+      if (hostname.includes('bing')) return 'Bing (organic)';
+      if (hostname.includes('yahoo')) return 'Yahoo (organic)';
+      if (hostname.includes('facebook') || hostname.includes('fb.com')) return 'Facebook';
+      if (hostname.includes('linkedin')) return 'LinkedIn';
+      if (hostname.includes('twitter') || hostname.includes('x.com')) return 'X/Twitter';
+      return hostname;
+    } catch { return 'Referral'; }
+  }
+  return 'Direct';
 }
 ```
 
-### Technical Details
-- `material` maps from the `body_material` column
-- `price` maps from the `rental_rate` column (numeric, nullable — will be `null` if not set)
-- `available` is always `true` in this response since we filter for `status = 'available'` and `is_rented = false`
-- VINs are semi-public identifiers used on registrations; no sensitive data is exposed
-- Sorted by year descending
+Then replace line 281:
+```
+- formData.utm_source || 'Direct'
++ inferSource(formData)
+```
+
+### Files
+| File | Action |
+|------|--------|
+| `supabase/functions/send-contact-email/index.ts` | Modify — add `inferSource` helper, use it for the Source field |
 
