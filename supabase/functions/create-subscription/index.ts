@@ -453,8 +453,8 @@ serve(async (req) => {
       });
 
       // ==========================================
-      // FIX: Charge deposit immediately if subscription went straight to active with no invoice
-      // This happens when billing_cycle_anchor is in the future with proration_behavior: "none"
+      // SAFETY NET: Charge deposit if subscription somehow went active without an open invoice.
+      // With create_prorations this shouldn't happen, but kept as a fallback.
       // ==========================================
       let depositChargedDuringCreation = false;
       if (isFirstGroup && depositAmount && depositAmount > 0 && subscription.status === "active") {
