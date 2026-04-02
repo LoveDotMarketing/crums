@@ -132,7 +132,7 @@ Deno.serve(async (req) => {
             .from("customer_subscriptions")
             .update({
               status: mappedStatus,
-              next_billing_date: new Date(stripeSub.current_period_end * 1000).toISOString(),
+              next_billing_date: safeTimestampToISO(stripeSub.current_period_end),
             })
             .eq("id", sub.id);
 
