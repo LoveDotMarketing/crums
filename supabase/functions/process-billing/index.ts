@@ -11,6 +11,18 @@ const logStep = (step: string, details?: Record<string, unknown>) => {
   console.log(`[PROCESS-BILLING] ${step}${detailsStr}`);
 };
 
+/** Safely convert a Unix timestamp (seconds) to ISO string, or return null */
+function safeTimestampToISO(ts: unknown): string | null {
+  if (ts == null || ts === 0 || typeof ts !== "number" || !Number.isFinite(ts)) return null;
+  try {
+    const d = new Date(ts * 1000);
+    if (isNaN(d.getTime())) return null;
+    return d.toISOString();
+  } catch {
+    return null;
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
