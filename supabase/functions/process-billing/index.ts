@@ -11,6 +11,18 @@ const logStep = (step: string, details?: Record<string, unknown>) => {
   console.log(`[PROCESS-BILLING] ${step}${detailsStr}`);
 };
 
+/** Safely convert a Unix timestamp (seconds) to ISO string, or return null */
+function safeTimestampToISO(ts: unknown): string | null {
+  if (ts == null || ts === 0 || typeof ts !== "number" || !Number.isFinite(ts)) return null;
+  try {
+    const d = new Date(ts * 1000);
+    if (isNaN(d.getTime())) return null;
+    return d.toISOString();
+  } catch {
+    return null;
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -120,7 +132,7 @@ Deno.serve(async (req) => {
             .from("customer_subscriptions")
             .update({
               status: mappedStatus,
-              next_billing_date: new Date(stripeSub.current_period_end * 1000).toISOString(),
+              next_billing_date: safeTimestampToISO(stripeSub.current_period_end),
             })
             .eq("id", sub.id);
 
@@ -160,8 +172,8 @@ Deno.serve(async (req) => {
                 .from("billing_history")
                 .update({
                   status: paymentStatus,
-                  paid_at: paymentStatus === "succeeded" && invoice.status_transitions?.paid_at
-                    ? new Date(invoice.status_transitions.paid_at * 1000).toISOString()
+                  paid_at: paymentStatus === "succeeded"
+                    ? safeTimestampToISO(invoice.status_transitions?.paid_at) ?? existing.paid_at
                     : existing.paid_at,
                   stripe_payment_intent_id: typeof invoice.payment_intent === 'string'
                     ? invoice.payment_intent : invoice.payment_intent?.id,
@@ -186,10 +198,10 @@ Deno.serve(async (req) => {
                 status: paymentStatus,
                 stripe_invoice_id: invoice.id,
                 stripe_payment_intent_id: typeof invoice.payment_intent === 'string' ? invoice.payment_intent : invoice.payment_intent?.id,
-                billing_period_start: invoice.period_start ? new Date(invoice.period_start * 1000).toISOString() : null,
-                billing_period_end: invoice.period_end ? new Date(invoice.period_end * 1000).toISOString() : null,
-                paid_at: invoice.status === "paid" && invoice.status_transitions?.paid_at 
-                  ? new Date(invoice.status_transitions.paid_at * 1000).toISOString() 
+                billing_period_start: safeTimestampToISO(invoice.period_start),
+                billing_period_end: safeTimestampToISO(invoice.period_end),
+                paid_at: invoice.status === "paid"
+                  ? safeTimestampToISO(invoice.status_transitions?.paid_at)
                   : null,
                 payment_method: "ach",
               });
