@@ -172,8 +172,8 @@ Deno.serve(async (req) => {
                 .from("billing_history")
                 .update({
                   status: paymentStatus,
-                  paid_at: paymentStatus === "succeeded" && invoice.status_transitions?.paid_at
-                    ? new Date(invoice.status_transitions.paid_at * 1000).toISOString()
+                  paid_at: paymentStatus === "succeeded"
+                    ? safeTimestampToISO(invoice.status_transitions?.paid_at) ?? existing.paid_at
                     : existing.paid_at,
                   stripe_payment_intent_id: typeof invoice.payment_intent === 'string'
                     ? invoice.payment_intent : invoice.payment_intent?.id,
