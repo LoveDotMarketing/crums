@@ -163,6 +163,7 @@ interface BillingHistoryItem {
   id: string;
   subscription_id: string;
   stripe_payment_intent_id: string | null;
+  stripe_invoice_id: string | null;
   amount: number;
   discount_amount: number;
   net_amount: number;
@@ -297,6 +298,7 @@ export default function Billing() {
   // Activate subscription state
   const [isActivating, setIsActivating] = useState<string | null>(null);
   const [activatedIds, setActivatedIds] = useState<Set<string>>(new Set());
+  const [isVoiding, setIsVoiding] = useState<string | null>(null);
   
   
   // Payment failures filter/sort state
@@ -652,6 +654,31 @@ export default function Billing() {
     }
     
     return { onCooldown: false, remainingMinutes: 0 };
+  };
+
+  // Void a recent charge within the 30-minute grace window
+  const handleVoidCharge = async (stripeInvoiceId: string) => {
+    setIsVoiding(stripeInvoiceId);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast.error("You must be logged in");
+        return;
+      }
+      const { data, error } = await supabase.functions.invoke("void-charge", {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+        body: { stripe_invoice_id: stripeInvoiceId },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      toast.success("Charge voided successfully");
+      logAdminAction("charge_voided", `Voided invoice ${stripeInvoiceId}`, { stripe_invoice_id: stripeInvoiceId });
+      await queryClient.invalidateQueries({ queryKey: ["billing-history"] });
+    } catch (err: any) {
+      toast.error("Void failed", { description: err.message });
+    } finally {
+      setIsVoiding(null);
+    }
   };
 
   // Activate an incomplete subscription by paying its open invoice
@@ -2399,38 +2426,65 @@ export default function Billing() {
                             <TableHead>Discount</TableHead>
                             <TableHead>Net</TableHead>
                             <TableHead>Status</TableHead>
+                            <TableHead></TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {billingHistory.map((payment) => (
-                            <TableRow key={payment.id}>
-                              <TableCell>
-                                {format(new Date(payment.created_at), "MMM d, yyyy")}
-                              </TableCell>
-                              <TableCell>
-                                {payment.customer_subscriptions?.customers?.full_name || "—"}
-                              </TableCell>
-                              <TableCell>
-                                {payment.billing_period_start && payment.billing_period_end ? (
-                                  <span className="text-sm">
-                                    {format(new Date(payment.billing_period_start), "MMM d")} - 
-                                    {format(new Date(payment.billing_period_end), "MMM d")}
-                                  </span>
-                                ) : "—"}
-                              </TableCell>
-                              <TableCell>${Number(payment.amount).toFixed(2)}</TableCell>
-                              <TableCell>
-                                {Number(payment.discount_amount) > 0 
-                                  ? `-$${Number(payment.discount_amount).toFixed(2)}`
-                                  : "—"
-                                }
-                              </TableCell>
-                              <TableCell className="font-medium">
-                                ${Number(payment.net_amount).toFixed(2)}
-                              </TableCell>
-                              <TableCell>{getStatusBadge(payment.status)}</TableCell>
-                            </TableRow>
-                          ))}
+                          {billingHistory.map((payment) => {
+                            const ageMs = Date.now() - new Date(payment.created_at).getTime();
+                            const withinVoidWindow = ageMs < 30 * 60 * 1000;
+                            const canVoid = withinVoidWindow && payment.stripe_invoice_id && 
+                              (payment.status === "pending" || payment.status === "processing");
+                            
+                            return (
+                              <TableRow key={payment.id}>
+                                <TableCell>
+                                  {format(new Date(payment.created_at), "MMM d, yyyy")}
+                                </TableCell>
+                                <TableCell>
+                                  {payment.customer_subscriptions?.customers?.full_name || "—"}
+                                </TableCell>
+                                <TableCell>
+                                  {payment.billing_period_start && payment.billing_period_end ? (
+                                    <span className="text-sm">
+                                      {format(new Date(payment.billing_period_start), "MMM d")} - 
+                                      {format(new Date(payment.billing_period_end), "MMM d")}
+                                    </span>
+                                  ) : "—"}
+                                </TableCell>
+                                <TableCell>${Number(payment.amount).toFixed(2)}</TableCell>
+                                <TableCell>
+                                  {Number(payment.discount_amount) > 0 
+                                    ? `-$${Number(payment.discount_amount).toFixed(2)}`
+                                    : "—"
+                                  }
+                                </TableCell>
+                                <TableCell className="font-medium">
+                                  ${Number(payment.net_amount).toFixed(2)}
+                                </TableCell>
+                                <TableCell>{getStatusBadge(payment.status)}</TableCell>
+                                <TableCell>
+                                  {canVoid && (
+                                    <Button 
+                                      variant="destructive" 
+                                      size="sm"
+                                      onClick={() => handleVoidCharge(payment.stripe_invoice_id!)}
+                                      disabled={isVoiding === payment.stripe_invoice_id}
+                                    >
+                                      {isVoiding === payment.stripe_invoice_id ? (
+                                        <RefreshCw className="h-3 w-3 animate-spin" />
+                                      ) : (
+                                        <>
+                                          <Ban className="h-3 w-3 mr-1" />
+                                          Void
+                                        </>
+                                      )}
+                                    </Button>
+                                  )}
+                                </TableCell>
+                              </TableRow>
+                            );
+                          })}
                         </TableBody>
                       </Table>
                     ) : (

@@ -33,7 +33,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Truck, RefreshCw, DollarSign, Tag, CalendarIcon, Info, KeyRound, Warehouse, FileText, CreditCard } from "lucide-react";
+import { Plus, Truck, RefreshCw, DollarSign, Tag, CalendarIcon, Info, KeyRound, Warehouse, FileText, CreditCard, AlertTriangle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -95,6 +95,7 @@ export function CreateSubscriptionDialog({ onSuccess, mode = "dialog", onCancel 
   const [subscriptionType, setSubscriptionType] = useState<SubscriptionType>("standard_lease");
   const [leaseToOwnTotal, setLeaseToOwnTotal] = useState<number>(0);
   const [billingAnchorDay, setBillingAnchorDay] = useState<number>(1);
+  const [showReview, setShowReview] = useState(false);
 
   // Fetch customer's billing anchor preference
   const { data: customerApplication } = useQuery({
@@ -373,6 +374,7 @@ export function CreateSubscriptionDialog({ onSuccess, mode = "dialog", onCancel 
     setSubscriptionType("standard_lease");
     setLeaseToOwnTotal(0);
     setBillingAnchorDay(1);
+    setShowReview(false);
   };
 
   // Get type-based default rental rate
@@ -951,7 +953,80 @@ export function CreateSubscriptionDialog({ onSuccess, mode = "dialog", onCancel 
         </div>
   );
 
-  const formActions = (
+  const firstChargeTotal = totalMonthlyRate + depositAmount;
+  const isLargeSubscription = firstChargeTotal >= 2000;
+
+  const reviewSummary = (
+    <div className="space-y-4 py-2">
+      {isLargeSubscription && (
+        <div className="rounded-md border border-destructive/50 bg-destructive/10 p-3 flex items-start gap-2">
+          <AlertTriangle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
+          <div className="text-sm text-destructive">
+            <p className="font-semibold">Large subscription warning</p>
+            <p>First charge of ${firstChargeTotal.toLocaleString()} will be initiated via ACH. ACH charges cannot be reversed for 5–7 business days.</p>
+          </div>
+        </div>
+      )}
+      <div className="rounded-md border p-4 space-y-2 bg-muted/50">
+        <div className="flex justify-between text-sm">
+          <span className="text-muted-foreground">Customer</span>
+          <span className="font-medium">{customers?.find(c => c.id === selectedCustomerId)?.full_name || "—"}</span>
+        </div>
+        <div className="flex justify-between text-sm">
+          <span className="text-muted-foreground">Trailers</span>
+          <span className="font-medium">{selectedTrailers.length} trailer{selectedTrailers.length !== 1 ? "s" : ""}</span>
+        </div>
+        {selectedTrailers.map(t => (
+          <div key={t.id} className="flex justify-between text-sm pl-4">
+            <span className="text-muted-foreground">{t.trailer_number}</span>
+            <span>${t.customRate.toFixed(2)}/mo</span>
+          </div>
+        ))}
+        <div className="flex justify-between text-sm border-t pt-2">
+          <span className="text-muted-foreground">{effectiveTotalLabel}</span>
+          <span className="font-bold">${totalMonthlyRate.toFixed(2)}</span>
+        </div>
+        <div className="flex justify-between text-sm">
+          <span className="text-muted-foreground">Deposit</span>
+          <span className="font-medium">${depositAmount.toFixed(2)}</span>
+        </div>
+        <div className="flex justify-between text-sm border-t pt-2">
+          <span className="text-muted-foreground">First Charge (approx)</span>
+          <span className="font-bold text-lg">${firstChargeTotal.toFixed(2)}</span>
+        </div>
+        <div className="flex justify-between text-sm">
+          <span className="text-muted-foreground">Billing</span>
+          <span>{effectiveBillingLabel} — Anchor day {billingAnchorDay}</span>
+        </div>
+        <div className="flex justify-between text-sm">
+          <span className="text-muted-foreground">Type</span>
+          <span>{subscriptionType.replace(/_/g, " ")}</span>
+        </div>
+      </div>
+    </div>
+  );
+
+  const formActions = showReview ? (
+    <div className="flex justify-end gap-2">
+      <Button variant="outline" onClick={() => setShowReview(false)}>
+        Back
+      </Button>
+      <Button
+        variant={isLargeSubscription ? "destructive" : "default"}
+        onClick={() => createSubscriptionMutation.mutate()}
+        disabled={createSubscriptionMutation.isPending}
+      >
+        {createSubscriptionMutation.isPending ? (
+          <>
+            <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+            Creating...
+          </>
+        ) : (
+          "Confirm & Create Subscription"
+        )}
+      </Button>
+    </div>
+  ) : (
     <div className="flex justify-end gap-2">
       <Button variant="outline" onClick={() => {
         if (mode === "inline") {
@@ -964,17 +1039,10 @@ export function CreateSubscriptionDialog({ onSuccess, mode = "dialog", onCancel 
         Cancel
       </Button>
       <Button
-        onClick={() => createSubscriptionMutation.mutate()}
-        disabled={!selectedCustomerId || selectedTrailers.length === 0 || createSubscriptionMutation.isPending}
+        onClick={() => setShowReview(true)}
+        disabled={!selectedCustomerId || selectedTrailers.length === 0}
       >
-        {createSubscriptionMutation.isPending ? (
-          <>
-            <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-            Creating...
-          </>
-        ) : (
-          "Create Subscription"
-        )}
+        Review Subscription
       </Button>
     </div>
   );
@@ -989,7 +1057,7 @@ export function CreateSubscriptionDialog({ onSuccess, mode = "dialog", onCancel 
             Set up a new billing subscription for a customer with custom trailer rates.
           </p>
         </div>
-        {formBody}
+        {showReview ? reviewSummary : formBody}
         <div className="sticky bottom-0 bg-background border-t pt-4 pb-2">
           {formActions}
         </div>
@@ -1016,7 +1084,7 @@ export function CreateSubscriptionDialog({ onSuccess, mode = "dialog", onCancel 
             Set up a new billing subscription for a customer with custom trailer rates.
           </DialogDescription>
         </DialogHeader>
-        {formBody}
+        {showReview ? reviewSummary : formBody}
         <DialogFooter>
           {formActions}
         </DialogFooter>

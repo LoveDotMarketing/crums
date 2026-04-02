@@ -54,6 +54,48 @@ serve(async (req) => {
     if (!amount || amount <= 0) throw new Error("A positive amount is required");
     if (!description) throw new Error("description is required");
 
+    const CHARGE_CEILING = 5000;
+    const COOLDOWN_MS = 10 * 60 * 1000; // 10 minutes
+
+    if (Number(amount) > CHARGE_CEILING) {
+      throw new Error(`Charge of $${amount} exceeds the $${CHARGE_CEILING} per-charge limit. Contact a senior admin to override.`);
+    }
+
+    // Duplicate detection: check for recent charge to same customer
+    const { data: recentCharge } = await supabaseAdmin
+      .from("app_event_logs")
+      .select("created_at")
+      .eq("event_type", "customer_charged")
+      .eq("user_id", userData.user.id)
+      .gte("created_at", new Date(Date.now() - COOLDOWN_MS).toISOString())
+      .limit(10);
+
+    const hasDuplicate = recentCharge?.some((log: any) => {
+      // Check metadata for same customer_id via description pattern
+      return true; // any recent charge within window triggers check
+    });
+
+    if (recentCharge && recentCharge.length > 0) {
+      // Check if any were for the same customer by querying more specifically
+      const { data: dupCheck } = await supabaseAdmin
+        .from("app_event_logs")
+        .select("created_at, metadata")
+        .eq("event_type", "customer_charged")
+        .gte("created_at", new Date(Date.now() - COOLDOWN_MS).toISOString())
+        .limit(50);
+
+      const isDuplicate = dupCheck?.some((log: any) => {
+        try {
+          const meta = typeof log.metadata === "string" ? JSON.parse(log.metadata) : log.metadata;
+          return meta?.customer_id === customer_id;
+        } catch { return false; }
+      });
+
+      if (isDuplicate) {
+        throw new Error("A charge was already made to this customer in the last 10 minutes. Wait before charging again.");
+      }
+    }
+
     const amountCents = Math.round(Number(amount) * 100);
     logStep("Charge request", { customerId: customer_id, amount, amountCents, description });
 
