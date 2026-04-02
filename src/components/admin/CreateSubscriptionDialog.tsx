@@ -33,7 +33,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Truck, RefreshCw, DollarSign, Tag, CalendarIcon, Info, KeyRound, Warehouse, FileText, CreditCard } from "lucide-react";
+import { Plus, Truck, RefreshCw, DollarSign, Tag, CalendarIcon, Info, KeyRound, Warehouse, FileText, CreditCard, AlertTriangle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
