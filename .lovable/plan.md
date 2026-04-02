@@ -1,34 +1,15 @@
 
 
-## Plan: Add Admin Audit Logging to Billing Actions
 
-### Problem
-The ChargeCustomerDialog and billing retry flow don't log which admin performed the action. The existing `eventLogger.ts` helpers exist but aren't wired into all billing flows.
+## Plan: Billing Failsafe — Multi-Layer Prevention (IMPLEMENTED)
 
-### Changes
+### Layer 1 — Confirmation Gate ✅
+- `ChargeCustomerDialog.tsx`: 2-step confirmation with review summary, red warning for $1,000+, type-to-confirm for $2,000+
+- `CreateSubscriptionDialog.tsx`: Review step showing full cost breakdown before final submit, warning banner for large subscriptions
 
-**1. `src/components/admin/ChargeCustomerDialog.tsx`**
-- Import `logAdminAction` from `@/lib/eventLogger`
-- After successful charge (line 83), log: `logAdminAction("customer_charged", \`Charged $\${amount} to \${customerName}\`, { customer_id, amount, description, stripe_invoice_id, payment_method })`
+### Layer 2 — Server-Side Limits ✅
+- `charge-customer/index.ts`: $5,000 per-charge ceiling, 10-minute duplicate detection per customer
 
-**2. `src/pages/admin/Billing.tsx`**
-- Import `logBillingRetried` from `@/lib/eventLogger`
-- After successful retry (line 615), log: `logBillingRetried(failure customer name or ID, failure amount)`
-
-**3. `supabase/functions/charge-customer/index.ts`**
-- After successful charge, insert an audit record into `app_event_logs` with the admin's `user_id`, event type `"customer_charged"`, and metadata (customer_id, amount, stripe_invoice_id, payment_method type)
-- This provides a server-side audit trail independent of the client
-
-### What This Covers
-- One-time charges (ChargeCustomerDialog) — client + server logging
-- Payment retries (Billing.tsx) — client logging
-- Subscription creation already logs via `logSubscriptionCreated`
-- Customer creation already logs via `logCustomerCreated`
-
-### Files
-| File | Action |
-|------|--------|
-| `src/components/admin/ChargeCustomerDialog.tsx` | Add audit log call after successful charge |
-| `src/pages/admin/Billing.tsx` | Add audit log call after successful retry |
-| `supabase/functions/charge-customer/index.ts` | Add server-side audit log insert |
-
+### Layer 3 — 30-Minute Void Window ✅
+- New `void-charge/index.ts` edge function: voids Stripe invoices within 30-min window, handles open/paid/processing states
+- `Billing.tsx`: "Void" button appears on billing history rows within 30 minutes of creation for pending/processing payments
