@@ -1,52 +1,34 @@
 
 
-## Fix: Lead Source "Direct" Label When Referrer is Google
+## Plan: Add Admin Audit Logging to Billing Actions
 
 ### Problem
-In `send-contact-email/index.ts` line 281, the Source field uses `formData.utm_source || 'Direct'`. When someone arrives from Google organic search, there's no `utm_source` — only a `referrer` of `https://www.google.com/`. So it incorrectly shows "Direct" instead of "Google (organic)".
+The ChargeCustomerDialog and billing retry flow don't log which admin performed the action. The existing `eventLogger.ts` helpers exist but aren't wired into all billing flows.
 
-### Solution
-Add inline source inference logic in the edge function that checks the referrer when `utm_source` is missing — mirroring the `inferSourceType` logic from the frontend.
+### Changes
 
-### Change
+**1. `src/components/admin/ChargeCustomerDialog.tsx`**
+- Import `logAdminAction` from `@/lib/eventLogger`
+- After successful charge (line 83), log: `logAdminAction("customer_charged", \`Charged $\${amount} to \${customerName}\`, { customer_id, amount, description, stripe_invoice_id, payment_method })`
 
-**File: `supabase/functions/send-contact-email/index.ts`**
+**2. `src/pages/admin/Billing.tsx`**
+- Import `logBillingRetried` from `@/lib/eventLogger`
+- After successful retry (line 615), log: `logBillingRetried(failure customer name or ID, failure amount)`
 
-Add a helper function that determines the display source:
+**3. `supabase/functions/charge-customer/index.ts`**
+- After successful charge, insert an audit record into `app_event_logs` with the admin's `user_id`, event type `"customer_charged"`, and metadata (customer_id, amount, stripe_invoice_id, payment_method type)
+- This provides a server-side audit trail independent of the client
 
-```typescript
-function inferSource(data: any): string {
-  if (data.landing_page?.startsWith('/lp/')) return 'Google (paid)';
-  if (data.utm_source) {
-    const medium = (data.utm_medium || '').toLowerCase();
-    if (['cpc', 'ppc', 'paid'].includes(medium)) return `${data.utm_source} (paid)`;
-    return data.utm_source;
-  }
-  if (data.referrer) {
-    try {
-      const hostname = new URL(data.referrer).hostname.toLowerCase();
-      if (hostname.includes('syndicatedsearch')) return 'Google (paid)';
-      if (hostname.includes('google')) return 'Google (organic)';
-      if (hostname.includes('bing')) return 'Bing (organic)';
-      if (hostname.includes('yahoo')) return 'Yahoo (organic)';
-      if (hostname.includes('facebook') || hostname.includes('fb.com')) return 'Facebook';
-      if (hostname.includes('linkedin')) return 'LinkedIn';
-      if (hostname.includes('twitter') || hostname.includes('x.com')) return 'X/Twitter';
-      return hostname;
-    } catch { return 'Referral'; }
-  }
-  return 'Direct';
-}
-```
-
-Then replace line 281:
-```
-- formData.utm_source || 'Direct'
-+ inferSource(formData)
-```
+### What This Covers
+- One-time charges (ChargeCustomerDialog) — client + server logging
+- Payment retries (Billing.tsx) — client logging
+- Subscription creation already logs via `logSubscriptionCreated`
+- Customer creation already logs via `logCustomerCreated`
 
 ### Files
 | File | Action |
 |------|--------|
-| `supabase/functions/send-contact-email/index.ts` | Modify — add `inferSource` helper, use it for the Source field |
+| `src/components/admin/ChargeCustomerDialog.tsx` | Add audit log call after successful charge |
+| `src/pages/admin/Billing.tsx` | Add audit log call after successful retry |
+| `supabase/functions/charge-customer/index.ts` | Add server-side audit log insert |
 
