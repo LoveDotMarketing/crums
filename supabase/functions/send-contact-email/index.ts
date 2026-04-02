@@ -10,6 +10,29 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
+function inferSource(data: any): string {
+  if (data.landing_page?.startsWith('/lp/')) return 'Google (paid)';
+  if (data.utm_source) {
+    const medium = (data.utm_medium || '').toLowerCase();
+    if (['cpc', 'ppc', 'paid'].includes(medium)) return `${data.utm_source} (paid)`;
+    return data.utm_source;
+  }
+  if (data.referrer) {
+    try {
+      const hostname = new URL(data.referrer).hostname.toLowerCase();
+      if (hostname.includes('syndicatedsearch')) return 'Google (paid)';
+      if (hostname.includes('google')) return 'Google (organic)';
+      if (hostname.includes('bing')) return 'Bing (organic)';
+      if (hostname.includes('yahoo')) return 'Yahoo (organic)';
+      if (hostname.includes('facebook') || hostname.includes('fb.com')) return 'Facebook';
+      if (hostname.includes('linkedin')) return 'LinkedIn';
+      if (hostname.includes('twitter') || hostname.includes('x.com')) return 'X/Twitter';
+      return hostname;
+    } catch { return 'Referral'; }
+  }
+  return 'Direct';
+}
+
 declare const EdgeRuntime: {
   waitUntil(promise: Promise<any>): void;
 };
@@ -278,7 +301,7 @@ serve(async (req) => {
             <div style="background-color: #e8f4f8; padding: 15px; border-radius: 5px; margin: 20px 0;">
               <h3 style="color: #0369a1; margin: 0 0 10px 0; font-size: 14px;">📊 Lead Source Information</h3>
               <table style="font-size: 13px; color: #555;">
-                <tr><td style="padding: 2px 10px 2px 0;"><strong>Source:</strong></td><td>${escapeHtml(formData.utm_source || 'Direct')}</td></tr>
+                <tr><td style="padding: 2px 10px 2px 0;"><strong>Source:</strong></td><td>${escapeHtml(inferSource(formData))}</td></tr>
                 <tr><td style="padding: 2px 10px 2px 0;"><strong>Medium:</strong></td><td>${escapeHtml(formData.utm_medium || '-')}</td></tr>
                 ${formData.utm_campaign ? `<tr><td style="padding: 2px 10px 2px 0;"><strong>Campaign:</strong></td><td>${escapeHtml(formData.utm_campaign)}</td></tr>` : ''}
                 ${formData.utm_term ? `<tr><td style="padding: 2px 10px 2px 0;"><strong>Keyword:</strong></td><td>${escapeHtml(formData.utm_term)}</td></tr>` : ''}
