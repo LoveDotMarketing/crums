@@ -163,6 +163,7 @@ interface BillingHistoryItem {
   id: string;
   subscription_id: string;
   stripe_payment_intent_id: string | null;
+  stripe_invoice_id: string | null;
   amount: number;
   discount_amount: number;
   net_amount: number;
