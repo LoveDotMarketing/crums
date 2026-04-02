@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { logAdminAction } from "@/lib/eventLogger";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
@@ -613,6 +614,12 @@ export default function Billing() {
 
       if (data.success) {
         toast.success(data.message || "Payment retry successful!");
+        logAdminAction("billing_retried", `Retried payment for failure ${failure.id}: $${failure.amount}`, {
+          failure_id: failure.id,
+          amount: failure.amount,
+          stripe_invoice_id: failure.stripe_invoice_id,
+          subscription_id: failure.subscription_id,
+        });
         await queryClient.invalidateQueries({ queryKey: ["payment-failures"] });
         await queryClient.invalidateQueries({ queryKey: ["billing-history"] });
       } else if (data.cooldown) {
