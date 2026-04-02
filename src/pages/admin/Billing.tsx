@@ -2400,38 +2400,65 @@ export default function Billing() {
                             <TableHead>Discount</TableHead>
                             <TableHead>Net</TableHead>
                             <TableHead>Status</TableHead>
+                            <TableHead></TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {billingHistory.map((payment) => (
-                            <TableRow key={payment.id}>
-                              <TableCell>
-                                {format(new Date(payment.created_at), "MMM d, yyyy")}
-                              </TableCell>
-                              <TableCell>
-                                {payment.customer_subscriptions?.customers?.full_name || "—"}
-                              </TableCell>
-                              <TableCell>
-                                {payment.billing_period_start && payment.billing_period_end ? (
-                                  <span className="text-sm">
-                                    {format(new Date(payment.billing_period_start), "MMM d")} - 
-                                    {format(new Date(payment.billing_period_end), "MMM d")}
-                                  </span>
-                                ) : "—"}
-                              </TableCell>
-                              <TableCell>${Number(payment.amount).toFixed(2)}</TableCell>
-                              <TableCell>
-                                {Number(payment.discount_amount) > 0 
-                                  ? `-$${Number(payment.discount_amount).toFixed(2)}`
-                                  : "—"
-                                }
-                              </TableCell>
-                              <TableCell className="font-medium">
-                                ${Number(payment.net_amount).toFixed(2)}
-                              </TableCell>
-                              <TableCell>{getStatusBadge(payment.status)}</TableCell>
-                            </TableRow>
-                          ))}
+                          {billingHistory.map((payment) => {
+                            const ageMs = Date.now() - new Date(payment.created_at).getTime();
+                            const withinVoidWindow = ageMs < 30 * 60 * 1000;
+                            const canVoid = withinVoidWindow && payment.stripe_invoice_id && 
+                              (payment.status === "pending" || payment.status === "processing");
+                            
+                            return (
+                              <TableRow key={payment.id}>
+                                <TableCell>
+                                  {format(new Date(payment.created_at), "MMM d, yyyy")}
+                                </TableCell>
+                                <TableCell>
+                                  {payment.customer_subscriptions?.customers?.full_name || "—"}
+                                </TableCell>
+                                <TableCell>
+                                  {payment.billing_period_start && payment.billing_period_end ? (
+                                    <span className="text-sm">
+                                      {format(new Date(payment.billing_period_start), "MMM d")} - 
+                                      {format(new Date(payment.billing_period_end), "MMM d")}
+                                    </span>
+                                  ) : "—"}
+                                </TableCell>
+                                <TableCell>${Number(payment.amount).toFixed(2)}</TableCell>
+                                <TableCell>
+                                  {Number(payment.discount_amount) > 0 
+                                    ? `-$${Number(payment.discount_amount).toFixed(2)}`
+                                    : "—"
+                                  }
+                                </TableCell>
+                                <TableCell className="font-medium">
+                                  ${Number(payment.net_amount).toFixed(2)}
+                                </TableCell>
+                                <TableCell>{getStatusBadge(payment.status)}</TableCell>
+                                <TableCell>
+                                  {canVoid && (
+                                    <Button 
+                                      variant="destructive" 
+                                      size="sm"
+                                      onClick={() => handleVoidCharge(payment.stripe_invoice_id!)}
+                                      disabled={isVoiding === payment.stripe_invoice_id}
+                                    >
+                                      {isVoiding === payment.stripe_invoice_id ? (
+                                        <RefreshCw className="h-3 w-3 animate-spin" />
+                                      ) : (
+                                        <>
+                                          <Ban className="h-3 w-3 mr-1" />
+                                          Void
+                                        </>
+                                      )}
+                                    </Button>
+                                  )}
+                                </TableCell>
+                              </TableRow>
+                            );
+                          })}
                         </TableBody>
                       </Table>
                     ) : (
