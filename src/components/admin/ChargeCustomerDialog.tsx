@@ -83,6 +83,14 @@ export function ChargeCustomerDialog({ customerId, customerName, trigger, onSucc
         description: `Invoice: ${data.stripe_invoice_id} — Status: ${data.status}`,
       });
 
+      logAdminAction("customer_charged", `Charged $${numAmount.toFixed(2)} to ${customerName}`, {
+        customer_id: customerId,
+        amount: numAmount,
+        description: description.trim(),
+        stripe_invoice_id: data.stripe_invoice_id,
+        payment_method: data.payment_method,
+      });
+
       setOpen(false);
       setAmount("");
       setDescription("");
