@@ -142,22 +142,24 @@ serve(async (req) => {
       logStep("Card surcharge applied", { base: amount, surcharge, total: adjustedAmount });
     }
 
-    // Create invoice item
-    await stripe.invoiceItems.create({
-      customer: sub.stripe_customer_id,
-      amount: finalAmountCents,
-      currency: "usd",
-      description: finalDescription,
-    });
-    logStep("Invoice item created", { amountCents: finalAmountCents, description: finalDescription });
-
-    // Create and finalize invoice
+    // Create invoice FIRST with pending_invoice_items_behavior: 'exclude' to prevent dangling items
     const invoice = await stripe.invoices.create({
       customer: sub.stripe_customer_id,
       collection_method: "charge_automatically",
       auto_advance: true,
+      pending_invoice_items_behavior: "exclude",
     });
-    logStep("Invoice created", { invoiceId: invoice.id });
+    logStep("Invoice created (isolated)", { invoiceId: invoice.id });
+
+    // Attach invoice item explicitly to this invoice
+    await stripe.invoiceItems.create({
+      customer: sub.stripe_customer_id,
+      invoice: invoice.id,
+      amount: finalAmountCents,
+      currency: "usd",
+      description: finalDescription,
+    });
+    logStep("Invoice item attached", { amountCents: finalAmountCents, description: finalDescription });
 
     const finalizedInvoice = await stripe.invoices.finalizeInvoice(invoice.id);
     logStep("Invoice finalized", { status: finalizedInvoice.status });
