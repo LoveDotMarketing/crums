@@ -374,6 +374,7 @@ export function CreateSubscriptionDialog({ onSuccess, mode = "dialog", onCancel 
     setSubscriptionType("standard_lease");
     setLeaseToOwnTotal(0);
     setBillingAnchorDay(1);
+    setShowReview(false);
   };
 
   // Get type-based default rental rate
