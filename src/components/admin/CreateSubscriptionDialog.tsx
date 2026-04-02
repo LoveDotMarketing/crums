@@ -1057,7 +1057,7 @@ export function CreateSubscriptionDialog({ onSuccess, mode = "dialog", onCancel 
             Set up a new billing subscription for a customer with custom trailer rates.
           </p>
         </div>
-        {formBody}
+        {showReview ? reviewSummary : formBody}
         <div className="sticky bottom-0 bg-background border-t pt-4 pb-2">
           {formActions}
         </div>
