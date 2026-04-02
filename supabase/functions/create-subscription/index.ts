@@ -422,38 +422,18 @@ serve(async (req) => {
       }
       if (anchorTimestamp) {
         subscriptionParams.billing_cycle_anchor = anchorTimestamp;
-        subscriptionParams.proration_behavior = "none";
-        logStep("Setting billing cycle anchor", { anchorDay, anchorTimestamp, group: groupKey });
+        // Use Stripe's native proration to charge from now → anchor date.
+        // Previously we used "none" + manual first-period add_invoice_items,
+        // but those one-time items could roll into the NEXT cycle invoice
+        // if they weren't consumed on the initial invoice — causing double-billing.
+        subscriptionParams.proration_behavior = "create_prorations";
+        logStep("Setting billing cycle anchor with prorations", { anchorDay, anchorTimestamp, group: groupKey });
       }
 
-      // Collect all one-time invoice items for the initial invoice
+      // Add deposit as a one-time invoice item on the initial invoice
       const addInvoiceItems: Stripe.SubscriptionCreateParams.AddInvoiceItem[] = [];
-
       if (depositInvoiceItem) {
         addInvoiceItems.push(depositInvoiceItem);
-      }
-
-      // FIX: When using billing_cycle_anchor with proration_behavior: "none",
-      // Stripe generates a $0 first invoice (no prorated charge). This causes
-      // the subscription to auto-activate without collecting any payment.
-      // Solution: Add the first period's recurring charges as one-time invoice items
-      // so the initial invoice has a real dollar amount and stays "incomplete".
-      if (anchorTimestamp) {
-        for (const trailer of groupTrailers) {
-          const rate = customRates?.[trailer.id] ?? trailer.rental_rate ?? getDefaultRate(trailer.type);
-          const firstPeriodPrice = await stripe.prices.create({
-            unit_amount: Math.round(rate * 100),
-            currency: "usd",
-            product_data: {
-              name: `Trailer ${trailer.trailer_number} - First Period Charge`,
-              metadata: { trailer_id: trailer.id, type: "first_period_charge" },
-            },
-          });
-          addInvoiceItems.push({ price: firstPeriodPrice.id });
-          logStep("Added first-period charge for anchored subscription", { 
-            trailerId: trailer.id, rate, priceId: firstPeriodPrice.id, group: groupKey 
-          });
-        }
       }
 
       if (addInvoiceItems.length > 0) {
@@ -473,8 +453,8 @@ serve(async (req) => {
       });
 
       // ==========================================
-      // FIX: Charge deposit immediately if subscription went straight to active with no invoice
-      // This happens when billing_cycle_anchor is in the future with proration_behavior: "none"
+      // SAFETY NET: Charge deposit if subscription somehow went active without an open invoice.
+      // With create_prorations this shouldn't happen, but kept as a fallback.
       // ==========================================
       let depositChargedDuringCreation = false;
       if (isFirstGroup && depositAmount && depositAmount > 0 && subscription.status === "active") {
