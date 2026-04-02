@@ -656,6 +656,31 @@ export default function Billing() {
     return { onCooldown: false, remainingMinutes: 0 };
   };
 
+  // Void a recent charge within the 30-minute grace window
+  const handleVoidCharge = async (stripeInvoiceId: string) => {
+    setIsVoiding(stripeInvoiceId);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast.error("You must be logged in");
+        return;
+      }
+      const { data, error } = await supabase.functions.invoke("void-charge", {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+        body: { stripe_invoice_id: stripeInvoiceId },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      toast.success("Charge voided successfully");
+      logAdminAction("charge_voided", `Voided invoice ${stripeInvoiceId}`, { stripe_invoice_id: stripeInvoiceId });
+      await queryClient.invalidateQueries({ queryKey: ["billing-history"] });
+    } catch (err: any) {
+      toast.error("Void failed", { description: err.message });
+    } finally {
+      setIsVoiding(null);
+    }
+  };
+
   // Activate an incomplete subscription by paying its open invoice
   const handleActivateSubscription = async (subscriptionId: string, customerName: string) => {
     setIsActivating(subscriptionId);
