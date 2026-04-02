@@ -12,6 +12,8 @@ const logStep = (step: string, details?: Record<string, unknown>) => {
   console.log(`[CHARGE-TOLL] ${step}${detailsStr}`);
 };
 
+const TOLL_CEILING = 2000;
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -31,6 +33,17 @@ serve(async (req) => {
     if (userError || !userData.user) throw new Error("Unauthorized");
     logStep("Authenticated", { userId: userData.user.id });
 
+    // Verify admin role
+    const { data: roleData } = await supabaseAdmin
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userData.user.id)
+      .eq("role", "admin")
+      .maybeSingle();
+
+    if (!roleData) throw new Error("Admin access required");
+    logStep("Admin role verified");
+
     const { toll_id } = await req.json();
     if (!toll_id) throw new Error("toll_id is required");
 
@@ -44,6 +57,12 @@ serve(async (req) => {
     if (tollError || !toll) throw new Error("Toll not found");
     if (toll.stripe_invoice_id) throw new Error("Toll has already been charged via Stripe");
     if (toll.status === "paid") throw new Error("Toll is already marked as paid");
+
+    // Amount ceiling check
+    if (Number(toll.amount) > TOLL_CEILING) {
+      throw new Error(`Toll amount of $${toll.amount} exceeds the $${TOLL_CEILING} per-toll limit. Verify the amount and contact a senior admin.`);
+    }
+
     logStep("Toll fetched", { tollId: toll.id, amount: toll.amount, customerId: toll.customer_id });
 
     // 2. Look up customer's stripe_customer_id
@@ -60,7 +79,7 @@ serve(async (req) => {
     }
     logStep("Stripe customer found", { stripeCustomerId: sub.stripe_customer_id });
 
-    // 3. Create Stripe invoice
+    // 3. Create Stripe invoice with invoice isolation
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY")!, {
       apiVersion: "2025-08-27.basil",
     });
@@ -71,22 +90,24 @@ serve(async (req) => {
     const description = `Toll - ${toll.toll_authority || toll.toll_location || "Unknown"} - ${tollDate}`;
     const amountCents = Math.round(Number(toll.amount) * 100);
 
-    // Create invoice item
-    await stripe.invoiceItems.create({
-      customer: sub.stripe_customer_id,
-      amount: amountCents,
-      currency: "usd",
-      description,
-    });
-    logStep("Invoice item created", { amountCents, description });
-
-    // Create and finalize invoice
+    // Create invoice FIRST with pending_invoice_items_behavior: 'exclude' to prevent dangling items
     const invoice = await stripe.invoices.create({
       customer: sub.stripe_customer_id,
       collection_method: "charge_automatically",
       auto_advance: true,
+      pending_invoice_items_behavior: "exclude",
     });
-    logStep("Invoice created", { invoiceId: invoice.id });
+    logStep("Invoice created (isolated)", { invoiceId: invoice.id });
+
+    // Attach invoice item explicitly to this invoice
+    await stripe.invoiceItems.create({
+      customer: sub.stripe_customer_id,
+      invoice: invoice.id,
+      amount: amountCents,
+      currency: "usd",
+      description,
+    });
+    logStep("Invoice item attached", { amountCents, description });
 
     const finalizedInvoice = await stripe.invoices.finalizeInvoice(invoice.id);
     logStep("Invoice finalized", { status: finalizedInvoice.status });
@@ -120,6 +141,24 @@ serve(async (req) => {
     if (updateError) {
       logStep("Failed to update toll record", { error: updateError.message });
     }
+
+    // 5. Audit log
+    await supabaseAdmin.from("app_event_logs").insert({
+      user_id: userData.user.id,
+      user_email: userData.user.email,
+      event_category: "admin_action",
+      event_type: "toll_charged",
+      description: `Charged toll $${toll.amount} to customer ${toll.customer_id}: ${description}`,
+      metadata: {
+        toll_id,
+        customer_id: toll.customer_id,
+        amount: toll.amount,
+        stripe_invoice_id: finalizedInvoice.id,
+        stripe_payment_intent_id: paymentIntentId,
+      },
+      page_url: "/dashboard/admin/tolls",
+    });
+    logStep("Audit log inserted");
 
     logStep("Toll charged successfully", { tollStatus, invoiceId: finalizedInvoice.id });
 

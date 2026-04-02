@@ -439,6 +439,12 @@ serve(async (req) => {
 
         logStep("Created first period invoice items", { totalAmount: totalAmount / 100 });
 
+        // Sanity ceiling: prevent runaway charges
+        const FIRST_PERIOD_CEILING_CENTS = 10000 * 100; // $10,000
+        if (totalAmount > FIRST_PERIOD_CEILING_CENTS) {
+          throw new Error(`First period charge of $${(totalAmount / 100).toFixed(2)} exceeds the $10,000 safety ceiling. Review subscription items manually.`);
+        }
+
         const finalized = await stripe.invoices.finalizeInvoice(firstPeriodInvoice.id);
         const paid = await stripe.invoices.pay(finalized.id, { payment_method: paymentMethodId });
         logStep("First period invoice charged", { invoiceId: paid.id, status: paid.status, amountPaid: paid.amount_paid / 100 });
