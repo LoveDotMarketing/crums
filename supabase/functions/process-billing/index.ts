@@ -198,10 +198,10 @@ Deno.serve(async (req) => {
                 status: paymentStatus,
                 stripe_invoice_id: invoice.id,
                 stripe_payment_intent_id: typeof invoice.payment_intent === 'string' ? invoice.payment_intent : invoice.payment_intent?.id,
-                billing_period_start: invoice.period_start ? new Date(invoice.period_start * 1000).toISOString() : null,
-                billing_period_end: invoice.period_end ? new Date(invoice.period_end * 1000).toISOString() : null,
-                paid_at: invoice.status === "paid" && invoice.status_transitions?.paid_at 
-                  ? new Date(invoice.status_transitions.paid_at * 1000).toISOString() 
+                billing_period_start: safeTimestampToISO(invoice.period_start),
+                billing_period_end: safeTimestampToISO(invoice.period_end),
+                paid_at: invoice.status === "paid"
+                  ? safeTimestampToISO(invoice.status_transitions?.paid_at)
                   : null,
                 payment_method: "ach",
               });
