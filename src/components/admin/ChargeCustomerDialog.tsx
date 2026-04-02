@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { logAdminAction } from "@/lib/eventLogger";
 
 const PRESETS = [
   { label: "Custom", value: "custom", amount: 0 },
