@@ -520,6 +520,7 @@ export function CreateSubscriptionDialog({ onSuccess, mode = "dialog", onCancel 
 
           {/* Billing Anchor Day Selection */}
           {selectedCustomerId && (
+            <>
             <div className="space-y-3">
               <Label>Billing Anchor Day</Label>
               {customerApplication?.billing_anchor_day && (
@@ -590,6 +591,7 @@ export function CreateSubscriptionDialog({ onSuccess, mode = "dialog", onCancel 
                 </div>
               )}
             </div>
+            </>
           )}
 
           {/* Subscription Type Selection */}
