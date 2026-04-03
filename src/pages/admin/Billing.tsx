@@ -656,8 +656,8 @@ export default function Billing() {
     return { onCooldown: false, remainingMinutes: 0 };
   };
 
-  // Void a recent charge within the 30-minute grace window
-  const handleVoidCharge = async (stripeInvoiceId: string) => {
+  // Void a recent charge within the 30-minute grace window (or admin override)
+  const handleVoidCharge = async (stripeInvoiceId: string, adminOverride = false) => {
     setIsVoiding(stripeInvoiceId);
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -667,12 +667,12 @@ export default function Billing() {
       }
       const { data, error } = await supabase.functions.invoke("void-charge", {
         headers: { Authorization: `Bearer ${session.access_token}` },
-        body: { stripe_invoice_id: stripeInvoiceId },
+        body: { stripe_invoice_id: stripeInvoiceId, adminOverride },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       toast.success("Charge voided successfully");
-      logAdminAction("charge_voided", `Voided invoice ${stripeInvoiceId}`, { stripe_invoice_id: stripeInvoiceId });
+      logAdminAction("charge_voided", `Voided invoice ${stripeInvoiceId}${adminOverride ? " (admin override)" : ""}`, { stripe_invoice_id: stripeInvoiceId, adminOverride });
       await queryClient.invalidateQueries({ queryKey: ["billing-history"] });
     } catch (err: any) {
       toast.error("Void failed", { description: err.message });
@@ -2435,6 +2435,8 @@ export default function Billing() {
                             const withinVoidWindow = ageMs < 30 * 60 * 1000;
                             const canVoid = withinVoidWindow && payment.stripe_invoice_id && 
                               (payment.status === "pending" || payment.status === "processing");
+                            const canAdminVoid = !withinVoidWindow && payment.stripe_invoice_id && 
+                              (payment.status === "pending" || payment.status === "processing");
                             
                             return (
                               <TableRow key={payment.id}>
@@ -2477,6 +2479,28 @@ export default function Billing() {
                                         <>
                                           <Ban className="h-3 w-3 mr-1" />
                                           Void
+                                        </>
+                                      )}
+                                    </Button>
+                                  )}
+                                  {canAdminVoid && (
+                                    <Button 
+                                      variant="outline" 
+                                      size="sm"
+                                      className="text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground"
+                                      onClick={() => {
+                                        if (window.confirm("This invoice is outside the 30-minute void window. Are you sure you want to void it with admin override?")) {
+                                          handleVoidCharge(payment.stripe_invoice_id!, true);
+                                        }
+                                      }}
+                                      disabled={isVoiding === payment.stripe_invoice_id}
+                                    >
+                                      {isVoiding === payment.stripe_invoice_id ? (
+                                        <RefreshCw className="h-3 w-3 animate-spin" />
+                                      ) : (
+                                        <>
+                                          <Ban className="h-3 w-3 mr-1" />
+                                          Admin Void
                                         </>
                                       )}
                                     </Button>

@@ -95,6 +95,7 @@ export function CreateSubscriptionDialog({ onSuccess, mode = "dialog", onCancel 
   const [subscriptionType, setSubscriptionType] = useState<SubscriptionType>("standard_lease");
   const [leaseToOwnTotal, setLeaseToOwnTotal] = useState<number>(0);
   const [billingAnchorDay, setBillingAnchorDay] = useState<number>(1);
+  const [firstBillingDate, setFirstBillingDate] = useState<Date | undefined>(undefined);
   const [showReview, setShowReview] = useState(false);
 
   // Fetch customer's billing anchor preference
@@ -326,6 +327,7 @@ export function CreateSubscriptionDialog({ onSuccess, mode = "dialog", onCancel 
           endDate: endDate ? format(endDate, "yyyy-MM-dd") : undefined,
           subscriptionType,
           billingAnchorDay,
+          firstBillingDate: firstBillingDate ? format(firstBillingDate, "yyyy-MM-dd") : undefined,
           leaseToOwnTotal: subscriptionType === "lease_to_own" && leaseToOwnTotal > 0 ? leaseToOwnTotal : undefined
         }
       });
@@ -374,6 +376,7 @@ export function CreateSubscriptionDialog({ onSuccess, mode = "dialog", onCancel 
     setSubscriptionType("standard_lease");
     setLeaseToOwnTotal(0);
     setBillingAnchorDay(1);
+    setFirstBillingDate(undefined);
     setShowReview(false);
   };
 
@@ -517,6 +520,7 @@ export function CreateSubscriptionDialog({ onSuccess, mode = "dialog", onCancel 
 
           {/* Billing Anchor Day Selection */}
           {selectedCustomerId && (
+            <>
             <div className="space-y-3">
               <Label>Billing Anchor Day</Label>
               {customerApplication?.billing_anchor_day && (
@@ -545,6 +549,49 @@ export function CreateSubscriptionDialog({ onSuccess, mode = "dialog", onCancel 
                 Sets the Stripe billing cycle anchor. Use different anchor days for split billing across multiple subscriptions.
               </p>
             </div>
+
+            {/* First Billing Date Override */}
+            <div className="space-y-3">
+              <Label className="flex items-center gap-2">
+                <CalendarIcon className="h-4 w-4" />
+                First Billing Date (Optional)
+              </Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !firstBillingDate && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {firstBillingDate ? format(firstBillingDate, "PPP") : "Auto (next anchor date)"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={firstBillingDate}
+                    onSelect={setFirstBillingDate}
+                    disabled={(date) => date < new Date()}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+              {firstBillingDate && (
+                <div className="flex items-center gap-2">
+                  <p className="text-xs text-amber-600 flex items-center gap-1">
+                    <AlertTriangle className="h-3 w-3" />
+                    Overrides anchor day calculation. First charge will be on {format(firstBillingDate, "MMM d, yyyy")}.
+                  </p>
+                  <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={() => setFirstBillingDate(undefined)}>
+                    Clear
+                  </Button>
+                </div>
+              )}
+            </div>
+            </>
           )}
 
           {/* Subscription Type Selection */}
@@ -998,6 +1045,12 @@ export function CreateSubscriptionDialog({ onSuccess, mode = "dialog", onCancel 
           <span className="text-muted-foreground">Billing</span>
           <span>{effectiveBillingLabel} — Anchor day {billingAnchorDay}</span>
         </div>
+        {firstBillingDate && (
+          <div className="flex justify-between text-sm">
+            <span className="text-muted-foreground">First Billing Date</span>
+            <span className="font-medium">{format(firstBillingDate, "MMM d, yyyy")}</span>
+          </div>
+        )}
         <div className="flex justify-between text-sm">
           <span className="text-muted-foreground">Type</span>
           <span>{subscriptionType.replace(/_/g, " ")}</span>
