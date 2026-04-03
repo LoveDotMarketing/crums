@@ -656,8 +656,8 @@ export default function Billing() {
     return { onCooldown: false, remainingMinutes: 0 };
   };
 
-  // Void a recent charge within the 30-minute grace window
-  const handleVoidCharge = async (stripeInvoiceId: string) => {
+  // Void a recent charge within the 30-minute grace window (or admin override)
+  const handleVoidCharge = async (stripeInvoiceId: string, adminOverride = false) => {
     setIsVoiding(stripeInvoiceId);
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -667,12 +667,12 @@ export default function Billing() {
       }
       const { data, error } = await supabase.functions.invoke("void-charge", {
         headers: { Authorization: `Bearer ${session.access_token}` },
-        body: { stripe_invoice_id: stripeInvoiceId },
+        body: { stripe_invoice_id: stripeInvoiceId, adminOverride },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       toast.success("Charge voided successfully");
-      logAdminAction("charge_voided", `Voided invoice ${stripeInvoiceId}`, { stripe_invoice_id: stripeInvoiceId });
+      logAdminAction("charge_voided", `Voided invoice ${stripeInvoiceId}${adminOverride ? " (admin override)" : ""}`, { stripe_invoice_id: stripeInvoiceId, adminOverride });
       await queryClient.invalidateQueries({ queryKey: ["billing-history"] });
     } catch (err: any) {
       toast.error("Void failed", { description: err.message });
