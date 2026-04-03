@@ -101,7 +101,7 @@ serve(async (req) => {
     logStep("Admin verified", { adminId: userData.user.id });
 
     const body: SubscriptionRequest = await req.json();
-    const { customerId, trailerIds, billingCycle, depositAmount, discountId, customRates, leaseToOwnFlags, endDate, subscriptionType, leaseToOwnTotal, billingAnchorDay, trailerBillingSchedules } = body;
+    const { customerId, trailerIds, billingCycle, depositAmount, discountId, customRates, leaseToOwnFlags, endDate, subscriptionType, leaseToOwnTotal, billingAnchorDay, trailerBillingSchedules, firstBillingDate } = body;
 
     if (!customerId || !trailerIds?.length || !billingCycle) {
       throw new Error("Missing required fields: customerId, trailerIds, billingCycle");
