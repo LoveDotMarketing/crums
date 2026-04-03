@@ -2483,6 +2483,28 @@ export default function Billing() {
                                       )}
                                     </Button>
                                   )}
+                                  {canAdminVoid && (
+                                    <Button 
+                                      variant="outline" 
+                                      size="sm"
+                                      className="text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground"
+                                      onClick={() => {
+                                        if (window.confirm("This invoice is outside the 30-minute void window. Are you sure you want to void it with admin override?")) {
+                                          handleVoidCharge(payment.stripe_invoice_id!, true);
+                                        }
+                                      }}
+                                      disabled={isVoiding === payment.stripe_invoice_id}
+                                    >
+                                      {isVoiding === payment.stripe_invoice_id ? (
+                                        <RefreshCw className="h-3 w-3 animate-spin" />
+                                      ) : (
+                                        <>
+                                          <Ban className="h-3 w-3 mr-1" />
+                                          Admin Void
+                                        </>
+                                      )}
+                                    </Button>
+                                  )}
                                 </TableCell>
                               </TableRow>
                             );
