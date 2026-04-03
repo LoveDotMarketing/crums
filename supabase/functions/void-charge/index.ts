@@ -43,9 +43,9 @@ serve(async (req) => {
 
     if (!roleData) throw new Error("Admin access required");
 
-    const { stripe_invoice_id } = await req.json();
+    const { stripe_invoice_id, adminOverride } = await req.json();
     if (!stripe_invoice_id) throw new Error("stripe_invoice_id is required");
-    logStep("Void request", { stripeInvoiceId: stripe_invoice_id });
+    logStep("Void request", { stripeInvoiceId: stripe_invoice_id, adminOverride: !!adminOverride });
 
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY")!, {
       apiVersion: "2025-08-27.basil",
