@@ -327,6 +327,7 @@ export function CreateSubscriptionDialog({ onSuccess, mode = "dialog", onCancel 
           endDate: endDate ? format(endDate, "yyyy-MM-dd") : undefined,
           subscriptionType,
           billingAnchorDay,
+          firstBillingDate: firstBillingDate ? format(firstBillingDate, "yyyy-MM-dd") : undefined,
           leaseToOwnTotal: subscriptionType === "lease_to_own" && leaseToOwnTotal > 0 ? leaseToOwnTotal : undefined
         }
       });
