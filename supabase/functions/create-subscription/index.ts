@@ -61,6 +61,7 @@ interface SubscriptionRequest {
   leaseToOwnTotal?: number; // Total buyout price for lease-to-own agreements
   billingAnchorDay?: number; // Admin-selected billing anchor day (1-28)
   trailerBillingSchedules?: Record<string, TrailerBillingSchedule>; // per-trailer billing overrides
+  firstBillingDate?: string; // Optional explicit first billing date (YYYY-MM-DD) — overrides anchor day calculation
 }
 
 serve(async (req) => {
