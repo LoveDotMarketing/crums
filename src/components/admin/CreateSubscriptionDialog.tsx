@@ -95,6 +95,7 @@ export function CreateSubscriptionDialog({ onSuccess, mode = "dialog", onCancel 
   const [subscriptionType, setSubscriptionType] = useState<SubscriptionType>("standard_lease");
   const [leaseToOwnTotal, setLeaseToOwnTotal] = useState<number>(0);
   const [billingAnchorDay, setBillingAnchorDay] = useState<number>(1);
+  const [firstBillingDate, setFirstBillingDate] = useState<Date | undefined>(undefined);
   const [showReview, setShowReview] = useState(false);
 
   // Fetch customer's billing anchor preference
