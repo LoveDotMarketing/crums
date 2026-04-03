@@ -548,6 +548,48 @@ export function CreateSubscriptionDialog({ onSuccess, mode = "dialog", onCancel 
                 Sets the Stripe billing cycle anchor. Use different anchor days for split billing across multiple subscriptions.
               </p>
             </div>
+
+            {/* First Billing Date Override */}
+            <div className="space-y-3">
+              <Label className="flex items-center gap-2">
+                <CalendarIcon className="h-4 w-4" />
+                First Billing Date (Optional)
+              </Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !firstBillingDate && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {firstBillingDate ? format(firstBillingDate, "PPP") : "Auto (next anchor date)"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={firstBillingDate}
+                    onSelect={setFirstBillingDate}
+                    disabled={(date) => date < new Date()}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+              {firstBillingDate && (
+                <div className="flex items-center gap-2">
+                  <p className="text-xs text-amber-600 flex items-center gap-1">
+                    <AlertTriangle className="h-3 w-3" />
+                    Overrides anchor day calculation. First charge will be on {format(firstBillingDate, "MMM d, yyyy")}.
+                  </p>
+                  <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={() => setFirstBillingDate(undefined)}>
+                    Clear
+                  </Button>
+                </div>
+              )}
+            </div>
           )}
 
           {/* Subscription Type Selection */}
