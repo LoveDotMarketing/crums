@@ -55,10 +55,13 @@ serve(async (req) => {
     const invoice = await stripe.invoices.retrieve(stripe_invoice_id);
     logStep("Invoice retrieved", { status: invoice.status, created: invoice.created });
 
-    // Enforce 30-minute grace window (server-side)
+    // Enforce 30-minute grace window (server-side) unless admin override
     const invoiceAge = Date.now() - (invoice.created * 1000);
-    if (invoiceAge > VOID_WINDOW_MS) {
+    if (!adminOverride && invoiceAge > VOID_WINDOW_MS) {
       throw new Error(`Void window expired. Invoice is ${Math.round(invoiceAge / 60000)} minutes old. Use a refund instead.`);
+    }
+    if (adminOverride) {
+      logStep("Admin override: bypassing void window", { invoiceAgeMinutes: Math.round(invoiceAge / 60000) });
     }
 
     // Attempt to void based on invoice status
