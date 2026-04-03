@@ -413,9 +413,14 @@ serve(async (req) => {
         },
       };
 
-      // Set billing cycle anchor — use weekday anchor for weekly, month-day anchor for monthly
+      // Set billing cycle anchor — use explicit firstBillingDate if provided, else weekday/monthly anchor
       let anchorTimestamp: number | undefined;
-      if (groupBillingCycle === "weekly" && anchorDay !== null) {
+      if (firstBillingDate) {
+        // Admin explicitly chose the first billing date — use it directly as the anchor
+        const fbDate = new Date(firstBillingDate + "T00:00:00Z");
+        anchorTimestamp = Math.floor(fbDate.getTime() / 1000);
+        logStep("Using explicit firstBillingDate as anchor", { firstBillingDate, anchorTimestamp, group: groupKey });
+      } else if (groupBillingCycle === "weekly" && anchorDay !== null) {
         anchorTimestamp = calculateNextWeekdayAnchor(anchorDay);
         logStep("Using weekly anchor (next weekday)", { dayOfWeek: anchorDay, anchorTimestamp, group: groupKey });
       } else {
@@ -423,10 +428,6 @@ serve(async (req) => {
       }
       if (anchorTimestamp) {
         subscriptionParams.billing_cycle_anchor = anchorTimestamp;
-        // Use Stripe's native proration to charge from now → anchor date.
-        // Previously we used "none" + manual first-period add_invoice_items,
-        // but those one-time items could roll into the NEXT cycle invoice
-        // if they weren't consumed on the initial invoice — causing double-billing.
         subscriptionParams.proration_behavior = "create_prorations";
         logStep("Setting billing cycle anchor with prorations", { anchorDay, anchorTimestamp, group: groupKey });
       }
