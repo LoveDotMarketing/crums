@@ -376,6 +376,7 @@ export function CreateSubscriptionDialog({ onSuccess, mode = "dialog", onCancel 
     setSubscriptionType("standard_lease");
     setLeaseToOwnTotal(0);
     setBillingAnchorDay(1);
+    setFirstBillingDate(undefined);
     setShowReview(false);
   };
 
