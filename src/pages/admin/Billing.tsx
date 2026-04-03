@@ -2435,6 +2435,8 @@ export default function Billing() {
                             const withinVoidWindow = ageMs < 30 * 60 * 1000;
                             const canVoid = withinVoidWindow && payment.stripe_invoice_id && 
                               (payment.status === "pending" || payment.status === "processing");
+                            const canAdminVoid = !withinVoidWindow && payment.stripe_invoice_id && 
+                              (payment.status === "pending" || payment.status === "processing");
                             
                             return (
                               <TableRow key={payment.id}>
