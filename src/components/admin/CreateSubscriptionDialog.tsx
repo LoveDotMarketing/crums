@@ -1045,6 +1045,12 @@ export function CreateSubscriptionDialog({ onSuccess, mode = "dialog", onCancel 
           <span className="text-muted-foreground">Billing</span>
           <span>{effectiveBillingLabel} — Anchor day {billingAnchorDay}</span>
         </div>
+        {firstBillingDate && (
+          <div className="flex justify-between text-sm">
+            <span className="text-muted-foreground">First Billing Date</span>
+            <span className="font-medium">{format(firstBillingDate, "MMM d, yyyy")}</span>
+          </div>
+        )}
         <div className="flex justify-between text-sm">
           <span className="text-muted-foreground">Type</span>
           <span>{subscriptionType.replace(/_/g, " ")}</span>
