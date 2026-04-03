@@ -1,58 +1,38 @@
 
 
-## Plan: Comprehensive Billing Safeguard Review and Hardening
+## Fix Gerald Porter's Billing Date
 
-After reviewing all billing-related edge functions and UI components, here are the remaining risks and fixes needed.
+### What Happened
+The subscription was created April 2 with a Friday weekly anchor, so Stripe tried to charge $1,666 immediately. The payment failed. Gerald's billing should start on the **15th** instead.
 
-### Risks Found
+### What Needs to Happen
 
-**1. `charge-toll/index.ts` — No admin role check**
-The function authenticates the user but never verifies they are an admin. Any authenticated user (customer, mechanic) can charge tolls to any customer via Stripe. This is a critical gap.
+**Step 1: Void the failed invoice in Stripe**
+Use the void-charge edge function or Stripe API to void invoice `in_1THvOSLjIwiEGQIhyZ3guS5E` ($1,666) so it stops attempting collection.
 
-**2. `charge-toll/index.ts` — No amount ceiling or audit logging**
-Unlike `charge-customer`, tolls have no maximum amount guard and no `app_event_logs` audit trail. A toll with an accidentally large amount would charge without safeguards.
+**Step 2: Update the Stripe subscription's billing_cycle_anchor**
+Use `stripe.subscriptions.update()` to change the `billing_cycle_anchor` to April 15 (Unix timestamp). For weekly billing, this resets the recurring cycle to start from the 15th. Since Stripe doesn't allow changing `billing_cycle_anchor` after creation on an existing subscription, we may need to **cancel and recreate** the subscription with the correct anchor.
 
-**3. `charge-customer/index.ts` — Dangling invoice items risk**
-When creating an invoice item then creating an invoice with default `pending_invoice_items_behavior`, if the invoice creation fails, the invoice item remains on the Stripe customer and gets swept into the NEXT invoice automatically. This is the same class of bug that caused the $15,480 overcharge. Should use `pending_invoice_items_behavior: 'exclude'` and attach items explicitly.
+**Step 3: Update local database**
+Update `subscription_items` to set `billing_anchor_day` to the correct value for the new schedule.
 
-**4. `charge-toll/index.ts` — Same dangling invoice items risk**
-Creates invoice item, then creates invoice without `pending_invoice_items_behavior: 'exclude'`. Orphaned items could stack onto future invoices.
-
-**5. `activate-subscription/index.ts` — No subscription-level amount sanity check**
-The "first period charge" safety net (lines 396-443) sums up all Stripe subscription items and charges them. If a subscription somehow had many items or very high prices, there is no ceiling. Should add a sanity check.
-
-**6. `create-subscription/index.ts` — Deposit standalone invoice (line 528-540)**
-The deposit fallback path creates an invoice without `pending_invoice_items_behavior: 'exclude'`, so it could pick up stale pending invoice items from the Stripe customer — inflating the charge.
-
-### Changes
+### Implementation
 
 | File | Change |
 |------|--------|
-| `supabase/functions/charge-toll/index.ts` | Add admin role verification, $2,000 toll ceiling, audit logging, use `pending_invoice_items_behavior: 'exclude'` with explicit invoice item attachment |
-| `supabase/functions/charge-customer/index.ts` | Switch to `pending_invoice_items_behavior: 'exclude'` and attach invoice item explicitly to prevent dangling items |
-| `supabase/functions/activate-subscription/index.ts` | Add $10,000 sanity ceiling on first-period charge; add `pending_invoice_items_behavior: 'exclude'` on deposit invoice (already done there, confirm consistency) |
-| `supabase/functions/create-subscription/index.ts` | Add `pending_invoice_items_behavior: 'exclude'` to the standalone deposit invoice fallback (line 528) |
+| No code changes needed | This is a data fix — void the invoice via Stripe API and recreate the subscription with the correct anchor date |
 
-### Technical Details
+### Preventive Improvement (Code Change)
+Add a **"First billing date"** date picker to `CreateSubscriptionDialog.tsx` so admins can explicitly choose when billing starts, rather than relying solely on anchor day math. This makes the intent explicit and prevents similar misconfigurations.
 
-**Dangling invoice item fix pattern** (applied to charge-customer and charge-toll):
-```typescript
-// Before (dangerous):
-await stripe.invoiceItems.create({ customer, amount, description });
-const invoice = await stripe.invoices.create({ customer, ... });
+| File | Change |
+|------|--------|
+| `src/components/admin/CreateSubscriptionDialog.tsx` | Add optional "First Billing Date" date picker that overrides the calculated anchor timestamp |
+| `supabase/functions/create-subscription/index.ts` | Accept `firstBillingDate` param and use it directly as `billing_cycle_anchor` when provided |
 
-// After (safe):
-const invoice = await stripe.invoices.create({
-  customer,
-  pending_invoice_items_behavior: 'exclude',
-  ...
-});
-await stripe.invoiceItems.create({ customer, invoice: invoice.id, amount, description });
-```
-
-This ensures that if the invoice item is created, it is explicitly tied to the invoice. No orphaned items can leak into future invoices.
-
-**Toll ceiling**: $2,000 max per toll charge (tolls are typically $5-$50; anything over $2,000 is clearly an error).
-
-**First-period ceiling**: $10,000 max on the activate-subscription safety net charge. If the calculated amount exceeds this, the function throws an error requiring manual review.
+### Technical Notes
+- Stripe does not allow updating `billing_cycle_anchor` on existing subscriptions — the subscription must be canceled and recreated
+- The void must happen first to prevent further collection attempts
+- Only trailer 144547 (active, $833/week) needs to be on the new subscription; 606945 is already ended
+- The "First Billing Date" picker gives admins explicit control and removes ambiguity between "anchor day" (abstract) and "when does billing actually start" (concrete)
 
