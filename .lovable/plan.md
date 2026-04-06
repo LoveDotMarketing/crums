@@ -1,43 +1,42 @@
 
 
-## Auto-Prepend "CRUMS-" Prefix for Referral Codes
+## Fix: Trailers Not Showing Under Customer After Billing Assignment
 
-### Problem
-If a user types just `D8127E` instead of `CRUMS-D8127E`, the code fails validation because `validateReferralCode` requires the `CRUMS-` prefix. The code should work either way.
+### Root Cause
 
-### Solution
-Update `normalizeReferralCode` to auto-prepend `CRUMS-` when the input is a bare 6-character alphanumeric string. This single change fixes all downstream flows (validation, processing, sharing links) since everything goes through this function.
+Two issues:
+
+1. **Missing status update in `create-subscription`**: When a subscription is first created, the edge function sets `is_rented: true` and `customer_id` on trailers but does NOT set `status: "rented"`. The `modify-subscription` function correctly sets all three. This inconsistency means trailers created via initial subscription may still show `status: "available"` even though they're assigned.
+
+2. **Query cache not invalidated**: After assigning trailers via the Billing tab (ManageTrailersDialog or CreateSubscriptionDialog), the `admin-customer-assigned-trailers` query on the Customer Detail page is never invalidated. The admin must manually refresh to see changes.
 
 ### Changes
 
-**File: `src/lib/referral.ts`**
+**1. Edge function: `supabase/functions/create-subscription/index.ts`**
 
-Update `normalizeReferralCode`:
+Update line 626 to also set `status: "rented"`:
 ```typescript
-export const normalizeReferralCode = (code: string): string => {
-  const trimmed = code.trim().toUpperCase();
-  // Auto-prepend CRUMS- if user entered just the 6-char suffix
-  if (/^[A-Z0-9]{6}$/.test(trimmed)) {
-    return `CRUMS-${trimmed}`;
-  }
-  return trimmed;
-};
+.update({ is_rented: true, customer_id: customerId, status: "rented" })
 ```
 
-This ensures:
-- `D8127E` → `CRUMS-D8127E` ✓
-- `CRUMS-D8127E` → `CRUMS-D8127E` ✓
-- `crums-d8127e` → `CRUMS-D8127E` ✓
-- Partner/staff codes (e.g. `BIGBIRD`) won't be affected since they're checked before customer code validation
+**2. Component: `src/components/admin/ManageTrailersDialog.tsx`**
 
-Also update `validateReferralCode` to call `normalizeReferralCode` (it already does), so validation will pass for bare suffixes too.
+After successful add/remove/swap, also invalidate the customer trailers query:
+```typescript
+await queryClient.invalidateQueries({ queryKey: ["admin-customer-assigned-trailers"] });
+```
 
-**File: `src/pages/Login.tsx`**
+**3. Component: `src/components/admin/CreateSubscriptionDialog.tsx`**
 
-The inline validation visual feedback calls `validateReferralCode(referralCode)` — since that already uses `normalizeReferralCode` internally, this will automatically work for bare codes. No change needed.
+After successful subscription creation, invalidate the customer trailers query:
+```typescript
+await queryClient.invalidateQueries({ queryKey: ["admin-customer-assigned-trailers"] });
+```
 
 ### Files Modified
 | File | Change |
 |------|--------|
-| `src/lib/referral.ts` | Auto-prepend `CRUMS-` in `normalizeReferralCode` for 6-char alphanumeric input |
+| `supabase/functions/create-subscription/index.ts` | Add `status: "rented"` when marking trailers |
+| `src/components/admin/ManageTrailersDialog.tsx` | Invalidate `admin-customer-assigned-trailers` query after changes |
+| `src/components/admin/CreateSubscriptionDialog.tsx` | Invalidate `admin-customer-assigned-trailers` query after creation |
 
