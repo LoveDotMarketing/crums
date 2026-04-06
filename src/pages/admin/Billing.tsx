@@ -1165,6 +1165,16 @@ export default function Billing() {
   const unresolvedFailures = paymentFailures?.filter(f => !f.resolved_at).length || 0;
   const recentPayments = billingHistory?.filter(h => h.status === "succeeded").slice(0, 5) || [];
 
+  // Calculate actual collected this month from billing_history
+  const now = new Date();
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+  const collectedThisMonth = billingHistory
+    ?.filter(h => h.status === "succeeded" && h.paid_at && h.paid_at >= startOfMonth)
+    .reduce((sum, h) => sum + Number(h.net_amount), 0) || 0;
+  const collectionRate = totalMonthlyRevenue > 0
+    ? Math.round((collectedThisMonth / totalMonthlyRevenue) * 100)
+    : 0;
+
   const getStatusBadge = (status: string) => {
     const variants: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
       active: "default",
@@ -1314,16 +1324,16 @@ export default function Billing() {
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
                   <CardTitle className="text-sm font-medium text-muted-foreground">
-                    Monthly Revenue
+                    Collected This Month
                   </CardTitle>
-                  <DollarSign className="h-4 w-4 text-muted-foreground" />
+                  <DollarSign className="h-4 w-4 text-green-600" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">
-                    ${totalMonthlyRevenue.toLocaleString()}
+                  <div className="text-2xl font-bold text-green-600">
+                    ${collectedThisMonth.toLocaleString()}
                   </div>
                   <p className="text-xs text-muted-foreground mt-1">
-                    From active leases
+                    Expected: ${totalMonthlyRevenue.toLocaleString()} · {collectionRate}% collected
                   </p>
                 </CardContent>
               </Card>
