@@ -1001,7 +1001,7 @@ export function CreateSubscriptionDialog({ onSuccess, mode = "dialog", onCancel 
         </div>
   );
 
-  const firstChargeTotal = totalMonthlyRate + depositAmount;
+  const firstChargeTotal = depositAmount;
   const isLargeSubscription = firstChargeTotal >= 2000;
 
   const reviewSummary = (

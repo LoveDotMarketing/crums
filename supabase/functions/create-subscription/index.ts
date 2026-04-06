@@ -412,8 +412,8 @@ serve(async (req) => {
       }
       if (anchorTimestamp) {
         subscriptionParams.billing_cycle_anchor = anchorTimestamp;
-        subscriptionParams.proration_behavior = "create_prorations";
-        logStep("Setting billing cycle anchor with prorations", { anchorDay, anchorTimestamp, group: groupKey });
+        subscriptionParams.proration_behavior = "none";
+        logStep("Setting billing cycle anchor without prorations (deposit-only immediate charge)", { anchorDay, anchorTimestamp, group: groupKey });
       }
 
       // No add_invoice_items — deposit handled via standalone invoice below
