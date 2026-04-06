@@ -58,6 +58,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
 import { format } from "date-fns";
+import { NeedsAttentionCard } from "@/components/admin/NeedsAttentionCard";
 
 interface Application {
   id: string;
@@ -680,6 +681,8 @@ export default function Applications() {
                 </CardContent>
               </Card>
             </div>
+
+            <NeedsAttentionCard />
 
             {/* Search and Filter */}
             <div className="mb-6 flex flex-col sm:flex-row gap-4">
