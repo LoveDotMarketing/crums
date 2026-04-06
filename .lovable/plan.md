@@ -1,46 +1,43 @@
 
 
-## Fix: Referral Code Not Showing for Customers
+## Auto-Prepend "CRUMS-" Prefix for Referral Codes
 
-### Root Cause
-
-The ReferralCard component chains 3 separate RLS-protected queries (profiles → customers → referral_codes). When a customer is logged in, the nested RLS evaluation across tables can silently fail — particularly the `referral_codes` policy contains a subquery that itself must pass through `customers` RLS, which contains another subquery to `profiles`. This nested RLS chain is fragile and silently returns empty results.
+### Problem
+If a user types just `D8127E` instead of `CRUMS-D8127E`, the code fails validation because `validateReferralCode` requires the `CRUMS-` prefix. The code should work either way.
 
 ### Solution
-
-Create a `SECURITY DEFINER` database function that returns the current user's referral code directly, bypassing the nested RLS chain. Then update the ReferralCard component to call this function instead of chaining 3 separate queries.
+Update `normalizeReferralCode` to auto-prepend `CRUMS-` when the input is a bare 6-character alphanumeric string. This single change fixes all downstream flows (validation, processing, sharing links) since everything goes through this function.
 
 ### Changes
 
-**1. Database migration — create `get_my_referral_code()` function**
+**File: `src/lib/referral.ts`**
 
-```sql
-CREATE OR REPLACE FUNCTION public.get_my_referral_code()
-RETURNS TABLE(id uuid, code text, is_active boolean, customer_id uuid)
-LANGUAGE sql
-STABLE SECURITY DEFINER
-SET search_path = public
-AS $$
-  SELECT rc.id, rc.code, rc.is_active, rc.customer_id
-  FROM referral_codes rc
-  JOIN customers c ON c.id = rc.customer_id
-  JOIN profiles p ON lower(p.email) = lower(c.email)
-  WHERE p.id = auth.uid();
-$$;
+Update `normalizeReferralCode`:
+```typescript
+export const normalizeReferralCode = (code: string): string => {
+  const trimmed = code.trim().toUpperCase();
+  // Auto-prepend CRUMS- if user entered just the 6-char suffix
+  if (/^[A-Z0-9]{6}$/.test(trimmed)) {
+    return `CRUMS-${trimmed}`;
+  }
+  return trimmed;
+};
 ```
 
-**2. File: `src/components/customer/ReferralCard.tsx`**
+This ensures:
+- `D8127E` → `CRUMS-D8127E` ✓
+- `CRUMS-D8127E` → `CRUMS-D8127E` ✓
+- `crums-d8127e` → `CRUMS-D8127E` ✓
+- Partner/staff codes (e.g. `BIGBIRD`) won't be affected since they're checked before customer code validation
 
-Replace the 3-query chain in `fetchReferralData` with:
-- Call `supabase.rpc('get_my_referral_code')` to get the referral code in one shot
-- Keep the existing `referrals` query (its RLS already works since it chains off the code ID we now have)
-- Add error logging to make future debugging easier
+Also update `validateReferralCode` to call `normalizeReferralCode` (it already does), so validation will pass for bare suffixes too.
 
-This eliminates the nested RLS problem entirely since the SECURITY DEFINER function runs with elevated privileges and handles the email join internally.
+**File: `src/pages/Login.tsx`**
+
+The inline validation visual feedback calls `validateReferralCode(referralCode)` — since that already uses `normalizeReferralCode` internally, this will automatically work for bare codes. No change needed.
 
 ### Files Modified
 | File | Change |
 |------|--------|
-| New migration | Create `get_my_referral_code()` SECURITY DEFINER function |
-| `src/components/customer/ReferralCard.tsx` | Use `rpc('get_my_referral_code')` instead of 3 chained queries |
+| `src/lib/referral.ts` | Auto-prepend `CRUMS-` in `normalizeReferralCode` for 6-char alphanumeric input |
 
