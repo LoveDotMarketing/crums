@@ -1039,8 +1039,12 @@ export function CreateSubscriptionDialog({ onSuccess, mode = "dialog", onCancel 
           <span className="font-medium">${depositAmount.toFixed(2)}</span>
         </div>
         <div className="flex justify-between text-sm border-t pt-2">
-          <span className="text-muted-foreground">First Charge (approx)</span>
+          <span className="text-muted-foreground">Immediate Charge (Deposit Only)</span>
           <span className="font-bold text-lg">${firstChargeTotal.toFixed(2)}</span>
+        </div>
+        <div className="text-xs text-muted-foreground">
+          Recurring billing of ${totalMonthlyRate.toFixed(2)} starts on anchor day {billingAnchorDay}
+        </div>
         </div>
         <div className="flex justify-between text-sm">
           <span className="text-muted-foreground">Billing</span>
