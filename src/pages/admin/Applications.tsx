@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { NeedsAttentionCard } from "@/components/admin/NeedsAttentionCard";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
@@ -679,6 +680,11 @@ export default function Applications() {
                   <div className="text-2xl font-bold text-red-600">{stats.rejected}</div>
                 </CardContent>
               </Card>
+            </div>
+
+            {/* Needs Attention */}
+            <div className="mb-8">
+              <NeedsAttentionCard />
             </div>
 
             {/* Search and Filter */}
