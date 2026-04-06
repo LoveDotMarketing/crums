@@ -1324,16 +1324,16 @@ export default function Billing() {
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
                   <CardTitle className="text-sm font-medium text-muted-foreground">
-                    Monthly Revenue
+                    Collected This Month
                   </CardTitle>
-                  <DollarSign className="h-4 w-4 text-muted-foreground" />
+                  <DollarSign className="h-4 w-4 text-green-600" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">
-                    ${totalMonthlyRevenue.toLocaleString()}
+                  <div className="text-2xl font-bold text-green-600">
+                    ${collectedThisMonth.toLocaleString()}
                   </div>
                   <p className="text-xs text-muted-foreground mt-1">
-                    From active leases
+                    Expected: ${totalMonthlyRevenue.toLocaleString()} · {collectionRate}% collected
                   </p>
                 </CardContent>
               </Card>
