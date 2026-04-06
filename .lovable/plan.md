@@ -1,29 +1,46 @@
 
 
-## Fix: Case-Insensitive Email Matching in ReferralCard
+## Fix: Referral Code Not Showing for Customers
 
-### Problem
-The `ReferralCard` component queries the `customers` table using `.eq("email", profile.email)` which is case-sensitive. For Azptrucking@gmail.com, the profile stores `azptrucking@gmail.com` (lowercase) while the customer record has `Azptrucking@gmail.com` (capital A). This causes the referral code lookup to fail silently, showing "Your referral code will be generated once your account is fully set up."
+### Root Cause
 
-This same case-sensitivity issue likely affects other components that join profiles to customers by email.
+The ReferralCard component chains 3 separate RLS-protected queries (profiles → customers → referral_codes). When a customer is logged in, the nested RLS evaluation across tables can silently fail — particularly the `referral_codes` policy contains a subquery that itself must pass through `customers` RLS, which contains another subquery to `profiles`. This nested RLS chain is fragile and silently returns empty results.
 
-### Fix
+### Solution
 
-**File: `src/components/customer/ReferralCard.tsx`**
+Create a `SECURITY DEFINER` database function that returns the current user's referral code directly, bypassing the nested RLS chain. Then update the ReferralCard component to call this function instead of chaining 3 separate queries.
 
-Replace the case-sensitive customer lookup:
-```typescript
-.eq("email", profile.email)
+### Changes
+
+**1. Database migration — create `get_my_referral_code()` function**
+
+```sql
+CREATE OR REPLACE FUNCTION public.get_my_referral_code()
+RETURNS TABLE(id uuid, code text, is_active boolean, customer_id uuid)
+LANGUAGE sql
+STABLE SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT rc.id, rc.code, rc.is_active, rc.customer_id
+  FROM referral_codes rc
+  JOIN customers c ON c.id = rc.customer_id
+  JOIN profiles p ON lower(p.email) = lower(c.email)
+  WHERE p.id = auth.uid();
+$$;
 ```
-with a case-insensitive match using Supabase's `ilike`:
-```typescript
-.ilike("email", profile.email)
-```
 
-This is a one-line change that ensures the referral code displays correctly regardless of email casing differences between the profile and customer tables.
+**2. File: `src/components/customer/ReferralCard.tsx`**
+
+Replace the 3-query chain in `fetchReferralData` with:
+- Call `supabase.rpc('get_my_referral_code')` to get the referral code in one shot
+- Keep the existing `referrals` query (its RLS already works since it chains off the code ID we now have)
+- Add error logging to make future debugging easier
+
+This eliminates the nested RLS problem entirely since the SECURITY DEFINER function runs with elevated privileges and handles the email join internally.
 
 ### Files Modified
 | File | Change |
 |------|--------|
-| `src/components/customer/ReferralCard.tsx` | Change `.eq("email", ...)` to `.ilike("email", ...)` for customer lookup |
+| New migration | Create `get_my_referral_code()` SECURITY DEFINER function |
+| `src/components/customer/ReferralCard.tsx` | Use `rpc('get_my_referral_code')` instead of 3 chained queries |
 
