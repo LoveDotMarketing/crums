@@ -291,13 +291,8 @@ serve(async (req) => {
       }
     }
 
-    // Get type-based default rental rate
-    const getDefaultRate = (trailerType: string): number => {
-      const type = trailerType?.toLowerCase() || "";
-      if (type.includes("flat") || type.includes("flatbed")) return 750;
-      if (type.includes("refrigerated") || type.includes("reefer")) return 850;
-      return 700;
-    };
+    // Import shared default rate logic
+    const { getDefaultRate } = await import("../_shared/billing.ts");
 
     // ==========================================
     // GROUP TRAILERS BY BILLING ANCHOR DAY
