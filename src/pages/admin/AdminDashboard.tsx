@@ -251,10 +251,12 @@ export default function AdminDashboard() {
     },
     {
       title: "Collected This Month",
-      value: tollStats ? `$${tollStats.collectedThisMonth.toLocaleString()}` : "...",
+      value: tollStats || leaseCollections !== undefined
+        ? `$${((leaseCollections || 0) + (tollStats?.tollsCollectedThisMonth || 0)).toLocaleString()}`
+        : "...",
       icon: DollarSign,
-      change: "From paid tolls",
-      trend: tollStats?.collectedThisMonth ? "up" as const : "neutral" as const
+      change: `$${(leaseCollections || 0).toLocaleString()} leases + $${(tollStats?.tollsCollectedThisMonth || 0).toLocaleString()} tolls`,
+      trend: ((leaseCollections || 0) + (tollStats?.tollsCollectedThisMonth || 0)) > 0 ? "up" as const : "neutral" as const
     },
   ];
 
