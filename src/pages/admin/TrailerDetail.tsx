@@ -1251,6 +1251,88 @@ export default function TrailerDetail() {
               </div>
             </div>
 
+            {/* Title Document */}
+            <Card className="mt-6">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="flex items-center gap-2">
+                      <ImageIcon className="h-5 w-5" />
+                      Title Document
+                    </CardTitle>
+                    <CardDescription>Vehicle title / certificate of title photo</CardDescription>
+                  </div>
+                  <div>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (!file || !trailerId) return;
+                        setUploadingPhoto(true);
+                        try {
+                          const compressed = await compressImage(file);
+                          const ext = compressed.name.split(".").pop() || "jpg";
+                          const path = `${trailerId}/title/${Date.now()}.${ext}`;
+                          const { error: uploadErr } = await supabase.storage.from("trailer-photos").upload(path, compressed);
+                          if (uploadErr) throw uploadErr;
+                          const { data: { publicUrl } } = supabase.storage.from("trailer-photos").getPublicUrl(path);
+                          await supabase.from("trailers").update({ title_document_url: publicUrl } as any).eq("id", trailerId);
+                          setTrailer(prev => prev ? { ...prev, title_document_url: publicUrl } as any : prev);
+                          toast.success("Title document uploaded");
+                        } catch (err: any) {
+                          console.error("Title upload error:", err);
+                          toast.error("Failed to upload title document");
+                        }
+                        setUploadingPhoto(false);
+                        e.target.value = "";
+                      }}
+                      className="hidden"
+                      id="title-doc-upload"
+                    />
+                    <label htmlFor="title-doc-upload">
+                      <Button type="button" variant="outline" size="sm" className="cursor-pointer" asChild>
+                        <span>
+                          <Camera className="h-4 w-4 mr-2" />
+                          {(trailer as any)?.title_document_url ? "Replace" : "Upload"}
+                        </span>
+                      </Button>
+                    </label>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {(trailer as any)?.title_document_url ? (
+                  <div className="relative group w-fit">
+                    <img
+                      src={(trailer as any).title_document_url}
+                      alt="Vehicle title document"
+                      className="max-h-64 rounded-lg border object-contain cursor-pointer"
+                      onClick={() => window.open((trailer as any).title_document_url, "_blank")}
+                    />
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                      onClick={async () => {
+                        try {
+                          await supabase.from("trailers").update({ title_document_url: null } as any).eq("id", trailerId);
+                          setTrailer(prev => prev ? { ...prev, title_document_url: null } as any : prev);
+                          toast.success("Title document removed");
+                        } catch {
+                          toast.error("Failed to remove title document");
+                        }
+                      }}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ) : (
+                  <p className="text-center text-muted-foreground py-4">No title document uploaded yet.</p>
+                )}
+              </CardContent>
+            </Card>
+
             {/* Trailer Photos */}
             <Card className="mt-6">
               <CardHeader>
