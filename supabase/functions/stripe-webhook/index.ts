@@ -262,6 +262,24 @@ async function handlePaymentFailed(
     return;
   }
 
+  // Update billing_history status to "failed" for this invoice
+  if (invoice.id) {
+    const { error: bhError } = await supabase
+      .from("billing_history")
+      .update({
+        status: "failed",
+        failure_reason: failureMessage,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("stripe_invoice_id", invoice.id);
+    
+    if (bhError) {
+      logStep("Failed to update billing_history status to failed", { error: bhError.message });
+    } else {
+      logStep("Updated billing_history to failed", { invoiceId: invoice.id });
+    }
+  }
+
   // Update subscription with grace period info
   const newFailedCount = (subscription.failed_payment_count || 0) + 1;
   // Note: We keep status as "active" during grace period - "past_due" is not a valid DB status

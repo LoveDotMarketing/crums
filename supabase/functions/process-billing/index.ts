@@ -154,9 +154,30 @@ Deno.serve(async (req) => {
         for (const invoice of invoices.data) {
           // Map Stripe status to our payment_status enum
             let paymentStatus: "pending" | "processing" | "succeeded" | "failed" | "refunded" = "pending";
-            if (invoice.status === "paid") paymentStatus = "succeeded";
-            else if (invoice.status === "open") paymentStatus = "pending";
-            else if (invoice.status === "uncollectible") paymentStatus = "failed";
+            if (invoice.status === "paid") {
+              paymentStatus = "succeeded";
+            } else if (invoice.status === "open") {
+              // Check the payment intent to distinguish pending vs failed vs processing
+              const piId = typeof invoice.payment_intent === 'string'
+                ? invoice.payment_intent : invoice.payment_intent?.id;
+              if (piId) {
+                try {
+                  const pi = await stripe.paymentIntents.retrieve(piId);
+                  if (pi.status === "requires_payment_method" || pi.status === "canceled") {
+                    paymentStatus = "failed";
+                  } else if (pi.status === "processing") {
+                    paymentStatus = "processing";
+                  } else {
+                    paymentStatus = "pending";
+                  }
+                  logStep("Checked payment intent for open invoice", { invoiceId: invoice.id, piStatus: pi.status, paymentStatus });
+                } catch {
+                  paymentStatus = "pending";
+                }
+              } else {
+                paymentStatus = "pending";
+              }
+            } else if (invoice.status === "uncollectible") paymentStatus = "failed";
 
           // Check if we already have this invoice (e.g. inserted by activate-subscription)
           const { data: existing } = await supabaseClient

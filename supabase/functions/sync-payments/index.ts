@@ -181,7 +181,24 @@ serve(async (req) => {
               paymentStatus = "succeeded";
             }
           } else if (inv.status === "open") {
-            paymentStatus = "processing";
+            // Check the payment intent to distinguish pending vs failed vs processing
+            if (piId) {
+              try {
+                const pi = await stripe.paymentIntents.retrieve(piId);
+                if (pi.status === "requires_payment_method" || pi.status === "canceled") {
+                  paymentStatus = "failed";
+                } else if (pi.status === "processing") {
+                  paymentStatus = "processing";
+                } else {
+                  paymentStatus = "pending";
+                }
+                logStep("Checked PI for open invoice", { invoiceId: inv.id, piStatus: pi.status, paymentStatus });
+              } catch {
+                paymentStatus = "processing"; // default for open invoices when PI check fails
+              }
+            } else {
+              paymentStatus = "pending";
+            }
           } else if (inv.status === "void" || inv.status === "uncollectible") {
             paymentStatus = "failed";
           }
