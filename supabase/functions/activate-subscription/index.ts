@@ -99,45 +99,11 @@ const resolveAchPaymentMethodId = async ({
     }
   }
 
-  // 3) Last fallback: find ACH or card method on any Stripe customer with same email
-  if (!storedPmId && customerEmail) {
-    const sameEmailCustomers = await stripe.customers.list({ email: customerEmail, limit: 10 });
-
-    for (const candidateCustomer of sameEmailCustomers.data) {
-      if (candidateCustomer.id === stripeCustomerId) continue;
-      // Check ACH first
-      const candidateAch = await stripe.paymentMethods.list({
-        customer: candidateCustomer.id,
-        type: "us_bank_account",
-        limit: 1,
-      });
-      if (candidateAch.data.length > 0) {
-        storedPmId = candidateAch.data[0].id;
-        logStep("Recovered ACH method from same-email Stripe customer", {
-          paymentMethodId: storedPmId,
-          fromStripeCustomerId: candidateCustomer.id,
-        });
-        break;
-      }
-      // Check card
-      const candidateCard = await stripe.paymentMethods.list({
-        customer: candidateCustomer.id,
-        type: "card",
-        limit: 1,
-      });
-      if (candidateCard.data.length > 0) {
-        storedPmId = candidateCard.data[0].id;
-        logStep("Recovered card method from same-email Stripe customer", {
-          paymentMethodId: storedPmId,
-          fromStripeCustomerId: candidateCustomer.id,
-        });
-        break;
-      }
-    }
-  }
+  // Cross-customer payment method resolution REMOVED for security.
+  // Only use methods on the subscription's own Stripe customer or the stored application PM.
 
   if (!storedPmId) {
-    throw new Error("Customer has no payment method attached. They need to complete payment setup first.");
+    throw new Error("Customer has no payment method attached. They need to complete payment setup first. If they previously set up a payment method on a different account, please re-run ACH/card setup for this customer.");
   }
 
   logStep("Recovered stored ACH payment method from application", { paymentMethodId: storedPmId });
@@ -264,14 +230,13 @@ serve(async (req) => {
           }
         }
 
-        const chargeCustomerId = paymentMethodCustomerId;
+        // Security: only charge on the subscription's own Stripe customer
+        const chargeCustomerId = subscription.stripe_customer_id;
 
-        if (chargeCustomerId !== subscription.stripe_customer_id) {
-          logStep("Charging deposit on alternate Stripe customer tied to ACH setup", {
-            chargeCustomerId,
-            subscriptionStripeCustomerId: subscription.stripe_customer_id,
-            paymentMethodId,
-          });
+        if (paymentMethodCustomerId !== chargeCustomerId) {
+          // Payment method is on a different customer — this should not happen
+          // after we removed the cross-customer fallback. Block the charge.
+          throw new Error("Payment method belongs to a different billing profile. Please re-run payment setup for this customer.");
         }
 
         // Set default payment method on the customer being charged
@@ -279,22 +244,26 @@ serve(async (req) => {
           invoice_settings: { default_payment_method: paymentMethodId },
         });
 
-        // Create standalone deposit invoice first, then attach the item explicitly
+        // Create standalone deposit invoice with idempotency key to prevent duplicate deposits
         const depositInvoice = await stripe.invoices.create({
           customer: chargeCustomerId,
           auto_advance: false,
           pending_invoice_items_behavior: 'exclude',
           metadata: { type: "security_deposit", subscription_id: subscription.stripe_subscription_id },
+        }, {
+          idempotencyKey: `${subscription.stripe_subscription_id}_deposit`,
         });
 
-        // Detect if payment method is a card and apply surcharge
+        // Detect if payment method is a card and apply surcharge using shared logic
+        const { calculateCardSurcharge } = await import("../_shared/billing.ts");
         const pmInfo = await stripe.paymentMethods.retrieve(paymentMethodId);
         const isCard = pmInfo.type === "card";
         let finalDepositAmount = depositAmount;
         let surchargeAmount = 0;
         if (isCard) {
-          finalDepositAmount = Math.round(((depositAmount + 0.30) / (1 - 0.029)) * 100) / 100;
-          surchargeAmount = Math.round((finalDepositAmount - depositAmount) * 100) / 100;
+          const result = calculateCardSurcharge(depositAmount);
+          finalDepositAmount = result.adjustedAmount;
+          surchargeAmount = result.surcharge;
           logStep("Card surcharge applied to deposit", { base: depositAmount, surcharge: surchargeAmount, total: finalDepositAmount });
         }
 

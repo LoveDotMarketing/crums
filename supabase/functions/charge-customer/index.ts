@@ -12,12 +12,8 @@ const logStep = (step: string, details?: Record<string, unknown>) => {
   console.log(`[CHARGE-CUSTOMER] ${step}${detailsStr}`);
 };
 
-// Calculate card surcharge using reverse formula: (base + 0.30) / (1 - 0.029)
-function calculateCardSurcharge(baseAmount: number): { adjustedAmount: number; surcharge: number } {
-  const adjustedAmount = Math.round(((baseAmount + 0.30) / (1 - 0.029)) * 100) / 100;
-  const surcharge = Math.round((adjustedAmount - baseAmount) * 100) / 100;
-  return { adjustedAmount, surcharge };
-}
+// Import shared surcharge logic
+import { calculateCardSurcharge } from "../_shared/billing.ts";
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {

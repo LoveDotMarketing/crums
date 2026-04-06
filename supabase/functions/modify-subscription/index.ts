@@ -22,12 +22,15 @@ interface ModifyRequest {
   customRates?: Record<string, number>;
 }
 
-// Get type-based default rental rate
-const getDefaultRate = (trailerType: string): number => {
-  const type = trailerType?.toLowerCase() || "";
-  if (type.includes("flat") || type.includes("flatbed")) return 750;
-  if (type.includes("refrigerated") || type.includes("reefer")) return 850;
-  return 700; // Dry Van default
+// Import shared default rate logic — used inline below via dynamic import
+// to avoid Deno static import issues with shared modules
+let _getDefaultRate: ((t: string) => number) | null = null;
+const getDefaultRate = async (trailerType: string): Promise<number> => {
+  if (!_getDefaultRate) {
+    const mod = await import("../_shared/billing.ts");
+    _getDefaultRate = mod.getDefaultRate;
+  }
+  return _getDefaultRate(trailerType);
 };
 
 serve(async (req) => {
@@ -229,7 +232,7 @@ serve(async (req) => {
         throw new Error(`Trailer ${newTrailer.trailer_number} is already rented`);
       }
 
-      const rate = customRates?.[swapToTrailerId] ?? newTrailer.rental_rate ?? getDefaultRate(newTrailer.type);
+      const rate = customRates?.[swapToTrailerId] ?? newTrailer.rental_rate ?? await getDefaultRate(newTrailer.type);
 
       // Create price for new trailer
       const price = await stripe.prices.create({
@@ -269,7 +272,7 @@ serve(async (req) => {
       }
 
       for (const trailer of trailers) {
-        const rate = customRates?.[trailer.id] ?? trailer.rental_rate ?? getDefaultRate(trailer.type);
+        const rate = customRates?.[trailer.id] ?? trailer.rental_rate ?? await getDefaultRate(trailer.type);
 
         const price = await stripe.prices.create({
           unit_amount: Math.round(rate * 100),

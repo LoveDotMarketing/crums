@@ -1199,7 +1199,7 @@ export default function Billing() {
     const labels: Record<BillingCycle, string> = {
       weekly: "Weekly",
       biweekly: "Bi-weekly",
-      semimonthly: "Twice Monthly",
+      semimonthly: "Bi-weekly",
       monthly: "Monthly"
     };
     return labels[cycle];

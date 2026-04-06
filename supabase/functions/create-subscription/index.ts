@@ -291,13 +291,8 @@ serve(async (req) => {
       }
     }
 
-    // Get type-based default rental rate
-    const getDefaultRate = (trailerType: string): number => {
-      const type = trailerType?.toLowerCase() || "";
-      if (type.includes("flat") || type.includes("flatbed")) return 750;
-      if (type.includes("refrigerated") || type.includes("reefer")) return 850;
-      return 700;
-    };
+    // Import shared default rate logic
+    const { getDefaultRate } = await import("../_shared/billing.ts");
 
     // ==========================================
     // GROUP TRAILERS BY BILLING ANCHOR DAY
@@ -383,20 +378,9 @@ serve(async (req) => {
         logStep("Created price for trailer", { trailerId: trailer.id, priceId: price.id, rate, group: groupKey, interval: groupBillingInterval });
       }
 
-      // Only add deposit to the first group's subscription
-      let depositInvoiceItem: Stripe.SubscriptionCreateParams.AddInvoiceItem | null = null;
-      if (isFirstGroup && depositAmount && depositAmount > 0) {
-        const depositPrice = await stripe.prices.create({
-          unit_amount: Math.round(depositAmount * 100),
-          currency: "usd",
-          product_data: {
-            name: "Security Deposit",
-            metadata: { type: "security_deposit", internal_customer_id: customerId },
-          },
-        });
-        depositInvoiceItem = { price: depositPrice.id };
-        logStep("Created deposit price", { depositAmount, priceId: depositPrice.id });
-      }
+      // Deposit is charged ONLY via standalone invoice (Path B below).
+      // We no longer add it as an add_invoice_item on the subscription to
+      // prevent the dual-charge risk where both paths execute.
 
       // Build Stripe subscription params
       const subscriptionParams: Stripe.SubscriptionCreateParams = {
@@ -432,15 +416,7 @@ serve(async (req) => {
         logStep("Setting billing cycle anchor with prorations", { anchorDay, anchorTimestamp, group: groupKey });
       }
 
-      // Add deposit as a one-time invoice item on the initial invoice
-      const addInvoiceItems: Stripe.SubscriptionCreateParams.AddInvoiceItem[] = [];
-      if (depositInvoiceItem) {
-        addInvoiceItems.push(depositInvoiceItem);
-      }
-
-      if (addInvoiceItems.length > 0) {
-        subscriptionParams.add_invoice_items = addInvoiceItems;
-      }
+      // No add_invoice_items — deposit handled via standalone invoice below
 
       if (coupon) {
         subscriptionParams.discounts = [{ coupon: coupon.id }];
@@ -455,16 +431,12 @@ serve(async (req) => {
       });
 
       // ==========================================
-      // SAFETY NET: Charge deposit if subscription somehow went active without an open invoice.
-      // With create_prorations this shouldn't happen, but kept as a fallback.
+      // DEPOSIT: Charge as standalone invoice (single path — no dual-charge risk).
+      // Uses idempotency key to prevent duplicate deposit charges.
       // ==========================================
       let depositChargedDuringCreation = false;
-      if (isFirstGroup && depositAmount && depositAmount > 0 && subscription.status === "active") {
-        const latestInvoice = typeof subscription.latest_invoice === "object" ? subscription.latest_invoice : null;
-        const hasOpenInvoice = latestInvoice && latestInvoice.status === "open";
-        
-        if (!hasOpenInvoice) {
-          logStep("Subscription active with no open invoice — charging deposit as standalone invoice");
+      if (isFirstGroup && depositAmount && depositAmount > 0) {
+          logStep("Charging deposit as standalone invoice", { depositAmount });
           
           try {
             // Resolve and attach the customer's ACH payment method before charging
@@ -519,12 +491,14 @@ serve(async (req) => {
               logStep("Set default payment method for deposit invoice", { depositPaymentMethodId });
             }
 
-            // Create invoice FIRST with isolation to prevent picking up stale pending items
+            // Create invoice with isolation and idempotency key to prevent duplicate deposits
             const depositInvoice = await stripe.invoices.create({
               customer: stripeCustomerId,
               auto_advance: false,
               pending_invoice_items_behavior: "exclude",
               metadata: { type: "security_deposit", subscription_id: subscription.id },
+            }, {
+              idempotencyKey: `${subscription.id}_deposit`,
             });
 
             // Attach deposit item explicitly to this invoice
@@ -552,7 +526,6 @@ serve(async (req) => {
             const msg = depositError instanceof Error ? depositError.message : String(depositError);
             logStep("WARNING: Failed to charge deposit during creation, admin can retry via Activate", { error: msg });
           }
-        }
       }
 
       // Calculate next billing date

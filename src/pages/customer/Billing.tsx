@@ -170,7 +170,7 @@ const CustomerBilling = () => {
     const cycle = item.billing_cycle || sub?.billing_cycle;
     const anchor = item.billing_anchor_day;
     if (cycle === "weekly") return "Every Friday";
-    if (cycle === "semimonthly") return "1st & 15th";
+    if (cycle === "semimonthly") return "Every 2 weeks";
     if (cycle === "monthly" && anchor === 15) return "15th of month";
     if (cycle === "monthly" && anchor === 1) return "1st of month";
     return cycle || "Monthly";
