@@ -12,7 +12,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { loginSchema, quickSignupSchema } from "@/lib/validations";
 import { supabase } from "@/integrations/supabase/client";
-import { Gift, Lock, Check, AlertCircle, Clipboard } from "lucide-react";
+import { Gift, Lock, Check, AlertCircle, Clipboard, Eye, EyeOff } from "lucide-react";
 import { trackLogin, trackSignup, trackSignupStarted, trackSignupFailed } from "@/lib/analytics";
 import { processReferralCode, validateReferralCode } from "@/lib/referral";
 import { trackLinkedInSignup } from "@/lib/linkedinAnalytics";
@@ -25,6 +25,7 @@ const Login = () => {
   const [referralCode, setReferralCode] = useState("");
   const [lockoutMinutes, setLockoutMinutes] = useState<number | null>(null);
   const [showPasteHint, setShowPasteHint] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { signIn, signUp, user, userRole } = useAuth();
@@ -233,14 +234,24 @@ const Login = () => {
                   </div>
                   <div>
                     <Label htmlFor="password">Password</Label>
-                    <Input
-                      id="password"
-                      type="password"
-                      required
-                      className="mt-2"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                    />
+                    <div className="relative mt-2">
+                      <Input
+                        id="password"
+                        type={showPassword ? "text" : "password"}
+                        required
+                        className="pr-10"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                      />
+                      <button
+                        type="button"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                        onClick={() => setShowPassword(!showPassword)}
+                        tabIndex={-1}
+                      >
+                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
+                    </div>
                   </div>
                   {isSignUp && (
                     <div>
