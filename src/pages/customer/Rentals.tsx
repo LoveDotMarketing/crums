@@ -35,6 +35,7 @@ interface SubscriptionItemData {
     vin: string | null;
     axle_count: number | null;
     body_material: string | null;
+    title_document_url: string | null;
   } | null;
 }
 
