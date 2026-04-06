@@ -25,6 +25,7 @@ const Login = () => {
   const [referralCode, setReferralCode] = useState("");
   const [lockoutMinutes, setLockoutMinutes] = useState<number | null>(null);
   const [showPasteHint, setShowPasteHint] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { signIn, signUp, user, userRole } = useAuth();
