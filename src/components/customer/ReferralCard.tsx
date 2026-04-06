@@ -53,7 +53,7 @@ export function ReferralCard() {
       const { data: customer } = await supabase
         .from("customers")
         .select("id")
-        .eq("email", profile.email)
+        .ilike("email", profile.email)
         .maybeSingle();
 
       if (!customer) {
