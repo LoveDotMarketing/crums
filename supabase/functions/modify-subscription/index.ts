@@ -232,7 +232,7 @@ serve(async (req) => {
         throw new Error(`Trailer ${newTrailer.trailer_number} is already rented`);
       }
 
-      const rate = customRates?.[swapToTrailerId] ?? newTrailer.rental_rate ?? getDefaultRate(newTrailer.type);
+      const rate = customRates?.[swapToTrailerId] ?? newTrailer.rental_rate ?? await getDefaultRate(newTrailer.type);
 
       // Create price for new trailer
       const price = await stripe.prices.create({
