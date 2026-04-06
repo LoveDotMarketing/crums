@@ -436,8 +436,7 @@ serve(async (req) => {
       // ==========================================
       let depositChargedDuringCreation = false;
       if (isFirstGroup && depositAmount && depositAmount > 0) {
-        {
-          logStep("Subscription active with no open invoice — charging deposit as standalone invoice");
+          logStep("Charging deposit as standalone invoice", { depositAmount });
           
           try {
             // Resolve and attach the customer's ACH payment method before charging
