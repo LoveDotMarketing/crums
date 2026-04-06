@@ -492,12 +492,14 @@ serve(async (req) => {
               logStep("Set default payment method for deposit invoice", { depositPaymentMethodId });
             }
 
-            // Create invoice FIRST with isolation to prevent picking up stale pending items
+            // Create invoice with isolation and idempotency key to prevent duplicate deposits
             const depositInvoice = await stripe.invoices.create({
               customer: stripeCustomerId,
               auto_advance: false,
               pending_invoice_items_behavior: "exclude",
               metadata: { type: "security_deposit", subscription_id: subscription.id },
+            }, {
+              idempotencyKey: `${subscription.id}_deposit`,
             });
 
             // Attach deposit item explicitly to this invoice

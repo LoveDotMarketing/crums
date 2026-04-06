@@ -22,12 +22,15 @@ interface ModifyRequest {
   customRates?: Record<string, number>;
 }
 
-// Get type-based default rental rate
-const getDefaultRate = (trailerType: string): number => {
-  const type = trailerType?.toLowerCase() || "";
-  if (type.includes("flat") || type.includes("flatbed")) return 750;
-  if (type.includes("refrigerated") || type.includes("reefer")) return 850;
-  return 700; // Dry Van default
+// Import shared default rate logic — used inline below via dynamic import
+// to avoid Deno static import issues with shared modules
+let _getDefaultRate: ((t: string) => number) | null = null;
+const getDefaultRate = async (trailerType: string): Promise<number> => {
+  if (!_getDefaultRate) {
+    const mod = await import("../_shared/billing.ts");
+    _getDefaultRate = mod.getDefaultRate;
+  }
+  return _getDefaultRate(trailerType);
 };
 
 serve(async (req) => {
