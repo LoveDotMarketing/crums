@@ -31,7 +31,12 @@ export const isValidReferralCodeFormat = (code: string): boolean => {
  * Normalizes a referral code to uppercase and trimmed
  */
 export const normalizeReferralCode = (code: string): string => {
-  return code.trim().toUpperCase();
+  const trimmed = code.trim().toUpperCase();
+  // Auto-prepend CRUMS- if user entered just the 6-char suffix
+  if (/^[A-Z0-9]{6}$/.test(trimmed)) {
+    return `CRUMS-${trimmed}`;
+  }
+  return trimmed;
 };
 
 /**
