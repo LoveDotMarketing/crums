@@ -1,62 +1,34 @@
 
 
-## Add Title Document & DOT Inspection Photos to Customer Trailers View
+## Add "Needs Attention" Card to Applications Page
 
-### Overview
-Mechanics need to upload a vehicle title document photo per trailer. Customers need to see both the title document and their latest DOT inspection photos on their "My Rentals" page.
+### Problem
+Admins need a quick way to see which active/approved customers still haven't signed their lease agreement or completed ACH payment setup, so they can follow up.
+
+### Solution
+Add a new summary card component above the applications table that queries `customer_applications` (approved, with incomplete payment setup) and `customer_subscriptions` (active/pending, without signed lease) to surface customers needing action.
 
 ### Changes
 
-**1. Database migration — add `title_document_url` to `trailers` table**
+**1. New component: `src/components/admin/NeedsAttentionCard.tsx`**
 
-```sql
-ALTER TABLE public.trailers ADD COLUMN title_document_url text;
-```
+A card with two sections:
+- **ACH Not Completed**: Approved applications where `payment_setup_status` is NOT `completed` (i.e. `pending`, `sent`, or null)
+- **Lease Not Signed**: Active/pending subscriptions where `lease_agreement_url` is null AND `docusign_completed_at` is null
 
-No new RLS needed — existing trailer policies already cover admin writes and customer reads.
+Each section shows a mini table with customer name, email, status, and a quick-action button (send ACH setup email / view customer). The card hides if both lists are empty.
 
-**2. Admin TrailerDetail page — add title document upload**
+Query approach:
+- ACH: Query `customer_applications` with `status = approved` and `payment_setup_status != completed`, join profiles
+- Lease: Query `customer_subscriptions` with `status in (active, pending)` and `docusign_completed_at is null` and `lease_agreement_url is null`, join customers for name/email
 
-File: `src/pages/admin/TrailerDetail.tsx`
+**2. Update: `src/pages/admin/Applications.tsx`**
 
-- Add a "Title Document" photo upload section using the existing `trailer-photos` storage bucket
-- Upload to path `{trailerId}/title/{timestamp}.jpg` in `trailer-photos` bucket
-- Save the public URL to `trailers.title_document_url`
-- Show existing title photo with replace/delete option
-
-**3. Mechanic access — allow mechanics to upload title document**
-
-File: `src/pages/mechanic/MechanicDashboard.tsx`
-
-- When a mechanic views a trailer, add a "Upload Title Document" button
-- Uses same storage bucket and saves to `trailers.title_document_url`
-
-Database migration — allow mechanics to update `title_document_url`:
-```sql
-CREATE POLICY "Mechanics can update trailer title document"
-ON public.trailers
-FOR UPDATE
-TO authenticated
-USING (has_role(auth.uid(), 'mechanic'::app_role))
-WITH CHECK (has_role(auth.uid(), 'mechanic'::app_role));
-```
-
-**4. Customer Rentals page — show title + DOT inspection photos**
-
-File: `src/pages/customer/Rentals.tsx`
-
-- Fetch `title_document_url` in the trailer select query (already selecting from trailers)
-- For each trailer, fetch the latest completed DOT inspection and its photos from `dot_inspections` + `dot_inspection_photos`
-- Add a "Documents" section to each trailer card:
-  - **Title Document**: Thumbnail with click-to-expand (if `title_document_url` exists)
-  - **DOT Inspection**: Photo gallery from the most recent completed inspection, with inspection date
-- Use a Dialog/modal for full-size photo viewing
+- Import and render `<NeedsAttentionCard />` between the stats cards and the search/filter section
 
 ### Files Modified
 | File | Change |
 |------|--------|
-| New migration | Add `title_document_url` column + mechanic update policy |
-| `src/pages/admin/TrailerDetail.tsx` | Title document upload UI |
-| `src/pages/mechanic/MechanicDashboard.tsx` | Title document upload for mechanics |
-| `src/pages/customer/Rentals.tsx` | Display title doc + DOT inspection photos per trailer |
+| `src/components/admin/NeedsAttentionCard.tsx` | New component showing customers missing ACH or lease signature |
+| `src/pages/admin/Applications.tsx` | Import and render the new card |
 
