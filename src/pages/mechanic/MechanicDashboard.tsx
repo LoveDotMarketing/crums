@@ -1066,6 +1066,65 @@ export default function MechanicDashboard() {
                               </Button>
                             )}
 
+                            {/* Upload Title Document */}
+                            <div className="relative inline-block">
+                              <input
+                                type="file"
+                                accept="image/*"
+                                className="hidden"
+                                id={`title-upload-${trailer.id}`}
+                                onChange={async (e) => {
+                                  const file = e.target.files?.[0];
+                                  if (!file) return;
+                                  try {
+                                    const MAX = 2000;
+                                    const compressed = await new Promise<File>((resolve) => {
+                                      if (!file.type.startsWith("image/")) { resolve(file); return; }
+                                      const img = new Image();
+                                      const url = URL.createObjectURL(file);
+                                      img.onload = () => {
+                                        URL.revokeObjectURL(url);
+                                        let { width, height } = img;
+                                        if (width <= MAX && height <= MAX) { resolve(file); return; }
+                                        if (width > height) { height = Math.round((height * MAX) / width); width = MAX; }
+                                        else { width = Math.round((width * MAX) / height); height = MAX; }
+                                        const canvas = document.createElement("canvas");
+                                        canvas.width = width; canvas.height = height;
+                                        const ctx = canvas.getContext("2d");
+                                        if (!ctx) { resolve(file); return; }
+                                        ctx.drawImage(img, 0, 0, width, height);
+                                        canvas.toBlob((blob) => {
+                                          if (!blob) { resolve(file); return; }
+                                          resolve(new File([blob], file.name.replace(/\.\w+$/, ".jpg"), { type: "image/jpeg" }));
+                                        }, "image/jpeg", 0.8);
+                                      };
+                                      img.onerror = () => { URL.revokeObjectURL(url); resolve(file); };
+                                      img.src = url;
+                                    });
+                                    const ext = compressed.name.split(".").pop() || "jpg";
+                                    const path = `${trailer.id}/title/${Date.now()}.${ext}`;
+                                    const { error: uploadErr } = await supabase.storage.from("trailer-photos").upload(path, compressed);
+                                    if (uploadErr) throw uploadErr;
+                                    const { data: { publicUrl } } = supabase.storage.from("trailer-photos").getPublicUrl(path);
+                                    await supabase.from("trailers").update({ title_document_url: publicUrl } as any).eq("id", trailer.id);
+                                    toast.success(`Title document uploaded for ${trailer.trailer_number}`);
+                                  } catch (err: any) {
+                                    console.error("Title upload error:", err);
+                                    toast.error("Failed to upload title document");
+                                  }
+                                  e.target.value = "";
+                                }}
+                              />
+                              <label htmlFor={`title-upload-${trailer.id}`}>
+                                <Button size="sm" variant="ghost" className="cursor-pointer" asChild>
+                                  <span>
+                                    <Camera className="mr-2 h-4 w-4" />
+                                    Title Doc
+                                  </span>
+                                </Button>
+                              </label>
+                            </div>
+
                             {/* View History - always available */}
                             <Button
                               size="sm"

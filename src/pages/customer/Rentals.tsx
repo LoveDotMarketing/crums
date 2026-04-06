@@ -9,6 +9,7 @@ import { Footer } from "@/components/Footer";
 import { toast } from "sonner";
 import { Loader2, Truck, MapPin, Calendar, FileText, DollarSign, TrendingDown } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
+import { TrailerDocuments } from "@/components/customer/TrailerDocuments";
 
 interface SubscriptionItemData {
   trailer_id: string;
@@ -34,6 +35,7 @@ interface SubscriptionItemData {
     vin: string | null;
     axle_count: number | null;
     body_material: string | null;
+    title_document_url: string | null;
   } | null;
 }
 
@@ -97,7 +99,8 @@ export default function Rentals() {
             year,
             vin,
             axle_count,
-            body_material
+            body_material,
+            title_document_url
           )
         `)
         .eq("subscription.customer_id", customer.id)
@@ -325,6 +328,12 @@ export default function Rentals() {
                             <p className="text-xs text-muted-foreground text-right">{leaseInfo.percentPaid.toFixed(1)}% paid</p>
                           </div>
                         )}
+
+                        {/* Documents: Title + DOT Inspection Photos */}
+                        <TrailerDocuments
+                          trailerId={trailer.id}
+                          titleDocumentUrl={(trailer as any).title_document_url}
+                        />
                       </CardContent>
                     </Card>
                   );

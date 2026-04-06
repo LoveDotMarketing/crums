@@ -2778,6 +2778,7 @@ export type Database = {
           suspension_type: string | null
           tire_tread_condition: string | null
           tire_type: string | null
+          title_document_url: string | null
           total_maintenance_cost: number | null
           trailer_number: string
           type: string
@@ -2821,6 +2822,7 @@ export type Database = {
           suspension_type?: string | null
           tire_tread_condition?: string | null
           tire_type?: string | null
+          title_document_url?: string | null
           total_maintenance_cost?: number | null
           trailer_number: string
           type: string
@@ -2864,6 +2866,7 @@ export type Database = {
           suspension_type?: string | null
           tire_tread_condition?: string | null
           tire_type?: string | null
+          title_document_url?: string | null
           total_maintenance_cost?: number | null
           trailer_number?: string
           type?: string
