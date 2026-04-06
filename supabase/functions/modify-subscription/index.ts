@@ -272,7 +272,7 @@ serve(async (req) => {
       }
 
       for (const trailer of trailers) {
-        const rate = customRates?.[trailer.id] ?? trailer.rental_rate ?? getDefaultRate(trailer.type);
+        const rate = customRates?.[trailer.id] ?? trailer.rental_rate ?? await getDefaultRate(trailer.type);
 
         const price = await stripe.prices.create({
           unit_amount: Math.round(rate * 100),

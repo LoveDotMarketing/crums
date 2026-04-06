@@ -103,7 +103,7 @@ const resolveAchPaymentMethodId = async ({
   // Only use methods on the subscription's own Stripe customer or the stored application PM.
 
   if (!storedPmId) {
-    throw new Error("Customer has no payment method attached. They need to complete payment setup first.");
+    throw new Error("Customer has no payment method attached. They need to complete payment setup first. If they previously set up a payment method on a different account, please re-run ACH/card setup for this customer.");
   }
 
   logStep("Recovered stored ACH payment method from application", { paymentMethodId: storedPmId });
