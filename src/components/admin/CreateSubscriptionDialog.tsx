@@ -750,7 +750,7 @@ export function CreateSubscriptionDialog({ onSuccess, mode = "dialog", onCancel 
                 <SelectContent>
                   <SelectItem value="weekly">Weekly</SelectItem>
                   <SelectItem value="biweekly">Bi-weekly (every 2 weeks)</SelectItem>
-                  <SelectItem value="semimonthly">Bi-weekly (every 2 weeks)</SelectItem>
+                  
                   <SelectItem value="monthly">Monthly</SelectItem>
                 </SelectContent>
               </Select>
