@@ -378,20 +378,9 @@ serve(async (req) => {
         logStep("Created price for trailer", { trailerId: trailer.id, priceId: price.id, rate, group: groupKey, interval: groupBillingInterval });
       }
 
-      // Only add deposit to the first group's subscription
-      let depositInvoiceItem: Stripe.SubscriptionCreateParams.AddInvoiceItem | null = null;
-      if (isFirstGroup && depositAmount && depositAmount > 0) {
-        const depositPrice = await stripe.prices.create({
-          unit_amount: Math.round(depositAmount * 100),
-          currency: "usd",
-          product_data: {
-            name: "Security Deposit",
-            metadata: { type: "security_deposit", internal_customer_id: customerId },
-          },
-        });
-        depositInvoiceItem = { price: depositPrice.id };
-        logStep("Created deposit price", { depositAmount, priceId: depositPrice.id });
-      }
+      // Deposit is charged ONLY via standalone invoice (Path B below).
+      // We no longer add it as an add_invoice_item on the subscription to
+      // prevent the dual-charge risk where both paths execute.
 
       // Build Stripe subscription params
       const subscriptionParams: Stripe.SubscriptionCreateParams = {
