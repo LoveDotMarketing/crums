@@ -1077,6 +1077,20 @@ export default function Customers() {
                                       <Eye className="h-4 w-4 mr-2" />
                                       View As Customer
                                     </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleSendPasswordReset(customer.email!);
+                                      }}
+                                      disabled={sendingResetFor === customer.email}
+                                    >
+                                      {sendingResetFor === customer.email ? (
+                                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                      ) : (
+                                        <KeyRound className="h-4 w-4 mr-2" />
+                                      )}
+                                      Send Password Reset
+                                    </DropdownMenuItem>
                                   </>
                                 )}
                                 <DropdownMenuSeparator />
