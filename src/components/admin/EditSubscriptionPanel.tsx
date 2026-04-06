@@ -237,7 +237,7 @@ export function EditSubscriptionPanel({ subscriptionId, onSave, onCancel }: Edit
                   <SelectItem value="monthly">Monthly</SelectItem>
                   <SelectItem value="weekly">Weekly</SelectItem>
                   <SelectItem value="biweekly">Bi-weekly</SelectItem>
-                  <SelectItem value="semimonthly">Twice Monthly</SelectItem>
+                  <SelectItem value="semimonthly">Bi-weekly (every 2 weeks)</SelectItem>
                 </SelectContent>
               </Select>
             </CardContent>
