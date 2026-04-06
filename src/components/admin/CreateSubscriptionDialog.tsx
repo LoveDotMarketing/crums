@@ -342,6 +342,7 @@ export function CreateSubscriptionDialog({ onSuccess, mode = "dialog", onCancel 
       queryClient.invalidateQueries({ queryKey: ["subscription-items"] });
       queryClient.invalidateQueries({ queryKey: ["available-trailers-for-subscription"] });
       queryClient.invalidateQueries({ queryKey: ["customers-for-subscription"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-customer-assigned-trailers"] });
       
       // Log admin action
       const customer = customers?.find(c => c.id === selectedCustomerId);

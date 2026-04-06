@@ -623,7 +623,7 @@ serve(async (req) => {
         // Update trailer to mark as rented
         await supabaseClient
           .from("trailers")
-          .update({ is_rented: true, customer_id: customerId })
+          .update({ is_rented: true, customer_id: customerId, status: "rented" })
           .eq("id", trailer.id);
       }
 
