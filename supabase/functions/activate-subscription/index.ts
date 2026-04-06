@@ -254,14 +254,16 @@ serve(async (req) => {
           idempotencyKey: `${subscription.stripe_subscription_id}_deposit`,
         });
 
-        // Detect if payment method is a card and apply surcharge
+        // Detect if payment method is a card and apply surcharge using shared logic
+        const { calculateCardSurcharge } = await import("../_shared/billing.ts");
         const pmInfo = await stripe.paymentMethods.retrieve(paymentMethodId);
         const isCard = pmInfo.type === "card";
         let finalDepositAmount = depositAmount;
         let surchargeAmount = 0;
         if (isCard) {
-          finalDepositAmount = Math.round(((depositAmount + 0.30) / (1 - 0.029)) * 100) / 100;
-          surchargeAmount = Math.round((finalDepositAmount - depositAmount) * 100) / 100;
+          const result = calculateCardSurcharge(depositAmount);
+          finalDepositAmount = result.adjustedAmount;
+          surchargeAmount = result.surcharge;
           logStep("Card surcharge applied to deposit", { base: depositAmount, surcharge: surchargeAmount, total: finalDepositAmount });
         }
 
