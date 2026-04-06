@@ -1,16 +1,29 @@
 
 
-## Remove Duplicate "Bi-weekly" Billing Cycle Option
+## Fix: Only Charge Deposit at Subscription Creation (Not First Month)
 
 ### Problem
-The Billing Cycle dropdown shows two identical "Bi-weekly (every 2 weeks)" entries — one for `biweekly` and one for `semimonthly`. Both map to the same Stripe interval (every 2 weeks, 26×/year). The `semimonthly` value is a legacy alias that should no longer appear as a selectable option.
+When creating a subscription, the system charges **deposit + first month's rent** immediately. The business rule is: only the deposit should be charged upfront. The recurring trailer fee should begin on the anchored billing date (1st, 15th, or auto-calculated).
+
+Two issues cause this:
+1. **Stripe backend**: `proration_behavior: "create_prorations"` generates a prorated charge for the period between now and the anchor date on the subscription's first invoice, which Stripe attempts to collect immediately.
+2. **UI summary**: `firstChargeTotal = totalMonthlyRate + depositAmount` misleadingly shows deposit + monthly rate as the immediate charge.
 
 ### Solution
-Remove the `semimonthly` `<SelectItem>` from the dropdowns in both the Create and Edit subscription dialogs. The backend already treats them identically, so existing subscriptions with `semimonthly` will continue to work — they just won't be created going forward. The display label mappings will keep the `semimonthly` entry so existing records render correctly.
+
+**1. Edge function: `supabase/functions/create-subscription/index.ts`**
+- Change `proration_behavior` from `"create_prorations"` to `"none"` so Stripe does NOT charge for the gap period between creation and the anchor date
+- The first recurring charge will happen on the anchor date, not at creation time
+
+**2. UI summary: `src/components/admin/CreateSubscriptionDialog.tsx`**
+- Change `firstChargeTotal` to equal only `depositAmount` (not deposit + monthly rate)
+- Update the "First Charge" label to "Immediate Charge (Deposit Only)"
+- Add a note showing when the first recurring billing will begin (the anchor date)
+- Adjust the large subscription warning threshold to use just the deposit amount
 
 ### Files Modified
 | File | Change |
 |------|--------|
-| `src/components/admin/CreateSubscriptionDialog.tsx` | Remove `semimonthly` SelectItem (line 753) |
-| `src/components/admin/EditSubscriptionPanel.tsx` | Remove `semimonthly` SelectItem (line 240) |
+| `supabase/functions/create-subscription/index.ts` | Change `proration_behavior` to `"none"` |
+| `src/components/admin/CreateSubscriptionDialog.tsx` | Fix first charge calculation to deposit-only, update labels |
 
