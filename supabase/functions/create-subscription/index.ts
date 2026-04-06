@@ -237,21 +237,58 @@ serve(async (req) => {
     logStep("Trailers found", { count: trailers.length });
 
     // Find or create Stripe customer
-    let stripeCustomerId: string;
-    const customers = await stripe.customers.list({ email: customer.email, limit: 1 });
+    // IMPORTANT: Prefer the Stripe customer ID from customer_applications (where
+    // the payment method is attached) over a generic email search, which can
+    // return a different/newer Stripe customer that has no payment method.
+    let stripeCustomerId: string | null = null;
 
-    if (customers.data.length > 0) {
-      stripeCustomerId = customers.data[0].id;
-      logStep("Found existing Stripe customer", { stripeCustomerId });
-    } else {
-      const newCustomer = await stripe.customers.create({
-        email: customer.email,
-        name: customer.full_name,
-        phone: customer.phone || undefined,
-        metadata: { internal_customer_id: customerId },
-      });
-      stripeCustomerId = newCustomer.id;
-      logStep("Created new Stripe customer", { stripeCustomerId });
+    // Path 1: Use the stripe_customer_id from customer_applications (has PM attached)
+    if (customer.email) {
+      const { data: profileForStripe } = await supabaseClient
+        .from("profiles")
+        .select("id")
+        .ilike("email", customer.email)
+        .maybeSingle();
+
+      if (profileForStripe?.id) {
+        const { data: appForStripe } = await supabaseClient
+          .from("customer_applications")
+          .select("stripe_customer_id")
+          .eq("user_id", profileForStripe.id)
+          .not("stripe_customer_id", "is", null)
+          .maybeSingle();
+
+        if (appForStripe?.stripe_customer_id) {
+          // Verify this Stripe customer actually exists
+          try {
+            const existingCust = await stripe.customers.retrieve(appForStripe.stripe_customer_id);
+            if (existingCust && !(existingCust as any).deleted) {
+              stripeCustomerId = appForStripe.stripe_customer_id;
+              logStep("Using Stripe customer from application record (has payment method)", { stripeCustomerId });
+            }
+          } catch {
+            logStep("Application stripe_customer_id is invalid, falling back to search");
+          }
+        }
+      }
+    }
+
+    // Path 2: Fallback — search Stripe by email
+    if (!stripeCustomerId) {
+      const stripeCustomers = await stripe.customers.list({ email: customer.email, limit: 1 });
+      if (stripeCustomers.data.length > 0) {
+        stripeCustomerId = stripeCustomers.data[0].id;
+        logStep("Found existing Stripe customer via email search", { stripeCustomerId });
+      } else {
+        const newCustomer = await stripe.customers.create({
+          email: customer.email,
+          name: customer.full_name,
+          phone: customer.phone || undefined,
+          metadata: { internal_customer_id: customerId },
+        });
+        stripeCustomerId = newCustomer.id;
+        logStep("Created new Stripe customer", { stripeCustomerId });
+      }
     }
 
     // Calculate billing interval
