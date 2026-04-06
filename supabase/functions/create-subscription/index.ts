@@ -526,7 +526,6 @@ serve(async (req) => {
             const msg = depositError instanceof Error ? depositError.message : String(depositError);
             logStep("WARNING: Failed to charge deposit during creation, admin can retry via Activate", { error: msg });
           }
-        }
       }
 
       // Calculate next billing date
