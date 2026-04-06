@@ -431,8 +431,8 @@ serve(async (req) => {
       });
 
       // ==========================================
-      // SAFETY NET: Charge deposit if subscription somehow went active without an open invoice.
-      // With create_prorations this shouldn't happen, but kept as a fallback.
+      // DEPOSIT: Charge as standalone invoice (single path — no dual-charge risk).
+      // Uses idempotency key to prevent duplicate deposit charges.
       // ==========================================
       let depositChargedDuringCreation = false;
       if (isFirstGroup && depositAmount && depositAmount > 0 && subscription.status === "active") {
