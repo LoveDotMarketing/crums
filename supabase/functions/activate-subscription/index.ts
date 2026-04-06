@@ -99,42 +99,8 @@ const resolveAchPaymentMethodId = async ({
     }
   }
 
-  // 3) Last fallback: find ACH or card method on any Stripe customer with same email
-  if (!storedPmId && customerEmail) {
-    const sameEmailCustomers = await stripe.customers.list({ email: customerEmail, limit: 10 });
-
-    for (const candidateCustomer of sameEmailCustomers.data) {
-      if (candidateCustomer.id === stripeCustomerId) continue;
-      // Check ACH first
-      const candidateAch = await stripe.paymentMethods.list({
-        customer: candidateCustomer.id,
-        type: "us_bank_account",
-        limit: 1,
-      });
-      if (candidateAch.data.length > 0) {
-        storedPmId = candidateAch.data[0].id;
-        logStep("Recovered ACH method from same-email Stripe customer", {
-          paymentMethodId: storedPmId,
-          fromStripeCustomerId: candidateCustomer.id,
-        });
-        break;
-      }
-      // Check card
-      const candidateCard = await stripe.paymentMethods.list({
-        customer: candidateCustomer.id,
-        type: "card",
-        limit: 1,
-      });
-      if (candidateCard.data.length > 0) {
-        storedPmId = candidateCard.data[0].id;
-        logStep("Recovered card method from same-email Stripe customer", {
-          paymentMethodId: storedPmId,
-          fromStripeCustomerId: candidateCustomer.id,
-        });
-        break;
-      }
-    }
-  }
+  // Cross-customer payment method resolution REMOVED for security.
+  // Only use methods on the subscription's own Stripe customer or the stored application PM.
 
   if (!storedPmId) {
     throw new Error("Customer has no payment method attached. They need to complete payment setup first.");
