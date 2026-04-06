@@ -435,11 +435,8 @@ serve(async (req) => {
       // Uses idempotency key to prevent duplicate deposit charges.
       // ==========================================
       let depositChargedDuringCreation = false;
-      if (isFirstGroup && depositAmount && depositAmount > 0 && subscription.status === "active") {
-        const latestInvoice = typeof subscription.latest_invoice === "object" ? subscription.latest_invoice : null;
-        const hasOpenInvoice = latestInvoice && latestInvoice.status === "open";
-        
-        if (!hasOpenInvoice) {
+      if (isFirstGroup && depositAmount && depositAmount > 0) {
+        {
           logStep("Subscription active with no open invoice — charging deposit as standalone invoice");
           
           try {
