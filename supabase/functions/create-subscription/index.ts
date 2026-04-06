@@ -416,15 +416,7 @@ serve(async (req) => {
         logStep("Setting billing cycle anchor with prorations", { anchorDay, anchorTimestamp, group: groupKey });
       }
 
-      // Add deposit as a one-time invoice item on the initial invoice
-      const addInvoiceItems: Stripe.SubscriptionCreateParams.AddInvoiceItem[] = [];
-      if (depositInvoiceItem) {
-        addInvoiceItems.push(depositInvoiceItem);
-      }
-
-      if (addInvoiceItems.length > 0) {
-        subscriptionParams.add_invoice_items = addInvoiceItems;
-      }
+      // No add_invoice_items — deposit handled via standalone invoice below
 
       if (coupon) {
         subscriptionParams.discounts = [{ coupon: coupon.id }];
