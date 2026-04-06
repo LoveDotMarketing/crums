@@ -37,46 +37,30 @@ export function ReferralCard() {
 
   const fetchReferralData = async () => {
     try {
-      // Get user's profile to find email
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("email")
-        .eq("id", user?.id)
-        .single();
+      // Use SECURITY DEFINER function to bypass nested RLS chain
+      const { data: codeData, error: codeError } = await supabase
+        .rpc('get_my_referral_code')
+        .maybeSingle();
 
-      if (!profile?.email) {
+      if (codeError) {
+        console.error("Error fetching referral code:", codeError);
         setLoading(false);
         return;
       }
-
-      // Find customer by email
-      const { data: customer } = await supabase
-        .from("customers")
-        .select("id")
-        .ilike("email", profile.email)
-        .maybeSingle();
-
-      if (!customer) {
-        setLoading(false);
-        return;
-      }
-
-      // Get referral code
-      const { data: codeData } = await supabase
-        .from("referral_codes")
-        .select("*")
-        .eq("customer_id", customer.id)
-        .maybeSingle();
 
       if (codeData) {
         setReferralCode(codeData);
 
         // Get referrals made with this code
-        const { data: referralsData } = await supabase
+        const { data: referralsData, error: referralsError } = await supabase
           .from("referrals")
           .select("*")
           .eq("referrer_code_id", codeData.id)
           .order("created_at", { ascending: false });
+
+        if (referralsError) {
+          console.error("Error fetching referrals:", referralsError);
+        }
 
         if (referralsData) {
           setReferrals(referralsData);

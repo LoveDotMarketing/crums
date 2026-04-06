@@ -3247,6 +3247,15 @@ export type Database = {
           schedule: string
         }[]
       }
+      get_my_referral_code: {
+        Args: never
+        Returns: {
+          code: string
+          customer_id: string
+          id: string
+          is_active: boolean
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
