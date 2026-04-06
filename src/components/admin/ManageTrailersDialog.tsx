@@ -167,6 +167,7 @@ export function ManageTrailersDialog({
       toast.success(`Removed ${data.removedTrailerIds?.length || 0} trailer(s) from subscription`);
       await queryClient.invalidateQueries({ queryKey: ["customer-subscriptions"] });
       await queryClient.invalidateQueries({ queryKey: ["subscription-items"] });
+      await queryClient.invalidateQueries({ queryKey: ["admin-customer-assigned-trailers"] });
       resetState();
       onOpenChange(false);
     } catch (error) {
