@@ -99,7 +99,8 @@ export default function Rentals() {
             year,
             vin,
             axle_count,
-            body_material
+            body_material,
+            title_document_url
           )
         `)
         .eq("subscription.customer_id", customer.id)
