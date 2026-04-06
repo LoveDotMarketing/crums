@@ -1,13 +1,29 @@
 
 
-## Add Password Visibility Toggle to Login
+## Fix: Case-Insensitive Email Matching in ReferralCard
 
-Add an eye icon button inside the password input field that toggles between showing and hiding the password text.
+### Problem
+The `ReferralCard` component queries the `customers` table using `.eq("email", profile.email)` which is case-sensitive. For Azptrucking@gmail.com, the profile stores `azptrucking@gmail.com` (lowercase) while the customer record has `Azptrucking@gmail.com` (capital A). This causes the referral code lookup to fail silently, showing "Your referral code will be generated once your account is fully set up."
 
-### File: `src/pages/Login.tsx`
+This same case-sensitivity issue likely affects other components that join profiles to customers by email.
 
-1. Import `Eye` and `EyeOff` icons from lucide-react
-2. Add `showPassword` state (boolean, default false)
-3. Wrap the password input in a relative div, change input type from `"password"` to `showPassword ? "text" : "password"`
-4. Add an absolutely-positioned button with Eye/EyeOff icon on the right side of the input
+### Fix
+
+**File: `src/components/customer/ReferralCard.tsx`**
+
+Replace the case-sensitive customer lookup:
+```typescript
+.eq("email", profile.email)
+```
+with a case-insensitive match using Supabase's `ilike`:
+```typescript
+.ilike("email", profile.email)
+```
+
+This is a one-line change that ensures the referral code displays correctly regardless of email casing differences between the profile and customer tables.
+
+### Files Modified
+| File | Change |
+|------|--------|
+| `src/components/customer/ReferralCard.tsx` | Change `.eq("email", ...)` to `.ilike("email", ...)` for customer lookup |
 
