@@ -28,7 +28,8 @@ import {
   Eye,
   CreditCard,
   Download,
-  FileText
+  FileText,
+  KeyRound
 } from "lucide-react";
 import {
   Table,
