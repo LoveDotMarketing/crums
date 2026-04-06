@@ -328,6 +328,12 @@ export default function Rentals() {
                             <p className="text-xs text-muted-foreground text-right">{leaseInfo.percentPaid.toFixed(1)}% paid</p>
                           </div>
                         )}
+
+                        {/* Documents: Title + DOT Inspection Photos */}
+                        <TrailerDocuments
+                          trailerId={trailer.id}
+                          titleDocumentUrl={(trailer as any).title_document_url}
+                        />
                       </CardContent>
                     </Card>
                   );
