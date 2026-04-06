@@ -1001,7 +1001,7 @@ export function CreateSubscriptionDialog({ onSuccess, mode = "dialog", onCancel 
         </div>
   );
 
-  const firstChargeTotal = totalMonthlyRate + depositAmount;
+  const firstChargeTotal = depositAmount;
   const isLargeSubscription = firstChargeTotal >= 2000;
 
   const reviewSummary = (
@@ -1011,7 +1011,7 @@ export function CreateSubscriptionDialog({ onSuccess, mode = "dialog", onCancel 
           <AlertTriangle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
           <div className="text-sm text-destructive">
             <p className="font-semibold">Large subscription warning</p>
-            <p>First charge of ${firstChargeTotal.toLocaleString()} will be initiated via ACH. ACH charges cannot be reversed for 5–7 business days.</p>
+            <p>Deposit of ${firstChargeTotal.toLocaleString()} will be charged immediately. Recurring billing starts on the anchor date.</p>
           </div>
         </div>
       )}
@@ -1039,8 +1039,11 @@ export function CreateSubscriptionDialog({ onSuccess, mode = "dialog", onCancel 
           <span className="font-medium">${depositAmount.toFixed(2)}</span>
         </div>
         <div className="flex justify-between text-sm border-t pt-2">
-          <span className="text-muted-foreground">First Charge (approx)</span>
+          <span className="text-muted-foreground">Immediate Charge (Deposit Only)</span>
           <span className="font-bold text-lg">${firstChargeTotal.toFixed(2)}</span>
+        </div>
+        <div className="text-xs text-muted-foreground">
+          Recurring billing of ${totalMonthlyRate.toFixed(2)} starts on anchor day {billingAnchorDay}
         </div>
         <div className="flex justify-between text-sm">
           <span className="text-muted-foreground">Billing</span>
