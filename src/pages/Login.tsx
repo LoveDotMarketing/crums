@@ -12,7 +12,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { loginSchema, quickSignupSchema } from "@/lib/validations";
 import { supabase } from "@/integrations/supabase/client";
-import { Gift, Lock, Check, AlertCircle, Clipboard } from "lucide-react";
+import { Gift, Lock, Check, AlertCircle, Clipboard, Eye, EyeOff } from "lucide-react";
 import { trackLogin, trackSignup, trackSignupStarted, trackSignupFailed } from "@/lib/analytics";
 import { processReferralCode, validateReferralCode } from "@/lib/referral";
 import { trackLinkedInSignup } from "@/lib/linkedinAnalytics";
