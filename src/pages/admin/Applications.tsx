@@ -682,6 +682,8 @@ export default function Applications() {
               </Card>
             </div>
 
+            <NeedsAttentionCard />
+
             {/* Search and Filter */}
             <div className="mb-6 flex flex-col sm:flex-row gap-4">
               <div className="relative flex-1 max-w-md">
