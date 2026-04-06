@@ -125,6 +125,29 @@ export default function Customers() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [customerToDelete, setCustomerToDelete] = useState<Customer | null>(null);
+  const [sendingResetFor, setSendingResetFor] = useState<string | null>(null);
+
+  const handleSendPasswordReset = async (email: string) => {
+    setSendingResetFor(email);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      if (error) throw error;
+      toast({
+        title: "Password Reset Sent",
+        description: `Reset email sent to ${email}`,
+      });
+    } catch (err: any) {
+      toast({
+        title: "Failed to Send Reset",
+        description: err.message || "Something went wrong",
+        variant: "destructive",
+      });
+    } finally {
+      setSendingResetFor(null);
+    }
+  };
 
   // Fetch customers from database (excluding admins and mechanics)
   const { data: customers = [], isLoading } = useQuery({
