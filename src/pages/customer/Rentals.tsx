@@ -9,6 +9,7 @@ import { Footer } from "@/components/Footer";
 import { toast } from "sonner";
 import { Loader2, Truck, MapPin, Calendar, FileText, DollarSign, TrendingDown } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
+import { TrailerDocuments } from "@/components/customer/TrailerDocuments";
 
 interface SubscriptionItemData {
   trailer_id: string;
