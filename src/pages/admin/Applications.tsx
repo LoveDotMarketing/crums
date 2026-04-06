@@ -682,6 +682,11 @@ export default function Applications() {
               </Card>
             </div>
 
+            {/* Needs Attention */}
+            <div className="mb-8">
+              <NeedsAttentionCard />
+            </div>
+
             {/* Search and Filter */}
             <div className="mb-6 flex flex-col sm:flex-row gap-4">
               <div className="relative flex-1 max-w-md">
