@@ -92,13 +92,29 @@ export default function AdminDashboard() {
         const paymentDate = new Date(t.payment_date);
         return paymentDate.getMonth() === now.getMonth() && paymentDate.getFullYear() === now.getFullYear();
       }) || [];
-      const collectedThisMonth = thisMonth.reduce((sum, t) => sum + Number(t.amount), 0);
+      const tollsCollectedThisMonth = thisMonth.reduce((sum, t) => sum + Number(t.amount), 0);
       
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
       const overdue = pending.filter(t => new Date(t.toll_date) < thirtyDaysAgo).length;
       
-      return { outstandingAmount, collectedThisMonth, pendingCount: pending.length, overdueCount: overdue };
+      return { outstandingAmount, tollsCollectedThisMonth, pendingCount: pending.length, overdueCount: overdue };
+    },
+  });
+
+  // Fetch lease payment collections this month from billing_history
+  const { data: leaseCollections } = useQuery({
+    queryKey: ["admin-lease-collections"],
+    queryFn: async () => {
+      const now = new Date();
+      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+      const { data, error } = await supabase
+        .from("billing_history")
+        .select("net_amount, paid_at")
+        .eq("status", "succeeded")
+        .gte("paid_at", startOfMonth);
+      if (error) throw error;
+      return data?.reduce((sum, h) => sum + Number(h.net_amount), 0) || 0;
     },
   });
 
