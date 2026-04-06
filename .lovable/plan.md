@@ -1,20 +1,13 @@
 
 
-## Fix: Password Reset Redirects to Lovable Instead of CRUMS
+## Add Password Visibility Toggle to Login
 
-### Problem
-When an admin triggers "Send Password Reset" from the Customers page, the code uses `window.location.origin` for the redirect URL. Since the admin is browsing the Lovable preview (`id-preview--*.lovable.app`), the reset email sends the customer to the Lovable preview URL instead of `https://crumsleasing.com`.
+Add an eye icon button inside the password input field that toggles between showing and hiding the password text.
 
-### Fix
-Hardcode the production domain `https://crumsleasing.com` for the `redirectTo` in all three locations where `resetPasswordForEmail` is called, instead of relying on `window.location.origin`.
+### File: `src/pages/Login.tsx`
 
-### Files Modified
-
-| File | Change |
-|------|--------|
-| `src/pages/admin/Customers.tsx` | Change `redirectTo` from `${window.location.origin}/reset-password` to `https://crumsleasing.com/reset-password` |
-| `src/pages/admin/Staff.tsx` | Same change |
-| `src/pages/ForgotPassword.tsx` | Same change |
-
-This ensures the password reset link always points to the production CRUMS site regardless of where the admin is browsing from.
+1. Import `Eye` and `EyeOff` icons from lucide-react
+2. Add `showPassword` state (boolean, default false)
+3. Wrap the password input in a relative div, change input type from `"password"` to `showPassword ? "text" : "password"`
+4. Add an absolutely-positioned button with Eye/EyeOff icon on the right side of the input
 
