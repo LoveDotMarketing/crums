@@ -1045,7 +1045,6 @@ export function CreateSubscriptionDialog({ onSuccess, mode = "dialog", onCancel 
         <div className="text-xs text-muted-foreground">
           Recurring billing of ${totalMonthlyRate.toFixed(2)} starts on anchor day {billingAnchorDay}
         </div>
-        </div>
         <div className="flex justify-between text-sm">
           <span className="text-muted-foreground">Billing</span>
           <span>{effectiveBillingLabel} — Anchor day {billingAnchorDay}</span>
