@@ -1011,7 +1011,7 @@ export function CreateSubscriptionDialog({ onSuccess, mode = "dialog", onCancel 
           <AlertTriangle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
           <div className="text-sm text-destructive">
             <p className="font-semibold">Large subscription warning</p>
-            <p>First charge of ${firstChargeTotal.toLocaleString()} will be initiated via ACH. ACH charges cannot be reversed for 5–7 business days.</p>
+            <p>Deposit of ${firstChargeTotal.toLocaleString()} will be charged immediately. Recurring billing starts on the anchor date.</p>
           </div>
         </div>
       )}
