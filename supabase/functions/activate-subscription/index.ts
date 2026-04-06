@@ -230,14 +230,13 @@ serve(async (req) => {
           }
         }
 
-        const chargeCustomerId = paymentMethodCustomerId;
+        // Security: only charge on the subscription's own Stripe customer
+        const chargeCustomerId = subscription.stripe_customer_id;
 
-        if (chargeCustomerId !== subscription.stripe_customer_id) {
-          logStep("Charging deposit on alternate Stripe customer tied to ACH setup", {
-            chargeCustomerId,
-            subscriptionStripeCustomerId: subscription.stripe_customer_id,
-            paymentMethodId,
-          });
+        if (paymentMethodCustomerId !== chargeCustomerId) {
+          // Payment method is on a different customer — this should not happen
+          // after we removed the cross-customer fallback. Block the charge.
+          throw new Error("Payment method belongs to a different billing profile. Please re-run payment setup for this customer.");
         }
 
         // Set default payment method on the customer being charged
@@ -245,12 +244,14 @@ serve(async (req) => {
           invoice_settings: { default_payment_method: paymentMethodId },
         });
 
-        // Create standalone deposit invoice first, then attach the item explicitly
+        // Create standalone deposit invoice with idempotency key to prevent duplicate deposits
         const depositInvoice = await stripe.invoices.create({
           customer: chargeCustomerId,
           auto_advance: false,
           pending_invoice_items_behavior: 'exclude',
           metadata: { type: "security_deposit", subscription_id: subscription.stripe_subscription_id },
+        }, {
+          idempotencyKey: `${subscription.stripe_subscription_id}_deposit`,
         });
 
         // Detect if payment method is a card and apply surcharge
