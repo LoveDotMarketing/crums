@@ -87,7 +87,7 @@ export function ManageTrailersDialog({
         .from("trailers")
         .select("id, trailer_number, type, vin, rental_rate, year, make, model")
         .eq("is_rented", false)
-        .in("status", ["available"])
+        .in("status", ["available", "pending"])
         .order("trailer_number");
 
       if (error) throw error;
