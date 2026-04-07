@@ -290,7 +290,7 @@ export function CreateSubscriptionDialog({ onSuccess, mode = "dialog", onCancel 
         }
 
         if (!hasPaymentMethod) {
-          throw new Error("Customer has no ACH payment method linked. Set up ACH on their profile first.");
+          throw new Error("Customer has no payment method linked. Set up ACH or card on their profile first.");
         }
       }
 
@@ -332,7 +332,13 @@ export function CreateSubscriptionDialog({ onSuccess, mode = "dialog", onCancel 
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        // Surface the actual backend error message if available
+        const backendMsg = (error as any)?.context?.body ? 
+          (() => { try { return JSON.parse((error as any).context.body)?.error; } catch { return null; } })() 
+          : null;
+        throw new Error(backendMsg || error.message || "Failed to create subscription");
+      }
       if (data?.error) throw new Error(data.error);
       
       return data;

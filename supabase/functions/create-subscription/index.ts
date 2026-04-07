@@ -163,13 +163,11 @@ serve(async (req) => {
     if (custError || !customer) throw new Error("Customer not found");
     logStep("Customer found", { customerId, email: customer.email });
 
-    // Server-side payment method guard: verify customer has a REAL payment method in Stripe
-    // (not just a DB record — the stored PM may have been detached/destroyed)
-    let verifiedPmId: string | null = null;
-
-    // Look up the stored stripe_payment_method_id from customer_applications
-    let appRecord: { stripe_payment_method_id: string | null; stripe_customer_id: string | null; id: string } | null = null;
-    let appLookupUserId: string | null = null;
+    // ==========================================
+    // RESOLVE STRIPE CUSTOMER FIRST, THEN MATCH PM
+    // ==========================================
+    let appRecord: { stripe_payment_method_id: string | null; stripe_customer_id: string | null; id: string; payment_method_type: string | null } | null = null;
+    let profileIdForStripe: string | null = null;
 
     if (customer.email) {
       const { data: profileData } = await supabaseClient
@@ -179,10 +177,10 @@ serve(async (req) => {
         .maybeSingle();
 
       if (profileData?.id) {
-        appLookupUserId = profileData.id;
+        profileIdForStripe = profileData.id;
         const { data: appData } = await supabaseClient
           .from("customer_applications")
-          .select("stripe_payment_method_id, stripe_customer_id, id")
+          .select("stripe_payment_method_id, stripe_customer_id, id, payment_method_type")
           .eq("user_id", profileData.id)
           .maybeSingle();
         appRecord = appData;
@@ -193,123 +191,37 @@ serve(async (req) => {
     if (!appRecord) {
       const { data: appByCustomerId } = await supabaseClient
         .from("customer_applications")
-        .select("stripe_payment_method_id, stripe_customer_id, id")
+        .select("stripe_payment_method_id, stripe_customer_id, id, payment_method_type")
         .eq("customer_id", customerId)
         .maybeSingle();
       appRecord = appByCustomerId;
     }
 
-    // Verify the stored PM is actually alive in Stripe
-    if (appRecord?.stripe_payment_method_id) {
-      try {
-        const pm = await stripe.paymentMethods.retrieve(appRecord.stripe_payment_method_id);
-        if (pm.customer) {
-          verifiedPmId = pm.id;
-          logStep("Payment method verified in Stripe", { pmId: pm.id, stripeCustomer: pm.customer });
-        } else {
-          logStep("Stored PM exists but is DETACHED (no customer) — treating as invalid", { pmId: pm.id });
-        }
-      } catch (pmErr: any) {
-        logStep("Stored PM retrieval failed — PM is dead", { pmId: appRecord.stripe_payment_method_id, error: pmErr.message });
-      }
-    }
-
-    if (!verifiedPmId) {
-      // Auto-reset the stale payment setup status so admin dashboard reflects reality
-      if (appRecord?.id) {
-        await supabaseClient
-          .from("customer_applications")
-          .update({
-            payment_setup_status: "pending",
-            stripe_payment_method_id: null,
-          })
-          .eq("id", appRecord.id);
-        logStep("Auto-reset stale payment_setup_status to pending", { applicationId: appRecord.id });
-      }
-      throw new Error("Customer's payment method is no longer valid in Stripe. Their payment setup has been reset — please have them re-link ACH or card before creating a subscription.");
-    }
-
-    // Resolve global anchor day from admin input or customer application
-    let globalAnchorDay = billingAnchorDay || null;
-    if (!globalAnchorDay) {
-      const { data: customerApplication } = await supabaseClient
-        .from("customer_applications")
-        .select("billing_anchor_day, user_id")
-        .eq("user_id", (
-          await supabaseClient
-            .from("profiles")
-            .select("id")
-            .eq("email", customer.email)
-            .maybeSingle()
-        ).data?.id || "")
-        .maybeSingle();
-      globalAnchorDay = customerApplication?.billing_anchor_day || null;
-    }
-    
-    logStep("Global billing anchor day", { 
-      adminProvided: billingAnchorDay,
-      resolved: globalAnchorDay
+    logStep("Application record lookup", {
+      found: !!appRecord,
+      storedPmId: appRecord?.stripe_payment_method_id ?? null,
+      storedStripeCustomer: appRecord?.stripe_customer_id ?? null,
+      pmType: appRecord?.payment_method_type ?? null,
     });
 
-    // Get trailers with rental rates
-    const { data: trailers, error: trailerError } = await supabaseClient
-      .from("trailers")
-      .select("*")
-      .in("id", trailerIds);
-
-    if (trailerError || !trailers?.length) throw new Error("Trailers not found");
-    logStep("Trailers found", { count: trailers.length });
-
-    // Find or create Stripe customer
-    // IMPORTANT: The resolved Stripe customer MUST have payment methods attached.
-    // If the stored customer_applications ID has no PMs (e.g. after a detach/reset),
-    // we search all Stripe customers by email to find the one with active PMs.
+    // --- Step 1: Resolve the Stripe Customer ---
     let stripeCustomerId: string | null = null;
-    let profileIdForStripe: string | null = null;
 
-    // Path 1: Try the stripe_customer_id from customer_applications
-    if (customer.email) {
-      const { data: profileForStripe } = await supabaseClient
-        .from("profiles")
-        .select("id")
-        .ilike("email", customer.email)
-        .maybeSingle();
-
-      profileIdForStripe = profileForStripe?.id ?? null;
-
-      if (profileForStripe?.id) {
-        const { data: appForStripe } = await supabaseClient
-          .from("customer_applications")
-          .select("stripe_customer_id")
-          .eq("user_id", profileForStripe.id)
-          .not("stripe_customer_id", "is", null)
-          .maybeSingle();
-
-        if (appForStripe?.stripe_customer_id) {
-          try {
-            const existingCust = await stripe.customers.retrieve(appForStripe.stripe_customer_id);
-            if (existingCust && !(existingCust as any).deleted) {
-              // Verify this customer actually has payment methods
-              const pms = await stripe.paymentMethods.list({
-                customer: appForStripe.stripe_customer_id,
-                limit: 5,
-              });
-              if (pms.data.length > 0) {
-                stripeCustomerId = appForStripe.stripe_customer_id;
-                logStep("Using Stripe customer from application record (verified has PMs)", { stripeCustomerId, pmCount: pms.data.length });
-              } else {
-                logStep("Application stripe_customer_id exists but has NO payment methods, falling back to email search", { custId: appForStripe.stripe_customer_id });
-              }
-            }
-          } catch {
-            logStep("Application stripe_customer_id is invalid, falling back to search");
-          }
+    // Path 1: Try stored stripe_customer_id
+    if (appRecord?.stripe_customer_id) {
+      try {
+        const existingCust = await stripe.customers.retrieve(appRecord.stripe_customer_id);
+        if (existingCust && !(existingCust as any).deleted) {
+          stripeCustomerId = appRecord.stripe_customer_id;
+          logStep("Stripe customer from application record is valid", { stripeCustomerId });
         }
+      } catch {
+        logStep("Stored stripe_customer_id is invalid, falling back to search");
       }
     }
 
-    // Path 2: Fallback — search ALL Stripe customers by email, pick the one with PMs
-    if (!stripeCustomerId) {
+    // Path 2: Fallback — search by email
+    if (!stripeCustomerId && customer.email) {
       const stripeCustomers = await stripe.customers.list({ email: customer.email, limit: 10 });
       logStep("Email search returned Stripe customers", { count: stripeCustomers.data.length });
 
@@ -318,39 +230,91 @@ serve(async (req) => {
         const pms = await stripe.paymentMethods.list({ customer: sc.id, limit: 1 });
         if (pms.data.length > 0) {
           stripeCustomerId = sc.id;
-          logStep("Found Stripe customer with payment methods via email search", { stripeCustomerId });
+          logStep("Found Stripe customer with PMs via email search", { stripeCustomerId });
           break;
         }
       }
+    }
 
-      // Hard-fail: no Stripe customer has payment methods — cannot proceed
-      if (!stripeCustomerId) {
-        // Auto-reset payment setup status
-        if (appRecord?.id) {
-          await supabaseClient
-            .from("customer_applications")
-            .update({
-              payment_setup_status: "pending",
-              stripe_payment_method_id: null,
-            })
-            .eq("id", appRecord.id);
-          logStep("Auto-reset payment_setup_status (no Stripe customer has PMs)", { applicationId: appRecord.id });
-        }
-        throw new Error("No valid payment method found on any Stripe customer profile for this email. Customer needs to re-complete ACH/card setup.");
-      }
-
-      // Update customer_applications with the correct stripe_customer_id
-      if (profileIdForStripe) {
-        const { error: updateAppErr } = await supabaseClient
+    if (!stripeCustomerId) {
+      if (appRecord?.id) {
+        await supabaseClient
           .from("customer_applications")
-          .update({ stripe_customer_id: stripeCustomerId })
-          .eq("user_id", profileIdForStripe);
-        if (updateAppErr) {
-          logStep("Warning: could not update application stripe_customer_id", { error: updateAppErr.message });
+          .update({ payment_setup_status: "pending", stripe_payment_method_id: null })
+          .eq("id", appRecord.id);
+        logStep("Auto-reset payment_setup_status (no valid Stripe customer found)");
+      }
+      throw new Error("No valid Stripe customer with payment methods found for this email. Customer needs to re-complete payment setup.");
+    }
+
+    // Sync stripe_customer_id in DB if it changed
+    if (appRecord && appRecord.stripe_customer_id !== stripeCustomerId && profileIdForStripe) {
+      await supabaseClient
+        .from("customer_applications")
+        .update({ stripe_customer_id: stripeCustomerId })
+        .eq("user_id", profileIdForStripe);
+      logStep("Synced customer_applications.stripe_customer_id", { old: appRecord.stripe_customer_id, new: stripeCustomerId });
+    }
+
+    // --- Step 2: Resolve Payment Method ON this exact Stripe customer ---
+    let verifiedPmId: string | null = null;
+
+    // Check if stored PM belongs to THIS Stripe customer
+    if (appRecord?.stripe_payment_method_id) {
+      try {
+        const pm = await stripe.paymentMethods.retrieve(appRecord.stripe_payment_method_id);
+        if (pm.customer === stripeCustomerId) {
+          verifiedPmId = pm.id;
+          logStep("Stored PM verified — belongs to resolved Stripe customer", { pmId: pm.id });
         } else {
-          logStep("Updated customer_applications with correct stripe_customer_id", { stripeCustomerId });
+          logStep("Stored PM belongs to DIFFERENT Stripe customer — ignoring", {
+            pmId: pm.id,
+            pmCustomer: pm.customer,
+            resolvedCustomer: stripeCustomerId,
+          });
+        }
+      } catch (pmErr: any) {
+        logStep("Stored PM retrieval failed — PM is dead", { pmId: appRecord.stripe_payment_method_id, error: pmErr.message });
+      }
+    }
+
+    // If stored PM didn't work, search for a live PM on the resolved customer
+    if (!verifiedPmId) {
+      const preferredType = appRecord?.payment_method_type === "card" ? "card" : "us_bank_account";
+      const fallbackType = preferredType === "card" ? "us_bank_account" : "card";
+
+      for (const pmType of [preferredType, fallbackType]) {
+        const methods = await stripe.paymentMethods.list({
+          customer: stripeCustomerId,
+          type: pmType as any,
+          limit: 1,
+        });
+        if (methods.data.length > 0) {
+          verifiedPmId = methods.data[0].id;
+          logStep(`Found live PM on Stripe customer via search`, { pmId: verifiedPmId, type: pmType });
+          break;
         }
       }
+    }
+
+    if (!verifiedPmId) {
+      if (appRecord?.id) {
+        await supabaseClient
+          .from("customer_applications")
+          .update({ payment_setup_status: "pending", stripe_payment_method_id: null })
+          .eq("id", appRecord.id);
+        logStep("Auto-reset stale payment_setup_status", { applicationId: appRecord.id });
+      }
+      throw new Error("Customer's payment method is no longer valid. Their payment setup has been reset — please have them re-link ACH or card before creating a subscription.");
+    }
+
+    // Sync the verified PM back to the DB if different
+    if (appRecord && appRecord.stripe_payment_method_id !== verifiedPmId) {
+      await supabaseClient
+        .from("customer_applications")
+        .update({ stripe_payment_method_id: verifiedPmId })
+        .eq("id", appRecord.id);
+      logStep("Synced customer_applications.stripe_payment_method_id", { old: appRecord.stripe_payment_method_id, new: verifiedPmId });
     }
 
     // Calculate billing interval
