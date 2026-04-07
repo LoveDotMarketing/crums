@@ -96,6 +96,48 @@ export const ChatBot = ({ userType }: ChatBotProps) => {
     }
   }, [isOpen, initChat]);
 
+  // Track chatbot_message_sent via DOM listener on n8n chat form
+  useEffect(() => {
+    if (!isOpen || isLoading || hasError || !proxyUrl) return;
+
+    let form: HTMLFormElement | null = null;
+    let lastFireTime = 0;
+
+    const handleSubmit = () => {
+      const input = form?.querySelector('textarea, input[type="text"]') as HTMLInputElement | HTMLTextAreaElement | null;
+      if (!input || !input.value.trim()) return;
+      const now = Date.now();
+      if (now - lastFireTime < 100) return;
+      lastFireTime = now;
+      trackChatbotMessage();
+    };
+
+    const container = document.getElementById('n8n-chat-container');
+    if (!container) return;
+
+    // Check if form already exists
+    form = container.querySelector('form');
+    if (form) {
+      form.addEventListener('submit', handleSubmit, { capture: true });
+      return () => { form?.removeEventListener('submit', handleSubmit, { capture: true }); };
+    }
+
+    // Otherwise observe for it
+    const observer = new MutationObserver(() => {
+      form = container.querySelector('form');
+      if (form) {
+        observer.disconnect();
+        form.addEventListener('submit', handleSubmit, { capture: true });
+      }
+    });
+    observer.observe(container, { childList: true, subtree: true });
+
+    return () => {
+      observer.disconnect();
+      form?.removeEventListener('submit', handleSubmit, { capture: true });
+    };
+  }, [isOpen, isLoading, hasError, proxyUrl]);
+
   const headerLabel = isAuthenticated
     ? userType === "admin" ? "Admin Support" : userType === "mechanic" ? "Mechanic Support" : "Account Support"
     : "Customer Support";
