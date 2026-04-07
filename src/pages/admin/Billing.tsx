@@ -736,7 +736,7 @@ export default function Billing() {
             company_name
           )
         `)
-        .order("created_at", { ascending: false });
+        .order("updated_at", { ascending: false });
       
       if (error) throw error;
       // Type assertion to handle the subscription_type field
