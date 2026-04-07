@@ -1,16 +1,20 @@
 
 
-## Fix: Sort Billing Subscriptions by Most Recent Activity
+## Fix: Trailer 260022 Missing from Roderick McGill's Subscription
 
 ### Problem
-The billing subscriptions list sorts by `created_at` descending. Roderick McGill's subscription was created on March 9, so even though his deposit was just charged (updating `updated_at` to today), he appears far down the list.
+Trailer 260022 is correctly assigned to Roderick McGill in the `trailers` table (status: `rented`, `customer_id` set), but the `subscription_items` record linking it to his subscription (`920b30f1-2fdc-4dfb-9e29-8e81acdd91bf`) has status `ended` instead of `active`. This causes it to be filtered out of subscription views.
 
 ### Solution
-Change the sort order from `created_at` to `updated_at` so that subscriptions with recent activity (deposits, status changes, edits) float to the top.
+Update the subscription item status from `ended` to `active` using a data update (not a migration).
 
-### Technical Change
-**File: `src/pages/admin/Billing.tsx` (line 739)**
-- Change `.order("created_at", { ascending: false })` to `.order("updated_at", { ascending: false })`
+### Technical Detail
+```sql
+UPDATE subscription_items 
+SET status = 'active', updated_at = now()
+WHERE subscription_id = '920b30f1-2fdc-4dfb-9e29-8e81acdd91bf'
+  AND trailer_id = '41954a74-c47f-4f24-86e2-452568b70526';
+```
 
-This is a one-line change. Subscriptions that were recently modified (deposit paid, status updated, edited) will now appear at the top of the billing list.
+This is a single data fix — no code changes needed. After this, the trailer will appear under his subscription in billing, customer profile, and the customer's "My Rentals" page.
 
