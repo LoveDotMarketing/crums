@@ -539,26 +539,44 @@ serve(async (req) => {
           logStep("Charging deposit as standalone invoice", { depositAmount });
           
           try {
-            // Resolve payment method: check ACH first, then card as fallback
-            const achMethods = await stripe.paymentMethods.list({
+            // Fetch customer's preferred payment method type
+            let depositPreferredType: string | null = null;
+            const { data: appPmPref } = await supabaseClient
+              .from("customer_applications")
+              .select("payment_method_type")
+              .eq("customer_id", customerId)
+              .order("updated_at", { ascending: false })
+              .limit(1)
+              .maybeSingle();
+            depositPreferredType = appPmPref?.payment_method_type ?? null;
+            logStep("Deposit: customer preferred payment type", { depositPreferredType });
+
+            // Resolve payment method: respect customer preference
+            const cardFirst = depositPreferredType === "card";
+            const primaryType = cardFirst ? "card" : "us_bank_account";
+            const fallbackType = cardFirst ? "us_bank_account" : "card";
+
+            const primaryMethods = await stripe.paymentMethods.list({
               customer: stripeCustomerId,
-              type: "us_bank_account",
+              type: primaryType,
               limit: 1,
             });
 
-            let depositPaymentMethodId: string | null = achMethods.data[0]?.id ?? null;
+            let depositPaymentMethodId: string | null = primaryMethods.data[0]?.id ?? null;
 
-            // Fallback: check for card payment methods
+            // Fallback: check other payment method type
             if (!depositPaymentMethodId) {
-              const cardMethods = await stripe.paymentMethods.list({
+              const fallbackMethods = await stripe.paymentMethods.list({
                 customer: stripeCustomerId,
-                type: "card",
+                type: fallbackType,
                 limit: 1,
               });
-              depositPaymentMethodId = cardMethods.data[0]?.id ?? null;
+              depositPaymentMethodId = fallbackMethods.data[0]?.id ?? null;
               if (depositPaymentMethodId) {
-                logStep("Using card payment method for deposit (no ACH found)", { pmId: depositPaymentMethodId });
+                logStep(`Using ${cardFirst ? "ACH" : "card"} payment method for deposit (fallback)`, { pmId: depositPaymentMethodId });
               }
+            } else {
+              logStep(`Using ${cardFirst ? "card" : "ACH"} payment method for deposit (preferred)`, { pmId: depositPaymentMethodId });
             }
 
             if (depositPaymentMethodId) {
