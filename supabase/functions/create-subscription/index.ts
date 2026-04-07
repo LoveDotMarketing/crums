@@ -485,7 +485,8 @@ serve(async (req) => {
       const subscriptionParams: Stripe.SubscriptionCreateParams = {
         customer: stripeCustomerId,
         items: subscriptionItems,
-        payment_behavior: "default_incomplete",
+        default_payment_method: verifiedPmId || undefined,
+        payment_behavior: "allow_incomplete",
         payment_settings: { save_default_payment_method: "on_subscription" },
         expand: ["latest_invoice.payment_intent"],
         metadata: { 
