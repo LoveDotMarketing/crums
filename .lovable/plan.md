@@ -1,22 +1,24 @@
 
 
-## Fix: Show Assigned Trailers in Manage Trailers Dialog
+## Patch: Fire `chatbot_message_sent` on User Messages
 
 ### Problem
-Trailer 034038 is already assigned to James E. Guthrie (`customer_id` set on the trailer), but the **Manage Trailers** dialog (used to add equipment to an existing subscription) only shows trailers with `is_rented: false` and status `available/pending`. Since 034038 is already assigned, it doesn't appear in the list.
+`trackChatbotMessage()` exists in `analytics.ts` but is never called. The n8n chat widget renders its own form inside `#n8n-chat-container`, so we need a DOM-level listener.
 
-The **Create Subscription** dialog already handles this correctly with a dual-query pattern, but the **Manage Trailers** dialog does not.
+### Changes
 
-### Solution
-Apply the same dual-query pattern from `CreateSubscriptionDialog` to `ManageTrailersDialog`: fetch both available trailers AND trailers assigned to the subscription's customer, then merge and deduplicate (excluding trailers already on the subscription).
+**File: `src/components/ChatBot.tsx`**
 
-### Technical Change
-**File: `src/components/admin/ManageTrailersDialog.tsx` (lines 82-97)**
+1. Import `trackChatbotMessage` alongside `trackChatbotOpen`
+2. Add a `useEffect` that, after chat initializes (`!isLoading && !hasError && isOpen`):
+   - Uses `MutationObserver` to wait for the n8n chat form to appear inside `#n8n-chat-container`
+   - Attaches a `submit` event listener (with `capture: true`) to the form
+   - On submit, reads the textarea/input value; if non-empty after trim, calls `trackChatbotMessage()`
+   - Uses a debounce flag (100ms cooldown) to prevent duplicate fires
+   - Cleans up observer and listener on unmount or when chat closes
 
-Update the `available-trailers-for-subscription` query to:
-1. Accept `customerId` as a query key dependency
-2. Run two parallel queries: one for generally available trailers, one for trailers assigned to this customer
-3. Merge results, excluding trailers already on the current subscription (from `currentItems`)
+No changes to `analytics.ts` — `trackChatbotMessage` already exists and fires the correct `chatbot_message_sent` event.
 
-This mirrors the existing pattern in `CreateSubscriptionDialog.tsx` lines 186-214.
+### Why MutationObserver
+The n8n chat widget renders asynchronously after `createChat()` resolves. We can't query the form immediately — we observe the container until the form element appears, then attach the listener once.
 
