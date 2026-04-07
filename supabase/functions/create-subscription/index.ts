@@ -486,7 +486,15 @@ serve(async (req) => {
         subscriptionParams.discounts = [{ coupon: coupon.id }];
       }
 
-      const subscription = await stripe.subscriptions.create(subscriptionParams);
+      let subscription: Stripe.Subscription;
+      try {
+        subscription = await stripe.subscriptions.create(subscriptionParams);
+      } catch (stripeSubErr: any) {
+        const stripeMsg = stripeSubErr?.message || String(stripeSubErr);
+        const stripeCode = stripeSubErr?.code || stripeSubErr?.type || "unknown";
+        logStep("FATAL: stripe.subscriptions.create failed", { error: stripeMsg, code: stripeCode, stripeCustomerId, pmId: verifiedPmId });
+        throw new Error(`Stripe subscription creation failed: ${stripeMsg}`);
+      }
       logStep("Created Stripe subscription", { 
         subscriptionId: subscription.id, group: groupKey, anchorDay,
         trailerCount: groupTrailers.length,
