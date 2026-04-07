@@ -535,6 +535,7 @@ serve(async (req) => {
       // Uses idempotency key to prevent duplicate deposit charges.
       // ==========================================
       let depositChargedDuringCreation = false;
+      let depositInvoiceResult: { paidInvoice: any; isCard: boolean; finalAmount: number } | null = null;
       if (isFirstGroup && depositAmount && depositAmount > 0) {
           logStep("Charging deposit as standalone invoice", { depositAmount });
           
@@ -579,11 +580,20 @@ serve(async (req) => {
               logStep(`Using ${cardFirst ? "card" : "ACH"} payment method for deposit (preferred)`, { pmId: depositPaymentMethodId });
             }
 
+            // Detect card and apply surcharge
+            const { calculateCardSurcharge } = await import("../_shared/billing.ts");
+            let isDepositCard = false;
+            let finalDepositAmount = depositAmount;
+            let depositSurcharge = 0;
             if (depositPaymentMethodId) {
-              await stripe.customers.update(stripeCustomerId, {
-                invoice_settings: { default_payment_method: depositPaymentMethodId },
-              });
-              logStep("Set default payment method for deposit invoice", { depositPaymentMethodId });
+              const pmInfo = await stripe.paymentMethods.retrieve(depositPaymentMethodId);
+              isDepositCard = pmInfo.type === "card";
+              if (isDepositCard) {
+                const result = calculateCardSurcharge(depositAmount);
+                finalDepositAmount = result.adjustedAmount;
+                depositSurcharge = result.surcharge;
+                logStep("Card surcharge applied to deposit", { base: depositAmount, surcharge: depositSurcharge, total: finalDepositAmount });
+              }
             }
 
             // Create invoice with isolation and idempotency key to prevent duplicate deposits
@@ -596,13 +606,13 @@ serve(async (req) => {
               idempotencyKey: `${subscription.id}_deposit`,
             });
 
-            // Attach deposit item explicitly to this invoice
+            // Attach deposit item explicitly to this invoice (with surcharge if card)
             await stripe.invoiceItems.create({
               customer: stripeCustomerId,
               invoice: depositInvoice.id,
-              amount: Math.round(depositAmount * 100),
+              amount: Math.round(finalDepositAmount * 100),
               currency: "usd",
-              description: "Security Deposit",
+              description: isDepositCard ? `Security Deposit (includes $${depositSurcharge.toFixed(2)} card processing fee)` : "Security Deposit",
             });
 
             const finalizedInvoice = await stripe.invoices.finalizeInvoice(depositInvoice.id);
@@ -615,6 +625,7 @@ serve(async (req) => {
             logStep("Standalone deposit invoice payment initiated", { invoiceId: paidInvoice.id, status: paidInvoice.status });
 
             depositChargedDuringCreation = true;
+            depositInvoiceResult = { paidInvoice, isCard: isDepositCard, finalAmount: finalDepositAmount };
           } catch (depositError) {
             // Deposit failure is FATAL — subscription cannot proceed without payment
             const msg = depositError instanceof Error ? depositError.message : String(depositError);
