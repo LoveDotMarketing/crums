@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { MessageCircle, X, Loader2, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { trackChatbotOpen } from "@/lib/analytics";
+import { trackChatbotOpen, trackChatbotMessage } from "@/lib/analytics";
 import { supabase } from "@/integrations/supabase/client";
 import "@n8n/chat/style.css";
 
