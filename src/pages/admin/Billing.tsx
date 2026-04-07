@@ -1518,11 +1518,15 @@ export default function Billing() {
                               ?.filter(bh => bh.subscription_id === sub.id)
                               ?.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())?.[0];
 
-                            const hasProcessingPayment = latestPaymentRecord && 
+                            // Only treat payments as "processing" if they're recent (within last 30 minutes)
+                            // Stale pending records from failed attempts should not block the Activate button
+                            const isRecentPayment = latestPaymentRecord && 
+                              (new Date().getTime() - new Date(latestPaymentRecord.created_at).getTime()) < 30 * 60 * 1000;
+                            const hasProcessingPayment = latestPaymentRecord && isRecentPayment &&
                               (latestPaymentRecord.status === "processing" || latestPaymentRecord.status === "pending");
                             
                             // Determine if this subscription is in processing state
-                            // Only show processing for active subs with pending/processing payments
+                            // Only show processing for active subs with recent pending/processing payments
                             const isProcessing = activatedIds.has(sub.id) || 
                               (hasProcessingPayment && !hasSuccessfulPayment);
 
