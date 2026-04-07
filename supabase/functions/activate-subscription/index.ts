@@ -12,47 +12,55 @@ const logStep = (step: string, details?: Record<string, unknown>) => {
   console.log(`[ACTIVATE-SUBSCRIPTION] ${step}${detailsStr}`);
 };
 
-const resolveAchPaymentMethodId = async ({
+const resolvePaymentMethodId = async ({
   stripe,
   supabaseClient,
   stripeCustomerId,
   localCustomerId,
   customerEmail,
+  preferredType,
 }: {
   stripe: Stripe;
   supabaseClient: ReturnType<typeof createClient>;
   stripeCustomerId: string;
   localCustomerId: string;
   customerEmail?: string | null;
+  preferredType?: string | null;
 }) => {
-  // 1) Prefer payment methods already attached to the Stripe customer on the subscription
-  // Check ACH first, then card as fallback
-  const existingAchMethods = await stripe.paymentMethods.list({
+  // Determine lookup order based on customer's preferred payment method type
+  const cardFirst = preferredType === "card";
+  const primaryType = cardFirst ? "card" : "us_bank_account";
+  const fallbackType = cardFirst ? "us_bank_account" : "card";
+  const primaryLabel = cardFirst ? "card" : "ACH";
+  const fallbackLabel = cardFirst ? "ACH" : "card";
+
+  // 1) Check primary payment method type on the Stripe customer
+  const primaryMethods = await stripe.paymentMethods.list({
     customer: stripeCustomerId,
-    type: "us_bank_account",
+    type: primaryType,
     limit: 1,
   });
 
-  if (existingAchMethods.data.length > 0) {
-    const paymentMethodId = existingAchMethods.data[0].id;
-    logStep("Found ACH payment method on subscription customer", { paymentMethodId });
+  if (primaryMethods.data.length > 0) {
+    const paymentMethodId = primaryMethods.data[0].id;
+    logStep(`Found ${primaryLabel} payment method on subscription customer (preferred)`, { paymentMethodId });
     return paymentMethodId;
   }
 
-  // Check for card payment methods
-  const existingCardMethods = await stripe.paymentMethods.list({
+  // 2) Check fallback payment method type
+  const fallbackMethods = await stripe.paymentMethods.list({
     customer: stripeCustomerId,
-    type: "card",
+    type: fallbackType,
     limit: 1,
   });
 
-  if (existingCardMethods.data.length > 0) {
-    const paymentMethodId = existingCardMethods.data[0].id;
-    logStep("Found card payment method on subscription customer", { paymentMethodId });
+  if (fallbackMethods.data.length > 0) {
+    const paymentMethodId = fallbackMethods.data[0].id;
+    logStep(`Found ${fallbackLabel} payment method on subscription customer (fallback)`, { paymentMethodId });
     return paymentMethodId;
   }
 
-  // 2) Fallback to stored ACH setup in customer_applications
+  // 3) Fallback to stored payment method in customer_applications
   let storedPmId: string | null = null;
 
   const { data: appByCustomerRows, error: appByCustomerError } = await supabaseClient
@@ -77,7 +85,7 @@ const resolveAchPaymentMethodId = async ({
       .limit(1);
 
     if (profileError) {
-      logStep("Warning: failed profile lookup for ACH fallback", { error: profileError.message, customerEmail });
+      logStep("Warning: failed profile lookup for PM fallback", { error: profileError.message, customerEmail });
     }
 
     const profileId = profileRows?.[0]?.id;
@@ -99,14 +107,11 @@ const resolveAchPaymentMethodId = async ({
     }
   }
 
-  // Cross-customer payment method resolution REMOVED for security.
-  // Only use methods on the subscription's own Stripe customer or the stored application PM.
-
   if (!storedPmId) {
     throw new Error("Customer has no payment method attached. They need to complete payment setup first. If they previously set up a payment method on a different account, please re-run ACH/card setup for this customer.");
   }
 
-  logStep("Recovered stored ACH payment method from application", { paymentMethodId: storedPmId });
+  logStep("Recovered stored payment method from application", { paymentMethodId: storedPmId });
   return storedPmId;
 };
 
@@ -179,6 +184,20 @@ serve(async (req) => {
       stripeCustomerId: subscription.stripe_customer_id
     });
 
+    // Fetch customer's preferred payment method type
+    let preferredPaymentType: string | null = null;
+    if (subscription.customers?.email) {
+      const { data: appPmType } = await supabaseClient
+        .from("customer_applications")
+        .select("payment_method_type")
+        .eq("customer_id", subscription.customer_id)
+        .order("updated_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      preferredPaymentType = appPmType?.payment_method_type ?? null;
+      logStep("Customer preferred payment type", { preferredPaymentType });
+    }
+
     if (!subscription.stripe_subscription_id) {
       throw new Error("No Stripe subscription ID found");
     }
@@ -204,12 +223,13 @@ serve(async (req) => {
       if (!depositPaid && depositAmount > 0) {
         logStep("Subscription active but deposit unpaid, charging deposit now", { depositAmount });
 
-        const paymentMethodId = await resolveAchPaymentMethodId({
+        const paymentMethodId = await resolvePaymentMethodId({
           stripe,
           supabaseClient,
           stripeCustomerId: subscription.stripe_customer_id,
           localCustomerId: subscription.customer_id,
           customerEmail: subscription.customers?.email,
+          preferredType: preferredPaymentType,
         });
 
         const resolvedPm = await stripe.paymentMethods.retrieve(paymentMethodId);
@@ -331,12 +351,13 @@ serve(async (req) => {
       if (!hasRealPayment) {
         logStep("Subscription active but NO real payment found — charging first period now");
 
-        const paymentMethodId = await resolveAchPaymentMethodId({
+        const paymentMethodId = await resolvePaymentMethodId({
           stripe,
           supabaseClient,
           stripeCustomerId: subscription.stripe_customer_id,
           localCustomerId: subscription.customer_id,
           customerEmail: subscription.customers?.email,
+          preferredType: preferredPaymentType,
         });
 
         // Ensure PM is attached to this Stripe customer
@@ -484,12 +505,13 @@ serve(async (req) => {
       }
     }
 
-    const paymentMethodId = await resolveAchPaymentMethodId({
+    const paymentMethodId = await resolvePaymentMethodId({
       stripe,
       supabaseClient,
       stripeCustomerId: subscription.stripe_customer_id,
       localCustomerId: subscription.customer_id,
       customerEmail: subscription.customers?.email,
+      preferredType: preferredPaymentType,
     });
 
     const resolvedPm = await stripe.paymentMethods.retrieve(paymentMethodId);
@@ -557,6 +579,10 @@ serve(async (req) => {
       newStatus: paidInvoice.status
     });
 
+    // Detect actual payment method type for billing record
+    const pmForRecord = await stripe.paymentMethods.retrieve(paymentMethodId);
+    const recordPaymentMethod = pmForRecord.type === "card" ? "card" : "ach";
+
     // Create billing_history record so UI shows "Processing" immediately
     const { error: bhError } = await supabaseClient.from("billing_history").insert({
       subscription_id: subscriptionId,
@@ -567,7 +593,7 @@ serve(async (req) => {
         ? paidInvoice.payment_intent 
         : paidInvoice.payment_intent?.id ?? null,
       stripe_invoice_id: paidInvoice.id,
-      payment_method: "ach",
+      payment_method: recordPaymentMethod,
     });
 
     if (bhError) {
