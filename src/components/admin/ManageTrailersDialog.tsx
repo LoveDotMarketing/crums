@@ -79,19 +79,40 @@ export function ManageTrailersDialog({
   const [swapToTrailerId, setSwapToTrailerId] = useState<string>("");
   const [customRates, setCustomRates] = useState<Record<string, number>>({});
 
-  // Fetch available trailers
+  // Fetch available trailers (dual-query: generally available + assigned to this customer)
+  const currentTrailerIds = currentItems.map(item => item.trailer_id);
   const { data: availableTrailers, isLoading: loadingTrailers } = useQuery({
-    queryKey: ["available-trailers-for-subscription"],
+    queryKey: ["available-trailers-for-subscription", customerId, currentTrailerIds],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // Query 1: generally available trailers
+      const availablePromise = supabase
         .from("trailers")
         .select("id, trailer_number, type, vin, rental_rate, year, make, model")
         .eq("is_rented", false)
         .in("status", ["available", "pending"])
         .order("trailer_number");
 
-      if (error) throw error;
-      return data;
+      // Query 2: trailers already assigned to this customer (may be rented)
+      const assignedPromise = supabase
+        .from("trailers")
+        .select("id, trailer_number, type, vin, rental_rate, year, make, model")
+        .eq("customer_id", customerId)
+        .order("trailer_number");
+
+      const [availableRes, assignedRes] = await Promise.all([availablePromise, assignedPromise]);
+      if (availableRes.error) throw availableRes.error;
+      if (assignedRes.error) throw assignedRes.error;
+
+      // Merge and deduplicate, excluding trailers already on this subscription
+      const merged = new Map<string, typeof availableRes.data[0]>();
+      for (const t of [...(availableRes.data || []), ...(assignedRes.data || [])]) {
+        if (!currentTrailerIds.includes(t.id)) {
+          merged.set(t.id, t);
+        }
+      }
+      return Array.from(merged.values()).sort((a, b) =>
+        (a.trailer_number || "").localeCompare(b.trailer_number || "")
+      );
     },
     enabled: open && (actionMode === "add" || actionMode === "swap"),
   });
