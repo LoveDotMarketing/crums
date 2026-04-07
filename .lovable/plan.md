@@ -1,50 +1,61 @@
 
 
-## Fix: Stripe Customer Resolution Must Verify Payment Methods Exist
+## Fix: Payment Method Verification is Broken at Two Levels
 
-### Problem
-Abdul's account has **two Stripe customers** for the same email:
-- `cus_U4oBrNhek7Fs0K` — stored in `customer_applications`, but has **no payment methods** (the old PM was detached and is permanently unusable)
-- `cus_U5sQ2ohTsvdzXt` — newer customer created during ACH re-setup, likely has the **active payment method**
+### Root Cause Analysis
 
-The previous fix told the system to prefer the `customer_applications` record, but that record points to the old empty customer. The deposit invoice was created on that customer with no PM → stuck as "Incomplete."
-
-### Immediate Cleanup (Manual in Stripe)
-1. **Cancel** old subscription `sub_1TJKcB` on `cus_U5sQ2ohTsvdzXt` and void its 3 open invoices ($3,800 total)
-2. **Void** the incomplete deposit invoice `in_1TJe45` ($1,400) on `cus_U4oBrNhek7Fs0K`
-3. **Cancel** subscription `sub_1TJe43` on `cus_U4oBrNhek7Fs0K`
-4. Clean up corresponding database records
-
-### Code Fix: `supabase/functions/create-subscription/index.ts`
-
-**Change the Stripe customer resolution logic** (lines 243–292) to verify the chosen customer actually has payment methods attached, not just that the ID exists in Stripe:
+The logs tell the full story of what happened at **Apr 7, 6:27 PM**:
 
 ```text
-Current flow:
-  1. Get stripe_customer_id from customer_applications
-  2. Verify customer exists in Stripe → use it ✓
-  3. Fallback: search by email
+1. Guard check (line 183): DB has stripe_payment_method_id = pm_1TJIqP...
+   → PASSES (but pm_1TJIqP was detached/destroyed during previous cleanup!)
 
-Fixed flow:
-  1. Get stripe_customer_id from customer_applications
-  2. Verify customer exists AND has ≥1 payment method → use it
-  3. If no PM: search ALL Stripe customers by email
-  4. Pick the one that HAS payment methods attached
-  5. Update customer_applications with the correct stripe_customer_id
+2. Stripe customer resolution:
+   - cus_U4oBrNhek7Fs0K → NO payment methods ✗
+   - Email search finds cus_U5sQ2ohTsvdzXt → NO payment methods ✗
+   - Falls through to "Using first Stripe customer (no PMs found)" → CONTINUES ANYWAY
+
+3. Subscription created with payment_behavior: "default_incomplete"
+   → Stripe marks it "Incomplete" because no PM can pay the first invoice
+
+4. Deposit invoice finalized → stripe.invoices.pay() called without a PM
+   → Error: "no default_payment_method set"
+   → Caught silently, logged as WARNING, function returns success
 ```
 
-Specifically:
-- After retrieving `appForStripe.stripe_customer_id`, list payment methods on that customer (`stripe.paymentMethods.list`)
-- If no PMs found, fall through to email search
-- In the email search fallback, iterate results and pick the customer that has PMs
-- After resolving the correct customer, **update** `customer_applications.stripe_customer_id` so future operations use the right one
+**Three bugs working together:**
 
-Also update the **deposit payment method resolution** (lines 478–522):
-- After listing ACH methods on the resolved customer, also check for card methods as fallback
-- Remove the dead-code path that tries to re-attach the stored PM (it's permanently unusable once detached)
+| Bug | Location | Problem |
+|-----|----------|---------|
+| **Stale guard** | Lines 166-206 | Checks if `stripe_payment_method_id` exists in the **database** — never verifies it's actually valid in Stripe |
+| **No hard stop** | Lines 302-318 | When zero Stripe customers have PMs, proceeds anyway instead of failing |
+| **Silent failure** | Lines 577-582 | Deposit charge failure is caught and swallowed — function returns `success: true` even though nothing was charged |
+
+### Solution
+
+**1. Replace the DB-only guard with a real Stripe verification** (lines 166-206)
+
+Instead of checking if `customer_applications.stripe_payment_method_id` is non-null, retrieve the actual PM from Stripe and verify it's still attached. If the stored PM is dead:
+- Auto-reset `payment_setup_status` to `"pending"` and clear the stale PM ID
+- Throw an error telling admin to re-do payment setup
+
+**2. Hard-fail when no Stripe customer has payment methods** (lines 302-318)
+
+When the email search finds customers but none have PMs, do NOT fall through to "use first customer." Instead, throw a clear error: *"No valid payment method found in Stripe. Customer needs to re-complete ACH/card setup."*
+
+Also auto-reset the `payment_setup_status` to `"pending"` so the admin dashboard reflects reality.
+
+**3. Make deposit failure a hard error** (lines 577-582)
+
+If the deposit invoice payment fails due to missing PM, this is not a recoverable situation — the entire subscription should fail. Change the catch block to re-throw the error instead of swallowing it. The subscription and trailer assignments should be rolled back (or at minimum, the function should return an error status).
+
+**4. Also update `confirm-ach-setup` to store `stripe_customer_id`** (lines 170-179)
+
+The confirm function updates `stripe_payment_method_id` and `payment_method_type` but does NOT store the `stripe_customer_id` that the PM is attached to. This means the create-subscription function has to re-discover the customer every time via a multi-step lookup that can pick the wrong one. Store the customer ID at confirmation time to eliminate ambiguity.
 
 ### Files Modified
 | File | Change |
 |------|--------|
-| `supabase/functions/create-subscription/index.ts` | Add PM verification to customer resolution; update app record with correct customer ID; simplify deposit PM lookup |
+| `supabase/functions/create-subscription/index.ts` | Verify PM in Stripe (not just DB), hard-fail when no PMs exist, make deposit failure fatal, auto-reset stale payment status |
+| `supabase/functions/confirm-ach-setup/index.ts` | Store `stripe_customer_id` alongside PM ID during confirmation |
 
