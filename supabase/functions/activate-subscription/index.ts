@@ -579,6 +579,10 @@ serve(async (req) => {
       newStatus: paidInvoice.status
     });
 
+    // Detect actual payment method type for billing record
+    const pmForRecord = await stripe.paymentMethods.retrieve(paymentMethodId);
+    const recordPaymentMethod = pmForRecord.type === "card" ? "card" : "ach";
+
     // Create billing_history record so UI shows "Processing" immediately
     const { error: bhError } = await supabaseClient.from("billing_history").insert({
       subscription_id: subscriptionId,
@@ -589,7 +593,7 @@ serve(async (req) => {
         ? paidInvoice.payment_intent 
         : paidInvoice.payment_intent?.id ?? null,
       stripe_invoice_id: paidInvoice.id,
-      payment_method: "ach",
+      payment_method: recordPaymentMethod,
     });
 
     if (bhError) {
