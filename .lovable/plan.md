@@ -1,61 +1,53 @@
 
 
-## Fix: Payment Method Verification is Broken at Two Levels
+## Clean Up Abdul's (Azptrucking@gmail.com) Broken Stripe State
 
-### Root Cause Analysis
+### Current State
 
-The logs tell the full story of what happened at **Apr 7, 6:27 PM**:
+**Two Stripe customers exist:**
+- `cus_U4oBrNhek7Fs0K` — 1 open invoice ($1,400 deposit)
+- `cus_U5sQ2ohTsvdzXt` — 3 open invoices ($1,400 + $1,000 + $1,400) + 1 active subscription (`sub_1TJeLH...`)
 
-```text
-1. Guard check (line 183): DB has stripe_payment_method_id = pm_1TJIqP...
-   → PASSES (but pm_1TJIqP was detached/destroyed during previous cleanup!)
+**Database:**
+- 1 subscription record (`e62fa1b0`) pointing to `sub_1TJeLH...` with status "active"
+- 1 subscription item (trailer 248088, status "ended", but trailer still marked "rented")
+- 2 billing_history records both "pending" with stale invoice IDs
+- Application still points to `cus_U5sQ2ohTsvdzXt` with a stale PM
 
-2. Stripe customer resolution:
-   - cus_U4oBrNhek7Fs0K → NO payment methods ✗
-   - Email search finds cus_U5sQ2ohTsvdzXt → NO payment methods ✗
-   - Falls through to "Using first Stripe customer (no PMs found)" → CONTINUES ANYWAY
+**Problem:** All 4 invoices are "open" with no valid payment method. The Stripe subscription is "active" but can never collect. Nothing is voidable from the UI because they show as "incomplete."
 
-3. Subscription created with payment_behavior: "default_incomplete"
-   → Stripe marks it "Incomplete" because no PM can pay the first invoice
+### Cleanup Steps
 
-4. Deposit invoice finalized → stripe.invoices.pay() called without a PM
-   → Error: "no default_payment_method set"
-   → Caught silently, logged as WARNING, function returns success
-```
+**1. Void all 4 open invoices in Stripe**
+Use the Stripe tool to void each invoice:
+- `in_1TJeLILjIwiEGQIhBxO83Uuv` ($1,400)
+- `in_1TJKcCLjIwiEGQIhiagYbkcY` ($1,000)
+- `in_1TJKXkLjIwiEGQIhuHI2erQ2` ($1,400)
+- `in_1THDZdLjIwiEGQIhAnYmlqnZ` ($1,400)
+- `in_1TJe45LjIwiEGQIhtglnlTf3` ($1,400 on other customer)
 
-**Three bugs working together:**
+**2. Cancel the Stripe subscription**
+Cancel `sub_1TJeLHLjIwiEGQIh52Int6rL` immediately.
 
-| Bug | Location | Problem |
-|-----|----------|---------|
-| **Stale guard** | Lines 166-206 | Checks if `stripe_payment_method_id` exists in the **database** — never verifies it's actually valid in Stripe |
-| **No hard stop** | Lines 302-318 | When zero Stripe customers have PMs, proceeds anyway instead of failing |
-| **Silent failure** | Lines 577-582 | Deposit charge failure is caught and swallowed — function returns `success: true` even though nothing was charged |
+**3. Clean up database records**
+Via migration:
+- Delete the 2 billing_history records for subscription `e62fa1b0`
+- Delete the subscription_items record
+- Delete the customer_subscriptions record `e62fa1b0`
+- Release trailer 248088: set status to "available", clear customer_id, set is_rented to false
 
-### Solution
+**4. Reset payment setup**
+Via migration:
+- Set `payment_setup_status = 'pending'`, clear `stripe_payment_method_id` and `stripe_customer_id` on the application record
 
-**1. Replace the DB-only guard with a real Stripe verification** (lines 166-206)
+**5. Delete the duplicate Stripe customer**
+Delete `cus_U5sQ2ohTsvdzXt` (the orphan with no valid PMs) so only `cus_U4oBrNhek7Fs0K` remains. Or vice versa — whichever one gets a fresh ACH link.
 
-Instead of checking if `customer_applications.stripe_payment_method_id` is non-null, retrieve the actual PM from Stripe and verify it's still attached. If the stored PM is dead:
-- Auto-reset `payment_setup_status` to `"pending"` and clear the stale PM ID
-- Throw an error telling admin to re-do payment setup
-
-**2. Hard-fail when no Stripe customer has payment methods** (lines 302-318)
-
-When the email search finds customers but none have PMs, do NOT fall through to "use first customer." Instead, throw a clear error: *"No valid payment method found in Stripe. Customer needs to re-complete ACH/card setup."*
-
-Also auto-reset the `payment_setup_status` to `"pending"` so the admin dashboard reflects reality.
-
-**3. Make deposit failure a hard error** (lines 577-582)
-
-If the deposit invoice payment fails due to missing PM, this is not a recoverable situation — the entire subscription should fail. Change the catch block to re-throw the error instead of swallowing it. The subscription and trailer assignments should be rolled back (or at minimum, the function should return an error status).
-
-**4. Also update `confirm-ach-setup` to store `stripe_customer_id`** (lines 170-179)
-
-The confirm function updates `stripe_payment_method_id` and `payment_method_type` but does NOT store the `stripe_customer_id` that the PM is attached to. This means the create-subscription function has to re-discover the customer every time via a multi-step lookup that can pick the wrong one. Store the customer ID at confirmation time to eliminate ambiguity.
+After cleanup, Abdul will need to redo ACH setup, then you can create a fresh subscription.
 
 ### Files Modified
-| File | Change |
-|------|--------|
-| `supabase/functions/create-subscription/index.ts` | Verify PM in Stripe (not just DB), hard-fail when no PMs exist, make deposit failure fatal, auto-reset stale payment status |
-| `supabase/functions/confirm-ach-setup/index.ts` | Store `stripe_customer_id` alongside PM ID during confirmation |
+| Target | Change |
+|--------|--------|
+| Stripe (via tools) | Void 5 invoices, cancel 1 subscription, delete 1 customer |
+| Database (migration) | Delete billing_history, subscription_items, customer_subscriptions records; release trailer; reset application payment status |
 
