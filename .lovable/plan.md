@@ -1,58 +1,53 @@
 
+Fix Stevie’s failed subscription creation by tightening Stripe customer/payment-method matching and exposing the real backend error.
 
-## Fix: Auto-Activate on Subscribe (Eliminate Separate Activate Step)
+Problem
+- Stevie Norwood exists, has trailer 164173 assigned, and has a completed payment setup record.
+- There is no local subscription, no subscription items, and nothing created in Stripe for this attempt.
+- The admin UI only shows a generic “Edge Function returned a non-2xx status code”.
+- Based on the current flow and Stevie’s screenshot showing a $0 immediate charge, the failure is most likely happening at Stripe subscription creation, before any local records are written.
+- The current `create-subscription` flow validates a stored payment method too early and only checks that it belongs to some Stripe customer, not necessarily the exact Stripe customer used for the subscription.
 
-### Problem
-When an admin creates a subscription, the system already creates the Stripe subscription and charges the deposit, but:
-1. It does NOT apply the card surcharge to the deposit (activate-subscription does)
-2. It does NOT create a `billing_history` record for the deposit (activate-subscription does)
-3. When a billing anchor causes a $0 first invoice, the subscription shows as "active" but with no real payment — requiring the admin to press "Activate" to charge the first period
+What to change
 
-The user wants **Subscribe = Activate**. One click, deposit charged, first period charged if needed, done.
+1. Harden `supabase/functions/create-subscription/index.ts`
+- Resolve the final Stripe customer first.
+- Replace the current early PM validation with a helper that resolves a payment method for that exact Stripe customer:
+  - use stored `stripe_payment_method_id` only if `pm.customer === stripeCustomerId`
+  - otherwise search live payment methods on that customer by preferred type first, then fallback type
+  - if a better match is found, sync `customer_applications.stripe_customer_id` and `stripe_payment_method_id`
+  - if no valid PM exists on that customer, return a clear actionable error
+- Use that resolved PM everywhere:
+  - `default_payment_method` on `stripe.subscriptions.create`
+  - deposit charge flow
+  - first-period safety-net flow
 
-### Solution
-Merge the activate-subscription logic into create-subscription so everything happens in one step.
+2. Add stronger logging in `create-subscription`
+- Log each pre-Stripe step:
+  - customer lookup
+  - Stripe customer resolution
+  - payment method resolution
+  - price creation
+  - `stripe.subscriptions.create`
+- Catch Stripe API errors and log the exact Stripe message/code so future failures are diagnosable.
 
-### Changes
+3. Improve admin error handling in `src/components/admin/CreateSubscriptionDialog.tsx`
+- Surface the backend’s actual error message instead of only the generic non-2xx message.
+- Update the client-side guard text from “ACH payment method” to “payment method” since the system supports both ACH and card.
 
-**1. `supabase/functions/create-subscription/index.ts`**
+Why this should fix Stevie
+- Stevie currently has no existing local or Stripe subscription artifacts, so the failed attempt is safe to retry.
+- The most likely issue is stale or mismatched Stripe payment-method/customer linkage, not the trailer assignment itself.
+- Once the function resolves the payment method against the exact Stripe customer being billed, the subscription creation should proceed normally.
 
-In the deposit charging block (lines 538-633):
-- Add card surcharge logic (import `calculateCardSurcharge` from shared billing, detect if PM is card, adjust deposit amount) — matching what activate-subscription does at lines 277-296
-- Create a `billing_history` record after the deposit is charged (matching activate-subscription lines 317-327)
+Technical detail
+- Main file: `supabase/functions/create-subscription/index.ts`
+- Secondary file: `src/components/admin/CreateSubscriptionDialog.tsx`
+- No database migration needed.
+- No UI redesign needed.
+- No GA/chatbot changes needed.
 
-After the Stripe subscription is created and deposit is handled, add a "first period safety net" block:
-- Check if the subscription's first invoice was $0 (due to billing anchor + proration_behavior: "none")
-- If so, create a standalone first-period invoice with all line items and charge it immediately (matching activate-subscription lines 342-462)
-- Apply card surcharge if applicable
-- Create a billing_history record for this charge too
-
-**2. `src/pages/admin/Billing.tsx`**
-
-After `create-subscription` returns successfully:
-- Remove the need to show "Activate" button for newly created subscriptions
-- The `isReadyToActivate` logic (line 1546) already excludes subs where `deposit_paid` is true and status is "active" — so if create-subscription sets these correctly, no Activate button will appear
-
-The Activate button and `activate-subscription` function remain available as a fallback for edge cases (e.g., previously created subscriptions that weren't auto-activated, or retries after failures).
-
-### Technical Detail
-
-The key additions to `create-subscription/index.ts` in the deposit block:
-
-```text
-1. After resolving depositPaymentMethodId:
-   - Retrieve PM info to detect card vs ACH
-   - If card: apply calculateCardSurcharge() to adjust deposit amount
-   
-2. After paying deposit invoice:
-   - Insert billing_history record with correct payment_method type
-
-3. After subscription creation + deposit:
-   - Check if subscription has any real payments via stripe.invoices.list
-   - If no real payments found, create standalone first-period invoice
-   - Apply card surcharge if card PM
-   - Charge and record in billing_history
-```
-
-This is entirely within `create-subscription/index.ts` — no other edge function changes needed.
-
+Expected result after implementation
+- Stevie’s subscription can be created successfully.
+- If Stripe linkage is stale, the system repairs it or returns a precise message.
+- Admins stop seeing the vague generic error and get the real reason immediately.
