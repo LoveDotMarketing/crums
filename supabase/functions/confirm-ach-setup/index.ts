@@ -87,7 +87,9 @@ serve(async (req) => {
     // Determine payment method type from the PM itself or from metadata
     const pmDetails = await stripe.paymentMethods.retrieve(pmId as string);
     const resolvedPmType = pmDetails.type === "card" ? "card" : "ach";
-    logStep("Resolved payment method type", { pmType: resolvedPmType, stripeType: pmDetails.type });
+    // Resolve the stripe_customer_id this PM is attached to
+    const pmStripeCustomerId = typeof pmDetails.customer === "string" ? pmDetails.customer : pmDetails.customer?.id ?? null;
+    logStep("Resolved payment method type", { pmType: resolvedPmType, stripeType: pmDetails.type, pmStripeCustomerId });
 
     // Ensure the payment method is attached to the correct Stripe customer
     try {
@@ -167,7 +169,7 @@ serve(async (req) => {
       }
     }
 
-    // Update the application with the payment method, billing anchor, and payment method type
+    // Update the application with the payment method, billing anchor, payment method type, AND stripe_customer_id
     const { error: updateError } = await supabaseClient
       .from("customer_applications")
       .update({
@@ -175,6 +177,7 @@ serve(async (req) => {
         payment_setup_status: "completed",
         billing_anchor_day: billingAnchorDay || null,
         payment_method_type: resolvedPmType,
+        stripe_customer_id: pmStripeCustomerId,
       })
       .eq("id", application.id);
 

@@ -163,8 +163,13 @@ serve(async (req) => {
     if (custError || !customer) throw new Error("Customer not found");
     logStep("Customer found", { customerId, email: customer.email });
 
-    // Server-side payment method guard: verify customer has ACH or card payment method
-    let hasPaymentMethod = false;
+    // Server-side payment method guard: verify customer has a REAL payment method in Stripe
+    // (not just a DB record — the stored PM may have been detached/destroyed)
+    let verifiedPmId: string | null = null;
+
+    // Look up the stored stripe_payment_method_id from customer_applications
+    let appRecord: { stripe_payment_method_id: string | null; stripe_customer_id: string | null; id: string } | null = null;
+    let appLookupUserId: string | null = null;
 
     if (customer.email) {
       const { data: profileData } = await supabaseClient
@@ -172,37 +177,56 @@ serve(async (req) => {
         .select("id")
         .ilike("email", customer.email)
         .maybeSingle();
-      
+
       if (profileData?.id) {
+        appLookupUserId = profileData.id;
         const { data: appData } = await supabaseClient
           .from("customer_applications")
-          .select("stripe_payment_method_id")
+          .select("stripe_payment_method_id, stripe_customer_id, id")
           .eq("user_id", profileData.id)
           .maybeSingle();
-        
-        if (appData?.stripe_payment_method_id) {
-          hasPaymentMethod = true;
-          logStep("Payment method verified via profile path", { userId: profileData.id });
-        }
+        appRecord = appData;
       }
     }
 
-    // Path 2 (fallback): customer_id → customer_applications
-    if (!hasPaymentMethod) {
+    // Fallback: look up by customer_id
+    if (!appRecord) {
       const { data: appByCustomerId } = await supabaseClient
         .from("customer_applications")
-        .select("stripe_payment_method_id")
+        .select("stripe_payment_method_id, stripe_customer_id, id")
         .eq("customer_id", customerId)
         .maybeSingle();
+      appRecord = appByCustomerId;
+    }
 
-      if (appByCustomerId?.stripe_payment_method_id) {
-        hasPaymentMethod = true;
-        logStep("Payment method verified via customer_id path", { customerId });
+    // Verify the stored PM is actually alive in Stripe
+    if (appRecord?.stripe_payment_method_id) {
+      try {
+        const pm = await stripe.paymentMethods.retrieve(appRecord.stripe_payment_method_id);
+        if (pm.customer) {
+          verifiedPmId = pm.id;
+          logStep("Payment method verified in Stripe", { pmId: pm.id, stripeCustomer: pm.customer });
+        } else {
+          logStep("Stored PM exists but is DETACHED (no customer) — treating as invalid", { pmId: pm.id });
+        }
+      } catch (pmErr: any) {
+        logStep("Stored PM retrieval failed — PM is dead", { pmId: appRecord.stripe_payment_method_id, error: pmErr.message });
       }
     }
 
-    if (!hasPaymentMethod) {
-      throw new Error("Customer has no payment method linked. Set up ACH or credit card on their profile first.");
+    if (!verifiedPmId) {
+      // Auto-reset the stale payment setup status so admin dashboard reflects reality
+      if (appRecord?.id) {
+        await supabaseClient
+          .from("customer_applications")
+          .update({
+            payment_setup_status: "pending",
+            stripe_payment_method_id: null,
+          })
+          .eq("id", appRecord.id);
+        logStep("Auto-reset stale payment_setup_status to pending", { applicationId: appRecord.id });
+      }
+      throw new Error("Customer's payment method is no longer valid in Stripe. Their payment setup has been reset — please have them re-link ACH or card before creating a subscription.");
     }
 
     // Resolve global anchor day from admin input or customer application
@@ -299,22 +323,20 @@ serve(async (req) => {
         }
       }
 
-      // If none have PMs, use the first non-deleted one (or create new)
+      // Hard-fail: no Stripe customer has payment methods — cannot proceed
       if (!stripeCustomerId) {
-        const firstValid = stripeCustomers.data.find(sc => !(sc as any).deleted);
-        if (firstValid) {
-          stripeCustomerId = firstValid.id;
-          logStep("Using first Stripe customer (no PMs found on any)", { stripeCustomerId });
-        } else {
-          const newCustomer = await stripe.customers.create({
-            email: customer.email,
-            name: customer.full_name,
-            phone: customer.phone || undefined,
-            metadata: { internal_customer_id: customerId },
-          });
-          stripeCustomerId = newCustomer.id;
-          logStep("Created new Stripe customer", { stripeCustomerId });
+        // Auto-reset payment setup status
+        if (appRecord?.id) {
+          await supabaseClient
+            .from("customer_applications")
+            .update({
+              payment_setup_status: "pending",
+              stripe_payment_method_id: null,
+            })
+            .eq("id", appRecord.id);
+          logStep("Auto-reset payment_setup_status (no Stripe customer has PMs)", { applicationId: appRecord.id });
         }
+        throw new Error("No valid payment method found on any Stripe customer profile for this email. Customer needs to re-complete ACH/card setup.");
       }
 
       // Update customer_applications with the correct stripe_customer_id
@@ -575,10 +597,19 @@ serve(async (req) => {
 
             depositChargedDuringCreation = true;
           } catch (depositError) {
-            // Don't fail the entire subscription creation if deposit charge fails
-            // Admin can retry via Activate button
+            // Deposit failure is FATAL — subscription cannot proceed without payment
             const msg = depositError instanceof Error ? depositError.message : String(depositError);
-            logStep("WARNING: Failed to charge deposit during creation, admin can retry via Activate", { error: msg });
+            logStep("FATAL: Deposit charge failed, aborting subscription", { error: msg });
+            
+            // Clean up: cancel the Stripe subscription we just created
+            try {
+              await stripe.subscriptions.cancel(subscription.id);
+              logStep("Rolled back Stripe subscription after deposit failure", { subscriptionId: subscription.id });
+            } catch (cancelErr: any) {
+              logStep("Warning: could not cancel Stripe subscription during rollback", { error: cancelErr.message });
+            }
+            
+            throw new Error(`Deposit charge failed: ${msg}. Subscription was not created. Please verify the customer's payment method is valid.`);
           }
       }
 
