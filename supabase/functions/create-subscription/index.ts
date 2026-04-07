@@ -237,18 +237,21 @@ serve(async (req) => {
     logStep("Trailers found", { count: trailers.length });
 
     // Find or create Stripe customer
-    // IMPORTANT: Prefer the Stripe customer ID from customer_applications (where
-    // the payment method is attached) over a generic email search, which can
-    // return a different/newer Stripe customer that has no payment method.
+    // IMPORTANT: The resolved Stripe customer MUST have payment methods attached.
+    // If the stored customer_applications ID has no PMs (e.g. after a detach/reset),
+    // we search all Stripe customers by email to find the one with active PMs.
     let stripeCustomerId: string | null = null;
+    let profileIdForStripe: string | null = null;
 
-    // Path 1: Use the stripe_customer_id from customer_applications (has PM attached)
+    // Path 1: Try the stripe_customer_id from customer_applications
     if (customer.email) {
       const { data: profileForStripe } = await supabaseClient
         .from("profiles")
         .select("id")
         .ilike("email", customer.email)
         .maybeSingle();
+
+      profileIdForStripe = profileForStripe?.id ?? null;
 
       if (profileForStripe?.id) {
         const { data: appForStripe } = await supabaseClient
@@ -259,12 +262,20 @@ serve(async (req) => {
           .maybeSingle();
 
         if (appForStripe?.stripe_customer_id) {
-          // Verify this Stripe customer actually exists
           try {
             const existingCust = await stripe.customers.retrieve(appForStripe.stripe_customer_id);
             if (existingCust && !(existingCust as any).deleted) {
-              stripeCustomerId = appForStripe.stripe_customer_id;
-              logStep("Using Stripe customer from application record (has payment method)", { stripeCustomerId });
+              // Verify this customer actually has payment methods
+              const pms = await stripe.paymentMethods.list({
+                customer: appForStripe.stripe_customer_id,
+                limit: 5,
+              });
+              if (pms.data.length > 0) {
+                stripeCustomerId = appForStripe.stripe_customer_id;
+                logStep("Using Stripe customer from application record (verified has PMs)", { stripeCustomerId, pmCount: pms.data.length });
+              } else {
+                logStep("Application stripe_customer_id exists but has NO payment methods, falling back to email search", { custId: appForStripe.stripe_customer_id });
+              }
             }
           } catch {
             logStep("Application stripe_customer_id is invalid, falling back to search");
@@ -273,21 +284,50 @@ serve(async (req) => {
       }
     }
 
-    // Path 2: Fallback — search Stripe by email
+    // Path 2: Fallback — search ALL Stripe customers by email, pick the one with PMs
     if (!stripeCustomerId) {
-      const stripeCustomers = await stripe.customers.list({ email: customer.email, limit: 1 });
-      if (stripeCustomers.data.length > 0) {
-        stripeCustomerId = stripeCustomers.data[0].id;
-        logStep("Found existing Stripe customer via email search", { stripeCustomerId });
-      } else {
-        const newCustomer = await stripe.customers.create({
-          email: customer.email,
-          name: customer.full_name,
-          phone: customer.phone || undefined,
-          metadata: { internal_customer_id: customerId },
-        });
-        stripeCustomerId = newCustomer.id;
-        logStep("Created new Stripe customer", { stripeCustomerId });
+      const stripeCustomers = await stripe.customers.list({ email: customer.email, limit: 10 });
+      logStep("Email search returned Stripe customers", { count: stripeCustomers.data.length });
+
+      for (const sc of stripeCustomers.data) {
+        if ((sc as any).deleted) continue;
+        const pms = await stripe.paymentMethods.list({ customer: sc.id, limit: 1 });
+        if (pms.data.length > 0) {
+          stripeCustomerId = sc.id;
+          logStep("Found Stripe customer with payment methods via email search", { stripeCustomerId });
+          break;
+        }
+      }
+
+      // If none have PMs, use the first non-deleted one (or create new)
+      if (!stripeCustomerId) {
+        const firstValid = stripeCustomers.data.find(sc => !(sc as any).deleted);
+        if (firstValid) {
+          stripeCustomerId = firstValid.id;
+          logStep("Using first Stripe customer (no PMs found on any)", { stripeCustomerId });
+        } else {
+          const newCustomer = await stripe.customers.create({
+            email: customer.email,
+            name: customer.full_name,
+            phone: customer.phone || undefined,
+            metadata: { internal_customer_id: customerId },
+          });
+          stripeCustomerId = newCustomer.id;
+          logStep("Created new Stripe customer", { stripeCustomerId });
+        }
+      }
+
+      // Update customer_applications with the correct stripe_customer_id
+      if (profileIdForStripe) {
+        const { error: updateAppErr } = await supabaseClient
+          .from("customer_applications")
+          .update({ stripe_customer_id: stripeCustomerId })
+          .eq("user_id", profileIdForStripe);
+        if (updateAppErr) {
+          logStep("Warning: could not update application stripe_customer_id", { error: updateAppErr.message });
+        } else {
+          logStep("Updated customer_applications with correct stripe_customer_id", { stripeCustomerId });
+        }
       }
     }
 
@@ -476,7 +516,7 @@ serve(async (req) => {
           logStep("Charging deposit as standalone invoice", { depositAmount });
           
           try {
-            // Resolve and attach the customer's ACH payment method before charging
+            // Resolve payment method: check ACH first, then card as fallback
             const achMethods = await stripe.paymentMethods.list({
               customer: stripeCustomerId,
               type: "us_bank_account",
@@ -485,39 +525,16 @@ serve(async (req) => {
 
             let depositPaymentMethodId: string | null = achMethods.data[0]?.id ?? null;
 
-            // If no ACH method on this Stripe customer, find it from the application record
-            if (!depositPaymentMethodId && customer.email) {
-              const { data: profileData } = await supabaseClient
-                .from("profiles")
-                .select("id")
-                .ilike("email", customer.email)
-                .maybeSingle();
-              
-              if (profileData?.id) {
-                const { data: appData } = await supabaseClient
-                  .from("customer_applications")
-                  .select("stripe_payment_method_id")
-                  .eq("user_id", profileData.id)
-                  .not("stripe_payment_method_id", "is", null)
-                  .maybeSingle();
-                
-                if (appData?.stripe_payment_method_id) {
-                  // Try to attach the stored PM to this Stripe customer
-                  try {
-                    const storedPm = await stripe.paymentMethods.retrieve(appData.stripe_payment_method_id);
-                    const pmCustomer = typeof storedPm.customer === "string" ? storedPm.customer : storedPm.customer?.id ?? null;
-                    if (!pmCustomer) {
-                      await stripe.paymentMethods.attach(appData.stripe_payment_method_id, { customer: stripeCustomerId });
-                    } else if (pmCustomer !== stripeCustomerId) {
-                      await stripe.paymentMethods.detach(appData.stripe_payment_method_id);
-                      await stripe.paymentMethods.attach(appData.stripe_payment_method_id, { customer: stripeCustomerId });
-                    }
-                    depositPaymentMethodId = appData.stripe_payment_method_id;
-                    logStep("Attached stored ACH method to Stripe customer for deposit", { pmId: depositPaymentMethodId });
-                  } catch (attachErr: any) {
-                    logStep("Warning: could not attach stored PM for deposit", { error: attachErr.message });
-                  }
-                }
+            // Fallback: check for card payment methods
+            if (!depositPaymentMethodId) {
+              const cardMethods = await stripe.paymentMethods.list({
+                customer: stripeCustomerId,
+                type: "card",
+                limit: 1,
+              });
+              depositPaymentMethodId = cardMethods.data[0]?.id ?? null;
+              if (depositPaymentMethodId) {
+                logStep("Using card payment method for deposit (no ACH found)", { pmId: depositPaymentMethodId });
               }
             }
 
