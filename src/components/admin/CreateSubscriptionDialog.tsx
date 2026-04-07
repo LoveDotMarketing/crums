@@ -189,7 +189,7 @@ export function CreateSubscriptionDialog({ onSuccess, mode = "dialog", onCancel 
           supabase
             .from("trailers")
             .select(cols)
-            .eq("status", "available")
+            .in("status", ["available", "pending"])
             .is("customer_id", null)
             .order("trailer_number"),
           supabase
@@ -216,7 +216,7 @@ export function CreateSubscriptionDialog({ onSuccess, mode = "dialog", onCancel 
         const { data, error } = await supabase
           .from("trailers")
           .select(cols)
-          .eq("status", "available")
+          .in("status", ["available", "pending"])
           .is("customer_id", null)
           .order("trailer_number");
 
