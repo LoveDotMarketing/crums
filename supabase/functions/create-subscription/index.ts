@@ -535,6 +535,7 @@ serve(async (req) => {
       // Uses idempotency key to prevent duplicate deposit charges.
       // ==========================================
       let depositChargedDuringCreation = false;
+      let depositInvoiceResult: { paidInvoice: any; isCard: boolean; finalAmount: number } | null = null;
       if (isFirstGroup && depositAmount && depositAmount > 0) {
           logStep("Charging deposit as standalone invoice", { depositAmount });
           
@@ -579,11 +580,20 @@ serve(async (req) => {
               logStep(`Using ${cardFirst ? "card" : "ACH"} payment method for deposit (preferred)`, { pmId: depositPaymentMethodId });
             }
 
+            // Detect card and apply surcharge
+            const { calculateCardSurcharge } = await import("../_shared/billing.ts");
+            let isDepositCard = false;
+            let finalDepositAmount = depositAmount;
+            let depositSurcharge = 0;
             if (depositPaymentMethodId) {
-              await stripe.customers.update(stripeCustomerId, {
-                invoice_settings: { default_payment_method: depositPaymentMethodId },
-              });
-              logStep("Set default payment method for deposit invoice", { depositPaymentMethodId });
+              const pmInfo = await stripe.paymentMethods.retrieve(depositPaymentMethodId);
+              isDepositCard = pmInfo.type === "card";
+              if (isDepositCard) {
+                const result = calculateCardSurcharge(depositAmount);
+                finalDepositAmount = result.adjustedAmount;
+                depositSurcharge = result.surcharge;
+                logStep("Card surcharge applied to deposit", { base: depositAmount, surcharge: depositSurcharge, total: finalDepositAmount });
+              }
             }
 
             // Create invoice with isolation and idempotency key to prevent duplicate deposits
@@ -596,13 +606,13 @@ serve(async (req) => {
               idempotencyKey: `${subscription.id}_deposit`,
             });
 
-            // Attach deposit item explicitly to this invoice
+            // Attach deposit item explicitly to this invoice (with surcharge if card)
             await stripe.invoiceItems.create({
               customer: stripeCustomerId,
               invoice: depositInvoice.id,
-              amount: Math.round(depositAmount * 100),
+              amount: Math.round(finalDepositAmount * 100),
               currency: "usd",
-              description: "Security Deposit",
+              description: isDepositCard ? `Security Deposit (includes $${depositSurcharge.toFixed(2)} card processing fee)` : "Security Deposit",
             });
 
             const finalizedInvoice = await stripe.invoices.finalizeInvoice(depositInvoice.id);
@@ -615,6 +625,7 @@ serve(async (req) => {
             logStep("Standalone deposit invoice payment initiated", { invoiceId: paidInvoice.id, status: paidInvoice.status });
 
             depositChargedDuringCreation = true;
+            depositInvoiceResult = { paidInvoice, isCard: isDepositCard, finalAmount: finalDepositAmount };
           } catch (depositError) {
             // Deposit failure is FATAL — subscription cannot proceed without payment
             const msg = depositError instanceof Error ? depositError.message : String(depositError);
@@ -729,6 +740,151 @@ serve(async (req) => {
           .from("trailers")
           .update({ is_rented: true, customer_id: customerId, status: "rented" })
           .eq("id", trailer.id);
+      }
+
+      // ==========================================
+      // POST-CREATION: billing_history for deposit + first-period safety net
+      // ==========================================
+      if (isFirstGroup && depositInvoiceResult && custSub) {
+        await supabaseClient.from("billing_history").insert({
+          subscription_id: custSub.id,
+          amount: depositInvoiceResult.finalAmount,
+          net_amount: depositInvoiceResult.finalAmount,
+          status: "processing",
+          stripe_payment_intent_id: typeof depositInvoiceResult.paidInvoice.payment_intent === "string"
+            ? depositInvoiceResult.paidInvoice.payment_intent
+            : depositInvoiceResult.paidInvoice.payment_intent?.id ?? null,
+          stripe_invoice_id: depositInvoiceResult.paidInvoice.id,
+          payment_method: depositInvoiceResult.isCard ? "card" : "ach",
+        });
+        logStep("Created billing_history record for deposit", { subscriptionId: custSub.id });
+      }
+
+      // FIRST-PERIOD SAFETY NET: If billing anchor caused a $0 first invoice,
+      // charge the first period immediately so the admin doesn't need to "Activate"
+      if (isFirstGroup && custSub) {
+        const invoices = await stripe.invoices.list({
+          subscription: subscription.id,
+          limit: 10,
+        });
+        const hasRealPayment = invoices.data.some(inv => inv.amount_paid > 0);
+
+        if (!hasRealPayment) {
+          logStep("No real payment on subscription — charging first period now");
+
+          // Resolve payment method for first period charge
+          let fpPaymentMethodId = verifiedPmId;
+          
+          // Re-check preferred type for first period
+          let fpPreferredType: string | null = null;
+          const { data: fpPmPref } = await supabaseClient
+            .from("customer_applications")
+            .select("payment_method_type")
+            .eq("customer_id", customerId)
+            .order("updated_at", { ascending: false })
+            .limit(1)
+            .maybeSingle();
+          fpPreferredType = fpPmPref?.payment_method_type ?? null;
+
+          const fpCardFirst = fpPreferredType === "card";
+          const fpPrimaryType = fpCardFirst ? "card" : "us_bank_account";
+          const fpFallbackType = fpCardFirst ? "us_bank_account" : "card";
+
+          const fpPrimaryMethods = await stripe.paymentMethods.list({
+            customer: stripeCustomerId,
+            type: fpPrimaryType,
+            limit: 1,
+          });
+          fpPaymentMethodId = fpPrimaryMethods.data[0]?.id ?? null;
+          if (!fpPaymentMethodId) {
+            const fpFallbackMethods = await stripe.paymentMethods.list({
+              customer: stripeCustomerId,
+              type: fpFallbackType,
+              limit: 1,
+            });
+            fpPaymentMethodId = fpFallbackMethods.data[0]?.id ?? null;
+          }
+
+          if (fpPaymentMethodId) {
+            await stripe.customers.update(stripeCustomerId, {
+              invoice_settings: { default_payment_method: fpPaymentMethodId },
+            });
+
+            // Get subscription items to build first-period charge
+            const stripeSubExpanded = await stripe.subscriptions.retrieve(subscription.id, {
+              expand: ["items.data.price"],
+            });
+
+            const firstPeriodInvoice = await stripe.invoices.create({
+              customer: stripeCustomerId,
+              auto_advance: false,
+              pending_invoice_items_behavior: "exclude",
+              metadata: { type: "first_period_charge", subscription_id: subscription.id },
+            });
+
+            let totalAmount = 0;
+            for (const item of stripeSubExpanded.items.data) {
+              const unitAmount = item.price?.unit_amount || 0;
+              if (unitAmount > 0) {
+                await stripe.invoiceItems.create({
+                  customer: stripeCustomerId,
+                  invoice: firstPeriodInvoice.id,
+                  amount: unitAmount,
+                  currency: "usd",
+                  description: item.price?.product
+                    ? `First period - ${typeof item.price.product === "string" ? item.price.product : (item.price.product as any).name || "Lease"}`
+                    : "First period charge",
+                });
+                totalAmount += unitAmount;
+              }
+            }
+
+            // Detect card and apply surcharge
+            const fpPmInfo = await stripe.paymentMethods.retrieve(fpPaymentMethodId);
+            const fpIsCard = fpPmInfo.type === "card";
+            if (fpIsCard && totalAmount > 0) {
+              const baseAmount = totalAmount / 100;
+              const adjustedAmount = Math.round(((baseAmount + 0.30) / (1 - 0.029)) * 100);
+              const surcharge = adjustedAmount - totalAmount;
+              if (surcharge > 0) {
+                await stripe.invoiceItems.create({
+                  customer: stripeCustomerId,
+                  invoice: firstPeriodInvoice.id,
+                  amount: surcharge,
+                  currency: "usd",
+                  description: "Card processing fee",
+                });
+                totalAmount += surcharge;
+                logStep("Card surcharge applied to first period", { surcharge: surcharge / 100 });
+              }
+            }
+
+            // Sanity ceiling
+            const FIRST_PERIOD_CEILING_CENTS = 10000 * 100;
+            if (totalAmount > FIRST_PERIOD_CEILING_CENTS) {
+              logStep("First period exceeds ceiling, skipping auto-charge", { totalAmount: totalAmount / 100 });
+            } else if (totalAmount > 0) {
+              const finalized = await stripe.invoices.finalizeInvoice(firstPeriodInvoice.id);
+              const paid = await stripe.invoices.pay(finalized.id, { payment_method: fpPaymentMethodId });
+              logStep("First period invoice charged", { invoiceId: paid.id, status: paid.status, amountPaid: paid.amount_paid / 100 });
+
+              await supabaseClient.from("billing_history").insert({
+                subscription_id: custSub.id,
+                amount: paid.amount_due / 100,
+                net_amount: paid.amount_due / 100,
+                status: "processing",
+                stripe_payment_intent_id: typeof paid.payment_intent === "string"
+                  ? paid.payment_intent
+                  : paid.payment_intent?.id ?? null,
+                stripe_invoice_id: paid.id,
+                payment_method: fpIsCard ? "card" : "ach",
+              });
+              logStep("Created billing_history record for first period");
+            }
+          } else {
+            logStep("Warning: no payment method found for first-period charge, will require manual activation");
+          }
+        }
       }
 
       // Track discount if applied (only on first group)
