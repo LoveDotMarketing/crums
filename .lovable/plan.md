@@ -1,33 +1,58 @@
 
 
-## Fix: Payment Method Selection Ignores Customer Preference
+## Fix: Auto-Activate on Subscribe (Eliminate Separate Activate Step)
 
 ### Problem
-Gerald Porter's `payment_method_type` is set to `card` in the database, but both `create-subscription` and `activate-subscription` always pick ACH payment methods first (via `resolveAchPaymentMethodId`). Gerald has an unverified ACH method AND a working card on file. The system chose the ACH method, which failed — so neither the $1,000 deposit nor the $833 first invoice were successfully charged.
+When an admin creates a subscription, the system already creates the Stripe subscription and charges the deposit, but:
+1. It does NOT apply the card surcharge to the deposit (activate-subscription does)
+2. It does NOT create a `billing_history` record for the deposit (activate-subscription does)
+3. When a billing anchor causes a $0 first invoice, the subscription shows as "active" but with no real payment — requiring the admin to press "Activate" to charge the first period
 
-### Root Cause
-The `resolveAchPaymentMethodId` function in `activate-subscription/index.ts` (lines 15-111) hardcodes the priority: ACH first, card second. It never checks the customer's `payment_method_type` preference from the database.
+The user wants **Subscribe = Activate**. One click, deposit charged, first period charged if needed, done.
 
-Similarly, `create-subscription/index.ts` picks the verified PM from `customer_applications.stripe_payment_method_id` without considering the preferred type.
+### Solution
+Merge the activate-subscription logic into create-subscription so everything happens in one step.
 
-### Fix (2 files)
+### Changes
 
-**1. `supabase/functions/activate-subscription/index.ts`**
-- Rename `resolveAchPaymentMethodId` → `resolvePaymentMethodId`
-- Accept an optional `preferredType` parameter (`"ach"` or `"card"`)
-- When `preferredType` is `"card"`, check card methods first, then ACH as fallback
-- When `preferredType` is `"ach"` or unset, keep existing behavior (ACH first, card fallback)
-- Where this function is called (3 places in the file), pass the customer's `payment_method_type` from the subscription's customer record
+**1. `supabase/functions/create-subscription/index.ts`**
 
-**2. `supabase/functions/create-subscription/index.ts`**
-- After looking up the customer, also fetch `payment_method_type` from the `customer_applications` table
-- When the customer's preferred type is `card`, look for a card PM on the Stripe customer to use as `default_payment_method` on the subscription and deposit invoice (instead of always using the stored PM which may be ACH)
+In the deposit charging block (lines 538-633):
+- Add card surcharge logic (import `calculateCardSurcharge` from shared billing, detect if PM is card, adjust deposit amount) — matching what activate-subscription does at lines 277-296
+- Create a `billing_history` record after the deposit is charged (matching activate-subscription lines 317-327)
 
-### Immediate Data Fix
-After deploying, Gerald Porter's subscription needs to be retried:
-1. The failed deposit and subscription invoices need to be voided/retried using his card payment method
-2. Or run sync-payments after the fix to let the system retry with the correct PM
+After the Stripe subscription is created and deposit is handled, add a "first period safety net" block:
+- Check if the subscription's first invoice was $0 (due to billing anchor + proration_behavior: "none")
+- If so, create a standalone first-period invoice with all line items and charge it immediately (matching activate-subscription lines 342-462)
+- Apply card surcharge if applicable
+- Create a billing_history record for this charge too
 
-### Why This Matters
-Any customer who has both ACH and card on file but prefers card will hit this same bug — the system will always use the (potentially unverified) ACH method.
+**2. `src/pages/admin/Billing.tsx`**
+
+After `create-subscription` returns successfully:
+- Remove the need to show "Activate" button for newly created subscriptions
+- The `isReadyToActivate` logic (line 1546) already excludes subs where `deposit_paid` is true and status is "active" — so if create-subscription sets these correctly, no Activate button will appear
+
+The Activate button and `activate-subscription` function remain available as a fallback for edge cases (e.g., previously created subscriptions that weren't auto-activated, or retries after failures).
+
+### Technical Detail
+
+The key additions to `create-subscription/index.ts` in the deposit block:
+
+```text
+1. After resolving depositPaymentMethodId:
+   - Retrieve PM info to detect card vs ACH
+   - If card: apply calculateCardSurcharge() to adjust deposit amount
+   
+2. After paying deposit invoice:
+   - Insert billing_history record with correct payment_method type
+
+3. After subscription creation + deposit:
+   - Check if subscription has any real payments via stripe.invoices.list
+   - If no real payments found, create standalone first-period invoice
+   - Apply card surcharge if card PM
+   - Charge and record in billing_history
+```
+
+This is entirely within `create-subscription/index.ts` — no other edge function changes needed.
 
