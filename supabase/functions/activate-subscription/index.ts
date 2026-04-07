@@ -223,12 +223,13 @@ serve(async (req) => {
       if (!depositPaid && depositAmount > 0) {
         logStep("Subscription active but deposit unpaid, charging deposit now", { depositAmount });
 
-        const paymentMethodId = await resolveAchPaymentMethodId({
+        const paymentMethodId = await resolvePaymentMethodId({
           stripe,
           supabaseClient,
           stripeCustomerId: subscription.stripe_customer_id,
           localCustomerId: subscription.customer_id,
           customerEmail: subscription.customers?.email,
+          preferredType: preferredPaymentType,
         });
 
         const resolvedPm = await stripe.paymentMethods.retrieve(paymentMethodId);
@@ -350,12 +351,13 @@ serve(async (req) => {
       if (!hasRealPayment) {
         logStep("Subscription active but NO real payment found — charging first period now");
 
-        const paymentMethodId = await resolveAchPaymentMethodId({
+        const paymentMethodId = await resolvePaymentMethodId({
           stripe,
           supabaseClient,
           stripeCustomerId: subscription.stripe_customer_id,
           localCustomerId: subscription.customer_id,
           customerEmail: subscription.customers?.email,
+          preferredType: preferredPaymentType,
         });
 
         // Ensure PM is attached to this Stripe customer
@@ -503,12 +505,13 @@ serve(async (req) => {
       }
     }
 
-    const paymentMethodId = await resolveAchPaymentMethodId({
+    const paymentMethodId = await resolvePaymentMethodId({
       stripe,
       supabaseClient,
       stripeCustomerId: subscription.stripe_customer_id,
       localCustomerId: subscription.customer_id,
       customerEmail: subscription.customers?.email,
+      preferredType: preferredPaymentType,
     });
 
     const resolvedPm = await stripe.paymentMethods.retrieve(paymentMethodId);
