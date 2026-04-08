@@ -174,6 +174,34 @@ serve(async (req: Request) => {
       // Don't fail - user was created, just role assignment failed
     }
 
+    // Auto-create staff_profiles row if one doesn't exist
+    const { data: existingProfile } = await supabaseAdmin
+      .from("staff_profiles")
+      .select("id")
+      .eq("user_id", userId)
+      .single();
+
+    if (!existingProfile) {
+      const code = 'CRUMS-' + Math.random().toString(36).substring(2, 8).toUpperCase();
+      const position = role === 'mechanic' ? 'mechanic' : role === 'sales' ? 'salesman' : 'administrator';
+
+      const { error: profileInsertError } = await supabaseAdmin
+        .from("staff_profiles")
+        .insert({
+          user_id: userId,
+          referral_code: code,
+          position,
+          is_active: true,
+          commission_rate: role === 'sales' ? 0.15 : 0,
+        });
+
+      if (profileInsertError) {
+        console.error("[invite-staff] Staff profile insert error:", profileInsertError);
+      } else {
+        console.log(`[invite-staff] Created staff_profiles for ${email} with code ${code}`);
+      }
+    }
+
     // Generate password reset link
     const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
       type: "recovery",

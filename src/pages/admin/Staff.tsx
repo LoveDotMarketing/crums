@@ -435,8 +435,34 @@ export default function Staff() {
                     {staffMembers.map((member) => (
                       <TableRow 
                         key={member.id} 
-                        className={member.staffProfileId ? "cursor-pointer hover:bg-muted/50" : ""} 
-                        onClick={() => member.staffProfileId && navigate(`/dashboard/admin/staff/${member.staffProfileId}`)}
+                        className="cursor-pointer hover:bg-muted/50"
+                        onClick={async () => {
+                          if (member.staffProfileId) {
+                            navigate(`/dashboard/admin/staff/${member.staffProfileId}`);
+                          } else {
+                            // Auto-create staff profile on click for legacy staff without one
+                            try {
+                              const code = 'CRUMS-' + Math.random().toString(36).substring(2, 8).toUpperCase();
+                              const position = member.role === 'mechanic' ? 'mechanic' : member.role === 'sales' ? 'salesman' : 'administrator';
+                              const { data, error } = await supabase
+                                .from("staff_profiles")
+                                .insert({
+                                  user_id: member.id,
+                                  referral_code: code,
+                                  position,
+                                  is_active: true,
+                                  commission_rate: member.role === 'sales' ? 0.15 : 0,
+                                })
+                                .select("id")
+                                .single();
+                              if (error) throw error;
+                              queryClient.invalidateQueries({ queryKey: ["staff-members"] });
+                              navigate(`/dashboard/admin/staff/${data.id}`);
+                            } catch (err) {
+                              toast({ title: "Error", description: "Could not create staff profile.", variant: "destructive" });
+                            }
+                          }
+                        }}
                       >
                         <TableCell className="font-medium">
                           <div className="flex items-center gap-2">
