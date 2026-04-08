@@ -751,16 +751,8 @@ serve(async (req) => {
           // Resolve payment method for first period charge
           let fpPaymentMethodId = verifiedPmId;
           
-          // Re-check preferred type for first period
-          let fpPreferredType: string | null = null;
-          const { data: fpPmPref } = await supabaseClient
-            .from("customer_applications")
-            .select("payment_method_type")
-            .eq("customer_id", customerId)
-            .order("updated_at", { ascending: false })
-            .limit(1)
-            .maybeSingle();
-          fpPreferredType = fpPmPref?.payment_method_type ?? null;
+          // Use the appRecord already resolved at the top of the function
+          let fpPreferredType: string | null = appRecord?.payment_method_type ?? null;
 
           const fpCardFirst = fpPreferredType === "card";
           const fpPrimaryType = fpCardFirst ? "card" : "us_bank_account";
