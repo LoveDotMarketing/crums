@@ -54,7 +54,8 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
   const hasAccess = !requiredRole || 
     userRole === requiredRole || 
     (requiredRole === "admin" && isAdminLike(userRole)) ||
-    (isImpersonating && effectiveRole === requiredRole);
+    (isImpersonating && effectiveRole === requiredRole) ||
+    (isImpersonating && requiredRole === "admin" && isAdminLike(effectiveRole));
 
   if (!user || (requiredRole && !hasAccess)) {
     return null;
