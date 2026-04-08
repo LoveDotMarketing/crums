@@ -9,6 +9,7 @@ import {
   LogOut,
   Wrench,
   DollarSign,
+  CreditCard,
   BarChart3,
   Send,
   UserCog,
@@ -94,6 +95,7 @@ const menuGroups: MenuGroup[] = [
     icon: DollarSign,
     items: [
       { title: "Billing", url: "/dashboard/admin/billing", icon: DollarSign, sectionKey: "billing" },
+      { title: "Payments", url: "/dashboard/admin/payments", icon: CreditCard, sectionKey: "payments" },
     ]
   },
   {
