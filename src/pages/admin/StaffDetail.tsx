@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -14,7 +14,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Copy, Loader2, Star, DollarSign, Users, TrendingUp, FileText, Sparkles } from "lucide-react";
+import { ArrowLeft, Copy, Loader2, Star, DollarSign, Users, TrendingUp, FileText, Sparkles, Settings2 } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { ALL_SECTION_KEYS, SECTION_LABELS, SectionKey } from "@/hooks/useStaffPermissions";
 
 export default function StaffDetail() {
   const { id } = useParams<{ id: string }>();
@@ -320,6 +322,11 @@ export default function StaffDetail() {
               </CardContent>
             </Card>
           </div>
+
+          {/* Permissions Panel — only show for non-admin roles */}
+          {staffData.role !== "admin" && (
+            <StaffPermissionsPanel userId={staffData.staffProfile.user_id} />
+          )}
 
           {/* Leads Table */}
           <Card className="mb-6">
