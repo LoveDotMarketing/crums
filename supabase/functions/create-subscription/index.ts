@@ -765,8 +765,9 @@ serve(async (req) => {
       }
 
       // FIRST-PERIOD SAFETY NET: If billing anchor caused a $0 first invoice,
-      // charge the first period immediately so the admin doesn't need to "Activate"
-      if (isFirstGroup && custSub) {
+      // charge the first period immediately so the admin doesn't need to "Activate".
+      // SKIP for delayed starts — trial_end means we intentionally deferred billing.
+      if (isFirstGroup && custSub && !isDelayedStart) {
         const invoices = await stripe.invoices.list({
           subscription: subscription.id,
           limit: 10,
