@@ -1,44 +1,71 @@
 
+Diagnosis
 
-## Fix: Four Bugs Blocking Subscription Creation
+- Yes, there is a fresh backend log for the retry.
+- It is not a login/session problem. The latest attempt shows:
+  - `Function started`
+  - `Admin verified`
+  - customer lookup succeeded
+  - trailer lookup succeeded
+  - Stripe customer lookup succeeded
+  - payment method lookup succeeded
+- The failure happens later, inside Stripe subscription creation.
 
-### Bug 1 (CRITICAL): Wrong column names in trailer SELECT — line 157
-The query fetches `trailer_type` and `default_rate`, but the actual database columns are `type` and `rental_rate`. PostgREST will return an error for non-existent columns, causing every subscription attempt to fail with "Failed to fetch trailer details."
+What the latest log says
 
-**Fix:** Line 157 — change the SELECT from:
-```
-"id, trailer_number, trailer_type, year, make, model, default_rate, customer_id"
-```
-to:
-```
-"id, trailer_number, type, year, make, model, rental_rate, customer_id"
-```
+- Fresh retries happened at:
+  - 2026-04-08 01:23:54–01:23:56 UTC
+  - 2026-04-08 01:24:21–01:24:25 UTC
+- The error is:
+  - `billing_cycle_anchor cannot be later than next natural billing date`
+- The request is sending:
+  - `firstBillingDate = 2026-05-15`
+  - monthly billing
+  - anchor day 15
+- Stripe is rejecting that because the chosen first billing date is too far in the future for the current `billing_cycle_anchor` approach.
 
-### Bug 2 (CRITICAL): Wrong property names after previous "fix" — lines 442, 692
-The previous fix changed `trailer.rental_rate` to `trailer.default_rate` and `trailer.type` to `trailer.trailer_type`. But since the real columns are `rental_rate` and `type`, this was backwards. These need to be reverted to `trailer.rental_rate` and `trailer.type`.
+Important conclusion
 
-**Fix:**
-- Line 442: `trailer.default_rate` → `trailer.rental_rate`, `trailer.trailer_type` → `trailer.type`
-- Line 692: same changes
+- Telling them to log out and log back in would not fix this specific error.
+- The request is already authenticated and reaching Stripe correctly.
+- This is a billing-date logic issue, not a stale-session issue.
 
-### Bug 3: Deposit PM lookup queries by `customer_id` which is only populated on 46% of records — lines 529-535
-The deposit payment-method-type lookup uses `.eq("customer_id", customerId)` on `customer_applications`. But `customer_id` is only populated on 27 of 58 records. When it's null, the query returns nothing, so `depositPreferredType` falls back to null and the system defaults to ACH — ignoring the customer's actual preference (e.g., card).
+Extra note from the data
 
-**Fix:** Use the `appRecord` already resolved at the top of the function (which correctly looks up via `user_id` first). Replace the deposit PM type query with:
-```typescript
-depositPreferredType = appRecord?.payment_method_type ?? null;
-```
+- The backend currently still sees this customer’s saved payment setup as `payment_method_type = ach`.
+- That is not what caused this failure, but if you expected card, that is a separate issue and relogging would not change it.
 
-### Bug 4: First-period PM lookup has the same `customer_id` issue — lines 764-770
-Identical problem to Bug 3 in the first-period safety-net block.
+Implementation plan
 
-**Fix:** Same approach — use `appRecord?.payment_method_type` instead of a fresh query by `customer_id`.
+1. Fix `create-subscription` to handle far-future `firstBillingDate` values safely.
+   - Keep current direct `billing_cycle_anchor` behavior only when the selected first billing date is within Stripe’s allowed window.
+   - For farther-out dates, switch to a delayed-start strategy instead of sending an invalid anchor.
 
-### File
-`supabase/functions/create-subscription/index.ts` — all four fixes in this single file. No migrations, no UI changes.
+2. Update the first-period auto-charge safety net.
+   - Right now it assumes “no real payment yet” means “charge now.”
+   - That logic must skip intentional delayed starts, otherwise it will fight the future billing-date behavior.
 
-### Impact
-- Bug 1 is a hard crash — this is the current blocker preventing any subscription from being created
-- Bug 2 would cause wrong billing rates once Bug 1 is fixed
-- Bugs 3-4 cause card customers to silently get billed via ACH when their `customer_applications.customer_id` is null
+3. Add validation in the admin subscription form.
+   - If the selected first billing date is not valid for the current creation path, show a clear message before submission.
+   - Make the UI explain whether the system will:
+     - charge deposit now and start recurring later, or
+     - reject the selected date.
 
+4. Improve logging for future debugging.
+   - Log which strategy was used:
+     - direct anchor
+     - delayed start
+     - auto first-period charge
+   - That will make these failures obvious immediately.
+
+Immediate workaround
+
+- Retry with `First Billing Date` cleared, or pick a nearer date.
+- If the business requirement is specifically “charge deposit now, but start recurring billing on May 15,” the code needs the billing-date fix above. Relogging will not solve it.
+
+Technical detail
+
+- Main failing file: `supabase/functions/create-subscription/index.ts`
+- Related UI: `src/components/admin/CreateSubscriptionDialog.tsx`
+- The latest failing log is the Stripe create call, not auth:
+  - `Stripe subscription creation failed: billing_cycle_anchor cannot be later than next natural billing date`
