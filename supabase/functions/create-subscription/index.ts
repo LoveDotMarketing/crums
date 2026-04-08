@@ -154,7 +154,7 @@ serve(async (req) => {
     // Fetch full trailer records for all requested trailers
     const { data: trailers, error: trailerFetchError } = await supabaseClient
       .from("trailers")
-      .select("id, trailer_number, trailer_type, year, make, model, default_rate, customer_id")
+      .select("id, trailer_number, type, year, make, model, rental_rate, customer_id")
       .in("id", trailerIds);
 
     if (trailerFetchError || !trailers?.length) {
@@ -439,7 +439,7 @@ serve(async (req) => {
       // Create Stripe prices for this group's trailers using the GROUP's billing interval
       const subscriptionItems: Stripe.SubscriptionCreateParams.Item[] = [];
       for (const trailer of groupTrailers) {
-        const rate = customRates?.[trailer.id] ?? trailer.default_rate ?? getDefaultRate(trailer.trailer_type);
+        const rate = customRates?.[trailer.id] ?? trailer.rental_rate ?? getDefaultRate(trailer.type);
         const price = await stripe.prices.create({
           unit_amount: Math.round(rate * 100),
           currency: "usd",
@@ -524,16 +524,8 @@ serve(async (req) => {
           logStep("Charging deposit as standalone invoice", { depositAmount });
           
           try {
-            // Fetch customer's preferred payment method type
-            let depositPreferredType: string | null = null;
-            const { data: appPmPref } = await supabaseClient
-              .from("customer_applications")
-              .select("payment_method_type")
-              .eq("customer_id", customerId)
-              .order("updated_at", { ascending: false })
-              .limit(1)
-              .maybeSingle();
-            depositPreferredType = appPmPref?.payment_method_type ?? null;
+            // Use the appRecord already resolved at the top of the function
+            let depositPreferredType: string | null = appRecord?.payment_method_type ?? null;
             logStep("Deposit: customer preferred payment type", { depositPreferredType });
 
             // Resolve payment method: respect customer preference
@@ -689,7 +681,7 @@ serve(async (req) => {
       for (let i = 0; i < groupTrailers.length; i++) {
         const trailer = groupTrailers[i];
         const stripeItem = subscription.items.data[i];
-        const rate = customRates?.[trailer.id] ?? trailer.default_rate ?? getDefaultRate(trailer.trailer_type);
+        const rate = customRates?.[trailer.id] ?? trailer.rental_rate ?? getDefaultRate(trailer.type);
         const isLeaseToOwn = subscriptionType === "lease_to_own" ? true : (leaseToOwnFlags?.[trailer.id] ?? false);
         const ownershipTransferDate = isLeaseToOwn && endDate ? endDate : null;
         
@@ -759,16 +751,8 @@ serve(async (req) => {
           // Resolve payment method for first period charge
           let fpPaymentMethodId = verifiedPmId;
           
-          // Re-check preferred type for first period
-          let fpPreferredType: string | null = null;
-          const { data: fpPmPref } = await supabaseClient
-            .from("customer_applications")
-            .select("payment_method_type")
-            .eq("customer_id", customerId)
-            .order("updated_at", { ascending: false })
-            .limit(1)
-            .maybeSingle();
-          fpPreferredType = fpPmPref?.payment_method_type ?? null;
+          // Use the appRecord already resolved at the top of the function
+          let fpPreferredType: string | null = appRecord?.payment_method_type ?? null;
 
           const fpCardFirst = fpPreferredType === "card";
           const fpPrimaryType = fpCardFirst ? "card" : "us_bank_account";
