@@ -11,22 +11,22 @@ import { useAuth } from "@/hooks/useAuth";
 import { Copy, Loader2, Star, DollarSign, Users, TrendingUp, FileText } from "lucide-react";
 
 export default function EmployeeDashboard() {
-  const { user } = useAuth();
+  const { user, effectiveUserId } = useAuth();
   const { toast } = useToast();
 
   // Fetch my staff profile
   const { data: staffProfile, isLoading } = useQuery({
-    queryKey: ["my-staff-profile", user?.id],
+    queryKey: ["my-staff-profile", effectiveUserId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("staff_profiles")
         .select("*")
-        .eq("user_id", user!.id)
+        .eq("user_id", effectiveUserId!)
         .single();
       if (error) throw error;
       return data;
     },
-    enabled: !!user?.id,
+    enabled: !!effectiveUserId,
   });
 
   // Fetch my leads
