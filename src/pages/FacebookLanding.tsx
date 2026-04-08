@@ -1,4 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
+
+const ChatBot = lazy(() => import("@/components/ChatBot").then(m => ({ default: m.ChatBot })));
 import { useNavigate } from "react-router-dom";
 import { SEO } from "@/components/SEO";
 import { Button } from "@/components/ui/button";
@@ -608,6 +610,9 @@ const FacebookLanding = () => {
           </div>
         </div>
       </footer>
+      <Suspense fallback={null}>
+        <ChatBot userType="public" />
+      </Suspense>
     </>
   );
 };
