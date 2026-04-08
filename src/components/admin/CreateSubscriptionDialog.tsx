@@ -586,17 +586,26 @@ export function CreateSubscriptionDialog({ onSuccess, mode = "dialog", onCancel 
                   />
                 </PopoverContent>
               </Popover>
-              {firstBillingDate && (
-                <div className="flex items-center gap-2">
-                  <p className="text-xs text-amber-600 flex items-center gap-1">
-                    <AlertTriangle className="h-3 w-3" />
-                    Overrides anchor day calculation. First charge will be on {format(firstBillingDate, "MMM d, yyyy")}.
-                  </p>
-                  <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={() => setFirstBillingDate(undefined)}>
-                    Clear
-                  </Button>
-                </div>
-              )}
+              {firstBillingDate && (() => {
+                const daysOut = Math.ceil((firstBillingDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+                const isDelayed = daysOut > 25;
+                return (
+                  <div className="flex flex-col gap-1">
+                    <div className="flex items-center gap-2">
+                      <p className="text-xs text-amber-600 flex items-center gap-1">
+                        <AlertTriangle className="h-3 w-3" />
+                        {isDelayed 
+                          ? `Delayed start: deposit charged now, first recurring charge on ${format(firstBillingDate, "MMM d, yyyy")} (~${daysOut} days out).`
+                          : `Overrides anchor day calculation. First charge will be on ${format(firstBillingDate, "MMM d, yyyy")}.`
+                        }
+                      </p>
+                      <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={() => setFirstBillingDate(undefined)}>
+                        Clear
+                      </Button>
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
             </>
           )}
