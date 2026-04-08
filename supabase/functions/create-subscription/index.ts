@@ -19,7 +19,6 @@ function calculateNextAnchorDate(anchorDay: number | null): number | undefined {
   const now = new Date();
   const targetDate = new Date(now.getFullYear(), now.getMonth(), anchorDay);
   
-  // If the target day has passed this month, use next month
   if (targetDate <= now) {
     targetDate.setMonth(targetDate.getMonth() + 1);
   }
@@ -28,14 +27,13 @@ function calculateNextAnchorDate(anchorDay: number | null): number | undefined {
 }
 
 // Helper function to calculate next occurrence of a weekday for weekly billing
-// dayOfWeek: 0=Sunday, 1=Monday, ..., 5=Friday, 6=Saturday
 function calculateNextWeekdayAnchor(dayOfWeek: number): number | undefined {
   if (dayOfWeek < 0 || dayOfWeek > 6) return undefined;
   
   const now = new Date();
-  const currentDay = now.getDay(); // 0=Sunday
+  const currentDay = now.getDay();
   let daysUntil = dayOfWeek - currentDay;
-  if (daysUntil <= 0) daysUntil += 7; // Always pick the NEXT occurrence
+  if (daysUntil <= 0) daysUntil += 7;
   
   const targetDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() + daysUntil);
   targetDate.setHours(0, 0, 0, 0);
@@ -49,25 +47,32 @@ interface TrailerBillingSchedule {
 }
 
 interface SubscriptionRequest {
-  customerId: string; // Our internal customer ID
+  customerId: string;
   trailerIds: string[];
   billingCycle: "weekly" | "biweekly" | "monthly" | "semimonthly";
   depositAmount?: number;
   discountId?: string;
-  customRates?: Record<string, number>; // trailerId -> custom rate override
-  leaseToOwnFlags?: Record<string, boolean>; // trailerId -> lease to own flag
-  endDate?: string; // Optional end date for fixed-term leases (YYYY-MM-DD)
-  subscriptionType?: "standard_lease" | "6_month_lease" | "24_month_lease" | "rent_for_storage" | "lease_to_own" | "repayment_plan";
-  leaseToOwnTotal?: number; // Total buyout price for lease-to-own agreements
-  billingAnchorDay?: number; // Admin-selected billing anchor day (1-28)
-  trailerBillingSchedules?: Record<string, TrailerBillingSchedule>; // per-trailer billing overrides
-  firstBillingDate?: string; // Optional explicit first billing date (YYYY-MM-DD) — overrides anchor day calculation
+  customRates?: Record<string, number>;
+  leaseToOwnFlags?: Record<string, boolean>;
+  endDate?: string;
+  subscriptionType?: "standard_lease" | "6_month_lease" | "24_month_lease" | "month_to_month" | "rent_for_storage" | "lease_to_own" | "repayment_plan";
+  leaseToOwnTotal?: number;
+  billingAnchorDay?: number;
+  trailerBillingSchedules?: Record<string, TrailerBillingSchedule>;
+  firstBillingDate?: string;
 }
+
+const VALID_BILLING_CYCLES = ["weekly", "biweekly", "semimonthly", "monthly"];
+const VALID_SUB_TYPES = ["standard_lease", "6_month_lease", "24_month_lease", "month_to_month", "rent_for_storage", "lease_to_own", "repayment_plan"];
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
+
+  // Rollback tracker — records every Stripe object we create so we can undo on failure
+  const rollbackActions: Array<{ type: "subscription" | "invoice"; id: string }> = [];
+  const trailersMarkedRented: string[] = [];
 
   try {
     logStep("Function started");
@@ -89,7 +94,6 @@ serve(async (req) => {
     const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
     if (userError) throw new Error(`Authentication error: ${userError.message}`);
 
-    // Check admin role
     const { data: roleData } = await supabaseClient
       .from("user_roles")
       .select("role")
@@ -103,8 +107,24 @@ serve(async (req) => {
     const body: SubscriptionRequest = await req.json();
     const { customerId, trailerIds, billingCycle, depositAmount, discountId, customRates, leaseToOwnFlags, endDate, subscriptionType, leaseToOwnTotal, billingAnchorDay, trailerBillingSchedules, firstBillingDate } = body;
 
+    // ==========================================
+    // STRICT VALIDATION
+    // ==========================================
     if (!customerId || !trailerIds?.length || !billingCycle) {
       throw new Error("Missing required fields: customerId, trailerIds, billingCycle");
+    }
+    if (!VALID_BILLING_CYCLES.includes(billingCycle)) {
+      throw new Error(`Invalid billingCycle: ${billingCycle}. Must be one of: ${VALID_BILLING_CYCLES.join(", ")}`);
+    }
+    const subType = subscriptionType || "standard_lease";
+    if (!VALID_SUB_TYPES.includes(subType)) {
+      throw new Error(`Invalid subscriptionType: ${subType}. Must be one of: ${VALID_SUB_TYPES.join(", ")}`);
+    }
+    // Validate weekly anchor days (must be 0-6 for day-of-week)
+    if ((billingCycle === "weekly" || billingCycle === "biweekly") && billingAnchorDay !== undefined) {
+      if (billingAnchorDay < 0 || billingAnchorDay > 6) {
+        throw new Error(`Invalid weekly anchor day: ${billingAnchorDay}. For weekly billing, use 0 (Sun) through 6 (Sat).`);
+      }
     }
 
     // Check for existing subscriptions for this customer
@@ -113,7 +133,6 @@ serve(async (req) => {
       .select("id, status, stripe_subscription_id, subscription_items(trailer_id)")
       .eq("customer_id", customerId);
 
-    // Check if any requested trailers are already on an active/pending/paused subscription
     const activeSubscriptions = (existingSubscriptions || []).filter(
       s => ["active", "pending", "paused"].includes(s.status)
     );
@@ -135,30 +154,26 @@ serve(async (req) => {
       });
     }
 
-    // Check if any of the requested trailers are already rented
+    // Check if any of the requested trailers are already rented by someone else
     const { data: rentedTrailers } = await supabaseClient
       .from("trailers")
       .select("id, trailer_number, is_rented, customer_id")
       .in("id", trailerIds)
       .eq("is_rented", true);
 
-    // Filter out trailers already assigned to THIS customer — only block trailers rented by someone else
     const rentedByOthers = (rentedTrailers || []).filter(t => t.customer_id !== customerId);
     if (rentedByOthers.length > 0) {
       const rentedNumbers = rentedByOthers.map(t => t.trailer_number).join(", ");
-      logStep("Some trailers are rented by other customers", { rentedByOthers });
-      throw new Error(`Trailer(s) ${rentedNumbers} are already rented by another customer. Please select available trailers.`);
+      throw new Error(`Trailer(s) ${rentedNumbers} are already rented by another customer.`);
     }
-    logStep("All requested trailers are available or already assigned to this customer");
 
-    // Fetch full trailer records for all requested trailers
+    // Fetch full trailer records
     const { data: trailers, error: trailerFetchError } = await supabaseClient
       .from("trailers")
       .select("id, trailer_number, type, year, make, model, rental_rate, customer_id")
       .in("id", trailerIds);
 
     if (trailerFetchError || !trailers?.length) {
-      logStep("Failed to fetch trailer details", { trailerFetchError });
       throw new Error("Failed to fetch trailer details for the requested trailers.");
     }
     logStep("Fetched trailer records", { count: trailers.length });
@@ -176,7 +191,7 @@ serve(async (req) => {
     logStep("Customer found", { customerId, email: customer.email });
 
     // ==========================================
-    // RESOLVE STRIPE CUSTOMER FIRST, THEN MATCH PM
+    // RESOLVE APPLICATION RECORD (hardened for repeat customers)
     // ==========================================
     let appRecord: { stripe_payment_method_id: string | null; stripe_customer_id: string | null; id: string; payment_method_type: string | null } | null = null;
     let profileIdForStripe: string | null = null;
@@ -190,23 +205,38 @@ serve(async (req) => {
 
       if (profileData?.id) {
         profileIdForStripe = profileData.id;
-        const { data: appData } = await supabaseClient
+        // Use order + limit instead of maybeSingle to handle repeat customers
+        const { data: appRows } = await supabaseClient
           .from("customer_applications")
           .select("stripe_payment_method_id, stripe_customer_id, id, payment_method_type")
           .eq("user_id", profileData.id)
-          .maybeSingle();
-        appRecord = appData;
+          .not("stripe_payment_method_id", "is", null)
+          .order("updated_at", { ascending: false })
+          .limit(1);
+        appRecord = appRows?.[0] ?? null;
+
+        // If no row with a PM, try without the PM filter (customer may exist but PM is null)
+        if (!appRecord) {
+          const { data: appRowsFallback } = await supabaseClient
+            .from("customer_applications")
+            .select("stripe_payment_method_id, stripe_customer_id, id, payment_method_type")
+            .eq("user_id", profileData.id)
+            .order("updated_at", { ascending: false })
+            .limit(1);
+          appRecord = appRowsFallback?.[0] ?? null;
+        }
       }
     }
 
-    // Fallback: look up by customer_id
+    // Fallback: look up by customer_id (also hardened)
     if (!appRecord) {
-      const { data: appByCustomerId } = await supabaseClient
+      const { data: appByCustomerRows } = await supabaseClient
         .from("customer_applications")
         .select("stripe_payment_method_id, stripe_customer_id, id, payment_method_type")
         .eq("customer_id", customerId)
-        .maybeSingle();
-      appRecord = appByCustomerId;
+        .order("updated_at", { ascending: false })
+        .limit(1);
+      appRecord = appByCustomerRows?.[0] ?? null;
     }
 
     logStep("Application record lookup", {
@@ -219,7 +249,6 @@ serve(async (req) => {
     // --- Step 1: Resolve the Stripe Customer ---
     let stripeCustomerId: string | null = null;
 
-    // Path 1: Try stored stripe_customer_id
     if (appRecord?.stripe_customer_id) {
       try {
         const existingCust = await stripe.customers.retrieve(appRecord.stripe_customer_id);
@@ -232,11 +261,8 @@ serve(async (req) => {
       }
     }
 
-    // Path 2: Fallback — search by email
     if (!stripeCustomerId && customer.email) {
       const stripeCustomers = await stripe.customers.list({ email: customer.email, limit: 10 });
-      logStep("Email search returned Stripe customers", { count: stripeCustomers.data.length });
-
       for (const sc of stripeCustomers.data) {
         if ((sc as any).deleted) continue;
         const pms = await stripe.paymentMethods.list({ customer: sc.id, limit: 1 });
@@ -254,43 +280,32 @@ serve(async (req) => {
           .from("customer_applications")
           .update({ payment_setup_status: "pending", stripe_payment_method_id: null })
           .eq("id", appRecord.id);
-        logStep("Auto-reset payment_setup_status (no valid Stripe customer found)");
       }
       throw new Error("No valid Stripe customer with payment methods found for this email. Customer needs to re-complete payment setup.");
     }
 
-    // Sync stripe_customer_id in DB if it changed
     if (appRecord && appRecord.stripe_customer_id !== stripeCustomerId && profileIdForStripe) {
       await supabaseClient
         .from("customer_applications")
         .update({ stripe_customer_id: stripeCustomerId })
         .eq("user_id", profileIdForStripe);
-      logStep("Synced customer_applications.stripe_customer_id", { old: appRecord.stripe_customer_id, new: stripeCustomerId });
     }
 
-    // --- Step 2: Resolve Payment Method ON this exact Stripe customer ---
+    // --- Step 2: Resolve Payment Method ---
     let verifiedPmId: string | null = null;
 
-    // Check if stored PM belongs to THIS Stripe customer
     if (appRecord?.stripe_payment_method_id) {
       try {
         const pm = await stripe.paymentMethods.retrieve(appRecord.stripe_payment_method_id);
         if (pm.customer === stripeCustomerId) {
           verifiedPmId = pm.id;
-          logStep("Stored PM verified — belongs to resolved Stripe customer", { pmId: pm.id });
-        } else {
-          logStep("Stored PM belongs to DIFFERENT Stripe customer — ignoring", {
-            pmId: pm.id,
-            pmCustomer: pm.customer,
-            resolvedCustomer: stripeCustomerId,
-          });
+          logStep("Stored PM verified", { pmId: pm.id });
         }
-      } catch (pmErr: any) {
-        logStep("Stored PM retrieval failed — PM is dead", { pmId: appRecord.stripe_payment_method_id, error: pmErr.message });
+      } catch {
+        logStep("Stored PM retrieval failed");
       }
     }
 
-    // If stored PM didn't work, search for a live PM on the resolved customer
     if (!verifiedPmId) {
       const preferredType = appRecord?.payment_method_type === "card" ? "card" : "us_bank_account";
       const fallbackType = preferredType === "card" ? "us_bank_account" : "card";
@@ -303,7 +318,7 @@ serve(async (req) => {
         });
         if (methods.data.length > 0) {
           verifiedPmId = methods.data[0].id;
-          logStep(`Found live PM on Stripe customer via search`, { pmId: verifiedPmId, type: pmType });
+          logStep(`Found live PM via search`, { pmId: verifiedPmId, type: pmType });
           break;
         }
       }
@@ -315,28 +330,64 @@ serve(async (req) => {
           .from("customer_applications")
           .update({ payment_setup_status: "pending", stripe_payment_method_id: null })
           .eq("id", appRecord.id);
-        logStep("Auto-reset stale payment_setup_status", { applicationId: appRecord.id });
       }
-      throw new Error("Customer's payment method is no longer valid. Their payment setup has been reset — please have them re-link ACH or card before creating a subscription.");
+      throw new Error("Customer's payment method is no longer valid. Their payment setup has been reset — please have them re-link ACH or card.");
     }
 
-    // Sync the verified PM back to the DB if different
     if (appRecord && appRecord.stripe_payment_method_id !== verifiedPmId) {
       await supabaseClient
         .from("customer_applications")
         .update({ stripe_payment_method_id: verifiedPmId })
         .eq("id", appRecord.id);
-      logStep("Synced customer_applications.stripe_payment_method_id", { old: appRecord.stripe_payment_method_id, new: verifiedPmId });
     }
 
-    // Calculate billing interval
+    // ==========================================
+    // GROUP TRAILERS BY CYCLE + ANCHOR (not anchor alone)
+    // ==========================================
     const intervalMap = {
       weekly: { interval: "week" as const, interval_count: 1 },
       biweekly: { interval: "week" as const, interval_count: 2 },
       semimonthly: { interval: "week" as const, interval_count: 2 },
       monthly: { interval: "month" as const, interval_count: 1 },
     };
-    const billingInterval = intervalMap[billingCycle];
+
+    const { getDefaultRate } = await import("../_shared/billing.ts");
+
+    // Each trailer resolves: cycle + anchor → group key
+    const anchorGroups = new Map<string, { trailers: typeof trailers; groupCycle: string; anchorDay: number | null }>();
+    
+    for (const trailer of trailers) {
+      const perTrailerSchedule = trailerBillingSchedules?.[trailer.id];
+      const resolvedCycle = perTrailerSchedule?.billing_cycle || billingCycle;
+      const resolvedAnchor = perTrailerSchedule?.billing_anchor_day ?? billingAnchorDay ?? null;
+      
+      // Validate weekly anchor (must be day-of-week 0-6)
+      if ((resolvedCycle === "weekly" || resolvedCycle === "biweekly") && resolvedAnchor !== null && (resolvedAnchor < 0 || resolvedAnchor > 6)) {
+        logStep("WARNING: Invalid weekly anchor, ignoring", { trailerId: trailer.id, anchor: resolvedAnchor });
+      }
+      
+      const groupKey = `${resolvedCycle}:${resolvedAnchor ?? "default"}`;
+      
+      if (!anchorGroups.has(groupKey)) {
+        anchorGroups.set(groupKey, { trailers: [], groupCycle: resolvedCycle, anchorDay: resolvedAnchor });
+      }
+      anchorGroups.get(groupKey)!.trailers.push(trailer);
+    }
+
+    logStep("Grouped trailers by cycle+anchor", { 
+      groups: Array.from(anchorGroups.entries()).map(([key, g]) => ({
+        key,
+        cycle: g.groupCycle,
+        anchorDay: g.anchorDay,
+        trailerCount: g.trailers.length,
+        trailers: g.trailers.map(tr => tr.trailer_number)
+      }))
+    });
+
+    // Block global firstBillingDate for multi-group setups
+    if (anchorGroups.size > 1 && firstBillingDate) {
+      throw new Error("Cannot use a single First Billing Date when trailers are split across multiple billing groups. Remove the First Billing Date or put all trailers on the same schedule.");
+    }
 
     // Get discount if provided
     let coupon: Stripe.Coupon | null = null;
@@ -353,54 +404,17 @@ serve(async (req) => {
           duration: "forever",
           metadata: { internal_discount_id: discountId },
         };
-
         if (discount.type === "percentage") {
           couponParams.percent_off = discount.value;
         } else {
           couponParams.amount_off = Math.round(discount.value * 100);
           couponParams.currency = "usd";
         }
-
         coupon = await stripe.coupons.create(couponParams);
         logStep("Created Stripe coupon", { couponId: coupon.id });
       }
     }
 
-    // Import shared default rate logic
-    const { getDefaultRate } = await import("../_shared/billing.ts");
-
-    // ==========================================
-    // GROUP TRAILERS BY BILLING ANCHOR DAY
-    // ==========================================
-    // Each trailer resolves its anchor day from:
-    //   1. trailerBillingSchedules[id]?.billing_anchor_day (per-trailer override)
-    //   2. globalAnchorDay (admin-selected or application default)
-    //   3. null (no anchor = Stripe default)
-    const anchorGroups = new Map<string, typeof trailers>();
-    
-    for (const trailer of trailers) {
-      const perTrailerSchedule = trailerBillingSchedules?.[trailer.id];
-      const resolvedAnchor = perTrailerSchedule?.billing_anchor_day ?? billingAnchorDay ?? null;
-      const groupKey = resolvedAnchor !== null ? String(resolvedAnchor) : "default";
-      
-      if (!anchorGroups.has(groupKey)) {
-        anchorGroups.set(groupKey, []);
-      }
-      anchorGroups.get(groupKey)!.push(trailer);
-    }
-
-    logStep("Grouped trailers by anchor day", { 
-      groups: Array.from(anchorGroups.entries()).map(([key, t]) => ({
-        anchorDay: key,
-        trailerCount: t.length,
-        trailers: t.map(tr => tr.trailer_number)
-      }))
-    });
-
-    // Determine subscription type
-    const subType = subscriptionType || "standard_lease";
-    
-    // Map Stripe status to our allowed values
     const statusMap: Record<string, string> = {
       incomplete: "pending",
       incomplete_expired: "canceled",
@@ -412,13 +426,11 @@ serve(async (req) => {
       paused: "paused",
     };
 
-    // Track all created subscription IDs for the response
-    const createdSubscriptions: Array<{ subscriptionId: string; stripeSubscriptionId: string; status: string; anchorDay: string }> = [];
+    const createdSubscriptions: Array<{ subscriptionId: string; stripeSubscriptionId: string; status: string; groupKey: string }> = [];
     let primarySubscriptionId = "";
     let primaryStripeSubscriptionId = "";
     let primaryStatus = "";
 
-    // Look for a canceled subscription to reuse (only for the FIRST group)
     const canceledSubscription = (existingSubscriptions || []).find(s => s.status === "canceled");
     const reuseExistingRow = canceledSubscription && activeSubscriptions.length === 0;
     let isFirstGroup = true;
@@ -426,17 +438,13 @@ serve(async (req) => {
     // ==========================================
     // CREATE A STRIPE SUBSCRIPTION PER GROUP
     // ==========================================
-    for (const [groupKey, groupTrailers] of anchorGroups) {
-      const anchorDay = groupKey === "default" ? null : parseInt(groupKey, 10);
+    for (const [groupKey, group] of anchorGroups) {
+      const { trailers: groupTrailers, groupCycle, anchorDay } = group;
+      const groupBillingInterval = intervalMap[groupCycle as keyof typeof intervalMap] || intervalMap[billingCycle];
       
-      // Resolve effective billing cycle for this group from per-trailer overrides
-      const firstTrailerSchedule = trailerBillingSchedules?.[groupTrailers[0].id];
-      const groupBillingCycle = firstTrailerSchedule?.billing_cycle || billingCycle;
-      const groupBillingInterval = intervalMap[groupBillingCycle as keyof typeof intervalMap] || billingInterval;
-      
-      logStep(`Processing anchor group`, { anchorDay: groupKey, trailerCount: groupTrailers.length, groupBillingCycle });
+      logStep(`Processing group`, { groupKey, trailerCount: groupTrailers.length, groupCycle, anchorDay });
 
-      // Create Stripe prices for this group's trailers using the GROUP's billing interval
+      // Create Stripe prices using the GROUP's billing interval
       const subscriptionItems: Stripe.SubscriptionCreateParams.Item[] = [];
       for (const trailer of groupTrailers) {
         const rate = customRates?.[trailer.id] ?? trailer.rental_rate ?? getDefaultRate(trailer.type);
@@ -450,12 +458,8 @@ serve(async (req) => {
           },
         });
         subscriptionItems.push({ price: price.id });
-        logStep("Created price for trailer", { trailerId: trailer.id, priceId: price.id, rate, group: groupKey, interval: groupBillingInterval });
+        logStep("Created price", { trailerId: trailer.id, rate, group: groupKey });
       }
-
-      // Deposit is charged ONLY via standalone invoice (Path B below).
-      // We no longer add it as an add_invoice_item on the subscription to
-      // prevent the dual-charge risk where both paths execute.
 
       // Build Stripe subscription params
       const subscriptionParams: Stripe.SubscriptionCreateParams = {
@@ -468,58 +472,50 @@ serve(async (req) => {
         metadata: { 
           internal_customer_id: customerId,
           deposit_amount: isFirstGroup ? (depositAmount?.toString() || "0") : "0",
-          billing_cycle: groupBillingCycle,
+          billing_cycle: groupCycle,
           billing_anchor_day: anchorDay?.toString() || "none",
         },
       };
 
-      // Set billing cycle anchor — use explicit firstBillingDate if provided, else weekday/monthly anchor
+      // Set billing cycle anchor
       let anchorTimestamp: number | undefined;
-      let isDelayedStart = false; // True when firstBillingDate is beyond Stripe's allowed anchor window
+      let isDelayedStart = false;
+      
       if (firstBillingDate) {
-        // Admin explicitly chose the first billing date
         const fbDate = new Date(firstBillingDate + "T00:00:00Z");
         const fbTimestamp = Math.floor(fbDate.getTime() / 1000);
         const nowTimestamp = Math.floor(Date.now() / 1000);
         
-        // Stripe rejects billing_cycle_anchor when it's beyond the next natural billing date.
-        // For monthly billing, max anchor is ~1 month out; for weekly, ~1 week out.
-        // Strategy: if firstBillingDate is within 25 days (safe buffer for monthly), use anchor directly.
-        // Otherwise, use trial_end to defer the first charge to the desired date.
-        const maxDirectAnchorSeconds = groupBillingCycle === "weekly" || groupBillingCycle === "biweekly"
-          ? 13 * 24 * 3600  // ~13 days for weekly/biweekly
-          : 25 * 24 * 3600; // ~25 days for monthly
+        const maxDirectAnchorSeconds = (groupCycle === "weekly" || groupCycle === "biweekly")
+          ? 13 * 24 * 3600
+          : 25 * 24 * 3600;
         
         if ((fbTimestamp - nowTimestamp) <= maxDirectAnchorSeconds) {
-          // Close enough — use direct billing_cycle_anchor
           anchorTimestamp = fbTimestamp;
-          logStep("Using explicit firstBillingDate as direct anchor", { firstBillingDate, anchorTimestamp, group: groupKey });
+          logStep("Using direct anchor mode", { firstBillingDate, anchorTimestamp, mode: "direct_anchor" });
         } else {
-          // Too far out — use trial_end to defer the first charge.
-          // Do NOT set billing_cycle_anchor here: Stripe rejects it when
-          // trial_end is after the anchor. Stripe will automatically align
-          // future billing to the trial_end date.
+          // Delayed start: trial_end only, NO billing_cycle_anchor
           isDelayedStart = true;
           subscriptionParams.trial_end = fbTimestamp;
           subscriptionParams.proration_behavior = "none";
-          logStep("Using delayed-start strategy (trial_end only, no billing_cycle_anchor)", { 
-            firstBillingDate, trialEnd: fbTimestamp, anchorDay, group: groupKey,
-            mode: "delayed_trial_only"
+          logStep("Using delayed-start mode (trial_end only)", { 
+            firstBillingDate, trialEnd: fbTimestamp,
+            mode: "delayed_trial_only",
+            billing_cycle_anchor: "OMITTED"
           });
         }
-      } else if (groupBillingCycle === "weekly" && anchorDay !== null) {
+      } else if ((groupCycle === "weekly" || groupCycle === "biweekly") && anchorDay !== null) {
         anchorTimestamp = calculateNextWeekdayAnchor(anchorDay);
-        logStep("Using weekly anchor (next weekday)", { dayOfWeek: anchorDay, anchorTimestamp, group: groupKey });
+        logStep("Using weekly anchor", { dayOfWeek: anchorDay, anchorTimestamp });
       } else {
         anchorTimestamp = calculateNextAnchorDate(anchorDay);
       }
+      
       if (anchorTimestamp && !isDelayedStart) {
         subscriptionParams.billing_cycle_anchor = anchorTimestamp;
         subscriptionParams.proration_behavior = "none";
-        logStep("Setting billing cycle anchor without prorations (deposit-only immediate charge)", { anchorDay, anchorTimestamp, group: groupKey });
+        logStep("Setting billing_cycle_anchor", { anchorTimestamp, mode: "direct_anchor" });
       }
-
-      // No add_invoice_items — deposit handled via standalone invoice below
 
       if (coupon) {
         subscriptionParams.discounts = [{ coupon: coupon.id }];
@@ -528,122 +524,94 @@ serve(async (req) => {
       let subscription: Stripe.Subscription;
       try {
         subscription = await stripe.subscriptions.create(subscriptionParams);
+        rollbackActions.push({ type: "subscription", id: subscription.id });
       } catch (stripeSubErr: any) {
         const stripeMsg = stripeSubErr?.message || String(stripeSubErr);
-        const stripeCode = stripeSubErr?.code || stripeSubErr?.type || "unknown";
-        logStep("FATAL: stripe.subscriptions.create failed", { error: stripeMsg, code: stripeCode, stripeCustomerId, pmId: verifiedPmId });
+        logStep("FATAL: stripe.subscriptions.create failed", { error: stripeMsg, stripeCustomerId, pmId: verifiedPmId });
         throw new Error(`Stripe subscription creation failed: ${stripeMsg}`);
       }
       logStep("Created Stripe subscription", { 
-        subscriptionId: subscription.id, group: groupKey, anchorDay,
-        trailerCount: groupTrailers.length,
+        subscriptionId: subscription.id, groupKey,
         stripeStatus: subscription.status,
-        latestInvoice: typeof subscription.latest_invoice === "string" ? subscription.latest_invoice : subscription.latest_invoice?.id,
       });
 
       // ==========================================
-      // DEPOSIT: Charge as standalone invoice (single path — no dual-charge risk).
-      // Uses idempotency key to prevent duplicate deposit charges.
+      // DEPOSIT (first group only)
       // ==========================================
       let depositChargedDuringCreation = false;
       let depositInvoiceResult: { paidInvoice: any; isCard: boolean; finalAmount: number } | null = null;
       if (isFirstGroup && depositAmount && depositAmount > 0) {
-          logStep("Charging deposit as standalone invoice", { depositAmount });
-          
-          try {
-            // Use the appRecord already resolved at the top of the function
-            let depositPreferredType: string | null = appRecord?.payment_method_type ?? null;
-            logStep("Deposit: customer preferred payment type", { depositPreferredType });
+        logStep("Charging deposit as standalone invoice", { depositAmount });
+        
+        try {
+          const depositPreferredType = appRecord?.payment_method_type ?? null;
+          const cardFirst = depositPreferredType === "card";
+          const primaryType = cardFirst ? "card" : "us_bank_account";
+          const fallbackType2 = cardFirst ? "us_bank_account" : "card";
 
-            // Resolve payment method: respect customer preference
-            const cardFirst = depositPreferredType === "card";
-            const primaryType = cardFirst ? "card" : "us_bank_account";
-            const fallbackType = cardFirst ? "us_bank_account" : "card";
+          const primaryMethods = await stripe.paymentMethods.list({
+            customer: stripeCustomerId,
+            type: primaryType,
+            limit: 1,
+          });
+          let depositPaymentMethodId: string | null = primaryMethods.data[0]?.id ?? null;
 
-            const primaryMethods = await stripe.paymentMethods.list({
+          if (!depositPaymentMethodId) {
+            const fallbackMethods = await stripe.paymentMethods.list({
               customer: stripeCustomerId,
-              type: primaryType,
+              type: fallbackType2,
               limit: 1,
             });
-
-            let depositPaymentMethodId: string | null = primaryMethods.data[0]?.id ?? null;
-
-            // Fallback: check other payment method type
-            if (!depositPaymentMethodId) {
-              const fallbackMethods = await stripe.paymentMethods.list({
-                customer: stripeCustomerId,
-                type: fallbackType,
-                limit: 1,
-              });
-              depositPaymentMethodId = fallbackMethods.data[0]?.id ?? null;
-              if (depositPaymentMethodId) {
-                logStep(`Using ${cardFirst ? "ACH" : "card"} payment method for deposit (fallback)`, { pmId: depositPaymentMethodId });
-              }
-            } else {
-              logStep(`Using ${cardFirst ? "card" : "ACH"} payment method for deposit (preferred)`, { pmId: depositPaymentMethodId });
-            }
-
-            // Detect card and apply surcharge
-            const { calculateCardSurcharge } = await import("../_shared/billing.ts");
-            let isDepositCard = false;
-            let finalDepositAmount = depositAmount;
-            let depositSurcharge = 0;
-            if (depositPaymentMethodId) {
-              const pmInfo = await stripe.paymentMethods.retrieve(depositPaymentMethodId);
-              isDepositCard = pmInfo.type === "card";
-              if (isDepositCard) {
-                const result = calculateCardSurcharge(depositAmount);
-                finalDepositAmount = result.adjustedAmount;
-                depositSurcharge = result.surcharge;
-                logStep("Card surcharge applied to deposit", { base: depositAmount, surcharge: depositSurcharge, total: finalDepositAmount });
-              }
-            }
-
-            // Create invoice with isolation and idempotency key to prevent duplicate deposits
-            const depositInvoice = await stripe.invoices.create({
-              customer: stripeCustomerId,
-              auto_advance: false,
-              pending_invoice_items_behavior: "exclude",
-              metadata: { type: "security_deposit", subscription_id: subscription.id },
-            }, {
-              idempotencyKey: `${subscription.id}_deposit`,
-            });
-
-            // Attach deposit item explicitly to this invoice (with surcharge if card)
-            await stripe.invoiceItems.create({
-              customer: stripeCustomerId,
-              invoice: depositInvoice.id,
-              amount: Math.round(finalDepositAmount * 100),
-              currency: "usd",
-              description: isDepositCard ? `Security Deposit (includes $${depositSurcharge.toFixed(2)} card processing fee)` : "Security Deposit",
-            });
-
-            const finalizedInvoice = await stripe.invoices.finalizeInvoice(depositInvoice.id);
-            logStep("Finalized standalone deposit invoice", { invoiceId: finalizedInvoice.id, amountDue: finalizedInvoice.amount_due });
-
-            // Pay with the specific payment method if available, otherwise let Stripe use default
-            const payParams: any = {};
-            if (depositPaymentMethodId) payParams.payment_method = depositPaymentMethodId;
-            const paidInvoice = await stripe.invoices.pay(finalizedInvoice.id, payParams);
-            logStep("Standalone deposit invoice payment initiated", { invoiceId: paidInvoice.id, status: paidInvoice.status });
-
-            depositChargedDuringCreation = true;
-            depositInvoiceResult = { paidInvoice, isCard: isDepositCard, finalAmount: finalDepositAmount };
-          } catch (depositError) {
-            // Deposit failure is FATAL — subscription cannot proceed without payment
-            const msg = depositError instanceof Error ? depositError.message : String(depositError);
-            logStep("FATAL: Deposit charge failed, aborting subscription", { error: msg });
-            
-            // Clean up: cancel the Stripe subscription we just created
-            try {
-              await stripe.subscriptions.cancel(subscription.id);
-              logStep("Rolled back Stripe subscription after deposit failure", { subscriptionId: subscription.id });
-            } catch (cancelErr: any) {
-              logStep("Warning: could not cancel Stripe subscription during rollback", { error: cancelErr.message });
-            }
-            
-            throw new Error(`Deposit charge failed: ${msg}. Subscription was not created. Please verify the customer's payment method is valid.`);
+            depositPaymentMethodId = fallbackMethods.data[0]?.id ?? null;
           }
+
+          const { calculateCardSurcharge } = await import("../_shared/billing.ts");
+          let isDepositCard = false;
+          let finalDepositAmount = depositAmount;
+          let depositSurcharge = 0;
+          if (depositPaymentMethodId) {
+            const pmInfo = await stripe.paymentMethods.retrieve(depositPaymentMethodId);
+            isDepositCard = pmInfo.type === "card";
+            if (isDepositCard) {
+              const result = calculateCardSurcharge(depositAmount);
+              finalDepositAmount = result.adjustedAmount;
+              depositSurcharge = result.surcharge;
+              logStep("Card surcharge applied to deposit", { base: depositAmount, surcharge: depositSurcharge, total: finalDepositAmount });
+            }
+          }
+
+          const depositInvoice = await stripe.invoices.create({
+            customer: stripeCustomerId,
+            auto_advance: false,
+            pending_invoice_items_behavior: "exclude",
+            metadata: { type: "security_deposit", subscription_id: subscription.id },
+          }, {
+            idempotencyKey: `${subscription.id}_deposit`,
+          });
+          rollbackActions.push({ type: "invoice", id: depositInvoice.id });
+
+          await stripe.invoiceItems.create({
+            customer: stripeCustomerId,
+            invoice: depositInvoice.id,
+            amount: Math.round(finalDepositAmount * 100),
+            currency: "usd",
+            description: isDepositCard ? `Security Deposit (includes $${depositSurcharge.toFixed(2)} card processing fee)` : "Security Deposit",
+          });
+
+          const finalizedInvoice = await stripe.invoices.finalizeInvoice(depositInvoice.id);
+          const payParams: any = {};
+          if (depositPaymentMethodId) payParams.payment_method = depositPaymentMethodId;
+          const paidInvoice = await stripe.invoices.pay(finalizedInvoice.id, payParams);
+          logStep("Deposit payment initiated", { invoiceId: paidInvoice.id, status: paidInvoice.status });
+
+          depositChargedDuringCreation = true;
+          depositInvoiceResult = { paidInvoice, isCard: isDepositCard, finalAmount: finalDepositAmount };
+        } catch (depositError) {
+          const msg = depositError instanceof Error ? depositError.message : String(depositError);
+          logStep("FATAL: Deposit charge failed, rolling back", { error: msg });
+          // Rollback is handled by the outer catch block
+          throw new Error(`Deposit charge failed: ${msg}. Subscription was not created. Please verify the customer's payment method is valid.`);
+        }
       }
 
       // Calculate next billing date
@@ -654,7 +622,7 @@ serve(async (req) => {
 
       const mappedStatus = statusMap[subscription.status] ?? "pending";
 
-      // Create or update customer_subscription record
+      // Create or update customer_subscription record — use GROUP's cycle, not the global one
       let custSub;
       let subError;
 
@@ -664,21 +632,26 @@ serve(async (req) => {
           .update({
             stripe_subscription_id: subscription.id,
             stripe_customer_id: stripeCustomerId,
-            billing_cycle: billingCycle,
+            billing_cycle: groupCycle as any,
             deposit_amount: depositAmount || null,
             deposit_paid: depositChargedDuringCreation,
             deposit_paid_at: depositChargedDuringCreation ? new Date().toISOString() : null,
             status: mappedStatus,
             next_billing_date: nextBillingDate,
             end_date: endDate || null,
-            subscription_type: subType,
+            subscription_type: subType as any,
+            // Clear stale values from old contract
+            grace_period_start: null,
+            grace_period_end: null,
+            failed_payment_count: 0,
+            contract_start_date: new Date().toISOString().split("T")[0],
           })
           .eq("id", canceledSubscription.id)
           .select()
           .single();
         custSub = data;
         subError = error;
-        logStep("Updated existing subscription record", { id: custSub?.id, group: groupKey });
+        logStep("Updated existing subscription record", { id: custSub?.id, groupKey });
       } else {
         const { data, error } = await supabaseClient
           .from("customer_subscriptions")
@@ -686,25 +659,28 @@ serve(async (req) => {
             customer_id: customerId,
             stripe_subscription_id: subscription.id,
             stripe_customer_id: stripeCustomerId,
-            billing_cycle: billingCycle,
+            billing_cycle: groupCycle as any,
             deposit_amount: isFirstGroup ? (depositAmount || null) : null,
             deposit_paid: isFirstGroup ? depositChargedDuringCreation : false,
             deposit_paid_at: (isFirstGroup && depositChargedDuringCreation) ? new Date().toISOString() : null,
             status: mappedStatus,
             next_billing_date: nextBillingDate,
             end_date: endDate || null,
-            subscription_type: subType,
+            subscription_type: subType as any,
+            contract_start_date: new Date().toISOString().split("T")[0],
           })
           .select()
           .single();
         custSub = data;
         subError = error;
-        logStep("Created new subscription record", { id: custSub?.id, group: groupKey });
+        logStep("Created new subscription record", { id: custSub?.id, groupKey });
       }
 
-      if (subError) throw new Error(`Failed to create subscription record for group ${groupKey}: ${subError.message}`);
+      if (subError) {
+        throw new Error(`Failed to create subscription record for group ${groupKey}: ${subError.message}`);
+      }
 
-      // Create subscription_items for each trailer in this group
+      // Create subscription_items for each trailer
       for (let i = 0; i < groupTrailers.length; i++) {
         const trailer = groupTrailers[i];
         const stripeItem = subscription.items.data[i];
@@ -712,7 +688,6 @@ serve(async (req) => {
         const isLeaseToOwn = subscriptionType === "lease_to_own" ? true : (leaseToOwnFlags?.[trailer.id] ?? false);
         const ownershipTransferDate = isLeaseToOwn && endDate ? endDate : null;
         
-        // Resolve per-trailer billing metadata
         const perTrailerSchedule = trailerBillingSchedules?.[trailer.id];
         const resolvedBillingCycle = perTrailerSchedule?.billing_cycle || billingCycle;
         const resolvedAnchorDay = perTrailerSchedule?.billing_anchor_day ?? anchorDay ?? null;
@@ -732,17 +707,12 @@ serve(async (req) => {
             billing_anchor_day: resolvedAnchorDay,
           });
 
-        logStep("Created subscription item", { 
-          trailerId: trailer.id, trailerNumber: trailer.trailer_number,
-          billingCycle: resolvedBillingCycle, anchorDay: resolvedAnchorDay,
-          group: groupKey
-        });
-
         // Update trailer to mark as rented
         await supabaseClient
           .from("trailers")
           .update({ is_rented: true, customer_id: customerId, status: "rented" })
           .eq("id", trailer.id);
+        trailersMarkedRented.push(trailer.id);
       }
 
       // ==========================================
@@ -760,12 +730,10 @@ serve(async (req) => {
           stripe_invoice_id: depositInvoiceResult.paidInvoice.id,
           payment_method: depositInvoiceResult.isCard ? "card" : "ach",
         });
-        logStep("Created billing_history record for deposit", { subscriptionId: custSub.id });
+        logStep("Created billing_history record for deposit");
       }
 
-      // FIRST-PERIOD SAFETY NET: If billing anchor caused a $0 first invoice,
-      // charge the first period immediately so the admin doesn't need to "Activate".
-      // SKIP for delayed starts — trial_end means we intentionally deferred billing.
+      // FIRST-PERIOD SAFETY NET — skip for delayed starts
       if (isFirstGroup && custSub && !isDelayedStart) {
         const invoices = await stripe.invoices.list({
           subscription: subscription.id,
@@ -776,12 +744,8 @@ serve(async (req) => {
         if (!hasRealPayment) {
           logStep("No real payment on subscription — charging first period now");
 
-          // Resolve payment method for first period charge
           let fpPaymentMethodId = verifiedPmId;
-          
-          // Use the appRecord already resolved at the top of the function
-          let fpPreferredType: string | null = appRecord?.payment_method_type ?? null;
-
+          const fpPreferredType = appRecord?.payment_method_type ?? null;
           const fpCardFirst = fpPreferredType === "card";
           const fpPrimaryType = fpCardFirst ? "card" : "us_bank_account";
           const fpFallbackType = fpCardFirst ? "us_bank_account" : "card";
@@ -806,7 +770,6 @@ serve(async (req) => {
               invoice_settings: { default_payment_method: fpPaymentMethodId },
             });
 
-            // Get subscription items to build first-period charge
             const stripeSubExpanded = await stripe.subscriptions.retrieve(subscription.id, {
               expand: ["items.data.price"],
             });
@@ -835,7 +798,6 @@ serve(async (req) => {
               }
             }
 
-            // Detect card and apply surcharge
             const fpPmInfo = await stripe.paymentMethods.retrieve(fpPaymentMethodId);
             const fpIsCard = fpPmInfo.type === "card";
             if (fpIsCard && totalAmount > 0) {
@@ -851,18 +813,16 @@ serve(async (req) => {
                   description: "Card processing fee",
                 });
                 totalAmount += surcharge;
-                logStep("Card surcharge applied to first period", { surcharge: surcharge / 100 });
               }
             }
 
-            // Sanity ceiling
             const FIRST_PERIOD_CEILING_CENTS = 10000 * 100;
             if (totalAmount > FIRST_PERIOD_CEILING_CENTS) {
               logStep("First period exceeds ceiling, skipping auto-charge", { totalAmount: totalAmount / 100 });
             } else if (totalAmount > 0) {
               const finalized = await stripe.invoices.finalizeInvoice(firstPeriodInvoice.id);
               const paid = await stripe.invoices.pay(finalized.id, { payment_method: fpPaymentMethodId });
-              logStep("First period invoice charged", { invoiceId: paid.id, status: paid.status, amountPaid: paid.amount_paid / 100 });
+              logStep("First period invoice charged", { invoiceId: paid.id, status: paid.status });
 
               await supabaseClient.from("billing_history").insert({
                 subscription_id: custSub.id,
@@ -875,30 +835,25 @@ serve(async (req) => {
                 stripe_invoice_id: paid.id,
                 payment_method: fpIsCard ? "card" : "ach",
               });
-              logStep("Created billing_history record for first period");
             }
           } else {
-            logStep("Warning: no payment method found for first-period charge, will require manual activation");
+            logStep("Warning: no payment method found for first-period charge");
           }
         }
       }
 
-      // Track discount if applied (only on first group)
+      // Track discount
       if (isFirstGroup && discountId && custSub) {
         await supabaseClient
           .from("applied_discounts")
-          .insert({
-            subscription_id: custSub.id,
-            discount_id: discountId,
-          });
-        logStep("Applied discount to subscription");
+          .insert({ subscription_id: custSub.id, discount_id: discountId });
       }
 
       createdSubscriptions.push({
         subscriptionId: custSub.id,
         stripeSubscriptionId: subscription.id,
         status: subscription.status,
-        anchorDay: groupKey,
+        groupKey,
       });
 
       if (isFirstGroup) {
@@ -921,7 +876,6 @@ serve(async (req) => {
         subscriptionId: primarySubscriptionId,
         stripeSubscriptionId: primaryStripeSubscriptionId,
         status: primaryStatus,
-        // Include all created subscriptions for multi-group scenarios
         allSubscriptions: createdSubscriptions.length > 1 ? createdSubscriptions : undefined,
       }),
       {
@@ -931,7 +885,54 @@ serve(async (req) => {
     );
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    logStep("ERROR", { message: errorMessage });
+    logStep("ERROR — initiating rollback", { message: errorMessage });
+
+    // ==========================================
+    // ROLLBACK: cancel Stripe objects + release trailers
+    // ==========================================
+    try {
+      const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
+      if (stripeKey && rollbackActions.length > 0) {
+        const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
+        for (const action of rollbackActions.reverse()) {
+          try {
+            if (action.type === "subscription") {
+              await stripe.subscriptions.cancel(action.id);
+              logStep("Rollback: canceled Stripe subscription", { id: action.id });
+            } else if (action.type === "invoice") {
+              try {
+                await stripe.invoices.voidInvoice(action.id);
+                logStep("Rollback: voided Stripe invoice", { id: action.id });
+              } catch {
+                // Invoice may not be voidable (already paid/draft)
+                logStep("Rollback: could not void invoice (may be paid or draft)", { id: action.id });
+              }
+            }
+          } catch (rollbackErr: any) {
+            logStep("Rollback warning: failed to undo Stripe object", { id: action.id, error: rollbackErr.message });
+          }
+        }
+      }
+
+      // Release trailers that were marked rented
+      if (trailersMarkedRented.length > 0) {
+        const supabaseClient = createClient(
+          Deno.env.get("SUPABASE_URL") ?? "",
+          Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+          { auth: { persistSession: false } }
+        );
+        for (const tid of trailersMarkedRented) {
+          await supabaseClient
+            .from("trailers")
+            .update({ is_rented: false, customer_id: null, status: "available" })
+            .eq("id", tid);
+        }
+        logStep("Rollback: released trailers", { count: trailersMarkedRented.length });
+      }
+    } catch (rollbackError: any) {
+      logStep("CRITICAL: Rollback itself failed", { error: rollbackError.message });
+    }
+
     return new Response(
       JSON.stringify({ error: errorMessage }),
       {
