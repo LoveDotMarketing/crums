@@ -11,7 +11,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Copy, Loader2, Star, DollarSign, Users, TrendingUp, FileText } from "lucide-react";
 
 export default function EmployeeDashboard() {
-  const { user } = useAuth();
+  const { user, effectiveUserId } = useAuth();
   const { toast } = useToast();
 
   // Fetch my staff profile
