@@ -610,6 +610,9 @@ const FacebookLanding = () => {
           </div>
         </div>
       </footer>
+      <Suspense fallback={null}>
+        <ChatBot userType="public" />
+      </Suspense>
     </>
   );
 };

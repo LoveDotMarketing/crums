@@ -575,6 +575,9 @@ const GoogleLanding = () => {
           </div>
         </div>
       </footer>
+      <Suspense fallback={null}>
+        <ChatBot userType="public" />
+      </Suspense>
     </>
   );
 };

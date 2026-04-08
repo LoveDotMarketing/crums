@@ -594,6 +594,9 @@ const LinkedInLanding = () => {
           </div>
         </div>
       </footer>
+      <Suspense fallback={null}>
+        <ChatBot userType="public" />
+      </Suspense>
     </>
   );
 };
