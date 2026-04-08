@@ -16,17 +16,17 @@ export default function EmployeeDashboard() {
 
   // Fetch my staff profile
   const { data: staffProfile, isLoading } = useQuery({
-    queryKey: ["my-staff-profile", user?.id],
+    queryKey: ["my-staff-profile", effectiveUserId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("staff_profiles")
         .select("*")
-        .eq("user_id", user!.id)
+        .eq("user_id", effectiveUserId!)
         .single();
       if (error) throw error;
       return data;
     },
-    enabled: !!user?.id,
+    enabled: !!effectiveUserId,
   });
 
   // Fetch my leads
