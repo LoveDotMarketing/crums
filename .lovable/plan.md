@@ -1,44 +1,28 @@
 
 
-## Fix: `trailers is not defined` Runtime Error in create-subscription
+## Fix: Three Bugs in create-subscription That Will Crash Every Call
 
-### Root Cause
-The edge function logs show: `"trailers is not defined"` (line 367). The code references a `trailers` variable (array of trailer objects with `id`, `trailer_number`, etc.) but this variable was never defined. The request body only provides `trailerIds` (string array), and the only trailer query (lines 139-143) stores results in `rentedTrailers` — which is scoped to rented trailers only.
+### Bugs Found
 
-Line 367: `const anchorGroups = new Map<string, typeof trailers>();`
-Line 369: `for (const trailer of trailers) {`
+**Bug 1: `globalAnchorDay` is not defined (line 383)**
+The code references `globalAnchorDay` but this variable was never declared. The request body destructures it as `billingAnchorDay` on line 104. This will throw a `ReferenceError` at runtime for every subscription creation attempt, just like the previous `trailers is not defined` crash.
 
-Both crash because `trailers` doesn't exist.
+**Bug 2: `trailer.rental_rate` — wrong column name (lines 442, 692)**
+The SELECT query on line 157 fetches `default_rate`, but lines 442 and 692 reference `trailer.rental_rate`. This will silently resolve to `undefined`, causing every trailer to fall through to `getDefaultRate()` and ignore any custom default rate set on the trailer record. For customers with negotiated rates stored on the trailer, they'd be billed the generic type-based default instead.
+
+**Bug 3: `trailer.type` — wrong column name (lines 442, 692)**
+Same issue: the SELECT fetches `trailer_type` but the code calls `getDefaultRate(trailer.type)`. Since `trailer.type` is `undefined`, `getDefaultRate` will receive `undefined`, which won't match any type check and will always return the $700 dry van default — even for flatbeds ($750) and reefers ($850).
 
 ### Fix
 
 **File: `supabase/functions/create-subscription/index.ts`**
 
-Add a trailer data fetch after the rented-by-others check (around line 152), before the Stripe initialization:
+1. **Line 383**: Change `globalAnchorDay` to `billingAnchorDay`
+2. **Lines 442 and 692**: Change `trailer.rental_rate` to `trailer.default_rate` and `trailer.type` to `trailer.trailer_type`
 
-```typescript
-// Fetch full trailer records for all requested trailers
-const { data: trailers, error: trailerFetchError } = await supabaseClient
-  .from("trailers")
-  .select("id, trailer_number, trailer_type, year, make, model, default_rate, customer_id")
-  .in("id", trailerIds);
+All three are single-token renames — no logic changes, no new code.
 
-if (trailerFetchError || !trailers?.length) {
-  throw new Error("Failed to fetch trailer details");
-}
-logStep("Fetched trailer records", { count: trailers.length });
-```
-
-This single addition defines the `trailers` variable that the rest of the function (lines 367-710+) depends on for anchor grouping, price creation, subscription item building, and trailer status updates.
-
-### Why This Was Missing
-The previous edits to harden PM resolution and add auto-activation likely reorganized the top of the function, and the original trailer fetch query was either lost or was never present (relying on a different variable name that got refactored away).
-
-### No other changes needed
-- No migration
-- No UI changes
-- No other edge function changes
-
-### Expected Result
-Stevie's subscription creation will proceed past the trailer grouping step and complete successfully.
+### Impact
+- Bug 1 is a hard crash (ReferenceError) — this is why Stevie's subscription failed
+- Bugs 2-3 cause silent wrong billing rates for any trailer with a custom rate or non-dry-van type
 
