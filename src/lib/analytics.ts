@@ -42,6 +42,9 @@ export const trackFormSubmission = (formName: string, success: boolean = true) =
     form_name: formName,
     success: success,
   });
+  if (success) {
+    trackFacebookEvent('Lead', { content_name: formName });
+  }
 };
 
 export const trackConversion = (
@@ -52,6 +55,13 @@ export const trackConversion = (
     conversion_type: conversionType,
     value: value || 0,
   });
+  if (conversionType === 'signup') {
+    trackFacebookEvent('CompleteRegistration');
+  } else if (conversionType === 'quote_request' || conversionType === 'rental_request') {
+    trackFacebookEvent('Lead', { content_name: conversionType });
+  } else if (conversionType === 'application_submit') {
+    trackFacebookEvent('SubmitApplication');
+  }
 };
 
 export const trackLogin = (method: string = 'email') => {
@@ -60,6 +70,7 @@ export const trackLogin = (method: string = 'email') => {
 
 export const trackSignup = (method: string = 'email') => {
   trackEvent('sign_up', { method });
+  trackFacebookEvent('CompleteRegistration', { content_name: method });
 };
 
 export const trackReferralAction = (action: 'copy_code' | 'share_code', code?: string) => {
@@ -115,6 +126,7 @@ export const trackSignupFailed = (errorType: string) => {
 // Application tracking
 export const trackApplicationStarted = () => {
   trackEvent('application_started', { event_category: 'conversion' });
+  trackFacebookEvent('InitiateCheckout', { content_name: 'application' });
 };
 
 export const trackApplicationSectionComplete = (section: string) => {
