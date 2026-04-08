@@ -323,7 +323,8 @@ serve(async (req) => {
           'eric@crumsleasing.com',
           'ambrosia@crumsleasing.com',
           'sales@crumsleasing.com',
-          'lovedotmarketing@gmail.com'
+          'lovedotmarketing@gmail.com',
+          'adam@crumsleasing.com'
         ];
 
         // Send email via SendGrid
