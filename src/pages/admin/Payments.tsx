@@ -49,12 +49,15 @@ export default function Payments() {
 
   const statusBadge = (status: string) => {
     switch (status) {
-      case "paid":
+      case "succeeded":
         return <Badge className="bg-green-100 text-green-800 hover:bg-green-100"><CheckCircle2 className="h-3 w-3 mr-1" />Paid</Badge>;
       case "pending":
+      case "processing":
         return <Badge variant="secondary"><Clock className="h-3 w-3 mr-1" />Pending</Badge>;
       case "failed":
         return <Badge variant="destructive"><AlertTriangle className="h-3 w-3 mr-1" />Failed</Badge>;
+      case "refunded":
+        return <Badge variant="outline">Refunded</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
@@ -70,8 +73,8 @@ export default function Payments() {
     return matchesSearch && matchesStatus;
   });
 
-  const totalPaid = payments?.filter(p => p.status === "paid").reduce((sum, p) => sum + Number(p.net_amount), 0) || 0;
-  const totalPending = payments?.filter(p => p.status === "pending").reduce((sum, p) => sum + Number(p.net_amount), 0) || 0;
+  const totalPaid = payments?.filter(p => p.status === "succeeded").reduce((sum, p) => sum + Number(p.net_amount), 0) || 0;
+  const totalPending = payments?.filter(p => p.status === "pending" || p.status === "processing").reduce((sum, p) => sum + Number(p.net_amount), 0) || 0;
   const totalFailed = payments?.filter(p => p.status === "failed").reduce((sum, p) => sum + Number(p.amount), 0) || 0;
 
   return (
