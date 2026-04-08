@@ -43,19 +43,6 @@ export function loadDeferredAnalytics(): void {
   liScript.src = 'https://snap.licdn.com/li.lms-analytics/insight.min.js';
   document.head.appendChild(liScript);
 
-  // Meta Pixel - stub already initialized in index.html synchronously
-  // Queue init + PageView BEFORE loading the SDK (matches standard snippet flow)
-  window.fbq('init', '1555487965511323');
-  window.fbq('track', 'PageView');
-
-  const fbScript = document.createElement('script');
-  fbScript.async = true;
-  fbScript.src = 'https://connect.facebook.net/en_US/fbevents.js';
-  fbScript.onload = () => {
-    console.log('[Analytics] Meta Pixel loaded successfully');
-  };
-  fbScript.onerror = () => {
-    console.warn('[Analytics] Meta Pixel failed to load - likely blocked by ad blocker');
-  };
-  document.head.appendChild(fbScript);
+  // Meta Pixel is fully loaded via index.html (complete SDK + init + PageView)
+  // No deferred loading needed for Meta Pixel
 }
