@@ -475,18 +475,46 @@ serve(async (req) => {
 
       // Set billing cycle anchor — use explicit firstBillingDate if provided, else weekday/monthly anchor
       let anchorTimestamp: number | undefined;
+      let isDelayedStart = false; // True when firstBillingDate is beyond Stripe's allowed anchor window
       if (firstBillingDate) {
-        // Admin explicitly chose the first billing date — use it directly as the anchor
+        // Admin explicitly chose the first billing date
         const fbDate = new Date(firstBillingDate + "T00:00:00Z");
-        anchorTimestamp = Math.floor(fbDate.getTime() / 1000);
-        logStep("Using explicit firstBillingDate as anchor", { firstBillingDate, anchorTimestamp, group: groupKey });
+        const fbTimestamp = Math.floor(fbDate.getTime() / 1000);
+        const nowTimestamp = Math.floor(Date.now() / 1000);
+        
+        // Stripe rejects billing_cycle_anchor when it's beyond the next natural billing date.
+        // For monthly billing, max anchor is ~1 month out; for weekly, ~1 week out.
+        // Strategy: if firstBillingDate is within 25 days (safe buffer for monthly), use anchor directly.
+        // Otherwise, use trial_end to defer the first charge to the desired date.
+        const maxDirectAnchorSeconds = groupBillingCycle === "weekly" || groupBillingCycle === "biweekly"
+          ? 13 * 24 * 3600  // ~13 days for weekly/biweekly
+          : 25 * 24 * 3600; // ~25 days for monthly
+        
+        if ((fbTimestamp - nowTimestamp) <= maxDirectAnchorSeconds) {
+          // Close enough — use direct billing_cycle_anchor
+          anchorTimestamp = fbTimestamp;
+          logStep("Using explicit firstBillingDate as direct anchor", { firstBillingDate, anchorTimestamp, group: groupKey });
+        } else {
+          // Too far out — use trial_end to defer, with billing_cycle_anchor for ongoing alignment
+          isDelayedStart = true;
+          subscriptionParams.trial_end = fbTimestamp;
+          // Set anchor to same day-of-month so future billing stays aligned
+          if (anchorDay && groupBillingCycle !== "weekly") {
+            const nearAnchor = calculateNextAnchorDate(anchorDay);
+            if (nearAnchor) {
+              subscriptionParams.billing_cycle_anchor = nearAnchor;
+            }
+          }
+          subscriptionParams.proration_behavior = "none";
+          logStep("Using delayed-start strategy (trial_end)", { firstBillingDate, trialEnd: fbTimestamp, anchorDay, group: groupKey });
+        }
       } else if (groupBillingCycle === "weekly" && anchorDay !== null) {
         anchorTimestamp = calculateNextWeekdayAnchor(anchorDay);
         logStep("Using weekly anchor (next weekday)", { dayOfWeek: anchorDay, anchorTimestamp, group: groupKey });
       } else {
         anchorTimestamp = calculateNextAnchorDate(anchorDay);
       }
-      if (anchorTimestamp) {
+      if (anchorTimestamp && !isDelayedStart) {
         subscriptionParams.billing_cycle_anchor = anchorTimestamp;
         subscriptionParams.proration_behavior = "none";
         logStep("Setting billing cycle anchor without prorations (deposit-only immediate charge)", { anchorDay, anchorTimestamp, group: groupKey });
@@ -737,8 +765,9 @@ serve(async (req) => {
       }
 
       // FIRST-PERIOD SAFETY NET: If billing anchor caused a $0 first invoice,
-      // charge the first period immediately so the admin doesn't need to "Activate"
-      if (isFirstGroup && custSub) {
+      // charge the first period immediately so the admin doesn't need to "Activate".
+      // SKIP for delayed starts — trial_end means we intentionally deferred billing.
+      if (isFirstGroup && custSub && !isDelayedStart) {
         const invoices = await stripe.invoices.list({
           subscription: subscription.id,
           limit: 10,
