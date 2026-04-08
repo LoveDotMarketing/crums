@@ -273,7 +273,14 @@ serve(async (req) => {
         const safeService = escapeHtml(formData.service || 'Not specified');
         const safeMessage = formData.message ? escapeHtml(formData.message) : '';
         
-        const emailSubject = `New Quote Request from ${safeName} - ${safeService}`;
+        const source = inferSource(formData);
+        const sourceLabel = source === 'Google (paid)' ? 'GPaid'
+          : source === 'Google (organic)' ? 'Organic'
+          : source === 'Bing (organic)' ? 'Bing'
+          : source;
+        const campaignSuffix = formData.utm_campaign ? ` - ${escapeHtml(formData.utm_campaign)}` : '';
+        const sourceTag = `[${sourceLabel}${campaignSuffix}]`;
+        const emailSubject = `${sourceTag} Request from ${safeName} - ${safeService}`;
         
         const emailBody = `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
