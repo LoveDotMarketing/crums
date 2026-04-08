@@ -55,13 +55,7 @@ export const trackConversion = (
     conversion_type: conversionType,
     value: value || 0,
   });
-  if (conversionType === 'signup') {
-    trackFacebookEvent('CompleteRegistration');
-  } else if (conversionType === 'quote_request' || conversionType === 'rental_request') {
-    trackFacebookEvent('Lead', { content_name: conversionType });
-  } else if (conversionType === 'application_submit') {
-    trackFacebookEvent('SubmitApplication');
-  }
+  trackFacebookEvent('Lead', { content_name: conversionType });
 };
 
 export const trackLogin = (method: string = 'email') => {
@@ -96,6 +90,7 @@ export const trackPhoneClick = (location: string) => {
     page_path: window.location.pathname,
     page_title: document.title,
   });
+  trackFacebookEvent('Contact', { content_name: 'phone_click' });
 };
 
 // Form funnel tracking
@@ -117,6 +112,7 @@ export const trackFormProgress = (formName: string, section: string, completionP
 // Signup funnel tracking
 export const trackSignupStarted = (source: string) => {
   trackEvent('signup_started', { source });
+  trackFacebookEvent('CompleteRegistration', { content_name: source });
 };
 
 export const trackSignupFailed = (errorType: string) => {
@@ -143,6 +139,7 @@ export const trackCtaClick = (buttonText: string, page: string, destination?: st
     cta_location: page,
     destination: destination || '',
   });
+  trackFacebookEvent('ViewContent', { content_name: buttonText });
 };
 
 // Calculator usage
