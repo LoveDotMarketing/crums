@@ -495,18 +495,17 @@ serve(async (req) => {
           anchorTimestamp = fbTimestamp;
           logStep("Using explicit firstBillingDate as direct anchor", { firstBillingDate, anchorTimestamp, group: groupKey });
         } else {
-          // Too far out — use trial_end to defer, with billing_cycle_anchor for ongoing alignment
+          // Too far out — use trial_end to defer the first charge.
+          // Do NOT set billing_cycle_anchor here: Stripe rejects it when
+          // trial_end is after the anchor. Stripe will automatically align
+          // future billing to the trial_end date.
           isDelayedStart = true;
           subscriptionParams.trial_end = fbTimestamp;
-          // Set anchor to same day-of-month so future billing stays aligned
-          if (anchorDay && groupBillingCycle !== "weekly") {
-            const nearAnchor = calculateNextAnchorDate(anchorDay);
-            if (nearAnchor) {
-              subscriptionParams.billing_cycle_anchor = nearAnchor;
-            }
-          }
           subscriptionParams.proration_behavior = "none";
-          logStep("Using delayed-start strategy (trial_end)", { firstBillingDate, trialEnd: fbTimestamp, anchorDay, group: groupKey });
+          logStep("Using delayed-start strategy (trial_end only, no billing_cycle_anchor)", { 
+            firstBillingDate, trialEnd: fbTimestamp, anchorDay, group: groupKey,
+            mode: "delayed_trial_only"
+          });
         }
       } else if (groupBillingCycle === "weekly" && anchorDay !== null) {
         anchorTimestamp = calculateNextWeekdayAnchor(anchorDay);
