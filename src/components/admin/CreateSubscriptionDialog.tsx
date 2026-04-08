@@ -103,7 +103,6 @@ export function CreateSubscriptionDialog({ onSuccess, mode = "dialog", onCancel 
     queryKey: ["customer-application-billing-preference", selectedCustomerId],
     queryFn: async () => {
       if (!selectedCustomerId) return null;
-      // First get the customer email to find their profile
       const { data: customer } = await supabase
         .from("customers")
         .select("email")
@@ -112,7 +111,6 @@ export function CreateSubscriptionDialog({ onSuccess, mode = "dialog", onCancel 
       
       if (!customer?.email) return null;
       
-      // Get profile by email to find user_id
       const { data: profile } = await supabase
         .from("profiles")
         .select("id")
@@ -121,15 +119,16 @@ export function CreateSubscriptionDialog({ onSuccess, mode = "dialog", onCancel 
       
       if (!profile?.id) return null;
       
-      // Get application with billing preference
+      // Use order + limit to handle repeat customers instead of maybeSingle
       const { data, error } = await supabase
         .from("customer_applications")
         .select("billing_anchor_day")
         .eq("user_id", profile.id)
-        .maybeSingle();
+        .order("updated_at", { ascending: false })
+        .limit(1);
       
-      if (error) return null;
-      return data;
+      if (error || !data?.length) return null;
+      return data[0];
     },
     enabled: !!selectedCustomerId && (isOpen || mode === "inline"),
   });
@@ -257,7 +256,7 @@ export function CreateSubscriptionDialog({ onSuccess, mode = "dialog", onCancel 
       if (customer?.email) {
         let hasPaymentMethod = false;
 
-        // Path 1: profile → user_id → customer_applications (case-insensitive)
+        // Path 1: profile → user_id → customer_applications (hardened for repeat customers)
         const { data: profile } = await supabase
           .from("profiles")
           .select("id")
@@ -265,26 +264,30 @@ export function CreateSubscriptionDialog({ onSuccess, mode = "dialog", onCancel 
           .maybeSingle();
         
         if (profile?.id) {
-          const { data: application } = await supabase
+          const { data: applications } = await supabase
             .from("customer_applications")
             .select("stripe_payment_method_id")
             .eq("user_id", profile.id)
-            .maybeSingle();
+            .not("stripe_payment_method_id", "is", null)
+            .order("updated_at", { ascending: false })
+            .limit(1);
           
-          if (application?.stripe_payment_method_id) {
+          if (applications?.[0]?.stripe_payment_method_id) {
             hasPaymentMethod = true;
           }
         }
 
-        // Path 2 (fallback): customer_id → customer_applications (admin-led ACH setup)
+        // Path 2 (fallback): customer_id → customer_applications
         if (!hasPaymentMethod) {
-          const { data: appByCustomerId } = await supabase
+          const { data: appByCustomerRows } = await supabase
             .from("customer_applications")
             .select("stripe_payment_method_id")
             .eq("customer_id", selectedCustomerId)
-            .maybeSingle();
+            .not("stripe_payment_method_id", "is", null)
+            .order("updated_at", { ascending: false })
+            .limit(1);
 
-          if (appByCustomerId?.stripe_payment_method_id) {
+          if (appByCustomerRows?.[0]?.stripe_payment_method_id) {
             hasPaymentMethod = true;
           }
         }
