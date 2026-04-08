@@ -96,18 +96,17 @@ export const ChatBot = ({ userType }: ChatBotProps) => {
     }
   }, [isOpen, initChat]);
 
-  // Track chatbot_message_sent via DOM listener on n8n chat form
+  // Track chatbot_message_sent via click/keypress on the n8n chat send button
   useEffect(() => {
     if (!isOpen || isLoading || hasError || !proxyUrl) return;
 
-    let form: HTMLFormElement | null = null;
     let lastFireTime = 0;
 
-    const handleSubmit = () => {
-      const input = form?.querySelector('textarea, input[type="text"]') as HTMLInputElement | HTMLTextAreaElement | null;
-      if (!input || !input.value.trim()) return;
+    const fireIfHasInput = (container: HTMLElement) => {
+      const textarea = container.querySelector('textarea') as HTMLTextAreaElement | null;
+      if (!textarea || !textarea.value.trim()) return;
       const now = Date.now();
-      if (now - lastFireTime < 100) return;
+      if (now - lastFireTime < 300) return;
       lastFireTime = now;
       trackChatbotMessage();
     };
@@ -115,26 +114,32 @@ export const ChatBot = ({ userType }: ChatBotProps) => {
     const container = document.getElementById('n8n-chat-container');
     if (!container) return;
 
-    // Check if form already exists
-    form = container.querySelector('form');
-    if (form) {
-      form.addEventListener('submit', handleSubmit, { capture: true });
-      return () => { form?.removeEventListener('submit', handleSubmit, { capture: true }); };
-    }
-
-    // Otherwise observe for it
-    const observer = new MutationObserver(() => {
-      form = container.querySelector('form');
-      if (form) {
-        observer.disconnect();
-        form.addEventListener('submit', handleSubmit, { capture: true });
+    // The n8n widget uses div.chat-input with a textarea + a send button (no <form>).
+    // Listen for clicks on the send button and Enter key on the textarea.
+    const handleClick = (e: Event) => {
+      const target = e.target as HTMLElement;
+      // The send button is a <button> inside .chat-input
+      if (target.closest('.chat-input button')) {
+        fireIfHasInput(container);
       }
-    });
-    observer.observe(container, { childList: true, subtree: true });
+    };
+
+    const handleKeydown = (e: Event) => {
+      const ke = e as KeyboardEvent;
+      if (ke.key === 'Enter' && !ke.shiftKey) {
+        const target = ke.target as HTMLElement;
+        if (target.tagName === 'TEXTAREA' && target.closest('.chat-input')) {
+          fireIfHasInput(container);
+        }
+      }
+    };
+
+    container.addEventListener('click', handleClick, { capture: true });
+    container.addEventListener('keydown', handleKeydown, { capture: true });
 
     return () => {
-      observer.disconnect();
-      form?.removeEventListener('submit', handleSubmit, { capture: true });
+      container.removeEventListener('click', handleClick, { capture: true });
+      container.removeEventListener('keydown', handleKeydown, { capture: true });
     };
   }, [isOpen, isLoading, hasError, proxyUrl]);
 
