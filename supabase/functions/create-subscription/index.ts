@@ -380,7 +380,7 @@ serve(async (req) => {
     
     for (const trailer of trailers) {
       const perTrailerSchedule = trailerBillingSchedules?.[trailer.id];
-      const resolvedAnchor = perTrailerSchedule?.billing_anchor_day ?? globalAnchorDay ?? null;
+      const resolvedAnchor = perTrailerSchedule?.billing_anchor_day ?? billingAnchorDay ?? null;
       const groupKey = resolvedAnchor !== null ? String(resolvedAnchor) : "default";
       
       if (!anchorGroups.has(groupKey)) {
@@ -439,7 +439,7 @@ serve(async (req) => {
       // Create Stripe prices for this group's trailers using the GROUP's billing interval
       const subscriptionItems: Stripe.SubscriptionCreateParams.Item[] = [];
       for (const trailer of groupTrailers) {
-        const rate = customRates?.[trailer.id] ?? trailer.rental_rate ?? getDefaultRate(trailer.type);
+        const rate = customRates?.[trailer.id] ?? trailer.default_rate ?? getDefaultRate(trailer.trailer_type);
         const price = await stripe.prices.create({
           unit_amount: Math.round(rate * 100),
           currency: "usd",
@@ -689,7 +689,7 @@ serve(async (req) => {
       for (let i = 0; i < groupTrailers.length; i++) {
         const trailer = groupTrailers[i];
         const stripeItem = subscription.items.data[i];
-        const rate = customRates?.[trailer.id] ?? trailer.rental_rate ?? getDefaultRate(trailer.type);
+        const rate = customRates?.[trailer.id] ?? trailer.default_rate ?? getDefaultRate(trailer.trailer_type);
         const isLeaseToOwn = subscriptionType === "lease_to_own" ? true : (leaseToOwnFlags?.[trailer.id] ?? false);
         const ownershipTransferDate = isLeaseToOwn && endDate ? endDate : null;
         
