@@ -16,14 +16,14 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
-import { UserPlus, Shield, Wrench, Mail, Loader2, Users, MoreHorizontal, Trash2, RefreshCw, Eye } from "lucide-react";
+import { UserPlus, Shield, Wrench, Mail, Loader2, Users, MoreHorizontal, Trash2, RefreshCw, Eye, BadgeDollarSign } from "lucide-react";
 
 interface StaffMember {
   id: string;
   email: string;
   first_name: string | null;
   last_name: string | null;
-  role: "admin" | "mechanic";
+  role: "admin" | "mechanic" | "sales";
   created_at: string;
   staffProfileId?: string;
 }
@@ -35,7 +35,7 @@ export default function Staff() {
   const queryClient = useQueryClient();
   const [isInviteOpen, setIsInviteOpen] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
-  const [inviteRole, setInviteRole] = useState<"admin" | "mechanic">("admin");
+  const [inviteRole, setInviteRole] = useState<"admin" | "mechanic" | "sales">("admin");
   const [inviteFirstName, setInviteFirstName] = useState("");
   const [inviteLastName, setInviteLastName] = useState("");
   const [memberToRemove, setMemberToRemove] = useState<StaffMember | null>(null);
@@ -48,7 +48,7 @@ export default function Staff() {
       const { data: roles, error: rolesError } = await supabase
         .from("user_roles")
         .select("user_id, role")
-        .in("role", ["admin", "mechanic"]);
+        .in("role", ["admin", "mechanic", "sales"]);
 
       if (rolesError) throw rolesError;
 
@@ -78,7 +78,7 @@ export default function Staff() {
           email: profile?.email || "Unknown",
           first_name: profile?.first_name,
           last_name: profile?.last_name,
-          role: r.role as "admin" | "mechanic",
+          role: r.role as "admin" | "mechanic" | "sales",
           created_at: profile?.created_at || "",
           staffProfileId: sp?.id,
         };
@@ -90,7 +90,7 @@ export default function Staff() {
 
   // Invite staff mutation
   const inviteMutation = useMutation({
-    mutationFn: async (data: { email: string; role: "admin" | "mechanic"; firstName?: string; lastName?: string }) => {
+    mutationFn: async (data: { email: string; role: "admin" | "mechanic" | "sales"; firstName?: string; lastName?: string }) => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error("Not authenticated");
 
@@ -152,7 +152,7 @@ export default function Staff() {
 
   // Change role mutation
   const changeRoleMutation = useMutation({
-    mutationFn: async ({ userId, role }: { userId: string; role: "admin" | "mechanic" }) => {
+    mutationFn: async ({ userId, role }: { userId: string; role: "admin" | "mechanic" | "sales" }) => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error("Not authenticated");
 
@@ -233,7 +233,7 @@ export default function Staff() {
     }
   };
 
-  const handleChangeRole = (member: StaffMember, newRole: "admin" | "mechanic") => {
+  const handleChangeRole = (member: StaffMember, newRole: "admin" | "mechanic" | "sales") => {
     if (member.role === newRole) return;
     changeRoleMutation.mutate({ userId: member.id, role: newRole });
   };
@@ -253,6 +253,7 @@ export default function Staff() {
 
   const adminCount = staffMembers?.filter(s => s.role === "admin").length || 0;
   const mechanicCount = staffMembers?.filter(s => s.role === "mechanic").length || 0;
+  const salesCount = staffMembers?.filter(s => s.role === "sales").length || 0;
 
   const isCurrentUser = (memberId: string) => user?.id === memberId;
 
@@ -296,7 +297,7 @@ export default function Staff() {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="role">Role *</Label>
-                    <Select value={inviteRole} onValueChange={(v) => setInviteRole(v as "admin" | "mechanic")}>
+                    <Select value={inviteRole} onValueChange={(v) => setInviteRole(v as "admin" | "mechanic" | "sales")}>
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
@@ -312,8 +313,14 @@ export default function Staff() {
                             <Wrench className="h-4 w-4" />
                             Mechanic
                           </div>
-                        </SelectItem>
-                      </SelectContent>
+                         </SelectItem>
+                         <SelectItem value="sales">
+                           <div className="flex items-center gap-2">
+                             <BadgeDollarSign className="h-4 w-4" />
+                             Sales
+                           </div>
+                         </SelectItem>
+                       </SelectContent>
                     </Select>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
@@ -351,7 +358,7 @@ export default function Staff() {
           </div>
 
           {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">Total Staff</CardTitle>
@@ -371,6 +378,17 @@ export default function Staff() {
                 <div className="flex items-center gap-2">
                   <Shield className="h-5 w-5 text-primary" />
                   <span className="text-2xl font-bold">{adminCount}</span>
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">Sales</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center gap-2">
+                  <BadgeDollarSign className="h-5 w-5 text-primary" />
+                  <span className="text-2xl font-bold">{salesCount}</span>
                 </div>
               </CardContent>
             </Card>
@@ -432,9 +450,11 @@ export default function Staff() {
                         </TableCell>
                         <TableCell>{member.email}</TableCell>
                         <TableCell>
-                          <Badge variant={member.role === "admin" ? "default" : "secondary"}>
+                          <Badge variant={member.role === "admin" ? "default" : member.role === "sales" ? "outline" : "secondary"}>
                             {member.role === "admin" ? (
                               <Shield className="h-3 w-3 mr-1" />
+                            ) : member.role === "sales" ? (
+                              <BadgeDollarSign className="h-3 w-3 mr-1" />
                             ) : (
                               <Wrench className="h-3 w-3 mr-1" />
                             )}
@@ -472,13 +492,22 @@ export default function Staff() {
                                     View As {member.role === "admin" ? "Admin" : "Mechanic"}
                                   </DropdownMenuItem>
                                   <DropdownMenuSeparator />
-                                  <DropdownMenuItem
-                                    onClick={() => handleChangeRole(member, member.role === "admin" ? "mechanic" : "admin")}
-                                    disabled={changeRoleMutation.isPending}
-                                  >
-                                    <RefreshCw className="h-4 w-4 mr-2" />
-                                    {member.role === "admin" ? "Change to Mechanic" : "Change to Admin"}
-                                  </DropdownMenuItem>
+                                   <DropdownMenuItem
+                                     onClick={() => handleChangeRole(member, member.role === "admin" ? "mechanic" : "admin")}
+                                     disabled={changeRoleMutation.isPending}
+                                   >
+                                     <RefreshCw className="h-4 w-4 mr-2" />
+                                     Change to {member.role === "admin" ? "Mechanic" : "Admin"}
+                                   </DropdownMenuItem>
+                                   {member.role !== "sales" && (
+                                     <DropdownMenuItem
+                                       onClick={() => handleChangeRole(member, "sales")}
+                                       disabled={changeRoleMutation.isPending}
+                                     >
+                                       <BadgeDollarSign className="h-4 w-4 mr-2" />
+                                       Change to Sales
+                                     </DropdownMenuItem>
+                                   )}
                                   <DropdownMenuSeparator />
                                   <DropdownMenuItem
                                     onClick={() => setMemberToRemove(member)}

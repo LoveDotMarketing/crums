@@ -8,7 +8,7 @@ const corsHeaders = {
 
 interface InviteRequest {
   email: string;
-  role: "admin" | "mechanic";
+  role: "admin" | "mechanic" | "sales";
   firstName?: string;
   lastName?: string;
 }
@@ -81,9 +81,9 @@ serve(async (req: Request) => {
       );
     }
 
-    if (!["admin", "mechanic"].includes(role)) {
+    if (!["admin", "mechanic", "sales"].includes(role)) {
       return new Response(
-        JSON.stringify({ error: "Invalid role. Must be 'admin' or 'mechanic'" }),
+        JSON.stringify({ error: "Invalid role. Must be 'admin', 'mechanic', or 'sales'" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -202,7 +202,7 @@ serve(async (req: Request) => {
     // Send welcome email via SendGrid
     const SENDGRID_API_KEY = Deno.env.get("SENDGRID_API_KEY");
     if (SENDGRID_API_KEY && resetLink) {
-      const roleName = role === "admin" ? "Administrator" : "Mechanic";
+      const roleName = role === "admin" ? "Administrator" : role === "sales" ? "Sales" : "Mechanic";
       const staffName = firstName || email.split("@")[0];
 
       const emailHtml = `

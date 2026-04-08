@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -14,7 +14,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Copy, Loader2, Star, DollarSign, Users, TrendingUp, FileText, Sparkles } from "lucide-react";
+import { ArrowLeft, Copy, Loader2, Star, DollarSign, Users, TrendingUp, FileText, Sparkles, Settings2 } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { ALL_SECTION_KEYS, SECTION_LABELS, SectionKey } from "@/hooks/useStaffPermissions";
 
 export default function StaffDetail() {
   const { id } = useParams<{ id: string }>();
@@ -321,6 +323,11 @@ export default function StaffDetail() {
             </Card>
           </div>
 
+          {/* Permissions Panel — only show for non-admin roles */}
+          {staffData.role !== "admin" && (
+            <StaffPermissionsPanel userId={staffData.staffProfile.user_id} />
+          )}
+
           {/* Leads Table */}
           <Card className="mb-6">
             <CardHeader className="flex flex-row items-center justify-between">
@@ -480,5 +487,136 @@ export default function StaffDetail() {
         </main>
       </div>
     </SidebarProvider>
+  );
+}
+
+function StaffPermissionsPanel({ userId }: { userId: string }) {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  const { data: permissions, isLoading } = useQuery({
+    queryKey: ["staff-permissions-detail", userId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("staff_permissions")
+        .select("section_key")
+        .eq("user_id", userId);
+      if (error) throw error;
+      return new Set((data || []).map((r) => r.section_key));
+    },
+  });
+
+  const [localPerms, setLocalPerms] = useState<Set<string>>(new Set());
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (permissions) setLocalPerms(new Set(permissions));
+  }, [permissions]);
+
+  const togglePermission = async (key: SectionKey) => {
+    const next = new Set(localPerms);
+    const adding = !next.has(key);
+    if (adding) {
+      next.add(key);
+    } else {
+      next.delete(key);
+    }
+    setLocalPerms(next);
+    setSaving(true);
+
+    try {
+      if (adding) {
+        const { error } = await supabase
+          .from("staff_permissions")
+          .insert({ user_id: userId, section_key: key });
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from("staff_permissions")
+          .delete()
+          .eq("user_id", userId)
+          .eq("section_key", key);
+        if (error) throw error;
+      }
+      queryClient.invalidateQueries({ queryKey: ["staff-permissions", userId] });
+      queryClient.invalidateQueries({ queryKey: ["staff-permissions-detail", userId] });
+    } catch (err: any) {
+      // revert
+      if (adding) next.delete(key); else next.add(key);
+      setLocalPerms(next);
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const toggleAll = async (on: boolean) => {
+    setSaving(true);
+    try {
+      if (on) {
+        // Insert all missing
+        const missing = ALL_SECTION_KEYS.filter((k) => !localPerms.has(k));
+        if (missing.length > 0) {
+          const { error } = await supabase
+            .from("staff_permissions")
+            .upsert(missing.map((k) => ({ user_id: userId, section_key: k })), { onConflict: "user_id,section_key" });
+          if (error) throw error;
+        }
+        setLocalPerms(new Set(ALL_SECTION_KEYS));
+      } else {
+        const { error } = await supabase
+          .from("staff_permissions")
+          .delete()
+          .eq("user_id", userId);
+        if (error) throw error;
+        setLocalPerms(new Set());
+      }
+      queryClient.invalidateQueries({ queryKey: ["staff-permissions", userId] });
+      queryClient.invalidateQueries({ queryKey: ["staff-permissions-detail", userId] });
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (isLoading) return null;
+
+  return (
+    <Card className="mb-6">
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle className="flex items-center gap-2">
+              <Settings2 className="h-5 w-5" />
+              Section Permissions
+            </CardTitle>
+            <CardDescription>Toggle which admin sections this staff member can access</CardDescription>
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={() => toggleAll(true)} disabled={saving}>
+              Enable All
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => toggleAll(false)} disabled={saving}>
+              Disable All
+            </Button>
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          {ALL_SECTION_KEYS.map((key) => (
+            <div key={key} className="flex items-center justify-between rounded-md border p-3">
+              <span className="text-sm font-medium">{SECTION_LABELS[key]}</span>
+              <Switch
+                checked={localPerms.has(key)}
+                onCheckedChange={() => togglePermission(key)}
+                disabled={saving}
+              />
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
   );
 }

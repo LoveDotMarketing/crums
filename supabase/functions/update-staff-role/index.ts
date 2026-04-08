@@ -78,9 +78,9 @@ serve(async (req) => {
     }
 
     // Validate role
-    if (!["admin", "mechanic"].includes(role)) {
+    if (!["admin", "mechanic", "sales"].includes(role)) {
       return new Response(
-        JSON.stringify({ error: "Invalid role. Must be 'admin' or 'mechanic'" }),
+        JSON.stringify({ error: "Invalid role. Must be 'admin', 'mechanic', or 'sales'" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -101,7 +101,7 @@ serve(async (req) => {
       .from("user_roles")
       .select("id, role")
       .eq("user_id", userId)
-      .in("role", ["admin", "mechanic"])
+      .in("role", ["admin", "mechanic", "sales"])
       .single();
 
     if (targetRoleError || !targetRole) {

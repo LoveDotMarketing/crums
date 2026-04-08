@@ -19,20 +19,22 @@ interface FailedLoginResult {
   minutes_remaining?: number;
 }
 
+export type AppRole = "admin" | "customer" | "mechanic" | "sales";
+
 export interface ImpersonatedUser {
   id: string;
   email: string;
-  role: "admin" | "customer" | "mechanic";
+  role: AppRole;
   displayName?: string;
 }
 
 interface AuthContextType {
   user: User | null;
   session: Session | null;
-  userRole: "admin" | "customer" | "mechanic" | null;
+  userRole: AppRole | null;
   isLoading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: any; locked?: boolean; minutesRemaining?: number }>;
-  signUp: (email: string, password: string, role: "admin" | "customer" | "mechanic") => Promise<{ error: any }>;
+  signUp: (email: string, password: string, role: AppRole) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   checkLoginAllowed: (email: string) => Promise<LoginAttemptResult>;
   // Impersonation
@@ -41,7 +43,7 @@ interface AuthContextType {
   startImpersonation: (user: ImpersonatedUser) => Promise<void>;
   stopImpersonation: () => void;
   effectiveUserId: string | null;
-  effectiveRole: "admin" | "customer" | "mechanic" | null;
+  effectiveRole: AppRole | null;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -49,7 +51,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
-  const [userRole, setUserRole] = useState<"admin" | "customer" | "mechanic" | null>(null);
+  const [userRole, setUserRole] = useState<AppRole | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [impersonatedUser, setImpersonatedUser] = useState<ImpersonatedUser | null>(null);
   const navigate = useNavigate();
@@ -236,7 +238,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         console.error("Error fetching user role:", error);
         setUserRole(null);
       } else {
-        setUserRole(data?.role as "admin" | "customer" | "mechanic");
+        setUserRole(data?.role as AppRole);
       }
     } catch (err) {
       console.error("Error fetching role:", err);
@@ -324,7 +326,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return { error: null };
   };
 
-  const signUp = async (email: string, password: string, role: "admin" | "customer" | "mechanic") => {
+  const signUp = async (email: string, password: string, role: AppRole) => {
     const redirectUrl = `${window.location.origin}/`;
     
     const { data, error } = await supabase.auth.signUp({

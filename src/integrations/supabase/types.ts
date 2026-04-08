@@ -2112,6 +2112,27 @@ export type Database = {
         }
         Relationships: []
       }
+      staff_permissions: {
+        Row: {
+          created_at: string
+          id: string
+          section_key: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          section_key: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          section_key?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       staff_profiles: {
         Row: {
           base_salary: number | null
@@ -3283,7 +3304,7 @@ export type Database = {
       validate_referral_code: { Args: { p_code: string }; Returns: string }
     }
     Enums: {
-      app_role: "admin" | "customer" | "mechanic"
+      app_role: "admin" | "customer" | "mechanic" | "sales"
       billing_cycle: "weekly" | "biweekly" | "monthly" | "semimonthly"
       discount_type: "percentage" | "fixed" | "multi_trailer" | "promo_code"
       payment_status:
@@ -3427,7 +3448,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "customer", "mechanic"],
+      app_role: ["admin", "customer", "mechanic", "sales"],
       billing_cycle: ["weekly", "biweekly", "monthly", "semimonthly"],
       discount_type: ["percentage", "fixed", "multi_trailer", "promo_code"],
       payment_status: [
