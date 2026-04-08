@@ -1,19 +1,40 @@
 
 
-## Fix: Employee Dashboard Not Working During Impersonation
+## Plan: Move Source Tag Before Name in Email Subject
 
-### Problem
-The Employee Dashboard queries `staff_profiles` using `user.id` from `useAuth()`, which is always the real logged-in user (the admin). During impersonation, it should use the impersonated user's ID instead. Adam's staff profile exists — the dashboard just isn't looking it up correctly.
+### Change
 
-### Solution
+**File: `supabase/functions/send-contact-email/index.ts`** — line 276
 
-**File: `src/pages/admin/EmployeeDashboard.tsx`**
+Current:
+```
+New Quote Request from Juan - trailer-leasing
+```
 
-Update the component to pull `impersonatedUser`, `isImpersonating`, and `effectiveUserId` from `useAuth()`. Replace all references to `user.id` with `effectiveUserId` so that:
+New format:
+```
+[GPaid - texas-dry-van] Request from Juan - trailer-leasing
+```
 
-- The staff profile query uses the impersonated user's ID
-- Leads, subscriptions, and reviews all chain off the correct profile
-- The dashboard renders Adam's data when viewing as Adam
+Replace line 276 with:
 
-This is a single-file change — just swap `user.id` → `effectiveUserId` in the query keys and query functions (approximately 3 occurrences).
+```typescript
+const source = inferSource(formData);
+const sourceLabel = source === 'Google (paid)' ? 'GPaid'
+  : source === 'Google (organic)' ? 'Organic'
+  : source === 'Bing (organic)' ? 'Bing'
+  : source;
+const campaignSuffix = formData.utm_campaign ? ` - ${escapeHtml(formData.utm_campaign)}` : '';
+const sourceTag = `[${sourceLabel}${campaignSuffix}]`;
+const emailSubject = `${sourceTag} Request from ${safeName} - ${safeService}`;
+```
+
+### Examples
+- `[GPaid - texas-dry-van] Request from Juan - trailer-leasing`
+- `[Organic] Request from Stevie - trailer-leasing`
+- `[LinkedIn] Request from Omar - Trailer Rentals`
+- `[Direct] Request from Kendall - trailer-leasing`
+- `[Facebook - spring-promo] Request from Gurminder - trailer-leasing`
+
+Single file change, ~6 lines replacing 1 line.
 
