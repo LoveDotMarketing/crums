@@ -7,6 +7,9 @@ interface ProtectedRouteProps {
   requiredRole?: "admin" | "customer" | "mechanic";
 }
 
+// Sales role can access admin routes
+const isAdminLike = (role: string | null) => role === "admin" || role === "sales";
+
 export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) {
   const { user, userRole, isLoading, effectiveRole, isImpersonating } = useAuth();
   const navigate = useNavigate();
@@ -15,15 +18,18 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
     if (!isLoading) {
       if (!user) {
         navigate("/login");
-      } else if (requiredRole && !isImpersonating && userRole !== requiredRole) {
-        // Only redirect if NOT impersonating - when impersonating, we use effectiveRole
-        // Redirect to appropriate dashboard based on actual role
-        if (userRole === "admin") {
-          navigate("/dashboard/admin");
-        } else if (userRole === "customer") {
-          navigate("/dashboard/customer");
-        } else if (userRole === "mechanic") {
-          navigate("/dashboard/mechanic");
+      } else if (requiredRole && !isImpersonating) {
+        // Sales can access admin routes
+        const hasRole = userRole === requiredRole || 
+          (requiredRole === "admin" && isAdminLike(userRole));
+        if (!hasRole) {
+          if (isAdminLike(userRole)) {
+            navigate("/dashboard/admin");
+          } else if (userRole === "customer") {
+            navigate("/dashboard/customer");
+          } else if (userRole === "mechanic") {
+            navigate("/dashboard/mechanic");
+          }
         }
       }
     }
@@ -47,6 +53,7 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
   // 3. Admin is impersonating and the effective role matches the required role
   const hasAccess = !requiredRole || 
     userRole === requiredRole || 
+    (requiredRole === "admin" && isAdminLike(userRole)) ||
     (isImpersonating && effectiveRole === requiredRole);
 
   if (!user || (requiredRole && !hasAccess)) {
