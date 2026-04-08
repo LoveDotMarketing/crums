@@ -100,6 +100,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Navigate to the appropriate dashboard
     switch (targetUser.role) {
       case "admin":
+      case "sales":
         navigate("/dashboard/admin");
         break;
       case "customer":
