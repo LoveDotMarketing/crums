@@ -1060,9 +1060,15 @@ export function CreateSubscriptionDialog({ onSuccess, mode = "dialog", onCancel 
           <span className="text-muted-foreground">Immediate Charge (Deposit Only)</span>
           <span className="font-bold text-lg">${firstChargeTotal.toFixed(2)}</span>
         </div>
-        <div className="text-xs text-muted-foreground">
-          Recurring billing of ${totalMonthlyRate.toFixed(2)} starts on anchor day {billingAnchorDay}
-        </div>
+        {firstBillingDate ? (
+          <div className="text-xs text-muted-foreground">
+            Deposit charges now. Recurring billing of ${totalMonthlyRate.toFixed(2)} starts on {format(firstBillingDate, "MMM d, yyyy")}. No separate activation step needed.
+          </div>
+        ) : (
+          <div className="text-xs text-muted-foreground">
+            Deposit charges now. Recurring billing of ${totalMonthlyRate.toFixed(2)} starts on anchor day {billingAnchorDay}.
+          </div>
+        )}
         <div className="flex justify-between text-sm">
           <span className="text-muted-foreground">Billing</span>
           <span>{effectiveBillingLabel} — Anchor day {billingAnchorDay}</span>
