@@ -95,7 +95,8 @@ serve(async (req) => {
     const recipients = [
       'eric@crumsleasing.com',
       'ambrosia@crumsleasing.com',
-      'sales@crumsleasing.com'
+      'sales@crumsleasing.com',
+      'adam@crumsleasing.com'
     ];
 
     // Send email via SendGrid
