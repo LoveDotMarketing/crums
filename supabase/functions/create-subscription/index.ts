@@ -151,6 +151,18 @@ serve(async (req) => {
     }
     logStep("All requested trailers are available or already assigned to this customer");
 
+    // Fetch full trailer records for all requested trailers
+    const { data: trailers, error: trailerFetchError } = await supabaseClient
+      .from("trailers")
+      .select("id, trailer_number, trailer_type, year, make, model, default_rate, customer_id")
+      .in("id", trailerIds);
+
+    if (trailerFetchError || !trailers?.length) {
+      logStep("Failed to fetch trailer details", { trailerFetchError });
+      throw new Error("Failed to fetch trailer details for the requested trailers.");
+    }
+    logStep("Fetched trailer records", { count: trailers.length });
+
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
 
     // Get customer details
