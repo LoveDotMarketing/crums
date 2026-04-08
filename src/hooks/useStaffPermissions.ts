@@ -61,20 +61,25 @@ export const SECTION_LABELS: Record<SectionKey, string> = {
 };
 
 export function useStaffPermissions() {
-  const { user, userRole } = useAuth();
-  const isFullAdmin = userRole === "admin";
+  const { user, userRole, isImpersonating, impersonatedUser, effectiveRole } = useAuth();
+  
+  // When impersonating a sales user, use their permissions; otherwise use actual role
+  const targetUserId = isImpersonating && impersonatedUser?.role === "sales" ? impersonatedUser.id : user?.id;
+  const isFullAdmin = isImpersonating 
+    ? effectiveRole === "admin" 
+    : userRole === "admin";
 
   const { data: permissions, isLoading } = useQuery({
-    queryKey: ["staff-permissions", user?.id],
+    queryKey: ["staff-permissions", targetUserId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("staff_permissions")
         .select("section_key")
-        .eq("user_id", user!.id);
+        .eq("user_id", targetUserId!);
       if (error) throw error;
       return (data || []).map((r) => r.section_key as SectionKey);
     },
-    enabled: !!user && !isFullAdmin,
+    enabled: !!targetUserId && !isFullAdmin,
   });
 
   const hasAccess = (sectionKey: SectionKey): boolean => {

@@ -515,7 +515,7 @@ export default function Staff() {
                                     onClick={() => handleViewAs(member)}
                                   >
                                     <Eye className="h-4 w-4 mr-2" />
-                                    View As {member.role === "admin" ? "Admin" : "Mechanic"}
+                                    View As {member.role === "admin" ? "Admin" : member.role === "sales" ? "Sales" : "Mechanic"}
                                   </DropdownMenuItem>
                                   <DropdownMenuSeparator />
                                    <DropdownMenuItem
