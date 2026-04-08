@@ -340,13 +340,23 @@ serve(async (req) => {
       }
 
       // SAFETY NET: Check if subscription is "active" but no real payment was ever collected.
-      // This happens when a billing_cycle_anchor + proration_behavior: "none" caused a $0 invoice
-      // to auto-activate the subscription without collecting any money.
+      // Also check standalone invoices (deposits, first-period charges) tied via metadata.
       const invoices = await stripe.invoices.list({
         subscription: subscription.stripe_subscription_id,
         limit: 10,
       });
-      const hasRealPayment = invoices.data.some(inv => inv.amount_paid > 0);
+      // Also check standalone invoices for this customer tied to this subscription via metadata
+      const customerInvoices = await stripe.invoices.list({
+        customer: subscription.stripe_customer_id,
+        limit: 20,
+      });
+      const standalonePayments = customerInvoices.data.filter(inv => 
+        inv.metadata?.subscription_id === subscription.stripe_subscription_id &&
+        (inv.metadata?.type === "security_deposit" || inv.metadata?.type === "first_period_charge") &&
+        inv.amount_paid > 0
+      );
+      const hasRealPayment = invoices.data.some(inv => inv.amount_paid > 0) || standalonePayments.length > 0;
+      logStep("Payment check", { subscriptionInvoicePayments: invoices.data.filter(i => i.amount_paid > 0).length, standalonePayments: standalonePayments.length });
 
       if (!hasRealPayment) {
         logStep("Subscription active but NO real payment found — charging first period now");

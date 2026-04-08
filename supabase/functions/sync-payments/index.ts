@@ -252,12 +252,13 @@ serve(async (req) => {
             logStep("Created payment record", { invoiceId: inv.id, status: paymentStatus, amount: inv.amount_due / 100 });
           }
 
-          // Check if this might be a deposit payment
+          // Check if this might be a deposit payment — use metadata first, then fall back to amount matching
+          const isDepositByMetadata = inv.metadata?.type === "security_deposit";
+          const isDepositByAmount = !isDepositByMetadata && sub.deposit_amount && Math.abs((inv.amount_due / 100) - sub.deposit_amount) < 1;
           if (
             paymentStatus === "succeeded" &&
             !sub.deposit_paid &&
-            sub.deposit_amount &&
-            Math.abs((inv.amount_due / 100) - sub.deposit_amount) < 1
+            (isDepositByMetadata || isDepositByAmount)
           ) {
             await supabaseClient
               .from("customer_subscriptions")
