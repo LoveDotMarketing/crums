@@ -9,6 +9,7 @@ import {
   LogOut,
   Wrench,
   DollarSign,
+  CreditCard,
   BarChart3,
   Send,
   UserCog,
