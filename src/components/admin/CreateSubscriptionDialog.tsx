@@ -389,6 +389,7 @@ export function CreateSubscriptionDialog({ onSuccess, mode = "dialog", onCancel 
     setBillingAnchorDay(1);
     setFirstBillingDate(undefined);
     setShowReview(false);
+    setConfirmAmount("");
   };
 
   // Get type-based default rental rate
