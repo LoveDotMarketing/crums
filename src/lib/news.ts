@@ -30,7 +30,7 @@ export const newsArticles: NewsArticle[] = [
     lastModified: "2026-04-09",
     priority: 0.9,
     changefreq: "monthly",
-    image: mats2026WalkthroughImage,
+    // image: to be added later
     articleSection: "Events"
   },
   {
