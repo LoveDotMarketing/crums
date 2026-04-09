@@ -1,6 +1,7 @@
 import { lazy, Suspense } from "react";
 import { Link } from "react-router-dom";
 import { trackCtaClick, trackPhoneClick, trackEvent, fireMetaCapi } from "@/lib/analytics";
+import { newsArticles } from "@/lib/news";
 import { useEffect } from "react";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
@@ -1425,6 +1426,59 @@ const Index = () => {
                 </Link>
               </CardContent>
             </Card>
+          </div>
+        </div>
+      </section>
+
+      {/* Latest News */}
+      <section className="py-16 bg-background border-b content-deferred">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-10">
+            <Badge variant="outline" className="mb-4 text-primary border-primary">
+              News & Updates
+            </Badge>
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-3">
+              Latest from CRUMS
+            </h2>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              Stay up to date with company news, events, and milestones
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto mb-8">
+            {newsArticles.slice(0, 3).map((article) => (
+              <Link key={article.slug} to={`/news/${article.slug}`} className="group block">
+                <Card className="border hover:border-primary/50 hover:shadow-lg transition-all h-full overflow-hidden">
+                  {article.image && (
+                    <div className="aspect-video overflow-hidden">
+                      <img
+                        src={article.image}
+                        alt={article.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        loading="lazy"
+                        decoding="async"
+                      />
+                    </div>
+                  )}
+                  <CardContent className="p-5">
+                    <p className="text-xs text-muted-foreground mb-2">{article.date}</p>
+                    <h3 className="text-lg font-bold text-foreground group-hover:text-primary transition-colors line-clamp-2 mb-2">
+                      {article.title}
+                    </h3>
+                    <p className="text-sm text-muted-foreground line-clamp-2">
+                      {article.description}
+                    </p>
+                  </CardContent>
+                </Card>
+              </Link>
+            ))}
+          </div>
+          <div className="text-center">
+            <Link to="/news">
+              <Button variant="outline" onClick={() => trackCtaClick('View All News', 'news', '/news')}>
+                View All News
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </Link>
           </div>
         </div>
       </section>
