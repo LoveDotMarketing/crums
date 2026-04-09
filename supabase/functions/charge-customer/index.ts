@@ -181,26 +181,26 @@ serve(async (req) => {
       surcharge: surchargeAmount,
     });
 
-    // Server-side audit log
-    await supabaseAdmin.from("app_event_logs").insert({
-      user_id: userData.user.id,
-      user_email: userData.user.email,
-      event_category: "admin_action",
-      event_type: "customer_charged",
-      description: `Charged $${amount} to customer ${customer_id}: ${description}`,
-      metadata: {
-        customer_id,
-        amount,
-        final_amount_cents: finalAmountCents,
-        description,
-        stripe_invoice_id: finalizedInvoice.id,
-        stripe_payment_intent_id: paymentIntentId,
-        payment_method: isCard ? "card" : "ach",
-        surcharge: surchargeAmount,
-      },
-      page_url: "/dashboard/admin/billing",
-    });
-    logStep("Audit log inserted");
+    // Update pending audit log to completed
+    if (pendingLog?.id) {
+      await supabaseAdmin.from("app_event_logs")
+        .update({
+          description: `Charged $${amount} to customer ${customer_id}: ${description}`,
+          metadata: {
+            customer_id,
+            amount,
+            final_amount_cents: finalAmountCents,
+            description,
+            stripe_invoice_id: finalizedInvoice.id,
+            stripe_payment_intent_id: paymentIntentId,
+            payment_method: isCard ? "card" : "ach",
+            surcharge: surchargeAmount,
+            status: "completed",
+          },
+        })
+        .eq("id", pendingLog.id);
+    }
+    logStep("Audit log updated to completed");
 
     return new Response(JSON.stringify({
       success: true,

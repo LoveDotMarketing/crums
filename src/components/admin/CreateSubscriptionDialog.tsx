@@ -1021,6 +1021,8 @@ export function CreateSubscriptionDialog({ onSuccess, mode = "dialog", onCancel 
 
   const firstChargeTotal = depositAmount;
   const isLargeSubscription = firstChargeTotal >= 2000;
+  const requiresTypeConfirm = firstChargeTotal >= 2000;
+  const [confirmAmount, setConfirmAmount] = useState("");
 
   const reviewSummary = (
     <div className="space-y-4 py-2">
