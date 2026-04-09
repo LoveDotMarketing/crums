@@ -97,6 +97,7 @@ export function CreateSubscriptionDialog({ onSuccess, mode = "dialog", onCancel 
   const [billingAnchorDay, setBillingAnchorDay] = useState<number>(1);
   const [firstBillingDate, setFirstBillingDate] = useState<Date | undefined>(undefined);
   const [showReview, setShowReview] = useState(false);
+  const [confirmAmount, setConfirmAmount] = useState("");
 
   // Fetch customer's billing anchor preference
   const { data: customerApplication } = useQuery({
@@ -1022,7 +1023,6 @@ export function CreateSubscriptionDialog({ onSuccess, mode = "dialog", onCancel 
   const firstChargeTotal = depositAmount;
   const isLargeSubscription = firstChargeTotal >= 2000;
   const requiresTypeConfirm = firstChargeTotal >= 2000;
-  const [confirmAmount, setConfirmAmount] = useState("");
 
   const reviewSummary = (
     <div className="space-y-4 py-2">
