@@ -115,8 +115,36 @@ const NewsArticlePage = () => {
                 {article.description}
               </p>
               
-              {/* Chamber of Commerce specific content */}
-              {slug === "crums-leasing-joins-greater-san-antonio-chamber-of-commerce" ? (
+              {/* MATS 2026 Walkthrough specific content */}
+              {slug === "mats-2026-expo-floor-walkthrough" ? (
+                <div className="mt-8 space-y-6">
+                  <div className="aspect-video rounded-xl overflow-hidden border border-border">
+                    <iframe
+                      width="100%"
+                      height="100%"
+                      src="https://www.youtube.com/embed/i2N3mUtS2wU"
+                      title="MATS 2026 Expo Floor Walkthrough - CRUMS Leasing"
+                      frameBorder="0"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                      allowFullScreen
+                      className="w-full h-full"
+                      loading="lazy"
+                    />
+                  </div>
+                  <div className="p-6 bg-muted/30 rounded-lg border border-border">
+                    <p className="text-foreground mb-4">
+                      The Mid-America Trucking Show 2026 was an incredible experience for the CRUMS Leasing team. 
+                      We spent three days at Booth #38024 in the South Wing, connecting with owner-operators, fleet 
+                      managers, and industry professionals from across the country.
+                    </p>
+                    <p className="text-foreground">
+                      Check out the full 360° walkthrough of the expo floor above. From the latest truck models to 
+                      innovative trailer technology, MATS 2026 showcased the best the trucking industry has to offer. 
+                      Thank you to everyone who stopped by our booth — we can't wait to see you next year!
+                    </p>
+                  </div>
+                </div>
+              ) : slug === "crums-leasing-joins-greater-san-antonio-chamber-of-commerce" ? (
                 <div className="mt-8 space-y-6">
                   <div className="p-6 bg-muted/30 rounded-lg border border-border">
                     <p className="text-foreground mb-4">

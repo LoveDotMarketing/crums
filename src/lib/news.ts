@@ -17,6 +17,22 @@ export interface NewsArticle {
 
 export const newsArticles: NewsArticle[] = [
   {
+    slug: "mats-2026-expo-floor-walkthrough",
+    title: "CRUMS Leasing at MATS 2026: Full Expo Floor Walkthrough",
+    description: "CRUMS had a great time at the MATS 2026 expo. We had fun meeting and greeting visitors at our booth. Here is a full walkthrough video in 360 of the expo floor.",
+    date: "April 9, 2026",
+    sortDate: "2026-04-09",
+    externalLinks: [
+      "https://youtu.be/i2N3mUtS2wU?si=H8zcs7tg9N9L2OYB",
+      "https://truckingshow.com/"
+    ],
+    lastModified: "2026-04-09",
+    priority: 0.9,
+    changefreq: "monthly",
+    image: mats2026Image,
+    articleSection: "Events"
+  },
+  {
     slug: "crums-leasing-joins-greater-san-antonio-chamber-of-commerce",
     title: "CRUMS Leasing Joins San Antonio Chamber of Commerce",
     description: "CRUMS Leasing announces membership in The Greater San Antonio Chamber of Commerce, reinforcing our commitment to local business and economic growth.",
