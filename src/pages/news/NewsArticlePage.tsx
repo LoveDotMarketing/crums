@@ -118,19 +118,18 @@ const NewsArticlePage = () => {
               {/* MATS 2026 Walkthrough specific content */}
               {slug === "mats-2026-expo-floor-walkthrough" ? (
                 <div className="mt-8 space-y-6">
-                  <div className="aspect-video rounded-xl overflow-hidden border border-border">
-                    <iframe
-                      width="100%"
-                      height="100%"
-                      src="https://www.youtube.com/embed/i2N3mUtS2wU"
-                      title="MATS 2026 Expo Floor Walkthrough - CRUMS Leasing"
-                      frameBorder="0"
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                      allowFullScreen
-                      className="w-full h-full"
-                      loading="lazy"
+                  <a
+                    href="https://youtu.be/i2N3mUtS2wU?si=Z29sp09Bq_TCAn1T"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block aspect-video rounded-xl overflow-hidden border border-border group"
+                  >
+                    <img
+                      src="/images/news/mats-2026-video-thumbnail.png"
+                      alt="MATS 2026 - 360 Video Walkthrough of Expo Floor - Watch on YouTube"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
-                  </div>
+                  </a>
                   <div className="p-6 bg-muted/30 rounded-lg border border-border">
                     <p className="text-foreground mb-4">
                       The Mid-America Trucking Show 2026 was an incredible experience for the CRUMS Leasing team. 
