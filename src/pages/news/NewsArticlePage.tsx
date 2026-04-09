@@ -96,18 +96,6 @@ const NewsArticlePage = () => {
               Back to News
             </Link>
 
-            {/* Featured Image */}
-            {article.image && (
-              <div className="mb-8 rounded-xl overflow-hidden border border-border">
-                <img 
-                  src={article.image}
-                  alt={`${article.title} - ${article.articleSection || 'CRUMS Leasing News'}`}
-                  className="w-full h-auto"
-                  width="1200"
-                  height="630"
-                />
-              </div>
-            )}
 
             {/* Article Body */}
             <div className="prose prose-lg max-w-none mb-12">
