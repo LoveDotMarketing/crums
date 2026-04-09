@@ -1086,18 +1086,30 @@ export function CreateSubscriptionDialog({ onSuccess, mode = "dialog", onCancel 
           <span>{subscriptionType.replace(/_/g, " ")}</span>
         </div>
       </div>
+
+      {requiresTypeConfirm && (
+        <div className="space-y-2">
+          <Label>Type <strong>{firstChargeTotal.toFixed(2)}</strong> to confirm</Label>
+          <Input
+            value={confirmAmount}
+            onChange={(e) => setConfirmAmount(e.target.value)}
+            placeholder={firstChargeTotal.toFixed(2)}
+            autoFocus
+          />
+        </div>
+      )}
     </div>
   );
 
   const formActions = showReview ? (
     <div className="flex justify-end gap-2">
-      <Button variant="outline" onClick={() => setShowReview(false)}>
+      <Button variant="outline" onClick={() => { setShowReview(false); setConfirmAmount(""); }}>
         Back
       </Button>
       <Button
         variant={isLargeSubscription ? "destructive" : "default"}
         onClick={() => createSubscriptionMutation.mutate()}
-        disabled={createSubscriptionMutation.isPending}
+        disabled={createSubscriptionMutation.isPending || (requiresTypeConfirm && confirmAmount !== firstChargeTotal.toFixed(2))}
       >
         {createSubscriptionMutation.isPending ? (
           <>
