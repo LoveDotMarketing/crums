@@ -97,6 +97,7 @@ export function CreateSubscriptionDialog({ onSuccess, mode = "dialog", onCancel 
   const [billingAnchorDay, setBillingAnchorDay] = useState<number>(1);
   const [firstBillingDate, setFirstBillingDate] = useState<Date | undefined>(undefined);
   const [showReview, setShowReview] = useState(false);
+  const [confirmAmount, setConfirmAmount] = useState("");
 
   // Fetch customer's billing anchor preference
   const { data: customerApplication } = useQuery({
@@ -388,6 +389,7 @@ export function CreateSubscriptionDialog({ onSuccess, mode = "dialog", onCancel 
     setBillingAnchorDay(1);
     setFirstBillingDate(undefined);
     setShowReview(false);
+    setConfirmAmount("");
   };
 
   // Get type-based default rental rate
@@ -1021,6 +1023,7 @@ export function CreateSubscriptionDialog({ onSuccess, mode = "dialog", onCancel 
 
   const firstChargeTotal = depositAmount;
   const isLargeSubscription = firstChargeTotal >= 2000;
+  const requiresTypeConfirm = firstChargeTotal >= 2000;
 
   const reviewSummary = (
     <div className="space-y-4 py-2">
@@ -1084,18 +1087,30 @@ export function CreateSubscriptionDialog({ onSuccess, mode = "dialog", onCancel 
           <span>{subscriptionType.replace(/_/g, " ")}</span>
         </div>
       </div>
+
+      {requiresTypeConfirm && (
+        <div className="space-y-2">
+          <Label>Type <strong>{firstChargeTotal.toFixed(2)}</strong> to confirm</Label>
+          <Input
+            value={confirmAmount}
+            onChange={(e) => setConfirmAmount(e.target.value)}
+            placeholder={firstChargeTotal.toFixed(2)}
+            autoFocus
+          />
+        </div>
+      )}
     </div>
   );
 
   const formActions = showReview ? (
     <div className="flex justify-end gap-2">
-      <Button variant="outline" onClick={() => setShowReview(false)}>
+      <Button variant="outline" onClick={() => { setShowReview(false); setConfirmAmount(""); }}>
         Back
       </Button>
       <Button
         variant={isLargeSubscription ? "destructive" : "default"}
         onClick={() => createSubscriptionMutation.mutate()}
-        disabled={createSubscriptionMutation.isPending}
+        disabled={createSubscriptionMutation.isPending || (requiresTypeConfirm && confirmAmount !== firstChargeTotal.toFixed(2))}
       >
         {createSubscriptionMutation.isPending ? (
           <>

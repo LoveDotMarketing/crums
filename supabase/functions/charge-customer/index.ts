@@ -57,43 +57,45 @@ serve(async (req) => {
       throw new Error(`Charge of $${amount} exceeds the $${CHARGE_CEILING} per-charge limit. Contact a senior admin to override.`);
     }
 
-    // Duplicate detection: check for recent charge to same customer
-    const { data: recentCharge } = await supabaseAdmin
-      .from("app_event_logs")
-      .select("created_at")
-      .eq("event_type", "customer_charged")
-      .eq("user_id", userData.user.id)
-      .gte("created_at", new Date(Date.now() - COOLDOWN_MS).toISOString())
-      .limit(10);
-
-    const hasDuplicate = recentCharge?.some((log: any) => {
-      // Check metadata for same customer_id via description pattern
-      return true; // any recent charge within window triggers check
-    });
-
-    if (recentCharge && recentCharge.length > 0) {
-      // Check if any were for the same customer by querying more specifically
-      const { data: dupCheck } = await supabaseAdmin
-        .from("app_event_logs")
-        .select("created_at, metadata")
-        .eq("event_type", "customer_charged")
-        .gte("created_at", new Date(Date.now() - COOLDOWN_MS).toISOString())
-        .limit(50);
-
-      const isDuplicate = dupCheck?.some((log: any) => {
-        try {
-          const meta = typeof log.metadata === "string" ? JSON.parse(log.metadata) : log.metadata;
-          return meta?.customer_id === customer_id;
-        } catch { return false; }
-      });
-
-      if (isDuplicate) {
-        throw new Error("A charge was already made to this customer in the last 10 minutes. Wait before charging again.");
-      }
-    }
-
     const amountCents = Math.round(Number(amount) * 100);
     logStep("Charge request", { customerId: customer_id, amount, amountCents, description });
+
+    // Duplicate detection: check for recent charge (pending or completed) to same customer
+    const cooldownCutoff = new Date(Date.now() - COOLDOWN_MS).toISOString();
+    const { data: dupCheck } = await supabaseAdmin
+      .from("app_event_logs")
+      .select("created_at, metadata")
+      .eq("event_type", "customer_charged")
+      .gte("created_at", cooldownCutoff)
+      .limit(50);
+
+    const isDuplicate = dupCheck?.some((log: any) => {
+      try {
+        const meta = typeof log.metadata === "string" ? JSON.parse(log.metadata) : log.metadata;
+        return meta?.customer_id === customer_id;
+      } catch { return false; }
+    });
+
+    if (isDuplicate) {
+      throw new Error("A charge was already made to this customer in the last 10 minutes. Wait before charging again.");
+    }
+
+    // Insert PENDING audit log BEFORE calling Stripe (closes race window)
+    const { data: pendingLog } = await supabaseAdmin.from("app_event_logs").insert({
+      user_id: userData.user.id,
+      user_email: userData.user.email,
+      event_category: "admin_action",
+      event_type: "customer_charged",
+      description: `[pending] Charging $${amount} to customer ${customer_id}: ${description}`,
+      metadata: {
+        customer_id,
+        amount,
+        description,
+        status: "pending",
+      },
+      page_url: "/dashboard/admin/billing",
+    }).select("id").single();
+    logStep("Pending audit log inserted", { logId: pendingLog?.id });
 
     // Look up customer's stripe_customer_id
     const { data: sub, error: subError } = await supabaseAdmin
@@ -138,12 +140,19 @@ serve(async (req) => {
       logStep("Card surcharge applied", { base: amount, surcharge, total: adjustedAmount });
     }
 
+    // Generate deterministic idempotency key (10-minute bucket)
+    const timeBucket = Math.floor(Date.now() / 600000);
+    const chargeIdempotencyKey = `charge_${customer_id}_${amountCents}_${timeBucket}`;
+    logStep("Using idempotency key", { chargeIdempotencyKey });
+
     // Create invoice FIRST with pending_invoice_items_behavior: 'exclude' to prevent dangling items
     const invoice = await stripe.invoices.create({
       customer: sub.stripe_customer_id,
       collection_method: "charge_automatically",
       auto_advance: true,
       pending_invoice_items_behavior: "exclude",
+    }, {
+      idempotencyKey: chargeIdempotencyKey,
     });
     logStep("Invoice created (isolated)", { invoiceId: invoice.id });
 
@@ -172,26 +181,26 @@ serve(async (req) => {
       surcharge: surchargeAmount,
     });
 
-    // Server-side audit log
-    await supabaseAdmin.from("app_event_logs").insert({
-      user_id: userData.user.id,
-      user_email: userData.user.email,
-      event_category: "admin_action",
-      event_type: "customer_charged",
-      description: `Charged $${amount} to customer ${customer_id}: ${description}`,
-      metadata: {
-        customer_id,
-        amount,
-        final_amount_cents: finalAmountCents,
-        description,
-        stripe_invoice_id: finalizedInvoice.id,
-        stripe_payment_intent_id: paymentIntentId,
-        payment_method: isCard ? "card" : "ach",
-        surcharge: surchargeAmount,
-      },
-      page_url: "/dashboard/admin/billing",
-    });
-    logStep("Audit log inserted");
+    // Update pending audit log to completed
+    if (pendingLog?.id) {
+      await supabaseAdmin.from("app_event_logs")
+        .update({
+          description: `Charged $${amount} to customer ${customer_id}: ${description}`,
+          metadata: {
+            customer_id,
+            amount,
+            final_amount_cents: finalAmountCents,
+            description,
+            stripe_invoice_id: finalizedInvoice.id,
+            stripe_payment_intent_id: paymentIntentId,
+            payment_method: isCard ? "card" : "ach",
+            surcharge: surchargeAmount,
+            status: "completed",
+          },
+        })
+        .eq("id", pendingLog.id);
+    }
+    logStep("Audit log updated to completed");
 
     return new Response(JSON.stringify({
       success: true,

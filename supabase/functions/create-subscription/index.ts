@@ -521,9 +521,36 @@ serve(async (req) => {
         subscriptionParams.discounts = [{ coupon: coupon.id }];
       }
 
+      // Duplicate subscription guard: check for recent subscription with same customer + trailers
+      const recentCutoff = new Date(Date.now() - 10 * 60 * 1000).toISOString();
+      const { data: recentSubs } = await supabaseClient
+        .from("customer_subscriptions")
+        .select("id, created_at, subscription_items(trailer_id)")
+        .eq("customer_id", customerId)
+        .gte("created_at", recentCutoff);
+
+      if (recentSubs && recentSubs.length > 0) {
+        const groupTrailerIds = new Set(groupTrailers.map(t => t.id));
+        const isDuplicate = recentSubs.some(sub => {
+          const subTrailerIds = (sub.subscription_items || []).map((si: any) => si.trailer_id);
+          return subTrailerIds.length > 0 && subTrailerIds.every((tid: string) => groupTrailerIds.has(tid));
+        });
+        if (isDuplicate) {
+          throw new Error("A subscription for these trailers was already created in the last 10 minutes. If this is intentional, wait and try again.");
+        }
+      }
+
+      // Generate deterministic idempotency key (10-minute bucket)
+      const timeBucket = Math.floor(Date.now() / 600000);
+      const trailerKey = groupTrailers.map(t => t.id).sort().join(",");
+      const idempotencyKey = `create-sub_${customerId}_${groupKey}_${timeBucket}_${trailerKey}`.substring(0, 255);
+      logStep("Using idempotency key", { idempotencyKey });
+
       let subscription: Stripe.Subscription;
       try {
-        subscription = await stripe.subscriptions.create(subscriptionParams);
+        subscription = await stripe.subscriptions.create(subscriptionParams, {
+          idempotencyKey,
+        });
         rollbackActions.push({ type: "subscription", id: subscription.id });
       } catch (stripeSubErr: any) {
         const stripeMsg = stripeSubErr?.message || String(stripeSubErr);
