@@ -1,0 +1,1 @@
+CREATE POLICY "Admins can update event logs" ON public.app_event_logs FOR UPDATE TO public USING (has_role(auth.uid(), 'admin'::app_role));
