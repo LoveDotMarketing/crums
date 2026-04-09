@@ -1,4 +1,5 @@
 const mats2026Image = "/images/crums-leasing-mats-convention-01.webp";
+const mats2026WalkthroughImage = "/images/news/mats-2026-expo-walkthrough.png";
 const chamberLogo = "/images/news/san-antonio-chamber-logo.png";
 
 export interface NewsArticle {
@@ -29,7 +30,7 @@ export const newsArticles: NewsArticle[] = [
     lastModified: "2026-04-09",
     priority: 0.9,
     changefreq: "monthly",
-    image: mats2026Image,
+    image: mats2026WalkthroughImage,
     articleSection: "Events"
   },
   {
