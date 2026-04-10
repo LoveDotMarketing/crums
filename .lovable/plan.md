@@ -1,37 +1,39 @@
 
 
-# Add Financial Visibility Permission Toggles
+# Add Drag-and-Drop Upload for Title Document and Photos
 
 ## What This Does
-Adds two new permission toggles for staff members so admins can hide sensitive financial data from sales users:
-- **"View Dashboard Revenue"** — controls visibility of the "Collected This Month" card on the Admin Dashboard
-- **"View Payment Amounts"** — controls visibility of the Total Paid / Pending / Failed summary cards AND the Amount column on the Payments page
+Replaces the current file-picker-only upload for the Title Document and Photos sections on the admin Trailer Detail page with drag-and-drop zones. Users can drag files directly from their desktop/drive onto the upload area instead of navigating through a file browser dialog. The existing button upload will still work as a fallback.
 
 ## Changes
 
-### 1. Extend the permissions system
-**File:** `src/hooks/useStaffPermissions.ts`
+### 1. Title Document section — add drop zone
+**File:** `src/pages/admin/TrailerDetail.tsx` (lines ~1254-1334)
 
-Add two new section keys to `ALL_SECTION_KEYS` and `SECTION_LABELS`:
-- `view_dashboard_revenue` → "View Dashboard Revenue"
-- `view_payment_amounts` → "View Payment Amounts"
+- Wrap the Title Document card content area in a drop zone `div` with `onDragOver`, `onDragLeave`, and `onDrop` handlers
+- On drop, call the same upload logic currently triggered by the hidden file input
+- Show a visual dashed-border highlight when a file is dragged over the area
+- Display helper text: "Drag & drop title document here, or click Upload"
+- Add `isDraggingTitle` state to toggle the highlight styling
 
-These are "sub-permissions" — toggleable independently from the page-level `dashboard` and `payments` permissions.
+### 2. Photos section — add drop zone
+**File:** `src/pages/admin/TrailerDetail.tsx` (lines ~1336-1430)
 
-### 2. Hide "Collected This Month" for restricted users
-**File:** `src/pages/admin/AdminDashboard.tsx`
+- Wrap the Photos card content area in a drop zone `div` with the same drag event handlers
+- On drop, feed the dropped files into the existing `handlePhotoUpload` logic (refactored to accept a `FileList` parameter)
+- Show dashed-border highlight during drag-over
+- Display helper text: "Drag & drop photos here, or click Upload Photos"
+- Add `isDraggingPhotos` state for highlight styling
 
-- Import `useStaffPermissions`
-- If `!hasAccess('view_dashboard_revenue')`, filter out the "Collected This Month" stat card from the rendered array
+### 3. Refactor upload handlers
+**File:** `src/pages/admin/TrailerDetail.tsx`
 
-### 3. Hide financial totals on Payments page
-**File:** `src/pages/admin/Payments.tsx`
+- Extract the photo upload logic from the `onChange` handler into a shared `processPhotoFiles(files: FileList)` function so both the input change event and the drop event can call it
+- Similarly extract title upload logic into `processTitleFile(file: File)`
 
-- Import `useStaffPermissions`
-- If `!hasAccess('view_payment_amounts')`:
-  - Hide the three summary cards (Total Paid, Pending, Failed)
-  - Hide the "Amount" column from the payments table
-
-### 4. Add toggles to Staff Detail panel
-The existing Staff Detail page already renders toggles for each key in `ALL_SECTION_KEYS` — adding the new keys will automatically create the toggle UI. No additional changes needed there.
+### Technical Details
+- Uses native HTML5 drag-and-drop API (`onDragOver`, `onDragLeave`, `onDrop`) — no new dependencies
+- `e.preventDefault()` on `onDragOver` to allow drops
+- `e.dataTransfer.files` provides the dropped `FileList`
+- Visual feedback: conditional `border-primary border-dashed bg-primary/5` classes when dragging
 
