@@ -542,6 +542,32 @@
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
+  <!-- Trailer Profiles -->
+  <url>
+    <loc>https://crumsleasing.com/2027-great-dane-dry-van-trailer-for-lease</loc>
+    <lastmod>2026-04-10</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://crumsleasing.com/2027-great-dane-flatbed-trailer-for-lease</loc>
+    <lastmod>2026-04-10</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <!-- Reviews & Events -->
+  <url>
+    <loc>https://crumsleasing.com/review</loc>
+    <lastmod>2026-04-10</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://crumsleasing.com/mats2026</loc>
+    <lastmod>2026-04-10</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
   <!-- Legal -->
   <url>
     <loc>https://crumsleasing.com/privacy</loc>
