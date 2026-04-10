@@ -178,6 +178,8 @@ export default function TrailerDetail() {
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [editingCaption, setEditingCaption] = useState<string | null>(null);
   const [captionText, setCaptionText] = useState("");
+  const [isDraggingTitle, setIsDraggingTitle] = useState(false);
+  const [isDraggingPhotos, setIsDraggingPhotos] = useState(false);
 
   const fetchTrailerPhotos = useCallback(async () => {
     if (!trailerId) return;
@@ -255,9 +257,8 @@ export default function TrailerDetail() {
     }
   };
 
-  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files || !trailerId) return;
+  const processPhotoFiles = async (files: FileList) => {
+    if (!files.length || !trailerId) return;
     setUploadingPhoto(true);
     try {
       const userId = (await supabase.auth.getUser()).data.user?.id;
@@ -282,8 +283,47 @@ export default function TrailerDetail() {
       toast.error("Failed to upload photos");
     }
     setUploadingPhoto(false);
+  };
+
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) await processPhotoFiles(e.target.files);
     e.target.value = "";
   };
+
+  const processTitleFile = async (file: File) => {
+    if (!trailerId) return;
+    setUploadingPhoto(true);
+    try {
+      const compressed = await compressImage(file);
+      const ext = compressed.name.split(".").pop() || "jpg";
+      const path = `${trailerId}/title/${Date.now()}.${ext}`;
+      const { error: uploadErr } = await supabase.storage.from("trailer-photos").upload(path, compressed);
+      if (uploadErr) throw uploadErr;
+      const { data: { publicUrl } } = supabase.storage.from("trailer-photos").getPublicUrl(path);
+      await supabase.from("trailers").update({ title_document_url: publicUrl } as any).eq("id", trailerId);
+      setTrailer(prev => prev ? { ...prev, title_document_url: publicUrl } as any : prev);
+      toast.success("Title document uploaded");
+    } catch (err: any) {
+      console.error("Title upload error:", err);
+      toast.error("Failed to upload title document");
+    }
+    setUploadingPhoto(false);
+  };
+
+  const handleDrop = (e: React.DragEvent, type: 'title' | 'photos') => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (type === 'title') setIsDraggingTitle(false);
+    else setIsDraggingPhotos(false);
+    const files = e.dataTransfer.files;
+    if (!files.length) return;
+    if (type === 'title') processTitleFile(files[0]);
+    else processPhotoFiles(files);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => { e.preventDefault(); e.stopPropagation(); };
+  const handleDragEnter = (e: React.DragEvent, type: 'title' | 'photos') => { e.preventDefault(); e.stopPropagation(); if (type === 'title') setIsDraggingTitle(true); else setIsDraggingPhotos(true); };
+  const handleDragLeave = (e: React.DragEvent, type: 'title' | 'photos') => { e.preventDefault(); e.stopPropagation(); if (type === 'title') setIsDraggingTitle(false); else setIsDraggingPhotos(false); };
 
   const handleDeletePhoto = async (photoId: string, photoUrl: string) => {
     try {
