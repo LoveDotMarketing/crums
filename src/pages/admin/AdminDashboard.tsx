@@ -12,11 +12,13 @@ import { formatDistanceToNow } from "date-fns";
 import { SEO } from "@/components/SEO";
 import { useNavigate } from "react-router-dom";
 import { TollFormDialog } from "@/components/admin/TollFormDialog";
+import { useStaffPermissions } from "@/hooks/useStaffPermissions";
 import { CustomerFormDialog } from "@/components/admin/CustomerFormDialog";
 
 export default function AdminDashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { hasAccess } = useStaffPermissions();
   const queryClient = useQueryClient();
   
   const [tollDialogOpen, setTollDialogOpen] = useState(false);
@@ -249,7 +251,7 @@ export default function AdminDashboard() {
       change: `${fleetStats?.available || 0} available`,
       trend: "neutral" as const
     },
-    {
+    ...(hasAccess('view_dashboard_revenue') ? [{
       title: "Collected This Month",
       value: tollStats || leaseCollections !== undefined
         ? `$${((leaseCollections || 0) + (tollStats?.tollsCollectedThisMonth || 0)).toLocaleString()}`
@@ -257,7 +259,7 @@ export default function AdminDashboard() {
       icon: DollarSign,
       change: `$${(leaseCollections || 0).toLocaleString()} leases + $${(tollStats?.tollsCollectedThisMonth || 0).toLocaleString()} tolls`,
       trend: ((leaseCollections || 0) + (tollStats?.tollsCollectedThisMonth || 0)) > 0 ? "up" as const : "neutral" as const
-    },
+    }] : []),
   ];
 
   const handleTollSuccess = () => {
