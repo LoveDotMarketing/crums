@@ -1308,23 +1308,7 @@ export default function TrailerDetail() {
                       accept="image/*"
                       onChange={async (e) => {
                         const file = e.target.files?.[0];
-                        if (!file || !trailerId) return;
-                        setUploadingPhoto(true);
-                        try {
-                          const compressed = await compressImage(file);
-                          const ext = compressed.name.split(".").pop() || "jpg";
-                          const path = `${trailerId}/title/${Date.now()}.${ext}`;
-                          const { error: uploadErr } = await supabase.storage.from("trailer-photos").upload(path, compressed);
-                          if (uploadErr) throw uploadErr;
-                          const { data: { publicUrl } } = supabase.storage.from("trailer-photos").getPublicUrl(path);
-                          await supabase.from("trailers").update({ title_document_url: publicUrl } as any).eq("id", trailerId);
-                          setTrailer(prev => prev ? { ...prev, title_document_url: publicUrl } as any : prev);
-                          toast.success("Title document uploaded");
-                        } catch (err: any) {
-                          console.error("Title upload error:", err);
-                          toast.error("Failed to upload title document");
-                        }
-                        setUploadingPhoto(false);
+                        if (file) await processTitleFile(file);
                         e.target.value = "";
                       }}
                       className="hidden"
@@ -1342,34 +1326,44 @@ export default function TrailerDetail() {
                 </div>
               </CardHeader>
               <CardContent>
-                {(trailer as any)?.title_document_url ? (
-                  <div className="relative group w-fit">
-                    <img
-                      src={(trailer as any).title_document_url}
-                      alt="Vehicle title document"
-                      className="max-h-64 rounded-lg border object-contain cursor-pointer"
-                      onClick={() => window.open((trailer as any).title_document_url, "_blank")}
-                    />
-                    <Button
-                      size="sm"
-                      variant="destructive"
-                      className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
-                      onClick={async () => {
-                        try {
-                          await supabase.from("trailers").update({ title_document_url: null } as any).eq("id", trailerId);
-                          setTrailer(prev => prev ? { ...prev, title_document_url: null } as any : prev);
-                          toast.success("Title document removed");
-                        } catch {
-                          toast.error("Failed to remove title document");
-                        }
-                      }}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ) : (
-                  <p className="text-center text-muted-foreground py-4">No title document uploaded yet.</p>
-                )}
+                <div
+                  onDragOver={handleDragOver}
+                  onDragEnter={(e) => handleDragEnter(e, 'title')}
+                  onDragLeave={(e) => handleDragLeave(e, 'title')}
+                  onDrop={(e) => handleDrop(e, 'title')}
+                  className={`rounded-lg transition-colors ${isDraggingTitle ? 'border-2 border-dashed border-primary bg-primary/5 p-4' : ''}`}
+                >
+                  {(trailer as any)?.title_document_url ? (
+                    <div className="relative group w-fit">
+                      <img
+                        src={(trailer as any).title_document_url}
+                        alt="Vehicle title document"
+                        className="max-h-64 rounded-lg border object-contain cursor-pointer"
+                        onClick={() => window.open((trailer as any).title_document_url, "_blank")}
+                      />
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={async () => {
+                          try {
+                            await supabase.from("trailers").update({ title_document_url: null } as any).eq("id", trailerId);
+                            setTrailer(prev => prev ? { ...prev, title_document_url: null } as any : prev);
+                            toast.success("Title document removed");
+                          } catch {
+                            toast.error("Failed to remove title document");
+                          }
+                        }}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <p className="text-center text-muted-foreground py-4">
+                      {isDraggingTitle ? "Drop file to upload" : "Drag & drop title document here, or click Upload"}
+                    </p>
+                  )}
+                </div>
               </CardContent>
             </Card>
 
