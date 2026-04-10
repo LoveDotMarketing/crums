@@ -1400,65 +1400,73 @@ export default function TrailerDetail() {
                 </div>
               </CardHeader>
               <CardContent>
-                {trailerPhotos.length === 0 ? (
-                  <p className="text-center text-muted-foreground py-8">
-                    No photos uploaded yet. Click "Upload Photos" to add images.
-                  </p>
-                ) : (
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                    {trailerPhotos.map((photo) => (
-                      <div key={photo.id} className="relative group rounded-lg overflow-hidden border bg-muted">
-                        <img
-                          src={photo.photo_url}
-                          alt={photo.caption || "Trailer photo"}
-                          className="w-full h-48 object-cover"
-                        />
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <button className="absolute top-2 right-2 bg-destructive text-destructive-foreground rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                              <X className="h-4 w-4" />
-                            </button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Delete Photo</AlertDialogTitle>
-                              <AlertDialogDescription>Are you sure you want to delete this photo?</AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => handleDeletePhoto(photo.id, photo.photo_url)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                                Delete
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                        <div className="p-2">
-                          {editingCaption === photo.id ? (
-                            <div className="flex gap-1">
-                              <Input
-                                value={captionText}
-                                onChange={(e) => setCaptionText(e.target.value)}
-                                placeholder="Caption..."
-                                className="h-7 text-xs"
-                                onKeyDown={(e) => { if (e.key === "Enter") handleSaveCaption(photo.id); }}
-                              />
-                              <Button size="sm" variant="ghost" className="h-7 px-2 text-xs" onClick={() => handleSaveCaption(photo.id)}>
-                                Save
-                              </Button>
-                            </div>
-                          ) : (
-                            <p
-                              className="text-xs text-muted-foreground cursor-pointer hover:text-foreground truncate"
-                              onClick={() => { setEditingCaption(photo.id); setCaptionText(photo.caption || ""); }}
-                            >
-                              {photo.caption || "Click to add caption..."}
-                            </p>
-                          )}
+                <div
+                  onDragOver={handleDragOver}
+                  onDragEnter={(e) => handleDragEnter(e, 'photos')}
+                  onDragLeave={(e) => handleDragLeave(e, 'photos')}
+                  onDrop={(e) => handleDrop(e, 'photos')}
+                  className={`rounded-lg transition-colors ${isDraggingPhotos ? 'border-2 border-dashed border-primary bg-primary/5 p-4' : ''}`}
+                >
+                  {trailerPhotos.length === 0 ? (
+                    <p className="text-center text-muted-foreground py-8">
+                      {isDraggingPhotos ? "Drop files to upload" : "Drag & drop photos here, or click Upload Photos"}
+                    </p>
+                  ) : (
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                      {trailerPhotos.map((photo) => (
+                        <div key={photo.id} className="relative group rounded-lg overflow-hidden border bg-muted">
+                          <img
+                            src={photo.photo_url}
+                            alt={photo.caption || "Trailer photo"}
+                            className="w-full h-48 object-cover"
+                          />
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <button className="absolute top-2 right-2 bg-destructive text-destructive-foreground rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <X className="h-4 w-4" />
+                              </button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Delete Photo</AlertDialogTitle>
+                                <AlertDialogDescription>Are you sure you want to delete this photo?</AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => handleDeletePhoto(photo.id, photo.photo_url)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                                  Delete
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                          <div className="p-2">
+                            {editingCaption === photo.id ? (
+                              <div className="flex gap-1">
+                                <Input
+                                  value={captionText}
+                                  onChange={(e) => setCaptionText(e.target.value)}
+                                  placeholder="Caption..."
+                                  className="h-7 text-xs"
+                                  onKeyDown={(e) => { if (e.key === "Enter") handleSaveCaption(photo.id); }}
+                                />
+                                <Button size="sm" variant="ghost" className="h-7 px-2 text-xs" onClick={() => handleSaveCaption(photo.id)}>
+                                  Save
+                                </Button>
+                              </div>
+                            ) : (
+                              <p
+                                className="text-xs text-muted-foreground cursor-pointer hover:text-foreground truncate"
+                                onClick={() => { setEditingCaption(photo.id); setCaptionText(photo.caption || ""); }}
+                              >
+                                {photo.caption || "Click to add caption..."}
+                              </p>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                      ))}
+                    </div>
+                  )}
+                </div>
               </CardContent>
             </Card>
 
