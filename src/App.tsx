@@ -219,8 +219,9 @@ const App = () => (
             <Route path="/dry-van-trailer-leasing" element={<DryVanTrailerLeasing />} />
             <Route path="/flatbed-trailer-leasing" element={<FlatbedTrailerLeasing />} />
             <Route path="/semi-trailer-leasing" element={<SemiTrailerLeasing />} />
-            {/* Redirect old refrigerated trailers page */}
+            {/* Redirect old routes */}
             <Route path="/refrigerated-trailers" element={<Navigate to="/dry-van-trailer-leasing" replace />} />
+            <Route path="/trailer-leasing" element={<Navigate to="/services/trailer-leasing" replace />} />
             <Route path="/commercial-dry-van-trailer-for-lease-56171" element={<TrailerProfile56171 />} />
             <Route path="/2027-great-dane-dry-van-trailer-for-lease" element={<TrailerProfile2027GreatDane />} />
             <Route path="/2027-great-dane-flatbed-trailer-for-lease" element={<TrailerProfile2027GreatDaneFlatbed />} />

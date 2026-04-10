@@ -1,4 +1,5 @@
 import { Helmet } from "react-helmet-async";
+import { useStructuredData } from "@/hooks/useStructuredData";
 
 interface SEOProps {
   title: string;
@@ -25,6 +26,8 @@ export const SEO = ({
   noindex = false,
   article
 }: SEOProps) => {
+  // Inject JSON-LD directly into DOM instead of via Helmet to avoid conflicts
+  useStructuredData(structuredData);
   const fullTitle = `${title} | CRUMS Leasing`;
   
   // Normalize canonical URL - remove trailing slashes except for root, handle query params
@@ -91,20 +94,6 @@ export const SEO = ({
       <meta name="twitter:image" content={`https://crumsleasing.com${ogImage}`} />
       <meta name="twitter:site" content="@crumsleasing" />
       
-      {/* Structured Data */}
-      {structuredData && (
-        Array.isArray(structuredData) ? (
-          structuredData.map((schema, index) => (
-            <script key={index} type="application/ld+json">
-              {JSON.stringify(schema)}
-            </script>
-          ))
-        ) : (
-          <script type="application/ld+json">
-            {JSON.stringify(structuredData)}
-          </script>
-        )
-      )}
     </Helmet>
   );
 };
