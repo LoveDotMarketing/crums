@@ -178,6 +178,8 @@ export default function TrailerDetail() {
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [editingCaption, setEditingCaption] = useState<string | null>(null);
   const [captionText, setCaptionText] = useState("");
+  const [isDraggingTitle, setIsDraggingTitle] = useState(false);
+  const [isDraggingPhotos, setIsDraggingPhotos] = useState(false);
 
   const fetchTrailerPhotos = useCallback(async () => {
     if (!trailerId) return;
@@ -255,9 +257,8 @@ export default function TrailerDetail() {
     }
   };
 
-  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files || !trailerId) return;
+  const processPhotoFiles = async (files: FileList) => {
+    if (!files.length || !trailerId) return;
     setUploadingPhoto(true);
     try {
       const userId = (await supabase.auth.getUser()).data.user?.id;
@@ -282,8 +283,47 @@ export default function TrailerDetail() {
       toast.error("Failed to upload photos");
     }
     setUploadingPhoto(false);
+  };
+
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) await processPhotoFiles(e.target.files);
     e.target.value = "";
   };
+
+  const processTitleFile = async (file: File) => {
+    if (!trailerId) return;
+    setUploadingPhoto(true);
+    try {
+      const compressed = await compressImage(file);
+      const ext = compressed.name.split(".").pop() || "jpg";
+      const path = `${trailerId}/title/${Date.now()}.${ext}`;
+      const { error: uploadErr } = await supabase.storage.from("trailer-photos").upload(path, compressed);
+      if (uploadErr) throw uploadErr;
+      const { data: { publicUrl } } = supabase.storage.from("trailer-photos").getPublicUrl(path);
+      await supabase.from("trailers").update({ title_document_url: publicUrl } as any).eq("id", trailerId);
+      setTrailer(prev => prev ? { ...prev, title_document_url: publicUrl } as any : prev);
+      toast.success("Title document uploaded");
+    } catch (err: any) {
+      console.error("Title upload error:", err);
+      toast.error("Failed to upload title document");
+    }
+    setUploadingPhoto(false);
+  };
+
+  const handleDrop = (e: React.DragEvent, type: 'title' | 'photos') => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (type === 'title') setIsDraggingTitle(false);
+    else setIsDraggingPhotos(false);
+    const files = e.dataTransfer.files;
+    if (!files.length) return;
+    if (type === 'title') processTitleFile(files[0]);
+    else processPhotoFiles(files);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => { e.preventDefault(); e.stopPropagation(); };
+  const handleDragEnter = (e: React.DragEvent, type: 'title' | 'photos') => { e.preventDefault(); e.stopPropagation(); if (type === 'title') setIsDraggingTitle(true); else setIsDraggingPhotos(true); };
+  const handleDragLeave = (e: React.DragEvent, type: 'title' | 'photos') => { e.preventDefault(); e.stopPropagation(); if (type === 'title') setIsDraggingTitle(false); else setIsDraggingPhotos(false); };
 
   const handleDeletePhoto = async (photoId: string, photoUrl: string) => {
     try {
@@ -1268,23 +1308,7 @@ export default function TrailerDetail() {
                       accept="image/*"
                       onChange={async (e) => {
                         const file = e.target.files?.[0];
-                        if (!file || !trailerId) return;
-                        setUploadingPhoto(true);
-                        try {
-                          const compressed = await compressImage(file);
-                          const ext = compressed.name.split(".").pop() || "jpg";
-                          const path = `${trailerId}/title/${Date.now()}.${ext}`;
-                          const { error: uploadErr } = await supabase.storage.from("trailer-photos").upload(path, compressed);
-                          if (uploadErr) throw uploadErr;
-                          const { data: { publicUrl } } = supabase.storage.from("trailer-photos").getPublicUrl(path);
-                          await supabase.from("trailers").update({ title_document_url: publicUrl } as any).eq("id", trailerId);
-                          setTrailer(prev => prev ? { ...prev, title_document_url: publicUrl } as any : prev);
-                          toast.success("Title document uploaded");
-                        } catch (err: any) {
-                          console.error("Title upload error:", err);
-                          toast.error("Failed to upload title document");
-                        }
-                        setUploadingPhoto(false);
+                        if (file) await processTitleFile(file);
                         e.target.value = "";
                       }}
                       className="hidden"
@@ -1302,34 +1326,44 @@ export default function TrailerDetail() {
                 </div>
               </CardHeader>
               <CardContent>
-                {(trailer as any)?.title_document_url ? (
-                  <div className="relative group w-fit">
-                    <img
-                      src={(trailer as any).title_document_url}
-                      alt="Vehicle title document"
-                      className="max-h-64 rounded-lg border object-contain cursor-pointer"
-                      onClick={() => window.open((trailer as any).title_document_url, "_blank")}
-                    />
-                    <Button
-                      size="sm"
-                      variant="destructive"
-                      className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
-                      onClick={async () => {
-                        try {
-                          await supabase.from("trailers").update({ title_document_url: null } as any).eq("id", trailerId);
-                          setTrailer(prev => prev ? { ...prev, title_document_url: null } as any : prev);
-                          toast.success("Title document removed");
-                        } catch {
-                          toast.error("Failed to remove title document");
-                        }
-                      }}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ) : (
-                  <p className="text-center text-muted-foreground py-4">No title document uploaded yet.</p>
-                )}
+                <div
+                  onDragOver={handleDragOver}
+                  onDragEnter={(e) => handleDragEnter(e, 'title')}
+                  onDragLeave={(e) => handleDragLeave(e, 'title')}
+                  onDrop={(e) => handleDrop(e, 'title')}
+                  className={`rounded-lg transition-colors ${isDraggingTitle ? 'border-2 border-dashed border-primary bg-primary/5 p-4' : ''}`}
+                >
+                  {(trailer as any)?.title_document_url ? (
+                    <div className="relative group w-fit">
+                      <img
+                        src={(trailer as any).title_document_url}
+                        alt="Vehicle title document"
+                        className="max-h-64 rounded-lg border object-contain cursor-pointer"
+                        onClick={() => window.open((trailer as any).title_document_url, "_blank")}
+                      />
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={async () => {
+                          try {
+                            await supabase.from("trailers").update({ title_document_url: null } as any).eq("id", trailerId);
+                            setTrailer(prev => prev ? { ...prev, title_document_url: null } as any : prev);
+                            toast.success("Title document removed");
+                          } catch {
+                            toast.error("Failed to remove title document");
+                          }
+                        }}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <p className="text-center text-muted-foreground py-4">
+                      {isDraggingTitle ? "Drop file to upload" : "Drag & drop title document here, or click Upload"}
+                    </p>
+                  )}
+                </div>
               </CardContent>
             </Card>
 
@@ -1366,65 +1400,73 @@ export default function TrailerDetail() {
                 </div>
               </CardHeader>
               <CardContent>
-                {trailerPhotos.length === 0 ? (
-                  <p className="text-center text-muted-foreground py-8">
-                    No photos uploaded yet. Click "Upload Photos" to add images.
-                  </p>
-                ) : (
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                    {trailerPhotos.map((photo) => (
-                      <div key={photo.id} className="relative group rounded-lg overflow-hidden border bg-muted">
-                        <img
-                          src={photo.photo_url}
-                          alt={photo.caption || "Trailer photo"}
-                          className="w-full h-48 object-cover"
-                        />
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <button className="absolute top-2 right-2 bg-destructive text-destructive-foreground rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                              <X className="h-4 w-4" />
-                            </button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Delete Photo</AlertDialogTitle>
-                              <AlertDialogDescription>Are you sure you want to delete this photo?</AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => handleDeletePhoto(photo.id, photo.photo_url)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                                Delete
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                        <div className="p-2">
-                          {editingCaption === photo.id ? (
-                            <div className="flex gap-1">
-                              <Input
-                                value={captionText}
-                                onChange={(e) => setCaptionText(e.target.value)}
-                                placeholder="Caption..."
-                                className="h-7 text-xs"
-                                onKeyDown={(e) => { if (e.key === "Enter") handleSaveCaption(photo.id); }}
-                              />
-                              <Button size="sm" variant="ghost" className="h-7 px-2 text-xs" onClick={() => handleSaveCaption(photo.id)}>
-                                Save
-                              </Button>
-                            </div>
-                          ) : (
-                            <p
-                              className="text-xs text-muted-foreground cursor-pointer hover:text-foreground truncate"
-                              onClick={() => { setEditingCaption(photo.id); setCaptionText(photo.caption || ""); }}
-                            >
-                              {photo.caption || "Click to add caption..."}
-                            </p>
-                          )}
+                <div
+                  onDragOver={handleDragOver}
+                  onDragEnter={(e) => handleDragEnter(e, 'photos')}
+                  onDragLeave={(e) => handleDragLeave(e, 'photos')}
+                  onDrop={(e) => handleDrop(e, 'photos')}
+                  className={`rounded-lg transition-colors ${isDraggingPhotos ? 'border-2 border-dashed border-primary bg-primary/5 p-4' : ''}`}
+                >
+                  {trailerPhotos.length === 0 ? (
+                    <p className="text-center text-muted-foreground py-8">
+                      {isDraggingPhotos ? "Drop files to upload" : "Drag & drop photos here, or click Upload Photos"}
+                    </p>
+                  ) : (
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                      {trailerPhotos.map((photo) => (
+                        <div key={photo.id} className="relative group rounded-lg overflow-hidden border bg-muted">
+                          <img
+                            src={photo.photo_url}
+                            alt={photo.caption || "Trailer photo"}
+                            className="w-full h-48 object-cover"
+                          />
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <button className="absolute top-2 right-2 bg-destructive text-destructive-foreground rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <X className="h-4 w-4" />
+                              </button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Delete Photo</AlertDialogTitle>
+                                <AlertDialogDescription>Are you sure you want to delete this photo?</AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => handleDeletePhoto(photo.id, photo.photo_url)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                                  Delete
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                          <div className="p-2">
+                            {editingCaption === photo.id ? (
+                              <div className="flex gap-1">
+                                <Input
+                                  value={captionText}
+                                  onChange={(e) => setCaptionText(e.target.value)}
+                                  placeholder="Caption..."
+                                  className="h-7 text-xs"
+                                  onKeyDown={(e) => { if (e.key === "Enter") handleSaveCaption(photo.id); }}
+                                />
+                                <Button size="sm" variant="ghost" className="h-7 px-2 text-xs" onClick={() => handleSaveCaption(photo.id)}>
+                                  Save
+                                </Button>
+                              </div>
+                            ) : (
+                              <p
+                                className="text-xs text-muted-foreground cursor-pointer hover:text-foreground truncate"
+                                onClick={() => { setEditingCaption(photo.id); setCaptionText(photo.caption || ""); }}
+                              >
+                                {photo.caption || "Click to add caption..."}
+                              </p>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                      ))}
+                    </div>
+                  )}
+                </div>
               </CardContent>
             </Card>
 
