@@ -28,6 +28,8 @@ export const ALL_SECTION_KEYS = [
   "sitemap",
   "indexnow",
   "reports",
+  "view_dashboard_revenue",
+  "view_payment_amounts",
 ] as const;
 
 export type SectionKey = typeof ALL_SECTION_KEYS[number];
@@ -58,6 +60,8 @@ export const SECTION_LABELS: Record<SectionKey, string> = {
   sitemap: "Sitemap",
   indexnow: "IndexNow",
   reports: "Reports",
+  view_dashboard_revenue: "View Dashboard Revenue",
+  view_payment_amounts: "View Payment Amounts",
 };
 
 export function useStaffPermissions() {

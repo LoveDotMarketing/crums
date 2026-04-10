@@ -10,10 +10,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { DollarSign, CheckCircle2, Clock, AlertTriangle, Search } from "lucide-react";
 import { format } from "date-fns";
 import { useState } from "react";
+import { useStaffPermissions } from "@/hooks/useStaffPermissions";
 
 export default function Payments() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const { hasAccess } = useStaffPermissions();
+  const canViewAmounts = hasAccess('view_payment_amounts');
 
   const { data: payments, isLoading } = useQuery({
     queryKey: ["admin-payments"],
@@ -89,6 +92,7 @@ export default function Payments() {
 
           <main className="p-6 space-y-6">
             {/* Summary cards */}
+            {canViewAmounts && (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -118,6 +122,7 @@ export default function Payments() {
                 </CardContent>
               </Card>
             </div>
+            )}
 
             {/* Filters */}
             <div className="flex gap-4">
@@ -146,7 +151,7 @@ export default function Payments() {
                     <TableRow>
                       <TableHead>Customer</TableHead>
                       <TableHead>Company</TableHead>
-                      <TableHead>Amount</TableHead>
+                      {canViewAmounts && <TableHead>Amount</TableHead>}
                       <TableHead>Status</TableHead>
                       <TableHead>Period</TableHead>
                       <TableHead>Date</TableHead>
@@ -163,7 +168,7 @@ export default function Payments() {
                         <TableRow key={p.id}>
                           <TableCell className="font-medium">{customer?.full_name || "—"}</TableCell>
                           <TableCell>{customer?.company_name || "—"}</TableCell>
-                          <TableCell>${Number(p.net_amount).toLocaleString("en-US", { minimumFractionDigits: 2 })}</TableCell>
+                          {canViewAmounts && <TableCell>${Number(p.net_amount).toLocaleString("en-US", { minimumFractionDigits: 2 })}</TableCell>}
                           <TableCell>{statusBadge(p.status)}</TableCell>
                           <TableCell className="text-sm text-muted-foreground">
                             {p.billing_period_start && p.billing_period_end
