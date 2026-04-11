@@ -8,6 +8,7 @@ import { AuthProvider } from "@/hooks/useAuth";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { ScrollToTop } from "@/components/ScrollToTop";
 import { ImpersonationBanner } from "@/components/admin/ImpersonationBanner";
+import { RouteMetaFallback } from "@/components/RouteMetaFallback";
 import { trackPageView } from "@/lib/analytics";
 import { captureLeadSource } from "@/lib/leadSourceTracking";
 // Eager load critical pages
@@ -200,6 +201,7 @@ const App = () => (
       <BrowserRouter>
         <ScrollToTop />
         <AnalyticsTracker />
+        <RouteMetaFallback />
         <AuthProvider>
           <ImpersonationBanner />
           <Suspense fallback={<PageLoader />}>

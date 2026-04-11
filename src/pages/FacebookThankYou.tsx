@@ -29,8 +29,8 @@ const FacebookThankYou = () => {
   return (
     <>
       <SEO
-        title="Thank You | CRUMS Leasing"
-        description="Your quote request has been received. Our team will contact you within 1 business day."
+        title="Facebook Quote Received | CRUMS Leasing"
+        description="Your Facebook quote request was received by CRUMS Leasing, and our team will contact you within 1 business day with next steps."
         noindex={true}
       />
 
