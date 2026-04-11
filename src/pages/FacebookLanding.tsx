@@ -229,8 +229,8 @@ const FacebookLanding = () => {
   return (
     <>
       <SEO
-        title="Get a Trailer Lease Quote"
-        description="Affordable semi-trailer leasing for owner-operators and small fleets. No credit check. Flexible terms. Get your quote today."
+        title="Facebook Trailer Lease Quote | CRUMS Leasing"
+        description="Request a CRUMS Leasing trailer lease quote from our Facebook offer page with flexible terms, no credit check, and fast follow-up for owner-operators."
         canonical="https://crumsleasing.com/lp/facebook"
         noindex={true}
         structuredData={structuredData}

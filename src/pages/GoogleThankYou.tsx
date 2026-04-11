@@ -29,8 +29,8 @@ const GoogleThankYou = () => {
   return (
     <>
       <SEO
-        title="Thank You | CRUMS Leasing"
-        description="Your quote request has been received. Our team will contact you within 1 business day."
+        title="Google Quote Received | CRUMS Leasing"
+        description="Your Google quote request was received by CRUMS Leasing, and our team will contact you within 1 business day with next steps."
         noindex={true}
       />
 

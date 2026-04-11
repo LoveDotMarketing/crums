@@ -213,8 +213,8 @@ const LinkedInLanding = () => {
   return (
     <>
       <SEO
-        title="Get a Trailer Lease Quote"
-        description="Affordable semi-trailer leasing for owner-operators and small fleets. No credit check. Flexible terms. Get your quote today."
+        title="LinkedIn Fleet Quote | CRUMS Leasing"
+        description="Request a CRUMS Leasing trailer lease quote from our LinkedIn campaign page with flexible terms, no credit check, and responsive fleet support."
         canonical="https://crumsleasing.com/lp/linkedin"
         noindex={true}
         structuredData={structuredData}

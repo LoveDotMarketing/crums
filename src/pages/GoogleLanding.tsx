@@ -206,8 +206,8 @@ const GoogleLanding = () => {
   return (
     <>
       <SEO
-        title="Get a Trailer Lease Quote"
-        description="Affordable semi-trailer leasing for owner-operators and small fleets. No credit check. Flexible terms. Get your quote today."
+        title="Google Trailer Lease Quote | CRUMS Leasing"
+        description="Request a CRUMS Leasing trailer lease quote from our Google ad page with flexible terms, no credit check, and quick follow-up for growing fleets."
         canonical="https://crumsleasing.com/lp/google"
         noindex={true}
         structuredData={structuredData}
