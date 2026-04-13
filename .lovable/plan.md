@@ -1,41 +1,31 @@
 
 
-## Plan: Improve Billing Audit Logging & Fix ACH Void Handling
+## Plan: Remove First-Period Safety Net from Subscription Creation
 
-### Problem Summary
-1. The `create-subscription` function generates deposit + first-period charges but writes **zero** audit log entries to `app_event_logs`
-2. The `void-charge` function can't handle ACH payments in `processing` status gracefully
-3. No way to trace which admin created a subscription or triggered charges
+### Problem
+The `create-subscription` edge function has a "first-period safety net" (lines 790-921) that automatically creates and charges a separate invoice for the first month's rent whenever a subscription starts on the same day. This caused the unexpected $800 charge. The business rule is: **only the deposit is charged immediately; the monthly trailer fee always bills on the scheduled billing date, never same-day.**
 
-### Changes
+### Change
 
-#### 1. Add audit logging to `create-subscription` (supabase/functions/create-subscription/index.ts)
-- After subscription creation succeeds, insert an `app_event_logs` entry with:
-  - `event_type: "subscription_created"`
-  - `user_id` and `user_email` of the admin who created it
-  - `metadata` containing: customer_id, customer email, trailer numbers, deposit amount, first-period amount, stripe_subscription_id, stripe_invoice_ids for both deposit and first-period charges
-- This ensures every subscription creation is traceable to a specific admin
+**File: `supabase/functions/create-subscription/index.ts`**
 
-#### 2. Add audit logging for deposit and first-period charges in `create-subscription`
-- After the deposit invoice is charged (~line 632), insert a `customer_charged` event with deposit details
-- After the first-period invoice is charged (~line 852), insert a `customer_charged` event with first-period details
-- Both entries include the admin's user_id/email so you always know who triggered it
+Delete the entire first-period safety net block (lines 789-921) — approximately 130 lines of code. This includes:
+- The Stripe invoice list check for "real payments"
+- Payment method resolution for first-period
+- First-period invoice creation, line items, card surcharge, finalization, and payment
+- The associated audit log insert and billing_history insert
+- The "no payment method found" warning
 
-#### 3. Improve `void-charge` to handle ACH processing gracefully (supabase/functions/void-charge/index.ts)
-- When an invoice has a payment_intent in `processing` status, return a clear error message: "This ACH payment is still processing (takes 4-5 business days). You can void it after it settles, or wait for it to fail. If it succeeds, use a refund instead."
-- Instead of the generic Stripe error, give actionable guidance
+After removal, subscription creation will:
+1. Create the Stripe subscription (deferred to the billing anchor date)
+2. Charge the security deposit only
+3. Log the deposit — done
 
-#### 4. Add admin identity to `charge-customer` metadata
-- The `charge-customer` function already logs to `app_event_logs` but doesn't include the admin's email in the metadata — add `admin_email` and `admin_id` fields to the metadata object
+The monthly fee will naturally bill on the 1st or 15th (the `billing_cycle_anchor`) as Stripe handles recurring invoicing automatically.
 
-### Files Modified
-- `supabase/functions/create-subscription/index.ts` — add 3 audit log inserts (subscription created, deposit charged, first-period charged)
-- `supabase/functions/void-charge/index.ts` — better error message for ACH processing state
-- `supabase/functions/charge-customer/index.ts` — add admin identity to metadata
-
-### What This Solves
-- Every subscription creation will show who did it, what trailers, what amounts
-- Every auto-generated charge (deposit + first rent) will be traceable
-- Void failures on ACH will give clear guidance instead of cryptic Stripe errors
-- The "who charged $800?" question will never happen again
+### What stays unchanged
+- Deposit invoice logic (lines 774-787) — untouched
+- Delayed start logic — untouched
+- All other subscription creation flow — untouched
+- The audit logging we just added for subscription creation and deposit — stays
 
