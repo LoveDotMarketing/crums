@@ -14,12 +14,18 @@ const logStep = (step: string, details?: Record<string, unknown>) => {
 
 interface ModifyRequest {
   subscriptionId: string;
-  action: "add_trailers" | "remove_trailers" | "swap_trailer";
+  action: "add_trailers" | "remove_trailers" | "swap_trailer" | "change_rate" | "change_billing_date";
   addTrailerIds?: string[];
   removeTrailerIds?: string[];
   swapFromTrailerId?: string;
   swapToTrailerId?: string;
   customRates?: Record<string, number>;
+  // change_rate fields
+  itemId?: string;
+  trailerId?: string;
+  newRate?: number;
+  // change_billing_date fields
+  newBillingDate?: string;
 }
 
 // Import shared default rate logic — used inline below via dynamic import
@@ -105,7 +111,128 @@ serve(async (req) => {
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
 
-    // Get billing interval from existing subscription
+    // Handle change_rate action — update price on a single Stripe subscription item
+    if (action === "change_rate") {
+      const { itemId, trailerId, newRate } = body;
+      if (!itemId || !trailerId || !newRate) throw new Error("change_rate requires itemId, trailerId, newRate");
+      logStep("Changing rate", { itemId, trailerId, newRate });
+
+      // Find the subscription item
+      const targetItem = activeSubscriptionItems.find(
+        (i: { id: string }) => i.id === itemId
+      );
+      if (!targetItem) throw new Error("Subscription item not found");
+
+      // Retrieve Stripe subscription
+      const stripeSubscription = await stripe.subscriptions.retrieve(subscription.stripe_subscription_id);
+      const existingStripeItem = stripeSubscription.items.data[0];
+      const recurringInterval = existingStripeItem?.price?.recurring;
+      if (!recurringInterval) throw new Error("Could not determine billing interval");
+
+      let stripeItemId = targetItem.stripe_subscription_item_id;
+
+      // If no stripe item ID, find by metadata/name
+      if (!stripeItemId) {
+        const expanded = await stripe.subscriptions.retrieve(
+          subscription.stripe_subscription_id,
+          { expand: ['items.data.price.product'] }
+        );
+        for (const si of expanded.items.data) {
+          const product = si.price?.product;
+          if (typeof product === 'object' && product !== null) {
+            const p = product as Stripe.Product;
+            if (p.metadata?.trailer_id === trailerId) {
+              stripeItemId = si.id;
+              break;
+            }
+          }
+        }
+      }
+
+      if (!stripeItemId) throw new Error("Could not find Stripe subscription item for this trailer");
+
+      // Create new price and swap
+      const { data: trailerData } = await supabaseClient
+        .from("trailers")
+        .select("trailer_number")
+        .eq("id", trailerId)
+        .single();
+
+      const newPrice = await stripe.prices.create({
+        unit_amount: Math.round(newRate * 100),
+        currency: "usd",
+        recurring: {
+          interval: recurringInterval.interval,
+          interval_count: recurringInterval.interval_count,
+        } as Stripe.PriceCreateParams.Recurring,
+        product_data: {
+          name: `Trailer ${trailerData?.trailer_number || "Unknown"} Lease`,
+          metadata: { trailer_id: trailerId },
+        },
+      });
+
+      await stripe.subscriptions.update(subscription.stripe_subscription_id, {
+        items: [
+          { id: stripeItemId, deleted: true },
+          { price: newPrice.id },
+        ],
+        proration_behavior: "none",
+      });
+
+      // Update local stripe_subscription_item_id
+      const updatedSub = await stripe.subscriptions.retrieve(
+        subscription.stripe_subscription_id,
+        { expand: ['items.data.price.product'] }
+      );
+      for (const si of updatedSub.items.data) {
+        const product = si.price?.product;
+        if (typeof product === 'object' && product !== null && (product as Stripe.Product).metadata?.trailer_id === trailerId) {
+          await supabaseClient
+            .from("subscription_items")
+            .update({ stripe_subscription_item_id: si.id, monthly_rate: newRate })
+            .eq("id", itemId);
+          break;
+        }
+      }
+
+      logStep("Rate updated in Stripe", { newRate, stripeItemId });
+
+      return new Response(
+        JSON.stringify({ success: true, action: "change_rate", itemId, newRate }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
+      );
+    }
+
+    // Handle change_billing_date action
+    if (action === "change_billing_date") {
+      const { newBillingDate } = body;
+      if (!newBillingDate) throw new Error("change_billing_date requires newBillingDate");
+      logStep("Changing billing date", { newBillingDate });
+
+      const targetDate = new Date(newBillingDate + "T00:00:00Z");
+      const targetTimestamp = Math.floor(targetDate.getTime() / 1000);
+
+      // Update Stripe subscription trial_end to shift next invoice date
+      await stripe.subscriptions.update(subscription.stripe_subscription_id, {
+        trial_end: targetTimestamp,
+        proration_behavior: "none",
+      });
+
+      // Update local DB
+      await supabaseClient
+        .from("customer_subscriptions")
+        .update({ next_billing_date: newBillingDate })
+        .eq("id", subscriptionId);
+
+      logStep("Billing date updated", { newBillingDate });
+
+      return new Response(
+        JSON.stringify({ success: true, action: "change_billing_date", newBillingDate }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
+      );
+    }
+
+    // Get billing interval from existing subscription (for add/remove/swap actions)
     const stripeSubscription = await stripe.subscriptions.retrieve(subscription.stripe_subscription_id);
     const existingItem = stripeSubscription.items.data[0];
     const recurringInterval = existingItem?.price?.recurring;
