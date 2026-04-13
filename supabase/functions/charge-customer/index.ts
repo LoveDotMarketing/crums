@@ -196,6 +196,8 @@ serve(async (req) => {
             payment_method: isCard ? "card" : "ach",
             surcharge: surchargeAmount,
             status: "completed",
+            admin_id: userData.user.id,
+            admin_email: userData.user.email,
           },
         })
         .eq("id", pendingLog.id);
