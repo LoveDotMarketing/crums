@@ -1,31 +1,35 @@
 
 
-## Plan: Remove First-Period Safety Net from Subscription Creation
+## Plan: Add Full Subscription Editing Capabilities
 
-### Problem
-The `create-subscription` edge function has a "first-period safety net" (lines 790-921) that automatically creates and charges a separate invoice for the first month's rent whenever a subscription starts on the same day. This caused the unexpected $800 charge. The business rule is: **only the deposit is charged immediately; the monthly trailer fee always bills on the scheduled billing date, never same-day.**
+### Current State
+You already have an **Edit Subscription panel** that can change subscription type, billing cycle, dates, deposit, and manage trailers. You also have a **Customer Form dialog** for editing customer info, and a **Billing Date dialog** for pre-activation anchor changes.
 
-### Change
+What's missing is the ability to edit the **monthly rate per trailer** and to **sync billing date and payment method changes to Stripe** on live subscriptions.
 
-**File: `supabase/functions/create-subscription/index.ts`**
+### Changes
 
-Delete the entire first-period safety net block (lines 789-921) — approximately 130 lines of code. This includes:
-- The Stripe invoice list check for "real payments"
-- Payment method resolution for first-period
-- First-period invoice creation, line items, card surcharge, finalization, and payment
-- The associated audit log insert and billing_history insert
-- The "no payment method found" warning
+**1. Add Monthly Rate Editing to Edit Subscription Panel**
+- File: `src/components/admin/EditSubscriptionPanel.tsx`
+- Add an editable rate input next to each trailer in the "Assigned Trailers" card
+- On save, update the `monthly_rate` column in `subscription_items` AND call `modify-subscription` (or a new Stripe update) to change the price on the Stripe subscription item
 
-After removal, subscription creation will:
-1. Create the Stripe subscription (deferred to the billing anchor date)
-2. Charge the security deposit only
-3. Log the deposit — done
+**2. Add Billing Date Change for Active Subscriptions**
+- File: `src/components/admin/EditSubscriptionPanel.tsx`
+- Add a "Next Billing Date" picker that updates `next_billing_date` on the subscription
+- File: `supabase/functions/modify-subscription/index.ts`
+- Add a new action `change_billing_date` that updates the Stripe subscription's `billing_cycle_anchor` (Stripe allows this on active subscriptions) and updates `next_billing_date` locally
 
-The monthly fee will naturally bill on the 1st or 15th (the `billing_cycle_anchor`) as Stripe handles recurring invoicing automatically.
+**3. Add Payment Method Management from Admin Side**
+- File: `src/components/admin/EditSubscriptionPanel.tsx`
+- Display current payment method type (ACH/Card) with a "Reset Payment Setup" button
+- This already exists on the Applications page — wire the same `reset-payment-setup` edge function call into the Edit Subscription panel so admins can trigger a payment method reset without navigating away
 
-### What stays unchanged
-- Deposit invoice logic (lines 774-787) — untouched
-- Delayed start logic — untouched
-- All other subscription creation flow — untouched
-- The audit logging we just added for subscription creation and deposit — stays
+**4. Link Customer Info Editing from Edit Subscription**
+- File: `src/components/admin/EditSubscriptionPanel.tsx`
+- Add an "Edit Customer" button that opens the existing `CustomerFormDialog` pre-filled with the subscription's customer data
+- No new components needed — just import and wire the existing dialog
+
+### What This Solves
+Admins can adjust monthly rates, billing dates, payment methods, and customer info on existing subscriptions — all without deleting and recreating anything.
 
