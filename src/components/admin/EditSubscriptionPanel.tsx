@@ -222,6 +222,7 @@ export function EditSubscriptionPanel({ subscriptionId, onSave, onCancel }: Edit
               .from("subscription_items")
               .update({ monthly_rate: newRate })
               .eq("id", item.id)
+              .then()
           );
 
           // Sync to Stripe if subscription is active and has stripe ID
