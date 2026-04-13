@@ -217,13 +217,13 @@ export function EditSubscriptionPanel({ subscriptionId, onSave, onCancel }: Edit
         const oldRate = item.monthly_rate || 0;
         if (newRate !== oldRate && newRate > 0) {
           // Update local DB
-          rateUpdatePromises.push(
-            supabase
+          const dbUpdate = async () => {
+            await supabase
               .from("subscription_items")
               .update({ monthly_rate: newRate })
-              .eq("id", item.id)
-              .then()
-          );
+              .eq("id", item.id);
+          };
+          rateUpdatePromises.push(dbUpdate());
 
           // Sync to Stripe if subscription is active and has stripe ID
           if (subscription?.stripe_subscription_id && subscription?.status === "active") {
