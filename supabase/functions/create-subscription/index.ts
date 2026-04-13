@@ -631,6 +631,32 @@ serve(async (req) => {
           const paidInvoice = await stripe.invoices.pay(finalizedInvoice.id, payParams);
           logStep("Deposit payment initiated", { invoiceId: paidInvoice.id, status: paidInvoice.status });
 
+          // Audit log: deposit charged
+          try {
+            await supabaseClient.from("app_event_logs").insert({
+              user_id: userData.user.id,
+              user_email: userData.user.email,
+              event_category: "admin_action",
+              event_type: "customer_charged",
+              description: `Deposit of $${finalDepositAmount.toFixed(2)} charged to ${customer.full_name} (${customer.email}) via subscription creation`,
+              metadata: {
+                customer_id: customerId,
+                customer_email: customer.email,
+                amount: finalDepositAmount,
+                charge_type: "security_deposit",
+                stripe_invoice_id: paidInvoice.id,
+                payment_method: isDepositCard ? "card" : "ach",
+                surcharge: depositSurcharge,
+                admin_id: userData.user.id,
+                admin_email: userData.user.email,
+                source: "create-subscription",
+              },
+              page_url: "/dashboard/admin/billing",
+            });
+          } catch (logErr: any) {
+            logStep("WARNING: Deposit audit log failed", { error: logErr.message });
+          }
+
           depositChargedDuringCreation = true;
           depositInvoiceResult = { paidInvoice, isCard: isDepositCard, finalAmount: finalDepositAmount };
         } catch (depositError) {
@@ -851,6 +877,31 @@ serve(async (req) => {
               const paid = await stripe.invoices.pay(finalized.id, { payment_method: fpPaymentMethodId });
               logStep("First period invoice charged", { invoiceId: paid.id, status: paid.status });
 
+              // Audit log: first period charged
+              try {
+                await supabaseClient.from("app_event_logs").insert({
+                  user_id: userData.user.id,
+                  user_email: userData.user.email,
+                  event_category: "admin_action",
+                  event_type: "customer_charged",
+                  description: `First period of $${(paid.amount_due / 100).toFixed(2)} charged to ${customer.full_name} (${customer.email}) via subscription creation`,
+                  metadata: {
+                    customer_id: customerId,
+                    customer_email: customer.email,
+                    amount: paid.amount_due / 100,
+                    charge_type: "first_period",
+                    stripe_invoice_id: paid.id,
+                    payment_method: fpIsCard ? "card" : "ach",
+                    admin_id: userData.user.id,
+                    admin_email: userData.user.email,
+                    source: "create-subscription",
+                  },
+                  page_url: "/dashboard/admin/billing",
+                });
+              } catch (logErr: any) {
+                logStep("WARNING: First period audit log failed", { error: logErr.message });
+              }
+
               await supabaseClient.from("billing_history").insert({
                 subscription_id: custSub.id,
                 amount: paid.amount_due / 100,
@@ -896,6 +947,47 @@ serve(async (req) => {
       totalGroups: anchorGroups.size,
       subscriptions: createdSubscriptions 
     });
+
+    // ==========================================
+    // AUDIT LOGGING — trace who created this subscription and all charges
+    // ==========================================
+    try {
+      const supabaseForLogs = createClient(
+        Deno.env.get("SUPABASE_URL") ?? "",
+        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+        { auth: { persistSession: false } }
+      );
+      const adminId = userData.user.id;
+      const adminEmail = userData.user.email;
+      const trailerNumbers = trailers.map(t => t.trailer_number);
+
+      // 1. Subscription created event
+      await supabaseForLogs.from("app_event_logs").insert({
+        user_id: adminId,
+        user_email: adminEmail,
+        event_category: "admin_action",
+        event_type: "subscription_created",
+        description: `Created ${subType} subscription for customer ${customer.full_name} (${customer.email}) — trailers: ${trailerNumbers.join(", ")}`,
+        metadata: {
+          customer_id: customerId,
+          customer_email: customer.email,
+          customer_name: customer.full_name,
+          trailer_ids: trailerIds,
+          trailer_numbers: trailerNumbers,
+          subscription_type: subType,
+          billing_cycle: billingCycle,
+          deposit_amount: depositAmount || 0,
+          admin_id: adminId,
+          admin_email: adminEmail,
+          subscriptions: createdSubscriptions,
+        },
+        page_url: "/dashboard/admin/billing",
+      });
+      logStep("Audit log: subscription_created inserted");
+    } catch (auditErr: any) {
+      // Non-fatal: don't fail the subscription over a log entry
+      logStep("WARNING: Audit log insert failed", { error: auditErr.message });
+    }
 
     return new Response(
       JSON.stringify({

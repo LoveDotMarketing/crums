@@ -66,10 +66,25 @@ serve(async (req) => {
 
     // Attempt to void based on invoice status
     if (invoice.status === "open") {
+      // Check if payment_intent is in processing state (ACH)
+      const openPiId = typeof invoice.payment_intent === "string"
+        ? invoice.payment_intent
+        : invoice.payment_intent?.id;
+      
+      if (openPiId) {
+        const openPi = await stripe.paymentIntents.retrieve(openPiId);
+        if (openPi.status === "processing") {
+          throw new Error(
+            "This ACH payment is still processing (takes 4-5 business days). " +
+            "You cannot void or cancel it while processing. " +
+            "Wait for it to settle — if it succeeds, use a refund. If it fails, the invoice will reopen and you can void it then."
+          );
+        }
+      }
+      
       await stripe.invoices.voidInvoice(stripe_invoice_id);
       logStep("Invoice voided (was open)");
     } else if (invoice.status === "paid") {
-      // For ACH, payment_intent may still be processing — try to cancel it
       const piId = typeof invoice.payment_intent === "string"
         ? invoice.payment_intent
         : invoice.payment_intent?.id;
@@ -77,18 +92,12 @@ serve(async (req) => {
       if (piId) {
         const pi = await stripe.paymentIntents.retrieve(piId);
         if (pi.status === "processing") {
-          // Can't cancel processing ACH, but we can void the invoice
-          // which prevents it from being marked as paid
-          try {
-            await stripe.invoices.voidInvoice(stripe_invoice_id);
-            logStep("Invoice voided (payment was processing)");
-          } catch (voidErr: any) {
-            // If void fails, try refund
-            await stripe.refunds.create({ payment_intent: piId });
-            logStep("Refund created (void failed on paid invoice)");
-          }
+          throw new Error(
+            "This ACH payment is still processing (takes 4-5 business days). " +
+            "You cannot void or refund it while processing. " +
+            "Wait for it to settle — if it succeeds, use a refund. If it fails, the invoice will reopen and you can void it then."
+          );
         } else if (pi.status === "succeeded") {
-          // Already settled — create a refund
           await stripe.refunds.create({ payment_intent: piId });
           logStep("Refund created (payment already succeeded)");
         } else {
