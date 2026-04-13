@@ -14,12 +14,18 @@ const logStep = (step: string, details?: Record<string, unknown>) => {
 
 interface ModifyRequest {
   subscriptionId: string;
-  action: "add_trailers" | "remove_trailers" | "swap_trailer";
+  action: "add_trailers" | "remove_trailers" | "swap_trailer" | "change_rate" | "change_billing_date";
   addTrailerIds?: string[];
   removeTrailerIds?: string[];
   swapFromTrailerId?: string;
   swapToTrailerId?: string;
   customRates?: Record<string, number>;
+  // change_rate fields
+  itemId?: string;
+  trailerId?: string;
+  newRate?: number;
+  // change_billing_date fields
+  newBillingDate?: string;
 }
 
 // Import shared default rate logic — used inline below via dynamic import
