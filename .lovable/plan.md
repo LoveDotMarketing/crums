@@ -1,35 +1,25 @@
 
 
-## Plan: Add Full Subscription Editing Capabilities
+## Plan: Fix BMS Logistics Weekly Rate
 
-### Current State
-You already have an **Edit Subscription panel** that can change subscription type, billing cycle, dates, deposit, and manage trailers. You also have a **Customer Form dialog** for editing customer info, and a **Billing Date dialog** for pre-activation anchor changes.
+### Problem
+BMS Logistics (sub `sub_1TC08CLjIwiEGQIhyZWxvuSF`) has a Stripe price set to **$175/month** but should be **$244.56/week**.
 
-What's missing is the ability to edit the **monthly rate per trailer** and to **sync billing date and payment method changes to Stripe** on live subscriptions.
+### Steps
 
-### Changes
+**1. Create correct weekly price in Stripe**
+- Create a new Stripe price: $244.56, recurring weekly, on the same product (`prod_UAKnE4Y5JUjnlK`)
 
-**1. Add Monthly Rate Editing to Edit Subscription Panel**
-- File: `src/components/admin/EditSubscriptionPanel.tsx`
-- Add an editable rate input next to each trailer in the "Assigned Trailers" card
-- On save, update the `monthly_rate` column in `subscription_items` AND call `modify-subscription` (or a new Stripe update) to change the price on the Stripe subscription item
+**2. Swap the subscription item**
+- Update the Stripe subscription to replace the old monthly price item (`si_UAKnJZQevBfz8D`) with the new weekly price
+- Use `proration_behavior: none` to avoid generating proration charges
 
-**2. Add Billing Date Change for Active Subscriptions**
-- File: `src/components/admin/EditSubscriptionPanel.tsx`
-- Add a "Next Billing Date" picker that updates `next_billing_date` on the subscription
-- File: `supabase/functions/modify-subscription/index.ts`
-- Add a new action `change_billing_date` that updates the Stripe subscription's `billing_cycle_anchor` (Stripe allows this on active subscriptions) and updates `next_billing_date` locally
+**3. Update local database**
+- Update `subscription_items.monthly_rate` to `244.56` for subscription `e88c3208-6337-4b4e-bd2a-78217f4653c0`
 
-**3. Add Payment Method Management from Admin Side**
-- File: `src/components/admin/EditSubscriptionPanel.tsx`
-- Display current payment method type (ACH/Card) with a "Reset Payment Setup" button
-- This already exists on the Applications page — wire the same `reset-payment-setup` edge function call into the Edit Subscription panel so admins can trigger a payment method reset without navigating away
+### Result
+Going forward, Stripe will automatically bill BMS Logistics **$244.56 every week** instead of the incorrect monthly charge.
 
-**4. Link Customer Info Editing from Edit Subscription**
-- File: `src/components/admin/EditSubscriptionPanel.tsx`
-- Add an "Edit Customer" button that opens the existing `CustomerFormDialog` pre-filled with the subscription's customer data
-- No new components needed — just import and wire the existing dialog
-
-### What This Solves
-Admins can adjust monthly rates, billing dates, payment methods, and customer info on existing subscriptions — all without deleting and recreating anything.
+### Note
+The already-paid $419.56 invoice will remain as-is in Stripe history. If you want to credit or adjust for the overcharge/undercharge, let me know and I can handle that separately.
 
