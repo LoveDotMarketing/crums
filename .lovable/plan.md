@@ -1,42 +1,29 @@
 
 
-## Plan: Add Google Ads Enhanced Conversions to All Forms
+## Plan: Create Trucking Games Hub Page
 
-### What This Does
-Google Ads Enhanced Conversions uses first-party customer data (email, phone, name, address) to improve conversion attribution. Before each conversion event, we call `gtag('set', 'user_data', {...})` with hashed user data from form fields.
+### What We're Building
+A `/crums-trucking-games` page styled like a game store/arcade hub. It will feature the "Yard Run" game with a card and a "Play Now" button that opens the HTML game in a new browser tab. The layout supports adding more games later.
 
-### Approach
-Create a single utility function `setEnhancedConversionData()` in `src/lib/analytics.ts` and call it right before every form submission / conversion event across all public-facing forms.
+### Steps
 
-### 1. New utility in `src/lib/analytics.ts`
+**1. Copy game HTML to `public/games/`**
+- Copy `crums-trucking-trailer-yard-run-game.html` to `public/games/yard-run.html`
 
-Add a `setGoogleAdsUserData` function that accepts first-party data and calls:
-```ts
-gtag('set', 'user_data', {
-  email, phone_number, address: { first_name, last_name, city, state, postal_code, country }
-});
-```
-Fields are optional — only set what's available from the form.
+**2. Create `src/pages/TruckingGames.tsx`**
+- Navigation + Footer layout matching the rest of the site
+- SEO component with title "Trucking Games - CRUMS Leasing"
+- Hero section: "CRUMS Trucking Games" heading with arcade/game store vibe
+- Game card grid layout (ready for multiple games)
+- First card: "Yard Run" with a featured image/screenshot placeholder, description, and a "Play Now" button that calls `window.open('/games/yard-run.html', '_blank')`
+- Card styled as "featured" with a badge
 
-### 2. Forms to update (8 files)
+**3. Register route in `src/App.tsx`**
+- Lazy import `TruckingGames`
+- Add `<Route path="/crums-trucking-games" element={<TruckingGames />} />`
 
-Each form gets a `setGoogleAdsUserData(...)` call inserted **before** the existing tracking calls (e.g., `trackFormSubmission`, `trackConversion`, `fireMetaCapi`):
-
-| File | Available Fields |
-|---|---|
-| `src/pages/Contact.tsx` | name (split), email, phone |
-| `src/pages/GetStarted.tsx` | firstName, lastName, email, phone, city, state, zip |
-| `src/pages/FacebookLanding.tsx` | name (split), email, phone |
-| `src/pages/GoogleLanding.tsx` | name (split), email, phone |
-| `src/pages/LinkedInLanding.tsx` | name (split), email, phone |
-| `src/pages/MATS2026.tsx` | full_name (split), email, phone |
-| `src/pages/customer/RentalRequest.tsx` | email (from profile), phone |
-| `src/pages/Login.tsx` | email only |
-
-### 3. Implementation Details
-
-- The utility will normalize data: lowercase email, strip phone to E.164-ish format
-- Google handles the hashing automatically when using `gtag('set', 'user_data', ...)`
-- Name splitting: `name.split(' ')` → first word = first_name, rest = last_name
-- No new dependencies needed
+### Technical Notes
+- The HTML game is fully self-contained (inline CSS/JS), so it works as a static file in `public/`
+- Opening in a new window gives it full-screen canvas control without interfering with site navigation
+- The page grid uses the same Card components as the rest of the site
 
