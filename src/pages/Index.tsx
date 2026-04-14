@@ -195,14 +195,14 @@ const Index = () => {
           <div className="flex items-center justify-center gap-3 text-secondary-foreground text-sm md:text-base">
             <Newspaper className="h-5 w-5 flex-shrink-0" />
             <p>
-              Join us at the{" "}
+              Thank you for visiting our booth at the MATS Trucking Show! Check out the featured game we had playing at our booth —{" "}
               <Link 
-                to="/news/mats-2026-crums-leasing-booth-38024" 
+                to="/crums-trucking-games" 
                 className="font-semibold underline hover:no-underline"
               >
-                Mid America Trucking Show
+                CRUMS Trailer Yard Run
               </Link>
-              . Booth 38024. Meet Eric Bledsoe and explore our fleet.
+              !
             </p>
           </div>
         </div>
