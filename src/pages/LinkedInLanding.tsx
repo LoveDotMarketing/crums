@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { trackFormStart, trackPageView } from "@/lib/analytics";
+import { trackFormStart, trackPageView, setGoogleAdsUserData, splitName } from "@/lib/analytics";
 import { getLeadSourceData } from "@/lib/leadSourceTracking";
 import { trackLinkedInPageView } from "@/lib/linkedinAnalytics";
 import {
@@ -151,6 +151,10 @@ const LinkedInLanding = () => {
         toast({ title: "Submission Failed", description: "Please try again later.", variant: "destructive" });
         return;
       }
+
+      // Enhanced Conversions
+      const { firstName: ecFirst, lastName: ecLast } = splitName(formData.name);
+      setGoogleAdsUserData({ email: formData.email, phone: formData.phone, firstName: ecFirst, lastName: ecLast });
 
       // Send confirmation email to the customer in background
       supabase.functions.invoke('send-contact-confirmation', {

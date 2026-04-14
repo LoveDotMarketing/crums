@@ -268,5 +268,51 @@ export const fireMetaCapi = (options: FireMetaCapiOptions) => {
   }
 };
 
+// Google Ads Enhanced Conversions – set first-party user data before conversion events
+export interface EnhancedConversionData {
+  email?: string;
+  phone?: string;
+  firstName?: string;
+  lastName?: string;
+  city?: string;
+  state?: string;
+  postalCode?: string;
+  country?: string;
+}
+
+export const setGoogleAdsUserData = (data: EnhancedConversionData) => {
+  if (typeof window === 'undefined' || !window.gtag) return;
+
+  const userData: Record<string, unknown> = {};
+
+  if (data.email) userData.email = data.email.trim().toLowerCase();
+  if (data.phone) {
+    // Strip to digits, prepend +1 if 10 digits (US)
+    const digits = data.phone.replace(/\D/g, '');
+    userData.phone_number = digits.length === 10 ? `+1${digits}` : `+${digits}`;
+  }
+
+  const address: Record<string, string> = {};
+  if (data.firstName) address.first_name = data.firstName.trim();
+  if (data.lastName) address.last_name = data.lastName.trim();
+  if (data.city) address.city = data.city.trim();
+  if (data.state) address.region = data.state.trim();
+  if (data.postalCode) address.postal_code = data.postalCode.trim();
+  address.country = data.country || 'US';
+
+  if (Object.keys(address).length > 1) userData.address = address;
+
+  if (Object.keys(userData).length > 0) {
+    window.gtag('set', 'user_data', userData);
+    console.log('[Analytics] Enhanced Conversion user_data set');
+  }
+};
+
+// Helper: split a full name into first/last
+export const splitName = (fullName: string): { firstName: string; lastName?: string } => {
+  const parts = fullName.trim().split(/\s+/);
+  return { firstName: parts[0], lastName: parts.length > 1 ? parts.slice(1).join(' ') : undefined };
+};
+
 // GA4 Dashboard URL for admin reference
 export const GA4_DASHBOARD_URL = 'https://analytics.google.com/analytics/web/#/a377323275p515941987/reports/intelligenthome?params=_u..nav%3Dmaui';

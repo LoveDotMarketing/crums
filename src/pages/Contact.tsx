@@ -15,7 +15,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { SEO } from "@/components/SEO";
 import { localBusinessSchema, generateBreadcrumbSchema } from "@/lib/structuredData";
 import { RelatedLinksSection } from "@/components/RelatedLinksSection";
-import { trackFormSubmission, trackConversion, trackPhoneClick, trackFormStart, fireMetaCapi } from "@/lib/analytics";
+import { trackFormSubmission, trackConversion, trackPhoneClick, trackFormStart, fireMetaCapi, setGoogleAdsUserData, splitName } from "@/lib/analytics";
 import { trackLinkedInQuoteRequest } from "@/lib/linkedinAnalytics";
 import { getLeadSourceData } from "@/lib/leadSourceTracking";
 
@@ -224,6 +224,10 @@ const Contact = () => {
         });
         return;
       }
+
+      // Enhanced Conversions
+      const { firstName: ecFirst, lastName: ecLast } = splitName(formData.name);
+      setGoogleAdsUserData({ email: formData.email, phone: formData.phone, firstName: ecFirst, lastName: ecLast });
 
       // Track successful form submission
       trackFormSubmission('contact_quote');
