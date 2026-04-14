@@ -1,53 +1,38 @@
 
 
-## Problem: Sales Role Gets Empty Data Due to RLS
+## Plan: Add Missing Sales RLS Policies
 
-The salesman logs in with the `sales` role. The dashboard queries tables like `trailers`, `customers`, `tolls`, `billing_history`, etc. — all of which have RLS policies that only grant SELECT to users with the `admin` app_role. Since `sales` is not `admin`, every query silently returns zero rows, so the cards show no numbers.
+The salesman has toggle access to 11 sections (dashboard, applications, fleet, archived_trailers, dot_inspections, work_orders, tolls, customers, employee, referrals, payments). The core dashboard tables already have sales SELECT policies, but **12 additional tables** queried by those pages are missing sales read access — meaning those pages will show empty data.
 
-When you impersonate the salesman, your actual auth session still has the `admin` role, so RLS passes and data appears.
+### Database Migration
 
-### Solution
+Add SELECT policies for the `sales` role on:
 
-Add a `sales` value to the `app_role` enum, then add SELECT RLS policies on the relevant tables so sales users can read dashboard data. This mirrors what admin can see (filtered by their staff_permissions on the UI side).
+| Table | Why Needed |
+|-------|-----------|
+| `customer_subscriptions` | Employee Dashboard, Referrals, Payments |
+| `subscription_items` | Billing/Payments trailer line items |
+| `dot_inspections` | DOT Inspections page |
+| `dot_inspection_photos` | DOT Inspections photo viewer |
+| `work_orders` | Work Orders page |
+| `work_order_line_items` | Work Orders line items |
+| `referral_codes` | Referrals page |
+| `referrals` | Referrals page |
+| `partners` | Referrals page |
+| `partner_commissions` | Referrals page |
+| `staff_profiles` | Employee Dashboard (already has "own profile" policy, but sales user needs it) |
+| `performance_reviews` | Employee Dashboard (own reviews) |
 
-### Steps
-
-**1. Database migration — extend enum and add RLS policies**
-
+Each policy follows the same pattern:
 ```sql
--- Add sales to the app_role enum
-ALTER TYPE public.app_role ADD VALUE IF NOT EXISTS 'sales';
-
--- Add SELECT policies for sales role on dashboard-relevant tables
-CREATE POLICY "Sales can view trailers" ON public.trailers FOR SELECT
-  TO authenticated USING (has_role(auth.uid(), 'sales'::app_role));
-
-CREATE POLICY "Sales can view customers" ON public.customers FOR SELECT
-  TO authenticated USING (has_role(auth.uid(), 'sales'::app_role));
-
-CREATE POLICY "Sales can view tolls" ON public.tolls FOR SELECT
-  TO authenticated USING (has_role(auth.uid(), 'sales'::app_role));
-
-CREATE POLICY "Sales can view billing history" ON public.billing_history FOR SELECT
-  TO authenticated USING (has_role(auth.uid(), 'sales'::app_role));
-
-CREATE POLICY "Sales can view maintenance records" ON public.maintenance_records FOR SELECT
-  TO authenticated USING (has_role(auth.uid(), 'sales'::app_role));
-
-CREATE POLICY "Sales can view applications" ON public.customer_applications FOR SELECT
-  TO authenticated USING (has_role(auth.uid(), 'sales'::app_role));
-
-CREATE POLICY "Sales can view profiles" ON public.profiles FOR SELECT
-  TO authenticated USING (has_role(auth.uid(), 'sales'::app_role));
+CREATE POLICY "Sales can view [table]"
+  ON public.[table] FOR SELECT
+  TO authenticated
+  USING (has_role(auth.uid(), 'sales'::app_role));
 ```
 
-**2. Verify the salesman's `user_roles` entry** — confirm they have a row with `role = 'sales'` in the `user_roles` table.
+For `staff_profiles` and `performance_reviews`, the existing "Staff can view own profile" policy should already work since the sales user is staff. I'll verify and only add if missing.
 
-### Why This Fixes It
-- RLS is enforced at the database level regardless of UI permissions
-- The UI code (staff_permissions, ProtectedRoute) correctly lets sales users navigate to admin pages, but the database rejects their reads
-- Adding SELECT policies for `sales` on these tables gives them read access matching what the UI intends to show
-
-### No Code Changes Needed
-The React components already work correctly — the issue is purely database-level access.
+### No Code Changes
+The React components and staff_permissions toggles already handle visibility correctly — this is purely a database access fix.
 
