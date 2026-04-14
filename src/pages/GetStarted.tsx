@@ -376,7 +376,7 @@ export default function GetStarted() {
       }
 
       // Enhanced Conversions
-      setGoogleAdsUserData({ email, phone: phoneNumber, firstName, lastName, city, state, postalCode: zip });
+      setGoogleAdsUserData({ email, phone: phoneNumber, firstName, lastName });
 
       // Track successful signup
       trackSignup('email');
