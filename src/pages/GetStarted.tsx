@@ -18,7 +18,7 @@ import { fullSignupSchema, customerApplicationSchema, validateFile, sanitizeInpu
 import { z } from "zod";
 import { SEO } from "@/components/SEO";
 import { generateBreadcrumbSchema } from "@/lib/structuredData";
-import { trackSignup, trackConversion, trackSignupStarted, trackSignupFailed, trackFormStart, trackEvent, fireMetaCapi } from "@/lib/analytics";
+import { trackSignup, trackConversion, trackSignupStarted, trackSignupFailed, trackFormStart, trackEvent, fireMetaCapi, setGoogleAdsUserData } from "@/lib/analytics";
 import { processReferralCode, validateReferralCode } from "@/lib/referral";
 import { trackLinkedInSignup, trackLinkedInApplicationSubmit } from "@/lib/linkedinAnalytics";
 import { logSignupStarted, logSignupCompleted, logSignupFailed, logSessionError, logDocumentUploadFailed, logCustomerEvent } from "@/lib/eventLogger";
@@ -374,6 +374,9 @@ export default function GetStarted() {
           });
         }
       }
+
+      // Enhanced Conversions
+      setGoogleAdsUserData({ email, phone: phoneNumber, firstName, lastName });
 
       // Track successful signup
       trackSignup('email');

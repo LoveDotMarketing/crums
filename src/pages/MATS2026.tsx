@@ -13,6 +13,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { toast } from "sonner";
 import { Loader2, MapPin, Truck } from "lucide-react";
 import { SEO } from "@/components/SEO";
+import { setGoogleAdsUserData, splitName } from "@/lib/analytics";
 
 const eventLeadSchema = z.object({
   full_name: z.string().min(1, "Name is required").max(100),
@@ -49,6 +50,9 @@ export default function MATS2026() {
         event_name: "MATS 2026",
       });
       if (error) throw error;
+      // Enhanced Conversions
+      const { firstName: ecFirst, lastName: ecLast } = splitName(values.full_name);
+      setGoogleAdsUserData({ email: values.email, phone: values.phone, firstName: ecFirst, lastName: ecLast });
       // Fire-and-forget thank you email
       supabase.functions.invoke('send-event-thank-you', {
         body: {

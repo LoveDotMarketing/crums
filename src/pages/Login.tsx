@@ -13,7 +13,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { loginSchema, quickSignupSchema } from "@/lib/validations";
 import { supabase } from "@/integrations/supabase/client";
 import { Gift, Lock, Check, AlertCircle, Clipboard, Eye, EyeOff } from "lucide-react";
-import { trackLogin, trackSignup, trackSignupStarted, trackSignupFailed } from "@/lib/analytics";
+import { trackLogin, trackSignup, trackSignupStarted, trackSignupFailed, setGoogleAdsUserData } from "@/lib/analytics";
 import { processReferralCode, validateReferralCode } from "@/lib/referral";
 import { trackLinkedInSignup } from "@/lib/linkedinAnalytics";
 
@@ -134,6 +134,9 @@ const Login = () => {
             }
           }
 
+          // Enhanced Conversions
+          setGoogleAdsUserData({ email });
+
           // Track successful signup
           trackSignup('email');
           trackLinkedInSignup();
@@ -159,6 +162,8 @@ const Login = () => {
           }
         } else {
           setLockoutMinutes(null);
+          // Enhanced Conversions
+          setGoogleAdsUserData({ email });
           // Track successful login
           trackLogin('email');
 

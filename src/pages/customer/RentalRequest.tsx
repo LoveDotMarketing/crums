@@ -12,7 +12,7 @@ import { Footer } from "@/components/Footer";
 import { toast } from "sonner";
 import { Loader2, FileText, AlertCircle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { trackFormSubmission, trackConversion, trackFormStart, fireMetaCapi } from "@/lib/analytics";
+import { trackFormSubmission, trackConversion, trackFormStart, fireMetaCapi, setGoogleAdsUserData } from "@/lib/analytics";
 import { getLeadSourceData } from "@/lib/leadSourceTracking";
 
 export default function RentalRequest() {
@@ -99,6 +99,9 @@ export default function RentalRequest() {
           user_name: userName,
         },
       }).catch(err => console.warn('Email notification failed:', err));
+
+      // Enhanced Conversions
+      setGoogleAdsUserData({ email: userEmail, phone: formData.phone_number });
 
       trackFormSubmission('rental_request', true);
       trackConversion('rental_request');
