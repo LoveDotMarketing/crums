@@ -1,25 +1,42 @@
 
 
-## Plan: Fix BMS Logistics Weekly Rate
+## Plan: Add Google Ads Enhanced Conversions to All Forms
 
-### Problem
-BMS Logistics (sub `sub_1TC08CLjIwiEGQIhyZWxvuSF`) has a Stripe price set to **$175/month** but should be **$244.56/week**.
+### What This Does
+Google Ads Enhanced Conversions uses first-party customer data (email, phone, name, address) to improve conversion attribution. Before each conversion event, we call `gtag('set', 'user_data', {...})` with hashed user data from form fields.
 
-### Steps
+### Approach
+Create a single utility function `setEnhancedConversionData()` in `src/lib/analytics.ts` and call it right before every form submission / conversion event across all public-facing forms.
 
-**1. Create correct weekly price in Stripe**
-- Create a new Stripe price: $244.56, recurring weekly, on the same product (`prod_UAKnE4Y5JUjnlK`)
+### 1. New utility in `src/lib/analytics.ts`
 
-**2. Swap the subscription item**
-- Update the Stripe subscription to replace the old monthly price item (`si_UAKnJZQevBfz8D`) with the new weekly price
-- Use `proration_behavior: none` to avoid generating proration charges
+Add a `setGoogleAdsUserData` function that accepts first-party data and calls:
+```ts
+gtag('set', 'user_data', {
+  email, phone_number, address: { first_name, last_name, city, state, postal_code, country }
+});
+```
+Fields are optional — only set what's available from the form.
 
-**3. Update local database**
-- Update `subscription_items.monthly_rate` to `244.56` for subscription `e88c3208-6337-4b4e-bd2a-78217f4653c0`
+### 2. Forms to update (8 files)
 
-### Result
-Going forward, Stripe will automatically bill BMS Logistics **$244.56 every week** instead of the incorrect monthly charge.
+Each form gets a `setGoogleAdsUserData(...)` call inserted **before** the existing tracking calls (e.g., `trackFormSubmission`, `trackConversion`, `fireMetaCapi`):
 
-### Note
-The already-paid $419.56 invoice will remain as-is in Stripe history. If you want to credit or adjust for the overcharge/undercharge, let me know and I can handle that separately.
+| File | Available Fields |
+|---|---|
+| `src/pages/Contact.tsx` | name (split), email, phone |
+| `src/pages/GetStarted.tsx` | firstName, lastName, email, phone, city, state, zip |
+| `src/pages/FacebookLanding.tsx` | name (split), email, phone |
+| `src/pages/GoogleLanding.tsx` | name (split), email, phone |
+| `src/pages/LinkedInLanding.tsx` | name (split), email, phone |
+| `src/pages/MATS2026.tsx` | full_name (split), email, phone |
+| `src/pages/customer/RentalRequest.tsx` | email (from profile), phone |
+| `src/pages/Login.tsx` | email only |
+
+### 3. Implementation Details
+
+- The utility will normalize data: lowercase email, strip phone to E.164-ish format
+- Google handles the hashing automatically when using `gtag('set', 'user_data', ...)`
+- Name splitting: `name.split(' ')` → first word = first_name, rest = last_name
+- No new dependencies needed
 
