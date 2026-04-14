@@ -86,6 +86,9 @@ const CrumsStory = lazy(() => import("./pages/CrumsStory"));
 
 // News pages
 const News = lazy(() => import("./pages/News"));
+
+// Games
+const TruckingGames = lazy(() => import("./pages/TruckingGames"));
 const NewsArticlePage = lazy(() => import("./pages/news/NewsArticlePage"));
 
 // Landing pages (ad campaigns)
@@ -629,6 +632,7 @@ const App = () => (
             <Route path="/resources/guides/mental-health" element={<MentalHealth />} />
             <Route path="/referral-program" element={<ReferralProgram />} />
             <Route path="/partners" element={<Partners />} />
+            <Route path="/crums-trucking-games" element={<TruckingGames />} />
             <Route path="/news" element={<News />} />
             <Route path="/news/:slug" element={<NewsArticlePage />} />
             <Route path="/reviews" element={<Reviews />} />
