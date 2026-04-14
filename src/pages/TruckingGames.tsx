@@ -53,9 +53,12 @@ const TruckingGames = () => {
                   game.featured ? "ring-2 ring-secondary" : ""
                 }`}
               >
-                {/* Placeholder thumbnail */}
-                <div className="relative h-48 bg-primary/10 flex items-center justify-center">
-                  <Gamepad2 className="h-16 w-16 text-primary/30" />
+                <div className="relative">
+                  <img
+                    src="/images/crums-yard-run-game-cover.webp"
+                    alt={game.title}
+                    className="w-full h-auto"
+                  />
                   {game.featured && (
                     <Badge className="absolute top-3 right-3 bg-secondary text-secondary-foreground">
                       Featured
