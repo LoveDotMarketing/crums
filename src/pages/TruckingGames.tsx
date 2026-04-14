@@ -54,11 +54,13 @@ const TruckingGames = () => {
                 }`}
               >
                 <div className="relative">
-                  <img
-                    src="/images/crums-yard-run-game-cover.webp"
-                    alt={game.title}
-                    className="w-full h-auto"
-                  />
+                  <a href={game.url} target="_blank" rel="noopener noreferrer">
+                    <img
+                      src="/images/crums-yard-run-game-cover.webp"
+                      alt={game.title}
+                      className="w-full h-auto cursor-pointer hover:opacity-90 transition-opacity"
+                    />
+                  </a>
                   {game.featured && (
                     <Badge className="absolute top-3 right-3 bg-secondary text-secondary-foreground">
                       Featured
