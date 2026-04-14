@@ -1,0 +1,1398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Yard Run – CRUMS Leasing</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Russo+One&family=Outfit:wght@400;600;700;800&display=swap');
+  *{margin:0;padding:0;box-sizing:border-box;}
+  :root{--td:#163340;--tl:#1B4B5A;--org:#E8862A;--orl:#F5A623;--wh:#FFF;}
+  html,body{width:100%;height:100%;overflow:hidden;background:var(--td);font-family:'Outfit',sans-serif;touch-action:none;-webkit-user-select:none;user-select:none;}
+  #wrap{width:100%;height:100%;display:flex;flex-direction:column;position:relative;}
+  #bar{background:var(--td);color:var(--wh);display:flex;align-items:center;padding:6px 12px;z-index:10;border-bottom:3px solid var(--org);min-height:44px;gap:0;}
+  .brand{display:flex;align-items:center;gap:6px;font-family:'Russo One',sans-serif;font-size:14px;letter-spacing:1px;white-space:nowrap;flex:0 0 auto;}
+  .brand .ic{background:var(--org);color:var(--wh);font-weight:800;padding:2px 5px;border-radius:4px;font-size:12px;}
+  #lvl{font-size:12px;font-weight:600;color:var(--orl);white-space:nowrap;flex:1 1 0;text-align:center;min-width:0;}
+  .gg{display:flex;align-items:center;gap:3px;flex:0 0 auto;margin:0 10px;}
+  .gl{font-size:10px;color:rgba(255,255,255,.5);margin-right:2px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;}
+  .gb{font-family:'Russo One',sans-serif;font-size:12px;width:30px;height:26px;border:2px solid rgba(255,255,255,.15);border-radius:6px;background:0 0;color:rgba(255,255,255,.4);cursor:pointer;transition:.15s;display:flex;align-items:center;justify-content:center;padding:0;}
+  .gb:hover{border-color:rgba(232,134,42,.5);color:rgba(255,255,255,.7);}
+  .gb.on{background:var(--org);border-color:var(--org);color:var(--wh);box-shadow:0 0 8px rgba(232,134,42,.4);}
+  .score-box{flex:0 0 auto;display:flex;align-items:center;gap:8px;}
+  #tmr{font-family:'Russo One',sans-serif;font-size:15px;color:var(--org);white-space:nowrap;width:70px;text-align:right;display:inline-block;font-variant-numeric:tabular-nums;letter-spacing:-.5px;}
+  #cc{flex:1;position:relative;overflow:hidden;background:#4A6741;}
+  canvas{display:block;width:100%;height:100%;}
+  #mob{display:none;position:absolute;bottom:0;left:0;right:0;padding:10px;z-index:20;pointer-events:none;}
+  .cr{display:flex;justify-content:space-between;align-items:center;width:100%;}
+  .cb{pointer-events:all;width:64px;height:64px;border-radius:16px;border:2px solid rgba(232,134,42,.6);background:rgba(22,51,64,.85);color:var(--org);font-size:28px;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);transition:.1s;}
+  .cb:active,.cb.on{background:rgba(232,134,42,.5);color:var(--wh);}
+  .sg{display:flex;gap:6px;}
+  .ov{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:50;background:rgba(22,51,64,.95);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);padding:24px;text-align:center;color:var(--wh);}
+  .ov.hid{display:none;}
+  .ov h1{font-family:'Russo One',sans-serif;font-size:clamp(28px,6vw,52px);color:var(--org);margin-bottom:4px;line-height:1.1;}
+  .ov h2{font-family:'Russo One',sans-serif;font-size:clamp(18px,4vw,28px);color:var(--wh);margin-bottom:16px;}
+  .ov p{font-size:clamp(13px,2.5vw,16px);color:rgba(255,255,255,.7);max-width:420px;line-height:1.5;margin-bottom:8px;}
+  .pb{font-family:'Russo One',sans-serif;font-size:clamp(16px,3vw,22px);background:var(--org);color:var(--wh);border:none;padding:14px 48px;border-radius:12px;cursor:pointer;margin-top:20px;transition:.15s;letter-spacing:1px;}
+  .pb:hover{background:var(--orl);transform:scale(1.05);}
+  .ch{margin-top:16px;font-size:12px;color:rgba(255,255,255,.4);}
+  .stars{font-size:clamp(28px,6vw,48px);margin:10px 0;letter-spacing:8px;}
+  .sf{color:var(--org);}.se{color:rgba(255,255,255,.2);}
+  #ws{font-size:14px;color:rgba(255,255,255,.6);margin-bottom:8px;}
+  .br{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;}
+  .pb.sc{background:0 0;border:2px solid var(--org);color:var(--org);padding:12px 32px;font-size:14px;}
+  .pb.sc:hover{background:rgba(232,134,42,.15);}
+  #hi{position:absolute;top:50px;left:50%;transform:translateX(-50%);font-family:'Russo One',sans-serif;font-size:14px;padding:6px 18px;border-radius:20px;z-index:15;transition:.3s;opacity:0;pointer-events:none;white-space:nowrap;}
+  #hi.ap{background:rgba(232,134,42,.9);color:#fff;opacity:1;}
+  #hi.cn{background:rgba(46,204,113,.9);color:#fff;opacity:1;animation:pg .5s;}
+  @keyframes pg{0%{transform:translateX(-50%) scale(1)}50%{transform:translateX(-50%) scale(1.2)}100%{transform:translateX(-50%) scale(1)}}
+  .cl{display:inline-block;margin-top:12px;color:var(--org);text-decoration:none;font-weight:600;font-size:13px;opacity:.8;}.cl:hover{opacity:1;}
+  #snd{background:0 0;border:none;color:var(--wh);font-size:18px;cursor:pointer;opacity:.7;padding:4px;}#snd:hover{opacity:1;}
+  #rh{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);font-size:11px;color:rgba(255,255,255,.3);z-index:15;pointer-events:none;}
+  @media(max-width:768px){#mob{display:block;}#rh{bottom:160px;}.brand span:not(.ic){display:none;}.gl{display:none;}}
+
+  /* Debug log panel */
+  #debugPanel{position:fixed;top:0;right:0;width:340px;height:100%;background:rgba(0,0,0,.92);color:#0f0;font-family:'Courier New',monospace;font-size:11px;z-index:9999;display:flex;flex-direction:column;border-left:2px solid #0f0;transition:transform .3s;transform:translateX(0);}
+  #debugPanel.closed{transform:translateX(100%);}
+  #debugToggle{position:fixed;top:8px;right:8px;z-index:10000;background:#111;color:#0f0;border:1px solid #0f0;border-radius:4px;padding:4px 10px;font-family:monospace;font-size:12px;cursor:pointer;}
+  #debugHead{padding:6px 10px;background:#0f0;color:#000;font-weight:bold;font-size:12px;display:flex;justify-content:space-between;align-items:center;}
+  #debugHead button{background:#000;color:#0f0;border:1px solid #0f0;border-radius:3px;padding:2px 8px;cursor:pointer;font-family:monospace;font-size:10px;}
+  #debugLog{flex:1;overflow-y:auto;padding:6px 10px;line-height:1.5;word-break:break-all;}
+  #debugLog .err{color:#f44;}#debugLog .warn{color:#fa0;}#debugLog .info{color:#0f0;}#debugLog .gp{color:#0ff;}
+  #gpLive{padding:8px 10px;border-top:1px solid #333;background:rgba(0,50,0,.5);white-space:pre;font-size:10px;line-height:1.4;max-height:180px;overflow-y:auto;color:#0ff;}
+  @media(max-width:768px){#debugPanel{width:260px;font-size:10px;}}
+
+  /* Menu focus for controller nav */
+  .pb.focus,.pb.sc.focus{outline:3px solid var(--wh);outline-offset:3px;box-shadow:0 0 16px rgba(255,255,255,.4);}
+
+  /* Leaderboard */
+  #lbList{width:100%;max-width:380px;margin:10px 0;text-align:left;max-height:280px;overflow-y:auto;}
+  .lb-row{display:flex;justify-content:space-between;padding:6px 14px;font-family:'Outfit',sans-serif;font-size:14px;color:rgba(255,255,255,.7);border-bottom:1px solid rgba(255,255,255,.08);}
+  .lb-row.head{color:var(--org);font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:1px;border-bottom:2px solid rgba(232,134,42,.3);}
+  .lb-row .rank{width:30px;text-align:center;font-weight:700;color:var(--org);}
+  .lb-row .nm{flex:1;margin:0 10px;}
+  .lb-row .sc{width:70px;text-align:right;font-family:'Russo One',sans-serif;color:var(--wh);}
+  .lb-row:nth-child(2){background:rgba(232,134,42,.15);color:var(--wh);}
+  .lb-row:nth-child(3){background:rgba(232,134,42,.08);}
+  .lb-empty{color:rgba(255,255,255,.3);font-style:italic;text-align:center;padding:20px;}
+
+  /* Arcade name entry */
+  #arcadeNameBox{display:flex;gap:12px;justify-content:center;margin:16px 0;}
+  .arc-slot{width:48px;height:58px;background:rgba(0,0,0,.4);border:2px solid rgba(255,255,255,.2);border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:'Russo One',sans-serif;font-size:28px;color:var(--wh);position:relative;transition:.15s;}
+  .arc-slot.active{border-color:var(--org);box-shadow:0 0 12px rgba(232,134,42,.5);background:rgba(232,134,42,.15);}
+  .arc-arrow{position:absolute;font-size:14px;color:var(--org);}
+  .arc-arrow.up{top:-18px;}
+  .arc-arrow.dn{bottom:-18px;}
+  .arc-hint{font-size:11px;color:rgba(255,255,255,.4);margin-top:8px;}
+  #kbNameInput{font-family:'Russo One',sans-serif;font-size:22px;text-align:center;width:200px;padding:10px;background:rgba(0,0,0,.4);border:2px solid var(--org);border-radius:8px;color:var(--wh);text-transform:uppercase;letter-spacing:4px;outline:none;}
+  #kbNameInput:focus{box-shadow:0 0 12px rgba(232,134,42,.5);}
+</style>
+</head>
+<body>
+<!-- Debug Panel -->
+<button id="debugToggle" onclick="document.getElementById('debugPanel').classList.toggle('closed');this.textContent=document.getElementById('debugPanel').classList.contains('closed')?'🔧 LOG':'✕ CLOSE'">✕ CLOSE</button>
+<div id="debugPanel">
+  <div id="debugHead"><span>🔧 DEBUG LOG</span><button onclick="document.getElementById('debugLog').innerHTML=''">CLEAR</button></div>
+  <div id="debugLog"></div>
+  <div id="gpLive">🎮 Gamepad: waiting for connection...\nPress any button on controller to activate.</div>
+</div>
+
+<script>
+// Intercept ALL console output and errors into the debug panel
+(function(){
+  const logEl=document.getElementById('debugLog');
+  function addLog(msg,cls){
+    const d=document.createElement('div');
+    d.className=cls||'info';
+    const ts=new Date();
+    const time=ts.getMinutes().toString().padStart(2,'0')+':'+ts.getSeconds().toString().padStart(2,'0')+'.'+ts.getMilliseconds().toString().padStart(3,'0');
+    d.textContent='['+time+'] '+msg;
+    logEl.appendChild(d);
+    // Keep max 200 entries
+    while(logEl.children.length>200) logEl.removeChild(logEl.firstChild);
+    logEl.scrollTop=logEl.scrollHeight;
+  }
+  // Override console
+  const _log=console.log, _warn=console.warn, _err=console.error;
+  console.log=function(){_log.apply(console,arguments);addLog(Array.from(arguments).join(' '),'info');};
+  console.warn=function(){_warn.apply(console,arguments);addLog(Array.from(arguments).join(' '),'warn');};
+  console.error=function(){_err.apply(console,arguments);addLog(Array.from(arguments).join(' '),'err');};
+  // Catch uncaught errors
+  window.onerror=function(msg,src,line,col,err){addLog('ERROR: '+msg+' ('+src+':'+line+':'+col+')','err');};
+  window.addEventListener('unhandledrejection',function(e){addLog('PROMISE ERR: '+e.reason,'err');});
+  // Log page load
+  addLog('Page loaded: '+location.href,'info');
+  addLog('Protocol: '+location.protocol,'info');
+  if(location.protocol==='file:') addLog('⚠ Running from file:// — some browsers restrict Gamepad API here. Try localhost if controller fails.','warn');
+  addLog('UserAgent: '+navigator.userAgent.substring(0,80),'info');
+  addLog('Gamepad API: '+(('getGamepads' in navigator)?'AVAILABLE':'NOT AVAILABLE'),'info');
+  addLog('Secure context: '+window.isSecureContext,'info');
+  if(!window.isSecureContext) addLog('⚠ Not a secure context — Gamepad may be restricted','warn');
+  // Test getGamepads immediately
+  try{
+    const pads=navigator.getGamepads();
+    addLog('getGamepads() works! Returned '+pads.length+' slots','info');
+    for(let i=0;i<pads.length;i++){
+      if(pads[i]) addLog('  Slot '+i+': '+pads[i].id,'gp');
+    }
+  }catch(e){
+    addLog('getGamepads() FAILED: '+e.message,'err');
+  }
+})();
+</script>
+
+<div id="wrap">
+  <div id="bar">
+    <div class="brand"><span class="ic">CL</span><span>CRUMS LEASING</span></div>
+    <span id="lvl">Level 1</span>
+    <div class="gg">
+      <span class="gl">GEAR</span>
+      <button class="gb on" data-g="1">1</button>
+      <button class="gb" data-g="2">2</button>
+      <button class="gb" data-g="3">3</button>
+      <button class="gb" data-g="4">4</button>
+    </div>
+    <div class="score-box"><span id="tmr">0.0s</span><button id="snd">🔊</button></div>
+  </div>
+  <div id="cc">
+    <canvas id="cv"></canvas>
+    <div id="hi">BACK UP TO TRAILER</div>
+    <div id="rh"></div>
+    <div id="mob"><div class="cr">
+      <div class="sg"><button class="cb" data-k="left">◀</button><button class="cb" data-k="right">▶</button></div>
+      <button class="cb" id="btnHorn" style="font-size:16px;width:56px;border-color:rgba(255,200,50,.6);">🔊</button>
+      <div class="sg"><button class="cb" data-k="up">▲</button><button class="cb" data-k="down">▼</button></div>
+    </div></div>
+
+    <div class="ov" id="scnStart">
+      <h1>YARD RUN</h1><h2>by CRUMS Leasing</h2>
+      <p>Drive into the yard, back up to hook your Crums trailer, then navigate obstacles to the exit. Don't hit anything!</p>
+      <div style="text-align:left;background:rgba(0,0,0,.25);border-radius:10px;padding:14px 18px;margin:10px 0;max-width:380px;width:100%;font-size:13px;color:rgba(255,255,255,.7);line-height:1.8;">
+        <div style="color:var(--org);font-family:'Russo One',sans-serif;font-size:12px;margin-bottom:6px;letter-spacing:1px;">KEYBOARD</div>
+        <div><span style="color:#fff;font-weight:700;">↑ ↓ ← →</span> or <span style="color:#fff;font-weight:700;">WASD</span> — Drive &amp; steer</div>
+        <div><span style="color:#fff;font-weight:700;">1 2 3 4</span> — Shift gears (1=slow, 4=fast)</div>
+        <div><span style="color:#fff;font-weight:700;">SPACE</span> — Air horn (scares critters!)</div>
+        <div style="color:var(--org);font-family:'Russo One',sans-serif;font-size:12px;margin:8px 0 6px;letter-spacing:1px;">🎮 CONTROLLER</div>
+        <div><span style="color:#fff;font-weight:700;">D-Pad / Left Stick</span> — Steer left/right</div>
+        <div><span style="color:#fff;font-weight:700;">B</span> — Drive forward / Select in menus</div>
+        <div><span style="color:#fff;font-weight:700;">A</span> — Reverse</div>
+        <div><span style="color:#fff;font-weight:700;">X / Y</span> — Horn</div>
+        <div><span style="color:#fff;font-weight:700;">RB / LB</span> — Gear up / down</div>
+        <div><span style="color:#fff;font-weight:700;">D-Pad ↑↓</span> — Navigate menus</div>
+      </div>
+      <div class="br">
+        <button class="pb mbtn" id="btnStart">START</button>
+        <button class="pb sc mbtn" id="btnLB">LEADERBOARD</button>
+      </div>
+      <div class="ch" id="hint"></div>
+    </div>
+
+    <div class="ov hid" id="scnWin">
+      <h2>LEVEL COMPLETE!</h2>
+      <div class="stars" id="wStar"></div><div id="ws"></div>
+      <div class="br"><button class="pb mbtn" id="btnNext">NEXT LEVEL</button><button class="pb sc mbtn" id="btnRetry">RETRY</button></div>
+      <a href="https://crumsleasing.com" target="_blank" class="cl">Need a real trailer? → crumsleasing.com</a>
+    </div>
+
+    <div class="ov hid" id="scnEnd">
+      <h1>YOU CLEARED THE YARD!</h1><p>Certified yard master. All levels complete!</p>
+      <div id="fs" style="margin:10px 0;color:var(--org);font-family:'Russo One',sans-serif;font-size:18px"></div>
+      <div class="br"><button class="pb mbtn" id="btnNameEntry">ENTER YOUR NAME</button><button class="pb sc mbtn" id="btnReplay">PLAY AGAIN</button></div>
+      <a href="https://crumsleasing.com" target="_blank" class="cl">Quality trailers, flexible terms → crumsleasing.com</a>
+    </div>
+
+    <div class="ov hid" id="scnName">
+      <h2>ENTER YOUR NAME</h2>
+      <p id="nameScore" style="color:var(--org);font-family:'Russo One',sans-serif;font-size:18px;margin-bottom:4px;"></p>
+      <div id="kbNameWrap"><input type="text" id="kbNameInput" maxlength="4" placeholder="NAME" autocomplete="off" spellcheck="false"></div>
+      <div id="arcadeNameBox" style="display:none;">
+        <div class="arc-slot active" data-pos="0"><span class="arc-arrow up">▲</span>A<span class="arc-arrow dn">▼</span></div>
+        <div class="arc-slot" data-pos="1"><span class="arc-arrow up">▲</span>A<span class="arc-arrow dn">▼</span></div>
+        <div class="arc-slot" data-pos="2"><span class="arc-arrow up">▲</span>A<span class="arc-arrow dn">▼</span></div>
+        <div class="arc-slot" data-pos="3"><span class="arc-arrow up">▲</span>A<span class="arc-arrow dn">▼</span></div>
+      </div>
+      <div class="arc-hint" id="nameHint">Type your 4-letter name and press Enter</div>
+      <div class="br"><button class="pb mbtn" id="btnSubmitName">SUBMIT</button><button class="pb sc mbtn" id="btnSkipName">SKIP</button></div>
+    </div>
+
+    <div class="ov hid" id="scnLB">
+      <h2 style="margin-bottom:2px;">🏆 LEADERBOARD</h2>
+      <div id="lbCount" style="font-size:11px;color:rgba(255,255,255,.35);margin-bottom:6px;"></div>
+      <div id="lbList"></div>
+      <div class="br" style="margin-top:8px;">
+        <button class="pb mbtn" id="btnLBBack">BACK</button>
+        <button class="pb sc mbtn" id="btnLBExport">EXPORT</button>
+        <button class="pb sc mbtn" id="btnLBImport">IMPORT</button>
+        <button class="pb sc mbtn" id="btnLBClear" style="border-color:#a33;color:#a33;">CLEAR</button>
+      </div>
+      <input type="file" id="lbFileInput" accept=".json" style="display:none;">
+      <div id="lbMsg" style="font-size:12px;color:#2ecc71;margin-top:8px;min-height:18px;"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ========== AUDIO ==========
+const AC=window.AudioContext||window.webkitAudioContext;
+let ac=null,snd=true;
+function ea(){if(!ac)ac=new AC();if(ac.state==='suspended')ac.resume();}
+function ps(tp){
+  if(!snd||!ac)return;
+  try{
+    const o=ac.createOscillator(),g=ac.createGain();o.connect(g);g.connect(ac.destination);const t=ac.currentTime;
+    if(tp==='hook'){o.type='square';o.frequency.setValueAtTime(220,t);o.frequency.setValueAtTime(440,t+.08);o.frequency.setValueAtTime(660,t+.16);g.gain.setValueAtTime(.15,t);g.gain.exponentialRampToValueAtTime(.01,t+.35);o.start(t);o.stop(t+.35);}
+    else if(tp==='crash'){o.type='sawtooth';o.frequency.setValueAtTime(200,t);o.frequency.exponentialRampToValueAtTime(50,t+.3);g.gain.setValueAtTime(.2,t);g.gain.exponentialRampToValueAtTime(.01,t+.3);o.start(t);o.stop(t+.3);}
+    else if(tp==='beep'){o.type='square';o.frequency.setValueAtTime(800,t);g.gain.setValueAtTime(.06,t);g.gain.exponentialRampToValueAtTime(.01,t+.1);o.start(t);o.stop(t+.1);}
+    else if(tp==='win'){o.type='square';[330,440,550,660].forEach((f,i)=>o.frequency.setValueAtTime(f,t+i*.12));g.gain.setValueAtTime(.12,t);g.gain.exponentialRampToValueAtTime(.01,t+.55);o.start(t);o.stop(t+.55);}
+    else if(tp==='gear'){o.type='triangle';o.frequency.setValueAtTime(500,t);g.gain.setValueAtTime(.08,t);g.gain.exponentialRampToValueAtTime(.01,t+.08);o.start(t);o.stop(t+.08);}
+    else if(tp==='horn'){
+      // Big rig air horn - two oscillators for that chord
+      o.type='sawtooth';o.frequency.setValueAtTime(180,t);o.frequency.setValueAtTime(175,t+.15);
+      g.gain.setValueAtTime(.22,t);g.gain.setValueAtTime(.22,t+.4);g.gain.exponentialRampToValueAtTime(.01,t+.7);
+      o.start(t);o.stop(t+.7);
+      // Second tone for the chord
+      const o2=ac.createOscillator(),g2=ac.createGain();o2.connect(g2);g2.connect(ac.destination);
+      o2.type='sawtooth';o2.frequency.setValueAtTime(228,t);o2.frequency.setValueAtTime(222,t+.15);
+      g2.gain.setValueAtTime(.18,t);g2.gain.setValueAtTime(.18,t+.4);g2.gain.exponentialRampToValueAtTime(.01,t+.7);
+      o2.start(t);o2.stop(t+.7);
+    }
+  }catch(e){}
+}
+let bi=null;
+function bOn(){bOff();bi=setInterval(()=>ps('beep'),500);}
+function bOff(){if(bi){clearInterval(bi);bi=null;}}
+
+// ========== CANVAS ==========
+const cv=document.getElementById('cv'),cx=cv.getContext('2d');
+const WW=1200,WH=600;
+function rsz(){const c=document.getElementById('cc');cv.width=c.clientWidth*devicePixelRatio;cv.height=c.clientHeight*devicePixelRatio;cx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);}
+window.addEventListener('resize',rsz);rsz();
+function dW(){return cv.width/devicePixelRatio;}
+function dH(){return cv.height/devicePixelRatio;}
+function cm(){const s=Math.min(dW()/WW,dH()/WH);return{s,ox:(dW()-WW*s)/2,oy:(dH()-WH*s)/2};}
+
+// ========== INPUT ==========
+const KBD={up:false,down:false,left:false,right:false}; // keyboard state
+const GP={up:false,down:false,left:false,right:false};   // gamepad state
+const K={up:false,down:false,left:false,right:false};    // merged (used by game)
+document.addEventListener('keydown',e=>{
+  if(e.key==='ArrowUp'||e.key==='w')KBD.up=true;
+  if(e.key==='ArrowDown'||e.key==='s')KBD.down=true;
+  if(e.key==='ArrowLeft'||e.key==='a')KBD.left=true;
+  if(e.key==='ArrowRight'||e.key==='d')KBD.right=true;
+  if(e.key>='1'&&e.key<='4')setG(+e.key);
+  if(e.key===' '){e.preventDefault();honk();}
+});
+document.addEventListener('keyup',e=>{
+  if(e.key==='ArrowUp'||e.key==='w')KBD.up=false;
+  if(e.key==='ArrowDown'||e.key==='s')KBD.down=false;
+  if(e.key==='ArrowLeft'||e.key==='a')KBD.left=false;
+  if(e.key==='ArrowRight'||e.key==='d')KBD.right=false;
+});
+document.querySelectorAll('.cb').forEach(b=>{
+  const k=b.dataset.k;if(!k)return;
+  const on=()=>{KBD[k]=true;b.classList.add('on');};
+  const off=()=>{KBD[k]=false;b.classList.remove('on');};
+  b.addEventListener('touchstart',e=>{e.preventDefault();on();});
+  b.addEventListener('touchend',e=>{e.preventDefault();off();});
+  b.addEventListener('touchcancel',e=>{e.preventDefault();off();});
+  b.addEventListener('mousedown',on);b.addEventListener('mouseup',off);b.addEventListener('mouseleave',off);
+});
+
+// ========== GAMEPAD ==========
+let gpConnected=false;
+let gpHornPrev=false;
+let gpGearUpPrev=false, gpGearDownPrev=false;
+let gpStartPrev=false;
+let gpNavPrevU=false,gpNavPrevD=false,gpNavPrevL=false,gpNavPrevR=false;
+const GP_DEADZONE=0.12;
+let gpDebug='';
+let gpIndex=-1; // store the gamepad index
+let gpFrameCount=0;
+
+window.addEventListener('gamepadconnected',e=>{
+  gpConnected=true;
+  gpIndex=e.gamepad.index;
+  const g=e.gamepad;
+  console.log('═══ GAMEPAD CONNECTED ═══');
+  console.log('  Index: '+gpIndex);
+  console.log('  ID: '+g.id);
+  console.log('  Mapping: "'+g.mapping+'" (empty=non-standard)');
+  console.log('  Buttons: '+g.buttons.length);
+  console.log('  Axes: '+g.axes.length);
+  console.log('  Connected: '+g.connected);
+  console.log('  Timestamp: '+g.timestamp);
+  // Test if we can read button states right now
+  try{
+    const val=g.buttons[0].value;
+    console.log('  Button[0] readable: YES (val='+val+')');
+  }catch(ex){
+    console.error('  Button[0] readable: NO — '+ex.message);
+  }
+  // Test getGamepads right after connect
+  try{
+    const pads=navigator.getGamepads();
+    const p=pads[gpIndex];
+    if(p){
+      console.log('  getGamepads()['+gpIndex+']: FOUND (ts='+p.timestamp+')');
+    }else{
+      console.warn('  getGamepads()['+gpIndex+']: NULL!');
+    }
+  }catch(ex){
+    console.error('  getGamepads() FAILED: '+ex.message);
+  }
+  const h=document.getElementById('hint');
+  if(h)h.textContent='🎮 '+g.id.substring(0,40);
+});
+window.addEventListener('gamepaddisconnected',e=>{
+  console.log('═══ GAMEPAD DISCONNECTED ═══');
+  gpConnected=false;gpDebug='';gpIndex=-1;
+});
+
+function pollGamepad(){
+  if(!gpConnected||gpIndex<0){
+    GP.up=GP.down=GP.left=GP.right=false;
+    gpDebug='';
+    const lv=document.getElementById('gpLive');
+    if(lv)lv.textContent='🎮 Gamepad: '+(gpConnected?'connected but idx='+gpIndex:'not connected')+'\nPress any button on controller to activate.';
+    return;
+  }
+
+  // Must call getGamepads() EVERY frame — it returns a fresh snapshot
+  let gp=null;
+  try{
+    const pads=navigator.getGamepads();
+    if(pads&&pads[gpIndex]) gp=pads[gpIndex];
+    // Also try scanning all slots if our index failed
+    if(!gp){
+      for(let i=0;i<pads.length;i++){
+        if(pads[i]&&pads[i].connected){gp=pads[i];gpIndex=i;console.log('GP: found at alt index '+i);break;}
+      }
+    }
+  }catch(e){
+    gpDebug='BLOCKED: '+e.message;
+    GP.up=GP.down=GP.left=GP.right=false;
+    const lv=document.getElementById('gpLive');
+    if(lv)lv.textContent='🎮 getGamepads() BLOCKED\n'+e.message+'\nThis environment blocks gamepad access.';
+    return;
+  }
+
+  if(!gp){
+    gpDebug='Pad idx '+gpIndex+' not found in getGamepads()';
+    GP.up=GP.down=GP.left=GP.right=false;
+    const lv=document.getElementById('gpLive');
+    if(lv)lv.textContent='🎮 getGamepads() returned but pad['+gpIndex+'] is null\nTry pressing a button on the controller.';
+    return;
+  }
+
+  // ---- Read raw data ----
+  const numAxes=gp.axes.length;
+  const numBtns=gp.buttons.length;
+  const axes=new Array(numAxes);
+  for(let i=0;i<numAxes;i++) axes[i]=gp.axes[i];
+  const btns=new Array(numBtns);
+  for(let i=0;i<numBtns;i++){
+    const b=gp.buttons[i];
+    btns[i]={v:b.value, p:b.pressed};
+  }
+
+  // ---- Build verbose debug string ----
+  let dbg='🎮 ';
+  let anyActive=false;
+  for(let i=0;i<numAxes;i++){
+    const v=axes[i];
+    if(Math.abs(v)>0.05){dbg+=`A${i}:${v.toFixed(2)} `;anyActive=true;}
+  }
+  for(let i=0;i<numBtns;i++){
+    if(btns[i].p||btns[i].v>0.05){dbg+=`B${i}:${btns[i].v.toFixed(1)} `;anyActive=true;}
+  }
+  if(!anyActive) dbg+=`[idle] ${numAxes}axes ${numBtns}btns`;
+
+  // Log first few frames + whenever input detected
+  gpFrameCount++;
+  if(gpFrameCount<10||(anyActive&&gpFrameCount%60===0)){
+    console.log('GP POLL #'+gpFrameCount+': '+dbg);
+  }
+  gpDebug=dbg;
+
+  // Update live panel every 5 frames
+  if(gpFrameCount%5===0){
+    const liveEl=document.getElementById('gpLive');
+    if(liveEl){
+      let txt='🎮 GAMEPAD LIVE (frame '+gpFrameCount+')\n';
+      txt+='ID: '+gp.id.substring(0,50)+'\n';
+      txt+='Map: '+gp.mapping+' | TS: '+gp.timestamp.toFixed(0)+'\n';
+      txt+='─── AXES ───\n';
+      for(let i=0;i<numAxes;i++){
+        const bar='█'.repeat(Math.round(Math.abs(axes[i])*10));
+        txt+=` A${i}: ${axes[i]>=0?' ':''}${axes[i].toFixed(3)} ${bar}\n`;
+      }
+      txt+='─── BUTTONS ───\n';
+      for(let i=0;i<numBtns;i++){
+        if(btns[i].p||btns[i].v>0.01){
+          txt+=` B${i}: val=${btns[i].v.toFixed(2)} pressed=${btns[i].p}\n`;
+        }
+      }
+      if(!anyActive) txt+=' (none pressed)\n';
+      txt+='─── OUTPUT ───\n';
+      txt+=' State: '+state+' | Hooked: '+hooked+'\n';
+      txt+=' GP → U:'+GP.up+' D:'+GP.down+' L:'+GP.left+' R:'+GP.right+'\n';
+      txt+=' KB → U:'+KBD.up+' D:'+KBD.down+' L:'+KBD.left+' R:'+KBD.right+'\n';
+      txt+=' K  → U:'+K.up+' D:'+K.down+' L:'+K.left+' R:'+K.right;
+      liveEl.textContent=txt;
+    }
+  }
+
+  // ---- Map inputs ----
+
+  // STEERING: Left stick X (axis 0)
+  let steerX=axes[0]||0;
+  let steerY=axes[1]||0;
+
+  GP.left = steerX < -GP_DEADZONE;
+  GP.right = steerX > GP_DEADZONE;
+
+  // D-pad: buttons 12-15
+  let dUp=btns[12]&&btns[12].p;
+  let dDown=btns[13]&&btns[13].p;
+  let dLeft=btns[14]&&btns[14].p;
+  let dRight=btns[15]&&btns[15].p;
+
+  // Hat switch scan (axes 4+) for controllers that map D-pad to axes
+  for(let i=4;i<numAxes;i++){
+    const v=axes[i];
+    if(i%2===0){if(v<-0.5)dLeft=true;if(v>0.5)dRight=true;}
+    else{if(v<-0.5)dUp=true;if(v>0.5)dDown=true;}
+  }
+
+  // D-pad left/right = steer
+  if(dLeft) GP.left=true;
+  if(dRight) GP.right=true;
+
+  // ---- FACE BUTTONS (0-based: Windows Btn1=btns[0]=A, Btn2=btns[1]=B) ----
+  const btnA=btns[0]&&btns[0].p;   // A button (Windows Button 1) = REVERSE
+  const btnB=btns[1]&&btns[1].p;   // B button (Windows Button 2) = FORWARD + MENU SELECT
+  const btnX=btns[2]&&btns[2].p;   // X button = HORN
+  const btnY=btns[3]&&btns[3].p;   // Y button = HORN
+  const startBtn=btns[9]&&btns[9].p;
+  const selectBtn=btns[8]&&btns[8].p;
+
+  // Also keep triggers as alternate gas/brake
+  const trigR=btns[7]&&(btns[7].p||btns[7].v>0.2);  // ZR = also gas
+  const trigL=btns[6]&&(btns[6].p||btns[6].v>0.2);  // ZL = also reverse
+
+  // GAS: B button + ZR trigger
+  // BRAKE/REVERSE: A button + ZL trigger
+  GP.up = btnB || trigR;
+  GP.down = btnA || trigL;
+
+  // D-pad edge detection for menu/arcade navigation
+  const stickU=steerY<-0.5, stickD=steerY>0.5, stickL=steerX<-0.5, stickR=steerX>0.5;
+  const navUp=(dUp||stickU)&&!gpNavPrevU;
+  const navDn=(dDown||stickD)&&!gpNavPrevD;
+  const navLt=(dLeft||stickL)&&!gpNavPrevL;
+  const navRt=(dRight||stickR)&&!gpNavPrevR;
+  gpNavPrevU=dUp||stickU; gpNavPrevD=dDown||stickD;
+  gpNavPrevL=dLeft||stickL; gpNavPrevR=dRight||stickR;
+
+  // --- CONTEXT: ARCADE NAME ENTRY ---
+  if(state==='nameEntry'&&arcActive){
+    if(navUp) arcadeNav(-1,'y');
+    if(navDn) arcadeNav(1,'y');
+    if(navLt) arcadeNav(-1,'x');
+    if(navRt) arcadeNav(1,'x');
+    if((btnB||startBtn)&&!gpStartPrev){ea();document.getElementById('btnSubmitName').click();}
+    if(selectBtn&&!gpStartPrev){ea();document.getElementById('btnSkipName').click();}
+    gpStartPrev=btnB||startBtn||selectBtn;
+  }
+  // --- CONTEXT: MENU SCREENS ---
+  else if(state!=='playing'){
+    // D-pad / stick navigates between buttons
+    if(navDn||navRt) menuNav(1);
+    if(navUp||navLt) menuNav(-1);
+    // B button or Start = confirm focused button
+    if((btnB||startBtn)&&!gpStartPrev){ea();menuConfirm();}
+    gpStartPrev=btnB||startBtn;
+  }
+  // --- CONTEXT: GAMEPLAY ---
+  else {
+    // Track B button state so holding B through exit doesn't auto-confirm menu
+    gpStartPrev=btnB||startBtn;
+    // X or Y = horn
+    const hornBtn=btnX||btnY;
+    if(hornBtn&&!gpHornPrev) honk();
+    gpHornPrev=hornBtn;
+  }
+
+  // GEAR: LB(4)=down, RB(5)=up — only during gameplay
+  const gearUp=btns[5]&&btns[5].p;
+  const gearDown=btns[4]&&btns[4].p;
+  if(state==='playing'){
+    if(gearUp&&!gpGearUpPrev) setG(gear+1);
+    if(gearDown&&!gpGearDownPrev) setG(gear-1);
+  }
+  gpGearUpPrev=gearUp;
+  gpGearDownPrev=gearDown;
+}
+
+// ========== GEARS ==========
+let gear=1;
+const GS={1:{mx:.8,ac:.03},2:{mx:1.4,ac:.045},3:{mx:2.1,ac:.06},4:{mx:3.0,ac:.08}};
+function setG(g){gear=Math.max(1,Math.min(4,g));document.querySelectorAll('.gb').forEach(b=>b.classList.toggle('on',+b.dataset.g===gear));ps('gear');}
+document.querySelectorAll('.gb').forEach(b=>b.addEventListener('click',e=>{e.preventDefault();ea();setG(+b.dataset.g);}));
+
+// ========== HORN ==========
+let hornCooldown=0;
+function honk(){
+  if(hornCooldown>0||state!=='playing')return;
+  ps('horn');
+  hornCooldown=1.2; // seconds cooldown
+  // Scare all dogs within range
+  const range=200;
+  for(const o of obstacles){
+    if(o.t!=='dog')continue;
+    const dx=o.x-T.x, dy=o.y-T.y;
+    const dist=Math.sqrt(dx*dx+dy*dy);
+    if(dist<range){
+      // Flee away from truck
+      const fleeAngle=Math.atan2(dy,dx);
+      o.scared=true;
+      o.scaredTimer=2.5; // seconds to run
+      o.fleeVX=Math.cos(fleeAngle)*2.5;
+      o.fleeVY=Math.sin(fleeAngle)*2.5;
+    }
+  }
+}
+
+function updateDogs(dt){
+  for(const o of obstacles){
+    if(o.t!=='dog')continue;
+    if(o.scared&&o.scaredTimer>0){
+      o.scaredTimer-=dt;
+      o.x+=o.fleeVX;
+      o.y+=o.fleeVY;
+      // Slow down over time
+      o.fleeVX*=0.98;
+      o.fleeVY*=0.98;
+      // Keep in bounds
+      o.x=Math.max(50,Math.min(WW-50,o.x));
+      o.y=Math.max(40,Math.min(WH-40,o.y));
+      if(o.scaredTimer<=0) o.scared=false;
+    }
+  }
+  if(hornCooldown>0) hornCooldown-=dt;
+}
+
+// ========== GAME STATE ==========
+let curLvl=0,state='start',timer=0,resets=0,hooked=false,hookPt=null;
+
+// Truck: center of cab
+const T={x:0,y:0,a:0,spd:0,W:60,H:28};
+
+// Trailer: we track the REAR AXLE position + hitch position
+// The rear axle "drags" behind the hitch - this is what creates real articulation
+const TR={W:100,H:30};
+const TR_LEN=84; // distance from hitch (kingpin/5th wheel) to rear axle
+
+// Rear axle position - this is the KEY to proper articulation
+let rearX=0, rearY=0;
+// Hitch point (calculated from truck each frame when hooked)
+let hitchX=0, hitchY=0;
+// Trailer body angle (derived from hitch->rear axle direction)
+let trAngle=0;
+
+// Unhooked trailer state (body center + angle, for display before hookup)
+let uhCX=0, uhCY=0, uhA=0;
+
+// Get truck's 5th wheel position (back of cab)
+function tHitch(){
+  return{x:T.x-Math.cos(T.a)*T.W*.45, y:T.y-Math.sin(T.a)*T.W*.45};
+}
+
+// Get trailer body center from current hitch + rear axle
+function trCenter(){
+  return{x:(hitchX+rearX)/2, y:(hitchY+rearY)/2};
+}
+
+// Get the kingpin position of the unhooked trailer
+function uhKP(){
+  const off=TR_LEN/2;
+  return{x:uhCX+Math.cos(uhA)*off, y:uhCY+Math.sin(uhA)*off};
+}
+
+// ========== LEVELS ==========
+const LVS=[
+  {nm:"Easy Pickup",ts:{x:80,y:300,a:0},tp:{x:550,y:300,a:0},
+   pk:[],
+   obs:[{t:'crate',x:700,y:180},{t:'cones',x:750,y:420},{t:'tires',x:900,y:300}],
+   ex:{x:1130,y:240,w:70,h:120},st:[25,40,60]},
+  {nm:"Angled Approach",ts:{x:80,y:200,a:0},tp:{x:520,y:400,a:Math.PI*.15},
+   pk:[{x:520,y:340,a:0}],
+   obs:[{t:'car',x:680,y:200},{t:'crate',x:750,y:480},{t:'dog',x:850,y:350},{t:'tires',x:950,y:150}],
+   ex:{x:1130,y:260,w:70,h:120},st:[30,48,70]},
+  {nm:"Tight Squeeze",ts:{x:80,y:150,a:0},tp:{x:480,y:430,a:-Math.PI*.1},
+   pk:[{x:480,y:375,a:0},{x:480,y:490,a:0}],
+   obs:[{t:'car',x:650,y:150},{t:'car',x:660,y:480},{t:'crate',x:800,y:300},
+        {t:'forklift',x:900,y:180},{t:'tires',x:920,y:440},{t:'cones',x:1020,y:320}],
+   ex:{x:1130,y:240,w:70,h:120},st:[38,58,85]},
+  {nm:"Obstacle Course",ts:{x:80,y:450,a:0},tp:{x:400,y:160,a:Math.PI*.25},
+   pk:[{x:380,y:100,a:Math.PI*.2},{x:420,y:225,a:Math.PI*.15},{x:550,y:130,a:0}],
+   obs:[{t:'car',x:350,y:350},{t:'crate',x:580,y:420},
+        {t:'dog',x:700,y:150},{t:'forklift',x:750,y:380},{t:'tires',x:880,y:250},
+        {t:'car',x:950,y:450},{t:'cones',x:1020,y:180}],
+   ex:{x:1130,y:270,w:70,h:120},st:[50,70,95]},
+  {nm:"The Gauntlet",ts:{x:80,y:500,a:0},tp:{x:350,y:120,a:-Math.PI*.3},
+   pk:[{x:320,y:65,a:-Math.PI*.25},{x:380,y:182,a:-Math.PI*.2},{x:500,y:90,a:0},{x:500,y:160,a:0}],
+   obs:[{t:'car',x:250,y:320},{t:'forklift',x:500,y:260},{t:'car',x:520,y:400},
+        {t:'crate',x:650,y:100},{t:'tires',x:670,y:300},{t:'crate',x:700,y:480},
+        {t:'dog',x:820,y:200},{t:'car',x:850,y:420},{t:'forklift',x:960,y:300},
+        {t:'cones',x:1050,y:150},{t:'tires',x:1040,y:450}],
+   ex:{x:1130,y:260,w:70,h:100},st:[60,80,115]},
+];
+
+const OSZ={crate:{w:36,h:36},car:{w:65,h:32},dog:{w:24,h:24},tires:{w:38,h:30},forklift:{w:40,h:30},cones:{w:22,h:22}};
+let obstacles=[],parked=[],exitZ={};
+
+function loadLvl(i){
+  const L=LVS[i];
+  T.x=L.ts.x;T.y=L.ts.y;T.a=L.ts.a;T.spd=0;
+
+  // Store unhooked trailer (body center)
+  uhCX=L.tp.x; uhCY=L.tp.y; uhA=L.tp.a;
+
+  // Pre-compute hitch and rear axle from body center
+  const half=TR_LEN/2;
+  hitchX=uhCX+Math.cos(uhA)*half;
+  hitchY=uhCY+Math.sin(uhA)*half;
+  rearX=uhCX-Math.cos(uhA)*half;
+  rearY=uhCY-Math.sin(uhA)*half;
+  trAngle=uhA;
+
+  hooked=false;hookPt=null;timer=0;resets=0;
+  setG(1);
+  obstacles=L.obs.map(o=>({...o}));
+  parked=(L.pk||[]).map(p=>({...p}));
+  exitZ={...L.ex};
+  document.getElementById('lvl').textContent=`Level ${i+1}: ${L.nm}`;
+  document.getElementById('tmr').textContent='0.0s';
+  const hi=document.getElementById('hi');
+  hi.className='ap';hi.textContent='BACK UP TO TRAILER';hi.style.opacity='1';
+  document.getElementById('rh').textContent='ontouchstart'in window?'':'Arrow Keys / WASD · 1-4 shift gears';
+  bOff();
+}
+
+function resetHook(){
+  if(!hookPt)return;
+  T.x=hookPt.tx;T.y=hookPt.ty;T.a=hookPt.ta;T.spd=0;
+  hitchX=hookPt.hx;hitchY=hookPt.hy;
+  rearX=hookPt.rx;rearY=hookPt.ry;
+  trAngle=hookPt.tra;
+  resets++;ps('crash');
+}
+
+// ========== PHYSICS ==========
+const FRIC=.02, TURN=.028;
+
+function updTruck(){
+  const G=GS[gear];
+  if(K.up)T.spd=Math.min(T.spd+G.ac,G.mx);
+  else if(K.down)T.spd=Math.max(T.spd-G.ac,-G.mx*.5);
+  else{if(Math.abs(T.spd)<FRIC)T.spd=0;else T.spd-=Math.sign(T.spd)*FRIC;}
+  if(T.spd>G.mx)T.spd-=FRIC*3;
+  if(T.spd<-G.mx*.5)T.spd+=FRIC*3;
+
+  if(Math.abs(T.spd)>.04){
+    const d=T.spd>0?1:-1;
+    const sf=1-Math.abs(T.spd)/5*.25;
+    if(K.left)T.a-=TURN*d*sf;
+    if(K.right)T.a+=TURN*d*sf;
+  }
+
+  T.x+=Math.cos(T.a)*T.spd;
+  T.y+=Math.sin(T.a)*T.spd;
+  T.x=Math.max(10,Math.min(WW-10,T.x));
+  T.y=Math.max(20,Math.min(WH-20,T.y));
+
+  if(T.spd<-.15&&!bi)bOn();
+  else if(T.spd>=-.15&&bi)bOff();
+}
+
+function updTrailer(){
+  if(!hooked)return;
+
+  // Step 1: Lock hitch point to the back of the truck (rigid 5th wheel connection)
+  const h=tHitch();
+  hitchX=h.x;
+  hitchY=h.y;
+
+  // Step 2: The rear axle STAYS WHERE IT IS (inertia) but must maintain
+  // a fixed distance (TR_LEN) from the hitch. This is the "rigid rod drag" model.
+  // The rear axle gets "pulled" toward the correct distance.
+  const dx=rearX-hitchX;
+  const dy=rearY-hitchY;
+  const dist=Math.sqrt(dx*dx+dy*dy);
+
+  if(dist>0.001){
+    // Normalize and project rear axle to exactly TR_LEN behind hitch
+    rearX=hitchX+(dx/dist)*TR_LEN;
+    rearY=hitchY+(dy/dist)*TR_LEN;
+  }
+
+  // Step 3: Trailer angle is simply the direction from rear axle TO hitch
+  trAngle=Math.atan2(hitchY-rearY, hitchX-rearX);
+}
+
+// ========== COLLISION (SAT) ==========
+function cors(cx,cy,a,w,h){
+  const c=Math.cos(a),s=Math.sin(a),hw=w/2,hh=h/2;
+  return[{x:cx+c*hw-s*hh,y:cy+s*hw+c*hh},{x:cx+c*hw+s*hh,y:cy+s*hw-c*hh},
+         {x:cx-c*hw+s*hh,y:cy-s*hw-c*hh},{x:cx-c*hw-s*hh,y:cy-s*hw+c*hh}];
+}
+function axs(cs){return cs.map((c,i)=>{const n=cs[(i+1)%cs.length],ex=n.x-c.x,ey=n.y-c.y,l=Math.sqrt(ex*ex+ey*ey);return{x:-ey/l,y:ex/l};});}
+function prj(cs,ax){let mn=1e9,mx=-1e9;for(const c of cs){const d=c.x*ax.x+c.y*ax.y;if(d<mn)mn=d;if(d>mx)mx=d;}return{mn,mx};}
+function sat(a,b){for(const ax of[...axs(a),...axs(b)]){const pa=prj(a,ax),pb=prj(b,ax);if(pa.mx<pb.mn||pb.mx<pa.mn)return false;}return true;}
+
+function chkColl(){
+  const tc=cors(T.x,T.y,T.a,T.W,T.H);
+  let trc=null;
+  if(hooked){
+    const c=trCenter();
+    trc=cors(c.x,c.y,trAngle,TR.W,TR.H);
+  }
+  for(const o of obstacles){
+    const sz=OSZ[o.t]||{w:30,h:30};
+    const oc=cors(o.x,o.y,0,sz.w,sz.h);
+    if(sat(tc,oc))return true;
+    if(trc&&sat(trc,oc))return true;
+  }
+  // Parked trailers collision
+  for(const p of parked){
+    const pc=cors(p.x,p.y,p.a,TR.W,TR.H);
+    if(sat(tc,pc))return true;
+    if(trc&&sat(trc,pc))return true;
+  }
+  // Unhooked Crums trailer is solid - truck can't drive through it
+  // But allow the truck rear to approach the kingpin when properly aligned for hookup
+  if(!hooked){
+    const bk=tHitch();
+    const kp=uhKP();
+    const dkp=Math.sqrt((bk.x-kp.x)**2+(bk.y-kp.y)**2);
+    // Check alignment
+    let aaDiff=Math.abs(T.a-uhA);
+    while(aaDiff>Math.PI)aaDiff=Math.PI*2-aaDiff;
+    const truckRearDir=T.a+Math.PI;
+    const toKP=Math.atan2(kp.y-bk.y,kp.x-bk.x);
+    let apDiff=Math.abs(truckRearDir-toKP);
+    while(apDiff>Math.PI)apDiff=Math.PI*2-apDiff;
+
+    // Only skip trailer collision if truck is close to kingpin, well-aligned, and approaching correctly
+    const validApproach = dkp<35 && aaDiff<.6 && apDiff<.7;
+
+    if(!validApproach){
+      const uc=cors(uhCX,uhCY,uhA,TR.W,TR.H);
+      if(sat(tc,uc))return true;
+    }
+  }
+  return false;
+}
+
+function chkHook(){
+  if(hooked)return;
+  const bk=tHitch();
+  const kp=uhKP();
+  const dx=bk.x-kp.x,dy=bk.y-kp.y;
+  const dist=Math.sqrt(dx*dx+dy*dy);
+
+  // Angle between truck and trailer must be similar (both pointing roughly same way)
+  let ad=Math.abs(T.a-uhA);
+  while(ad>Math.PI)ad=Math.PI*2-ad;
+
+  // Also check that the truck's rear is actually facing the kingpin
+  // (back of truck should point toward the trailer front)
+  const truckRearAngle=T.a+Math.PI; // direction the back of truck faces
+  const toKingpin=Math.atan2(kp.y-bk.y, kp.x-bk.x);
+  let approachDiff=Math.abs(truckRearAngle-toKingpin);
+  while(approachDiff>Math.PI)approachDiff=Math.PI*2-approachDiff;
+
+  const hi=document.getElementById('hi');
+  if(dist<60){
+    hi.className='ap';
+    if(ad>.5) hi.textContent='STRAIGHTEN UP — ALIGN WITH TRAILER';
+    else if(approachDiff>.6) hi.textContent='BACK IN STRAIGHT — LINE UP REAR';
+    else hi.textContent=`ALMOST THERE (${Math.round(dist)})`;
+    hi.style.opacity='1';
+  }
+  else{hi.style.opacity='.6';hi.textContent='BACK UP TO TRAILER';}
+
+  // Only hook if: close enough, aligned, AND approaching from the right direction
+  if(dist<16&&ad<.4&&approachDiff<.5){
+    hooked=true;
+    hitchX=bk.x;hitchY=bk.y;
+    const half=TR_LEN/2;
+    rearX=uhCX-Math.cos(uhA)*half;
+    rearY=uhCY-Math.sin(uhA)*half;
+    trAngle=uhA;
+
+    hookPt={tx:T.x,ty:T.y,ta:T.a,hx:hitchX,hy:hitchY,rx:rearX,ry:rearY,tra:trAngle};
+    hi.className='cn';hi.textContent='✓ HOOKED UP! DRIVE TO EXIT →';
+    console.log('🔗 HOOKED UP! Truck at',T.x.toFixed(0),T.y.toFixed(0),'Exit zone:',exitZ.x,exitZ.y,exitZ.w,exitZ.h);
+    ps('hook');
+    setTimeout(()=>{hi.style.opacity='0';},2500);
+  }
+}
+
+function chkExit(){
+  if(!hooked)return false;
+  return T.x>exitZ.x&&T.x<exitZ.x+exitZ.w&&T.y>exitZ.y&&T.y<exitZ.y+exitZ.h;
+}
+
+// ========== DRAWING ==========
+const CO={as:'#3A3F42',or:'#E8862A',td:'#163340',tl:'#1B4B5A'};
+
+function drYard(m){
+  cx.save();cx.translate(m.ox,m.oy);cx.scale(m.s,m.s);
+  cx.fillStyle='#4A5B48';cx.fillRect(0,0,WW,WH);
+  cx.fillStyle=CO.as;cx.fillRect(40,30,WW-80,WH-60);
+  cx.strokeStyle='rgba(255,255,255,.1)';cx.lineWidth=2;cx.setLineDash([20,15]);
+  for(let y=100;y<WH-50;y+=120){cx.beginPath();cx.moveTo(60,y);cx.lineTo(WW-60,y);cx.stroke();}
+  cx.setLineDash([]);
+  cx.fillStyle='rgba(232,134,42,.12)';cx.fillRect(0,220,50,160);
+  cx.strokeStyle=CO.or;cx.lineWidth=2;cx.strokeRect(0,220,50,160);
+  cx.fillStyle='rgba(232,134,42,.5)';cx.font='20px Russo One';cx.textAlign='center';cx.fillText('→',25,305);
+  cx.fillStyle='rgba(46,204,113,.12)';cx.fillRect(exitZ.x,exitZ.y,exitZ.w,exitZ.h);
+  cx.strokeStyle='#2ECC71';cx.lineWidth=2;cx.strokeRect(exitZ.x,exitZ.y,exitZ.w,exitZ.h);
+  cx.fillStyle='#2ECC71';cx.font='13px Outfit';cx.fillText('EXIT →',exitZ.x+exitZ.w/2,exitZ.y-6);
+  cx.strokeStyle='rgba(255,255,255,.06)';cx.lineWidth=3;cx.strokeRect(40,30,WW-80,WH-60);
+  cx.fillStyle=CO.td;cx.fillRect(WW/2-80,34,160,24);
+  cx.fillStyle=CO.or;cx.font='bold 12px Outfit';cx.fillText('CRUMS LEASING YARD',WW/2,50);
+  cx.restore();
+}
+
+function drTruck(m){
+  cx.save();cx.translate(m.ox,m.oy);cx.scale(m.s,m.s);
+  cx.translate(T.x,T.y);cx.rotate(T.a);
+  const W=T.W,H=T.H;
+  cx.fillStyle='rgba(0,0,0,.2)';cx.fillRect(-W/2+3,-H/2+3,W,H);
+  cx.fillStyle=CO.tl;cx.fillRect(-W/2,-H/2,W,H);
+  cx.fillStyle='#245A6B';cx.fillRect(W/2-16,-H/2+2,14,H-4);
+  cx.fillStyle='rgba(150,210,230,.5)';cx.fillRect(W/2-10,-H/2+4,6,H-8);
+  cx.fillStyle='#777';cx.fillRect(-W/2+8,-H/2-4,4,5);cx.fillRect(-W/2+8,H/2-1,4,5);
+  cx.fillStyle='#222';
+  cx.fillRect(-W/2+2,-H/2-2,12,5);cx.fillRect(-W/2+2,H/2-3,12,5);
+  cx.fillRect(W/2-18,-H/2-2,12,5);cx.fillRect(W/2-18,H/2-3,12,5);
+  if(T.spd>.1){cx.fillStyle='rgba(255,240,150,.7)';cx.fillRect(W/2-2,-H/2+3,3,4);cx.fillRect(W/2-2,H/2-7,3,4);}
+  if(T.spd<-.1){cx.fillStyle='rgba(255,255,255,.8)';cx.fillRect(-W/2-1,-H/2+3,3,4);cx.fillRect(-W/2-1,H/2-7,3,4);}
+  cx.fillStyle='#555';cx.beginPath();cx.arc(-W*.45,0,3,0,Math.PI*2);cx.fill();
+  cx.restore();
+}
+
+function drTrailer(m){
+  // Get body center and angle
+  let bcx,bcy,ba;
+  if(hooked){
+    const c=trCenter();bcx=c.x;bcy=c.y;ba=trAngle;
+  }else{
+    bcx=uhCX;bcy=uhCY;ba=uhA;
+  }
+
+  cx.save();cx.translate(m.ox,m.oy);cx.scale(m.s,m.s);
+
+  // Draw coupling bar first (behind trailer body)
+  if(hooked){
+    cx.strokeStyle='#555';cx.lineWidth=4;
+    cx.beginPath();cx.moveTo(hitchX,hitchY);
+    // Draw a short bar from hitch into the trailer front
+    const barEnd=TR_LEN*0.15;
+    cx.lineTo(hitchX-Math.cos(ba)*barEnd, hitchY-Math.sin(ba)*barEnd);
+    cx.stroke();
+    // Also draw connection dot at hitch
+    cx.fillStyle='#777';cx.beginPath();cx.arc(hitchX,hitchY,3.5,0,Math.PI*2);cx.fill();
+  }
+
+  cx.save();
+  cx.translate(bcx,bcy);cx.rotate(ba);
+  const W=TR.W,H=TR.H;
+
+  // Shadow
+  cx.fillStyle='rgba(0,0,0,.18)';cx.fillRect(-W/2+3,-H/2+3,W,H);
+  // Body
+  cx.fillStyle=hooked?'#E2E6EA':'#D0D4D8';cx.fillRect(-W/2,-H/2,W,H);
+  cx.strokeStyle=hooked?CO.or:'#999';cx.lineWidth=hooked?2.5:1.5;cx.strokeRect(-W/2,-H/2,W,H);
+  // Branding
+  cx.fillStyle=CO.td;cx.fillRect(-W/2+8,-H/2+4,W-16,H-8);
+  cx.fillStyle=CO.or;cx.font='bold 11px Outfit';cx.textAlign='center';cx.textBaseline='middle';
+  cx.fillText('CRUMS',0,-3);
+  cx.font='7px Outfit';cx.fillStyle='#ccc';cx.fillText('LEASING',0,7);
+  // Wheels
+  cx.fillStyle='#222';
+  cx.fillRect(-W/2+6,-H/2-2,10,5);cx.fillRect(-W/2+6,H/2-3,10,5);
+  cx.fillRect(-W/2+20,-H/2-2,10,5);cx.fillRect(-W/2+20,H/2-3,10,5);
+
+  // Kingpin indicator when not hooked
+  if(!hooked){
+    const kx=W/2;
+    cx.fillStyle=CO.or;cx.beginPath();cx.arc(kx,0,5,0,Math.PI*2);cx.fill();
+    cx.strokeStyle='white';cx.lineWidth=1.5;cx.stroke();
+    const p=.5+Math.sin(Date.now()*.005)*.5;
+    cx.strokeStyle=`rgba(232,134,42,${p*.6})`;cx.lineWidth=2;
+    cx.beginPath();cx.arc(kx,0,9+p*3,0,Math.PI*2);cx.stroke();
+  }
+
+  // Rear lights
+  cx.fillStyle='#cc2222';
+  cx.fillRect(-W/2-1,-H/2+3,3,5);cx.fillRect(-W/2-1,H/2-8,3,5);
+
+  cx.restore();cx.restore();
+}
+
+function drObs(m){
+  cx.save();cx.translate(m.ox,m.oy);cx.scale(m.s,m.s);
+  for(const o of obstacles){
+    cx.save();cx.translate(o.x,o.y);
+    if(o.t==='crate'){cx.fillStyle='#8B6914';cx.fillRect(-18,-18,36,36);cx.strokeStyle='#6B4F10';cx.lineWidth=2;cx.strokeRect(-18,-18,36,36);cx.beginPath();cx.moveTo(-18,-18);cx.lineTo(18,18);cx.moveTo(18,-18);cx.lineTo(-18,18);cx.lineWidth=1;cx.stroke();}
+    else if(o.t==='car'){cx.fillStyle='#C0392B';cx.fillRect(-32,-16,65,32);cx.fillStyle='rgba(150,200,230,.5)';cx.fillRect(10,-12,14,24);cx.fillStyle='#222';cx.fillRect(-28,-18,12,5);cx.fillRect(-28,13,12,5);cx.fillRect(18,-18,12,5);cx.fillRect(18,13,12,5);}
+    else if(o.t==='dog'){
+      const scared=o.scared&&o.scaredTimer>0;
+      const w=scared?0:Math.sin(Date.now()*.003+o.x)*4;
+      cx.translate(w,0);
+      if(scared){
+        const runCycle=Math.sin(Date.now()*.02)*4;
+        cx.fillStyle='#8B5E3C';
+        cx.beginPath();cx.ellipse(0,0,14,6,0,0,Math.PI*2);cx.fill();
+        cx.strokeStyle='#7A4E2C';cx.lineWidth=2;
+        cx.beginPath();cx.moveTo(-6,6);cx.lineTo(-6+runCycle,12);cx.stroke();
+        cx.beginPath();cx.moveTo(6,6);cx.lineTo(6-runCycle,12);cx.stroke();
+        cx.beginPath();cx.moveTo(-6,-6);cx.lineTo(-6-runCycle,-12);cx.stroke();
+        cx.beginPath();cx.moveTo(6,-6);cx.lineTo(6+runCycle,-12);cx.stroke();
+        cx.fillStyle='#8B5E3C';cx.beginPath();cx.arc(13,0,5,0,Math.PI*2);cx.fill();
+        cx.fillStyle='#FF4444';cx.font='bold 14px Outfit';cx.textAlign='center';cx.fillText('!',0,-16);
+      } else {
+        cx.fillStyle='#8B5E3C';
+        cx.beginPath();cx.ellipse(0,0,12,8,0,0,Math.PI*2);cx.fill();
+        cx.beginPath();cx.arc(10,-2,6,0,Math.PI*2);cx.fill();
+        cx.strokeStyle='#8B5E3C';cx.lineWidth=3;
+        cx.beginPath();cx.arc(-14,-4,6,.5,Math.PI);cx.stroke();
+        cx.fillStyle='#222';cx.beginPath();cx.arc(12,-4,1.5,0,Math.PI*2);cx.fill();
+      }
+    }
+    else if(o.t==='tires'){cx.fillStyle='#333';cx.beginPath();cx.arc(-8,-6,12,0,Math.PI*2);cx.fill();cx.beginPath();cx.arc(8,-2,12,0,Math.PI*2);cx.fill();cx.beginPath();cx.arc(-2,8,12,0,Math.PI*2);cx.fill();cx.fillStyle='#555';cx.beginPath();cx.arc(-8,-6,6,0,Math.PI*2);cx.fill();cx.beginPath();cx.arc(8,-2,6,0,Math.PI*2);cx.fill();cx.beginPath();cx.arc(-2,8,6,0,Math.PI*2);cx.fill();}
+    else if(o.t==='forklift'){cx.fillStyle='#D4A017';cx.fillRect(-20,-15,40,30);cx.fillStyle='#333';cx.fillRect(-24,-18,8,5);cx.fillRect(-24,13,8,5);cx.fillRect(12,-18,8,5);cx.fillRect(12,13,8,5);cx.fillStyle='#888';cx.fillRect(22,-8,14,2);cx.fillRect(22,5,14,2);}
+    else if(o.t==='cones'){cx.fillStyle='#E87420';cx.beginPath();cx.moveTo(0,-12);cx.lineTo(-8,10);cx.lineTo(8,10);cx.closePath();cx.fill();cx.fillStyle='white';cx.fillRect(-5,-2,10,3);cx.fillRect(-3,-7,6,2);}
+    cx.restore();
+  }
+  cx.restore();
+}
+
+// Draw parked (static) trailers - other trailers sitting in the yard
+function drParked(m){
+  if(!parked.length)return;
+  cx.save();cx.translate(m.ox,m.oy);cx.scale(m.s,m.s);
+  const W=TR.W,H=TR.H;
+  const colors=['#8B9199','#7A8590','#95918A','#6E7B85'];
+  for(let i=0;i<parked.length;i++){
+    const p=parked[i];
+    cx.save();cx.translate(p.x,p.y);cx.rotate(p.a);
+    // Shadow
+    cx.fillStyle='rgba(0,0,0,.15)';cx.fillRect(-W/2+3,-H/2+3,W,H);
+    // Body
+    cx.fillStyle=colors[i%colors.length];cx.fillRect(-W/2,-H/2,W,H);
+    cx.strokeStyle='rgba(0,0,0,.25)';cx.lineWidth=1.5;cx.strokeRect(-W/2,-H/2,W,H);
+    // Panel lines (make it look like a real box trailer)
+    cx.strokeStyle='rgba(0,0,0,.08)';cx.lineWidth=1;
+    for(let lx=-W/2+20;lx<W/2;lx+=18){cx.beginPath();cx.moveTo(lx,-H/2);cx.lineTo(lx,H/2);cx.stroke();}
+    // Rear door lines
+    cx.strokeStyle='rgba(0,0,0,.15)';cx.lineWidth=1.5;
+    cx.beginPath();cx.moveTo(-W/2+2,-H/2+2);cx.lineTo(-W/2+2,H/2-2);cx.stroke();
+    cx.beginPath();cx.moveTo(-W/2+5,0);cx.lineTo(-W/2+2,0);cx.stroke();
+    // Wheels (rear tandem)
+    cx.fillStyle='#222';
+    cx.fillRect(-W/2+6,-H/2-2,10,5);cx.fillRect(-W/2+6,H/2-3,10,5);
+    cx.fillRect(-W/2+20,-H/2-2,10,5);cx.fillRect(-W/2+20,H/2-3,10,5);
+    // Landing gear (front)
+    cx.fillStyle='#444';
+    cx.fillRect(W/2-6,-H/2-3,4,4);cx.fillRect(W/2-6,H/2-1,4,4);
+    // Rear lights
+    cx.fillStyle='#993333';
+    cx.fillRect(-W/2-1,-H/2+3,3,4);cx.fillRect(-W/2-1,H/2-7,3,4);
+    cx.restore();
+  }
+  cx.restore();
+}
+
+function drGuide(m){
+  if(hooked)return;
+  const bk=tHitch(),kp=uhKP();
+  const dx=bk.x-kp.x,dy=bk.y-kp.y,dist=Math.sqrt(dx*dx+dy*dy);
+  if(dist>100)return;
+  cx.save();cx.translate(m.ox,m.oy);cx.scale(m.s,m.s);
+  cx.strokeStyle=dist<16?'#2ECC71':CO.or;cx.lineWidth=dist<16?2.5:1.5;
+  cx.setLineDash([5,5]);cx.beginPath();cx.moveTo(bk.x,bk.y);cx.lineTo(kp.x,kp.y);cx.stroke();cx.setLineDash([]);
+  if(dist>16&&dist<80){cx.fillStyle='rgba(255,255,255,.6)';cx.font='10px Outfit';cx.textAlign='center';cx.fillText(Math.round(dist),(bk.x+kp.x)/2,(bk.y+kp.y)/2-10);}
+  cx.restore();
+}
+
+// ========== DEBUG: show hitch angle difference ==========
+function drDebug(m){
+  if(!hooked)return;
+  // Draw a small arc showing the articulation angle
+  let jack=T.a-trAngle;
+  while(jack>Math.PI)jack-=Math.PI*2;
+  while(jack<-Math.PI)jack+=Math.PI*2;
+  const deg=Math.round(jack*180/Math.PI);
+
+  cx.save();cx.translate(m.ox,m.oy);cx.scale(m.s,m.s);
+  cx.fillStyle=Math.abs(deg)>50?'rgba(255,80,80,.8)':'rgba(255,255,255,.5)';
+  cx.font='bold 10px Outfit';cx.textAlign='center';
+  cx.fillText(deg+'°',hitchX,hitchY-12);
+  cx.restore();
+}
+
+// ========== MAIN LOOP ==========
+let lt=0;
+function loop(ts){
+  const dt=Math.min((ts-lt)/1000,.05);lt=ts;
+  pollGamepad();
+  // Merge keyboard/touch + gamepad inputs
+  K.up=KBD.up||GP.up; K.down=KBD.down||GP.down;
+  K.left=KBD.left||GP.left; K.right=KBD.right||GP.right;
+  if(state==='playing'){
+    timer+=dt;
+    document.getElementById('tmr').textContent=timer.toFixed(1)+'s';
+    updTruck();updTrailer();updateDogs(dt);chkHook();
+    if(chkColl()){
+      if(hooked)resetHook();
+      else{T.x-=Math.cos(T.a)*T.spd*3;T.y-=Math.sin(T.a)*T.spd*3;T.spd=0;ps('crash');}
+    }
+    if(T.x<15||T.x>WW-15||T.y<25||T.y>WH-25){
+      T.x=Math.max(15,Math.min(WW-15,T.x));T.y=Math.max(25,Math.min(WH-25,T.y));T.spd*=-.3;
+    }
+    if(hooked&&gpFrameCount%60===0){
+      console.log('📍 Truck:',T.x.toFixed(0)+','+T.y.toFixed(0),'Exit:',exitZ.x+'-'+(exitZ.x+exitZ.w)+','+exitZ.y+'-'+(exitZ.y+exitZ.h),'Dist to exit:',(exitZ.x-T.x).toFixed(0));
+    }
+    if(chkExit()){state='win';bOff();ps('win');showWin();console.log('🏁 LEVEL COMPLETE! state=win');}
+  }
+  const m=cm();
+  cx.clearRect(0,0,dW(),dH());
+  cx.fillStyle='#3A4A38';cx.fillRect(0,0,dW(),dH());
+  drYard(m);drObs(m);drParked(m);drTrailer(m);drTruck(m);drGuide(m);drDebug(m);
+  // State indicator (top left of game area)
+  cx.save();
+  cx.fillStyle='rgba(0,0,0,.5)';cx.fillRect(4,4,140,16);
+  cx.fillStyle=state==='playing'?'#0f0':state==='win'?'#ff0':'#f80';
+  cx.font='bold 11px monospace';cx.textAlign='left';cx.textBaseline='top';
+  cx.fillText('State:'+state+' Hook:'+hooked,8,6);
+  cx.restore();
+  // Gamepad live debug HUD — always show when controller connected
+  if(gpConnected){
+    const dbgText=gpDebug||'🎮 Connected but no data yet...';
+    cx.save();
+    cx.fillStyle='rgba(0,0,0,.75)';
+    cx.fillRect(4,dH()-48,dW()-8,44);
+    cx.fillStyle='#0f0';cx.font='bold 13px monospace';cx.textAlign='left';cx.textBaseline='top';
+    cx.fillText(dbgText.substring(0,80),10,dH()-44);
+    // Show merged output
+    cx.fillStyle='#ff0';cx.font='12px monospace';
+    cx.fillText(`OUTPUT → up:${K.up} down:${K.down} left:${K.left} right:${K.right} | GP.up:${GP.up} GP.down:${GP.down} GP.left:${GP.left} GP.right:${GP.right}`,10,dH()-26);
+    cx.restore();
+  }
+  requestAnimationFrame(loop);
+}
+
+// ========== SCREENS ==========
+function showWin(){
+  totalTime+=timer; // accumulate across levels
+  const L=LVS[curLvl],t=timer;let s=1;if(t<=L.st[1])s=2;if(t<=L.st[0])s=3;
+  let h='';for(let i=0;i<3;i++)h+=i<s?'<span class="sf">★</span>':'<span class="se">★</span>';
+  document.getElementById('wStar').innerHTML=h;
+  document.getElementById('ws').innerHTML=`Time: <strong>${t.toFixed(1)}s</strong> | Resets: <strong>${resets}</strong><br><span style="font-size:11px;color:rgba(255,255,255,.4)">★★★ under ${L.st[0]}s · ★★ under ${L.st[1]}s</span>`;
+  document.getElementById('btnNext').textContent=curLvl>=LVS.length-1?'FINISH':'NEXT LEVEL';
+  document.getElementById('scnWin').classList.remove('hid');
+  menuFocusIdx=0;updateMenuFocus();
+}
+function hideAll(){['scnStart','scnWin','scnEnd','scnName','scnLB'].forEach(id=>document.getElementById(id).classList.add('hid'));menuFocusIdx=0;updateMenuFocus();}
+
+// ========== LEADERBOARD (localStorage + file backup) ==========
+let totalTime=0;
+const LB_KEY='yardrun_lb_v2';
+const LB_MAX=50;
+
+function getLB(){
+  try{
+    // Try v2 key first, fallback to v1
+    let raw=localStorage.getItem(LB_KEY);
+    if(!raw) raw=localStorage.getItem('yardrun_lb');
+    const lb=JSON.parse(raw||'[]');
+    // Validate entries
+    return lb.filter(e=>e&&typeof e.name==='string'&&typeof e.time==='number');
+  }catch(e){console.error('LB load error:',e);return[];}
+}
+function saveLB(lb){
+  try{
+    const json=JSON.stringify(lb);
+    localStorage.setItem(LB_KEY,json);
+    // Also save backup key
+    localStorage.setItem('yardrun_lb',json);
+    console.log('💾 Leaderboard saved:',lb.length,'entries');
+  }catch(e){console.error('LB save error:',e);}
+}
+function addScore(name,time){
+  const lb=getLB();
+  const entry={
+    name:(name||'ANON').toUpperCase().substring(0,4).padEnd(4,' '),
+    time:parseFloat(time.toFixed(1)),
+    date:new Date().toISOString(),
+    resets:resets
+  };
+  lb.push(entry);
+  lb.sort((a,b)=>a.time-b.time);
+  if(lb.length>LB_MAX) lb.length=LB_MAX;
+  saveLB(lb);
+  console.log('🏆 Score added:',entry.name,entry.time+'s');
+  return lb.findIndex(e=>e.date===entry.date)+1; // return rank
+}
+function renderLB(){
+  const lb=getLB();
+  const el=document.getElementById('lbList');
+  const ct=document.getElementById('lbCount');
+  ct.textContent=lb.length+' score'+(lb.length!==1?'s':'')+' saved';
+  if(!lb.length){el.innerHTML='<div class="lb-empty">No scores yet. Be the first to clear the yard!</div>';return;}
+  let h='<div class="lb-row head"><span class="rank">#</span><span class="nm">NAME</span><span class="sc">TIME</span></div>';
+  lb.forEach((s,i)=>{
+    const d=s.date?new Date(s.date).toLocaleDateString():'';
+    h+='<div class="lb-row"><span class="rank">'+(i+1)+'</span><span class="nm">'+s.name+'</span><span class="sc">'+s.time+'s</span></div>';
+  });
+  el.innerHTML=h;
+}
+function exportLB(){
+  const lb=getLB();
+  if(!lb.length){showLBMsg('No scores to export','#fa0');return;}
+  const data={game:'YardRun by CRUMS Leasing',version:2,exported:new Date().toISOString(),scores:lb};
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download='yardrun-leaderboard-'+new Date().toISOString().slice(0,10)+'.json';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
+  showLBMsg('✓ Exported '+lb.length+' scores','#2ecc71');
+  console.log('📤 Exported',lb.length,'scores');
+}
+function importLB(file){
+  const reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      const data=JSON.parse(e.target.result);
+      let scores=[];
+      // Support both formats: {scores:[...]} or raw array
+      if(Array.isArray(data)) scores=data;
+      else if(data.scores&&Array.isArray(data.scores)) scores=data.scores;
+      else{showLBMsg('Invalid file format','#f44');return;}
+      // Validate
+      scores=scores.filter(s=>s&&typeof s.name==='string'&&typeof s.time==='number');
+      if(!scores.length){showLBMsg('No valid scores found in file','#f44');return;}
+      // Merge with existing (dedup by name+time+date)
+      const existing=getLB();
+      const existingKeys=new Set(existing.map(s=>s.name+s.time+(s.date||'')));
+      let added=0;
+      for(const s of scores){
+        const key=s.name+s.time+(s.date||'');
+        if(!existingKeys.has(key)){
+          existing.push(s);
+          existingKeys.add(key);
+          added++;
+        }
+      }
+      existing.sort((a,b)=>a.time-b.time);
+      if(existing.length>LB_MAX) existing.length=LB_MAX;
+      saveLB(existing);
+      renderLB();
+      showLBMsg('✓ Imported '+added+' new scores ('+scores.length+' total in file)','#2ecc71');
+      console.log('📥 Imported',added,'new scores from',scores.length,'in file');
+    }catch(ex){
+      showLBMsg('Error reading file: '+ex.message,'#f44');
+      console.error('Import error:',ex);
+    }
+  };
+  reader.readAsText(file);
+}
+function showLBMsg(msg,color){
+  const el=document.getElementById('lbMsg');
+  if(el){el.textContent=msg;el.style.color=color||'#2ecc71';}
+  setTimeout(()=>{if(el)el.textContent='';},4000);
+}
+
+// ========== MENU FOCUS NAVIGATION ==========
+let menuFocusIdx=0;
+function getVisibleMenuBtns(){
+  // Find which screen is visible, get its .mbtn buttons
+  const screens=['scnStart','scnWin','scnEnd','scnName','scnLB'];
+  for(const id of screens){
+    const scn=document.getElementById(id);
+    if(scn&&!scn.classList.contains('hid')){
+      return Array.from(scn.querySelectorAll('.mbtn'));
+    }
+  }
+  return[];
+}
+function updateMenuFocus(){
+  document.querySelectorAll('.mbtn').forEach(b=>b.classList.remove('focus'));
+  const btns=getVisibleMenuBtns();
+  if(btns.length){
+    menuFocusIdx=Math.max(0,Math.min(menuFocusIdx,btns.length-1));
+    btns[menuFocusIdx].classList.add('focus');
+  }
+}
+function menuNav(dir){
+  const btns=getVisibleMenuBtns();
+  if(!btns.length) return;
+  menuFocusIdx+=dir;
+  if(menuFocusIdx<0) menuFocusIdx=btns.length-1;
+  if(menuFocusIdx>=btns.length) menuFocusIdx=0;
+  updateMenuFocus();
+}
+function menuConfirm(){
+  const btns=getVisibleMenuBtns();
+  if(btns.length&&btns[menuFocusIdx]){
+    console.log('🎮 menuConfirm → '+btns[menuFocusIdx].id);
+    btns[menuFocusIdx].click();
+  }
+}
+// Keyboard menu nav (arrow keys on menu screens)
+document.addEventListener('keydown',e=>{
+  if(state==='playing') return;
+  if(state==='nameEntry'&&document.activeElement===document.getElementById('kbNameInput')) return;
+  if(e.key==='ArrowDown'||e.key==='s'){menuNav(1);e.preventDefault();}
+  if(e.key==='ArrowUp'||e.key==='w'){menuNav(-1);e.preventDefault();}
+  if(e.key==='Enter'||e.key===' '){menuConfirm();e.preventDefault();}
+});
+
+// ========== ARCADE NAME ENTRY ==========
+const ARC_CHARS='ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 ';
+let arcLetters=[0,0,0,0]; // indices into ARC_CHARS
+let arcPos=0; // which slot is active (0-3)
+let arcActive=false;
+
+function initArcade(){
+  arcLetters=[0,0,0,0]; arcPos=0; arcActive=true;
+  updateArcadeDisplay();
+}
+function updateArcadeDisplay(){
+  const slots=document.querySelectorAll('.arc-slot');
+  slots.forEach((s,i)=>{
+    s.textContent=ARC_CHARS[arcLetters[i]];
+    s.className='arc-slot'+(i===arcPos?' active':'');
+    // Re-add arrows
+    s.innerHTML='<span class="arc-arrow up">▲</span>'+ARC_CHARS[arcLetters[i]]+'<span class="arc-arrow dn">▼</span>';
+  });
+}
+function arcadeNav(dir,axis){
+  // axis: 'y'=change letter, 'x'=change slot
+  if(axis==='y'){
+    arcLetters[arcPos]+=dir;
+    if(arcLetters[arcPos]<0) arcLetters[arcPos]=ARC_CHARS.length-1;
+    if(arcLetters[arcPos]>=ARC_CHARS.length) arcLetters[arcPos]=0;
+  } else {
+    arcPos+=dir;
+    if(arcPos<0) arcPos=3;
+    if(arcPos>3) arcPos=0;
+  }
+  updateArcadeDisplay();
+}
+function getArcadeName(){
+  return arcLetters.map(i=>ARC_CHARS[i]).join('').trim()||'ANON';
+}
+
+// ========== BUTTON HANDLERS ==========
+document.getElementById('btnStart').addEventListener('click',()=>{
+  console.log('▶ btnStart clicked');ea();hideAll();curLvl=0;totalTime=0;loadLvl(0);state='playing';
+});
+document.getElementById('btnLB').addEventListener('click',()=>{
+  console.log('▶ btnLB clicked');hideAll();renderLB();
+  document.getElementById('scnLB').classList.remove('hid');state='leaderboard';menuFocusIdx=0;updateMenuFocus();
+});
+document.getElementById('btnNext').addEventListener('click',()=>{
+  console.log('▶ btnNext clicked, curLvl='+curLvl);hideAll();
+  if(curLvl>=LVS.length-1){
+    document.getElementById('fs').textContent='Total Time: '+totalTime.toFixed(1)+'s';
+    document.getElementById('scnEnd').classList.remove('hid');state='complete';menuFocusIdx=0;updateMenuFocus();
+  } else {
+    curLvl++;console.log('▶ Loading level '+curLvl);loadLvl(curLvl);state='playing';
+  }
+});
+document.getElementById('btnRetry').addEventListener('click',()=>{
+  console.log('▶ btnRetry');hideAll();loadLvl(curLvl);state='playing';
+});
+document.getElementById('btnReplay').addEventListener('click',()=>{
+  console.log('▶ btnReplay');hideAll();curLvl=0;totalTime=0;loadLvl(0);state='playing';
+});
+document.getElementById('btnNameEntry').addEventListener('click',()=>{
+  console.log('▶ btnNameEntry');hideAll();
+  document.getElementById('nameScore').textContent='Your Time: '+totalTime.toFixed(1)+'s';
+  document.getElementById('scnName').classList.remove('hid');state='nameEntry';
+  // Detect if controller is active → show arcade, else show keyboard
+  if(gpConnected){
+    document.getElementById('kbNameWrap').style.display='none';
+    document.getElementById('arcadeNameBox').style.display='flex';
+    document.getElementById('nameHint').textContent='D-Pad ↑↓ change letter · ←→ move slot · A to submit';
+    initArcade();
+  } else {
+    document.getElementById('kbNameWrap').style.display='block';
+    document.getElementById('arcadeNameBox').style.display='none';
+    document.getElementById('nameHint').textContent='Type your 4-letter name and press Enter';
+    const inp=document.getElementById('kbNameInput');inp.value='';
+    setTimeout(()=>inp.focus(),100);
+  }
+  menuFocusIdx=0;updateMenuFocus();
+});
+document.getElementById('btnSubmitName').addEventListener('click',()=>{
+  let name='';
+  if(gpConnected&&arcActive){
+    name=getArcadeName();
+  } else {
+    name=document.getElementById('kbNameInput').value.trim().toUpperCase()||'ANON';
+  }
+  console.log('▶ Submit name:',name,'time:',totalTime);
+  const rank=addScore(name,totalTime);arcActive=false;
+  hideAll();renderLB();
+  showLBMsg('🏆 '+name+' placed #'+rank+'!','#E8862A');
+  document.getElementById('scnLB').classList.remove('hid');state='leaderboard';menuFocusIdx=0;updateMenuFocus();
+});
+document.getElementById('btnSkipName').addEventListener('click',()=>{
+  console.log('▶ Skip name');arcActive=false;
+  hideAll();document.getElementById('scnStart').classList.remove('hid');state='start';menuFocusIdx=0;updateMenuFocus();
+});
+document.getElementById('kbNameInput').addEventListener('keydown',e=>{
+  if(e.key==='Enter'){e.preventDefault();document.getElementById('btnSubmitName').click();}
+});
+document.getElementById('btnLBBack').addEventListener('click',()=>{
+  console.log('▶ LB Back');hideAll();document.getElementById('scnStart').classList.remove('hid');state='start';menuFocusIdx=0;updateMenuFocus();
+});
+document.getElementById('btnLBExport').addEventListener('click',()=>{
+  console.log('▶ LB Export');exportLB();
+});
+document.getElementById('btnLBImport').addEventListener('click',()=>{
+  console.log('▶ LB Import');document.getElementById('lbFileInput').click();
+});
+document.getElementById('lbFileInput').addEventListener('change',e=>{
+  if(e.target.files&&e.target.files[0]){importLB(e.target.files[0]);e.target.value='';}
+});
+document.getElementById('btnLBClear').addEventListener('click',()=>{
+  if(confirm('Clear ALL leaderboard scores? This cannot be undone.\n\nTip: Export first to save a backup!')){
+    localStorage.removeItem(LB_KEY);localStorage.removeItem('yardrun_lb');
+    renderLB();showLBMsg('Leaderboard cleared','#fa0');
+  }
+});
+document.getElementById('snd').addEventListener('click',()=>{snd=!snd;document.getElementById('snd').textContent=snd?'🔊':'🔇';if(!snd)bOff();});
+
+// Horn button (mobile)
+document.getElementById('btnHorn').addEventListener('touchstart',e=>{e.preventDefault();ea();honk();});
+document.getElementById('btnHorn').addEventListener('click',e=>{e.preventDefault();ea();honk();});
+
+document.getElementById('hint').textContent='ontouchstart'in window?'On-screen controls · Horn to scare critters':'Arrow keys / WASD · 1-4 gears · SPACE horn';
+
+// Init focus
+menuFocusIdx=0;
+setTimeout(updateMenuFocus,100);
+
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
