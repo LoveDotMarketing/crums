@@ -189,23 +189,16 @@ const Index = () => {
       </section>
 
       {/* Event CTA Banner */}
-      <section className="bg-secondary py-3">
+      <Link to="/crums-trucking-games" className="block bg-secondary py-3 hover:brightness-110 transition-all">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-center gap-3 text-secondary-foreground text-sm md:text-base">
             <img src="/images/trailer-yard-game-blue-truck.webp" alt="Yard Run Game" className="h-8 w-8 flex-shrink-0 object-contain" />
             <p>
-              Thanks for visiting us at MATS! Play the game from our booth —{" "}
-              <Link 
-                to="/crums-trucking-games" 
-                className="font-semibold underline hover:no-underline"
-              >
-                CRUMS Trailer Yard Run
-              </Link>
-              !
+              Thanks for visiting us at MATS! Play the game from our booth — <span className="font-semibold underline">CRUMS Trailer Yard Run</span>!
             </p>
           </div>
         </div>
-      </section>
+      </Link>
 
       {/* Trust & Transparency Section */}
       <section className="py-10 bg-background border-b">
