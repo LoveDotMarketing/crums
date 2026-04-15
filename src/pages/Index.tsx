@@ -41,7 +41,7 @@ const dryVanTrailerImg = "/images/dry-van-trailer.webp";
 const flatbedTrailerImg = "/images/flatbed-trailer.webp";
 
 const trailer56171Img = "/images/trailers/trailer-56171.webp";
-import whyChooseCrumsThumbnail from "@/assets/why-choose-crums-thumbnail.png";
+
 import { SEO } from "@/components/SEO";
 import { organizationSchema, generateBreadcrumbSchema, customerReviews, generateReviewSchema } from "@/lib/structuredData";
 import { locations, HEADQUARTERS } from "@/lib/locations";
