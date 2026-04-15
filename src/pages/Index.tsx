@@ -28,7 +28,6 @@ import {
   Heart,
   Award,
   Star,
-  Newspaper,
   MapPin,
   Phone,
   Briefcase,
