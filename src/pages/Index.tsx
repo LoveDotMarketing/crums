@@ -194,7 +194,7 @@ const Index = () => {
           <div className="flex items-center justify-center gap-3 text-secondary-foreground text-sm md:text-base">
             <img src="/images/trailer-yard-game-blue-truck.webp" alt="Yard Run Game" className="h-8 w-8 flex-shrink-0 object-contain" />
             <p>
-              Thank you for visiting our booth at the MATS Trucking Show! Check out the featured game we had playing at our booth —{" "}
+              Thanks for visiting us at MATS! Play the game from our booth —{" "}
               <Link 
                 to="/crums-trucking-games" 
                 className="font-semibold underline hover:no-underline"
