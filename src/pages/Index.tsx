@@ -1130,6 +1130,8 @@ const Index = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
             <Card ref={reveal} className="reveal-scale border-2 hover:shadow-lg transition-shadow" style={{ '--reveal-delay': '0s' } as React.CSSProperties}>
+              <CardContent className="p-6">
+                <Link to="/dry-van-trailers" className="block hover:opacity-80 transition-opacity">
                   <ProgressiveImage 
                     src={dryVanTrailerImg} 
                     alt="CRUMS Leasing 53-foot dry van trailer - enclosed cargo protection for general freight" 
@@ -1159,7 +1161,7 @@ const Index = () => {
                 </Link>
               </CardContent>
             </Card>
-            <Card className="border-2 hover:shadow-lg transition-shadow">
+            <Card ref={reveal} className="reveal-scale border-2 hover:shadow-lg transition-shadow" style={{ '--reveal-delay': '0.15s' } as React.CSSProperties}>
               <CardContent className="p-6">
                 <Link to="/flatbed-trailers" className="block hover:opacity-80 transition-opacity">
                   <ProgressiveImage 
@@ -1288,6 +1290,8 @@ const Index = () => {
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div ref={reveal} className="reveal-left">
+              <ProgressiveImage
+                src={fleetImage}
                 alt="CRUMS Leasing dry van trailer"
                 className="w-full h-auto"
                 width={1400}
@@ -1296,6 +1300,8 @@ const Index = () => {
               />
             </div>
             <div ref={reveal} className="reveal-up">
+              <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
+                Why Choose CRUMS Leasing?
               </h2>
               <p className="text-xl text-muted-foreground mb-8">
                 We're more than an equipment provider — we're your partner in success.
