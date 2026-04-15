@@ -1,23 +1,17 @@
 
 
-## Plan: Add Upsert Logic to `create-phone-lead`
+## Plan: Add Realtime Updates to Phone Leads Dashboard
 
-Modify the existing `create-phone-lead` edge function to check if a lead with the same phone number already exists. If it does, update the existing record (merge notes, update email/name if provided). If not, insert a new one.
+**Problem**: When a lead is updated via the `create-phone-lead` edge function (e.g., from Bland AI), the Phone Leads dashboard doesn't reflect the changes until you manually refresh the page.
 
-### How it works
+**Solution**: Enable realtime on the `phone_leads` table and subscribe to changes in the dashboard component so it auto-refreshes when leads are created or updated.
 
-- On POST, after validating `name` and `phone`, query `phone_leads` for an existing row matching the phone number
-- If found: update the existing row — append new notes (preserving old ones), update name/email if provided, keep the original `created_at` and `status`
-- If not found: insert a new row (current behavior)
-- Response includes an `action` field (`"created"` or `"updated"`) so the caller knows what happened
+### Changes
 
-### Files changed
+1. **Database migration** — Enable realtime for `phone_leads`:
+   ```sql
+   ALTER PUBLICATION supabase_realtime ADD TABLE phone_leads;
+   ```
 
-1. **`supabase/functions/create-phone-lead/index.ts`**
-   - Add a SELECT query by phone number before insert
-   - If match found, UPDATE with merged notes and optional field updates
-   - If no match, INSERT as before
-   - Return `{ ...data, action: "created" | "updated" }`
-
-No database changes needed — the `phone_leads` table already supports all required operations via service role.
+2. **`src/pages/admin/PhoneLeads.tsx`** — Add a Supabase realtime subscription that invalidates the `["phone-leads"]` React Query cache on any INSERT, UPDATE, or DELETE event. This triggers an automatic refetch so the table updates live.
 
