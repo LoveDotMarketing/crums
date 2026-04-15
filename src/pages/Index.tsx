@@ -1,5 +1,6 @@
 import { lazy, Suspense } from "react";
 import { Link } from "react-router-dom";
+import { useScrollReveal } from "@/hooks/useScrollReveal";
 import { trackCtaClick, trackPhoneClick, trackEvent, fireMetaCapi } from "@/lib/analytics";
 import { newsArticles } from "@/lib/news";
 import { useEffect } from "react";
@@ -53,6 +54,7 @@ const ChatBot = lazy(() => import("@/components/ChatBot").then(m => ({ default: 
 const Index = () => {
   useTimeOnPageTracking('home');
   useEffect(() => { fireMetaCapi({ eventName: 'ViewContent' }); }, []);
+  const reveal = useScrollReveal();
   const breadcrumbSchema = generateBreadcrumbSchema([
     { name: "Home", url: "https://crumsleasing.com/" }
   ]);
