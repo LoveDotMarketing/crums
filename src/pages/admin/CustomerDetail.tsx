@@ -487,7 +487,41 @@ export default function CustomerDetail() {
                           customerEmail={customer.email || undefined}
                           customerName={customer.full_name}
                         />
+                        {application && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-7 text-xs"
+                            disabled={resettingPayment}
+                            onClick={handleResetPaymentSetup}
+                          >
+                            {resettingPayment ? (
+                              <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                            ) : (
+                              <CreditCard className="h-3 w-3 mr-1" />
+                            )}
+                            Reset Payment
+                          </Button>
+                        )}
                       </div>
+                      {application?.payment_setup_status && (
+                        <div className="flex items-center gap-2">
+                          <span className="text-muted-foreground w-28">Setup Status</span>
+                          <Badge
+                            variant={application.payment_setup_status === 'completed' ? 'default' : 'secondary'}
+                            className="text-xs capitalize"
+                          >
+                            {application.payment_setup_status === 'completed' ? (
+                              <CheckCircle2 className="h-3 w-3 mr-1" />
+                            ) : application.payment_setup_status === 'pending' ? (
+                              <Clock className="h-3 w-3 mr-1" />
+                            ) : (
+                              <AlertCircle className="h-3 w-3 mr-1" />
+                            )}
+                            {application.payment_setup_status}
+                          </Badge>
+                        </div>
+                      )}
                       {customer.notes && (
                         <div className="pt-2 border-t border-border">
                           <p className="text-xs text-muted-foreground mb-1">Notes</p>
