@@ -328,7 +328,13 @@ All colors MUST be HSL.
 
   .reveal-up[data-revealed="true"],
   .reveal-left[data-revealed="true"],
-  .reveal-scale[data-revealed="true"] {
+  .reveal-scale[data-revealed="true"],
+  [data-revealed="true"] > .reveal-up,
+  [data-revealed="true"] > .reveal-left,
+  [data-revealed="true"] > .reveal-scale,
+  [data-revealed="true"] .reveal-up,
+  [data-revealed="true"] .reveal-left,
+  [data-revealed="true"] .reveal-scale {
     opacity: 1;
     transform: translateY(0) translateX(0) scale(1);
   }
