@@ -959,6 +959,32 @@ export default function PaymentSetup() {
                     </AccordionContent>
                   </AccordionItem>
 
+                  <AccordionItem value="refund-processing">
+                    <AccordionTrigger>Refund & Processing Timeline</AccordionTrigger>
+                    <AccordionContent className="space-y-2 text-muted-foreground">
+                      <p>
+                        <strong>ACH Bank Payments:</strong> ACH transactions require <strong>7–10 business days</strong> to 
+                        fully process and settle. During this period, funds are held by the payment processor and cannot 
+                        be reversed or refunded immediately.
+                      </p>
+                      <p>
+                        <strong>Credit Card Payments:</strong> Credit card refunds may take <strong>5–10 business days</strong> to 
+                        appear on your statement after processing begins.
+                      </p>
+                      <p>
+                        <strong>Refund & Cancellation:</strong> If you cancel your lease or request a refund, processing 
+                        will begin only after the original transaction has fully settled. If a manual refund is issued 
+                        and the original payment subsequently fails or is reversed, you agree to promptly return the 
+                        refunded amount within <strong>5 business days</strong>.
+                      </p>
+                      <p>
+                        Failure to return funds will result in a <strong>daily interest charge of 1.5%</strong> on the 
+                        outstanding balance until fully repaid, and Crum's Leasing LLC reserves the right to pursue 
+                        all available legal remedies.
+                      </p>
+                    </AccordionContent>
+                  </AccordionItem>
+
                   <AccordionItem value="tolls">
                     <AccordionTrigger>Tolls & Administrative Fees</AccordionTrigger>
                     <AccordionContent className="space-y-2 text-muted-foreground">

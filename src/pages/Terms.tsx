@@ -106,7 +106,22 @@ const Terms = () => {
             </section>
 
             <section className="space-y-4">
-              <h2 className="text-2xl font-semibold text-foreground">7. Changes to Terms</h2>
+              <h2 className="text-2xl font-semibold text-foreground">7. Refund & Cancellation Policy</h2>
+              <p>
+                All payments made to Crum's Leasing LLC are subject to standard banking processing timelines:
+              </p>
+              <ul className="list-disc pl-6 space-y-2">
+                <li><strong>ACH Bank Payments:</strong> ACH transactions require 7–10 business days to fully process and settle. During this period, funds are held by the payment processor and cannot be reversed or refunded immediately.</li>
+                <li><strong>Credit Card Payments:</strong> Credit card refunds may take 5–10 business days to appear on your statement after processing begins.</li>
+                <li><strong>Refund Processing:</strong> If you cancel your lease or request a refund, processing will begin only after the original transaction has fully settled.</li>
+                <li><strong>Manual Refund Obligation:</strong> If a manual refund is issued (via any method) and the original payment subsequently fails, is declined, or is reversed by your financial institution, you agree to promptly return the refunded amount within 5 business days of notification.</li>
+                <li><strong>Interest on Unreturned Funds:</strong> Failure to return funds within the 5 business day period will result in a daily interest charge of 1.5% on the outstanding balance until fully repaid.</li>
+                <li><strong>Legal Remedies:</strong> Crum's Leasing LLC reserves the right to pursue all available legal remedies, including but not limited to collections, court action, and recovery of attorney fees, for any unreturned funds.</li>
+              </ul>
+            </section>
+
+            <section className="space-y-4">
+              <h2 className="text-2xl font-semibold text-foreground">8. Changes to Terms</h2>
               <p>
                 We reserve the right to modify these terms at any time. Changes will be effective 
                 immediately upon posting to this website.
@@ -114,7 +129,7 @@ const Terms = () => {
             </section>
 
             <section className="space-y-4">
-              <h2 className="text-2xl font-semibold text-foreground">8. Contact Information</h2>
+              <h2 className="text-2xl font-semibold text-foreground">9. Contact Information</h2>
               <p>
                 For questions about these Terms of Service, please contact us at:
               </p>
