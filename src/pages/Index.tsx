@@ -135,18 +135,18 @@ const Index = () => {
         <div className="absolute inset-0 bg-gradient-to-r from-primary/95 to-primary/70"></div>
 
         <div className="relative z-10 container mx-auto px-4 text-center text-primary-foreground">
-          <Badge className="bg-secondary/90 text-secondary-foreground mb-4 text-sm px-4 py-1">
+          <Badge className="hero-entrance bg-secondary/90 text-secondary-foreground mb-4 text-sm px-4 py-1" style={{ animationDelay: '0.2s' }}>
             Need a trailer fast? We deliver nationwide.
           </Badge>
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
+          <h1 className="hero-entrance text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight" style={{ animationDelay: '0.4s' }}>
             Dry Van & Flatbed Trailer Leasing
             <br />
             <span className="text-secondary">Empowering Every Carrier to Succeed</span>
           </h1>
-          <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto text-primary-foreground">
+          <p className="hero-entrance text-xl md:text-2xl mb-8 max-w-3xl mx-auto text-primary-foreground" style={{ animationDelay: '0.6s' }}>
             Quality dry van and flatbed trailers guided by family values, integrity, and commitment to your success — creating lasting partnerships that move people forward.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <div className="hero-entrance flex flex-col sm:flex-row gap-4 justify-center" style={{ animationDelay: '0.8s' }}>
             <Link to="/contact">
               <Button 
                 size="lg" 
@@ -206,28 +206,28 @@ const Index = () => {
       <section className="py-10 bg-background border-b">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
-            <div className="flex flex-col items-center">
+            <div ref={reveal} className="reveal-up flex flex-col items-center" style={{ '--reveal-delay': '0s' } as React.CSSProperties}>
               <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mb-3">
                 <FileText className="h-6 w-6 text-primary" />
               </div>
               <h3 className="font-semibold text-foreground text-sm">No Hidden Fees</h3>
               <p className="text-xs text-muted-foreground mt-1">Simple, transparent contracts</p>
             </div>
-            <div className="flex flex-col items-center">
+            <div ref={reveal} className="reveal-up flex flex-col items-center" style={{ '--reveal-delay': '0.1s' } as React.CSSProperties}>
               <div className="h-12 w-12 rounded-full bg-secondary/10 flex items-center justify-center mb-3">
                 <MapPin className="h-6 w-6 text-secondary" />
               </div>
               <h3 className="font-semibold text-foreground text-sm">GPS-Equipped Fleet</h3>
               <p className="text-xs text-muted-foreground mt-1">Peace of mind tracking</p>
             </div>
-            <div className="flex flex-col items-center">
+            <div ref={reveal} className="reveal-up flex flex-col items-center" style={{ '--reveal-delay': '0.2s' } as React.CSSProperties}>
               <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mb-3">
                 <Shield className="h-6 w-6 text-primary" />
               </div>
               <h3 className="font-semibold text-foreground text-sm">Well-Maintained</h3>
               <p className="text-xs text-muted-foreground mt-1">Inspected before every lease</p>
             </div>
-            <div className="flex flex-col items-center">
+            <div ref={reveal} className="reveal-up flex flex-col items-center" style={{ '--reveal-delay': '0.3s' } as React.CSSProperties}>
               <div className="h-12 w-12 rounded-full bg-secondary/10 flex items-center justify-center mb-3">
                 <TrendingUp className="h-6 w-6 text-secondary" />
               </div>
