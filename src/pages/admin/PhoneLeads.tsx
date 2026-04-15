@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { SidebarProvider } from "@/components/ui/sidebar";
@@ -25,6 +25,20 @@ export default function PhoneLeads() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [selectedLead, setSelectedLead] = useState<any>(null);
+
+  useEffect(() => {
+    const channel = supabase
+      .channel("phone-leads-realtime")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "phone_leads" },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ["phone-leads"] });
+        }
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [queryClient]);
 
   const { data: leads = [], isLoading } = useQuery({
     queryKey: ["phone-leads"],
