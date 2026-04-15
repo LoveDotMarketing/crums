@@ -80,6 +80,13 @@ const CrumsStory = () => {
       <section className="py-12 md:py-20">
         <div className="container mx-auto px-4">
           <div className="max-w-3xl mx-auto">
+            <div className="bg-muted/50 rounded-xl p-6 md:p-8 border border-border mb-12">
+              <h2 className="text-2xl font-bold mb-4 text-foreground">Story Summary</h2>
+              <p className="text-muted-foreground leading-relaxed">
+                "The CRUMS Story" is a personal narrative from the founder, Eric, reflecting on growing up watching his mother navigate hardship with grace — keeping the lights on, putting family first, and never losing her kindness. Those lessons in patience, perseverance, and heart became the foundation for CRUMS Leasing. The song follows the journey from that first trailer and the weight of every contract signed, to building something real while carrying the responsibility of everyone counting on him. At its core, it's a promise to rise without losing what matters — staying humble, leading with love, and breaking cycles rather than just chasing success.
+              </p>
+            </div>
+
             <h2 className="text-3xl font-bold text-center mb-12 text-foreground">
               Lyrics
             </h2>
