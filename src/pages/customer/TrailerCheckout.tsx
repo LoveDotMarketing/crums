@@ -58,6 +58,8 @@ export default function TrailerCheckout() {
   const [conditionAccepted, setConditionAccepted] = useState(false);
   const [responsibilityUnderstood, setResponsibilityUnderstood] = useState(false);
   const [certificationAccepted, setCertificationAccepted] = useState(false);
+  const [processingTimelineAccepted, setProcessingTimelineAccepted] = useState(false);
+  const [refundPolicyAccepted, setRefundPolicyAccepted] = useState(false);
   
   // Customer info
   const [companyName, setCompanyName] = useState("");
@@ -100,7 +102,7 @@ export default function TrailerCheckout() {
     }
   };
 
-  const allAcknowledged = reviewConfirmed && conditionAccepted && responsibilityUnderstood && certificationAccepted;
+  const allAcknowledged = reviewConfirmed && conditionAccepted && responsibilityUnderstood && certificationAccepted && processingTimelineAccepted && refundPolicyAccepted;
   const canSubmit = allAcknowledged && companyName.trim() && signerName.trim() && signature;
 
   const handleSubmit = async () => {
@@ -414,6 +416,40 @@ export default function TrailerCheckout() {
                 </Label>
                 <p className="text-sm text-muted-foreground mt-1">
                   By signing below, I certify that I am authorized to take possession of this trailer, have reviewed its condition, and will adhere to all safety and operational guidelines.
+                </p>
+              </div>
+            </div>
+
+            <Separator />
+
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800">
+              <Checkbox 
+                id="processingTimeline" 
+                checked={processingTimelineAccepted}
+                onCheckedChange={(checked) => setProcessingTimelineAccepted(checked === true)}
+              />
+              <div>
+                <Label htmlFor="processingTimeline" className="font-medium cursor-pointer">
+                  Payment Processing Timeline
+                </Label>
+                <p className="text-sm text-muted-foreground mt-1">
+                  I understand that ACH bank payments require 7–10 business days to fully process and settle. Credit card payments may take up to 5–10 business days for refund processing. During this period, funds are held by the payment processor and cannot be reversed or refunded immediately.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800">
+              <Checkbox 
+                id="refundPolicy" 
+                checked={refundPolicyAccepted}
+                onCheckedChange={(checked) => setRefundPolicyAccepted(checked === true)}
+              />
+              <div>
+                <Label htmlFor="refundPolicy" className="font-medium cursor-pointer">
+                  Refund & Cancellation Policy
+                </Label>
+                <p className="text-sm text-muted-foreground mt-1">
+                  I acknowledge that all payments made to Crum's Leasing LLC are subject to standard banking processing timelines. If I cancel my lease or request a refund, processing will begin only after the original transaction has fully settled. If a manual refund is issued and the original payment subsequently fails or is reversed, I agree to promptly return the refunded amount within 5 business days. Failure to return funds will result in a daily interest charge of 1.5% on the outstanding balance until fully repaid, and Crum's Leasing LLC reserves the right to pursue all available legal remedies.
                 </p>
               </div>
             </div>
