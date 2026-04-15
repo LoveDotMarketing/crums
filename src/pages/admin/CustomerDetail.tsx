@@ -70,6 +70,7 @@ export default function CustomerDetail() {
   const [statementsOpen, setStatementsOpen] = useState(false);
   const [downloadingDocId, setDownloadingDocId] = useState<string | null>(null);
   const [downloadingStatId, setDownloadingStatId] = useState<string | null>(null);
+  const [resettingPayment, setResettingPayment] = useState(false);
 
   // ── Core customer record ──────────────────────────────────────────────────
   const { data: customer, isLoading: customerLoading } = useQuery({
@@ -260,6 +261,29 @@ export default function CustomerDetail() {
       toast({ title: "Error generating download link", description: err.message, variant: "destructive" });
     } finally {
       setDownloadingStatId(null);
+    }
+  };
+
+  const handleResetPaymentSetup = async () => {
+    if (!application?.id) return;
+    setResettingPayment(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await supabase.functions.invoke("reset-payment-setup", {
+        body: { applicationId: application.id },
+      });
+      if (res.error) throw new Error(res.error.message);
+      const result = res.data;
+      if (result?.error) throw new Error(result.error);
+      toast({
+        title: "Payment setup reset",
+        description: `Detached ${result.detachedCount || 0} payment method(s). Customer can now re-link.`,
+      });
+      queryClient.invalidateQueries({ queryKey: ["admin-customer-application"] });
+    } catch (err: any) {
+      toast({ title: "Reset failed", description: err.message, variant: "destructive" });
+    } finally {
+      setResettingPayment(false);
     }
   };
 
@@ -463,7 +487,41 @@ export default function CustomerDetail() {
                           customerEmail={customer.email || undefined}
                           customerName={customer.full_name}
                         />
+                        {application && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-7 text-xs"
+                            disabled={resettingPayment}
+                            onClick={handleResetPaymentSetup}
+                          >
+                            {resettingPayment ? (
+                              <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                            ) : (
+                              <CreditCard className="h-3 w-3 mr-1" />
+                            )}
+                            Reset Payment
+                          </Button>
+                        )}
                       </div>
+                      {application?.payment_setup_status && (
+                        <div className="flex items-center gap-2">
+                          <span className="text-muted-foreground w-28">Setup Status</span>
+                          <Badge
+                            variant={application.payment_setup_status === 'completed' ? 'default' : 'secondary'}
+                            className="text-xs capitalize"
+                          >
+                            {application.payment_setup_status === 'completed' ? (
+                              <CheckCircle2 className="h-3 w-3 mr-1" />
+                            ) : application.payment_setup_status === 'pending' ? (
+                              <Clock className="h-3 w-3 mr-1" />
+                            ) : (
+                              <AlertCircle className="h-3 w-3 mr-1" />
+                            )}
+                            {application.payment_setup_status}
+                          </Badge>
+                        </div>
+                      )}
                       {customer.notes && (
                         <div className="pt-2 border-t border-border">
                           <p className="text-xs text-muted-foreground mb-1">Notes</p>
