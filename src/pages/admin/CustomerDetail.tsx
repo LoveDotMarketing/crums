@@ -264,6 +264,29 @@ export default function CustomerDetail() {
     }
   };
 
+  const handleResetPaymentSetup = async () => {
+    if (!application?.id) return;
+    setResettingPayment(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await supabase.functions.invoke("reset-payment-setup", {
+        body: { applicationId: application.id },
+      });
+      if (res.error) throw new Error(res.error.message);
+      const result = res.data;
+      if (result?.error) throw new Error(result.error);
+      toast({
+        title: "Payment setup reset",
+        description: `Detached ${result.detachedCount || 0} payment method(s). Customer can now re-link.`,
+      });
+      queryClient.invalidateQueries({ queryKey: ["admin-customer-application"] });
+    } catch (err: any) {
+      toast({ title: "Reset failed", description: err.message, variant: "destructive" });
+    } finally {
+      setResettingPayment(false);
+    }
+  };
+
   const handleViewAsCustomer = async () => {
     if (!customer?.email || !profile) {
       toast({ title: "No account linked to this customer.", variant: "destructive" });
