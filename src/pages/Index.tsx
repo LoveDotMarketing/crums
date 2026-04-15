@@ -194,7 +194,7 @@ const Index = () => {
       <Link to="/crums-trucking-games" className="block bg-secondary py-3 hover:brightness-110 transition-all overflow-hidden">
         <div className="animate-slide-in-brake container mx-auto px-4">
           <div className="flex items-center justify-center gap-3 text-secondary-foreground text-sm md:text-base">
-            <img src="/images/trailer-yard-game-blue-truck.webp" alt="Yard Run Game" className="h-8 w-8 flex-shrink-0 object-contain" />
+            <img src="/images/trailer-yard-game-blue-truck.webp" alt="Yard Run Game" className="h-full max-h-full w-auto flex-shrink-0 object-contain" />
             <p>
               Thanks for visiting us at MATS! Play the game from our booth — <span className="font-semibold underline">CRUMS Trailer Yard Run</span>!
             </p>
