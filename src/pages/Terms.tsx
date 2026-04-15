@@ -129,7 +129,7 @@ const Terms = () => {
             </section>
 
             <section className="space-y-4">
-              <h2 className="text-2xl font-semibold text-foreground">8. Contact Information</h2>
+              <h2 className="text-2xl font-semibold text-foreground">9. Contact Information</h2>
               <p>
                 For questions about these Terms of Service, please contact us at:
               </p>
