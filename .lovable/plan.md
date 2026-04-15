@@ -1,38 +1,36 @@
 
 
-## Plan: Add Missing Sales RLS Policies
+## Plan: Replace Yard Run Game File (v4 with GA4 Analytics)
 
-The salesman has toggle access to 11 sections (dashboard, applications, fleet, archived_trailers, dot_inspections, work_orders, tolls, customers, employee, referrals, payments). The core dashboard tables already have sales SELECT policies, but **12 additional tables** queried by those pages are missing sales read access — meaning those pages will show empty data.
+### What's happening
+Replace `public/games/yard-run.html` with the uploaded v4 file that includes built-in GA4 analytics tracking.
 
-### Database Migration
+### GA4 Review — Confirmed Correct
+- **Measurement ID**: `G-FHB5E7Q0PK` ✓ (matches site-wide GA4)
+- **gtag config**: Standard async loader in `<head>` ✓
+- **GA helper object**: Clean wrapper with try/catch error handling ✓
+- **Device detection**: mobile vs desktop auto-tagged on all events ✓
+- **game_name param**: `'yard-run'` consistently attached ✓
 
-Add SELECT policies for the `sales` role on:
+### Events tracked
+| Event | Data |
+|---|---|
+| `game_start` | device type |
+| `level_start` | level number, level name |
+| `game_level_complete` | level, time, stars, resets |
+| `game_all_levels_complete` | total time, session duration |
+| `game_session_duration` | seconds on page |
+| `game_retry` | level number |
+| `trailer_hooked` | level, time to hook |
+| `collision` | level, obstacle type |
+| `destructible_hit` | level, object type |
+| `level_abandon` | level, time spent |
+| `horn_used` | level |
+| `night_level_played` | level |
+| `control_type` | input method |
 
-| Table | Why Needed |
-|-------|-----------|
-| `customer_subscriptions` | Employee Dashboard, Referrals, Payments |
-| `subscription_items` | Billing/Payments trailer line items |
-| `dot_inspections` | DOT Inspections page |
-| `dot_inspection_photos` | DOT Inspections photo viewer |
-| `work_orders` | Work Orders page |
-| `work_order_line_items` | Work Orders line items |
-| `referral_codes` | Referrals page |
-| `referrals` | Referrals page |
-| `partners` | Referrals page |
-| `partner_commissions` | Referrals page |
-| `staff_profiles` | Employee Dashboard (already has "own profile" policy, but sales user needs it) |
-| `performance_reviews` | Employee Dashboard (own reviews) |
+### Change
+1. Copy `user-uploads://crums-trucking-trailer-yard-run-game-4.html` → `public/games/yard-run.html` (overwrites existing)
 
-Each policy follows the same pattern:
-```sql
-CREATE POLICY "Sales can view [table]"
-  ON public.[table] FOR SELECT
-  TO authenticated
-  USING (has_role(auth.uid(), 'sales'::app_role));
-```
-
-For `staff_profiles` and `performance_reviews`, the existing "Staff can view own profile" policy should already work since the sales user is staff. I'll verify and only add if missing.
-
-### No Code Changes
-The React components and staff_permissions toggles already handle visibility correctly — this is purely a database access fix.
+No other file changes needed — the TruckingGames.tsx page already links to `/games/yard-run.html`.
 
