@@ -1,5 +1,6 @@
 import { lazy, Suspense } from "react";
 import { Link } from "react-router-dom";
+import { useScrollReveal } from "@/hooks/useScrollReveal";
 import { trackCtaClick, trackPhoneClick, trackEvent, fireMetaCapi } from "@/lib/analytics";
 import { newsArticles } from "@/lib/news";
 import { useEffect } from "react";
@@ -53,6 +54,7 @@ const ChatBot = lazy(() => import("@/components/ChatBot").then(m => ({ default: 
 const Index = () => {
   useTimeOnPageTracking('home');
   useEffect(() => { fireMetaCapi({ eventName: 'ViewContent' }); }, []);
+  const reveal = useScrollReveal();
   const breadcrumbSchema = generateBreadcrumbSchema([
     { name: "Home", url: "https://crumsleasing.com/" }
   ]);
@@ -133,18 +135,18 @@ const Index = () => {
         <div className="absolute inset-0 bg-gradient-to-r from-primary/95 to-primary/70"></div>
 
         <div className="relative z-10 container mx-auto px-4 text-center text-primary-foreground">
-          <Badge className="bg-secondary/90 text-secondary-foreground mb-4 text-sm px-4 py-1">
+          <Badge className="hero-entrance bg-secondary/90 text-secondary-foreground mb-4 text-sm px-4 py-1" style={{ animationDelay: '0.2s' }}>
             Need a trailer fast? We deliver nationwide.
           </Badge>
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
+          <h1 className="hero-entrance text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight" style={{ animationDelay: '0.4s' }}>
             Dry Van & Flatbed Trailer Leasing
             <br />
             <span className="text-secondary">Empowering Every Carrier to Succeed</span>
           </h1>
-          <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto text-primary-foreground">
+          <p className="hero-entrance text-xl md:text-2xl mb-8 max-w-3xl mx-auto text-primary-foreground" style={{ animationDelay: '0.6s' }}>
             Quality dry van and flatbed trailers guided by family values, integrity, and commitment to your success — creating lasting partnerships that move people forward.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <div className="hero-entrance flex flex-col sm:flex-row gap-4 justify-center" style={{ animationDelay: '0.8s' }}>
             <Link to="/contact">
               <Button 
                 size="lg" 
@@ -204,28 +206,28 @@ const Index = () => {
       <section className="py-10 bg-background border-b">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
-            <div className="flex flex-col items-center">
+            <div ref={reveal} className="reveal-up flex flex-col items-center" style={{ '--reveal-delay': '0s' } as React.CSSProperties}>
               <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mb-3">
                 <FileText className="h-6 w-6 text-primary" />
               </div>
               <h3 className="font-semibold text-foreground text-sm">No Hidden Fees</h3>
               <p className="text-xs text-muted-foreground mt-1">Simple, transparent contracts</p>
             </div>
-            <div className="flex flex-col items-center">
+            <div ref={reveal} className="reveal-up flex flex-col items-center" style={{ '--reveal-delay': '0.1s' } as React.CSSProperties}>
               <div className="h-12 w-12 rounded-full bg-secondary/10 flex items-center justify-center mb-3">
                 <MapPin className="h-6 w-6 text-secondary" />
               </div>
               <h3 className="font-semibold text-foreground text-sm">GPS-Equipped Fleet</h3>
               <p className="text-xs text-muted-foreground mt-1">Peace of mind tracking</p>
             </div>
-            <div className="flex flex-col items-center">
+            <div ref={reveal} className="reveal-up flex flex-col items-center" style={{ '--reveal-delay': '0.2s' } as React.CSSProperties}>
               <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mb-3">
                 <Shield className="h-6 w-6 text-primary" />
               </div>
               <h3 className="font-semibold text-foreground text-sm">Well-Maintained</h3>
               <p className="text-xs text-muted-foreground mt-1">Inspected before every lease</p>
             </div>
-            <div className="flex flex-col items-center">
+            <div ref={reveal} className="reveal-up flex flex-col items-center" style={{ '--reveal-delay': '0.3s' } as React.CSSProperties}>
               <div className="h-12 w-12 rounded-full bg-secondary/10 flex items-center justify-center mb-3">
                 <TrendingUp className="h-6 w-6 text-secondary" />
               </div>
@@ -250,8 +252,8 @@ const Index = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
             {/* Existing 2020 Great Dane 56171 */}
-            <Link to="/commercial-dry-van-trailer-for-lease-56171" className="block group">
-              <Card className="border-2 hover:border-primary hover:shadow-xl transition-all duration-300 overflow-hidden h-full">
+            <Link to="/commercial-dry-van-trailer-for-lease-56171" className="block group" ref={reveal}>
+              <Card className="reveal-scale border-2 hover:border-primary hover:shadow-xl transition-all duration-300 overflow-hidden h-full" style={{ '--reveal-delay': '0s' } as React.CSSProperties}>
                 <div className="relative aspect-video">
                   <img
                     src={trailer56171Img}
@@ -304,8 +306,8 @@ const Index = () => {
             </Link>
 
             {/* New 2027 Great Dane Fleet */}
-            <Link to="/2027-great-dane-dry-van-trailer-for-lease" className="block group">
-              <Card className="border-2 hover:border-secondary hover:shadow-xl transition-all duration-300 overflow-hidden h-full">
+            <Link to="/2027-great-dane-dry-van-trailer-for-lease" className="block group" ref={reveal}>
+              <Card className="reveal-scale border-2 hover:border-secondary hover:shadow-xl transition-all duration-300 overflow-hidden h-full" style={{ '--reveal-delay': '0.15s' } as React.CSSProperties}>
                 <div className="relative aspect-video">
                   <img
                     src={dryVanTrailerImg}
@@ -366,8 +368,8 @@ const Index = () => {
             </Link>
 
             {/* New 2027 Great Dane Flatbed */}
-            <Link to="/2027-great-dane-flatbed-trailer-for-lease" className="block group">
-              <Card className="border-2 hover:border-primary hover:shadow-xl transition-all duration-300 overflow-hidden h-full">
+            <Link to="/2027-great-dane-flatbed-trailer-for-lease" className="block group" ref={reveal}>
+              <Card className="reveal-scale border-2 hover:border-primary hover:shadow-xl transition-all duration-300 overflow-hidden h-full" style={{ '--reveal-delay': '0.3s' } as React.CSSProperties}>
                 <div className="relative aspect-video">
                   <img
                     src="/images/trailers/2027-great-dane-flatbed-01.jpg"
@@ -426,8 +428,8 @@ const Index = () => {
       </section>
 
       {/* Featured Video Section */}
-      <section className="py-12 bg-muted">
-        <div className="container mx-auto px-4">
+      <section className="py-12 bg-muted" ref={reveal}>
+        <div className="container mx-auto px-4 reveal-up">
           <Link 
             to="/crums-story" 
             className="block max-w-3xl mx-auto group"
@@ -599,8 +601,8 @@ const Index = () => {
       </section>
 
       {/* Thank a Veteran Featured Section */}
-      <section className="py-12 bg-brand-navy">
-        <div className="container mx-auto px-4">
+      <section className="py-12 bg-brand-navy" ref={reveal}>
+        <div className="container mx-auto px-4 reveal-left">
           <Link 
             to="/veterans-military-discount"
             className="flex flex-col md:flex-row items-center justify-center gap-6 md:gap-10 group"
@@ -644,7 +646,7 @@ const Index = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
             {customerReviews.map((review, index) => (
-              <Card key={index} className="border hover:shadow-lg transition-shadow bg-card">
+              <Card ref={reveal} key={index} className="reveal-up border hover:shadow-lg transition-shadow bg-card" style={{ '--reveal-delay': `${index * 0.1}s` } as React.CSSProperties}>
                 <CardContent className="p-6">
                   <div className="flex items-center gap-3 mb-4">
                     <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center">
@@ -949,7 +951,7 @@ const Index = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {/* Family First */}
-            <Card className="border-2 hover:shadow-lg transition-shadow bg-gradient-to-br from-secondary/10 to-background">
+            <Card ref={reveal} className="reveal-up border-2 hover:shadow-lg transition-shadow bg-gradient-to-br from-secondary/10 to-background" style={{ '--reveal-delay': '0s' } as React.CSSProperties}>
               <CardContent className="p-8">
                 <div className="h-14 w-14 rounded-full bg-secondary/20 flex items-center justify-center mb-6">
                   <Heart className="h-7 w-7 text-secondary" />
@@ -964,7 +966,7 @@ const Index = () => {
             </Card>
 
             {/* Hard Work & Dedication */}
-            <Card className="border-2 hover:shadow-lg transition-shadow bg-gradient-to-br from-primary/10 to-background">
+            <Card ref={reveal} className="reveal-up border-2 hover:shadow-lg transition-shadow bg-gradient-to-br from-primary/10 to-background" style={{ '--reveal-delay': '0.1s' } as React.CSSProperties}>
               <CardContent className="p-8">
                 <div className="h-14 w-14 rounded-full bg-primary/20 flex items-center justify-center mb-6">
                   <Award className="h-7 w-7 text-primary" />
@@ -980,7 +982,7 @@ const Index = () => {
             </Card>
 
             {/* Quality You Can Count On */}
-            <Card className="border-2 hover:shadow-lg transition-shadow bg-gradient-to-br from-accent/10 to-background">
+            <Card ref={reveal} className="reveal-up border-2 hover:shadow-lg transition-shadow bg-gradient-to-br from-accent/10 to-background" style={{ '--reveal-delay': '0.2s' } as React.CSSProperties}>
               <CardContent className="p-8">
                 <div className="h-14 w-14 rounded-full bg-accent/20 flex items-center justify-center mb-6">
                   <CheckCircle className="h-7 w-7 text-accent" />
@@ -996,7 +998,7 @@ const Index = () => {
             </Card>
 
             {/* Integrity in Every Mile */}
-            <Card className="border-2 hover:shadow-lg transition-shadow bg-gradient-to-br from-primary/10 to-background">
+            <Card ref={reveal} className="reveal-up border-2 hover:shadow-lg transition-shadow bg-gradient-to-br from-primary/10 to-background" style={{ '--reveal-delay': '0.3s' } as React.CSSProperties}>
               <CardContent className="p-8">
                 <div className="h-14 w-14 rounded-full bg-primary/20 flex items-center justify-center mb-6">
                   <Shield className="h-7 w-7 text-primary" />
@@ -1012,7 +1014,7 @@ const Index = () => {
             </Card>
 
             {/* Relationships Fuel Our Success */}
-            <Card className="border-2 hover:shadow-lg transition-shadow bg-gradient-to-br from-secondary/10 to-background">
+            <Card ref={reveal} className="reveal-up border-2 hover:shadow-lg transition-shadow bg-gradient-to-br from-secondary/10 to-background" style={{ '--reveal-delay': '0.4s' } as React.CSSProperties}>
               <CardContent className="p-8">
                 <div className="h-14 w-14 rounded-full bg-secondary/20 flex items-center justify-center mb-6">
                   <Users className="h-7 w-7 text-secondary" />
@@ -1028,7 +1030,7 @@ const Index = () => {
             </Card>
 
             {/* Keep Moving Forward */}
-            <Card className="border-2 hover:shadow-lg transition-shadow bg-gradient-to-br from-primary/10 to-background">
+            <Card ref={reveal} className="reveal-up border-2 hover:shadow-lg transition-shadow bg-gradient-to-br from-primary/10 to-background" style={{ '--reveal-delay': '0.5s' } as React.CSSProperties}>
               <CardContent className="p-8">
                 <div className="h-14 w-14 rounded-full bg-primary/20 flex items-center justify-center mb-6">
                   <TrendingUp className="h-7 w-7 text-primary" />
@@ -1127,7 +1129,7 @@ const Index = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-            <Card className="border-2 hover:shadow-lg transition-shadow">
+            <Card ref={reveal} className="reveal-scale border-2 hover:shadow-lg transition-shadow" style={{ '--reveal-delay': '0s' } as React.CSSProperties}>
               <CardContent className="p-6">
                 <Link to="/dry-van-trailers" className="block hover:opacity-80 transition-opacity">
                   <ProgressiveImage 
@@ -1159,7 +1161,7 @@ const Index = () => {
                 </Link>
               </CardContent>
             </Card>
-            <Card className="border-2 hover:shadow-lg transition-shadow">
+            <Card ref={reveal} className="reveal-scale border-2 hover:shadow-lg transition-shadow" style={{ '--reveal-delay': '0.15s' } as React.CSSProperties}>
               <CardContent className="p-6">
                 <Link to="/flatbed-trailers" className="block hover:opacity-80 transition-opacity">
                   <ProgressiveImage 
@@ -1287,7 +1289,7 @@ const Index = () => {
       <section className="py-20 bg-muted">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            <div>
+            <div ref={reveal} className="reveal-left">
               <ProgressiveImage
                 src={fleetImage}
                 alt="CRUMS Leasing dry van trailer"
@@ -1297,7 +1299,7 @@ const Index = () => {
                 placeholderColor="transparent"
               />
             </div>
-            <div>
+            <div ref={reveal} className="reveal-up">
               <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
                 Why Choose CRUMS Leasing?
               </h2>
@@ -1523,7 +1525,7 @@ const Index = () => {
       {/* CTA Section */}
       <section className="py-20 bg-gradient-to-r from-primary to-brand-teal-dark text-primary-foreground">
         <div className="container mx-auto px-4 text-center">
-          <h2 className="text-4xl md:text-5xl font-bold mb-6">
+          <h2 ref={reveal} className="reveal-up text-4xl md:text-5xl font-bold mb-6">
             Ready to Get Started?
           </h2>
           <p className="text-xl mb-8 max-w-2xl mx-auto text-primary-foreground">
