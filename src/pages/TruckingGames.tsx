@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Gamepad2, ExternalLink } from "lucide-react";
+import { trackEvent } from "@/lib/analytics";
 
 const games = [
   {
@@ -18,6 +19,10 @@ const games = [
 ];
 
 const TruckingGames = () => {
+  const handleGameLaunch = (game: typeof games[0]) => {
+    trackEvent('game_launch', { game_name: game.id });
+    window.open(game.url, '_blank', 'noopener,noreferrer');
+  };
   return (
     <div className="min-h-screen flex flex-col">
       <SEO
@@ -54,7 +59,7 @@ const TruckingGames = () => {
                 }`}
               >
                 <div className="relative">
-                  <a href={game.url} target="_blank" rel="noopener noreferrer">
+                  <a href={game.url} target="_blank" rel="noopener noreferrer" onClick={(e) => { e.preventDefault(); handleGameLaunch(game); }}>
                     <img
                       src="/images/crums-yard-run-game-cover.webp"
                       alt={game.title}
@@ -79,7 +84,7 @@ const TruckingGames = () => {
                 <CardFooter>
                   <Button
                     className="w-full gap-2"
-                    onClick={() => window.open(game.url, "_blank")}
+                    onClick={() => handleGameLaunch(game)}
                   >
                     Play Now <ExternalLink className="h-4 w-4" />
                   </Button>
