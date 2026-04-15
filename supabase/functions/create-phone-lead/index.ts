@@ -19,6 +19,10 @@ function validateWebhookAuth(req: Request): { valid: boolean; error?: string } {
   return { valid: false, error: "Invalid authorization token" };
 }
 
+function normalizePhone(phone: string): string {
+  return phone.replace(/\D/g, "");
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -54,6 +58,56 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
+    const normalized = normalizePhone(phone);
+
+    // Check for existing lead by normalized phone
+    const { data: existing } = await supabase
+      .from("phone_leads")
+      .select("*")
+      .or(`phone.eq.${phone},phone.eq.${normalized}`)
+      .order("created_at", { ascending: true })
+      .limit(1)
+      .maybeSingle();
+
+    if (existing) {
+      // Merge notes: append new notes to old
+      let mergedNotes = existing.notes || "";
+      if (notes) {
+        mergedNotes = mergedNotes
+          ? `${mergedNotes}\n---\n${notes}`
+          : notes;
+      }
+
+      const updates: Record<string, unknown> = {
+        notes: mergedNotes || null,
+        updated_at: new Date().toISOString(),
+      };
+      // Update name/email only if provided and different
+      if (name && name !== existing.name) updates.name = name;
+      if (email && email !== existing.email) updates.email = email;
+
+      const { data, error } = await supabase
+        .from("phone_leads")
+        .update(updates)
+        .eq("id", existing.id)
+        .select()
+        .single();
+
+      if (error) {
+        console.error("[create-phone-lead] Update error:", error);
+        return new Response(
+          JSON.stringify({ error: "Failed to update phone lead" }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      return new Response(JSON.stringify({ ...data, action: "updated" }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // No existing lead — insert new
     const { data, error } = await supabase
       .from("phone_leads")
       .insert({ name, phone, email: email || null, notes: notes || null })
@@ -68,7 +122,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    return new Response(JSON.stringify(data), {
+    return new Response(JSON.stringify({ ...data, action: "created" }), {
       status: 201,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
