@@ -999,6 +999,9 @@ const Index = () => {
 
             {/* Integrity in Every Mile */}
             <Card ref={reveal} className="reveal-up border-2 hover:shadow-lg transition-shadow bg-gradient-to-br from-primary/10 to-background" style={{ '--reveal-delay': '0.3s' } as React.CSSProperties}>
+              <CardContent className="p-8">
+                <div className="h-14 w-14 rounded-full bg-primary/20 flex items-center justify-center mb-6">
+                  <Shield className="h-7 w-7 text-primary" />
                 </div>
                 <h3 className="text-2xl font-bold mb-4 text-foreground">
                   Integrity in Every Mile
@@ -1012,6 +1015,9 @@ const Index = () => {
 
             {/* Relationships Fuel Our Success */}
             <Card ref={reveal} className="reveal-up border-2 hover:shadow-lg transition-shadow bg-gradient-to-br from-secondary/10 to-background" style={{ '--reveal-delay': '0.4s' } as React.CSSProperties}>
+              <CardContent className="p-8">
+                <div className="h-14 w-14 rounded-full bg-secondary/20 flex items-center justify-center mb-6">
+                  <Users className="h-7 w-7 text-secondary" />
                 </div>
                 <h3 className="text-2xl font-bold mb-4 text-foreground">
                   Relationships Fuel Our Success
@@ -1025,6 +1031,9 @@ const Index = () => {
 
             {/* Keep Moving Forward */}
             <Card ref={reveal} className="reveal-up border-2 hover:shadow-lg transition-shadow bg-gradient-to-br from-primary/10 to-background" style={{ '--reveal-delay': '0.5s' } as React.CSSProperties}>
+              <CardContent className="p-8">
+                <div className="h-14 w-14 rounded-full bg-primary/20 flex items-center justify-center mb-6">
+                  <TrendingUp className="h-7 w-7 text-primary" />
                 </div>
                 <h3 className="text-2xl font-bold mb-4 text-foreground">
                   Keep Moving Forward
