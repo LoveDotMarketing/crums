@@ -252,8 +252,8 @@ const Index = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
             {/* Existing 2020 Great Dane 56171 */}
-            <Link to="/commercial-dry-van-trailer-for-lease-56171" className="block group">
-              <Card className="border-2 hover:border-primary hover:shadow-xl transition-all duration-300 overflow-hidden h-full">
+            <Link to="/commercial-dry-van-trailer-for-lease-56171" className="block group" ref={reveal}>
+              <Card className="reveal-scale border-2 hover:border-primary hover:shadow-xl transition-all duration-300 overflow-hidden h-full" style={{ '--reveal-delay': '0s' } as React.CSSProperties}>
                 <div className="relative aspect-video">
                   <img
                     src={trailer56171Img}
@@ -306,8 +306,8 @@ const Index = () => {
             </Link>
 
             {/* New 2027 Great Dane Fleet */}
-            <Link to="/2027-great-dane-dry-van-trailer-for-lease" className="block group">
-              <Card className="border-2 hover:border-secondary hover:shadow-xl transition-all duration-300 overflow-hidden h-full">
+            <Link to="/2027-great-dane-dry-van-trailer-for-lease" className="block group" ref={reveal}>
+              <Card className="reveal-scale border-2 hover:border-secondary hover:shadow-xl transition-all duration-300 overflow-hidden h-full" style={{ '--reveal-delay': '0.15s' } as React.CSSProperties}>
                 <div className="relative aspect-video">
                   <img
                     src={dryVanTrailerImg}
@@ -368,8 +368,8 @@ const Index = () => {
             </Link>
 
             {/* New 2027 Great Dane Flatbed */}
-            <Link to="/2027-great-dane-flatbed-trailer-for-lease" className="block group">
-              <Card className="border-2 hover:border-primary hover:shadow-xl transition-all duration-300 overflow-hidden h-full">
+            <Link to="/2027-great-dane-flatbed-trailer-for-lease" className="block group" ref={reveal}>
+              <Card className="reveal-scale border-2 hover:border-primary hover:shadow-xl transition-all duration-300 overflow-hidden h-full" style={{ '--reveal-delay': '0.3s' } as React.CSSProperties}>
                 <div className="relative aspect-video">
                   <img
                     src="/images/trailers/2027-great-dane-flatbed-01.jpg"
@@ -428,8 +428,8 @@ const Index = () => {
       </section>
 
       {/* Featured Video Section */}
-      <section className="py-12 bg-muted">
-        <div className="container mx-auto px-4">
+      <section className="py-12 bg-muted" ref={reveal}>
+        <div className="container mx-auto px-4 reveal-up">
           <Link 
             to="/crums-story" 
             className="block max-w-3xl mx-auto group"
@@ -601,8 +601,8 @@ const Index = () => {
       </section>
 
       {/* Thank a Veteran Featured Section */}
-      <section className="py-12 bg-brand-navy">
-        <div className="container mx-auto px-4">
+      <section className="py-12 bg-brand-navy" ref={reveal}>
+        <div className="container mx-auto px-4 reveal-left">
           <Link 
             to="/veterans-military-discount"
             className="flex flex-col md:flex-row items-center justify-center gap-6 md:gap-10 group"
@@ -646,7 +646,7 @@ const Index = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
             {customerReviews.map((review, index) => (
-              <Card key={index} className="border hover:shadow-lg transition-shadow bg-card">
+              <Card ref={reveal} key={index} className="reveal-up border hover:shadow-lg transition-shadow bg-card" style={{ '--reveal-delay': `${index * 0.1}s` } as React.CSSProperties}>
                 <CardContent className="p-6">
                   <div className="flex items-center gap-3 mb-4">
                     <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center">
@@ -951,7 +951,7 @@ const Index = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {/* Family First */}
-            <Card className="border-2 hover:shadow-lg transition-shadow bg-gradient-to-br from-secondary/10 to-background">
+            <Card ref={reveal} className="reveal-up border-2 hover:shadow-lg transition-shadow bg-gradient-to-br from-secondary/10 to-background" style={{ '--reveal-delay': '0s' } as React.CSSProperties}>
               <CardContent className="p-8">
                 <div className="h-14 w-14 rounded-full bg-secondary/20 flex items-center justify-center mb-6">
                   <Heart className="h-7 w-7 text-secondary" />
@@ -966,7 +966,7 @@ const Index = () => {
             </Card>
 
             {/* Hard Work & Dedication */}
-            <Card className="border-2 hover:shadow-lg transition-shadow bg-gradient-to-br from-primary/10 to-background">
+            <Card ref={reveal} className="reveal-up border-2 hover:shadow-lg transition-shadow bg-gradient-to-br from-primary/10 to-background" style={{ '--reveal-delay': '0.1s' } as React.CSSProperties}>
               <CardContent className="p-8">
                 <div className="h-14 w-14 rounded-full bg-primary/20 flex items-center justify-center mb-6">
                   <Award className="h-7 w-7 text-primary" />
@@ -982,7 +982,7 @@ const Index = () => {
             </Card>
 
             {/* Quality You Can Count On */}
-            <Card className="border-2 hover:shadow-lg transition-shadow bg-gradient-to-br from-accent/10 to-background">
+            <Card ref={reveal} className="reveal-up border-2 hover:shadow-lg transition-shadow bg-gradient-to-br from-accent/10 to-background" style={{ '--reveal-delay': '0.2s' } as React.CSSProperties}>
               <CardContent className="p-8">
                 <div className="h-14 w-14 rounded-full bg-accent/20 flex items-center justify-center mb-6">
                   <CheckCircle className="h-7 w-7 text-accent" />
@@ -998,10 +998,7 @@ const Index = () => {
             </Card>
 
             {/* Integrity in Every Mile */}
-            <Card className="border-2 hover:shadow-lg transition-shadow bg-gradient-to-br from-primary/10 to-background">
-              <CardContent className="p-8">
-                <div className="h-14 w-14 rounded-full bg-primary/20 flex items-center justify-center mb-6">
-                  <Shield className="h-7 w-7 text-primary" />
+            <Card ref={reveal} className="reveal-up border-2 hover:shadow-lg transition-shadow bg-gradient-to-br from-primary/10 to-background" style={{ '--reveal-delay': '0.3s' } as React.CSSProperties}>
                 </div>
                 <h3 className="text-2xl font-bold mb-4 text-foreground">
                   Integrity in Every Mile
@@ -1014,10 +1011,7 @@ const Index = () => {
             </Card>
 
             {/* Relationships Fuel Our Success */}
-            <Card className="border-2 hover:shadow-lg transition-shadow bg-gradient-to-br from-secondary/10 to-background">
-              <CardContent className="p-8">
-                <div className="h-14 w-14 rounded-full bg-secondary/20 flex items-center justify-center mb-6">
-                  <Users className="h-7 w-7 text-secondary" />
+            <Card ref={reveal} className="reveal-up border-2 hover:shadow-lg transition-shadow bg-gradient-to-br from-secondary/10 to-background" style={{ '--reveal-delay': '0.4s' } as React.CSSProperties}>
                 </div>
                 <h3 className="text-2xl font-bold mb-4 text-foreground">
                   Relationships Fuel Our Success
@@ -1030,10 +1024,7 @@ const Index = () => {
             </Card>
 
             {/* Keep Moving Forward */}
-            <Card className="border-2 hover:shadow-lg transition-shadow bg-gradient-to-br from-primary/10 to-background">
-              <CardContent className="p-8">
-                <div className="h-14 w-14 rounded-full bg-primary/20 flex items-center justify-center mb-6">
-                  <TrendingUp className="h-7 w-7 text-primary" />
+            <Card ref={reveal} className="reveal-up border-2 hover:shadow-lg transition-shadow bg-gradient-to-br from-primary/10 to-background" style={{ '--reveal-delay': '0.5s' } as React.CSSProperties}>
                 </div>
                 <h3 className="text-2xl font-bold mb-4 text-foreground">
                   Keep Moving Forward
@@ -1129,9 +1120,7 @@ const Index = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-            <Card className="border-2 hover:shadow-lg transition-shadow">
-              <CardContent className="p-6">
-                <Link to="/dry-van-trailers" className="block hover:opacity-80 transition-opacity">
+            <Card ref={reveal} className="reveal-scale border-2 hover:shadow-lg transition-shadow" style={{ '--reveal-delay': '0s' } as React.CSSProperties}>
                   <ProgressiveImage 
                     src={dryVanTrailerImg} 
                     alt="CRUMS Leasing 53-foot dry van trailer - enclosed cargo protection for general freight" 
@@ -1289,9 +1278,7 @@ const Index = () => {
       <section className="py-20 bg-muted">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            <div>
-              <ProgressiveImage
-                src={fleetImage}
+            <div ref={reveal} className="reveal-left">
                 alt="CRUMS Leasing dry van trailer"
                 className="w-full h-auto"
                 width={1400}
@@ -1299,9 +1286,7 @@ const Index = () => {
                 placeholderColor="transparent"
               />
             </div>
-            <div>
-              <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
-                Why Choose CRUMS Leasing?
+            <div ref={reveal} className="reveal-up">
               </h2>
               <p className="text-xl text-muted-foreground mb-8">
                 We're more than an equipment provider — we're your partner in success.
@@ -1525,7 +1510,7 @@ const Index = () => {
       {/* CTA Section */}
       <section className="py-20 bg-gradient-to-r from-primary to-brand-teal-dark text-primary-foreground">
         <div className="container mx-auto px-4 text-center">
-          <h2 className="text-4xl md:text-5xl font-bold mb-6">
+          <h2 ref={reveal} className="reveal-up text-4xl md:text-5xl font-bold mb-6">
             Ready to Get Started?
           </h2>
           <p className="text-xl mb-8 max-w-2xl mx-auto text-primary-foreground">
