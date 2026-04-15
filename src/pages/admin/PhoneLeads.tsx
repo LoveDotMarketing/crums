@@ -26,6 +26,20 @@ export default function PhoneLeads() {
   const queryClient = useQueryClient();
   const [selectedLead, setSelectedLead] = useState<any>(null);
 
+  useEffect(() => {
+    const channel = supabase
+      .channel("phone-leads-realtime")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "phone_leads" },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ["phone-leads"] });
+        }
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [queryClient]);
+
   const { data: leads = [], isLoading } = useQuery({
     queryKey: ["phone-leads"],
     queryFn: async () => {
