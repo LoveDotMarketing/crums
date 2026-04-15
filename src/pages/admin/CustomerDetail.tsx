@@ -70,6 +70,7 @@ export default function CustomerDetail() {
   const [statementsOpen, setStatementsOpen] = useState(false);
   const [downloadingDocId, setDownloadingDocId] = useState<string | null>(null);
   const [downloadingStatId, setDownloadingStatId] = useState<string | null>(null);
+  const [resettingPayment, setResettingPayment] = useState(false);
 
   // ── Core customer record ──────────────────────────────────────────────────
   const { data: customer, isLoading: customerLoading } = useQuery({
