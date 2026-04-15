@@ -429,28 +429,22 @@ const Index = () => {
       <section className="py-12 bg-muted">
         <div className="container mx-auto px-4">
           <Link 
-            to="/why-choose-crums" 
+            to="/crums-story" 
             className="block max-w-3xl mx-auto group"
             onClick={() => {
-              trackCtaClick('Featured Video', 'video', '/why-choose-crums');
-              trackEvent('video_play', {
-                video_title: 'Why CDL Drivers Choose CRUMS Leasing for Reliable Trailer Rentals',
-                page_section: 'homepage_video',
-              });
+              trackCtaClick('The CRUMS Story', 'video', '/crums-story');
             }}
           >
             <h2 className="text-xl md:text-2xl font-bold text-foreground text-center mb-6 group-hover:text-primary transition-colors">
-              Why CDL Drivers Choose CRUMS Leasing for Reliable Trailer Rentals
+              The CRUMS Story
             </h2>
             <div className="relative rounded-lg overflow-hidden shadow-xl">
               <img
-                src={whyChooseCrumsThumbnail}
-                alt="Why CDL Drivers Choose CRUMS Leasing - trailer with basketballs video thumbnail"
+                src="/images/crums-story-thumbnail.png"
+                alt="The CRUMS Story - watch our origin story video"
                 className="w-full h-auto group-hover:scale-105 transition-transform duration-300"
                 loading="lazy"
                 decoding="async"
-                width={889}
-                height={500}
               />
               <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors flex items-center justify-center">
                 <div className="h-16 w-16 md:h-20 md:w-20 rounded-full bg-secondary/90 flex items-center justify-center group-hover:scale-110 transition-transform">
