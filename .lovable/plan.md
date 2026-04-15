@@ -1,15 +1,18 @@
 
 
-## Plan: Update Orange MATS Banner with Truck Image
+## Plan: Add `game_launch` tracking to TruckingGames hub
 
 ### Change
-Replace the `Newspaper` icon in the Event CTA Banner (lines 192-209 in `src/pages/Index.tsx`) with the uploaded truck image (`trailer-yard-game-blue-truck.webp`).
+Add a `trackEvent('game_launch', { game_name: game.id })` call to both click points in `src/pages/TruckingGames.tsx`:
+
+1. **Image link click** (line 57) — wrap in an `onClick` handler that fires the event before navigating
+2. **Play Now button** (line 82) — fire the event before `window.open`
 
 ### Steps
+1. Import `trackEvent` from `@/lib/analytics`
+2. Create a helper function `handleGameLaunch(game)` that calls `trackEvent('game_launch', { game_name: game.id })` then opens the URL
+3. Update the image `<a>` tag to use `onClick` with `e.preventDefault()` + the helper
+4. Update the Button `onClick` to use the same helper
 
-1. **Copy uploaded image** → `public/images/trailer-yard-game-blue-truck.webp`
-2. **Edit `src/pages/Index.tsx`** — In the Event CTA Banner section (~line 196):
-   - Remove `Newspaper` icon
-   - Replace with `<img src="/images/trailer-yard-game-blue-truck.webp" alt="Yard Run Game" className="h-8 w-8 flex-shrink-0 object-contain" />`
-   - Remove `Newspaper` from the lucide-react import if no longer used elsewhere
+Single file edit, no other changes needed.
 
