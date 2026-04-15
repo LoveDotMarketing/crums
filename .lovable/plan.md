@@ -1,18 +1,17 @@
 
 
-## Plan: Add `game_launch` tracking to TruckingGames hub
+## Plan: Add Story Summary Above Lyrics
 
 ### Change
-Add a `trackEvent('game_launch', { game_name: game.id })` call to both click points in `src/pages/TruckingGames.tsx`:
+Add a "Story Summary" section between the video/credits area and the lyrics section in `src/pages/CrumsStory.tsx`.
 
-1. **Image link click** (line 57) — wrap in an `onClick` handler that fires the event before navigating
-2. **Play Now button** (line 82) — fire the event before `window.open`
+### Content
+A brief, respectful TLDR that captures the song's narrative: growing up in hardship, a mother's resilience and lessons (patience, kindness, perseverance), the leap into building CRUMS Leasing, the weight of responsibility, and staying true to those values while rising.
 
-### Steps
-1. Import `trackEvent` from `@/lib/analytics`
-2. Create a helper function `handleGameLaunch(game)` that calls `trackEvent('game_launch', { game_name: game.id })` then opens the URL
-3. Update the image `<a>` tag to use `onClick` with `e.preventDefault()` + the helper
-4. Update the Button `onClick` to use the same helper
+### Implementation
+Edit `src/pages/CrumsStory.tsx` — insert a styled summary block (using the existing `bg-muted/50` card style) between the video section and the lyrics `<h2>`, containing:
+- Heading: "Story Summary"
+- 3-4 sentence paragraph summarizing the journey
 
-Single file edit, no other changes needed.
+Single file, ~10 lines added.
 
