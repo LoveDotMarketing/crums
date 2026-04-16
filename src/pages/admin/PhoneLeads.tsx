@@ -234,9 +234,11 @@ export default function PhoneLeads() {
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground mb-1">Notes</p>
-                    <p className="whitespace-pre-wrap text-sm bg-muted p-3 rounded-md min-h-[60px]">
-                      {selectedLead.notes || "No notes"}
-                    </p>
+                    <div className="max-h-[300px] overflow-y-auto bg-muted p-3 rounded-md min-h-[60px]">
+                      <p className="whitespace-pre-wrap text-sm break-words">
+                        {selectedLead.notes || "No notes"}
+                      </p>
+                    </div>
                   </div>
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
