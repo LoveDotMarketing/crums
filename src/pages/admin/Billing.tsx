@@ -1486,6 +1486,15 @@ export default function Billing() {
                     </div>
                   </CardHeader>
                   <CardContent>
+                    <div className="relative mb-4 max-w-sm">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        placeholder="Search by customer, company, or email..."
+                        value={subscriptionsSearch}
+                        onChange={(e) => setSubscriptionsSearch(e.target.value)}
+                        className="pl-9"
+                      />
+                    </div>
                     {loadingSubscriptions ? (
                       <div className="flex items-center justify-center py-8">
                         <RefreshCw className="h-6 w-6 animate-spin text-muted-foreground" />
@@ -1506,7 +1515,16 @@ export default function Billing() {
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {subscriptions.map((sub) => {
+                          {subscriptions.filter((sub) => {
+                            const q = subscriptionsSearch.trim().toLowerCase();
+                            if (!q) return true;
+                            const c = sub.customers;
+                            return (
+                              (c?.full_name || "").toLowerCase().includes(q) ||
+                              (c?.company_name || "").toLowerCase().includes(q) ||
+                              (c?.email || "").toLowerCase().includes(q)
+                            );
+                          }).map((sub) => {
                             const trailerCount = subscriptionItems?.filter(
                               i => i.subscription_id === sub.id && i.status === "active"
                             ).length || 0;
