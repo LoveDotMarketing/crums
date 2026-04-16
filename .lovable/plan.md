@@ -1,58 +1,39 @@
 
 
-## Plan: Realign GroundLink Subscriptions to 1st & 15th Billing
+User wants two changes:
 
-### Diagnosis
+1. **API: Overwrite notes instead of appending** — currently the `create-phone-lead` edge function merges notes (`mergedNotes = old + "\n---\n" + new`). User wants it to just overwrite with the latest note.
 
-GroundLink (Ground Link LLC) has **two active subscriptions** in your system, intentionally split for half-and-half billing:
+2. **UI: Long notes overflow the screen** — in `PhoneLeads.tsx`, the lead detail dialog renders notes in a `<p>` with `whitespace-pre-wrap` and `min-h-[60px]`, with no max height or scroll. Long notes blow out the dialog.
 
-| Sub | Trailers | Monthly Total | Intended Anchor Day | Actual Stripe Billing |
-|---|---|---|---|---|
-| `81046ac5...` (sub_1T6fyx) | 5 trailers (156004, 156175, 166370, 606948, 903637) | **$3,800** | **15th** | Currently Apr 11 → May 12 (charged Apr 14) |
-| `c232ab1a...` (sub_1T5ZS1) | 3 trailers (166367, 603989, 606951) | **$2,300** | **1st** | Currently Mar 28 → Apr 28 |
+## Plan
 
-The `billing_anchor_day` is correctly set in your DB (1 and 15), but Stripe's `billing_cycle_anchor` was set to whenever the subscription was originally created (Feb 27 and Mar 2), so Stripe keeps billing near those dates instead of the 1st and 15th. The Apr 14 charge of $3,800 in your screenshot confirms this — it should have been Apr 15.
+### 1. `supabase/functions/create-phone-lead/index.ts`
+Replace the merge logic with a simple overwrite: when updating an existing lead, set `notes` to the new `notes` value (or keep existing if no new notes provided — but if user sends notes, overwrite cleanly).
 
-### Fix
-
-Use Stripe's `billing_cycle_anchor` parameter with `proration_behavior: 'none'` to push each subscription's next billing date to the correct calendar day, with no proration charges.
-
-**Sub `sub_1T5ZS1...` ($2,300, anchor day 1):**
-- Set `billing_cycle_anchor` = May 1, 2026 (Unix: 1777939200)
-- Next charge: May 1, then 1st of every month going forward
-
-**Sub `sub_1T6fyx...` ($3,800, anchor day 15):**
-- Set `billing_cycle_anchor` = May 15, 2026 (Unix: 1779148800)
-- Next charge: May 15, then 15th of every month going forward
-- Note: the Apr 14 $3,800 charge already went through (still pending ACH), so the period from Apr 14 → May 15 is essentially "free extra month" — that's the cost of realigning without proration. Acceptable trade-off.
-
-### Implementation
-
-**Option A — One-off Stripe API calls now (recommended)**
-
-I'll execute two `stripe.subscriptions.update` calls directly in default mode:
-```
-stripe.subscriptions.update('sub_1T5ZS1...', {
-  billing_cycle_anchor: 1777939200,  // May 1, 2026
-  proration_behavior: 'none',
-});
-stripe.subscriptions.update('sub_1T6fyx...', {
-  billing_cycle_anchor: 1779148800,  // May 15, 2026
-  proration_behavior: 'none',
-});
+```ts
+const updates: Record<string, unknown> = {
+  updated_at: new Date().toISOString(),
+};
+if (notes !== undefined) updates.notes = notes || null;  // overwrite
+if (name && name !== existing.name) updates.name = name;
+if (email && email !== existing.email) updates.email = email;
 ```
 
-After running, I'll also update `customer_subscriptions.next_billing_date` in your DB to reflect the new anchors so the dashboard shows the correct upcoming dates.
+### 2. `src/pages/admin/PhoneLeads.tsx`
+In the lead detail Dialog, wrap the notes `<p>` in a scrollable container with a max height. Replace:
 
-**Option B — Use the existing admin "First Billing Date" picker**
+```tsx
+<p className="whitespace-pre-wrap text-sm bg-muted p-3 rounded-md min-h-[60px]">
+  {selectedLead.notes || "No notes"}
+</p>
+```
 
-If your `EditSubscriptionDatesDialog` already supports re-anchoring (per memory `subscription-anchor-manual-override`), I can walk you through doing it manually for each sub. But the API approach is faster and avoids any edge cases.
+with a `max-h-[300px] overflow-y-auto` container so long notes scroll inside the dialog instead of pushing it off-screen.
 
-### Files / changes
+Also truncate the table row's notes cell more strictly (already `max-w-[200px] truncate` — that's fine, no change needed there).
 
-1. Run two Stripe API updates (no code file changes — direct API calls).
-2. Update `customer_subscriptions.next_billing_date` for both rows to `2026-05-01` and `2026-05-15`.
-3. Add audit log entries to `app_event_logs` recording the manual realignment.
-
-No edge function or schema changes needed.
+### Files changed
+1. `supabase/functions/create-phone-lead/index.ts` — overwrite notes instead of merging
+2. `src/pages/admin/PhoneLeads.tsx` — make notes scrollable in detail dialog
 
