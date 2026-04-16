@@ -10,9 +10,9 @@ serve(async (req) => {
 
   const STRIPE_KEY = Deno.env.get("STRIPE_SECRET_KEY")!;
 
-  async function updateSub(subId: string, anchorUnix: number, label: string) {
+  async function updateSub(subId: string, trialEndUnix: number, label: string) {
     const body = new URLSearchParams({
-      billing_cycle_anchor: String(anchorUnix),
+      trial_end: String(trialEndUnix),
       proration_behavior: "none",
     });
     const res = await fetch(`https://api.stripe.com/v1/subscriptions/${subId}`, {
@@ -29,6 +29,7 @@ serve(async (req) => {
       subId,
       status: res.status,
       error: json.error ?? null,
+      trial_end: json.trial_end ? new Date(json.trial_end * 1000).toISOString() : null,
       billing_cycle_anchor: json.billing_cycle_anchor
         ? new Date(json.billing_cycle_anchor * 1000).toISOString()
         : null,
@@ -41,9 +42,10 @@ serve(async (req) => {
     };
   }
 
+  // Use trial_end to defer next billing — Stripe will anchor future cycles to this date
   const results = await Promise.all([
-    updateSub("sub_1T5ZS1LjIwiEGQIhaRTuOx5P", 1777939200, "Sub 1 - $2,300 - anchor day 1 (May 1)"),
-    updateSub("sub_1T6fyxLjIwiEGQIhmWSblWrY", 1779148800, "Sub 2 - $3,800 - anchor day 15 (May 15)"),
+    updateSub("sub_1T5ZS1LjIwiEGQIhaRTuOx5P", 1777939200, "Sub 1 - $2,300 - next bill May 1"),
+    updateSub("sub_1T6fyxLjIwiEGQIhmWSblWrY", 1779148800, "Sub 2 - $3,800 - next bill May 15"),
   ]);
 
   return new Response(JSON.stringify({ results }, null, 2), {
