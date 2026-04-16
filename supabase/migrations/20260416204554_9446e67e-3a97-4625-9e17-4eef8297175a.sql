@@ -1,0 +1,2 @@
+UPDATE customer_subscriptions SET next_billing_date = '2026-05-01' WHERE id = 'c232ab1a-9fdc-438f-ae70-93aba3000803';
+UPDATE customer_subscriptions SET next_billing_date = '2026-05-15' WHERE id = '81046ac5-fa9d-4378-b55d-0b567e795cdb';
