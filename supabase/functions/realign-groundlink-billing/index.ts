@@ -44,8 +44,8 @@ serve(async (req) => {
 
   // Use trial_end to defer next billing — Stripe will anchor future cycles to this date
   const results = await Promise.all([
-    updateSub("sub_1T5ZS1LjIwiEGQIhaRTuOx5P", 1777939200, "Sub 1 - $2,300 - next bill May 1"),
-    updateSub("sub_1T6fyxLjIwiEGQIhmWSblWrY", 1779148800, "Sub 2 - $3,800 - next bill May 15"),
+    updateSub("sub_1T5ZS1LjIwiEGQIhaRTuOx5P", 1777593600, "Sub 1 - $2,300 - next bill May 1"),
+    updateSub("sub_1T6fyxLjIwiEGQIhmWSblWrY", 1778803200, "Sub 2 - $3,800 - next bill May 15"),
   ]);
 
   return new Response(JSON.stringify({ results }, null, 2), {
