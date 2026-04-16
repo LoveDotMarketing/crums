@@ -70,19 +70,11 @@ Deno.serve(async (req) => {
       .maybeSingle();
 
     if (existing) {
-      // Merge notes: append new notes to old
-      let mergedNotes = existing.notes || "";
-      if (notes) {
-        mergedNotes = mergedNotes
-          ? `${mergedNotes}\n---\n${notes}`
-          : notes;
-      }
-
+      // Overwrite notes with the latest value (do not append)
       const updates: Record<string, unknown> = {
-        notes: mergedNotes || null,
         updated_at: new Date().toISOString(),
       };
-      // Update name/email only if provided and different
+      if (notes !== undefined) updates.notes = notes || null;
       if (name && name !== existing.name) updates.name = name;
       if (email && email !== existing.email) updates.email = email;
 
