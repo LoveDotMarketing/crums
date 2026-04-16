@@ -164,7 +164,3 @@ verify_jwt = false
 # Transcribe call recording - admin only (auth handled in code)
 [functions.transcribe-recording]
 verify_jwt = false
-
-# One-off realignment script - no auth (deploy, run once, delete)
-[functions.realign-groundlink-billing]
-verify_jwt = false
