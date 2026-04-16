@@ -301,6 +301,9 @@ export default function Billing() {
   const [isVoiding, setIsVoiding] = useState<string | null>(null);
   
   
+  // Subscriptions search
+  const [subscriptionsSearch, setSubscriptionsSearch] = useState("");
+
   // Payment failures filter/sort state
   const [failuresSearch, setFailuresSearch] = useState("");
   const [failuresStatusFilter, setFailuresStatusFilter] = useState<"all" | "unresolved" | "resolved">("all");
