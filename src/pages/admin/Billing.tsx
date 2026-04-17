@@ -2828,7 +2828,7 @@ export default function Billing() {
                     {confirmAction?.action === "pause" && (
                       <>
                         Are you sure you want to pause the subscription for <strong>{confirmAction.customerName}</strong>? 
-                        Billing will be suspended and trailers will be released back to inventory.
+                        Billing collection will be suspended in Stripe, but trailers will remain assigned to the customer so the subscription can be resumed cleanly.
                       </>
                     )}
                     {confirmAction?.action === "resume" && (
