@@ -54,7 +54,9 @@ serve(async (req) => {
     logStep("Admin verified", { adminId: userData.user.id });
 
     const body: ManageRequest = await req.json();
-    const { subscriptionId, action, releaseTrailers = true } = body;
+    const { subscriptionId, action } = body;
+    // Pause should NEVER release trailers — only cancel does. Resume is a no-op for trailers.
+    const releaseTrailers = action === "cancel" ? (body.releaseTrailers ?? true) : false;
     logStep("Request received", { subscriptionId, action, releaseTrailers });
 
     // Fetch the subscription
@@ -119,8 +121,8 @@ serve(async (req) => {
     if (updateError) throw new Error(`Failed to update subscription: ${updateError.message}`);
     logStep("Updated subscription status", { newStatus });
 
-    // Release trailers if cancelling or pausing with release flag
-    if ((action === "cancel" || (action === "pause" && releaseTrailers)) && subscription.subscription_items) {
+    // Release trailers ONLY on cancel. Pause keeps trailers assigned so resume works cleanly.
+    if (action === "cancel" && subscription.subscription_items) {
       const trailerIds = subscription.subscription_items.map((item: { trailer_id: string }) => item.trailer_id);
       
       if (trailerIds.length > 0) {
@@ -151,15 +153,16 @@ serve(async (req) => {
       }
     }
 
-    // If resuming, reactivate subscription items
+    // If resuming, safety net: reactivate any legacy items left in 'paused' state.
+    // Items shouldn't be paused under the new pause behavior, but this handles older subs.
     if (action === "resume") {
       await supabaseClient
         .from("subscription_items")
         .update({ status: "active", end_date: null })
         .eq("subscription_id", subscriptionId)
         .eq("status", "paused");
-      
-      logStep("Reactivated subscription items");
+
+      logStep("Resume complete (legacy paused items reactivated if any)");
     }
 
     return new Response(
@@ -168,7 +171,7 @@ serve(async (req) => {
         action,
         subscriptionId,
         newStatus,
-        trailersReleased: action === "cancel" || (action === "pause" && releaseTrailers)
+        trailersReleased: action === "cancel"
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
