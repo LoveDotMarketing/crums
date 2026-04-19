@@ -161,6 +161,8 @@ async function compressImage(file: File): Promise<File> {
 export default function TrailerDetail() {
   const { trailerId } = useParams<{ trailerId: string }>();
   const navigate = useNavigate();
+  const { effectiveRole } = useAuth();
+  const isAdmin = effectiveRole === "admin";
   const [trailer, setTrailer] = useState<Trailer | null>(null);
   const [maintenanceRecords, setMaintenanceRecords] = useState<MaintenanceRecord[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
