@@ -1334,10 +1334,10 @@ export default function TrailerDetail() {
               </CardHeader>
               <CardContent>
                 <div
-                  onDragOver={handleDragOver}
-                  onDragEnter={(e) => handleDragEnter(e, 'title')}
-                  onDragLeave={(e) => handleDragLeave(e, 'title')}
-                  onDrop={(e) => handleDrop(e, 'title')}
+                  onDragOver={isAdmin ? handleDragOver : undefined}
+                  onDragEnter={isAdmin ? (e) => handleDragEnter(e, 'title') : undefined}
+                  onDragLeave={isAdmin ? (e) => handleDragLeave(e, 'title') : undefined}
+                  onDrop={isAdmin ? (e) => handleDrop(e, 'title') : undefined}
                   className={`rounded-lg transition-colors ${isDraggingTitle ? 'border-2 border-dashed border-primary bg-primary/5 p-4' : ''}`}
                 >
                   {(trailer as any)?.title_document_url ? (
@@ -1348,26 +1348,30 @@ export default function TrailerDetail() {
                         className="max-h-64 rounded-lg border object-contain cursor-pointer"
                         onClick={() => window.open((trailer as any).title_document_url, "_blank")}
                       />
-                      <Button
-                        size="sm"
-                        variant="destructive"
-                        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
-                        onClick={async () => {
-                          try {
-                            await supabase.from("trailers").update({ title_document_url: null } as any).eq("id", trailerId);
-                            setTrailer(prev => prev ? { ...prev, title_document_url: null } as any : prev);
-                            toast.success("Title document removed");
-                          } catch {
-                            toast.error("Failed to remove title document");
-                          }
-                        }}
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
+                      {isAdmin && (
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                          onClick={async () => {
+                            try {
+                              await supabase.from("trailers").update({ title_document_url: null } as any).eq("id", trailerId);
+                              setTrailer(prev => prev ? { ...prev, title_document_url: null } as any : prev);
+                              toast.success("Title document removed");
+                            } catch {
+                              toast.error("Failed to remove title document");
+                            }
+                          }}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      )}
                     </div>
                   ) : (
                     <p className="text-center text-muted-foreground py-4">
-                      {isDraggingTitle ? "Drop file to upload" : "Drag & drop title document here, or click Upload"}
+                      {isAdmin
+                        ? (isDraggingTitle ? "Drop file to upload" : "Drag & drop title document here, or click Upload")
+                        : "No title document uploaded"}
                     </p>
                   )}
                 </div>
