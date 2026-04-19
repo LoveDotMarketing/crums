@@ -1306,25 +1306,29 @@ export default function TrailerDetail() {
                     <CardDescription>Vehicle title / certificate of title photo</CardDescription>
                   </div>
                   <div>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={async (e) => {
-                        const file = e.target.files?.[0];
-                        if (file) await processTitleFile(file);
-                        e.target.value = "";
-                      }}
-                      className="hidden"
-                      id="title-doc-upload"
-                    />
-                    <label htmlFor="title-doc-upload">
-                      <Button type="button" variant="outline" size="sm" className="cursor-pointer" asChild>
-                        <span>
-                          <Camera className="h-4 w-4 mr-2" />
-                          {(trailer as any)?.title_document_url ? "Replace" : "Upload"}
-                        </span>
-                      </Button>
-                    </label>
+                    {isAdmin && (
+                      <>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={async (e) => {
+                            const file = e.target.files?.[0];
+                            if (file) await processTitleFile(file);
+                            e.target.value = "";
+                          }}
+                          className="hidden"
+                          id="title-doc-upload"
+                        />
+                        <label htmlFor="title-doc-upload">
+                          <Button type="button" variant="outline" size="sm" className="cursor-pointer" asChild>
+                            <span>
+                              <Camera className="h-4 w-4 mr-2" />
+                              {(trailer as any)?.title_document_url ? "Replace" : "Upload"}
+                            </span>
+                          </Button>
+                        </label>
+                      </>
+                    )}
                   </div>
                 </div>
               </CardHeader>
