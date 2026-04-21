@@ -355,8 +355,24 @@ export default function BlandNodes() {
                         <p className="text-xs font-mono text-muted-foreground mt-2 break-all">
                           pathway: {selectedNode.pathway_id} · node: {selectedNode.node_id}
                         </p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {lastPublish ? (
+                            <>
+                              Last published:{" "}
+                              <span className="font-medium text-foreground">
+                                v#{lastPublish.version_number}
+                              </span>{" "}
+                              to {lastPublish.environment} ·{" "}
+                              {formatDistanceToNow(new Date(lastPublish.created_at), {
+                                addSuffix: true,
+                              })}
+                            </>
+                          ) : (
+                            <>Never published from admin.</>
+                          )}
+                        </p>
                       </div>
-                      <div className="flex gap-2">
+                      <div className="flex gap-2 flex-wrap">
                         <Button
                           variant="outline"
                           size="sm"
@@ -371,12 +387,26 @@ export default function BlandNodes() {
                           Refresh from Bland
                         </Button>
                         <Button
+                          variant="secondary"
                           size="sm"
                           disabled={!isDirty || saveMutation.isPending}
                           onClick={() => setConfirmOpen(true)}
                         >
                           <Save className="h-4 w-4 mr-1" />
-                          Save & Push to Bland
+                          Save Draft to Bland
+                        </Button>
+                        <Button
+                          size="sm"
+                          disabled={isDirty || publishMutation.isPending}
+                          onClick={() => setPublishOpen(true)}
+                          title={
+                            isDirty
+                              ? "Save your draft first before publishing"
+                              : "Snapshot the draft and make it live for callers"
+                          }
+                        >
+                          <Rocket className="h-4 w-4 mr-1" />
+                          Publish to Production
                         </Button>
                       </div>
                     </div>
