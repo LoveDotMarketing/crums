@@ -107,6 +107,7 @@ const menuGroups: MenuGroup[] = [
       { title: "Call Logs", url: "/dashboard/admin/call-logs", icon: Phone, sectionKey: "call_logs" },
       { title: "Lead Sources", url: "/dashboard/admin/lead-sources", icon: Target, sectionKey: "lead_sources" },
       { title: "Phone Leads", url: "/dashboard/admin/phone-leads", icon: Phone, sectionKey: "phone_leads" },
+      { title: "Bland AI Nodes", url: "/dashboard/admin/bland-nodes", icon: Phone, sectionKey: "bland_nodes" },
     ]
   },
   {
