@@ -1580,6 +1580,79 @@ export type Database = {
           },
         ]
       }
+      partner_referred_customers: {
+        Row: {
+          company_name: string | null
+          created_at: string
+          created_by: string | null
+          customer_name: string
+          email: string | null
+          id: string
+          linked_customer_id: string | null
+          linked_subscription_id: string | null
+          notes: string | null
+          partner_id: string
+          phone: string | null
+          referred_at: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          company_name?: string | null
+          created_at?: string
+          created_by?: string | null
+          customer_name: string
+          email?: string | null
+          id?: string
+          linked_customer_id?: string | null
+          linked_subscription_id?: string | null
+          notes?: string | null
+          partner_id: string
+          phone?: string | null
+          referred_at?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          company_name?: string | null
+          created_at?: string
+          created_by?: string | null
+          customer_name?: string
+          email?: string | null
+          id?: string
+          linked_customer_id?: string | null
+          linked_subscription_id?: string | null
+          notes?: string | null
+          partner_id?: string
+          phone?: string | null
+          referred_at?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partner_referred_customers_linked_customer_id_fkey"
+            columns: ["linked_customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partner_referred_customers_linked_subscription_id_fkey"
+            columns: ["linked_subscription_id"]
+            isOneToOne: false
+            referencedRelation: "customer_subscriptions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partner_referred_customers_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "partners"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       partners: {
         Row: {
           commission_rate: number
