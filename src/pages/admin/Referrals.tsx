@@ -296,7 +296,37 @@ export default function Referrals() {
     }
   });
 
-  // Update referral status mutation
+  // Fetch all partner-referred customers (the attribution log)
+  const { data: partnerReferredCustomers, isLoading: referredCustomersLoading } = useQuery({
+    queryKey: ["partner-referred-customers"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("partner_referred_customers")
+        .select(`
+          *,
+          linked_customer:customers!partner_referred_customers_linked_customer_id_fkey(full_name, company_name, email)
+        `)
+        .order("referred_at", { ascending: false });
+      if (error) throw error;
+      return data as PartnerReferredCustomer[];
+    }
+  });
+
+  // Fetch lightweight customer list for the "Link to existing CRUMS customer" combobox
+  const { data: allCustomers } = useQuery({
+    queryKey: ["all-customers-lite"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("customers")
+        .select("id, full_name, company_name, email")
+        .eq("status", "active")
+        .order("full_name", { ascending: true })
+        .limit(1000);
+      if (error) throw error;
+      return data as CustomerLite[];
+    }
+  });
+
   const updateReferralMutation = useMutation({
     mutationFn: async ({ id, status, notes }: { id: string; status: string; notes?: string }) => {
       const updateData: Record<string, unknown> = {
