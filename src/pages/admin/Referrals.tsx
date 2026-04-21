@@ -286,7 +286,8 @@ export default function Referrals() {
           partner_id,
           status,
           subscription_type,
-          customers(full_name, company_name),
+          customer_id,
+          customers(id, full_name, company_name),
           subscription_items(monthly_rate, status)
         `)
         .in("status", ["active", "trialing", "past_due", "pending"]);
