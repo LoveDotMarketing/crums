@@ -947,6 +947,7 @@ export default function Referrals() {
                           <TableHead>Partner</TableHead>
                           <TableHead>Referral Code</TableHead>
                           <TableHead>Commission Rate</TableHead>
+                          <TableHead>Brought In</TableHead>
                           <TableHead>Customers</TableHead>
                           <TableHead>Owed</TableHead>
                           <TableHead>Status</TableHead>
@@ -957,6 +958,7 @@ export default function Referrals() {
                         {partners.map((partner) => {
                           const partnerSubs = partnerSubscriptions?.filter(s => s.partner_id === partner.id) || [];
                           const activeCustomers = partnerSubs.filter(s => s.status === "active").length;
+                          const broughtIn = partnerReferredCustomers?.filter(rc => rc.partner_id === partner.id).length || 0;
                           const owed = partnerCommissions?.filter(c => c.partner_id === partner.id && c.status === "pending")
                             .reduce((sum, c) => sum + Number(c.commission_amount), 0) || 0;
                           return (
@@ -984,6 +986,10 @@ export default function Referrals() {
                                 <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
                                   {(partner.commission_rate * 100).toFixed(0)}%/mo
                                 </Badge>
+                              </TableCell>
+                              <TableCell>
+                                <span className="font-medium">{broughtIn}</span>
+                                <span className="text-muted-foreground text-sm"> logged</span>
                               </TableCell>
                               <TableCell>
                                 <span className="font-medium">{activeCustomers}</span>
