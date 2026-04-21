@@ -489,6 +489,45 @@ export default function BlandNodes() {
                           </div>
                         </AccordionContent>
                       </AccordionItem>
+                      <AccordionItem value="publishes">
+                        <AccordionTrigger>
+                          Publish history ({publishes?.length || 0})
+                        </AccordionTrigger>
+                        <AccordionContent>
+                          {(!publishes || publishes.length === 0) && (
+                            <p className="text-sm text-muted-foreground">
+                              No production publishes from admin yet.
+                            </p>
+                          )}
+                          <div className="space-y-2">
+                            {publishes?.map((p) => (
+                              <div
+                                key={p.id}
+                                className="border rounded-md p-3 text-sm flex items-start justify-between gap-3"
+                              >
+                                <div className="min-w-0">
+                                  <p className="font-medium">
+                                    Version #{p.version_number}{" "}
+                                    <span className="text-xs text-muted-foreground font-normal">
+                                      → {p.environment}
+                                    </span>
+                                  </p>
+                                  {p.version_name && (
+                                    <p className="text-xs text-muted-foreground truncate">
+                                      {p.version_name}
+                                    </p>
+                                  )}
+                                </div>
+                                <span className="text-xs text-muted-foreground whitespace-nowrap">
+                                  {formatDistanceToNow(new Date(p.created_at), {
+                                    addSuffix: true,
+                                  })}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        </AccordionContent>
+                      </AccordionItem>
                     </Accordion>
                   </CardContent>
                 </>
