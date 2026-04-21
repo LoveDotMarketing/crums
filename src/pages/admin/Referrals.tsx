@@ -1586,6 +1586,156 @@ export default function Referrals() {
             </DialogContent>
           </Dialog>
 
+          {/* Log Customer Dialog (attributed customer log) */}
+          <Dialog open={logCustomerOpen} onOpenChange={(open) => {
+            setLogCustomerOpen(open);
+            if (!open) {
+              setEditingReferredCustomer(null);
+              setReferredCustomerForm(defaultReferredCustomerForm);
+            }
+          }}>
+            <DialogContent className="max-w-lg">
+              <DialogHeader>
+                <DialogTitle>{editingReferredCustomer ? "Edit Customer Entry" : "Log Customer"}</DialogTitle>
+                <DialogDescription>
+                  Track a customer {selectedPartner?.name} brought in — even leads or prospects who haven't signed up yet.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4 py-2">
+                <div className="space-y-1.5">
+                  <Label>Customer Name *</Label>
+                  <Input
+                    placeholder="e.g. John Smith"
+                    value={referredCustomerForm.customer_name}
+                    onChange={(e) => setReferredCustomerForm(f => ({ ...f, customer_name: e.target.value }))}
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <Label>Company</Label>
+                    <Input
+                      placeholder="e.g. Royal Duck Logistics"
+                      value={referredCustomerForm.company_name}
+                      onChange={(e) => setReferredCustomerForm(f => ({ ...f, company_name: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Status</Label>
+                    <Select
+                      value={referredCustomerForm.status}
+                      onValueChange={(v) => setReferredCustomerForm(f => ({ ...f, status: v }))}
+                    >
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="lead">Lead</SelectItem>
+                        <SelectItem value="signed_up">Signed Up</SelectItem>
+                        <SelectItem value="active_customer">Active Customer</SelectItem>
+                        <SelectItem value="lost">Lost</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <Label>Email</Label>
+                    <Input
+                      type="email"
+                      placeholder="customer@example.com"
+                      value={referredCustomerForm.email}
+                      onChange={(e) => setReferredCustomerForm(f => ({ ...f, email: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Phone</Label>
+                    <Input
+                      placeholder="(555) 000-0000"
+                      value={referredCustomerForm.phone}
+                      onChange={(e) => setReferredCustomerForm(f => ({ ...f, phone: e.target.value }))}
+                    />
+                  </div>
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Link to existing CRUMS customer (optional)</Label>
+                  <Popover open={linkCustomerPopoverOpen} onOpenChange={setLinkCustomerPopoverOpen}>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" className="w-full justify-between font-normal">
+                        {referredCustomerForm.linked_customer_id
+                          ? (() => {
+                              const c = (allCustomers || []).find(c => c.id === referredCustomerForm.linked_customer_id);
+                              return c ? `${c.full_name}${c.company_name ? ` (${c.company_name})` : ""}` : "Select…";
+                            })()
+                          : "None — manual entry only"}
+                        <ChevronDown className="h-4 w-4 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="p-0 w-[--radix-popover-trigger-width]" align="start">
+                      <Command>
+                        <CommandInput placeholder="Search by name, company, email…" />
+                        <CommandList>
+                          <CommandEmpty>No customers found.</CommandEmpty>
+                          <CommandGroup>
+                            <CommandItem
+                              value="__clear__"
+                              onSelect={() => {
+                                setReferredCustomerForm(f => ({ ...f, linked_customer_id: "" }));
+                                setLinkCustomerPopoverOpen(false);
+                              }}
+                            >
+                              <span className="text-muted-foreground">— None —</span>
+                            </CommandItem>
+                            {(allCustomers || []).map((c) => (
+                              <CommandItem
+                                key={c.id}
+                                value={`${c.full_name} ${c.company_name || ""} ${c.email || ""}`}
+                                onSelect={() => {
+                                  setReferredCustomerForm(f => ({
+                                    ...f,
+                                    linked_customer_id: c.id,
+                                    customer_name: f.customer_name || c.full_name,
+                                    company_name: f.company_name || c.company_name || "",
+                                    email: f.email || c.email || "",
+                                  }));
+                                  setLinkCustomerPopoverOpen(false);
+                                }}
+                              >
+                                <div>
+                                  <p className="font-medium">{c.full_name}</p>
+                                  <p className="text-xs text-muted-foreground">
+                                    {c.company_name || ""}{c.company_name && c.email ? " · " : ""}{c.email || ""}
+                                  </p>
+                                </div>
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+                  <p className="text-xs text-muted-foreground">If they're already a CRUMS customer, link them so commissions auto-tie back to this entry.</p>
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Notes</Label>
+                  <Textarea
+                    placeholder="Anything to remember about this lead/customer…"
+                    value={referredCustomerForm.notes}
+                    onChange={(e) => setReferredCustomerForm(f => ({ ...f, notes: e.target.value }))}
+                    rows={2}
+                  />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setLogCustomerOpen(false)}>Cancel</Button>
+                <Button
+                  onClick={() => saveReferredCustomerMutation.mutate()}
+                  disabled={!referredCustomerForm.customer_name.trim() || saveReferredCustomerMutation.isPending}
+                >
+                  {saveReferredCustomerMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                  {editingReferredCustomer ? "Save Changes" : "Log Customer"}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
           {/* Log Commission Dialog */}
           <Dialog open={logCommissionOpen} onOpenChange={setLogCommissionOpen}>
             <DialogContent>
