@@ -224,7 +224,7 @@ export default function Referrals() {
     }
   });
 
-  // Fetch subscriptions attributed to partners for the detail view
+  // Fetch ALL active subscriptions (attributed and unattributed) for the commission picker
   const { data: partnerSubscriptions } = useQuery({
     queryKey: ["partner-subscriptions"],
     queryFn: async () => {
@@ -238,8 +238,8 @@ export default function Referrals() {
           customers(full_name, company_name),
           subscription_items(monthly_rate, status)
         `)
-        .not("partner_id", "is", null);
-      
+        .in("status", ["active", "trialing", "past_due", "pending"]);
+
       if (error) throw error;
       return data;
     }
