@@ -1346,10 +1346,142 @@ export default function Referrals() {
                     </Card>
                   </div>
 
-                  {/* Attributed subscriptions */}
+                  {/* Attributed Customers Log (manual entries — leads, signed up, active, lost) */}
                   <div>
                     <div className="flex items-center justify-between mb-3">
-                      <h3 className="font-semibold">Attributed Customers</h3>
+                      <div>
+                        <h3 className="font-semibold">Attributed Customers</h3>
+                        <p className="text-xs text-muted-foreground">Every customer {selectedPartner.name} brought in — leads, signed up, active, or lost.</p>
+                      </div>
+                      <Button size="sm" onClick={() => {
+                        setEditingReferredCustomer(null);
+                        setReferredCustomerForm(defaultReferredCustomerForm);
+                        setLogCustomerOpen(true);
+                      }}>
+                        <UserPlus className="h-3 w-3 mr-1" />
+                        Log Customer
+                      </Button>
+                    </div>
+                    {referredCustomersLoading ? (
+                      <div className="flex justify-center py-4"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>
+                    ) : selectedPartnerReferred.length > 0 ? (
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Customer</TableHead>
+                            <TableHead>Company</TableHead>
+                            <TableHead>Status</TableHead>
+                            <TableHead>Referred</TableHead>
+                            <TableHead>Linked CRUMS Customer</TableHead>
+                            <TableHead>Actions</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {selectedPartnerReferred.map((rc) => {
+                            const statusVariant: Record<string, string> = {
+                              lead: "bg-yellow-100 text-yellow-700 border-yellow-300",
+                              signed_up: "bg-blue-100 text-blue-700 border-blue-300",
+                              active_customer: "bg-green-100 text-green-700 border-green-300",
+                              lost: "bg-red-100 text-red-700 border-red-300",
+                            };
+                            const statusLabel: Record<string, string> = {
+                              lead: "Lead",
+                              signed_up: "Signed Up",
+                              active_customer: "Active Customer",
+                              lost: "Lost",
+                            };
+                            const linkedSubs = (partnerSubscriptions || []).filter(
+                              (s: any) => rc.linked_customer_id && s.customer_id === rc.linked_customer_id
+                            );
+                            return (
+                              <TableRow key={rc.id}>
+                                <TableCell>
+                                  <p className="font-medium">{rc.customer_name}</p>
+                                  {rc.email && <p className="text-xs text-muted-foreground">{rc.email}</p>}
+                                  {rc.phone && <p className="text-xs text-muted-foreground">{rc.phone}</p>}
+                                </TableCell>
+                                <TableCell className="text-sm">{rc.company_name || "—"}</TableCell>
+                                <TableCell>
+                                  <Badge variant="outline" className={statusVariant[rc.status] || ""}>
+                                    {statusLabel[rc.status] || rc.status}
+                                  </Badge>
+                                </TableCell>
+                                <TableCell className="text-sm">{format(new Date(rc.referred_at), "MMM d, yyyy")}</TableCell>
+                                <TableCell className="text-sm">
+                                  {rc.linked_customer ? (
+                                    <span>{rc.linked_customer.full_name}{rc.linked_customer.company_name ? ` (${rc.linked_customer.company_name})` : ""}</span>
+                                  ) : (
+                                    <span className="text-muted-foreground">—</span>
+                                  )}
+                                </TableCell>
+                                <TableCell>
+                                  <div className="flex gap-1">
+                                    {rc.status === "active_customer" && linkedSubs.length > 0 && (
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        title="Log Commission for this Customer"
+                                        onClick={() => {
+                                          setLogCommissionForm((f) => ({
+                                            ...f,
+                                            subscription_id: linkedSubs[0].id,
+                                          }));
+                                          setLogCommissionOpen(true);
+                                        }}
+                                      >
+                                        <Link2 className="h-3 w-3 mr-1" />
+                                        Log Commission
+                                      </Button>
+                                    )}
+                                    <Button
+                                      size="icon"
+                                      variant="ghost"
+                                      className="h-7 w-7"
+                                      onClick={() => {
+                                        setEditingReferredCustomer(rc);
+                                        setReferredCustomerForm({
+                                          customer_name: rc.customer_name,
+                                          company_name: rc.company_name || "",
+                                          email: rc.email || "",
+                                          phone: rc.phone || "",
+                                          status: rc.status,
+                                          linked_customer_id: rc.linked_customer_id || "",
+                                          notes: rc.notes || "",
+                                        });
+                                        setLogCustomerOpen(true);
+                                      }}
+                                    >
+                                      <Pencil className="h-3 w-3" />
+                                    </Button>
+                                    <Button
+                                      size="icon"
+                                      variant="ghost"
+                                      className="h-7 w-7 text-red-600"
+                                      onClick={() => {
+                                        if (confirm(`Remove "${rc.customer_name}" from ${selectedPartner.name}'s log?`)) {
+                                          deleteReferredCustomerMutation.mutate(rc.id);
+                                        }
+                                      }}
+                                    >
+                                      <Trash2 className="h-3 w-3" />
+                                    </Button>
+                                  </div>
+                                </TableCell>
+                              </TableRow>
+                            );
+                          })}
+                        </TableBody>
+                      </Table>
+                    ) : (
+                      <p className="text-muted-foreground text-sm py-4 text-center">No customers logged yet for {selectedPartner.name}.</p>
+                    )}
+                  </div>
+
+                  {/* Active Subscriptions (auto-detected from partner_id field on subscriptions) */}
+                  <div>
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="font-semibold">Active Subscriptions</h3>
+                      <p className="text-xs text-muted-foreground">Subscriptions tagged with this partner's ID at creation.</p>
                     </div>
                     {selectedPartnerSubscriptions.length > 0 ? (
                       <Table>
@@ -1385,7 +1517,7 @@ export default function Referrals() {
                         </TableBody>
                       </Table>
                     ) : (
-                      <p className="text-muted-foreground text-sm py-4 text-center">No customers attributed to this partner yet.</p>
+                      <p className="text-muted-foreground text-sm py-4 text-center">No subscriptions tagged with this partner yet.</p>
                     )}
                   </div>
 
