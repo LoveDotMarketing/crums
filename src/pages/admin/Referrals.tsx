@@ -27,6 +27,8 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { 
@@ -45,6 +47,11 @@ import {
   TrendingUp,
   ChevronDown,
   ChevronRight,
+  UserPlus,
+  Trash2,
+  Pencil,
+  Link2,
+  Star,
 } from "lucide-react";
 import { SEO } from "@/components/SEO";
 
@@ -121,6 +128,33 @@ interface PartnerCommission {
   }>;
 }
 
+interface PartnerReferredCustomer {
+  id: string;
+  partner_id: string;
+  customer_name: string;
+  company_name: string | null;
+  email: string | null;
+  phone: string | null;
+  status: string;
+  linked_customer_id: string | null;
+  linked_subscription_id: string | null;
+  notes: string | null;
+  referred_at: string;
+  created_at: string;
+  linked_customer?: {
+    full_name: string;
+    company_name: string | null;
+    email: string | null;
+  } | null;
+}
+
+interface CustomerLite {
+  id: string;
+  full_name: string;
+  company_name: string | null;
+  email: string | null;
+}
+
 const defaultPartnerForm = {
   name: "",
   company_name: "",
@@ -128,6 +162,16 @@ const defaultPartnerForm = {
   phone: "",
   referral_code: "",
   commission_rate: 15,
+  notes: "",
+};
+
+const defaultReferredCustomerForm = {
+  customer_name: "",
+  company_name: "",
+  email: "",
+  phone: "",
+  status: "lead",
+  linked_customer_id: "" as string | "",
   notes: "",
 };
 
@@ -153,6 +197,12 @@ export default function Referrals() {
     billing_period_end: "",
     notes: "",
   });
+
+  // Attributed customers (referred customer log) state
+  const [logCustomerOpen, setLogCustomerOpen] = useState(false);
+  const [editingReferredCustomer, setEditingReferredCustomer] = useState<PartnerReferredCustomer | null>(null);
+  const [referredCustomerForm, setReferredCustomerForm] = useState(defaultReferredCustomerForm);
+  const [linkCustomerPopoverOpen, setLinkCustomerPopoverOpen] = useState(false);
 
   // Fetch referral codes with customer info
   const { data: referralCodes, isLoading: codesLoading } = useQuery({
@@ -236,7 +286,8 @@ export default function Referrals() {
           partner_id,
           status,
           subscription_type,
-          customers(full_name, company_name),
+          customer_id,
+          customers(id, full_name, company_name),
           subscription_items(monthly_rate, status)
         `)
         .in("status", ["active", "trialing", "past_due", "pending"]);
@@ -246,7 +297,37 @@ export default function Referrals() {
     }
   });
 
-  // Update referral status mutation
+  // Fetch all partner-referred customers (the attribution log)
+  const { data: partnerReferredCustomers, isLoading: referredCustomersLoading } = useQuery({
+    queryKey: ["partner-referred-customers"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("partner_referred_customers")
+        .select(`
+          *,
+          linked_customer:customers!partner_referred_customers_linked_customer_id_fkey(full_name, company_name, email)
+        `)
+        .order("referred_at", { ascending: false });
+      if (error) throw error;
+      return data as PartnerReferredCustomer[];
+    }
+  });
+
+  // Fetch lightweight customer list for the "Link to existing CRUMS customer" combobox
+  const { data: allCustomers } = useQuery({
+    queryKey: ["all-customers-lite"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("customers")
+        .select("id, full_name, company_name, email")
+        .eq("status", "active")
+        .order("full_name", { ascending: true })
+        .limit(1000);
+      if (error) throw error;
+      return data as CustomerLite[];
+    }
+  });
+
   const updateReferralMutation = useMutation({
     mutationFn: async ({ id, status, notes }: { id: string; status: string; notes?: string }) => {
       const updateData: Record<string, unknown> = {
@@ -361,15 +442,86 @@ export default function Referrals() {
           status: "pending",
         });
       if (error) throw error;
+
+      // Auto-link the chosen subscription to the partner's attribution log entry (if one exists for this customer)
+      const sub: any = (partnerSubscriptions || []).find((s: any) => s.id === logCommissionForm.subscription_id);
+      const subCustomerId = sub?.customers?.id || sub?.customer_id;
+      if (subCustomerId) {
+        const matches = (partnerReferredCustomers || []).filter(
+          (rc) => rc.partner_id === selectedPartner.id && rc.linked_customer_id === subCustomerId
+        );
+        if (matches.length > 0) {
+          await supabase
+            .from("partner_referred_customers")
+            .update({ linked_subscription_id: logCommissionForm.subscription_id, status: "active_customer" })
+            .in("id", matches.map((m) => m.id));
+        }
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["partner-commissions"] });
+      queryClient.invalidateQueries({ queryKey: ["partner-referred-customers"] });
       toast.success("Commission logged successfully");
       setLogCommissionOpen(false);
       setLogCommissionForm({ subscription_id: "", commission_amount: "", billing_period_start: "", billing_period_end: "", notes: "" });
     },
     onError: (error) => {
       toast.error("Failed to log commission: " + error.message);
+    }
+  });
+
+  // Save (create or update) a partner-referred customer entry
+  const saveReferredCustomerMutation = useMutation({
+    mutationFn: async () => {
+      if (!selectedPartner) return;
+      const payload = {
+        partner_id: selectedPartner.id,
+        customer_name: referredCustomerForm.customer_name.trim(),
+        company_name: referredCustomerForm.company_name.trim() || null,
+        email: referredCustomerForm.email.trim() || null,
+        phone: referredCustomerForm.phone.trim() || null,
+        status: referredCustomerForm.status,
+        linked_customer_id: referredCustomerForm.linked_customer_id || null,
+        notes: referredCustomerForm.notes.trim() || null,
+      };
+      if (editingReferredCustomer) {
+        const { error } = await supabase
+          .from("partner_referred_customers")
+          .update(payload)
+          .eq("id", editingReferredCustomer.id);
+        if (error) throw error;
+      } else {
+        const { data: { user } } = await supabase.auth.getUser();
+        const { error } = await supabase
+          .from("partner_referred_customers")
+          .insert({ ...payload, created_by: user?.id || null });
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["partner-referred-customers"] });
+      toast.success(editingReferredCustomer ? "Customer entry updated" : "Customer logged");
+      setLogCustomerOpen(false);
+      setEditingReferredCustomer(null);
+      setReferredCustomerForm(defaultReferredCustomerForm);
+    },
+    onError: (error) => {
+      toast.error("Failed to save customer: " + error.message);
+    }
+  });
+
+  // Delete a partner-referred customer entry
+  const deleteReferredCustomerMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("partner_referred_customers").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["partner-referred-customers"] });
+      toast.success("Customer entry removed");
+    },
+    onError: (error) => {
+      toast.error("Failed to remove: " + error.message);
     }
   });
 
@@ -480,6 +632,7 @@ export default function Referrals() {
 
   const selectedPartnerCommissions = partnerCommissions?.filter(c => c.partner_id === selectedPartner?.id) || [];
   const selectedPartnerSubscriptions = partnerSubscriptions?.filter(s => s.partner_id === selectedPartner?.id) || [];
+  const selectedPartnerReferred = partnerReferredCustomers?.filter(rc => rc.partner_id === selectedPartner?.id) || [];
   const partnerOwed = selectedPartnerCommissions.filter(c => c.status === "pending").reduce((sum, c) => sum + Number(c.commission_amount), 0);
   const partnerPaid = selectedPartnerCommissions.filter(c => c.status === "paid").reduce((sum, c) => sum + Number(c.commission_amount), 0);
 
@@ -794,6 +947,7 @@ export default function Referrals() {
                           <TableHead>Partner</TableHead>
                           <TableHead>Referral Code</TableHead>
                           <TableHead>Commission Rate</TableHead>
+                          <TableHead>Brought In</TableHead>
                           <TableHead>Customers</TableHead>
                           <TableHead>Owed</TableHead>
                           <TableHead>Status</TableHead>
@@ -804,6 +958,7 @@ export default function Referrals() {
                         {partners.map((partner) => {
                           const partnerSubs = partnerSubscriptions?.filter(s => s.partner_id === partner.id) || [];
                           const activeCustomers = partnerSubs.filter(s => s.status === "active").length;
+                          const broughtIn = partnerReferredCustomers?.filter(rc => rc.partner_id === partner.id).length || 0;
                           const owed = partnerCommissions?.filter(c => c.partner_id === partner.id && c.status === "pending")
                             .reduce((sum, c) => sum + Number(c.commission_amount), 0) || 0;
                           return (
@@ -831,6 +986,10 @@ export default function Referrals() {
                                 <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
                                   {(partner.commission_rate * 100).toFixed(0)}%/mo
                                 </Badge>
+                              </TableCell>
+                              <TableCell>
+                                <span className="font-medium">{broughtIn}</span>
+                                <span className="text-muted-foreground text-sm"> logged</span>
                               </TableCell>
                               <TableCell>
                                 <span className="font-medium">{activeCustomers}</span>
@@ -1187,10 +1346,142 @@ export default function Referrals() {
                     </Card>
                   </div>
 
-                  {/* Attributed subscriptions */}
+                  {/* Attributed Customers Log (manual entries — leads, signed up, active, lost) */}
                   <div>
                     <div className="flex items-center justify-between mb-3">
-                      <h3 className="font-semibold">Attributed Customers</h3>
+                      <div>
+                        <h3 className="font-semibold">Attributed Customers</h3>
+                        <p className="text-xs text-muted-foreground">Every customer {selectedPartner.name} brought in — leads, signed up, active, or lost.</p>
+                      </div>
+                      <Button size="sm" onClick={() => {
+                        setEditingReferredCustomer(null);
+                        setReferredCustomerForm(defaultReferredCustomerForm);
+                        setLogCustomerOpen(true);
+                      }}>
+                        <UserPlus className="h-3 w-3 mr-1" />
+                        Log Customer
+                      </Button>
+                    </div>
+                    {referredCustomersLoading ? (
+                      <div className="flex justify-center py-4"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>
+                    ) : selectedPartnerReferred.length > 0 ? (
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Customer</TableHead>
+                            <TableHead>Company</TableHead>
+                            <TableHead>Status</TableHead>
+                            <TableHead>Referred</TableHead>
+                            <TableHead>Linked CRUMS Customer</TableHead>
+                            <TableHead>Actions</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {selectedPartnerReferred.map((rc) => {
+                            const statusVariant: Record<string, string> = {
+                              lead: "bg-yellow-100 text-yellow-700 border-yellow-300",
+                              signed_up: "bg-blue-100 text-blue-700 border-blue-300",
+                              active_customer: "bg-green-100 text-green-700 border-green-300",
+                              lost: "bg-red-100 text-red-700 border-red-300",
+                            };
+                            const statusLabel: Record<string, string> = {
+                              lead: "Lead",
+                              signed_up: "Signed Up",
+                              active_customer: "Active Customer",
+                              lost: "Lost",
+                            };
+                            const linkedSubs = (partnerSubscriptions || []).filter(
+                              (s: any) => rc.linked_customer_id && s.customer_id === rc.linked_customer_id
+                            );
+                            return (
+                              <TableRow key={rc.id}>
+                                <TableCell>
+                                  <p className="font-medium">{rc.customer_name}</p>
+                                  {rc.email && <p className="text-xs text-muted-foreground">{rc.email}</p>}
+                                  {rc.phone && <p className="text-xs text-muted-foreground">{rc.phone}</p>}
+                                </TableCell>
+                                <TableCell className="text-sm">{rc.company_name || "—"}</TableCell>
+                                <TableCell>
+                                  <Badge variant="outline" className={statusVariant[rc.status] || ""}>
+                                    {statusLabel[rc.status] || rc.status}
+                                  </Badge>
+                                </TableCell>
+                                <TableCell className="text-sm">{format(new Date(rc.referred_at), "MMM d, yyyy")}</TableCell>
+                                <TableCell className="text-sm">
+                                  {rc.linked_customer ? (
+                                    <span>{rc.linked_customer.full_name}{rc.linked_customer.company_name ? ` (${rc.linked_customer.company_name})` : ""}</span>
+                                  ) : (
+                                    <span className="text-muted-foreground">—</span>
+                                  )}
+                                </TableCell>
+                                <TableCell>
+                                  <div className="flex gap-1">
+                                    {rc.status === "active_customer" && linkedSubs.length > 0 && (
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        title="Log Commission for this Customer"
+                                        onClick={() => {
+                                          setLogCommissionForm((f) => ({
+                                            ...f,
+                                            subscription_id: linkedSubs[0].id,
+                                          }));
+                                          setLogCommissionOpen(true);
+                                        }}
+                                      >
+                                        <Link2 className="h-3 w-3 mr-1" />
+                                        Log Commission
+                                      </Button>
+                                    )}
+                                    <Button
+                                      size="icon"
+                                      variant="ghost"
+                                      className="h-7 w-7"
+                                      onClick={() => {
+                                        setEditingReferredCustomer(rc);
+                                        setReferredCustomerForm({
+                                          customer_name: rc.customer_name,
+                                          company_name: rc.company_name || "",
+                                          email: rc.email || "",
+                                          phone: rc.phone || "",
+                                          status: rc.status,
+                                          linked_customer_id: rc.linked_customer_id || "",
+                                          notes: rc.notes || "",
+                                        });
+                                        setLogCustomerOpen(true);
+                                      }}
+                                    >
+                                      <Pencil className="h-3 w-3" />
+                                    </Button>
+                                    <Button
+                                      size="icon"
+                                      variant="ghost"
+                                      className="h-7 w-7 text-red-600"
+                                      onClick={() => {
+                                        if (confirm(`Remove "${rc.customer_name}" from ${selectedPartner.name}'s log?`)) {
+                                          deleteReferredCustomerMutation.mutate(rc.id);
+                                        }
+                                      }}
+                                    >
+                                      <Trash2 className="h-3 w-3" />
+                                    </Button>
+                                  </div>
+                                </TableCell>
+                              </TableRow>
+                            );
+                          })}
+                        </TableBody>
+                      </Table>
+                    ) : (
+                      <p className="text-muted-foreground text-sm py-4 text-center">No customers logged yet for {selectedPartner.name}.</p>
+                    )}
+                  </div>
+
+                  {/* Active Subscriptions (auto-detected from partner_id field on subscriptions) */}
+                  <div>
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="font-semibold">Active Subscriptions</h3>
+                      <p className="text-xs text-muted-foreground">Subscriptions tagged with this partner's ID at creation.</p>
                     </div>
                     {selectedPartnerSubscriptions.length > 0 ? (
                       <Table>
@@ -1226,7 +1517,7 @@ export default function Referrals() {
                         </TableBody>
                       </Table>
                     ) : (
-                      <p className="text-muted-foreground text-sm py-4 text-center">No customers attributed to this partner yet.</p>
+                      <p className="text-muted-foreground text-sm py-4 text-center">No subscriptions tagged with this partner yet.</p>
                     )}
                   </div>
 
@@ -1292,6 +1583,156 @@ export default function Referrals() {
                   )}
                 </div>
               )}
+            </DialogContent>
+          </Dialog>
+
+          {/* Log Customer Dialog (attributed customer log) */}
+          <Dialog open={logCustomerOpen} onOpenChange={(open) => {
+            setLogCustomerOpen(open);
+            if (!open) {
+              setEditingReferredCustomer(null);
+              setReferredCustomerForm(defaultReferredCustomerForm);
+            }
+          }}>
+            <DialogContent className="max-w-lg">
+              <DialogHeader>
+                <DialogTitle>{editingReferredCustomer ? "Edit Customer Entry" : "Log Customer"}</DialogTitle>
+                <DialogDescription>
+                  Track a customer {selectedPartner?.name} brought in — even leads or prospects who haven't signed up yet.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4 py-2">
+                <div className="space-y-1.5">
+                  <Label>Customer Name *</Label>
+                  <Input
+                    placeholder="e.g. John Smith"
+                    value={referredCustomerForm.customer_name}
+                    onChange={(e) => setReferredCustomerForm(f => ({ ...f, customer_name: e.target.value }))}
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <Label>Company</Label>
+                    <Input
+                      placeholder="e.g. Royal Duck Logistics"
+                      value={referredCustomerForm.company_name}
+                      onChange={(e) => setReferredCustomerForm(f => ({ ...f, company_name: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Status</Label>
+                    <Select
+                      value={referredCustomerForm.status}
+                      onValueChange={(v) => setReferredCustomerForm(f => ({ ...f, status: v }))}
+                    >
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="lead">Lead</SelectItem>
+                        <SelectItem value="signed_up">Signed Up</SelectItem>
+                        <SelectItem value="active_customer">Active Customer</SelectItem>
+                        <SelectItem value="lost">Lost</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <Label>Email</Label>
+                    <Input
+                      type="email"
+                      placeholder="customer@example.com"
+                      value={referredCustomerForm.email}
+                      onChange={(e) => setReferredCustomerForm(f => ({ ...f, email: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Phone</Label>
+                    <Input
+                      placeholder="(555) 000-0000"
+                      value={referredCustomerForm.phone}
+                      onChange={(e) => setReferredCustomerForm(f => ({ ...f, phone: e.target.value }))}
+                    />
+                  </div>
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Link to existing CRUMS customer (optional)</Label>
+                  <Popover open={linkCustomerPopoverOpen} onOpenChange={setLinkCustomerPopoverOpen}>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" className="w-full justify-between font-normal">
+                        {referredCustomerForm.linked_customer_id
+                          ? (() => {
+                              const c = (allCustomers || []).find(c => c.id === referredCustomerForm.linked_customer_id);
+                              return c ? `${c.full_name}${c.company_name ? ` (${c.company_name})` : ""}` : "Select…";
+                            })()
+                          : "None — manual entry only"}
+                        <ChevronDown className="h-4 w-4 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="p-0 w-[--radix-popover-trigger-width]" align="start">
+                      <Command>
+                        <CommandInput placeholder="Search by name, company, email…" />
+                        <CommandList>
+                          <CommandEmpty>No customers found.</CommandEmpty>
+                          <CommandGroup>
+                            <CommandItem
+                              value="__clear__"
+                              onSelect={() => {
+                                setReferredCustomerForm(f => ({ ...f, linked_customer_id: "" }));
+                                setLinkCustomerPopoverOpen(false);
+                              }}
+                            >
+                              <span className="text-muted-foreground">— None —</span>
+                            </CommandItem>
+                            {(allCustomers || []).map((c) => (
+                              <CommandItem
+                                key={c.id}
+                                value={`${c.full_name} ${c.company_name || ""} ${c.email || ""}`}
+                                onSelect={() => {
+                                  setReferredCustomerForm(f => ({
+                                    ...f,
+                                    linked_customer_id: c.id,
+                                    customer_name: f.customer_name || c.full_name,
+                                    company_name: f.company_name || c.company_name || "",
+                                    email: f.email || c.email || "",
+                                  }));
+                                  setLinkCustomerPopoverOpen(false);
+                                }}
+                              >
+                                <div>
+                                  <p className="font-medium">{c.full_name}</p>
+                                  <p className="text-xs text-muted-foreground">
+                                    {c.company_name || ""}{c.company_name && c.email ? " · " : ""}{c.email || ""}
+                                  </p>
+                                </div>
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+                  <p className="text-xs text-muted-foreground">If they're already a CRUMS customer, link them so commissions auto-tie back to this entry.</p>
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Notes</Label>
+                  <Textarea
+                    placeholder="Anything to remember about this lead/customer…"
+                    value={referredCustomerForm.notes}
+                    onChange={(e) => setReferredCustomerForm(f => ({ ...f, notes: e.target.value }))}
+                    rows={2}
+                  />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setLogCustomerOpen(false)}>Cancel</Button>
+                <Button
+                  onClick={() => saveReferredCustomerMutation.mutate()}
+                  disabled={!referredCustomerForm.customer_name.trim() || saveReferredCustomerMutation.isPending}
+                >
+                  {saveReferredCustomerMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                  {editingReferredCustomer ? "Save Changes" : "Log Customer"}
+                </Button>
+              </DialogFooter>
             </DialogContent>
           </Dialog>
 
