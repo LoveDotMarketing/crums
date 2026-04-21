@@ -441,15 +441,86 @@ export default function Referrals() {
           status: "pending",
         });
       if (error) throw error;
+
+      // Auto-link the chosen subscription to the partner's attribution log entry (if one exists for this customer)
+      const sub: any = (partnerSubscriptions || []).find((s: any) => s.id === logCommissionForm.subscription_id);
+      const subCustomerId = sub?.customers?.id || sub?.customer_id;
+      if (subCustomerId) {
+        const matches = (partnerReferredCustomers || []).filter(
+          (rc) => rc.partner_id === selectedPartner.id && rc.linked_customer_id === subCustomerId
+        );
+        if (matches.length > 0) {
+          await supabase
+            .from("partner_referred_customers")
+            .update({ linked_subscription_id: logCommissionForm.subscription_id, status: "active_customer" })
+            .in("id", matches.map((m) => m.id));
+        }
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["partner-commissions"] });
+      queryClient.invalidateQueries({ queryKey: ["partner-referred-customers"] });
       toast.success("Commission logged successfully");
       setLogCommissionOpen(false);
       setLogCommissionForm({ subscription_id: "", commission_amount: "", billing_period_start: "", billing_period_end: "", notes: "" });
     },
     onError: (error) => {
       toast.error("Failed to log commission: " + error.message);
+    }
+  });
+
+  // Save (create or update) a partner-referred customer entry
+  const saveReferredCustomerMutation = useMutation({
+    mutationFn: async () => {
+      if (!selectedPartner) return;
+      const payload = {
+        partner_id: selectedPartner.id,
+        customer_name: referredCustomerForm.customer_name.trim(),
+        company_name: referredCustomerForm.company_name.trim() || null,
+        email: referredCustomerForm.email.trim() || null,
+        phone: referredCustomerForm.phone.trim() || null,
+        status: referredCustomerForm.status,
+        linked_customer_id: referredCustomerForm.linked_customer_id || null,
+        notes: referredCustomerForm.notes.trim() || null,
+      };
+      if (editingReferredCustomer) {
+        const { error } = await supabase
+          .from("partner_referred_customers")
+          .update(payload)
+          .eq("id", editingReferredCustomer.id);
+        if (error) throw error;
+      } else {
+        const { data: { user } } = await supabase.auth.getUser();
+        const { error } = await supabase
+          .from("partner_referred_customers")
+          .insert({ ...payload, created_by: user?.id || null });
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["partner-referred-customers"] });
+      toast.success(editingReferredCustomer ? "Customer entry updated" : "Customer logged");
+      setLogCustomerOpen(false);
+      setEditingReferredCustomer(null);
+      setReferredCustomerForm(defaultReferredCustomerForm);
+    },
+    onError: (error) => {
+      toast.error("Failed to save customer: " + error.message);
+    }
+  });
+
+  // Delete a partner-referred customer entry
+  const deleteReferredCustomerMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("partner_referred_customers").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["partner-referred-customers"] });
+      toast.success("Customer entry removed");
+    },
+    onError: (error) => {
+      toast.error("Failed to remove: " + error.message);
     }
   });
 
