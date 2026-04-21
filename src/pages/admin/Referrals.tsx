@@ -198,6 +198,12 @@ export default function Referrals() {
     notes: "",
   });
 
+  // Attributed customers (referred customer log) state
+  const [logCustomerOpen, setLogCustomerOpen] = useState(false);
+  const [editingReferredCustomer, setEditingReferredCustomer] = useState<PartnerReferredCustomer | null>(null);
+  const [referredCustomerForm, setReferredCustomerForm] = useState(defaultReferredCustomerForm);
+  const [linkCustomerPopoverOpen, setLinkCustomerPopoverOpen] = useState(false);
+
   // Fetch referral codes with customer info
   const { data: referralCodes, isLoading: codesLoading } = useQuery({
     queryKey: ["referral-codes"],
