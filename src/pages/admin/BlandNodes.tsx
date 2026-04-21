@@ -35,7 +35,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { toast } from "sonner";
-import { Loader2, RefreshCw, Save, Plus, Trash2, Edit, Phone } from "lucide-react";
+import { Loader2, RefreshCw, Save, Plus, Trash2, Edit, Phone, Rocket } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { formatDistanceToNow } from "date-fns";
 
@@ -58,12 +58,24 @@ interface BlandNodeEdit {
   created_at: string;
 }
 
+interface BlandPathwayPublish {
+  id: string;
+  pathway_id: string;
+  version_number: number | null;
+  version_name: string | null;
+  environment: string;
+  published_by: string | null;
+  created_at: string;
+}
+
 export default function BlandNodes() {
   const qc = useQueryClient();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
   const [originalPrompt, setOriginalPrompt] = useState("");
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [publishOpen, setPublishOpen] = useState(false);
+  const [versionName, setVersionName] = useState("");
   const [manageOpen, setManageOpen] = useState(false);
   const [editingNode, setEditingNode] = useState<BlandNode | null>(null);
   const [form, setForm] = useState({ label: "", pathway_id: "", node_id: "", description: "" });
