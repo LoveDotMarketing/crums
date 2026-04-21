@@ -148,6 +148,71 @@ export type Database = {
           },
         ]
       }
+      bland_node_edits: {
+        Row: {
+          created_at: string
+          edited_by: string | null
+          id: string
+          new_prompt: string
+          node_record_id: string
+          previous_prompt: string | null
+        }
+        Insert: {
+          created_at?: string
+          edited_by?: string | null
+          id?: string
+          new_prompt: string
+          node_record_id: string
+          previous_prompt?: string | null
+        }
+        Update: {
+          created_at?: string
+          edited_by?: string | null
+          id?: string
+          new_prompt?: string
+          node_record_id?: string
+          previous_prompt?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bland_node_edits_node_record_id_fkey"
+            columns: ["node_record_id"]
+            isOneToOne: false
+            referencedRelation: "bland_pathway_nodes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bland_pathway_nodes: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          label: string
+          node_id: string
+          pathway_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          label: string
+          node_id: string
+          pathway_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          label?: string
+          node_id?: string
+          pathway_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       call_transcripts: {
         Row: {
           created_at: string
