@@ -632,6 +632,7 @@ export default function Referrals() {
 
   const selectedPartnerCommissions = partnerCommissions?.filter(c => c.partner_id === selectedPartner?.id) || [];
   const selectedPartnerSubscriptions = partnerSubscriptions?.filter(s => s.partner_id === selectedPartner?.id) || [];
+  const selectedPartnerReferred = partnerReferredCustomers?.filter(rc => rc.partner_id === selectedPartner?.id) || [];
   const partnerOwed = selectedPartnerCommissions.filter(c => c.status === "pending").reduce((sum, c) => sum + Number(c.commission_amount), 0);
   const partnerPaid = selectedPartnerCommissions.filter(c => c.status === "paid").reduce((sum, c) => sum + Number(c.commission_amount), 0);
 
