@@ -1,68 +1,66 @@
 
 
-## Plan: Log every customer a partner brought in (paid or not)
+## Plan: Bland Pathway Node Editor in Admin
 
-### What Ambrosia wants
-On Big Bird's partner detail page, she needs to log **every** customer Big Bird referred — even prospects who never signed up, and signed customers who aren't paying out commission yet. Today the only way to associate a customer with a partner is via the **Log Commission** dialog, which requires a real subscription + dollar amount.
+### Goal
+Give Ambrosia/staff a simple admin page to edit Bland Pathway node prompts (markdown) and push them to Bland's API — no more logging into Bland's dashboard for frequent inventory/instruction tweaks.
 
-### Solution: a new "Attributed Customers" log per partner
+### How it works
+1. Admin opens **Marketing → Bland AI** in the sidebar.
+2. Page lists configured nodes (each with a label like "Answer Questions"). She picks one.
+3. The current prompt is pulled from Bland's API and shown in a markdown editor with a live preview tab.
+4. She edits → clicks **Save & Push to Bland**. An edge function PATCHes the node via Bland's API.
+5. Every save is logged to a new `bland_node_edits` table (who, when, before/after) for audit + rollback.
 
-Add a new table `partner_referred_customers` that stores a simple, free-form log of any person/business a partner brought in. It's independent from billing/subscriptions — purely an attribution ledger.
+### What gets built
 
-**New table fields**
-- `id` (uuid)
-- `partner_id` (uuid → partners.id)
-- `customer_name` (text, required) — e.g. "Royal Duck Logistics"
-- `company_name` (text, optional)
-- `email` (text, optional)
-- `phone` (text, optional)
-- `status` (text: `lead` | `signed_up` | `active_customer` | `lost`, default `lead`)
-- `linked_customer_id` (uuid, optional → customers.id) — set if/when they become a CRUMS customer
-- `linked_subscription_id` (uuid, optional → customer_subscriptions.id) — set if commission later applies
-- `notes` (text, optional)
-- `referred_at` (date, default today)
-- `created_by` (uuid)
-- `created_at`, `updated_at` (timestamps)
+**1. Database (1 migration)**
+- `bland_pathway_nodes` — registry of editable nodes:
+  - `id`, `label` (e.g. "Answer Questions — Main Hub"), `pathway_id`, `node_id`, `description`, `created_at`, `updated_at`.
+  - Seeded with the Answer Questions node (`d4e5f6a7-1b2c-3d4e-5f6a-7b8c9d0e1f2a`) so it works out of the box.
+  - RLS: admin only (full CRUD).
+- `bland_node_edits` — edit history:
+  - `id`, `node_record_id` (FK), `edited_by` (uuid), `previous_prompt`, `new_prompt`, `created_at`.
+  - RLS: admin only (read).
 
-RLS: admin full access; `sales` read-only.
+**2. Edge functions (2 new, JWT-protected, admin-only)**
+- `bland-get-node` — `GET` Bland API for `{pathway_id}/nodes/{node_id}`, returns current prompt + node metadata.
+- `bland-update-node` — accepts `{ node_record_id, new_prompt }`, fetches current prompt for snapshot, PATCHes Bland (POST `https://api.bland.ai/v1/pathway/{pathway_id}/nodes/{node_id}` with `{ data: { prompt } }`), then inserts a row in `bland_node_edits`. Returns success/error.
+- Both use a new `BLAND_API_KEY` secret (admin will be prompted to add it).
 
-### UI changes — `src/pages/admin/Referrals.tsx`
+**3. UI — `src/pages/admin/BlandNodes.tsx`**
+- Sidebar entry under **Marketing**: "Bland AI Nodes" (Phone icon) — gated by new `bland_nodes` permission.
+- Layout:
+  - Left: list of registered nodes with label + last-edited timestamp.
+  - Right (when one selected):
+    - Header with node label, pathway/node IDs (small/muted), "Refresh from Bland" button.
+    - Tabs: **Edit** (textarea, monospace, ~30 rows) | **Preview** (rendered markdown using `react-markdown` — already in skill context patterns).
+    - "Save & Push to Bland" button (disabled until changed). Confirms via dialog: "This will overwrite the live Bland node. Continue?"
+    - Toast on success / error with Bland's message.
+    - **Edit history** accordion below: last 10 edits with diff-friendly view (collapsible "Show previous version") + a "Restore this version" button that copies that prompt back into the editor (manual save still required).
+- Empty state if no `BLAND_API_KEY` set: instructions + link to add it.
 
-In the **Partner Detail dialog** (the dialog that opens when you click Big Bird):
+**4. Admin "Manage Nodes" small dialog** (on the same page)
+- "+ Add Node" button → dialog: label, pathway_id, node_id, description. Lets her register additional nodes (e.g. greeting node, routing nodes) over time without code changes.
+- Edit/Delete actions per registered node.
 
-1. **New section above "Commissions": "Attributed Customers"**
-   - Table columns: Customer, Company, Status badge, Referred Date, Linked CRUMS Customer (if any), Actions (edit / delete / "Link to Subscription").
-   - Empty state: "No customers logged yet for {partner name}."
-   - "+ Log Customer" button opens a dialog.
+**5. Permissions**
+- Add `bland_nodes` to `ALL_SECTION_KEYS` + `SECTION_LABELS` so it shows in Staff permission matrix; admins always have it.
 
-2. **"Log Customer" dialog** (new)
-   - Customer Name * (text)
-   - Company (text)
-   - Email (text)
-   - Phone (text)
-   - Status (select: Lead / Signed Up / Active Customer / Lost — default Lead)
-   - Optional: searchable "Link to existing CRUMS customer" combobox (if they're already in `customers` table — auto-populates name/email/company)
-   - Notes (textarea)
-   - Save → inserts into `partner_referred_customers`
-
-3. **Smart linking**
-   - If she sets status to "Active Customer" and links a CRUMS customer, show a quick-action button: **"Log Commission for this Customer"** that opens the existing Log Commission dialog pre-filtered to that customer's active subscriptions.
-   - Conversely, in the existing **Log Commission** dialog: when she picks a subscription that belongs to a customer already in the partner's attributed log, auto-link the new commission row to that attribution entry (set `linked_subscription_id`).
-
-4. **Partner card on the main Partners tab**
-   - Add a small stat next to "Commissions": **"Customers brought in: {count}"** so Ambrosia sees at a glance how productive Big Bird has been even without payouts.
-
-### What stays the same
-- `partner_commissions` table — unchanged. Still used only for actual payouts.
-- `Log Commission` dialog — unchanged from last release (searchable subscription picker, auto-suggested amount).
-- Partners table, referral codes, customer-side referral flow — unchanged.
-
-### Files
-1. **New migration** — create `partner_referred_customers` table + RLS (admin all, sales read).
-2. **`src/pages/admin/Referrals.tsx`** — add Attributed Customers section, Log Customer dialog, customer count stat, and the optional subscription auto-link in Log Commission.
+### Secrets needed
+- **`BLAND_API_KEY`** — Bland API key. After plan approval and migration, you'll be prompted to paste it.
 
 ### Out of scope
-- No edge function changes.
-- No automatic detection of "this new customer mentioned Big Bird" — purely manual logging by staff (matches Ambrosia's screenshot intent).
-- No payout/commission logic changes — payouts still flow through `partner_commissions`.
+- Editing other Bland resources (tools, standards, settings) — only node prompts.
+- Scheduled/automated updates from inventory data — manual editing only for v1 (can layer a cron later).
+- Markdown WYSIWYG — plain textarea + react-markdown preview is enough; matches Bland's own editor.
+
+### Files
+1. New migration — `bland_pathway_nodes` + `bland_node_edits` tables, RLS, seed row.
+2. New edge functions: `supabase/functions/bland-get-node/index.ts`, `supabase/functions/bland-update-node/index.ts`.
+3. New page: `src/pages/admin/BlandNodes.tsx`.
+4. `src/App.tsx` — add lazy route `/dashboard/admin/bland-nodes`.
+5. `src/components/admin/AdminSidebar.tsx` — add menu item under Marketing.
+6. `src/hooks/useStaffPermissions.ts` — add `bland_nodes` section key + label.
+7. `package.json` — add `react-markdown` if not already present.
 
