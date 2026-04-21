@@ -535,14 +535,15 @@ export default function BlandNodes() {
             </Card>
           </div>
 
-          {/* Confirm save dialog */}
+          {/* Confirm save (draft) dialog */}
           <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
             <AlertDialogContent>
               <AlertDialogHeader>
-                <AlertDialogTitle>Push to Bland?</AlertDialogTitle>
+                <AlertDialogTitle>Save draft to Bland?</AlertDialogTitle>
                 <AlertDialogDescription>
-                  This will overwrite the live Bland node prompt immediately. The previous version
-                  will be saved in edit history so you can restore it.
+                  This updates the pathway's <strong>draft</strong> on Bland. Callers will not hear
+                  the new prompt until you click <strong>Publish to Production</strong>. The previous
+                  version will be saved in edit history so you can restore it.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
@@ -557,11 +558,50 @@ export default function BlandNodes() {
                   {saveMutation.isPending && (
                     <Loader2 className="h-4 w-4 mr-1 animate-spin" />
                   )}
-                  Yes, push to Bland
+                  Save draft
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
+
+          {/* Publish to production dialog */}
+          <Dialog open={publishOpen} onOpenChange={setPublishOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Publish to Production?</DialogTitle>
+                <DialogDescription>
+                  This snapshots your current draft as a new version and makes it live for all
+                  callers. The change takes effect on their next call.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-2">
+                <Label>Version name (optional)</Label>
+                <Input
+                  value={versionName}
+                  onChange={(e) => setVersionName(e.target.value)}
+                  placeholder={`Edited via admin — ${new Date().toLocaleString()}`}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Shown in Bland's version list for audit purposes.
+                </p>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setPublishOpen(false)}>
+                  Cancel
+                </Button>
+                <Button
+                  onClick={() => publishMutation.mutate()}
+                  disabled={publishMutation.isPending}
+                >
+                  {publishMutation.isPending && (
+                    <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                  )}
+                  <Rocket className="h-4 w-4 mr-1" />
+                  Publish to Production
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
 
           {/* Manage node dialog */}
           <Dialog open={manageOpen} onOpenChange={setManageOpen}>
