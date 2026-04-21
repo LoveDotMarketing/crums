@@ -35,7 +35,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { toast } from "sonner";
-import { Loader2, RefreshCw, Save, Plus, Trash2, Edit, Phone } from "lucide-react";
+import { Loader2, RefreshCw, Save, Plus, Trash2, Edit, Phone, Rocket } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { formatDistanceToNow } from "date-fns";
 
@@ -58,12 +58,24 @@ interface BlandNodeEdit {
   created_at: string;
 }
 
+interface BlandPathwayPublish {
+  id: string;
+  pathway_id: string;
+  version_number: number | null;
+  version_name: string | null;
+  environment: string;
+  published_by: string | null;
+  created_at: string;
+}
+
 export default function BlandNodes() {
   const qc = useQueryClient();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
   const [originalPrompt, setOriginalPrompt] = useState("");
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [publishOpen, setPublishOpen] = useState(false);
+  const [versionName, setVersionName] = useState("");
   const [manageOpen, setManageOpen] = useState(false);
   const [editingNode, setEditingNode] = useState<BlandNode | null>(null);
   const [form, setForm] = useState({ label: "", pathway_id: "", node_id: "", description: "" });
@@ -122,6 +134,23 @@ export default function BlandNodes() {
     },
   });
 
+  const { data: publishes } = useQuery({
+    queryKey: ["bland-pathway-publishes", selectedNode?.pathway_id],
+    enabled: !!selectedNode?.pathway_id,
+    queryFn: async (): Promise<BlandPathwayPublish[]> => {
+      const { data, error } = await (supabase as any)
+        .from("bland_pathway_publishes")
+        .select("*")
+        .eq("pathway_id", selectedNode!.pathway_id)
+        .order("created_at", { ascending: false })
+        .limit(10);
+      if (error) throw error;
+      return (data as BlandPathwayPublish[]) || [];
+    },
+  });
+
+  const lastPublish = publishes?.[0] || null;
+
   const saveMutation = useMutation({
     mutationFn: async () => {
       const { data, error } = await supabase.functions.invoke("bland-update-node", {
@@ -132,7 +161,9 @@ export default function BlandNodes() {
       return data;
     },
     onSuccess: () => {
-      toast.success("Pushed to Bland");
+      toast.success("Draft saved", {
+        description: "Click 'Publish to Production' to make it live for callers.",
+      });
       setOriginalPrompt(draft);
       qc.invalidateQueries({ queryKey: ["bland-node-edits", selectedId] });
       qc.invalidateQueries({ queryKey: ["bland-pathway-nodes"] });
@@ -141,6 +172,31 @@ export default function BlandNodes() {
     onError: (e: any) => {
       toast.error(e?.message || "Failed to update Bland");
     },
+  });
+
+  const publishMutation = useMutation({
+    mutationFn: async () => {
+      if (!selectedNode) throw new Error("No node selected");
+      const { data, error } = await supabase.functions.invoke("bland-publish-pathway", {
+        body: {
+          pathway_id: selectedNode.pathway_id,
+          version_name: versionName.trim() || undefined,
+          environment: "production",
+        },
+      });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+      return data as { version_number: number; version_name: string; environment: string };
+    },
+    onSuccess: (data) => {
+      toast.success(`Published version #${data.version_number} to ${data.environment}`, {
+        description: "Callers will hear the new prompt on their next call.",
+      });
+      setPublishOpen(false);
+      setVersionName("");
+      qc.invalidateQueries({ queryKey: ["bland-pathway-publishes", selectedNode?.pathway_id] });
+    },
+    onError: (e: any) => toast.error(e?.message || "Failed to publish"),
   });
 
   const upsertNodeMutation = useMutation({
@@ -299,8 +355,24 @@ export default function BlandNodes() {
                         <p className="text-xs font-mono text-muted-foreground mt-2 break-all">
                           pathway: {selectedNode.pathway_id} · node: {selectedNode.node_id}
                         </p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {lastPublish ? (
+                            <>
+                              Last published:{" "}
+                              <span className="font-medium text-foreground">
+                                v#{lastPublish.version_number}
+                              </span>{" "}
+                              to {lastPublish.environment} ·{" "}
+                              {formatDistanceToNow(new Date(lastPublish.created_at), {
+                                addSuffix: true,
+                              })}
+                            </>
+                          ) : (
+                            <>Never published from admin.</>
+                          )}
+                        </p>
                       </div>
-                      <div className="flex gap-2">
+                      <div className="flex gap-2 flex-wrap">
                         <Button
                           variant="outline"
                           size="sm"
@@ -315,12 +387,26 @@ export default function BlandNodes() {
                           Refresh from Bland
                         </Button>
                         <Button
+                          variant="secondary"
                           size="sm"
                           disabled={!isDirty || saveMutation.isPending}
                           onClick={() => setConfirmOpen(true)}
                         >
                           <Save className="h-4 w-4 mr-1" />
-                          Save & Push to Bland
+                          Save Draft to Bland
+                        </Button>
+                        <Button
+                          size="sm"
+                          disabled={isDirty || publishMutation.isPending}
+                          onClick={() => setPublishOpen(true)}
+                          title={
+                            isDirty
+                              ? "Save your draft first before publishing"
+                              : "Snapshot the draft and make it live for callers"
+                          }
+                        >
+                          <Rocket className="h-4 w-4 mr-1" />
+                          Publish to Production
                         </Button>
                       </div>
                     </div>
@@ -403,6 +489,45 @@ export default function BlandNodes() {
                           </div>
                         </AccordionContent>
                       </AccordionItem>
+                      <AccordionItem value="publishes">
+                        <AccordionTrigger>
+                          Publish history ({publishes?.length || 0})
+                        </AccordionTrigger>
+                        <AccordionContent>
+                          {(!publishes || publishes.length === 0) && (
+                            <p className="text-sm text-muted-foreground">
+                              No production publishes from admin yet.
+                            </p>
+                          )}
+                          <div className="space-y-2">
+                            {publishes?.map((p) => (
+                              <div
+                                key={p.id}
+                                className="border rounded-md p-3 text-sm flex items-start justify-between gap-3"
+                              >
+                                <div className="min-w-0">
+                                  <p className="font-medium">
+                                    Version #{p.version_number}{" "}
+                                    <span className="text-xs text-muted-foreground font-normal">
+                                      → {p.environment}
+                                    </span>
+                                  </p>
+                                  {p.version_name && (
+                                    <p className="text-xs text-muted-foreground truncate">
+                                      {p.version_name}
+                                    </p>
+                                  )}
+                                </div>
+                                <span className="text-xs text-muted-foreground whitespace-nowrap">
+                                  {formatDistanceToNow(new Date(p.created_at), {
+                                    addSuffix: true,
+                                  })}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        </AccordionContent>
+                      </AccordionItem>
                     </Accordion>
                   </CardContent>
                 </>
@@ -410,14 +535,15 @@ export default function BlandNodes() {
             </Card>
           </div>
 
-          {/* Confirm save dialog */}
+          {/* Confirm save (draft) dialog */}
           <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
             <AlertDialogContent>
               <AlertDialogHeader>
-                <AlertDialogTitle>Push to Bland?</AlertDialogTitle>
+                <AlertDialogTitle>Save draft to Bland?</AlertDialogTitle>
                 <AlertDialogDescription>
-                  This will overwrite the live Bland node prompt immediately. The previous version
-                  will be saved in edit history so you can restore it.
+                  This updates the pathway's <strong>draft</strong> on Bland. Callers will not hear
+                  the new prompt until you click <strong>Publish to Production</strong>. The previous
+                  version will be saved in edit history so you can restore it.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
@@ -432,11 +558,50 @@ export default function BlandNodes() {
                   {saveMutation.isPending && (
                     <Loader2 className="h-4 w-4 mr-1 animate-spin" />
                   )}
-                  Yes, push to Bland
+                  Save draft
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
+
+          {/* Publish to production dialog */}
+          <Dialog open={publishOpen} onOpenChange={setPublishOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Publish to Production?</DialogTitle>
+                <DialogDescription>
+                  This snapshots your current draft as a new version and makes it live for all
+                  callers. The change takes effect on their next call.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-2">
+                <Label>Version name (optional)</Label>
+                <Input
+                  value={versionName}
+                  onChange={(e) => setVersionName(e.target.value)}
+                  placeholder={`Edited via admin — ${new Date().toLocaleString()}`}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Shown in Bland's version list for audit purposes.
+                </p>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setPublishOpen(false)}>
+                  Cancel
+                </Button>
+                <Button
+                  onClick={() => publishMutation.mutate()}
+                  disabled={publishMutation.isPending}
+                >
+                  {publishMutation.isPending && (
+                    <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                  )}
+                  <Rocket className="h-4 w-4 mr-1" />
+                  Publish to Production
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
 
           {/* Manage node dialog */}
           <Dialog open={manageOpen} onOpenChange={setManageOpen}>
