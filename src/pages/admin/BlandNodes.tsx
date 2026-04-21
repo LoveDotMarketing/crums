@@ -134,6 +134,23 @@ export default function BlandNodes() {
     },
   });
 
+  const { data: publishes } = useQuery({
+    queryKey: ["bland-pathway-publishes", selectedNode?.pathway_id],
+    enabled: !!selectedNode?.pathway_id,
+    queryFn: async (): Promise<BlandPathwayPublish[]> => {
+      const { data, error } = await (supabase as any)
+        .from("bland_pathway_publishes")
+        .select("*")
+        .eq("pathway_id", selectedNode!.pathway_id)
+        .order("created_at", { ascending: false })
+        .limit(10);
+      if (error) throw error;
+      return (data as BlandPathwayPublish[]) || [];
+    },
+  });
+
+  const lastPublish = publishes?.[0] || null;
+
   const saveMutation = useMutation({
     mutationFn: async () => {
       const { data, error } = await supabase.functions.invoke("bland-update-node", {
@@ -144,7 +161,9 @@ export default function BlandNodes() {
       return data;
     },
     onSuccess: () => {
-      toast.success("Pushed to Bland");
+      toast.success("Draft saved", {
+        description: "Click 'Publish to Production' to make it live for callers.",
+      });
       setOriginalPrompt(draft);
       qc.invalidateQueries({ queryKey: ["bland-node-edits", selectedId] });
       qc.invalidateQueries({ queryKey: ["bland-pathway-nodes"] });
@@ -153,6 +172,31 @@ export default function BlandNodes() {
     onError: (e: any) => {
       toast.error(e?.message || "Failed to update Bland");
     },
+  });
+
+  const publishMutation = useMutation({
+    mutationFn: async () => {
+      if (!selectedNode) throw new Error("No node selected");
+      const { data, error } = await supabase.functions.invoke("bland-publish-pathway", {
+        body: {
+          pathway_id: selectedNode.pathway_id,
+          version_name: versionName.trim() || undefined,
+          environment: "production",
+        },
+      });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+      return data as { version_number: number; version_name: string; environment: string };
+    },
+    onSuccess: (data) => {
+      toast.success(`Published version #${data.version_number} to ${data.environment}`, {
+        description: "Callers will hear the new prompt on their next call.",
+      });
+      setPublishOpen(false);
+      setVersionName("");
+      qc.invalidateQueries({ queryKey: ["bland-pathway-publishes", selectedNode?.pathway_id] });
+    },
+    onError: (e: any) => toast.error(e?.message || "Failed to publish"),
   });
 
   const upsertNodeMutation = useMutation({
