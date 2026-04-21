@@ -213,6 +213,44 @@ export type Database = {
         }
         Relationships: []
       }
+      bland_pathway_publishes: {
+        Row: {
+          created_at: string
+          environment: string
+          id: string
+          pathway_id: string
+          published_by: string | null
+          version_name: string | null
+          version_number: number | null
+        }
+        Insert: {
+          created_at?: string
+          environment?: string
+          id?: string
+          pathway_id: string
+          published_by?: string | null
+          version_name?: string | null
+          version_number?: number | null
+        }
+        Update: {
+          created_at?: string
+          environment?: string
+          id?: string
+          pathway_id?: string
+          published_by?: string | null
+          version_name?: string | null
+          version_number?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bland_pathway_publishes_published_by_fkey"
+            columns: ["published_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       call_transcripts: {
         Row: {
           created_at: string
