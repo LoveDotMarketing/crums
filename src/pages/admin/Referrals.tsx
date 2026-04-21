@@ -128,6 +128,33 @@ interface PartnerCommission {
   }>;
 }
 
+interface PartnerReferredCustomer {
+  id: string;
+  partner_id: string;
+  customer_name: string;
+  company_name: string | null;
+  email: string | null;
+  phone: string | null;
+  status: string;
+  linked_customer_id: string | null;
+  linked_subscription_id: string | null;
+  notes: string | null;
+  referred_at: string;
+  created_at: string;
+  linked_customer?: {
+    full_name: string;
+    company_name: string | null;
+    email: string | null;
+  } | null;
+}
+
+interface CustomerLite {
+  id: string;
+  full_name: string;
+  company_name: string | null;
+  email: string | null;
+}
+
 const defaultPartnerForm = {
   name: "",
   company_name: "",
@@ -135,6 +162,16 @@ const defaultPartnerForm = {
   phone: "",
   referral_code: "",
   commission_rate: 15,
+  notes: "",
+};
+
+const defaultReferredCustomerForm = {
+  customer_name: "",
+  company_name: "",
+  email: "",
+  phone: "",
+  status: "lead",
+  linked_customer_id: "" as string | "",
   notes: "",
 };
 
