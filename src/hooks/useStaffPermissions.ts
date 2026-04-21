@@ -28,6 +28,7 @@ export const ALL_SECTION_KEYS = [
   "sitemap",
   "indexnow",
   "reports",
+  "bland_nodes",
   "view_dashboard_revenue",
   "view_payment_amounts",
 ] as const;
@@ -60,6 +61,7 @@ export const SECTION_LABELS: Record<SectionKey, string> = {
   sitemap: "Sitemap",
   indexnow: "IndexNow",
   reports: "Reports",
+  bland_nodes: "Bland AI Nodes",
   view_dashboard_revenue: "View Dashboard Revenue",
   view_payment_amounts: "View Payment Amounts",
 };
