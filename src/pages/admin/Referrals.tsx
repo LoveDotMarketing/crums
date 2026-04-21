@@ -1306,27 +1306,74 @@ export default function Referrals() {
               </DialogHeader>
               <div className="space-y-4 py-2">
                 <div className="space-y-1.5">
-                  <Label>Subscription ID</Label>
-                  <Input
-                    placeholder="Paste subscription UUID"
+                  <Label>Customer Subscription</Label>
+                  <Select
                     value={logCommissionForm.subscription_id}
-                    onChange={(e) => setLogCommissionForm(f => ({ ...f, subscription_id: e.target.value }))}
-                  />
-                  {selectedPartnerSubscriptions.length > 0 && (
-                    <div className="mt-2 space-y-1">
-                      <p className="text-xs text-muted-foreground">Or select an attributed customer:</p>
-                      {selectedPartnerSubscriptions.map((sub: any) => (
-                        <button
-                          key={sub.id}
-                          className="w-full text-left text-sm px-3 py-2 rounded border hover:bg-muted transition-colors"
-                          onClick={() => setLogCommissionForm(f => ({ ...f, subscription_id: sub.id }))}
-                        >
-                          {sub.customers?.full_name || "Unknown"} — {sub.id.slice(0, 8)}...
-                          {logCommissionForm.subscription_id === sub.id && <CheckCircle className="h-3 w-3 inline ml-2 text-green-600" />}
-                        </button>
-                      ))}
-                    </div>
-                  )}
+                    onValueChange={(value) => {
+                      const sub: any = (partnerSubscriptions || []).find((s: any) => s.id === value);
+                      const monthlyTotal = sub
+                        ? (sub.subscription_items || [])
+                            .filter((i: any) => i.status !== "removed" && i.status !== "cancelled")
+                            .reduce((sum: number, i: any) => sum + Number(i.monthly_rate || 0), 0)
+                        : 0;
+                      const rate = selectedPartner?.commission_rate ?? 0;
+                      const suggested = monthlyTotal > 0 ? (monthlyTotal * Number(rate)).toFixed(2) : "";
+
+                      const now = new Date();
+                      const start = new Date(now.getFullYear(), now.getMonth(), 1);
+                      const end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+                      const fmt = (d: Date) => d.toISOString().slice(0, 10);
+
+                      setLogCommissionForm((f) => ({
+                        ...f,
+                        subscription_id: value,
+                        commission_amount: suggested || f.commission_amount,
+                        billing_period_start: f.billing_period_start || fmt(start),
+                        billing_period_end: f.billing_period_end || fmt(end),
+                      }));
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a customer subscription..." />
+                    </SelectTrigger>
+                    <SelectContent className="max-h-80">
+                      {(() => {
+                        const all = (partnerSubscriptions || []) as any[];
+                        const attributed = all.filter((s) => s.partner_id === selectedPartner?.id);
+                        const others = all.filter((s) => s.partner_id !== selectedPartner?.id);
+                        const renderItem = (sub: any, isAttributed: boolean) => {
+                          const monthlyTotal = (sub.subscription_items || [])
+                            .filter((i: any) => i.status !== "removed" && i.status !== "cancelled")
+                            .reduce((sum: number, i: any) => sum + Number(i.monthly_rate || 0), 0);
+                          const customerLabel =
+                            sub.customers?.company_name || sub.customers?.full_name || "Unknown";
+                          const typeLabel = (sub.subscription_type || "lease").replace(/_/g, " ");
+                          return (
+                            <SelectItem key={sub.id} value={sub.id}>
+                              {isAttributed ? "★ " : ""}
+                              {customerLabel} — {typeLabel} — ${monthlyTotal.toFixed(0)}/mo
+                            </SelectItem>
+                          );
+                        };
+                        return (
+                          <>
+                            {attributed.map((s) => renderItem(s, true))}
+                            {others.map((s) => renderItem(s, false))}
+                            {all.length === 0 && (
+                              <div className="px-3 py-2 text-sm text-muted-foreground">
+                                No active subscriptions found.
+                              </div>
+                            )}
+                          </>
+                        );
+                      })()}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">
+                    Pick the customer's subscription this commission is for. {selectedPartner?.name} earns{" "}
+                    {selectedPartner ? Math.round(Number(selectedPartner.commission_rate) * 100) : 15}% of their
+                    monthly lease for the first contract period. Subscriptions marked ★ are already attributed to {selectedPartner?.name}.
+                  </p>
                 </div>
                 <div className="space-y-1.5">
                   <Label>Commission Amount ($)</Label>
