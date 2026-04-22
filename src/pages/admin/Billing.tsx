@@ -1506,14 +1506,30 @@ export default function Billing() {
                     </div>
                   </CardHeader>
                   <CardContent>
-                    <div className="relative mb-4 max-w-sm">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        placeholder="Search by customer, company, or email..."
-                        value={subscriptionsSearch}
-                        onChange={(e) => setSubscriptionsSearch(e.target.value)}
-                        className="pl-9"
-                      />
+                    <div className="mb-4 flex flex-wrap items-center gap-3">
+                      <div className="relative max-w-sm flex-1 min-w-[240px]">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          placeholder="Search by customer, company, or email..."
+                          value={subscriptionsSearch}
+                          onChange={(e) => setSubscriptionsSearch(e.target.value)}
+                          className="pl-9"
+                        />
+                      </div>
+                      <div className="flex items-center gap-1 rounded-md border border-border p-1">
+                        {(["all", "live", "sandbox"] as const).map((opt) => (
+                          <Button
+                            key={opt}
+                            type="button"
+                            size="sm"
+                            variant={sandboxFilter === opt ? "default" : "ghost"}
+                            className="h-7 px-3 text-xs capitalize"
+                            onClick={() => setSandboxFilter(opt)}
+                          >
+                            {opt === "all" ? "All" : opt === "live" ? "Live only" : "Sandbox only"}
+                          </Button>
+                        ))}
+                      </div>
                     </div>
                     {loadingSubscriptions ? (
                       <div className="flex items-center justify-center py-8">
@@ -1531,20 +1547,41 @@ export default function Billing() {
                             <TableHead>Deposit</TableHead>
                             <TableHead>Trailers</TableHead>
                             <TableHead>Status</TableHead>
+                            <TableHead>Mode</TableHead>
                             <TableHead className="w-[50px]">Actions</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {subscriptions.filter((sub) => {
-                            const q = subscriptionsSearch.trim().toLowerCase();
-                            if (!q) return true;
-                            const c = sub.customers;
-                            return (
-                              (c?.full_name || "").toLowerCase().includes(q) ||
-                              (c?.company_name || "").toLowerCase().includes(q) ||
-                              (c?.email || "").toLowerCase().includes(q)
-                            );
-                          }).map((sub) => {
+                          {(() => {
+                            const filtered = subscriptions.filter((sub) => {
+                              const q = subscriptionsSearch.trim().toLowerCase();
+                              const matchesSearch = !q || (
+                                ((sub.customers as any)?.full_name || "").toLowerCase().includes(q) ||
+                                ((sub.customers as any)?.company_name || "").toLowerCase().includes(q) ||
+                                ((sub.customers as any)?.email || "").toLowerCase().includes(q)
+                              );
+                              const isSandbox = (sub as any).sandbox === true;
+                              const matchesSandbox =
+                                sandboxFilter === "all" ||
+                                (sandboxFilter === "sandbox" && isSandbox) ||
+                                (sandboxFilter === "live" && !isSandbox);
+                              return matchesSearch && matchesSandbox;
+                            });
+                            if (sandboxFilter === "sandbox") {
+                              return (
+                                <>
+                                  <TableRow>
+                                    <TableCell colSpan={10} className="bg-amber-50 dark:bg-amber-950/30 text-amber-800 dark:text-amber-300 text-xs py-2">
+                                      Showing {filtered.length} sandbox subscription{filtered.length === 1 ? "" : "s"} — these route to Stripe test mode.
+                                    </TableCell>
+                                  </TableRow>
+                                  {filtered.map(renderSubscriptionRow)}
+                                </>
+                              );
+                            }
+                            return filtered.map(renderSubscriptionRow);
+                          })()}
+                          {false && subscriptions.filter((sub) => {
                             const trailerCount = subscriptionItems?.filter(
                               i => i.subscription_id === sub.id && i.status === "active"
                             ).length || 0;
