@@ -120,15 +120,16 @@ serve(async (req) => {
     }
 
     // Get or create customer_applications row
+    const APP_SELECT = "id, stripe_customer_id, status, sandbox, sandbox_stripe_customer_id, stripe_mode";
     let { data: application } = useCustomerPath
       ? await supabaseClient
           .from("customer_applications")
-          .select("id, stripe_customer_id, status")
+          .select(APP_SELECT)
           .eq("customer_id", customerId)
           .maybeSingle()
       : await supabaseClient
           .from("customer_applications")
-          .select("id, stripe_customer_id, status")
+          .select(APP_SELECT)
           .eq("user_id", lookupUserId)
           .maybeSingle();
 
@@ -148,7 +149,7 @@ serve(async (req) => {
       const { data: newApp, error: createAppError } = await supabaseClient
         .from("customer_applications")
         .insert(insertPayload)
-        .select("id, stripe_customer_id, status")
+        .select(APP_SELECT)
         .single();
       if (createAppError) {
         logStep("Error creating application", { error: createAppError.message });
@@ -157,7 +158,22 @@ serve(async (req) => {
       application = newApp;
       logStep("Auto-created application", { applicationId: application.id });
     } else {
-      logStep("Application found", { applicationId: application.id, status: application.status });
+      logStep("Application found", { applicationId: application.id, status: application.status, sandbox: application.sandbox });
+    }
+
+    // Resolve stripe instance based on application sandbox flag
+    if (application.sandbox) {
+      const testKey = Deno.env.get("STRIPE_TEST_SECRET_KEY");
+      const testPublishable = Deno.env.get("STRIPE_TEST_PUBLISHABLE_KEY");
+      if (!testKey) throw new Error("Sandbox application: STRIPE_TEST_SECRET_KEY is not configured");
+      if (!testPublishable) throw new Error("Sandbox application: STRIPE_TEST_PUBLISHABLE_KEY is not configured. Add this secret to enable sandbox payment setup.");
+      stripe = new Stripe(testKey, { apiVersion: "2025-08-27.basil" });
+      stripePublishableKey = testPublishable;
+      stripeMode = "test";
+      logStep("Using Stripe TEST mode for sandbox application");
+    } else {
+      stripe = new Stripe(liveStripeKey, { apiVersion: "2025-08-27.basil" });
+      stripeMode = "live";
     }
 
     // Find or create Stripe customer
