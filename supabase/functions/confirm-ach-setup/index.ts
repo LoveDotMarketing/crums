@@ -174,16 +174,23 @@ serve(async (req) => {
       }
     }
 
-    // Update the application with the payment method, billing anchor, payment method type, AND stripe_customer_id
+    // Update the application with the payment method, billing anchor, payment method type,
+    // and the Stripe customer id (in the right column for the active mode).
+    const updatePayload: Record<string, unknown> = {
+      stripe_payment_method_id: pmId as string,
+      payment_setup_status: "completed",
+      billing_anchor_day: billingAnchorDay || null,
+      payment_method_type: resolvedPmType,
+      stripe_mode: stripeMode,
+    };
+    if (application.sandbox) {
+      updatePayload.sandbox_stripe_customer_id = pmStripeCustomerId;
+    } else {
+      updatePayload.stripe_customer_id = pmStripeCustomerId;
+    }
     const { error: updateError } = await supabaseClient
       .from("customer_applications")
-      .update({
-        stripe_payment_method_id: pmId as string,
-        payment_setup_status: "completed",
-        billing_anchor_day: billingAnchorDay || null,
-        payment_method_type: resolvedPmType,
-        stripe_customer_id: pmStripeCustomerId,
-      })
+      .update(updatePayload)
       .eq("id", application.id);
 
     if (updateError) {
