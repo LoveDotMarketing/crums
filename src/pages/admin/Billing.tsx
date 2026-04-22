@@ -1553,12 +1553,13 @@ export default function Billing() {
                         </TableHeader>
                         <TableBody>
                           {(() => {
-                            const filtered = subscriptions.filter((sub) => {
+                            const filteredSubs = (subscriptions || []).filter((sub) => {
                               const q = subscriptionsSearch.trim().toLowerCase();
+                              const c = sub.customers as any;
                               const matchesSearch = !q || (
-                                ((sub.customers as any)?.full_name || "").toLowerCase().includes(q) ||
-                                ((sub.customers as any)?.company_name || "").toLowerCase().includes(q) ||
-                                ((sub.customers as any)?.email || "").toLowerCase().includes(q)
+                                (c?.full_name || "").toLowerCase().includes(q) ||
+                                (c?.company_name || "").toLowerCase().includes(q) ||
+                                (c?.email || "").toLowerCase().includes(q)
                               );
                               const isSandbox = (sub as any).sandbox === true;
                               const matchesSandbox =
@@ -1567,21 +1568,16 @@ export default function Billing() {
                                 (sandboxFilter === "live" && !isSandbox);
                               return matchesSearch && matchesSandbox;
                             });
-                            if (sandboxFilter === "sandbox") {
-                              return (
-                                <>
+                            return (
+                              <>
+                                {sandboxFilter === "sandbox" && (
                                   <TableRow>
                                     <TableCell colSpan={10} className="bg-amber-50 dark:bg-amber-950/30 text-amber-800 dark:text-amber-300 text-xs py-2">
-                                      Showing {filtered.length} sandbox subscription{filtered.length === 1 ? "" : "s"} — these route to Stripe test mode.
+                                      Showing {filteredSubs.length} sandbox subscription{filteredSubs.length === 1 ? "" : "s"} — these route to Stripe test mode.
                                     </TableCell>
                                   </TableRow>
-                                  {filtered.map(renderSubscriptionRow)}
-                                </>
-                              );
-                            }
-                            return filtered.map(renderSubscriptionRow);
-                          })()}
-                          {false && subscriptions.filter((sub) => {
+                                )}
+                                {filteredSubs.map((sub) => {
                             const trailerCount = subscriptionItems?.filter(
                               i => i.subscription_id === sub.id && i.status === "active"
                             ).length || 0;
