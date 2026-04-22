@@ -576,7 +576,81 @@ export function EditSubscriptionPanel({ subscriptionId, onSave, onCancel }: Edit
         </Card>
       </div>
 
-      {/* Trailers with Rate Editing */}
+      {/* Sandbox Mode (admin-only) */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm font-medium flex items-center gap-2">
+            <FlaskConical className="h-4 w-4" />
+            Sandbox Mode
+            {subscription.sandbox ? (
+              <Badge className="bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/30 hover:bg-amber-500/20">
+                Sandbox
+              </Badge>
+            ) : (
+              <Badge className="bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/20">
+                Live
+              </Badge>
+            )}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label className="text-sm">Use Stripe test mode</Label>
+              <p className="text-xs text-muted-foreground">
+                Routes all charges for this subscription through Stripe test mode.
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              {isTogglingSandbox && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
+              <Switch
+                checked={!!subscription.sandbox}
+                disabled={isTogglingSandbox}
+                onCheckedChange={(next) => {
+                  if (next) setShowEnableSandboxDialog(true);
+                  else setShowDisableSandboxDialog(true);
+                }}
+              />
+            </div>
+          </div>
+
+          {subscription.sandbox && subscription.sandbox_stripe_customer_id && (
+            <div className="space-y-3 rounded-lg border border-amber-500/30 bg-amber-500/5 p-3">
+              <div className="space-y-1">
+                <Label className="text-xs text-muted-foreground">Test Stripe customer</Label>
+                <div className="flex items-center gap-2">
+                  <code className="flex-1 text-xs font-mono bg-background border border-border rounded px-2 py-1.5 truncate">
+                    {subscription.sandbox_stripe_customer_id}
+                  </code>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleCopyTestCustomerId}
+                    className="h-8"
+                  >
+                    {copiedTestId ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+                  </Button>
+                </div>
+              </div>
+              <a
+                href={`https://dashboard.stripe.com/test/customers/${subscription.sandbox_stripe_customer_id}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:underline"
+              >
+                <ExternalLink className="h-3.5 w-3.5" />
+                Open in Stripe test dashboard
+              </a>
+              <p className="text-xs text-muted-foreground">
+                ℹ Use Stripe test card <code className="font-mono">4242 4242 4242 4242</code> to add a payment method.
+              </p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-sm font-medium flex items-center gap-2">
