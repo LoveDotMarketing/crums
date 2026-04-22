@@ -196,6 +196,7 @@ serve(async (req) => {
             stripe_payment_intent_id: paymentIntentId,
             payment_method: isCard ? "card" : "ach",
             surcharge: surchargeAmount,
+            stripe_mode: mode,
             status: "completed",
             admin_id: userData.user.id,
             admin_email: userData.user.email,
