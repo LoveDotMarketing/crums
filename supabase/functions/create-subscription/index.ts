@@ -814,8 +814,9 @@ serve(async (req) => {
             : depositInvoiceResult.paidInvoice.payment_intent?.id ?? null,
           stripe_invoice_id: depositInvoiceResult.paidInvoice.id,
           payment_method: depositInvoiceResult.isCard ? "card" : "ach",
+          stripe_mode: isSandboxApp ? "test" : "live",
         });
-        logStep("Created billing_history record for deposit");
+        logStep("Created billing_history record for deposit", { mode: isSandboxApp ? "test" : "live" });
       }
 
       // First-period safety net REMOVED — deposit covers first period;
