@@ -1952,6 +1952,9 @@ export default function Billing() {
                               </TableRow>
                             );
                           })}
+                              </>
+                            );
+                          })()}
                         </TableBody>
                       </Table>
                     ) : (
