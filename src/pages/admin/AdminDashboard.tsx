@@ -325,6 +325,26 @@ export default function AdminDashboard() {
               ))}
             </div>
 
+            {/* Sandbox subscriptions stat — only when there are any */}
+            {(sandboxSubsCount ?? 0) > 0 && (
+              <div className="mb-8">
+                <button
+                  type="button"
+                  onClick={() => navigate("/dashboard/admin/billing?sandboxFilter=sandbox")}
+                  className="w-full md:w-auto md:min-w-[280px] text-left rounded-lg border border-amber-300 bg-amber-50 hover:bg-amber-100 dark:border-amber-800 dark:bg-amber-950/30 dark:hover:bg-amber-950/50 transition-colors p-4 flex items-center gap-4"
+                >
+                  <div className="h-10 w-10 rounded-md bg-amber-200/60 dark:bg-amber-900/40 flex items-center justify-center">
+                    <FlaskConical className="h-5 w-5 text-amber-800 dark:text-amber-300" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-amber-900 dark:text-amber-200">Sandbox subscriptions</p>
+                    <p className="text-2xl font-bold text-amber-900 dark:text-amber-100">{sandboxSubsCount}</p>
+                  </div>
+                  <span className="text-xs text-amber-800 dark:text-amber-300 underline">View →</span>
+                </button>
+              </div>
+            )}
+
             {/* Recent Activity */}
             <div className="grid gap-6 md:grid-cols-2">
               <Card className="border-border">
