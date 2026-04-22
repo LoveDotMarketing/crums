@@ -108,7 +108,7 @@ serve(async (req) => {
   }
 
   const supabase = createClient(supabaseUrl, supabaseServiceKey);
-  const stripe = new Stripe(stripeSecretKey, { apiVersion: "2025-08-27.basil" });
+  // Per-subscription Stripe client is selected inside the loop via getStripeClient(subscription).
 
   try {
     logStep("Starting payment failure processing");
