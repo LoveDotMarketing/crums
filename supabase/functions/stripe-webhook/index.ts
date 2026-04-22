@@ -544,13 +544,14 @@ async function handlePaymentSucceeded(
     .upsert({
       subscription_id: subscription.id,
       stripe_invoice_id: invoice.id,
-      stripe_payment_intent_id: typeof invoice.payment_intent === "string" 
-        ? invoice.payment_intent 
+      stripe_payment_intent_id: typeof invoice.payment_intent === "string"
+        ? invoice.payment_intent
         : invoice.payment_intent?.id,
       amount: (invoice.total || 0) / 100,
       net_amount: (invoice.total || 0) / 100,
       status: "succeeded",
       paid_at: new Date().toISOString(),
+      stripe_mode: stripeMode,
     }, {
       onConflict: "stripe_invoice_id",
     });
