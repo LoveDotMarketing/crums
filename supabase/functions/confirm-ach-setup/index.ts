@@ -65,7 +65,28 @@ serve(async (req) => {
       lookupUserId = targetUserId || customerId;
     }
 
-    const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
+    // Load application FIRST so we know if this is sandbox mode
+    const appQuery = customerId
+      ? supabaseClient.from("customer_applications").select("id, customer_id, user_id, sandbox, sandbox_stripe_customer_id, stripe_mode").eq("customer_id", customerId).single()
+      : supabaseClient.from("customer_applications").select("id, customer_id, user_id, sandbox, sandbox_stripe_customer_id, stripe_mode").eq("user_id", lookupUserId).single();
+    const { data: application, error: appError } = await appQuery;
+
+    if (appError || !application) {
+      throw new Error("Application not found");
+    }
+
+    // Pick the right Stripe key based on application sandbox flag
+    let stripe: Stripe;
+    let stripeMode: "live" | "test" = "live";
+    if (application.sandbox) {
+      const testKey = Deno.env.get("STRIPE_TEST_SECRET_KEY");
+      if (!testKey) throw new Error("Sandbox application: STRIPE_TEST_SECRET_KEY is not configured");
+      stripe = new Stripe(testKey, { apiVersion: "2025-08-27.basil" });
+      stripeMode = "test";
+      logStep("Using Stripe TEST mode for sandbox application");
+    } else {
+      stripe = new Stripe(liveStripeKey, { apiVersion: "2025-08-27.basil" });
+    }
 
     // Retrieve the SetupIntent to verify it succeeded
     const setupIntent = await stripe.setupIntents.retrieve(setupIntentId);
@@ -78,24 +99,20 @@ serve(async (req) => {
       throw new Error(`SetupIntent status is ${setupIntent.status}, expected succeeded`);
     }
 
-    // Get the payment method ID from the SetupIntent if not provided
     const pmId = paymentMethodId || setupIntent.payment_method;
     if (!pmId) {
       throw new Error("No payment method found on SetupIntent");
     }
 
-    // Determine payment method type from the PM itself or from metadata
     const pmDetails = await stripe.paymentMethods.retrieve(pmId as string);
     const resolvedPmType = pmDetails.type === "card" ? "card" : "ach";
-    // Resolve the stripe_customer_id this PM is attached to
     const pmStripeCustomerId = typeof pmDetails.customer === "string" ? pmDetails.customer : pmDetails.customer?.id ?? null;
-    logStep("Resolved payment method type", { pmType: resolvedPmType, stripeType: pmDetails.type, pmStripeCustomerId });
+    logStep("Resolved payment method type", { pmType: resolvedPmType, stripeType: pmDetails.type, pmStripeCustomerId, mode: stripeMode });
 
     // Ensure the payment method is attached to the correct Stripe customer
     try {
       const pmCustomer = typeof pmDetails.customer === "string" ? pmDetails.customer : pmDetails.customer?.id ?? null;
       
-      // Determine the correct email to look up the Stripe customer
       let lookupEmail = user.email!;
       if (customerId) {
         const { data: custData } = await supabaseClient
@@ -114,7 +131,6 @@ serve(async (req) => {
       }
       
       if (!pmCustomer) {
-        // PM is detached — find a Stripe customer to attach it to
         const existingCustomers = await stripe.customers.list({ email: lookupEmail, limit: 1 });
         if (existingCustomers.data.length > 0) {
           await stripe.paymentMethods.attach(pmId as string, { customer: existingCustomers.data[0].id });
@@ -124,7 +140,6 @@ serve(async (req) => {
           logStep("Attached PM to existing Stripe customer", { pmId, stripeCustomerId: existingCustomers.data[0].id, email: lookupEmail });
         }
       } else {
-        // PM is attached — set as default payment method
         await stripe.customers.update(pmCustomer, {
           invoice_settings: { default_payment_method: pmId as string },
         });
@@ -132,16 +147,6 @@ serve(async (req) => {
       }
     } catch (attachErr: any) {
       logStep("Warning: could not ensure PM attachment", { error: attachErr.message, pmId });
-    }
-
-    // Get the user's application - use customer_id for customer path, user_id otherwise
-    const appQuery = customerId
-      ? supabaseClient.from("customer_applications").select("id, customer_id, user_id").eq("customer_id", customerId).single()
-      : supabaseClient.from("customer_applications").select("id, customer_id, user_id").eq("user_id", lookupUserId).single();
-    const { data: application, error: appError } = await appQuery;
-
-    if (appError || !application) {
-      throw new Error("Application not found");
     }
 
     // Auto-link customer_id on the application if missing
