@@ -2494,6 +2494,44 @@ export type Database = {
           },
         ]
       }
+      subscription_sandbox_audit: {
+        Row: {
+          changed_at: string
+          changed_by: string | null
+          from_sandbox: boolean
+          id: string
+          reason: string | null
+          subscription_id: string
+          to_sandbox: boolean
+        }
+        Insert: {
+          changed_at?: string
+          changed_by?: string | null
+          from_sandbox: boolean
+          id?: string
+          reason?: string | null
+          subscription_id: string
+          to_sandbox: boolean
+        }
+        Update: {
+          changed_at?: string
+          changed_by?: string | null
+          from_sandbox?: boolean
+          id?: string
+          reason?: string | null
+          subscription_id?: string
+          to_sandbox?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscription_sandbox_audit_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "customer_subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       support_tickets: {
         Row: {
           assigned_to: string | null
