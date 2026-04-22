@@ -178,7 +178,8 @@ serve(async (req) => {
     }
     logStep("Fetched trailer records", { count: trailers.length });
 
-    const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
+    // Stripe instance is initialized after we resolve the application sandbox flag below
+    let stripe: Stripe;
 
     // Get customer details
     const { data: customer, error: custError } = await supabaseClient
