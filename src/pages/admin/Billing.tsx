@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { logAdminAction } from "@/lib/eventLogger";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
@@ -67,7 +68,8 @@ import {
   KeyRound,
   Warehouse,
   Handshake,
-  Trash2
+  Trash2,
+  FlaskConical
 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
@@ -164,6 +166,7 @@ interface BillingHistoryItem {
   subscription_id: string;
   stripe_payment_intent_id: string | null;
   stripe_invoice_id: string | null;
+  stripe_mode: "live" | "test";
   amount: number;
   discount_amount: number;
   net_amount: number;
@@ -301,8 +304,25 @@ export default function Billing() {
   const [isVoiding, setIsVoiding] = useState<string | null>(null);
   
   
-  // Subscriptions search
+  // Subscriptions search + sandbox filter
   const [subscriptionsSearch, setSubscriptionsSearch] = useState("");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialSandboxFilter = (searchParams.get("sandboxFilter") as "all" | "live" | "sandbox" | null) || "all";
+  const [sandboxFilter, setSandboxFilter] = useState<"all" | "live" | "sandbox">(
+    initialSandboxFilter === "live" || initialSandboxFilter === "sandbox" ? initialSandboxFilter : "all"
+  );
+
+  // Keep URL in sync (so deep links work both ways)
+  useEffect(() => {
+    const current = searchParams.get("sandboxFilter") || "all";
+    if (current !== sandboxFilter) {
+      const next = new URLSearchParams(searchParams);
+      if (sandboxFilter === "all") next.delete("sandboxFilter");
+      else next.set("sandboxFilter", sandboxFilter);
+      setSearchParams(next, { replace: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sandboxFilter]);
 
   // Payment failures filter/sort state
   const [failuresSearch, setFailuresSearch] = useState("");
