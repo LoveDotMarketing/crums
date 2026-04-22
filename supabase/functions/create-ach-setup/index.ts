@@ -73,7 +73,10 @@ serve(async (req) => {
       }
     }
 
-    const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
+    // Defer stripe instantiation until we know if this application is in sandbox mode
+    let stripe: Stripe;
+    let stripePublishableKey = liveStripePublishableKey;
+    let stripeMode: "live" | "test" = "live";
 
     let targetEmail: string;
     let targetName: string | undefined;
