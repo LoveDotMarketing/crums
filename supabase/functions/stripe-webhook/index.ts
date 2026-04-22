@@ -146,13 +146,14 @@ serve(async (req) => {
       }
 
       // Look up our subscription and customer IDs if we have a stripe_subscription_id
+      // Check both live and sandbox columns
       if (logData.stripe_subscription_id) {
         const { data: subData } = await supabase
           .from("customer_subscriptions")
           .select("id, customer_id, customers(email)")
-          .eq("stripe_subscription_id", logData.stripe_subscription_id)
+          .or(`stripe_subscription_id.eq.${logData.stripe_subscription_id},sandbox_stripe_subscription_id.eq.${logData.stripe_subscription_id}`)
           .maybeSingle();
-        
+
         if (subData) {
           logData.subscription_id = subData.id;
           logData.customer_id = subData.customer_id;
