@@ -1,5 +1,6 @@
 import Stripe from "npm:stripe@18.5.0";
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
+import { getStripeClient } from "../_shared/billing.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -33,6 +34,7 @@ Deno.serve(async (req) => {
 
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
     if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
+    // Live client kept here only for the auth/role-check path; per-subscription client is selected below via getStripeClient().
 
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
@@ -69,7 +71,7 @@ Deno.serve(async (req) => {
       throw new Error("No authorization provided");
     }
 
-    const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
+    // Per-subscription Stripe client is resolved inside the loop via getStripeClient(sub).
 
     // Get all active subscriptions that need billing check
     const { data: subscriptions, error: subError } = await supabaseClient
@@ -95,6 +97,9 @@ Deno.serve(async (req) => {
           logStep("Skipping subscription without Stripe ID", { id: sub.id });
           continue;
         }
+
+        // Resolve the right Stripe client (live or test) for this subscription
+        const { stripe, mode } = getStripeClient(sub);
 
         // Retrieve the Stripe subscription
         const stripeSub = await stripe.subscriptions.retrieve(sub.stripe_subscription_id);
