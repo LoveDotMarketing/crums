@@ -207,20 +207,20 @@ serve(async (req) => {
       if (profileData?.id) {
         profileIdForStripe = profileData.id;
         // Use order + limit instead of maybeSingle to handle repeat customers
+        const APP_COLS = "stripe_payment_method_id, stripe_customer_id, sandbox_stripe_customer_id, sandbox, id, payment_method_type";
         const { data: appRows } = await supabaseClient
           .from("customer_applications")
-          .select("stripe_payment_method_id, stripe_customer_id, id, payment_method_type")
+          .select(APP_COLS)
           .eq("user_id", profileData.id)
           .not("stripe_payment_method_id", "is", null)
           .order("updated_at", { ascending: false })
           .limit(1);
         appRecord = appRows?.[0] ?? null;
 
-        // If no row with a PM, try without the PM filter (customer may exist but PM is null)
         if (!appRecord) {
           const { data: appRowsFallback } = await supabaseClient
             .from("customer_applications")
-            .select("stripe_payment_method_id, stripe_customer_id, id, payment_method_type")
+            .select(APP_COLS)
             .eq("user_id", profileData.id)
             .order("updated_at", { ascending: false })
             .limit(1);
@@ -229,15 +229,25 @@ serve(async (req) => {
       }
     }
 
-    // Fallback: look up by customer_id (also hardened)
     if (!appRecord) {
       const { data: appByCustomerRows } = await supabaseClient
         .from("customer_applications")
-        .select("stripe_payment_method_id, stripe_customer_id, id, payment_method_type")
+        .select("stripe_payment_method_id, stripe_customer_id, sandbox_stripe_customer_id, sandbox, id, payment_method_type")
         .eq("customer_id", customerId)
         .order("updated_at", { ascending: false })
         .limit(1);
       appRecord = appByCustomerRows?.[0] ?? null;
+    }
+
+    // Initialize Stripe with the right key based on application sandbox flag
+    const isSandboxApp = !!appRecord?.sandbox;
+    if (isSandboxApp) {
+      const testKey = Deno.env.get("STRIPE_TEST_SECRET_KEY");
+      if (!testKey) throw new Error("Sandbox application: STRIPE_TEST_SECRET_KEY is not configured");
+      stripe = new Stripe(testKey, { apiVersion: "2025-08-27.basil" });
+      logStep("Using Stripe TEST mode for sandbox application");
+    } else {
+      stripe = new Stripe(liveStripeKey, { apiVersion: "2025-08-27.basil" });
     }
 
     logStep("Application record lookup", {
