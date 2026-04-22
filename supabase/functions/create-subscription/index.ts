@@ -274,17 +274,7 @@ serve(async (req) => {
         logStep("Stored stripe customer id is invalid, falling back to search");
       }
     }
-    if (false && appRecord?.stripe_customer_id) {
-      try {
-        const existingCust = await stripe.customers.retrieve(appRecord.stripe_customer_id);
-        if (existingCust && !(existingCust as any).deleted) {
-          stripeCustomerId = appRecord.stripe_customer_id;
-          logStep("Stripe customer from application record is valid", { stripeCustomerId });
-        }
-      } catch {
-        logStep("Stored stripe_customer_id is invalid, falling back to search");
-      }
-    }
+
 
     if (!stripeCustomerId && customer.email) {
       const stripeCustomers = await stripe.customers.list({ email: customer.email, limit: 10 });
