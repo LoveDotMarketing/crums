@@ -1,51 +1,38 @@
 
 
-## Plan: Add Sandbox Application toggle UI
+## Fix: Disambiguate the profiles join in toggle-application-sandbox
 
-Build the missing admin UI so you can flip the sandbox flag on Mark's application from the dashboard, then we'll wire up the test publishable key.
+The toggle is failing because the edge function's query embeds `profiles(...)` but `customer_applications` has two foreign keys pointing at `profiles` (`user_id` and `reviewed_by`). PostgREST throws an ambiguous-relationship error before the function ever gets to do its work, so the UI sees a generic non-2xx and you see no log line.
 
-### 1. CustomerDetail page — Sandbox Application card
+### Change
 
-In `src/pages/admin/CustomerDetail.tsx`, in the application section, add a card matching the existing subscription sandbox card pattern:
-- **Switch** + amber **Sandbox** badge when on
-- **Confirmation `AlertDialog`** with bullets explaining impact + optional reason `Textarea`
-- Calls the `toggle-application-sandbox` edge function with `{ applicationId, enable, reason, force? }`
-- On success: toast + refetch application
-- On 409 `requiresForce`: second confirmation dialog warning that the customer's stored payment method will be cleared, then retries with `force: true`
+In `supabase/functions/toggle-application-sandbox/index.ts`, change the embed to specify the FK name:
 
-When `application.sandbox === true`, render a persistent **amber banner** at the top of the customer detail page:
-> *"This customer's application is in SANDBOX mode — payment setup runs against Stripe test mode. No real bank or card will be charged."*
+```ts
+profiles!customer_applications_user_id_fkey ( id, first_name, last_name, email )
+```
 
-### 2. Applications list — Mode column + filter
+That tells PostgREST to follow the `user_id` FK (the actual applicant), not `reviewed_by` (the staff member who reviewed it).
 
-In `src/pages/admin/Applications.tsx`:
-- Add a **Mode** column showing an amber **Sandbox** badge when `sandbox = true`, otherwise nothing (keeps live rows visually clean)
-- Add a filter chip group: **All / Live only / Sandbox only** matching the Billing page pattern
+### Defensive cleanup in the same edit
 
-### 3. SandboxActivityPanel — show application rows
+1. Wrap the `.from("customer_applications").select(...)` call in a try and **log the raw `appErr`** before returning the 404 — right now any DB error gets masked as "Application not found", which hid this bug.
+2. Add a `console.log("[toggle-application-sandbox] start", { applicationId, enable, force })` at the top of the handler so future failures show up in logs immediately after boot.
 
-In `src/components/admin/SandboxActivityPanel.tsx`, extend the audit query to include rows where `application_id IS NOT NULL` and render them with a different label prefix:
-- Subscription rows: *"Subscription #1234 — Live → Sandbox by Eric"*
-- Application rows: *"Application: Mark Solis — Live → Sandbox by Eric"*
+### Verification
 
-Resolve application → customer name via a join on `customer_applications` → `customers` / `profiles`.
+1. Re-deploy (automatic).
+2. Flip the **Sandbox Application** switch on Mark's customer page.
+3. Expect: success toast, badge turns amber, banner appears at the top of the page.
+4. Confirm an audit row exists:
+   ```sql
+   SELECT * FROM subscription_sandbox_audit
+   WHERE application_id IS NOT NULL
+   ORDER BY changed_at DESC LIMIT 5;
+   ```
 
-### 4. Files
+### Out of scope
 
-1. `src/pages/admin/CustomerDetail.tsx` — sandbox card, confirmation dialog, force-retry path, amber banner
-2. `src/pages/admin/Applications.tsx` — Mode column + filter chip group
-3. `src/components/admin/SandboxActivityPanel.tsx` — render application audit rows alongside subscription rows
-
-### Out of scope (this round)
-
-- `STRIPE_TEST_PUBLISHABLE_KEY` secret — you'll add this after the UI ships
-- Frontend publishable-key resolution in `PaymentSetup.tsx` — separate follow-up after the secret is set, since it needs the key to exist before it can be tested
-
-### After this ships
-
-1. Open Mark's customer page → flip **Sandbox Application** on
-2. You give me the `STRIPE_TEST_PUBLISHABLE_KEY`
-3. I wire up the publishable-key resolver in `PaymentSetup.tsx`
-4. Mark hits payment setup → Stripe Elements loads in test mode → he uses test bank `110000000` / `000123456789`
-5. End-to-end sandbox flow works without touching real money
+- No schema changes — the columns and tables are correct.
+- No frontend changes — `ApplicationSandboxCard.tsx` is fine; the bug is server-side only.
 
