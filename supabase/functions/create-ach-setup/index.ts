@@ -20,10 +20,10 @@ serve(async (req) => {
   try {
     logStep("Function started");
 
-    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
-    const stripePublishableKey = Deno.env.get("STRIPE_PUBLISHABLE_KEY");
-    if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
-    if (!stripePublishableKey) throw new Error("STRIPE_PUBLISHABLE_KEY is not set");
+    const liveStripeKey = Deno.env.get("STRIPE_SECRET_KEY");
+    const liveStripePublishableKey = Deno.env.get("STRIPE_PUBLISHABLE_KEY");
+    if (!liveStripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
+    if (!liveStripePublishableKey) throw new Error("STRIPE_PUBLISHABLE_KEY is not set");
 
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
