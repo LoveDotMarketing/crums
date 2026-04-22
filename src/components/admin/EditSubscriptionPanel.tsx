@@ -21,9 +21,23 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   ArrowLeft,
   Calendar as CalendarIcon,
+  Check,
+  Copy,
   CreditCard,
+  ExternalLink,
+  FlaskConical,
   KeyRound,
   Loader2,
   Pencil,
@@ -61,6 +75,10 @@ export function EditSubscriptionPanel({ subscriptionId, onSave, onCancel }: Edit
   const [showCustomerForm, setShowCustomerForm] = useState(false);
   const [isResettingPayment, setIsResettingPayment] = useState(false);
   const [rateEdits, setRateEdits] = useState<Record<string, string>>({});
+  const [isTogglingSandbox, setIsTogglingSandbox] = useState(false);
+  const [showEnableSandboxDialog, setShowEnableSandboxDialog] = useState(false);
+  const [showDisableSandboxDialog, setShowDisableSandboxDialog] = useState(false);
+  const [copiedTestId, setCopiedTestId] = useState(false);
 
   // Form state
   const [subscriptionType, setSubscriptionType] = useState<SubscriptionType>("standard_lease");
@@ -302,6 +320,52 @@ export function EditSubscriptionPanel({ subscriptionId, onSave, onCancel }: Edit
     }
   };
 
+  const handleEnableSandbox = async () => {
+    setShowEnableSandboxDialog(false);
+    setIsTogglingSandbox(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("enable-sandbox", {
+        body: { subscriptionId },
+      });
+      if (error) throw error;
+      toast.success(`Sandbox enabled. Test customer: ${data.sandbox_stripe_customer_id}`);
+      await queryClient.invalidateQueries({ queryKey: ["subscription-detail", subscriptionId] });
+    } catch (error) {
+      toast.error("Failed to enable sandbox: " + (error instanceof Error ? error.message : "Unknown error"));
+    } finally {
+      setIsTogglingSandbox(false);
+    }
+  };
+
+  const handleDisableSandbox = async () => {
+    setShowDisableSandboxDialog(false);
+    setIsTogglingSandbox(true);
+    try {
+      const { error } = await supabase
+        .from("customer_subscriptions")
+        .update({ sandbox: false })
+        .eq("id", subscriptionId);
+      if (error) throw error;
+      toast.success("Sandbox disabled. Switched back to live mode.");
+      await queryClient.invalidateQueries({ queryKey: ["subscription-detail", subscriptionId] });
+    } catch (error) {
+      toast.error("Failed to disable sandbox: " + (error instanceof Error ? error.message : "Unknown error"));
+    } finally {
+      setIsTogglingSandbox(false);
+    }
+  };
+
+  const handleCopyTestCustomerId = async () => {
+    if (!subscription?.sandbox_stripe_customer_id) return;
+    try {
+      await navigator.clipboard.writeText(subscription.sandbox_stripe_customer_id);
+      setCopiedTestId(true);
+      setTimeout(() => setCopiedTestId(false), 2000);
+    } catch {
+      toast.error("Failed to copy");
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -512,7 +576,81 @@ export function EditSubscriptionPanel({ subscriptionId, onSave, onCancel }: Edit
         </Card>
       </div>
 
-      {/* Trailers with Rate Editing */}
+      {/* Sandbox Mode (admin-only) */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm font-medium flex items-center gap-2">
+            <FlaskConical className="h-4 w-4" />
+            Sandbox Mode
+            {subscription.sandbox ? (
+              <Badge className="bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/30 hover:bg-amber-500/20">
+                Sandbox
+              </Badge>
+            ) : (
+              <Badge className="bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/20">
+                Live
+              </Badge>
+            )}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label className="text-sm">Use Stripe test mode</Label>
+              <p className="text-xs text-muted-foreground">
+                Routes all charges for this subscription through Stripe test mode.
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              {isTogglingSandbox && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
+              <Switch
+                checked={!!subscription.sandbox}
+                disabled={isTogglingSandbox}
+                onCheckedChange={(next) => {
+                  if (next) setShowEnableSandboxDialog(true);
+                  else setShowDisableSandboxDialog(true);
+                }}
+              />
+            </div>
+          </div>
+
+          {subscription.sandbox && subscription.sandbox_stripe_customer_id && (
+            <div className="space-y-3 rounded-lg border border-amber-500/30 bg-amber-500/5 p-3">
+              <div className="space-y-1">
+                <Label className="text-xs text-muted-foreground">Test Stripe customer</Label>
+                <div className="flex items-center gap-2">
+                  <code className="flex-1 text-xs font-mono bg-background border border-border rounded px-2 py-1.5 truncate">
+                    {subscription.sandbox_stripe_customer_id}
+                  </code>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleCopyTestCustomerId}
+                    className="h-8"
+                  >
+                    {copiedTestId ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+                  </Button>
+                </div>
+              </div>
+              <a
+                href={`https://dashboard.stripe.com/test/customers/${subscription.sandbox_stripe_customer_id}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:underline"
+              >
+                <ExternalLink className="h-3.5 w-3.5" />
+                Open in Stripe test dashboard
+              </a>
+              <p className="text-xs text-muted-foreground">
+                ℹ Use Stripe test card <code className="font-mono">4242 4242 4242 4242</code> to add a payment method.
+              </p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-sm font-medium flex items-center gap-2">
@@ -599,6 +737,42 @@ export function EditSubscriptionPanel({ subscriptionId, onSave, onCancel }: Edit
           customer={subscription.customers as any}
         />
       )}
+
+      {/* Enable Sandbox confirmation */}
+      <AlertDialog open={showEnableSandboxDialog} onOpenChange={setShowEnableSandboxDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Enable sandbox mode for this subscription?</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2 text-sm">
+                <p>• All future charges use Stripe test mode — no real money moves.</p>
+                <p>• You'll need to attach a test payment method before charges will succeed.</p>
+                <p>• Existing live charge history is preserved and not affected.</p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleEnableSandbox}>Enable sandbox</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Disable Sandbox confirmation */}
+      <AlertDialog open={showDisableSandboxDialog} onOpenChange={setShowDisableSandboxDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Switch back to live mode?</AlertDialogTitle>
+            <AlertDialogDescription>
+              The test customer is preserved for future re-enable. Future charges will route through your live Stripe account again.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDisableSandbox}>Switch to live</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
