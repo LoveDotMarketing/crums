@@ -176,30 +176,33 @@ serve(async (req) => {
       stripeMode = "live";
     }
 
-    // Find or create Stripe customer
-    let customerId_stripe = application.stripe_customer_id;
+    // Find or create Stripe customer.
+    // In sandbox mode, use the application's sandbox_stripe_customer_id (test mode customer);
+    // in live mode, use stripe_customer_id.
+    let customerId_stripe = application.sandbox
+      ? application.sandbox_stripe_customer_id
+      : application.stripe_customer_id;
 
-    // Validate existing Stripe customer ID is still valid
     if (customerId_stripe) {
       try {
         await stripe.customers.retrieve(customerId_stripe);
-        logStep("Verified existing Stripe customer", { customerId: customerId_stripe });
+        logStep("Verified existing Stripe customer", { customerId: customerId_stripe, mode: stripeMode });
       } catch (stripeErr) {
         logStep("WARNING: Stored Stripe customer ID is invalid, will create new one", {
           invalidId: customerId_stripe,
+          mode: stripeMode,
           error: stripeErr instanceof Error ? stripeErr.message : String(stripeErr),
         });
         customerId_stripe = null;
-        // Clear the stale ID from the application record
         await supabaseClient
           .from("customer_applications")
-          .update({ stripe_customer_id: null })
+          .update(application.sandbox ? { sandbox_stripe_customer_id: null } : { stripe_customer_id: null })
           .eq("id", application.id);
       }
     }
     
     if (!customerId_stripe) {
-      logStep("No valid Stripe customer, searching by email");
+      logStep("No valid Stripe customer, searching by email", { mode: stripeMode });
       const customers = await stripe.customers.list({ email: targetEmail, limit: 1 });
       
       if (customers.data.length > 0) {
@@ -213,17 +216,28 @@ serve(async (req) => {
           metadata: {
             supabase_user_id: lookupUserId,
             company_name: targetCompany || '',
+            ...(application.sandbox ? { source: "lovable_admin_sandbox", live_application_id: String(application.id) } : {}),
             ...(useCustomerPath ? { customer_record_id: customerId } : {}),
           },
         });
         customerId_stripe = customer.id;
-        logStep("Created new Stripe customer", { customerId: customerId_stripe });
+        logStep("Created new Stripe customer", { customerId: customerId_stripe, mode: stripeMode });
       }
 
-      // Save customer ID to application
+      const persistPayload: Record<string, unknown> = { stripe_mode: stripeMode };
+      if (application.sandbox) {
+        persistPayload.sandbox_stripe_customer_id = customerId_stripe;
+      } else {
+        persistPayload.stripe_customer_id = customerId_stripe;
+      }
       await supabaseClient
         .from("customer_applications")
-        .update({ stripe_customer_id: customerId_stripe })
+        .update(persistPayload)
+        .eq("id", application.id);
+    } else if (application.stripe_mode !== stripeMode) {
+      await supabaseClient
+        .from("customer_applications")
+        .update({ stripe_mode: stripeMode })
         .eq("id", application.id);
     }
 
