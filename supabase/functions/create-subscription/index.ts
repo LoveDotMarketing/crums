@@ -694,12 +694,29 @@ serve(async (req) => {
       let custSub;
       let subError;
 
+      // Route IDs to live vs sandbox columns based on the application's sandbox flag
+      const sandboxFields = isSandboxApp
+        ? {
+            sandbox: true,
+            sandbox_stripe_customer_id: stripeCustomerId,
+            sandbox_stripe_subscription_id: subscription.id,
+            stripe_customer_id: null,
+            stripe_subscription_id: null,
+          }
+        : {
+            sandbox: false,
+            sandbox_stripe_customer_id: null,
+            sandbox_stripe_subscription_id: null,
+            stripe_customer_id: stripeCustomerId,
+            stripe_subscription_id: subscription.id,
+          };
+
       if (isFirstGroup && reuseExistingRow && canceledSubscription) {
         const { data, error } = await supabaseClient
           .from("customer_subscriptions")
           .update({
-            stripe_subscription_id: subscription.id,
-            stripe_customer_id: stripeCustomerId,
+            ...sandboxFields,
+            application_id: appRecord?.id ?? null,
             billing_cycle: groupCycle as any,
             deposit_amount: depositAmount || null,
             deposit_paid: depositChargedDuringCreation,
@@ -719,14 +736,14 @@ serve(async (req) => {
           .single();
         custSub = data;
         subError = error;
-        logStep("Updated existing subscription record", { id: custSub?.id, groupKey });
+        logStep("Updated existing subscription record", { id: custSub?.id, groupKey, sandbox: isSandboxApp });
       } else {
         const { data, error } = await supabaseClient
           .from("customer_subscriptions")
           .insert({
             customer_id: customerId,
-            stripe_subscription_id: subscription.id,
-            stripe_customer_id: stripeCustomerId,
+            ...sandboxFields,
+            application_id: appRecord?.id ?? null,
             billing_cycle: groupCycle as any,
             deposit_amount: isFirstGroup ? (depositAmount || null) : null,
             deposit_paid: isFirstGroup ? depositChargedDuringCreation : false,
@@ -741,7 +758,7 @@ serve(async (req) => {
           .single();
         custSub = data;
         subError = error;
-        logStep("Created new subscription record", { id: custSub?.id, groupKey });
+        logStep("Created new subscription record", { id: custSub?.id, groupKey, sandbox: isSandboxApp });
       }
 
       if (subError) {
