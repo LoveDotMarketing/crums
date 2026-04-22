@@ -194,7 +194,7 @@ serve(async (req) => {
     // ==========================================
     // RESOLVE APPLICATION RECORD (hardened for repeat customers)
     // ==========================================
-    let appRecord: { stripe_payment_method_id: string | null; stripe_customer_id: string | null; id: string; payment_method_type: string | null } | null = null;
+    let appRecord: { stripe_payment_method_id: string | null; stripe_customer_id: string | null; sandbox_stripe_customer_id: string | null; sandbox: boolean | null; id: string; payment_method_type: string | null } | null = null;
     let profileIdForStripe: string | null = null;
 
     if (customer.email) {
