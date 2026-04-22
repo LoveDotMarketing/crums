@@ -219,14 +219,16 @@ serve(async (req) => {
                   paid_at: paymentStatus === "succeeded" ? new Date().toISOString() : null,
                   updated_at: new Date().toISOString(),
                   stripe_payment_intent_id: piId || undefined,
+                  stripe_mode: mode,
                 })
                 .eq("id", existingPayment.id);
 
               results.paymentsUpdated++;
-              logStep("Updated payment status", { 
-                paymentId: existingPayment.id, 
+              logStep("Updated payment status", {
+                paymentId: existingPayment.id,
                 oldStatus: existingPayment.status,
-                newStatus: paymentStatus 
+                newStatus: paymentStatus,
+                mode,
               });
             }
           } else {
@@ -253,10 +255,11 @@ serve(async (req) => {
                 billing_period_end: billingPeriodEnd,
                 paid_at: paymentStatus === "succeeded" ? new Date(inv.created * 1000).toISOString() : null,
                 payment_method: "ach",
+                stripe_mode: mode,
               });
 
             results.paymentsCreated++;
-            logStep("Created payment record", { invoiceId: inv.id, status: paymentStatus, amount: inv.amount_due / 100 });
+            logStep("Created payment record", { invoiceId: inv.id, status: paymentStatus, amount: inv.amount_due / 100, mode });
           }
 
           // Check if this might be a deposit payment — use metadata first, then fall back to amount matching
