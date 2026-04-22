@@ -75,6 +75,10 @@ export function EditSubscriptionPanel({ subscriptionId, onSave, onCancel }: Edit
   const [showCustomerForm, setShowCustomerForm] = useState(false);
   const [isResettingPayment, setIsResettingPayment] = useState(false);
   const [rateEdits, setRateEdits] = useState<Record<string, string>>({});
+  const [isTogglingSandbox, setIsTogglingSandbox] = useState(false);
+  const [showEnableSandboxDialog, setShowEnableSandboxDialog] = useState(false);
+  const [showDisableSandboxDialog, setShowDisableSandboxDialog] = useState(false);
+  const [copiedTestId, setCopiedTestId] = useState(false);
 
   // Form state
   const [subscriptionType, setSubscriptionType] = useState<SubscriptionType>("standard_lease");
