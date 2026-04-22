@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
+import { getStripeClient } from "../_shared/billing.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -56,7 +57,7 @@ serve(async (req) => {
       throw new Error("No authorization provided");
     }
 
-    const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
+    // Per-subscription Stripe client is selected inside the loop via getStripeClient(sub).
 
     // Parse request body for optional filters
     let subscriptionId: string | undefined;
@@ -92,6 +93,9 @@ serve(async (req) => {
 
     for (const sub of subscriptions || []) {
       try {
+        // Resolve correct Stripe client (live or test) for this subscription
+        const { stripe, mode } = getStripeClient(sub);
+        logStep("Processing subscription", { subId: sub.id, mode });
         // Get invoices for this subscription directly from Stripe
         const stripeInvoices = [];
         if (sub.stripe_subscription_id) {
@@ -108,10 +112,12 @@ serve(async (req) => {
 
         // Also get standalone invoices (deposits/charges) for this customer
         try {
-          const customerInvoices = await stripe.invoices.list({
-            customer: sub.stripe_customer_id,
-            limit: 100,
-          });
+          const { customerId } = getStripeClient(sub);
+          if (customerId) {
+            const customerInvoices = await stripe.invoices.list({
+              customer: customerId,
+              limit: 100,
+            });
           // Add invoices that reference this subscription via metadata
           for (const inv of customerInvoices.data) {
             if (inv.metadata?.subscription_id === sub.stripe_subscription_id && 
