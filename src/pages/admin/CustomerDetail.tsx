@@ -585,6 +585,17 @@ export default function CustomerDetail() {
                       )}
                     </CardContent>
                   </Card>
+
+                  {application && (
+                    <div className="md:col-span-2">
+                      <ApplicationSandboxCard
+                        applicationId={application.id}
+                        sandbox={!!application.sandbox}
+                        sandboxStripeCustomerId={application.sandbox_stripe_customer_id ?? null}
+                        paymentSetupStatus={application.payment_setup_status ?? null}
+                      />
+                    </div>
+                  )}
                 </div>
               </TabsContent>
 
