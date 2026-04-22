@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { logAdminAction } from "@/lib/eventLogger";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
@@ -67,7 +68,8 @@ import {
   KeyRound,
   Warehouse,
   Handshake,
-  Trash2
+  Trash2,
+  FlaskConical
 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
@@ -164,6 +166,7 @@ interface BillingHistoryItem {
   subscription_id: string;
   stripe_payment_intent_id: string | null;
   stripe_invoice_id: string | null;
+  stripe_mode: "live" | "test";
   amount: number;
   discount_amount: number;
   net_amount: number;
@@ -301,8 +304,25 @@ export default function Billing() {
   const [isVoiding, setIsVoiding] = useState<string | null>(null);
   
   
-  // Subscriptions search
+  // Subscriptions search + sandbox filter
   const [subscriptionsSearch, setSubscriptionsSearch] = useState("");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialSandboxFilter = (searchParams.get("sandboxFilter") as "all" | "live" | "sandbox" | null) || "all";
+  const [sandboxFilter, setSandboxFilter] = useState<"all" | "live" | "sandbox">(
+    initialSandboxFilter === "live" || initialSandboxFilter === "sandbox" ? initialSandboxFilter : "all"
+  );
+
+  // Keep URL in sync (so deep links work both ways)
+  useEffect(() => {
+    const current = searchParams.get("sandboxFilter") || "all";
+    if (current !== sandboxFilter) {
+      const next = new URLSearchParams(searchParams);
+      if (sandboxFilter === "all") next.delete("sandboxFilter");
+      else next.set("sandboxFilter", sandboxFilter);
+      setSearchParams(next, { replace: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sandboxFilter]);
 
   // Payment failures filter/sort state
   const [failuresSearch, setFailuresSearch] = useState("");
@@ -1486,14 +1506,30 @@ export default function Billing() {
                     </div>
                   </CardHeader>
                   <CardContent>
-                    <div className="relative mb-4 max-w-sm">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        placeholder="Search by customer, company, or email..."
-                        value={subscriptionsSearch}
-                        onChange={(e) => setSubscriptionsSearch(e.target.value)}
-                        className="pl-9"
-                      />
+                    <div className="mb-4 flex flex-wrap items-center gap-3">
+                      <div className="relative max-w-sm flex-1 min-w-[240px]">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          placeholder="Search by customer, company, or email..."
+                          value={subscriptionsSearch}
+                          onChange={(e) => setSubscriptionsSearch(e.target.value)}
+                          className="pl-9"
+                        />
+                      </div>
+                      <div className="flex items-center gap-1 rounded-md border border-border p-1">
+                        {(["all", "live", "sandbox"] as const).map((opt) => (
+                          <Button
+                            key={opt}
+                            type="button"
+                            size="sm"
+                            variant={sandboxFilter === opt ? "default" : "ghost"}
+                            className="h-7 px-3 text-xs capitalize"
+                            onClick={() => setSandboxFilter(opt)}
+                          >
+                            {opt === "all" ? "All" : opt === "live" ? "Live only" : "Sandbox only"}
+                          </Button>
+                        ))}
+                      </div>
                     </div>
                     {loadingSubscriptions ? (
                       <div className="flex items-center justify-center py-8">
@@ -1511,20 +1547,37 @@ export default function Billing() {
                             <TableHead>Deposit</TableHead>
                             <TableHead>Trailers</TableHead>
                             <TableHead>Status</TableHead>
+                            <TableHead>Mode</TableHead>
                             <TableHead className="w-[50px]">Actions</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {subscriptions.filter((sub) => {
-                            const q = subscriptionsSearch.trim().toLowerCase();
-                            if (!q) return true;
-                            const c = sub.customers;
+                          {(() => {
+                            const filteredSubs = (subscriptions || []).filter((sub) => {
+                              const q = subscriptionsSearch.trim().toLowerCase();
+                              const c = sub.customers as any;
+                              const matchesSearch = !q || (
+                                (c?.full_name || "").toLowerCase().includes(q) ||
+                                (c?.company_name || "").toLowerCase().includes(q) ||
+                                (c?.email || "").toLowerCase().includes(q)
+                              );
+                              const isSandbox = (sub as any).sandbox === true;
+                              const matchesSandbox =
+                                sandboxFilter === "all" ||
+                                (sandboxFilter === "sandbox" && isSandbox) ||
+                                (sandboxFilter === "live" && !isSandbox);
+                              return matchesSearch && matchesSandbox;
+                            });
                             return (
-                              (c?.full_name || "").toLowerCase().includes(q) ||
-                              (c?.company_name || "").toLowerCase().includes(q) ||
-                              (c?.email || "").toLowerCase().includes(q)
-                            );
-                          }).map((sub) => {
+                              <>
+                                {sandboxFilter === "sandbox" && (
+                                  <TableRow>
+                                    <TableCell colSpan={10} className="bg-amber-50 dark:bg-amber-950/30 text-amber-800 dark:text-amber-300 text-xs py-2">
+                                      Showing {filteredSubs.length} sandbox subscription{filteredSubs.length === 1 ? "" : "s"} — these route to Stripe test mode.
+                                    </TableCell>
+                                  </TableRow>
+                                )}
+                                {filteredSubs.map((sub) => {
                             const trailerCount = subscriptionItems?.filter(
                               i => i.subscription_id === sub.id && i.status === "active"
                             ).length || 0;
@@ -1695,6 +1748,16 @@ export default function Billing() {
                                       </TooltipProvider>
                                     )}
                                   </div>
+                                </TableCell>
+                                <TableCell>
+                                  {(sub as any).sandbox ? (
+                                    <Badge variant="outline" className="bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800">
+                                      <FlaskConical className="h-3 w-3 mr-1" />
+                                      Sandbox
+                                    </Badge>
+                                  ) : (
+                                    <span className="text-xs text-muted-foreground">Live</span>
+                                  )}
                                 </TableCell>
                                 <TableCell onClick={(e) => e.stopPropagation()}>
                                   <div className="flex items-center gap-1">
@@ -1899,6 +1962,9 @@ export default function Billing() {
                               </TableRow>
                             );
                           })}
+                              </>
+                            );
+                          })()}
                         </TableBody>
                       </Table>
                     ) : (
@@ -2461,6 +2527,7 @@ export default function Billing() {
                             <TableHead>Discount</TableHead>
                             <TableHead>Net</TableHead>
                             <TableHead>Status</TableHead>
+                            <TableHead className="w-[70px]">Mode</TableHead>
                             <TableHead></TableHead>
                           </TableRow>
                         </TableHeader>
@@ -2500,6 +2567,15 @@ export default function Billing() {
                                   ${Number(payment.net_amount).toFixed(2)}
                                 </TableCell>
                                 <TableCell>{getStatusBadge(payment.status)}</TableCell>
+                                <TableCell>
+                                  {payment.stripe_mode === "test" ? (
+                                    <span className="text-xs px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300 font-medium">
+                                      TEST
+                                    </span>
+                                  ) : (
+                                    <span className="text-xs text-muted-foreground">Live</span>
+                                  )}
+                                </TableCell>
                                 <TableCell>
                                   {canVoid && (
                                     <Button 

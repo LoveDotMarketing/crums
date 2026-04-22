@@ -408,6 +408,19 @@ export function EditSubscriptionPanel({ subscriptionId, onSave, onCancel }: Edit
         )}
       </div>
 
+      {/* Sandbox banner — admin-only context, persistent while sandbox=true */}
+      {subscription.sandbox && (
+        <div className="flex items-start gap-3 rounded-lg border border-amber-300 bg-amber-50 p-4 text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-200">
+          <FlaskConical className="h-5 w-5 mt-0.5 flex-shrink-0" />
+          <div>
+            <p className="font-semibold">Sandbox mode</p>
+            <p className="text-sm">
+              This subscription is in SANDBOX mode — charges use Stripe test keys. No real money moves.
+            </p>
+          </div>
+        </div>
+      )}
+
       <div className="grid gap-6 md:grid-cols-2">
         {/* Subscription Type */}
         <Card>
