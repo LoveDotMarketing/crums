@@ -116,7 +116,7 @@ serve(async (req) => {
           logData.stripe_subscription_id = typeof invoice.subscription === "string" 
             ? invoice.subscription 
             : invoice.subscription?.id;
-          await handlePaymentFailed(supabase, stripe, invoice);
+          await handlePaymentFailed(supabase, stripe, invoice, stripeMode);
           break;
         }
         case "invoice.paid": {
@@ -125,7 +125,7 @@ serve(async (req) => {
           logData.stripe_subscription_id = typeof invoice.subscription === "string" 
             ? invoice.subscription 
             : invoice.subscription?.id;
-          await handlePaymentSucceeded(supabase, stripe, invoice);
+          await handlePaymentSucceeded(supabase, stripe, invoice, stripeMode);
           break;
         }
         case "customer.subscription.updated": {
@@ -210,9 +210,10 @@ serve(async (req) => {
 async function handlePaymentFailed(
   supabase: SupabaseClient,
   stripe: Stripe,
-  invoice: Stripe.Invoice
+  invoice: Stripe.Invoice,
+  stripeMode: "live" | "test"
 ) {
-  logStep("Processing payment failed", { invoiceId: invoice.id, subscriptionId: invoice.subscription });
+  logStep("Processing payment failed", { invoiceId: invoice.id, subscriptionId: invoice.subscription, mode: stripeMode });
 
   if (!invoice.subscription) {
     logStep("No subscription associated with invoice, skipping");
@@ -346,14 +347,16 @@ async function handlePaymentFailed(
 async function handlePaymentSucceeded(
   supabase: SupabaseClient,
   stripe: Stripe,
-  invoice: Stripe.Invoice
+  invoice: Stripe.Invoice,
+  stripeMode: "live" | "test"
 ) {
-  logStep("Processing payment succeeded", { 
-    invoiceId: invoice.id, 
+  logStep("Processing payment succeeded", {
+    invoiceId: invoice.id,
     customerId: invoice.customer,
     subscriptionId: invoice.subscription,
     hasSubscription: !!invoice.subscription,
-    billingReason: invoice.billing_reason
+    billingReason: invoice.billing_reason,
+    mode: stripeMode,
   });
 
   // Skip invoices that aren't for subscriptions (one-time payments, etc.)
@@ -399,13 +402,14 @@ async function handlePaymentSucceeded(
               .upsert({
                 subscription_id: custSub.id,
                 stripe_invoice_id: invoice.id,
-                stripe_payment_intent_id: typeof invoice.payment_intent === "string" 
-                  ? invoice.payment_intent 
+                stripe_payment_intent_id: typeof invoice.payment_intent === "string"
+                  ? invoice.payment_intent
                   : invoice.payment_intent?.id,
                 amount: (invoice.total || 0) / 100,
                 net_amount: (invoice.total || 0) / 100,
                 status: "succeeded",
                 paid_at: new Date().toISOString(),
+                stripe_mode: stripeMode,
               }, {
                 onConflict: "stripe_invoice_id",
               });
@@ -595,11 +599,11 @@ async function handleSubscriptionUpdated(
     .from("customer_subscriptions")
     .update({
       status: newStatus,
-      next_billing_date: subscription.current_period_end 
+      next_billing_date: subscription.current_period_end
         ? new Date(subscription.current_period_end * 1000).toISOString().split("T")[0]
         : null,
     })
-    .eq("stripe_subscription_id", subscription.id);
+    .or(`stripe_subscription_id.eq.${subscription.id},sandbox_stripe_subscription_id.eq.${subscription.id}`);
 
   if (error) {
     logStep("Failed to update subscription status", { error: error.message });
@@ -614,13 +618,13 @@ async function handleSubscriptionDeleted(
 ) {
   logStep("Processing subscription deleted", { subscriptionId: subscription.id });
 
-  // Update subscription status to canceled
+  // Update subscription status to canceled (check both live and sandbox columns)
   const { data: sub } = await supabase
     .from("customer_subscriptions")
     .update({ status: "canceled" })
-    .eq("stripe_subscription_id", subscription.id)
+    .or(`stripe_subscription_id.eq.${subscription.id},sandbox_stripe_subscription_id.eq.${subscription.id}`)
     .select("id")
-    .single();
+    .maybeSingle();
 
   if (sub) {
     // Resolve any pending failures
