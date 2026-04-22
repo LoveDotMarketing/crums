@@ -1,125 +1,88 @@
 
 
-## Plan: Sandbox toggle audit trail
+## Plan: Sandbox application flag
 
-Track every sandbox flip with who, when, why — and surface them on the Payments admin page.
+Let admins flag a customer's **application** for sandbox before they reach payment setup, so the entire ACH/card linking flow runs against Stripe **test mode** — no real bank ever touched. The downstream subscription auto-inherits sandbox.
 
 ### 1. Schema (one migration)
 
-New table `public.subscription_sandbox_audit`:
-
+Add to `customer_applications`:
 | column | type | notes |
 |---|---|---|
-| `id` | uuid PK | `gen_random_uuid()` |
-| `subscription_id` | uuid NOT NULL | references `customer_subscriptions(id)` ON DELETE CASCADE |
-| `from_sandbox` | boolean NOT NULL | state before the toggle |
-| `to_sandbox` | boolean NOT NULL | state after the toggle |
-| `changed_by` | uuid NULL | references `auth.users(id)` ON DELETE SET NULL |
-| `changed_at` | timestamptz NOT NULL DEFAULT now() | |
-| `reason` | text NULL | optional admin note |
+| `sandbox` | boolean NOT NULL DEFAULT false | per-application sandbox flag |
+| `stripe_mode` | text NOT NULL DEFAULT 'live' | stamped by edge functions: `'live'` or `'test'` |
+| `sandbox_stripe_customer_id` | text NULL | test-mode customer reused on retries |
 
-Index: `(subscription_id, changed_at DESC)` and `(changed_at DESC)` for the global activity panel.
+Extend the existing `subscription_sandbox_audit` table with a nullable `application_id uuid` column so one immutable audit log covers both application and subscription toggles. Update the index to `(application_id, changed_at DESC)` alongside the existing subscription index. RLS unchanged (admin-only).
 
-RLS: enabled. Single policy — admins can SELECT/INSERT (`has_role(auth.uid(), 'admin')`). No UPDATE/DELETE policies (immutable audit log).
+### 2. New edge function: `toggle-application-sandbox`
 
-### 2. Edge functions
+Mirrors `enable-sandbox`/`disable-sandbox` shape:
+1. Verify Bearer token + admin role.
+2. Read current `sandbox` from `customer_applications`.
+3. **Guard:** reject if `payment_setup_status === 'completed'` AND switching to live (would orphan a test PM). Allow with explicit `force: true` flag (which also clears `stripe_payment_method_id` so customer is re-prompted to set up payment in live mode).
+4. `UPDATE customer_applications SET sandbox = $new WHERE id = $1`.
+5. Insert audit row with `application_id`, `from_sandbox`, `to_sandbox`, `changed_by`, `reason`.
+6. Append `app_event_logs` row (`event_type: 'application_sandbox_toggled'`).
 
-**`enable-sandbox`** (existing) — at the very end of the success path, after the `customer_subscriptions` update, insert one audit row:
-```ts
-await adminClient.from("subscription_sandbox_audit").insert({
-  subscription_id: subscriptionId,
-  from_sandbox: false,
-  to_sandbox: true,
-  changed_by: userData.user.id,
-  reason: reason ?? null,
-});
-```
-Accept new optional `reason: string` field on the request body (trimmed, max 500 chars).
+### 3. Edge function changes
 
-**`disable-sandbox`** (new edge function) — mirrors `enable-sandbox` shape:
-1. Verify Bearer token + admin role (same pattern as `enable-sandbox`).
-2. Read current `sandbox` value from `customer_subscriptions`.
-3. `UPDATE customer_subscriptions SET sandbox = false WHERE id = $1`.
-4. Insert audit row (`from_sandbox: true`, `to_sandbox: false`, `reason`).
-5. Append `app_event_logs` row (`event_type: 'sandbox_disabled'`) for parity with enable.
+**`create-ach-setup`** — at the top, fetch the customer's application row. If `application.sandbox === true`:
+- Use `STRIPE_TEST_SECRET_KEY` instead of `STRIPE_SECRET_KEY`.
+- Reuse `sandbox_stripe_customer_id` if present; otherwise create a test-mode Stripe customer with metadata `{ source: 'lovable_admin_sandbox', live_application_id: <id> }` and persist the new ID to `sandbox_stripe_customer_id`.
+- Stamp `stripe_mode = 'test'` on the application before returning the SetupIntent.
 
-The frontend currently disables sandbox via a direct table `update`. We switch it to call this new function so the audit trail is guaranteed (RLS on the new table won't trust client-side inserts, and we want consistent server-side stamping).
+**`confirm-ach-setup`** — same key-selection branch based on `application.sandbox`.
 
-### 3. UI — confirmation dialog (`EditSubscriptionPanel.tsx`)
+**`create-subscription`** — when activating an application, if `application.sandbox === true`, set `customer_subscriptions.sandbox = true` and `sandbox_stripe_customer_id = application.sandbox_stripe_customer_id` automatically. Use the test secret key for the Stripe subscription/PM operations.
 
-Both confirm dialogs (Enable + Disable) get an optional reason field:
+### 4. Frontend — publishable key resolution
 
-```
-┌─ Enable sandbox mode for this subscription? ─┐
-│ • All future charges use Stripe test mode…   │
-│ • You'll need to attach a test payment…      │
-│ • Existing live charge history is preserved. │
-│                                              │
-│ Reason (optional)                            │
-│ ┌──────────────────────────────────────────┐ │
-│ │ e.g. Testing bi-weekly billing cycle     │ │
-│ └──────────────────────────────────────────┘ │
-│                                              │
-│         [Cancel]  [Enable sandbox]           │
-└──────────────────────────────────────────────┘
-```
+Currently `payment-setup` loads Stripe.js with the **live** publishable key. Change `useStripeKey` (or wherever the publishable key is fetched) to also read the application's `stripe_mode` and pick test vs live publishable key. Add `STRIPE_TEST_PUBLISHABLE_KEY` to secrets if not already present (we already have `STRIPE_TEST_SECRET_KEY` and `STRIPE_WEBHOOK_SIGNING_SECRET_TEST`).
 
-Implementation:
-- Add `enableReason` / `disableReason` state (cleared each open).
-- `<Textarea>` (rows=2, maxLength=500) inside each `AlertDialog`.
-- `handleEnableSandbox` passes `reason: enableReason.trim() || undefined` in the body.
-- `handleDisableSandbox` switches from direct supabase update → `supabase.functions.invoke("disable-sandbox", { body: { subscriptionId, reason } })`.
+If the test publishable key isn't configured, the toggle UI shows an inline warning ("Add `STRIPE_TEST_PUBLISHABLE_KEY` secret to enable sandbox applications").
 
-### 4. UI — "Sandbox Activity" panel on `/dashboard/admin/payments`
+### 5. UI — Customer Detail page (`src/pages/admin/CustomerDetail.tsx`)
 
-New `SandboxActivityPanel` component placed below the existing payments table on `Payments.tsx` (the user said `/admin/settings/payments`; this app's actual route is `/dashboard/admin/payments` — same page, no separate Settings route exists, confirmed via App.tsx).
+In the application section header, add a **Sandbox Application** card matching the subscription sandbox card visual:
+- Switch + amber **Sandbox** badge when on
+- Confirmation `AlertDialog` with bullets explaining the impact + optional reason `Textarea`
+- When on, persistent amber banner at the top of the customer detail page: *"This customer's application is in SANDBOX mode — payment setup runs against Stripe test mode."*
 
-Query:
-```ts
-useQuery({
-  queryKey: ["sandbox-audit-recent"],
-  queryFn: async () => supabase
-    .from("subscription_sandbox_audit")
-    .select(`
-      id, from_sandbox, to_sandbox, reason, changed_at, changed_by,
-      customer_subscriptions ( id, customers ( full_name, company_name, email ) )
-    `)
-    .order("changed_at", { ascending: false })
-    .limit(50)
-});
-```
+### 6. UI — Applications list (`src/pages/admin/Applications.tsx`)
 
-Admin user names: a second query `supabase.from("profiles").select("id, full_name, email").in("id", changedByIds)` then merged in. (The audit row stores `auth.users.id`; profiles already mirror this.)
+Add a **Mode** column with amber **Sandbox** badge for `sandbox=true` rows. Add the same `Sandbox only / Live only / All` filter chip pattern used on Billing.
 
-Rendered as a `Card` titled **Sandbox Activity** with a `Table`:
+### 7. UI — Customer-facing payment setup
 
-| Subscription | Admin | Change | Reason | When |
-|---|---|---|---|---|
-| Acme Logistics — link → /dashboard/admin/billing?subscription=… | Eric Crum | `Live → Sandbox` (amber arrow) | "Testing weekly cycle" | 2 min ago |
+Zero visible changes. The Stripe Elements iframe just loads with the test publishable key when applicable. No badges, no banners — matches the "customers see nothing" rule.
 
-- Subscription cell links to existing edit panel via the same deep-link pattern Billing already uses (`?subscription=<id>`); falls back to the customer name as plain text if `customer_subscriptions` was deleted (cascade fires audit row stays via SET NULL — actually we cascade delete the audit row; so subscription always exists).
-- Admin cell: full_name or email; "Unknown" if profile missing.
-- Change cell: small badges — amber `Sandbox`, muted `Live`, with a `→` between.
-- Reason: muted italic if null (`—`).
-- When: `formatDistanceToNow(changed_at, { addSuffix: true })` with the absolute date as a tooltip.
-- Empty state: "No sandbox toggles yet."
-- Pagination: out of scope; the 50-row cap is plenty for v1. Future: link to a full audit page if it grows.
+### 8. Files
 
-### 5. Files
+1. **Migration** — add 3 columns to `customer_applications` + `application_id` to `subscription_sandbox_audit` + new index.
+2. `supabase/functions/toggle-application-sandbox/index.ts` — new function.
+3. `supabase/functions/create-ach-setup/index.ts` — branch on `application.sandbox`.
+4. `supabase/functions/confirm-ach-setup/index.ts` — branch on `application.sandbox`.
+5. `supabase/functions/create-subscription/index.ts` — inherit sandbox flag.
+6. `src/pages/customer/PaymentSetup.tsx` (and any `useStripeKey` helper) — resolve publishable key from application's `stripe_mode`.
+7. `src/pages/admin/CustomerDetail.tsx` — sandbox card + banner.
+8. `src/pages/admin/Applications.tsx` — Mode column + filter chip.
+9. `src/components/admin/SandboxActivityPanel.tsx` — render `application_id` rows alongside subscription rows (e.g., "Application: Mark Solis — Live → Sandbox").
+10. `src/integrations/supabase/types.ts` — auto-regenerated.
 
-1. **New migration** — `subscription_sandbox_audit` table + indexes + RLS policy.
-2. **`supabase/functions/enable-sandbox/index.ts`** — accept `reason`, insert audit row.
-3. **`supabase/functions/disable-sandbox/index.ts`** — new function (admin-verified, flips flag, inserts audit row, emits `app_event_logs`).
-4. **`src/components/admin/EditSubscriptionPanel.tsx`** — add `Textarea` to both dialogs, switch disable handler to invoke the new edge function.
-5. **`src/pages/admin/Payments.tsx`** — render new `SandboxActivityPanel` card below existing table.
-6. **`src/components/admin/SandboxActivityPanel.tsx`** — new component (query + table).
-7. **`src/integrations/supabase/types.ts`** — auto-regenerated.
+### Test flow after build
+
+1. Admin adds `STRIPE_TEST_PUBLISHABLE_KEY` secret.
+2. Admin opens Mark Solis's customer page → flips **Sandbox Application** on → reason "Test account."
+3. Mark logs in, completes the application, clicks **Set up payment**.
+4. Stripe Elements loads in test mode. Mark enters routing `110000000` / account `000123456789` (or card `4242…`). ACH "links" instantly.
+5. Admin approves → activates subscription → it auto-inherits `sandbox=true`, reuses the test Stripe customer.
+6. All future charges run against Stripe test mode. Mark's portal looks identical to a live customer.
 
 ### Out of scope
 
-- No edit/delete of audit rows (immutable by RLS design).
-- No CSV export of the audit log (easy add later).
-- No email/Slack notification on sandbox flips.
-- No standalone "/admin/settings/payments" route — the existing Payments admin page is the natural home and matches the request's intent.
-- No reason-required policy — kept optional per the prompt.
+- No automatic switch back to live after testing — admin must explicitly toggle off (with the guard around completed payment setup).
+- No bulk "create test customer" wizard — the existing signup + this toggle is the path.
+- No separate "sandbox" badge on the public signup form — sandbox is set after signup, by an admin.
+- No reason-required policy.
 
