@@ -737,6 +737,42 @@ export function EditSubscriptionPanel({ subscriptionId, onSave, onCancel }: Edit
           customer={subscription.customers as any}
         />
       )}
+
+      {/* Enable Sandbox confirmation */}
+      <AlertDialog open={showEnableSandboxDialog} onOpenChange={setShowEnableSandboxDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Enable sandbox mode for this subscription?</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2 text-sm">
+                <p>• All future charges use Stripe test mode — no real money moves.</p>
+                <p>• You'll need to attach a test payment method before charges will succeed.</p>
+                <p>• Existing live charge history is preserved and not affected.</p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleEnableSandbox}>Enable sandbox</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Disable Sandbox confirmation */}
+      <AlertDialog open={showDisableSandboxDialog} onOpenChange={setShowDisableSandboxDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Switch back to live mode?</AlertDialogTitle>
+            <AlertDialogDescription>
+              The test customer is preserved for future re-enable. Future charges will route through your live Stripe account again.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDisableSandbox}>Switch to live</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
