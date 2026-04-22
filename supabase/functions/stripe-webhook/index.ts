@@ -223,12 +223,12 @@ async function handlePaymentFailed(
     ? invoice.subscription 
     : invoice.subscription.id;
 
-  // Find our subscription record
+  // Find our subscription record (check both live and sandbox columns)
   const { data: subscription, error: subError } = await supabase
     .from("customer_subscriptions")
     .select("id, customer_id, failed_payment_count, grace_period_start")
-    .eq("stripe_subscription_id", stripeSubscriptionId)
-    .single();
+    .or(`stripe_subscription_id.eq.${stripeSubscriptionId},sandbox_stripe_subscription_id.eq.${stripeSubscriptionId}`)
+    .maybeSingle();
 
   if (subError || !subscription) {
     logStep("Subscription not found in database", { stripeSubscriptionId, error: subError?.message });
