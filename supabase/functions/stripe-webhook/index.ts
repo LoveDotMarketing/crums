@@ -438,13 +438,13 @@ async function handlePaymentSucceeded(
 
   logStep("Looking for subscription", { stripeSubscriptionId });
 
-  // Find our subscription record
+  // Find our subscription record (check both live and sandbox columns)
   let subscription: { id: string; customer_id: string } | null = null;
-  
+
   const { data: subData, error: subError } = await supabase
     .from("customer_subscriptions")
     .select("id, customer_id")
-    .eq("stripe_subscription_id", stripeSubscriptionId)
+    .or(`stripe_subscription_id.eq.${stripeSubscriptionId},sandbox_stripe_subscription_id.eq.${stripeSubscriptionId}`)
     .maybeSingle();
 
   if (subData) {
