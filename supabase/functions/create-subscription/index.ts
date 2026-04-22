@@ -260,7 +260,21 @@ serve(async (req) => {
     // --- Step 1: Resolve the Stripe Customer ---
     let stripeCustomerId: string | null = null;
 
-    if (appRecord?.stripe_customer_id) {
+    const appStripeCustomerId = isSandboxApp
+      ? appRecord?.sandbox_stripe_customer_id
+      : appRecord?.stripe_customer_id;
+    if (appStripeCustomerId) {
+      try {
+        const existingCust = await stripe.customers.retrieve(appStripeCustomerId);
+        if (existingCust && !(existingCust as any).deleted) {
+          stripeCustomerId = appStripeCustomerId;
+          logStep("Stripe customer from application record is valid", { stripeCustomerId, sandbox: isSandboxApp });
+        }
+      } catch {
+        logStep("Stored stripe customer id is invalid, falling back to search");
+      }
+    }
+    if (false && appRecord?.stripe_customer_id) {
       try {
         const existingCust = await stripe.customers.retrieve(appRecord.stripe_customer_id);
         if (existingCust && !(existingCust as any).deleted) {
