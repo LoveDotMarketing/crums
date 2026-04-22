@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar } from "@/components/ui/calendar";
@@ -78,6 +79,8 @@ export function EditSubscriptionPanel({ subscriptionId, onSave, onCancel }: Edit
   const [isTogglingSandbox, setIsTogglingSandbox] = useState(false);
   const [showEnableSandboxDialog, setShowEnableSandboxDialog] = useState(false);
   const [showDisableSandboxDialog, setShowDisableSandboxDialog] = useState(false);
+  const [enableReason, setEnableReason] = useState("");
+  const [disableReason, setDisableReason] = useState("");
   const [copiedTestId, setCopiedTestId] = useState(false);
 
   // Form state
@@ -321,15 +324,18 @@ export function EditSubscriptionPanel({ subscriptionId, onSave, onCancel }: Edit
   };
 
   const handleEnableSandbox = async () => {
+    const reason = enableReason.trim();
     setShowEnableSandboxDialog(false);
     setIsTogglingSandbox(true);
     try {
       const { data, error } = await supabase.functions.invoke("enable-sandbox", {
-        body: { subscriptionId },
+        body: { subscriptionId, reason: reason || undefined },
       });
       if (error) throw error;
       toast.success(`Sandbox enabled. Test customer: ${data.sandbox_stripe_customer_id}`);
+      setEnableReason("");
       await queryClient.invalidateQueries({ queryKey: ["subscription-detail", subscriptionId] });
+      await queryClient.invalidateQueries({ queryKey: ["sandbox-audit-recent"] });
     } catch (error) {
       toast.error("Failed to enable sandbox: " + (error instanceof Error ? error.message : "Unknown error"));
     } finally {
@@ -338,16 +344,18 @@ export function EditSubscriptionPanel({ subscriptionId, onSave, onCancel }: Edit
   };
 
   const handleDisableSandbox = async () => {
+    const reason = disableReason.trim();
     setShowDisableSandboxDialog(false);
     setIsTogglingSandbox(true);
     try {
-      const { error } = await supabase
-        .from("customer_subscriptions")
-        .update({ sandbox: false })
-        .eq("id", subscriptionId);
+      const { error } = await supabase.functions.invoke("disable-sandbox", {
+        body: { subscriptionId, reason: reason || undefined },
+      });
       if (error) throw error;
       toast.success("Sandbox disabled. Switched back to live mode.");
+      setDisableReason("");
       await queryClient.invalidateQueries({ queryKey: ["subscription-detail", subscriptionId] });
+      await queryClient.invalidateQueries({ queryKey: ["sandbox-audit-recent"] });
     } catch (error) {
       toast.error("Failed to disable sandbox: " + (error instanceof Error ? error.message : "Unknown error"));
     } finally {
@@ -752,7 +760,13 @@ export function EditSubscriptionPanel({ subscriptionId, onSave, onCancel }: Edit
       )}
 
       {/* Enable Sandbox confirmation */}
-      <AlertDialog open={showEnableSandboxDialog} onOpenChange={setShowEnableSandboxDialog}>
+      <AlertDialog
+        open={showEnableSandboxDialog}
+        onOpenChange={(open) => {
+          setShowEnableSandboxDialog(open);
+          if (!open) setEnableReason("");
+        }}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Enable sandbox mode for this subscription?</AlertDialogTitle>
@@ -764,6 +778,19 @@ export function EditSubscriptionPanel({ subscriptionId, onSave, onCancel }: Edit
               </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
+          <div className="space-y-2">
+            <Label htmlFor="enable-sandbox-reason" className="text-sm">
+              Reason <span className="text-muted-foreground font-normal">(optional)</span>
+            </Label>
+            <Textarea
+              id="enable-sandbox-reason"
+              rows={2}
+              maxLength={500}
+              placeholder="e.g. Testing bi-weekly billing cycle"
+              value={enableReason}
+              onChange={(e) => setEnableReason(e.target.value)}
+            />
+          </div>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={handleEnableSandbox}>Enable sandbox</AlertDialogAction>
@@ -772,7 +799,13 @@ export function EditSubscriptionPanel({ subscriptionId, onSave, onCancel }: Edit
       </AlertDialog>
 
       {/* Disable Sandbox confirmation */}
-      <AlertDialog open={showDisableSandboxDialog} onOpenChange={setShowDisableSandboxDialog}>
+      <AlertDialog
+        open={showDisableSandboxDialog}
+        onOpenChange={(open) => {
+          setShowDisableSandboxDialog(open);
+          if (!open) setDisableReason("");
+        }}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Switch back to live mode?</AlertDialogTitle>
@@ -780,6 +813,19 @@ export function EditSubscriptionPanel({ subscriptionId, onSave, onCancel }: Edit
               The test customer is preserved for future re-enable. Future charges will route through your live Stripe account again.
             </AlertDialogDescription>
           </AlertDialogHeader>
+          <div className="space-y-2">
+            <Label htmlFor="disable-sandbox-reason" className="text-sm">
+              Reason <span className="text-muted-foreground font-normal">(optional)</span>
+            </Label>
+            <Textarea
+              id="disable-sandbox-reason"
+              rows={2}
+              maxLength={500}
+              placeholder="e.g. Testing complete, returning to production"
+              value={disableReason}
+              onChange={(e) => setDisableReason(e.target.value)}
+            />
+          </div>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={handleDisableSandbox}>Switch to live</AlertDialogAction>

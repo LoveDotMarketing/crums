@@ -11,6 +11,7 @@ import { DollarSign, CheckCircle2, Clock, AlertTriangle, Search } from "lucide-r
 import { format } from "date-fns";
 import { useState } from "react";
 import { useStaffPermissions } from "@/hooks/useStaffPermissions";
+import { SandboxActivityPanel } from "@/components/admin/SandboxActivityPanel";
 
 export default function Payments() {
   const [search, setSearch] = useState("");
@@ -185,6 +186,9 @@ export default function Payments() {
                 </Table>
               </CardContent>
             </Card>
+
+            {/* Sandbox Activity audit log */}
+            <SandboxActivityPanel />
           </main>
         </div>
       </div>
