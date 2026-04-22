@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
+import { getStripeClient } from "../_shared/billing.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -162,11 +163,13 @@ serve(async (req) => {
     if (!subscriptionId) throw new Error("subscriptionId is required");
     logStep("Processing subscription", { subscriptionId });
 
-    // Get the subscription from database
+    // Get the subscription from database (include sandbox routing fields)
     const { data: subscription, error: subError } = await supabaseClient
       .from("customer_subscriptions")
       .select(`
         *,
+        sandbox,
+        sandbox_stripe_customer_id,
         customers (
           full_name,
           email
@@ -202,11 +205,18 @@ serve(async (req) => {
       throw new Error("No Stripe subscription ID found");
     }
 
-    if (!subscription.stripe_customer_id) {
-      throw new Error("No Stripe customer ID found");
+    // Resolve correct Stripe client (live or test) for this subscription
+    const { stripe, mode, customerId: routedCustomerId } = getStripeClient(subscription);
+    logStep("Stripe client selected", { mode, routedCustomerId });
+
+    // Override stripe_customer_id with the mode-correct one for downstream code
+    if (routedCustomerId) {
+      subscription.stripe_customer_id = routedCustomerId;
     }
 
-    const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
+    if (!subscription.stripe_customer_id) {
+      throw new Error("No Stripe customer ID found for the selected mode");
+    }
 
     // Get the Stripe subscription to find the latest invoice
     const stripeSubscription = await stripe.subscriptions.retrieve(subscription.stripe_subscription_id);
