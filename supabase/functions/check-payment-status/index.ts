@@ -22,6 +22,7 @@ serve(async (req) => {
 
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
     if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
+    const testStripeKey = Deno.env.get("STRIPE_TEST_SECRET_KEY");
 
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
@@ -43,7 +44,7 @@ serve(async (req) => {
     // Get the user's application
     const { data: application, error: appError } = await supabaseClient
       .from("customer_applications")
-      .select("id, stripe_customer_id, stripe_payment_method_id, payment_setup_status, status, payment_method_type")
+      .select("id, stripe_customer_id, sandbox_stripe_customer_id, sandbox, stripe_payment_method_id, payment_setup_status, status, payment_method_type")
       .eq("user_id", user.id)
       .single();
 
@@ -55,16 +56,23 @@ serve(async (req) => {
       );
     }
 
+    // Pick Stripe mode based on application's sandbox flag
+    const isSandbox = !!application.sandbox;
+    const effectiveStripeCustomerId = isSandbox
+      ? application.sandbox_stripe_customer_id
+      : application.stripe_customer_id;
+
     logStep("Application loaded", {
       appId: application.id,
       status: application.payment_setup_status,
       storedPmId: application.stripe_payment_method_id,
-      stripeCustomerId: application.stripe_customer_id,
+      stripeCustomerId: effectiveStripeCustomerId,
+      sandbox: isSandbox,
     });
 
     // No Stripe customer yet → no payment method
-    if (!application.stripe_customer_id) {
-      logStep("No Stripe customer ID found");
+    if (!effectiveStripeCustomerId) {
+      logStep("No Stripe customer ID found", { sandbox: isSandbox });
       return new Response(
         JSON.stringify({
           hasPaymentMethod: false,
@@ -76,12 +84,16 @@ serve(async (req) => {
       );
     }
 
-    const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
+    if (isSandbox && !testStripeKey) {
+      throw new Error("Application is in sandbox mode but STRIPE_TEST_SECRET_KEY is not configured");
+    }
 
-    // Fetch actual payment methods from Stripe
-    const achMethods = await stripe.paymentMethods.list({ customer: application.stripe_customer_id, type: "us_bank_account" });
-    const cardMethods = await stripe.paymentMethods.list({ customer: application.stripe_customer_id, type: "card" });
-    logStep("Retrieved payment methods", { achCount: achMethods.data.length, cardCount: cardMethods.data.length });
+    const stripe = new Stripe(isSandbox ? testStripeKey! : stripeKey, { apiVersion: "2025-08-27.basil" });
+
+    // Fetch actual payment methods from Stripe (correct mode)
+    const achMethods = await stripe.paymentMethods.list({ customer: effectiveStripeCustomerId, type: "us_bank_account" });
+    const cardMethods = await stripe.paymentMethods.list({ customer: effectiveStripeCustomerId, type: "card" });
+    logStep("Retrieved payment methods", { achCount: achMethods.data.length, cardCount: cardMethods.data.length, mode: isSandbox ? "test" : "live" });
 
     const allMethods = [...achMethods.data, ...cardMethods.data];
     const storedPmId = application.stripe_payment_method_id;

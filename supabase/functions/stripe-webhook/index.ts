@@ -17,12 +17,14 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  const stripeSecretKey = Deno.env.get("STRIPE_SECRET_KEY");
-  const webhookSecret = Deno.env.get("STRIPE_WEBHOOK_SIGNING_SECRET");
+  const liveStripeKey = Deno.env.get("STRIPE_SECRET_KEY");
+  const liveWebhookSecret = Deno.env.get("STRIPE_WEBHOOK_SIGNING_SECRET");
+  const testStripeKey = Deno.env.get("STRIPE_TEST_SECRET_KEY");
+  const testWebhookSecret = Deno.env.get("STRIPE_WEBHOOK_SIGNING_SECRET_TEST");
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
   const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
-  if (!stripeSecretKey || !webhookSecret || !supabaseUrl || !supabaseServiceKey) {
+  if (!liveStripeKey || !liveWebhookSecret || !supabaseUrl || !supabaseServiceKey) {
     console.error("Missing required environment variables");
     return new Response(JSON.stringify({ error: "Server configuration error" }), {
       status: 500,
@@ -30,8 +32,13 @@ serve(async (req) => {
     });
   }
 
-  const stripe = new Stripe(stripeSecretKey, { apiVersion: "2025-08-27.basil" });
+  const liveStripe = new Stripe(liveStripeKey, { apiVersion: "2025-08-27.basil" });
+  const testStripe = testStripeKey ? new Stripe(testStripeKey, { apiVersion: "2025-08-27.basil" }) : null;
   const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+  // Will be reassigned after signature verification picks live or test mode
+  let stripe: Stripe = liveStripe;
+  let stripeMode: "live" | "test" = "live";
 
   try {
     const body = await req.text();
@@ -45,18 +52,40 @@ serve(async (req) => {
       });
     }
 
-    // Verify webhook signature using async method (required for Stripe SDK v18+)
+    // Dual-mode signature verification: try live first, then test
     let event: Stripe.Event;
     try {
-      event = await stripe.webhooks.constructEventAsync(body, signature, webhookSecret);
-    } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : "Unknown error";
-      logStep("Webhook signature verification failed", { error: errorMessage });
-      return new Response(JSON.stringify({ error: "Invalid signature" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      event = await liveStripe.webhooks.constructEventAsync(body, signature, liveWebhookSecret);
+      stripe = liveStripe;
+      stripeMode = "live";
+    } catch (liveErr: unknown) {
+      // Live verification failed — try test mode if configured
+      if (testStripe && testWebhookSecret) {
+        try {
+          event = await testStripe.webhooks.constructEventAsync(body, signature, testWebhookSecret);
+          stripe = testStripe;
+          stripeMode = "test";
+          logStep("Verified with TEST signing secret");
+        } catch (testErr: unknown) {
+          const liveMsg = liveErr instanceof Error ? liveErr.message : "Unknown";
+          const testMsg = testErr instanceof Error ? testErr.message : "Unknown";
+          logStep("Webhook signature verification failed for both live and test", { liveMsg, testMsg });
+          return new Response(JSON.stringify({ error: "Invalid signature" }), {
+            status: 400,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+      } else {
+        const errorMessage = liveErr instanceof Error ? liveErr.message : "Unknown error";
+        logStep("Webhook signature verification failed (test mode not configured)", { error: errorMessage });
+        return new Response(JSON.stringify({ error: "Invalid signature" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
     }
+
+    logStep("Received webhook event", { type: event.type, id: event.id, mode: stripeMode, livemode: event.livemode });
 
     logStep("Received webhook event", { type: event.type, id: event.id });
 
@@ -87,7 +116,7 @@ serve(async (req) => {
           logData.stripe_subscription_id = typeof invoice.subscription === "string" 
             ? invoice.subscription 
             : invoice.subscription?.id;
-          await handlePaymentFailed(supabase, stripe, invoice);
+          await handlePaymentFailed(supabase, stripe, invoice, stripeMode);
           break;
         }
         case "invoice.paid": {
@@ -96,7 +125,7 @@ serve(async (req) => {
           logData.stripe_subscription_id = typeof invoice.subscription === "string" 
             ? invoice.subscription 
             : invoice.subscription?.id;
-          await handlePaymentSucceeded(supabase, stripe, invoice);
+          await handlePaymentSucceeded(supabase, stripe, invoice, stripeMode);
           break;
         }
         case "customer.subscription.updated": {
@@ -117,13 +146,14 @@ serve(async (req) => {
       }
 
       // Look up our subscription and customer IDs if we have a stripe_subscription_id
+      // Check both live and sandbox columns
       if (logData.stripe_subscription_id) {
         const { data: subData } = await supabase
           .from("customer_subscriptions")
           .select("id, customer_id, customers(email)")
-          .eq("stripe_subscription_id", logData.stripe_subscription_id)
+          .or(`stripe_subscription_id.eq.${logData.stripe_subscription_id},sandbox_stripe_subscription_id.eq.${logData.stripe_subscription_id}`)
           .maybeSingle();
-        
+
         if (subData) {
           logData.subscription_id = subData.id;
           logData.customer_id = subData.customer_id;
@@ -180,9 +210,10 @@ serve(async (req) => {
 async function handlePaymentFailed(
   supabase: SupabaseClient,
   stripe: Stripe,
-  invoice: Stripe.Invoice
+  invoice: Stripe.Invoice,
+  stripeMode: "live" | "test"
 ) {
-  logStep("Processing payment failed", { invoiceId: invoice.id, subscriptionId: invoice.subscription });
+  logStep("Processing payment failed", { invoiceId: invoice.id, subscriptionId: invoice.subscription, mode: stripeMode });
 
   if (!invoice.subscription) {
     logStep("No subscription associated with invoice, skipping");
@@ -193,12 +224,12 @@ async function handlePaymentFailed(
     ? invoice.subscription 
     : invoice.subscription.id;
 
-  // Find our subscription record
+  // Find our subscription record (check both live and sandbox columns)
   const { data: subscription, error: subError } = await supabase
     .from("customer_subscriptions")
     .select("id, customer_id, failed_payment_count, grace_period_start")
-    .eq("stripe_subscription_id", stripeSubscriptionId)
-    .single();
+    .or(`stripe_subscription_id.eq.${stripeSubscriptionId},sandbox_stripe_subscription_id.eq.${stripeSubscriptionId}`)
+    .maybeSingle();
 
   if (subError || !subscription) {
     logStep("Subscription not found in database", { stripeSubscriptionId, error: subError?.message });
@@ -316,14 +347,16 @@ async function handlePaymentFailed(
 async function handlePaymentSucceeded(
   supabase: SupabaseClient,
   stripe: Stripe,
-  invoice: Stripe.Invoice
+  invoice: Stripe.Invoice,
+  stripeMode: "live" | "test"
 ) {
-  logStep("Processing payment succeeded", { 
-    invoiceId: invoice.id, 
+  logStep("Processing payment succeeded", {
+    invoiceId: invoice.id,
     customerId: invoice.customer,
     subscriptionId: invoice.subscription,
     hasSubscription: !!invoice.subscription,
-    billingReason: invoice.billing_reason
+    billingReason: invoice.billing_reason,
+    mode: stripeMode,
   });
 
   // Skip invoices that aren't for subscriptions (one-time payments, etc.)
@@ -369,13 +402,14 @@ async function handlePaymentSucceeded(
               .upsert({
                 subscription_id: custSub.id,
                 stripe_invoice_id: invoice.id,
-                stripe_payment_intent_id: typeof invoice.payment_intent === "string" 
-                  ? invoice.payment_intent 
+                stripe_payment_intent_id: typeof invoice.payment_intent === "string"
+                  ? invoice.payment_intent
                   : invoice.payment_intent?.id,
                 amount: (invoice.total || 0) / 100,
                 net_amount: (invoice.total || 0) / 100,
                 status: "succeeded",
                 paid_at: new Date().toISOString(),
+                stripe_mode: stripeMode,
               }, {
                 onConflict: "stripe_invoice_id",
               });
@@ -408,13 +442,13 @@ async function handlePaymentSucceeded(
 
   logStep("Looking for subscription", { stripeSubscriptionId });
 
-  // Find our subscription record
+  // Find our subscription record (check both live and sandbox columns)
   let subscription: { id: string; customer_id: string } | null = null;
-  
+
   const { data: subData, error: subError } = await supabase
     .from("customer_subscriptions")
     .select("id, customer_id")
-    .eq("stripe_subscription_id", stripeSubscriptionId)
+    .or(`stripe_subscription_id.eq.${stripeSubscriptionId},sandbox_stripe_subscription_id.eq.${stripeSubscriptionId}`)
     .maybeSingle();
 
   if (subData) {
@@ -514,13 +548,14 @@ async function handlePaymentSucceeded(
     .upsert({
       subscription_id: subscription.id,
       stripe_invoice_id: invoice.id,
-      stripe_payment_intent_id: typeof invoice.payment_intent === "string" 
-        ? invoice.payment_intent 
+      stripe_payment_intent_id: typeof invoice.payment_intent === "string"
+        ? invoice.payment_intent
         : invoice.payment_intent?.id,
       amount: (invoice.total || 0) / 100,
       net_amount: (invoice.total || 0) / 100,
       status: "succeeded",
       paid_at: new Date().toISOString(),
+      stripe_mode: stripeMode,
     }, {
       onConflict: "stripe_invoice_id",
     });
@@ -564,11 +599,11 @@ async function handleSubscriptionUpdated(
     .from("customer_subscriptions")
     .update({
       status: newStatus,
-      next_billing_date: subscription.current_period_end 
+      next_billing_date: subscription.current_period_end
         ? new Date(subscription.current_period_end * 1000).toISOString().split("T")[0]
         : null,
     })
-    .eq("stripe_subscription_id", subscription.id);
+    .or(`stripe_subscription_id.eq.${subscription.id},sandbox_stripe_subscription_id.eq.${subscription.id}`);
 
   if (error) {
     logStep("Failed to update subscription status", { error: error.message });
@@ -583,13 +618,13 @@ async function handleSubscriptionDeleted(
 ) {
   logStep("Processing subscription deleted", { subscriptionId: subscription.id });
 
-  // Update subscription status to canceled
+  // Update subscription status to canceled (check both live and sandbox columns)
   const { data: sub } = await supabase
     .from("customer_subscriptions")
     .update({ status: "canceled" })
-    .eq("stripe_subscription_id", subscription.id)
+    .or(`stripe_subscription_id.eq.${subscription.id},sandbox_stripe_subscription_id.eq.${subscription.id}`)
     .select("id")
-    .single();
+    .maybeSingle();
 
   if (sub) {
     // Resolve any pending failures
