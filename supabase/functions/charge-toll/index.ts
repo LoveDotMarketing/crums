@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
+import { getStripeClient } from "../_shared/billing.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -65,10 +66,10 @@ serve(async (req) => {
 
     logStep("Toll fetched", { tollId: toll.id, amount: toll.amount, customerId: toll.customer_id });
 
-    // 2. Look up customer's stripe_customer_id
+    // 2. Look up customer's subscription (with sandbox info) for Stripe routing
     const { data: sub, error: subError } = await supabaseAdmin
       .from("customer_subscriptions")
-      .select("stripe_customer_id")
+      .select("stripe_customer_id, sandbox, sandbox_stripe_customer_id")
       .eq("customer_id", toll.customer_id)
       .not("stripe_customer_id", "is", null)
       .limit(1)
@@ -77,12 +78,14 @@ serve(async (req) => {
     if (subError || !sub?.stripe_customer_id) {
       throw new Error("Customer has no linked Stripe account. Set up ACH payment first.");
     }
-    logStep("Stripe customer found", { stripeCustomerId: sub.stripe_customer_id });
+
+    const { stripe, mode, customerId } = getStripeClient(sub);
+    if (!customerId) {
+      throw new Error("Customer has no Stripe customer ID for the selected mode.");
+    }
+    logStep("Stripe customer resolved", { stripeCustomerId: customerId, mode });
 
     // 3. Create Stripe invoice with invoice isolation
-    const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY")!, {
-      apiVersion: "2025-08-27.basil",
-    });
 
     const tollDate = new Date(toll.toll_date).toLocaleDateString("en-US", {
       month: "numeric", day: "numeric", year: "numeric"
@@ -92,7 +95,7 @@ serve(async (req) => {
 
     // Create invoice FIRST with pending_invoice_items_behavior: 'exclude' to prevent dangling items
     const invoice = await stripe.invoices.create({
-      customer: sub.stripe_customer_id,
+      customer: customerId,
       collection_method: "charge_automatically",
       auto_advance: true,
       pending_invoice_items_behavior: "exclude",
@@ -101,7 +104,7 @@ serve(async (req) => {
 
     // Attach invoice item explicitly to this invoice
     await stripe.invoiceItems.create({
-      customer: sub.stripe_customer_id,
+      customer: customerId,
       invoice: invoice.id,
       amount: amountCents,
       currency: "usd",

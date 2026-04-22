@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
+import { getStripeClient } from "../_shared/billing.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -56,7 +57,7 @@ serve(async (req) => {
       throw new Error("No authorization provided");
     }
 
-    const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
+    // Per-subscription Stripe client is selected inside the loop via getStripeClient(sub).
 
     // Parse request body for optional filters
     let subscriptionId: string | undefined;
@@ -92,6 +93,9 @@ serve(async (req) => {
 
     for (const sub of subscriptions || []) {
       try {
+        // Resolve correct Stripe client (live or test) for this subscription
+        const { stripe, mode } = getStripeClient(sub);
+        logStep("Processing subscription", { subId: sub.id, mode });
         // Get invoices for this subscription directly from Stripe
         const stripeInvoices = [];
         if (sub.stripe_subscription_id) {
@@ -108,15 +112,18 @@ serve(async (req) => {
 
         // Also get standalone invoices (deposits/charges) for this customer
         try {
-          const customerInvoices = await stripe.invoices.list({
-            customer: sub.stripe_customer_id,
-            limit: 100,
-          });
-          // Add invoices that reference this subscription via metadata
-          for (const inv of customerInvoices.data) {
-            if (inv.metadata?.subscription_id === sub.stripe_subscription_id && 
-                !stripeInvoices.some(si => si.id === inv.id)) {
-              stripeInvoices.push(inv);
+          const { customerId } = getStripeClient(sub);
+          if (customerId) {
+            const customerInvoices = await stripe.invoices.list({
+              customer: customerId,
+              limit: 100,
+            });
+            // Add invoices that reference this subscription via metadata
+            for (const inv of customerInvoices.data) {
+              if (inv.metadata?.subscription_id === sub.stripe_subscription_id &&
+                  !stripeInvoices.some(si => si.id === inv.id)) {
+                stripeInvoices.push(inv);
+              }
             }
           }
         } catch {
@@ -212,14 +219,16 @@ serve(async (req) => {
                   paid_at: paymentStatus === "succeeded" ? new Date().toISOString() : null,
                   updated_at: new Date().toISOString(),
                   stripe_payment_intent_id: piId || undefined,
+                  stripe_mode: mode,
                 })
                 .eq("id", existingPayment.id);
 
               results.paymentsUpdated++;
-              logStep("Updated payment status", { 
-                paymentId: existingPayment.id, 
+              logStep("Updated payment status", {
+                paymentId: existingPayment.id,
                 oldStatus: existingPayment.status,
-                newStatus: paymentStatus 
+                newStatus: paymentStatus,
+                mode,
               });
             }
           } else {
@@ -246,10 +255,11 @@ serve(async (req) => {
                 billing_period_end: billingPeriodEnd,
                 paid_at: paymentStatus === "succeeded" ? new Date(inv.created * 1000).toISOString() : null,
                 payment_method: "ach",
+                stripe_mode: mode,
               });
 
             results.paymentsCreated++;
-            logStep("Created payment record", { invoiceId: inv.id, status: paymentStatus, amount: inv.amount_due / 100 });
+            logStep("Created payment record", { invoiceId: inv.id, status: paymentStatus, amount: inv.amount_due / 100, mode });
           }
 
           // Check if this might be a deposit payment — use metadata first, then fall back to amount matching

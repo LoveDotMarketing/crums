@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
+import { getStripeClient } from "../_shared/billing.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -62,7 +63,7 @@ serve(async (req) => {
     // Fetch the subscription
     const { data: subscription, error: subError } = await supabaseClient
       .from("customer_subscriptions")
-      .select("*, subscription_items(id, trailer_id)")
+      .select("*, sandbox, sandbox_stripe_customer_id, subscription_items(id, trailer_id)")
       .eq("id", subscriptionId)
       .single();
 
@@ -71,7 +72,8 @@ serve(async (req) => {
     }
     logStep("Found subscription", { stripeId: subscription.stripe_subscription_id });
 
-    const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
+    const { stripe, mode } = getStripeClient(subscription);
+    logStep("Stripe client selected", { mode });
     let newStatus: string;
     let stripeAction: string;
 

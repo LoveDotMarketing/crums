@@ -37,6 +37,9 @@ interface PaymentFailure {
     id: string;
     customer_id: string;
     stripe_subscription_id: string | null;
+    stripe_customer_id: string | null;
+    sandbox: boolean | null;
+    sandbox_stripe_customer_id: string | null;
     grace_period_end: string | null;
     customers: {
       email: string | null;
@@ -105,7 +108,7 @@ serve(async (req) => {
   }
 
   const supabase = createClient(supabaseUrl, supabaseServiceKey);
-  const stripe = new Stripe(stripeSecretKey, { apiVersion: "2025-08-27.basil" });
+  // Per-subscription Stripe client is selected inside the loop via getStripeClient(subscription).
 
   try {
     logStep("Starting payment failure processing");
@@ -133,6 +136,9 @@ serve(async (req) => {
           id,
           customer_id,
           stripe_subscription_id,
+          stripe_customer_id,
+          sandbox,
+          sandbox_stripe_customer_id,
           grace_period_end,
           customers(email, full_name)
         )
@@ -208,12 +214,13 @@ serve(async (req) => {
           subscriptionId: subscription.id 
         });
 
-        // Cancel the Stripe subscription
+        // Cancel the Stripe subscription using the right client (live or test)
         if (subscription.stripe_subscription_id) {
           try {
-            await stripe.subscriptions.cancel(subscription.stripe_subscription_id);
-            logStep("Canceled Stripe subscription", { 
-              stripeId: subscription.stripe_subscription_id 
+            const { stripe: subStripe } = getStripeClient(subscription);
+            await subStripe.subscriptions.cancel(subscription.stripe_subscription_id);
+            logStep("Canceled Stripe subscription", {
+              stripeId: subscription.stripe_subscription_id
             });
           } catch (stripeErr: unknown) {
             const errorMessage = stripeErr instanceof Error ? stripeErr.message : "Unknown error";

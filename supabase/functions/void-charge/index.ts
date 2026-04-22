@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
+import { getStripeClient } from "../_shared/billing.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -47,9 +48,16 @@ serve(async (req) => {
     if (!stripe_invoice_id) throw new Error("stripe_invoice_id is required");
     logStep("Void request", { stripeInvoiceId: stripe_invoice_id, adminOverride: !!adminOverride });
 
-    const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY")!, {
-      apiVersion: "2025-08-27.basil",
-    });
+    // Resolve correct Stripe client by looking up the billing_history row's subscription
+    const { data: bhRow } = await supabaseAdmin
+      .from("billing_history")
+      .select("subscription_id, stripe_mode, customer_subscriptions:subscription_id(sandbox, stripe_customer_id, sandbox_stripe_customer_id)")
+      .eq("stripe_invoice_id", stripe_invoice_id)
+      .maybeSingle();
+
+    const subForClient = (bhRow?.customer_subscriptions as { sandbox?: boolean; stripe_customer_id?: string | null; sandbox_stripe_customer_id?: string | null } | null) ?? {};
+    const { stripe, mode } = getStripeClient(subForClient);
+    logStep("Stripe client resolved", { mode, recordedMode: bhRow?.stripe_mode ?? "unknown" });
 
     // Retrieve the invoice
     const invoice = await stripe.invoices.retrieve(stripe_invoice_id);

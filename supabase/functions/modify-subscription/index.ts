@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
+import { getStripeClient } from "../_shared/billing.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -81,7 +82,7 @@ serve(async (req) => {
     // Fetch the subscription with active items only
     const { data: subscription, error: subError } = await supabaseClient
       .from("customer_subscriptions")
-      .select("*, subscription_items(id, trailer_id, stripe_subscription_item_id, monthly_rate, status)")
+      .select("*, sandbox, sandbox_stripe_customer_id, subscription_items(id, trailer_id, stripe_subscription_item_id, monthly_rate, status)")
       .eq("id", subscriptionId)
       .single();
 
@@ -109,7 +110,8 @@ serve(async (req) => {
       activeItemCount: activeSubscriptionItems.length
     });
 
-    const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
+    const { stripe, mode } = getStripeClient(subscription);
+    logStep("Stripe client selected", { mode });
 
     // Handle change_rate action — update price on a single Stripe subscription item
     if (action === "change_rate") {
