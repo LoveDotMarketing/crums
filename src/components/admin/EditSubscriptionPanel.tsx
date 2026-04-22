@@ -320,7 +320,51 @@ export function EditSubscriptionPanel({ subscriptionId, onSave, onCancel }: Edit
     }
   };
 
-  if (isLoading) {
+  const handleEnableSandbox = async () => {
+    setShowEnableSandboxDialog(false);
+    setIsTogglingSandbox(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("enable-sandbox", {
+        body: { subscriptionId },
+      });
+      if (error) throw error;
+      toast.success(`Sandbox enabled. Test customer: ${data.sandbox_stripe_customer_id}`);
+      await queryClient.invalidateQueries({ queryKey: ["subscription-detail", subscriptionId] });
+    } catch (error) {
+      toast.error("Failed to enable sandbox: " + (error instanceof Error ? error.message : "Unknown error"));
+    } finally {
+      setIsTogglingSandbox(false);
+    }
+  };
+
+  const handleDisableSandbox = async () => {
+    setShowDisableSandboxDialog(false);
+    setIsTogglingSandbox(true);
+    try {
+      const { error } = await supabase
+        .from("customer_subscriptions")
+        .update({ sandbox: false })
+        .eq("id", subscriptionId);
+      if (error) throw error;
+      toast.success("Sandbox disabled. Switched back to live mode.");
+      await queryClient.invalidateQueries({ queryKey: ["subscription-detail", subscriptionId] });
+    } catch (error) {
+      toast.error("Failed to disable sandbox: " + (error instanceof Error ? error.message : "Unknown error"));
+    } finally {
+      setIsTogglingSandbox(false);
+    }
+  };
+
+  const handleCopyTestCustomerId = async () => {
+    if (!subscription?.sandbox_stripe_customer_id) return;
+    try {
+      await navigator.clipboard.writeText(subscription.sandbox_stripe_customer_id);
+      setCopiedTestId(true);
+      setTimeout(() => setCopiedTestId(false), 2000);
+    } catch {
+      toast.error("Failed to copy");
+    }
+  };
     return (
       <div className="flex items-center justify-center py-12">
         <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full" />
