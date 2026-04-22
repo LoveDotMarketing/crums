@@ -100,6 +100,7 @@ export type Database = {
           payment_method: string | null
           status: Database["public"]["Enums"]["payment_status"]
           stripe_invoice_id: string | null
+          stripe_mode: string
           stripe_payment_intent_id: string | null
           subscription_id: string
           updated_at: string
@@ -117,6 +118,7 @@ export type Database = {
           payment_method?: string | null
           status?: Database["public"]["Enums"]["payment_status"]
           stripe_invoice_id?: string | null
+          stripe_mode?: string
           stripe_payment_intent_id?: string | null
           subscription_id: string
           updated_at?: string
@@ -134,6 +136,7 @@ export type Database = {
           payment_method?: string | null
           status?: Database["public"]["Enums"]["payment_status"]
           stripe_invoice_id?: string | null
+          stripe_mode?: string
           stripe_payment_intent_id?: string | null
           subscription_id?: string
           updated_at?: string
@@ -657,6 +660,8 @@ export type Database = {
           lease_agreement_url: string | null
           next_billing_date: string | null
           partner_id: string | null
+          sandbox: boolean
+          sandbox_stripe_customer_id: string | null
           status: string
           stripe_customer_id: string | null
           stripe_subscription_id: string | null
@@ -683,6 +688,8 @@ export type Database = {
           lease_agreement_url?: string | null
           next_billing_date?: string | null
           partner_id?: string | null
+          sandbox?: boolean
+          sandbox_stripe_customer_id?: string | null
           status?: string
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
@@ -709,6 +716,8 @@ export type Database = {
           lease_agreement_url?: string | null
           next_billing_date?: string | null
           partner_id?: string | null
+          sandbox?: boolean
+          sandbox_stripe_customer_id?: string | null
           status?: string
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
