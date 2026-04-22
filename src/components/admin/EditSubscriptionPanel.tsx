@@ -21,9 +21,23 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   ArrowLeft,
   Calendar as CalendarIcon,
+  Check,
+  Copy,
   CreditCard,
+  ExternalLink,
+  FlaskConical,
   KeyRound,
   Loader2,
   Pencil,
