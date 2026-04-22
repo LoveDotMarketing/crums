@@ -1749,6 +1749,16 @@ export default function Billing() {
                                     )}
                                   </div>
                                 </TableCell>
+                                <TableCell>
+                                  {(sub as any).sandbox ? (
+                                    <Badge variant="outline" className="bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800">
+                                      <FlaskConical className="h-3 w-3 mr-1" />
+                                      Sandbox
+                                    </Badge>
+                                  ) : (
+                                    <span className="text-xs text-muted-foreground">Live</span>
+                                  )}
+                                </TableCell>
                                 <TableCell onClick={(e) => e.stopPropagation()}>
                                   <div className="flex items-center gap-1">
                                     {isProcessing ? (
@@ -2517,6 +2527,7 @@ export default function Billing() {
                             <TableHead>Discount</TableHead>
                             <TableHead>Net</TableHead>
                             <TableHead>Status</TableHead>
+                            <TableHead className="w-[70px]">Mode</TableHead>
                             <TableHead></TableHead>
                           </TableRow>
                         </TableHeader>
@@ -2556,6 +2567,15 @@ export default function Billing() {
                                   ${Number(payment.net_amount).toFixed(2)}
                                 </TableCell>
                                 <TableCell>{getStatusBadge(payment.status)}</TableCell>
+                                <TableCell>
+                                  {payment.stripe_mode === "test" ? (
+                                    <span className="text-xs px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300 font-medium">
+                                      TEST
+                                    </span>
+                                  ) : (
+                                    <span className="text-xs text-muted-foreground">Live</span>
+                                  )}
+                                </TableCell>
                                 <TableCell>
                                   {canVoid && (
                                     <Button 
