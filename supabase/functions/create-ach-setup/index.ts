@@ -20,10 +20,10 @@ serve(async (req) => {
   try {
     logStep("Function started");
 
-    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
-    const stripePublishableKey = Deno.env.get("STRIPE_PUBLISHABLE_KEY");
-    if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
-    if (!stripePublishableKey) throw new Error("STRIPE_PUBLISHABLE_KEY is not set");
+    const liveStripeKey = Deno.env.get("STRIPE_SECRET_KEY");
+    const liveStripePublishableKey = Deno.env.get("STRIPE_PUBLISHABLE_KEY");
+    if (!liveStripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
+    if (!liveStripePublishableKey) throw new Error("STRIPE_PUBLISHABLE_KEY is not set");
 
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
@@ -73,7 +73,10 @@ serve(async (req) => {
       }
     }
 
-    const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
+    // Defer stripe instantiation until we know if this application is in sandbox mode
+    let stripe: Stripe;
+    let stripePublishableKey = liveStripePublishableKey;
+    let stripeMode: "live" | "test" = "live";
 
     let targetEmail: string;
     let targetName: string | undefined;
@@ -117,15 +120,16 @@ serve(async (req) => {
     }
 
     // Get or create customer_applications row
+    const APP_SELECT = "id, stripe_customer_id, status, sandbox, sandbox_stripe_customer_id, stripe_mode";
     let { data: application } = useCustomerPath
       ? await supabaseClient
           .from("customer_applications")
-          .select("id, stripe_customer_id, status")
+          .select(APP_SELECT)
           .eq("customer_id", customerId)
           .maybeSingle()
       : await supabaseClient
           .from("customer_applications")
-          .select("id, stripe_customer_id, status")
+          .select(APP_SELECT)
           .eq("user_id", lookupUserId)
           .maybeSingle();
 
@@ -145,7 +149,7 @@ serve(async (req) => {
       const { data: newApp, error: createAppError } = await supabaseClient
         .from("customer_applications")
         .insert(insertPayload)
-        .select("id, stripe_customer_id, status")
+        .select(APP_SELECT)
         .single();
       if (createAppError) {
         logStep("Error creating application", { error: createAppError.message });
@@ -154,33 +158,51 @@ serve(async (req) => {
       application = newApp;
       logStep("Auto-created application", { applicationId: application.id });
     } else {
-      logStep("Application found", { applicationId: application.id, status: application.status });
+      logStep("Application found", { applicationId: application.id, status: application.status, sandbox: application.sandbox });
     }
 
-    // Find or create Stripe customer
-    let customerId_stripe = application.stripe_customer_id;
+    // Resolve stripe instance based on application sandbox flag
+    if (application.sandbox) {
+      const testKey = Deno.env.get("STRIPE_TEST_SECRET_KEY");
+      const testPublishable = Deno.env.get("STRIPE_TEST_PUBLISHABLE_KEY");
+      if (!testKey) throw new Error("Sandbox application: STRIPE_TEST_SECRET_KEY is not configured");
+      if (!testPublishable) throw new Error("Sandbox application: STRIPE_TEST_PUBLISHABLE_KEY is not configured. Add this secret to enable sandbox payment setup.");
+      stripe = new Stripe(testKey, { apiVersion: "2025-08-27.basil" });
+      stripePublishableKey = testPublishable;
+      stripeMode = "test";
+      logStep("Using Stripe TEST mode for sandbox application");
+    } else {
+      stripe = new Stripe(liveStripeKey, { apiVersion: "2025-08-27.basil" });
+      stripeMode = "live";
+    }
 
-    // Validate existing Stripe customer ID is still valid
+    // Find or create Stripe customer.
+    // In sandbox mode, use the application's sandbox_stripe_customer_id (test mode customer);
+    // in live mode, use stripe_customer_id.
+    let customerId_stripe = application.sandbox
+      ? application.sandbox_stripe_customer_id
+      : application.stripe_customer_id;
+
     if (customerId_stripe) {
       try {
         await stripe.customers.retrieve(customerId_stripe);
-        logStep("Verified existing Stripe customer", { customerId: customerId_stripe });
+        logStep("Verified existing Stripe customer", { customerId: customerId_stripe, mode: stripeMode });
       } catch (stripeErr) {
         logStep("WARNING: Stored Stripe customer ID is invalid, will create new one", {
           invalidId: customerId_stripe,
+          mode: stripeMode,
           error: stripeErr instanceof Error ? stripeErr.message : String(stripeErr),
         });
         customerId_stripe = null;
-        // Clear the stale ID from the application record
         await supabaseClient
           .from("customer_applications")
-          .update({ stripe_customer_id: null })
+          .update(application.sandbox ? { sandbox_stripe_customer_id: null } : { stripe_customer_id: null })
           .eq("id", application.id);
       }
     }
     
     if (!customerId_stripe) {
-      logStep("No valid Stripe customer, searching by email");
+      logStep("No valid Stripe customer, searching by email", { mode: stripeMode });
       const customers = await stripe.customers.list({ email: targetEmail, limit: 1 });
       
       if (customers.data.length > 0) {
@@ -194,17 +216,28 @@ serve(async (req) => {
           metadata: {
             supabase_user_id: lookupUserId,
             company_name: targetCompany || '',
+            ...(application.sandbox ? { source: "lovable_admin_sandbox", live_application_id: String(application.id) } : {}),
             ...(useCustomerPath ? { customer_record_id: customerId } : {}),
           },
         });
         customerId_stripe = customer.id;
-        logStep("Created new Stripe customer", { customerId: customerId_stripe });
+        logStep("Created new Stripe customer", { customerId: customerId_stripe, mode: stripeMode });
       }
 
-      // Save customer ID to application
+      const persistPayload: Record<string, unknown> = { stripe_mode: stripeMode };
+      if (application.sandbox) {
+        persistPayload.sandbox_stripe_customer_id = customerId_stripe;
+      } else {
+        persistPayload.stripe_customer_id = customerId_stripe;
+      }
       await supabaseClient
         .from("customer_applications")
-        .update({ stripe_customer_id: customerId_stripe })
+        .update(persistPayload)
+        .eq("id", application.id);
+    } else if (application.stripe_mode !== stripeMode) {
+      await supabaseClient
+        .from("customer_applications")
+        .update({ stripe_mode: stripeMode })
         .eq("id", application.id);
     }
 

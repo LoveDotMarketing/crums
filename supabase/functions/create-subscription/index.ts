@@ -77,8 +77,8 @@ serve(async (req) => {
   try {
     logStep("Function started");
 
-    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
-    if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
+    const liveStripeKey = Deno.env.get("STRIPE_SECRET_KEY");
+    if (!liveStripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
 
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
@@ -178,7 +178,8 @@ serve(async (req) => {
     }
     logStep("Fetched trailer records", { count: trailers.length });
 
-    const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
+    // Stripe instance is initialized after we resolve the application sandbox flag below
+    let stripe: Stripe;
 
     // Get customer details
     const { data: customer, error: custError } = await supabaseClient
@@ -193,7 +194,7 @@ serve(async (req) => {
     // ==========================================
     // RESOLVE APPLICATION RECORD (hardened for repeat customers)
     // ==========================================
-    let appRecord: { stripe_payment_method_id: string | null; stripe_customer_id: string | null; id: string; payment_method_type: string | null } | null = null;
+    let appRecord: { stripe_payment_method_id: string | null; stripe_customer_id: string | null; sandbox_stripe_customer_id: string | null; sandbox: boolean | null; id: string; payment_method_type: string | null } | null = null;
     let profileIdForStripe: string | null = null;
 
     if (customer.email) {
@@ -206,20 +207,20 @@ serve(async (req) => {
       if (profileData?.id) {
         profileIdForStripe = profileData.id;
         // Use order + limit instead of maybeSingle to handle repeat customers
+        const APP_COLS = "stripe_payment_method_id, stripe_customer_id, sandbox_stripe_customer_id, sandbox, id, payment_method_type";
         const { data: appRows } = await supabaseClient
           .from("customer_applications")
-          .select("stripe_payment_method_id, stripe_customer_id, id, payment_method_type")
+          .select(APP_COLS)
           .eq("user_id", profileData.id)
           .not("stripe_payment_method_id", "is", null)
           .order("updated_at", { ascending: false })
           .limit(1);
         appRecord = appRows?.[0] ?? null;
 
-        // If no row with a PM, try without the PM filter (customer may exist but PM is null)
         if (!appRecord) {
           const { data: appRowsFallback } = await supabaseClient
             .from("customer_applications")
-            .select("stripe_payment_method_id, stripe_customer_id, id, payment_method_type")
+            .select(APP_COLS)
             .eq("user_id", profileData.id)
             .order("updated_at", { ascending: false })
             .limit(1);
@@ -228,15 +229,25 @@ serve(async (req) => {
       }
     }
 
-    // Fallback: look up by customer_id (also hardened)
     if (!appRecord) {
       const { data: appByCustomerRows } = await supabaseClient
         .from("customer_applications")
-        .select("stripe_payment_method_id, stripe_customer_id, id, payment_method_type")
+        .select("stripe_payment_method_id, stripe_customer_id, sandbox_stripe_customer_id, sandbox, id, payment_method_type")
         .eq("customer_id", customerId)
         .order("updated_at", { ascending: false })
         .limit(1);
       appRecord = appByCustomerRows?.[0] ?? null;
+    }
+
+    // Initialize Stripe with the right key based on application sandbox flag
+    const isSandboxApp = !!appRecord?.sandbox;
+    if (isSandboxApp) {
+      const testKey = Deno.env.get("STRIPE_TEST_SECRET_KEY");
+      if (!testKey) throw new Error("Sandbox application: STRIPE_TEST_SECRET_KEY is not configured");
+      stripe = new Stripe(testKey, { apiVersion: "2025-08-27.basil" });
+      logStep("Using Stripe TEST mode for sandbox application");
+    } else {
+      stripe = new Stripe(liveStripeKey, { apiVersion: "2025-08-27.basil" });
     }
 
     logStep("Application record lookup", {
@@ -249,17 +260,21 @@ serve(async (req) => {
     // --- Step 1: Resolve the Stripe Customer ---
     let stripeCustomerId: string | null = null;
 
-    if (appRecord?.stripe_customer_id) {
+    const appStripeCustomerId = isSandboxApp
+      ? appRecord?.sandbox_stripe_customer_id
+      : appRecord?.stripe_customer_id;
+    if (appStripeCustomerId) {
       try {
-        const existingCust = await stripe.customers.retrieve(appRecord.stripe_customer_id);
+        const existingCust = await stripe.customers.retrieve(appStripeCustomerId);
         if (existingCust && !(existingCust as any).deleted) {
-          stripeCustomerId = appRecord.stripe_customer_id;
-          logStep("Stripe customer from application record is valid", { stripeCustomerId });
+          stripeCustomerId = appStripeCustomerId;
+          logStep("Stripe customer from application record is valid", { stripeCustomerId, sandbox: isSandboxApp });
         }
       } catch {
-        logStep("Stored stripe_customer_id is invalid, falling back to search");
+        logStep("Stored stripe customer id is invalid, falling back to search");
       }
     }
+
 
     if (!stripeCustomerId && customer.email) {
       const stripeCustomers = await stripe.customers.list({ email: customer.email, limit: 10 });

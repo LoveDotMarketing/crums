@@ -393,6 +393,8 @@ export type Database = {
           referrer: string | null
           reviewed_at: string | null
           reviewed_by: string | null
+          sandbox: boolean
+          sandbox_stripe_customer_id: string | null
           secondary_contact_name: string | null
           secondary_contact_phone: string | null
           secondary_contact_relationship: string | null
@@ -400,6 +402,7 @@ export type Database = {
           staff_referral_id: string | null
           status: string
           stripe_customer_id: string | null
+          stripe_mode: string
           stripe_payment_method_id: string | null
           trailer_type: string | null
           truck_vin: string | null
@@ -438,6 +441,8 @@ export type Database = {
           referrer?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
+          sandbox?: boolean
+          sandbox_stripe_customer_id?: string | null
           secondary_contact_name?: string | null
           secondary_contact_phone?: string | null
           secondary_contact_relationship?: string | null
@@ -445,6 +450,7 @@ export type Database = {
           staff_referral_id?: string | null
           status?: string
           stripe_customer_id?: string | null
+          stripe_mode?: string
           stripe_payment_method_id?: string | null
           trailer_type?: string | null
           truck_vin?: string | null
@@ -483,6 +489,8 @@ export type Database = {
           referrer?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
+          sandbox?: boolean
+          sandbox_stripe_customer_id?: string | null
           secondary_contact_name?: string | null
           secondary_contact_phone?: string | null
           secondary_contact_relationship?: string | null
@@ -490,6 +498,7 @@ export type Database = {
           staff_referral_id?: string | null
           status?: string
           stripe_customer_id?: string | null
+          stripe_mode?: string
           stripe_payment_method_id?: string | null
           trailer_type?: string | null
           truck_vin?: string | null
@@ -2496,33 +2505,50 @@ export type Database = {
       }
       subscription_sandbox_audit: {
         Row: {
+          application_id: string | null
           changed_at: string
           changed_by: string | null
           from_sandbox: boolean
           id: string
           reason: string | null
-          subscription_id: string
+          subscription_id: string | null
           to_sandbox: boolean
         }
         Insert: {
+          application_id?: string | null
           changed_at?: string
           changed_by?: string | null
           from_sandbox: boolean
           id?: string
           reason?: string | null
-          subscription_id: string
+          subscription_id?: string | null
           to_sandbox: boolean
         }
         Update: {
+          application_id?: string | null
           changed_at?: string
           changed_by?: string | null
           from_sandbox?: boolean
           id?: string
           reason?: string | null
-          subscription_id?: string
+          subscription_id?: string | null
           to_sandbox?: boolean
         }
         Relationships: [
+          {
+            foreignKeyName: "subscription_sandbox_audit_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "customer_application_safe"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscription_sandbox_audit_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "customer_applications"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "subscription_sandbox_audit_subscription_id_fkey"
             columns: ["subscription_id"]
