@@ -17,12 +17,14 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  const stripeSecretKey = Deno.env.get("STRIPE_SECRET_KEY");
-  const webhookSecret = Deno.env.get("STRIPE_WEBHOOK_SIGNING_SECRET");
+  const liveStripeKey = Deno.env.get("STRIPE_SECRET_KEY");
+  const liveWebhookSecret = Deno.env.get("STRIPE_WEBHOOK_SIGNING_SECRET");
+  const testStripeKey = Deno.env.get("STRIPE_TEST_SECRET_KEY");
+  const testWebhookSecret = Deno.env.get("STRIPE_WEBHOOK_SIGNING_SECRET_TEST");
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
   const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
-  if (!stripeSecretKey || !webhookSecret || !supabaseUrl || !supabaseServiceKey) {
+  if (!liveStripeKey || !liveWebhookSecret || !supabaseUrl || !supabaseServiceKey) {
     console.error("Missing required environment variables");
     return new Response(JSON.stringify({ error: "Server configuration error" }), {
       status: 500,
@@ -30,8 +32,13 @@ serve(async (req) => {
     });
   }
 
-  const stripe = new Stripe(stripeSecretKey, { apiVersion: "2025-08-27.basil" });
+  const liveStripe = new Stripe(liveStripeKey, { apiVersion: "2025-08-27.basil" });
+  const testStripe = testStripeKey ? new Stripe(testStripeKey, { apiVersion: "2025-08-27.basil" }) : null;
   const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+  // Will be reassigned after signature verification picks live or test mode
+  let stripe: Stripe = liveStripe;
+  let stripeMode: "live" | "test" = "live";
 
   try {
     const body = await req.text();
@@ -45,18 +52,40 @@ serve(async (req) => {
       });
     }
 
-    // Verify webhook signature using async method (required for Stripe SDK v18+)
+    // Dual-mode signature verification: try live first, then test
     let event: Stripe.Event;
     try {
-      event = await stripe.webhooks.constructEventAsync(body, signature, webhookSecret);
-    } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : "Unknown error";
-      logStep("Webhook signature verification failed", { error: errorMessage });
-      return new Response(JSON.stringify({ error: "Invalid signature" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      event = await liveStripe.webhooks.constructEventAsync(body, signature, liveWebhookSecret);
+      stripe = liveStripe;
+      stripeMode = "live";
+    } catch (liveErr: unknown) {
+      // Live verification failed — try test mode if configured
+      if (testStripe && testWebhookSecret) {
+        try {
+          event = await testStripe.webhooks.constructEventAsync(body, signature, testWebhookSecret);
+          stripe = testStripe;
+          stripeMode = "test";
+          logStep("Verified with TEST signing secret");
+        } catch (testErr: unknown) {
+          const liveMsg = liveErr instanceof Error ? liveErr.message : "Unknown";
+          const testMsg = testErr instanceof Error ? testErr.message : "Unknown";
+          logStep("Webhook signature verification failed for both live and test", { liveMsg, testMsg });
+          return new Response(JSON.stringify({ error: "Invalid signature" }), {
+            status: 400,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+      } else {
+        const errorMessage = liveErr instanceof Error ? liveErr.message : "Unknown error";
+        logStep("Webhook signature verification failed (test mode not configured)", { error: errorMessage });
+        return new Response(JSON.stringify({ error: "Invalid signature" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
     }
+
+    logStep("Received webhook event", { type: event.type, id: event.id, mode: stripeMode, livemode: event.livemode });
 
     logStep("Received webhook event", { type: event.type, id: event.id });
 
