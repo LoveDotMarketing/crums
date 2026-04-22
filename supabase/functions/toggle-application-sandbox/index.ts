@@ -14,6 +14,7 @@ Deno.serve(async (req) => {
 
   try {
     const authHeader = req.headers.get("Authorization");
+    console.log("[toggle-application-sandbox] request received");
     if (!authHeader?.startsWith("Bearer ")) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
@@ -65,6 +66,8 @@ Deno.serve(async (req) => {
       });
     }
 
+    console.log("[toggle-application-sandbox] start", { applicationId, enable, force });
+
     // Load application + linked customer
     const { data: app, error: appErr } = await adminClient
       .from("customer_applications")
@@ -77,16 +80,26 @@ Deno.serve(async (req) => {
         customer_id,
         user_id,
         customers ( id, full_name, email ),
-        profiles ( id, first_name, last_name, email )
+        profiles!customer_applications_user_id_fkey ( id, first_name, last_name, email )
       `)
       .eq("id", applicationId)
       .single();
 
     if (appErr || !app) {
-      return new Response(JSON.stringify({ error: "Application not found" }), {
-        status: 404,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      console.error("[toggle-application-sandbox] application lookup failed", {
+        applicationId,
+        appErr,
       });
+      return new Response(
+        JSON.stringify({
+          error: "Application not found",
+          details: appErr?.message ?? null,
+        }),
+        {
+          status: 404,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
+      );
     }
 
     const previousSandbox = !!app.sandbox;
