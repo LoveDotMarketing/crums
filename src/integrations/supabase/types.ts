@@ -652,6 +652,7 @@ export type Database = {
       }
       customer_subscriptions: {
         Row: {
+          application_id: string | null
           billing_cycle: Database["public"]["Enums"]["billing_cycle"]
           contract_start_date: string | null
           created_at: string
@@ -671,6 +672,7 @@ export type Database = {
           partner_id: string | null
           sandbox: boolean
           sandbox_stripe_customer_id: string | null
+          sandbox_stripe_subscription_id: string | null
           status: string
           stripe_customer_id: string | null
           stripe_subscription_id: string | null
@@ -680,6 +682,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          application_id?: string | null
           billing_cycle?: Database["public"]["Enums"]["billing_cycle"]
           contract_start_date?: string | null
           created_at?: string
@@ -699,6 +702,7 @@ export type Database = {
           partner_id?: string | null
           sandbox?: boolean
           sandbox_stripe_customer_id?: string | null
+          sandbox_stripe_subscription_id?: string | null
           status?: string
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
@@ -708,6 +712,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          application_id?: string | null
           billing_cycle?: Database["public"]["Enums"]["billing_cycle"]
           contract_start_date?: string | null
           created_at?: string
@@ -727,6 +732,7 @@ export type Database = {
           partner_id?: string | null
           sandbox?: boolean
           sandbox_stripe_customer_id?: string | null
+          sandbox_stripe_subscription_id?: string | null
           status?: string
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
@@ -736,6 +742,20 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "customer_subscriptions_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "customer_application_safe"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_subscriptions_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "customer_applications"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "customer_subscriptions_customer_id_fkey"
             columns: ["customer_id"]
