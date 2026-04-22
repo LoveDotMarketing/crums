@@ -140,12 +140,15 @@ serve(async (req) => {
 
     logStep("Processing retry request", { failureId });
 
-    // Get payment failure record with customer info
+    // Get payment failure record with customer + subscription (for sandbox routing)
     const { data: failure, error: failureError } = await supabase
       .from("payment_failures")
       .select(`
         *,
         customer_subscriptions (
+          sandbox,
+          stripe_customer_id,
+          sandbox_stripe_customer_id,
           customers (
             full_name,
             email
@@ -201,10 +204,10 @@ serve(async (req) => {
       customerEmail
     });
 
-    // Initialize Stripe
-    const stripe = new Stripe(stripeSecretKey, {
-      apiVersion: "2025-01-27.acacia",
-    });
+    // Initialize Stripe via shared helper (live or test based on subscription.sandbox)
+    const { getStripeClient } = await import("../_shared/billing.ts");
+    const subForClient = failure.customer_subscriptions ?? {};
+    const { stripe } = getStripeClient(subForClient);
 
     // Retrieve the invoice from Stripe
     const invoice = await stripe.invoices.retrieve(failure.stripe_invoice_id);
