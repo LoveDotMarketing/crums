@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { formatDistanceToNow, format } from "date-fns";
-import { FlaskConical, ArrowRight } from "lucide-react";
+import { FlaskConical, ArrowRight, FileText, Truck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -27,11 +27,29 @@ type AuditRow = {
   reason: string | null;
   changed_at: string;
   changed_by: string | null;
+  application_id: string | null;
   customer_subscriptions: {
     id: string;
     customers: {
       full_name: string | null;
       company_name: string | null;
+      email: string | null;
+    } | null;
+  } | null;
+  customer_applications: {
+    id: string;
+    customer_id: string | null;
+    user_id: string | null;
+    customers: {
+      id: string;
+      full_name: string | null;
+      company_name: string | null;
+      email: string | null;
+    } | null;
+    profiles: {
+      id: string;
+      first_name: string | null;
+      last_name: string | null;
       email: string | null;
     } | null;
   } | null;
@@ -68,9 +86,17 @@ export function SandboxActivityPanel() {
           reason,
           changed_at,
           changed_by,
+          application_id,
           customer_subscriptions (
             id,
             customers ( full_name, company_name, email )
+          ),
+          customer_applications:application_id (
+            id,
+            customer_id,
+            user_id,
+            customers ( id, full_name, company_name, email ),
+            profiles ( id, first_name, last_name, email )
           )
         `)
         .order("changed_at", { ascending: false })
@@ -117,7 +143,7 @@ export function SandboxActivityPanel() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Subscription</TableHead>
+              <TableHead>Target</TableHead>
               <TableHead>Admin</TableHead>
               <TableHead>Change</TableHead>
               <TableHead>Reason</TableHead>
@@ -139,13 +165,44 @@ export function SandboxActivityPanel() {
               </TableRow>
             ) : (
               audit.map((row) => {
-                const customer = row.customer_subscriptions?.customers;
-                const customerLabel =
-                  customer?.company_name ||
-                  customer?.full_name ||
-                  customer?.email ||
-                  "—";
-                const subId = row.customer_subscriptions?.id;
+                const isApplication = !!row.application_id;
+                let label = "—";
+                let linkTo: string | null = null;
+                let icon = <Truck className="h-3.5 w-3.5 text-muted-foreground" />;
+
+                if (isApplication) {
+                  const app = row.customer_applications;
+                  const appCustomer = app?.customers;
+                  const appProfile = app?.profiles;
+                  const name =
+                    appCustomer?.company_name ||
+                    appCustomer?.full_name ||
+                    [appProfile?.first_name, appProfile?.last_name]
+                      .filter(Boolean)
+                      .join(" ")
+                      .trim() ||
+                    appCustomer?.email ||
+                    appProfile?.email ||
+                    "Unknown applicant";
+                  label = `Application: ${name}`;
+                  if (appCustomer?.id) {
+                    linkTo = `/dashboard/admin/customers/${appCustomer.id}`;
+                  }
+                  icon = <FileText className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />;
+                } else {
+                  const customer = row.customer_subscriptions?.customers;
+                  const customerLabel =
+                    customer?.company_name ||
+                    customer?.full_name ||
+                    customer?.email ||
+                    "—";
+                  const subId = row.customer_subscriptions?.id;
+                  label = `Subscription: ${customerLabel}`;
+                  if (subId) {
+                    linkTo = `/dashboard/admin/billing?subscription=${subId}`;
+                  }
+                }
+
                 const adminInfo = row.changed_by
                   ? profilesMap?.get(row.changed_by)
                   : null;
@@ -153,16 +210,19 @@ export function SandboxActivityPanel() {
                 return (
                   <TableRow key={row.id}>
                     <TableCell className="font-medium">
-                      {subId ? (
-                        <Link
-                          to={`/dashboard/admin/billing?subscription=${subId}`}
-                          className="text-primary hover:underline"
-                        >
-                          {customerLabel}
-                        </Link>
-                      ) : (
-                        <span>{customerLabel}</span>
-                      )}
+                      <div className="flex items-center gap-2">
+                        {icon}
+                        {linkTo ? (
+                          <Link
+                            to={linkTo}
+                            className="text-primary hover:underline"
+                          >
+                            {label}
+                          </Link>
+                        ) : (
+                          <span>{label}</span>
+                        )}
+                      </div>
                     </TableCell>
                     <TableCell className="text-sm">{adminLabel}</TableCell>
                     <TableCell>

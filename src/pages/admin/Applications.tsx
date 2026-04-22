@@ -788,6 +788,15 @@ export default function Applications() {
                           <TableCell>
                             {format(new Date(app.created_at), "MMM d, yyyy")}
                           </TableCell>
+                          <TableCell>
+                            {app.sandbox ? (
+                              <Badge className="bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/30 hover:bg-amber-500/20 text-xs">
+                                Sandbox
+                              </Badge>
+                            ) : (
+                              <span className="text-xs text-muted-foreground">Live</span>
+                            )}
+                          </TableCell>
                           <TableCell>{getStatusBadge(app.status)}</TableCell>
                           <TableCell>
                             <div className="flex gap-1">
