@@ -118,11 +118,12 @@ serve(async (req) => {
               customer: customerId,
               limit: 100,
             });
-          // Add invoices that reference this subscription via metadata
-          for (const inv of customerInvoices.data) {
-            if (inv.metadata?.subscription_id === sub.stripe_subscription_id && 
-                !stripeInvoices.some(si => si.id === inv.id)) {
-              stripeInvoices.push(inv);
+            // Add invoices that reference this subscription via metadata
+            for (const inv of customerInvoices.data) {
+              if (inv.metadata?.subscription_id === sub.stripe_subscription_id &&
+                  !stripeInvoices.some(si => si.id === inv.id)) {
+                stripeInvoices.push(inv);
+              }
             }
           }
         } catch {
