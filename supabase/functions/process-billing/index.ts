@@ -204,10 +204,11 @@ Deno.serve(async (req) => {
                   stripe_payment_intent_id: typeof invoice.payment_intent === 'string'
                     ? invoice.payment_intent : invoice.payment_intent?.id,
                   net_amount: invoice.amount_paid / 100,
+                  stripe_mode: mode,
                   updated_at: new Date().toISOString(),
                 })
                 .eq("id", existing.id);
-              logStep("Updated existing invoice status", { invoiceId: invoice.id, oldStatus: existing.status, newStatus: paymentStatus });
+              logStep("Updated existing invoice status", { invoiceId: invoice.id, oldStatus: existing.status, newStatus: paymentStatus, mode });
             } else {
               logStep("Skipping unchanged invoice", { invoiceId: invoice.id });
             }
@@ -230,9 +231,10 @@ Deno.serve(async (req) => {
                   ? safeTimestampToISO(invoice.status_transitions?.paid_at)
                   : null,
                 payment_method: "ach",
+                stripe_mode: mode,
               });
 
-            logStep("Synced invoice to billing_history", { invoiceId: invoice.id });
+            logStep("Synced invoice to billing_history", { invoiceId: invoice.id, mode });
         }
 
         results.processed++;
