@@ -1,71 +1,93 @@
 
 
-## Plan: Sandbox Mode card on subscription detail
+## Plan: Sandbox vs Live visibility across admin app
 
-Add an admin-only "Sandbox Mode" card on the existing `EditSubscriptionPanel` so staff can flip a single subscription into Stripe test mode in one click — including auto-creating the test-mode Stripe customer.
+Make sandbox subscriptions impossible to miss for staff, while keeping the customer-facing portal completely silent about sandbox state.
 
-### What gets built
+### 1. Admin Subscriptions list (`src/pages/admin/Billing.tsx`)
 
-**1. New edge function `enable-sandbox`** (admin JWT-protected)
+**New "Sandbox" column** in the subscriptions table:
+- Header: `<TableHead>Mode</TableHead>` inserted between **Status** and **Actions**.
+- Cell renders an amber badge `Sandbox` (icon: `FlaskConical`) when `sub.sandbox === true`, otherwise a small muted `Live` text. Amber styling: `bg-amber-100 text-amber-800 border-amber-200` (matches existing color conventions in the file).
 
-Input: `{ subscriptionId }`.
+**New filter chip** above the table, next to the search input:
+- A small `ToggleGroup` (or three `Button` variants) with options: **All / Live only / Sandbox only**. Default `All`.
+- New state: `const [sandboxFilter, setSandboxFilter] = useState<"all"|"live"|"sandbox">("all")`.
+- Apply inside the existing `subscriptions.filter(...)` chain.
+- Sandbox-only view also shows a subtle amber helper line: *"Showing N sandbox subscriptions — these route to Stripe test mode."*
 
-Steps:
-1. Verify caller has `admin` role (service-role client + `has_role`).
-2. Load the subscription + linked customer (`full_name`, `email`).
-3. If `sandbox_stripe_customer_id` already exists → reuse it (don't create duplicates on re-enable).
-4. Otherwise, using the **test** Stripe client (`STRIPE_TEST_SECRET_KEY` via existing `_shared/billing.ts` helper exposure), create a new test-mode customer with the live customer's name + email, plus metadata `{ source: "lovable_admin_sandbox", live_customer_id, subscription_id }`.
-5. Update `customer_subscriptions`: `sandbox = true`, `sandbox_stripe_customer_id = <cus_…>`.
-6. Insert an `app_event_logs` row (category `billing`, type `sandbox_enabled`) for audit.
-7. Return `{ sandbox_stripe_customer_id }`.
+**Query update**: ensure `sandbox` is selected in the `customer-subscriptions` query (it likely already is via `select("*")`; if not, add it).
 
-Errors: clear messages if `STRIPE_TEST_SECRET_KEY` missing, customer not found, or non-admin.
+### 2. Subscription detail header banner (`src/components/admin/EditSubscriptionPanel.tsx`)
 
-**2. New "Sandbox Mode" card on `EditSubscriptionPanel.tsx`**
+Right after the existing header block (around line 390, before the `Subscription Type` card), render a persistent banner *only* when `subscription.sandbox === true`:
 
-Placed right after the existing "Payment Method" card (same row).
-
-```text
-┌─ Sandbox Mode ─────────────────────────┐
-│ Status: [● Live]                       │
-│                                        │
-│ [○━━━━] Use Stripe test mode           │
-│                                        │
-│ — when sandbox = true: —               │
-│ Test customer: cus_…  [copy]           │
-│ ↗ Open in Stripe test dashboard        │
-│                                        │
-│ ℹ Use test card 4242 4242 4242 4242    │
-│   to add a payment method.             │
-└────────────────────────────────────────┘
+```tsx
+<Alert className="border-amber-300 bg-amber-50 text-amber-900">
+  <FlaskConical className="h-4 w-4" />
+  <AlertTitle>Sandbox mode</AlertTitle>
+  <AlertDescription>
+    This subscription is in SANDBOX mode — charges use Stripe test keys.
+    No real money moves.
+  </AlertDescription>
+</Alert>
 ```
 
-- **Status badge**: green "Live" or amber "Sandbox" based on `subscription.sandbox`.
-- **Toggle behavior**:
-  - **Off → On**: opens an `AlertDialog` with the exact copy from the request:
-    > "Enable sandbox mode for this subscription?
-    > • All future charges use Stripe test mode — no real money moves.
-    > • You'll need to attach a test payment method before charges will succeed.
-    > • Existing live charge history is preserved and not affected."
-    Confirm calls `enable-sandbox`. On success: optimistic update, toast, invalidate `subscription-detail` query.
-  - **On → Off**: simple confirm dialog ("Switch back to live mode? The test customer is preserved for future re-enable."). Confirm does a direct `update({ sandbox: false })` — keeps `sandbox_stripe_customer_id` populated.
-- **Sandbox details (only when sandbox = true)**:
-  - Test customer ID with copy-to-clipboard button.
-  - Link: `https://dashboard.stripe.com/test/customers/{cus_id}` (target `_blank`).
-  - Yellow info note about test card `4242 4242 4242 4242`.
+Banner is sticky-visible (always rendered when sandbox=true, not dismissible) so admins can't forget while editing rates / running charges.
 
-**3. Visibility / safety**
-- Card always renders inside `EditSubscriptionPanel`, which is already only mounted in admin routes (`/dashboard/admin/billing`) — no extra role check needed in the component.
-- The toggle is independent of the existing "Save Changes" button: enabling/disabling sandbox writes immediately so admins can't get into a half-saved state.
-- Disable the toggle while the edge function is in flight (spinner on the switch).
+### 3. Billing history table — "Mode" column (`src/pages/admin/Billing.tsx`)
+
+In the billing-history table (around line 2038):
+- Add `<TableHead className="w-[70px]">Mode</TableHead>` near the right edge.
+- Each row renders `row.stripe_mode`:
+  - `"live"` → small muted text `Live` (text-xs text-muted-foreground).
+  - `"test"` → small amber pill `TEST` (`text-xs px-1.5 py-0.5 rounded bg-amber-100 text-amber-800`).
+- `BillingHistoryItem` interface in the file gains `stripe_mode: "live" | "test"` (the column already exists in DB).
+- The `select(...)` for `billing-history` query needs `stripe_mode` added to the field list.
+
+### 4. Admin Dashboard stat (`src/pages/admin/AdminDashboard.tsx`)
+
+New query `admin-sandbox-subs-count`:
+```ts
+const { data: sandboxSubsCount } = useQuery({
+  queryKey: ["admin-sandbox-subs-count"],
+  queryFn: async () => {
+    const { count } = await supabase
+      .from("customer_subscriptions")
+      .select("id", { count: "exact", head: true })
+      .eq("sandbox", true);
+    return count ?? 0;
+  },
+});
+```
+
+Add a new card in the stats grid (admin-only — placed after "Collected This Month"):
+- Title: **Sandbox subscriptions**
+- Value: `{sandboxSubsCount}`
+- Icon: `FlaskConical`, amber tint
+- The whole card is a `<button>` that navigates to `/dashboard/admin/billing?sandboxFilter=sandbox`.
+- Card hidden when count is `0` to avoid visual clutter on healthy days. (Always visible if you'd prefer — easy toggle.)
+
+In `Billing.tsx`, read `?sandboxFilter=` from `useSearchParams` on mount and seed `sandboxFilter` state so the deep link works.
+
+### 5. Customer-facing safety check
+
+Audit every customer page that renders subscription or billing data. None of the following will get any sandbox/test indicator:
+- `src/pages/customer/Billing.tsx`
+- `src/pages/customer/CustomerDashboard.tsx`
+- `src/pages/customer/Statements.tsx`
+- `src/components/admin/CustomerStatementsPanel.tsx` (used in admin context only — safe)
+
+Confirmed by code search: `sandbox` / `stripe_mode` are not currently selected in any customer-facing query, so existing data fetches won't accidentally surface them. We won't add them either. No customer-facing change in this task.
 
 ### Files
-1. `supabase/functions/enable-sandbox/index.ts` — new edge function (admin-verified, creates test-mode Stripe customer, updates subscription).
-2. `src/components/admin/EditSubscriptionPanel.tsx` — new "Sandbox Mode" card + AlertDialog confirmations + handlers.
+1. `src/pages/admin/Billing.tsx` — Mode column on subscriptions table, sandbox filter chip, Mode column on billing-history table, `stripe_mode` added to `BillingHistoryItem` and the history `select(...)`, deep-link param read.
+2. `src/components/admin/EditSubscriptionPanel.tsx` — persistent amber banner above content cards when `sandbox=true`.
+3. `src/pages/admin/AdminDashboard.tsx` — sandbox-count query + clickable stat card.
 
 ### Out of scope
-- No automatic copying of payment methods between live and test customers (Stripe doesn't allow it; admin uses the 4242 card in test mode).
-- No deletion of the test-mode Stripe customer when disabling — kept for re-enable.
-- No bulk/global sandbox toggle — strictly per-subscription, matches the existing schema.
-- No UI in the customer-facing portal — admin-only by virtue of the panel's location.
+- No changes to customer portal pages (intentional — customers see nothing).
+- No bulk sandbox toggle from the list (per-subscription only, matches existing detail-page workflow).
+- No analytics/reporting separation by mode (later, if needed — `stripe_mode` is now stamped so it's queryable).
+- No styling changes to existing Live rows (Live remains the unmarked default visual).
 
