@@ -1,104 +1,71 @@
 
 
-## Plan: Per-subscription Stripe sandbox mode
+## Plan: Sandbox Mode card on subscription detail
 
-Add a `sandbox` flag on each subscription so admins can route specific subscriptions through a Stripe **test** account (separate secret key, separate customer ID) without changing any business logic. Every billing record gets stamped with the mode it was processed in, and the webhook handles both live and test signatures.
+Add an admin-only "Sandbox Mode" card on the existing `EditSubscriptionPanel` so staff can flip a single subscription into Stripe test mode in one click — including auto-creating the test-mode Stripe customer.
 
-### 1. Schema changes (one migration)
+### What gets built
 
-**`customer_subscriptions`**
-- `sandbox boolean NOT NULL DEFAULT false`
-- `sandbox_stripe_customer_id text NULL`
-- Partial index: `CREATE INDEX idx_customer_subscriptions_sandbox ON customer_subscriptions(sandbox) WHERE sandbox = true;`
+**1. New edge function `enable-sandbox`** (admin JWT-protected)
 
-**`billing_history`**
-- `stripe_mode text NOT NULL DEFAULT 'live'`
-- `CHECK (stripe_mode IN ('live','test'))`
+Input: `{ subscriptionId }`.
 
-No data migration needed — existing rows stay `sandbox=false` / `stripe_mode='live'`.
+Steps:
+1. Verify caller has `admin` role (service-role client + `has_role`).
+2. Load the subscription + linked customer (`full_name`, `email`).
+3. If `sandbox_stripe_customer_id` already exists → reuse it (don't create duplicates on re-enable).
+4. Otherwise, using the **test** Stripe client (`STRIPE_TEST_SECRET_KEY` via existing `_shared/billing.ts` helper exposure), create a new test-mode customer with the live customer's name + email, plus metadata `{ source: "lovable_admin_sandbox", live_customer_id, subscription_id }`.
+5. Update `customer_subscriptions`: `sandbox = true`, `sandbox_stripe_customer_id = <cus_…>`.
+6. Insert an `app_event_logs` row (category `billing`, type `sandbox_enabled`) for audit.
+7. Return `{ sandbox_stripe_customer_id }`.
 
-### 2. New secret
-- **`STRIPE_TEST_SECRET_KEY`** — Stripe test-mode secret key. After plan approval you'll be prompted to add it. Without it, any attempt to use a sandbox subscription throws a clear error.
-- **`STRIPE_WEBHOOK_SIGNING_SECRET_TEST`** — webhook signing secret from the test endpoint. Naming mirrors the existing `STRIPE_WEBHOOK_SIGNING_SECRET`. Optional: if absent, webhook stays live-only and logs a warning when test signatures arrive.
-- README gets a "Stripe Sandbox Mode" section documenting both secrets, how to flip a subscription to sandbox, and the workflow (create test customer in test mode → paste its `cus_…` into `sandbox_stripe_customer_id` → flip `sandbox=true`).
+Errors: clear messages if `STRIPE_TEST_SECRET_KEY` missing, customer not found, or non-admin.
 
-### 3. `_shared/billing.ts` — new helper
+**2. New "Sandbox Mode" card on `EditSubscriptionPanel.tsx`**
 
-```ts
-type SubLike = {
-  sandbox?: boolean | null;
-  stripe_customer_id?: string | null;
-  sandbox_stripe_customer_id?: string | null;
-};
+Placed right after the existing "Payment Method" card (same row).
 
-export function getStripeClient(subscription: SubLike): {
-  stripe: Stripe;
-  mode: "live" | "test";
-  customerId: string | null;
-}
+```text
+┌─ Sandbox Mode ─────────────────────────┐
+│ Status: [● Live]                       │
+│                                        │
+│ [○━━━━] Use Stripe test mode           │
+│                                        │
+│ — when sandbox = true: —               │
+│ Test customer: cus_…  [copy]           │
+│ ↗ Open in Stripe test dashboard        │
+│                                        │
+│ ℹ Use test card 4242 4242 4242 4242    │
+│   to add a payment method.             │
+└────────────────────────────────────────┘
 ```
 
-Rules:
-- `sandbox=true` + `STRIPE_TEST_SECRET_KEY` set + `sandbox_stripe_customer_id` present → test client, `mode='test'`, `customerId=sandbox_stripe_customer_id`.
-- `sandbox=true` but `STRIPE_TEST_SECRET_KEY` missing → throw `"STRIPE_TEST_SECRET_KEY is not configured. Set it before flipping a subscription to sandbox."`
-- `sandbox=true` but `sandbox_stripe_customer_id` is null → throw `"Subscription is in sandbox mode but has no sandbox_stripe_customer_id. Create a test-mode customer in Stripe and set this field."`
-- Otherwise → live client, `mode='live'`, `customerId=stripe_customer_id`.
+- **Status badge**: green "Live" or amber "Sandbox" based on `subscription.sandbox`.
+- **Toggle behavior**:
+  - **Off → On**: opens an `AlertDialog` with the exact copy from the request:
+    > "Enable sandbox mode for this subscription?
+    > • All future charges use Stripe test mode — no real money moves.
+    > • You'll need to attach a test payment method before charges will succeed.
+    > • Existing live charge history is preserved and not affected."
+    Confirm calls `enable-sandbox`. On success: optimistic update, toast, invalidate `subscription-detail` query.
+  - **On → Off**: simple confirm dialog ("Switch back to live mode? The test customer is preserved for future re-enable."). Confirm does a direct `update({ sandbox: false })` — keeps `sandbox_stripe_customer_id` populated.
+- **Sandbox details (only when sandbox = true)**:
+  - Test customer ID with copy-to-clipboard button.
+  - Link: `https://dashboard.stripe.com/test/customers/{cus_id}` (target `_blank`).
+  - Yellow info note about test card `4242 4242 4242 4242`.
 
-Helper caches the two Stripe clients per cold-start.
-
-### 4. Edge functions updated to use the helper
-
-Every place that today does `new Stripe(STRIPE_SECRET_KEY, …)` and acts on a known subscription will:
-1. Add `sandbox, sandbox_stripe_customer_id` to the subscription select.
-2. Call `getStripeClient(subscription)` → use returned `stripe` + `customerId`.
-3. Stamp `stripe_mode: mode` on every `billing_history` insert/upsert.
-
-Functions touched:
-- `process-billing` — main scheduled biller. Inserts billing_history.
-- `create-subscription` — at creation, sandbox is always `false` (a brand-new sub is live by default; admins flip it later via the Billing dashboard if needed). Still adds `stripe_mode: 'live'` to its deposit billing_history row. Helper used so the path is consistent.
-- `manage-subscription` — pause/resume/cancel uses helper.
-- `process-payment-failures` — retries use helper, billing_history updates carry the existing row's mode (read it back, don't downgrade).
-- `charge-toll`, `charge-customer`, `retry-payment`, `void-charge`, `sync-payments`, `modify-subscription`, `activate-subscription` — all use helper + stamp `stripe_mode`.
-- `check-payment-status`, `confirm-ach-setup`, `create-ach-setup`, `reset-payment-setup`, `send-ach-setup-email` — these run on `customer_applications` *before* a subscription exists. **Out of scope for this change** — they stay on `STRIPE_SECRET_KEY` (live). Sandbox is a per-subscription concept; ACH onboarding always happens in live mode and the admin manually creates the matching test-mode customer when flipping a sub to sandbox. This is documented in the README.
-
-### 5. `stripe-webhook` — dual-signature verification
-
-Reuse existing `STRIPE_WEBHOOK_SIGNING_SECRET` for live; add new `STRIPE_WEBHOOK_SIGNING_SECRET_TEST`.
-
-```
-let event, mode;
-try {
-  event = await stripeLive.webhooks.constructEventAsync(body, sig, LIVE_SECRET);
-  mode = "live";
-} catch {
-  if (TEST_SECRET) {
-    event = await stripeTest.webhooks.constructEventAsync(body, sig, TEST_SECRET);
-    mode = "test";
-  } else throw;
-}
-```
-
-Downstream handlers receive `(supabase, stripe, event, mode)` where `stripe` is the matching client. After looking up the subscription record, sanity-check `subscription.sandbox === (mode === 'test')` and log a warning on mismatch (don't fail — admin may be mid-flip). All `billing_history` writes from the webhook stamp `stripe_mode: mode`.
-
-### 6. UI surface (minimal)
-On the admin **Edit Subscription** panel, add a small "Sandbox mode" section:
-- Toggle: **Sandbox (test Stripe account)**.
-- Text input: **Sandbox Stripe customer ID** (`cus_…`), only shown when toggle is on.
-- Inline help: *"When on, all billing for this subscription routes through your Stripe test account. Create the customer in Stripe test mode first and paste its ID here."*
-- Save button refuses to enable sandbox without the customer ID (mirrors the edge-function guard).
+**3. Visibility / safety**
+- Card always renders inside `EditSubscriptionPanel`, which is already only mounted in admin routes (`/dashboard/admin/billing`) — no extra role check needed in the component.
+- The toggle is independent of the existing "Save Changes" button: enabling/disabling sandbox writes immediately so admins can't get into a half-saved state.
+- Disable the toggle while the edge function is in flight (spinner on the switch).
 
 ### Files
-1. New migration — schema additions + index + check constraint.
-2. `supabase/functions/_shared/billing.ts` — add `getStripeClient`.
-3. Edge functions listed in §4 — replace direct `new Stripe(...)` and stamp `stripe_mode`.
-4. `supabase/functions/stripe-webhook/index.ts` — dual-secret verification + mode propagation.
-5. `src/components/admin/EditSubscriptionPanel.tsx` — sandbox toggle + customer-ID field.
-6. `src/integrations/supabase/types.ts` — auto-regenerated.
-7. `README.md` — "Stripe Sandbox Mode" section.
+1. `supabase/functions/enable-sandbox/index.ts` — new edge function (admin-verified, creates test-mode Stripe customer, updates subscription).
+2. `src/components/admin/EditSubscriptionPanel.tsx` — new "Sandbox Mode" card + AlertDialog confirmations + handlers.
 
 ### Out of scope
-- ACH onboarding functions stay on live Stripe (documented).
-- No automatic creation of the test-mode Stripe customer — admin does it manually in Stripe dashboard.
-- Refunds, disputes, and Stripe Connect flows are unaffected (none currently in the codebase).
-- No change to `subscription.stripe_subscription_id` semantics; for sandbox subs it will hold the test-mode `sub_…` ID once the next billing cycle creates it.
+- No automatic copying of payment methods between live and test customers (Stripe doesn't allow it; admin uses the 4242 card in test mode).
+- No deletion of the test-mode Stripe customer when disabling — kept for re-enable.
+- No bulk/global sandbox toggle — strictly per-subscription, matches the existing schema.
+- No UI in the customer-facing portal — admin-only by virtue of the panel's location.
 
