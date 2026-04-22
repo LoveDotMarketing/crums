@@ -12,8 +12,8 @@ const logStep = (step: string, details?: Record<string, unknown>) => {
   console.log(`[CHARGE-CUSTOMER] ${step}${detailsStr}`);
 };
 
-// Import shared surcharge logic
-import { calculateCardSurcharge } from "../_shared/billing.ts";
+// Import shared surcharge logic + per-subscription Stripe client selection
+import { calculateCardSurcharge, getStripeClient } from "../_shared/billing.ts";
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -97,10 +97,10 @@ serve(async (req) => {
     }).select("id").single();
     logStep("Pending audit log inserted", { logId: pendingLog?.id });
 
-    // Look up customer's stripe_customer_id
+    // Look up customer's subscription (with sandbox info) for Stripe routing
     const { data: sub, error: subError } = await supabaseAdmin
       .from("customer_subscriptions")
-      .select("stripe_customer_id")
+      .select("stripe_customer_id, sandbox, sandbox_stripe_customer_id")
       .eq("customer_id", customer_id)
       .not("stripe_customer_id", "is", null)
       .limit(1)
@@ -109,14 +109,15 @@ serve(async (req) => {
     if (subError || !sub?.stripe_customer_id) {
       throw new Error("Customer has no linked Stripe account. Set up payment method first.");
     }
-    logStep("Stripe customer found", { stripeCustomerId: sub.stripe_customer_id });
 
-    const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY")!, {
-      apiVersion: "2025-08-27.basil",
-    });
+    const { stripe, mode, customerId: stripeCustomerId } = getStripeClient(sub);
+    if (!stripeCustomerId) {
+      throw new Error("Customer has no Stripe customer ID for the selected mode.");
+    }
+    logStep("Stripe customer resolved", { stripeCustomerId, mode });
 
     // Check the customer's default payment method to detect card vs ACH
-    const stripeCustomer = await stripe.customers.retrieve(sub.stripe_customer_id);
+    const stripeCustomer = await stripe.customers.retrieve(stripeCustomerId);
     let isCard = false;
     if (stripeCustomer && !stripeCustomer.deleted) {
       const defaultPmId = stripeCustomer.invoice_settings?.default_payment_method;
@@ -147,7 +148,7 @@ serve(async (req) => {
 
     // Create invoice FIRST with pending_invoice_items_behavior: 'exclude' to prevent dangling items
     const invoice = await stripe.invoices.create({
-      customer: sub.stripe_customer_id,
+      customer: stripeCustomerId,
       collection_method: "charge_automatically",
       auto_advance: true,
       pending_invoice_items_behavior: "exclude",
@@ -158,7 +159,7 @@ serve(async (req) => {
 
     // Attach invoice item explicitly to this invoice
     await stripe.invoiceItems.create({
-      customer: sub.stripe_customer_id,
+      customer: stripeCustomerId,
       invoice: invoice.id,
       amount: finalAmountCents,
       currency: "usd",
@@ -167,7 +168,7 @@ serve(async (req) => {
     logStep("Invoice item attached", { amountCents: finalAmountCents, description: finalDescription });
 
     const finalizedInvoice = await stripe.invoices.finalizeInvoice(invoice.id);
-    logStep("Invoice finalized", { status: finalizedInvoice.status });
+    logStep("Invoice finalized", { status: finalizedInvoice.status, mode });
 
     const paymentIntentId = typeof finalizedInvoice.payment_intent === "string"
       ? finalizedInvoice.payment_intent
