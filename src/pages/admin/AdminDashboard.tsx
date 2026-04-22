@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Receipt, Users, Truck, DollarSign, TrendingUp, AlertCircle, Loader2, Mail } from "lucide-react";
+import { Receipt, Users, Truck, DollarSign, TrendingUp, AlertCircle, Loader2, Mail, FlaskConical } from "lucide-react";
 import { toast } from "sonner";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
@@ -226,6 +226,18 @@ export default function AdminDashboard() {
         .eq("status", "new");
       if (error) throw error;
       return data?.length || 0;
+    },
+  });
+
+  // Fetch sandbox subscriptions count (admin-only insight)
+  const { data: sandboxSubsCount } = useQuery({
+    queryKey: ["admin-sandbox-subs-count"],
+    queryFn: async () => {
+      const { count } = await supabase
+        .from("customer_subscriptions")
+        .select("id", { count: "exact", head: true })
+        .eq("sandbox", true);
+      return count ?? 0;
     },
   });
 
