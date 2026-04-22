@@ -97,6 +97,8 @@ interface Application {
   utm_content: string | null;
   referrer: string | null;
   landing_page: string | null;
+  sandbox: boolean;
+  sandbox_stripe_customer_id: string | null;
   profiles: {
     email: string;
     first_name: string | null;
@@ -212,6 +214,7 @@ interface AvailableTrailer {
 export default function Applications() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [modeFilter, setModeFilter] = useState<"all" | "live" | "sandbox">("all");
   const [selectedApplication, setSelectedApplication] = useState<Application | null>(null);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [statusDialogOpen, setStatusDialogOpen] = useState(false);
@@ -366,8 +369,11 @@ export default function Applications() {
       app.phone_number?.includes(searchQuery);
     
     const matchesStatus = statusFilter === "all" || app.status === statusFilter;
-    
-    return matchesSearch && matchesStatus;
+    const matchesMode =
+      modeFilter === "all" ||
+      (modeFilter === "sandbox" ? !!app.sandbox : !app.sandbox);
+
+    return matchesSearch && matchesStatus && matchesMode;
   });
 
   const getStatusBadge = (status: string) => {
@@ -710,6 +716,20 @@ export default function Applications() {
                   <SelectItem value="rejected">Rejected</SelectItem>
                 </SelectContent>
               </Select>
+              <div className="flex items-center gap-1 rounded-md border bg-background p-1">
+                {(["all", "live", "sandbox"] as const).map((mode) => (
+                  <Button
+                    key={mode}
+                    type="button"
+                    variant={modeFilter === mode ? "default" : "ghost"}
+                    size="sm"
+                    className="h-8 capitalize"
+                    onClick={() => setModeFilter(mode)}
+                  >
+                    {mode === "all" ? "All modes" : mode === "live" ? "Live only" : "Sandbox only"}
+                  </Button>
+                ))}
+              </div>
             </div>
 
             {/* Applications Table */}
@@ -726,6 +746,7 @@ export default function Applications() {
                       <TableHead>Source</TableHead>
                       <TableHead>Trailer Type</TableHead>
                       <TableHead>Submitted</TableHead>
+                      <TableHead>Mode</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead className="w-[120px]">Actions</TableHead>
                     </TableRow>
@@ -733,7 +754,7 @@ export default function Applications() {
                   <TableBody>
                     {filteredApplications.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                        <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                           No applications found
                         </TableCell>
                       </TableRow>
@@ -766,6 +787,15 @@ export default function Applications() {
                           <TableCell>{app.trailer_type || "—"}</TableCell>
                           <TableCell>
                             {format(new Date(app.created_at), "MMM d, yyyy")}
+                          </TableCell>
+                          <TableCell>
+                            {app.sandbox ? (
+                              <Badge className="bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/30 hover:bg-amber-500/20 text-xs">
+                                Sandbox
+                              </Badge>
+                            ) : (
+                              <span className="text-xs text-muted-foreground">Live</span>
+                            )}
                           </TableCell>
                           <TableCell>{getStatusBadge(app.status)}</TableCell>
                           <TableCell>

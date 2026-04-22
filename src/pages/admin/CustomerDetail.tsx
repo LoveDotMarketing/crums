@@ -46,6 +46,8 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { AdminAchSetupDialog } from "@/components/admin/AdminAchSetupDialog";
+import { ApplicationSandboxCard } from "@/components/admin/ApplicationSandboxCard";
+import { FlaskConical } from "lucide-react";
 
 const formatCurrency = (amount: number) =>
   new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(amount);
@@ -378,6 +380,22 @@ export default function CustomerDetail() {
           </header>
 
           <main className="flex-1 p-6 overflow-auto">
+            {application?.sandbox && (
+              <div className="mb-6 flex items-start gap-3 rounded-lg border border-amber-500/30 bg-amber-500/10 p-4 text-amber-900 dark:text-amber-200">
+                <FlaskConical className="h-5 w-5 mt-0.5 flex-shrink-0" />
+                <div className="text-sm">
+                  <p className="font-semibold">
+                    This customer's application is in SANDBOX mode
+                  </p>
+                  <p className="text-amber-800/90 dark:text-amber-200/90">
+                    Payment setup runs against Stripe test mode. No real bank
+                    or card will be linked or charged. The activated
+                    subscription will inherit sandbox mode automatically.
+                  </p>
+                </div>
+              </div>
+            )}
+
             {/* ── Summary cards ── */}
             <div className="grid gap-4 grid-cols-2 md:grid-cols-4 mb-6">
               <Card>
@@ -567,6 +585,17 @@ export default function CustomerDetail() {
                       )}
                     </CardContent>
                   </Card>
+
+                  {application && (
+                    <div className="md:col-span-2">
+                      <ApplicationSandboxCard
+                        applicationId={application.id}
+                        sandbox={!!application.sandbox}
+                        sandboxStripeCustomerId={application.sandbox_stripe_customer_id ?? null}
+                        paymentSetupStatus={application.payment_setup_status ?? null}
+                      />
+                    </div>
+                  )}
                 </div>
               </TabsContent>
 
