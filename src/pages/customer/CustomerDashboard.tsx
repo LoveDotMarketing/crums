@@ -54,6 +54,7 @@ export default function CustomerDashboard() {
   const [pendingCheckouts, setPendingCheckouts] = useState<PendingCheckout[]>([]);
   const [loading, setLoading] = useState(true);
   const [markingPaid, setMarkingPaid] = useState<string | null>(null);
+  const [customerRecordId, setCustomerRecordId] = useState<string | null>(null);
   const [profileData, setProfileData] = useState<{ first_name: string | null; last_name: string | null; company_name: string | null } | null>(null);
   const [hasLeaseToOwn, setHasLeaseToOwn] = useState(false);
   const [leaseAgreementUrl, setLeaseAgreementUrl] = useState<string | null>(null);
