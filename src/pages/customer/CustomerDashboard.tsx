@@ -392,7 +392,7 @@ export default function CustomerDashboard() {
           payment_date: new Date().toISOString() 
         })
         .eq("id", tollId)
-        .eq("customer_id", currentUserId);
+        .eq("customer_id", customerRecordId);
 
       if (error) throw error;
 
