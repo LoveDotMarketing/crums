@@ -54,6 +54,7 @@ export default function CustomerDashboard() {
   const [pendingCheckouts, setPendingCheckouts] = useState<PendingCheckout[]>([]);
   const [loading, setLoading] = useState(true);
   const [markingPaid, setMarkingPaid] = useState<string | null>(null);
+  const [customerRecordId, setCustomerRecordId] = useState<string | null>(null);
   const [profileData, setProfileData] = useState<{ first_name: string | null; last_name: string | null; company_name: string | null } | null>(null);
   const [hasLeaseToOwn, setHasLeaseToOwn] = useState(false);
   const [leaseAgreementUrl, setLeaseAgreementUrl] = useState<string | null>(null);
@@ -63,33 +64,35 @@ export default function CustomerDashboard() {
   // Use effectiveUserId for queries when impersonating
   const currentUserId = effectiveUserId;
 
+  // Resolve the legacy customers.id for the current/impersonated user
+  // (tolls.customer_id stores customers.id, NOT auth.users / profiles.id)
+  useEffect(() => {
+    const email = isImpersonating && impersonatedUser ? impersonatedUser.email : user?.email;
+    if (!email) {
+      setCustomerRecordId(null);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("customers")
+        .select("id")
+        .ilike("email", email)
+        .maybeSingle();
+      if (!cancelled) setCustomerRecordId(data?.id ?? null);
+    })();
+    return () => { cancelled = true; };
+  }, [user?.email, isImpersonating, impersonatedUser]);
+
   useEffect(() => {
     if (currentUserId) {
       checkApplicationStatus();
-      fetchTolls();
       fetchTrailers();
       fetchPendingCheckouts();
       fetchSubscriptionStatus();
       fetchProfile();
       checkLeaseToOwnSubscription();
       fetchMyDocuments();
-
-      // Set up real-time subscription for tolls
-      const tollChannel = supabase
-        .channel('customer-tolls')
-        .on(
-          'postgres_changes',
-          {
-            event: '*',
-            schema: 'public',
-            table: 'tolls',
-            filter: `customer_id=eq.${currentUserId}`
-          },
-          () => {
-            fetchTolls();
-          }
-        )
-        .subscribe();
 
       // Set up real-time subscription for trailers
       const trailerChannel = supabase
@@ -108,11 +111,35 @@ export default function CustomerDashboard() {
         .subscribe();
 
       return () => {
-        supabase.removeChannel(tollChannel);
         supabase.removeChannel(trailerChannel);
       };
     }
   }, [currentUserId]);
+
+  // Toll fetch + realtime keyed off the resolved customers.id
+  useEffect(() => {
+    if (!customerRecordId) {
+      setTolls([]);
+      setTollStats({ pendingAmount: 0, paidThisMonth: 0, pendingCount: 0 });
+      setLoading(false);
+      return;
+    }
+    fetchTolls();
+    const tollChannel = supabase
+      .channel(`customer-tolls-${customerRecordId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'tolls',
+          filter: `customer_id=eq.${customerRecordId}`,
+        },
+        () => { fetchTolls(); }
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(tollChannel); };
+  }, [customerRecordId]);
 
   const fetchProfile = async () => {
     if (!currentUserId) return;
@@ -247,13 +274,13 @@ export default function CustomerDashboard() {
   };
 
   const fetchTolls = async () => {
-    if (!currentUserId) return;
+    if (!customerRecordId) return;
 
     try {
       const { data, error } = await supabase
         .from("tolls")
         .select("id, toll_location, toll_authority, amount, toll_date, status, last_reminder_sent_at, reminder_count")
-        .eq("customer_id", currentUserId)
+        .eq("customer_id", customerRecordId)
         .order("toll_date", { ascending: false })
         .limit(20);
 
@@ -264,11 +291,11 @@ export default function CustomerDashboard() {
       // Calculate stats
       const now = new Date();
       const firstOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-      
+
       const pendingAmount = (data || [])
         .filter(t => t.status === "pending" || t.status === "overdue")
         .reduce((sum, t) => sum + Number(t.amount), 0);
-      
+
       const paidThisMonth = (data || [])
         .filter(t => t.status === "paid" && new Date(t.toll_date) >= firstOfMonth)
         .reduce((sum, t) => sum + Number(t.amount), 0);
@@ -365,7 +392,7 @@ export default function CustomerDashboard() {
           payment_date: new Date().toISOString() 
         })
         .eq("id", tollId)
-        .eq("customer_id", currentUserId);
+        .eq("customer_id", customerRecordId);
 
       if (error) throw error;
 
