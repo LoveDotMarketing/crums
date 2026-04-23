@@ -274,13 +274,13 @@ export default function CustomerDashboard() {
   };
 
   const fetchTolls = async () => {
-    if (!currentUserId) return;
+    if (!customerRecordId) return;
 
     try {
       const { data, error } = await supabase
         .from("tolls")
         .select("id, toll_location, toll_authority, amount, toll_date, status, last_reminder_sent_at, reminder_count")
-        .eq("customer_id", currentUserId)
+        .eq("customer_id", customerRecordId)
         .order("toll_date", { ascending: false })
         .limit(20);
 
@@ -291,11 +291,11 @@ export default function CustomerDashboard() {
       // Calculate stats
       const now = new Date();
       const firstOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-      
+
       const pendingAmount = (data || [])
         .filter(t => t.status === "pending" || t.status === "overdue")
         .reduce((sum, t) => sum + Number(t.amount), 0);
-      
+
       const paidThisMonth = (data || [])
         .filter(t => t.status === "paid" && new Date(t.toll_date) >= firstOfMonth)
         .reduce((sum, t) => sum + Number(t.amount), 0);
